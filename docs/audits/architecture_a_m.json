@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "961208f955c24d6a23063050eca770adc78b6dbc37c619dfd4042668a9c3bd18",
+        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -139,7 +139,8 @@
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
-      "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required."
+      "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -164,12 +165,12 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Declares AnalysisConsolidationConfig and its standalone consolidation policy."
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
+        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
         "role": "Exercises orchestrator lane planning and post-execution analysis boundaries used by consolidation."
       },
       {
@@ -184,7 +185,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "74759b37cb83a6c59f616b8b14fed21bbb187a8f489c4086bfb0fc7d380fddf0",
+        "sha256": "1372625f3d7dc04cf6822a1887871dfa9a149b2313df7d7acefd452a6ad0f932",
         "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
       }
     ],
@@ -204,7 +205,8 @@
       "On 2026-08-24, rechecked the complete explanation after consolidation began requesting text through the materialization output contract; the documented ledger and destination ownership remains accurate, and the full installed MCP neurite workflow completed.",
       "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-16: Re-read the complete page against the projected-ROI filename-identity change. Consolidation still selects paths through the shared target request and does not own source-identity projection; 249 focused materialization and adjacent runtime tests passed."
+      "2026-09-16: Re-read the complete page against the projected-ROI filename-identity change. Consolidation still selects paths through the shared target request and does not own source-identity projection; 249 focused materialization and adjacent runtime tests passed.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `tests/unit/test_orchestrator_lane_planning.py`, `openhcs/processing/materialization/core.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -219,7 +221,7 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "2d0ccc744689ccddb2314f2d5f412a8b020df726bf74d605ae2d2fa7eb5e4083",
+        "sha256": "bb958c74c98cb96c97c5ac1ea68ac997673aac6afcad57bdf0c9496065e895fa",
         "role": "Defines artifact families, specifications, references, relations, and materialisation declarations."
       },
       {
@@ -258,7 +260,8 @@
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -468,7 +471,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_server.py",
-        "sha256": "462c028c14740a3b1ec053427bfcddc0733bb74e4d949274518c31b1eaaf9a7e",
+        "sha256": "667f582fffd4b489ca7274f8962a759c3d33d24b10ec8e6d1aa5cac01233b067",
         "role": "Advertises the shared application identity and rejects incompatible requests before dispatching them into live UI state."
       },
       {
@@ -493,7 +496,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "9e5a9704ec0ee7d83575fc8f6bc2820a5aee382f33e7cfaddc6c27e3c02889dc",
+        "sha256": "1feee4bb413738f04e81cbdf26244dc0d585a68921e6c7749a941a08518007a1",
         "role": "Verifies read-only rejection, semantic no-op application, and branch restoration through the UI bridge."
       },
       {
@@ -572,7 +575,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "2026-09-16: Re-read the complete explanation against the changed function-pattern owner and its explicit-override regression. Revised child-state retention to distinguish same-surface value updates from explicit keyword additions/removals that rebuild the child at the same scope. The changed pyqt-reactive selection passed 180 tests and OpenHCS code/UI integration passed 112 tests."
+      "2026-09-16: Re-read the complete explanation against the changed function-pattern owner and its explicit-override regression. Revised child-state retention to distinguish same-surface value updates from explicit keyword additions/removals that rebuild the child at the same scope. The changed pyqt-reactive selection passed 180 tests and OpenHCS code/UI integration passed 112 tests.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/pyqt_gui/services/ui_bridge_server.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -667,7 +671,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Declares OpenHCS domain configuration that consumes ObjectState mechanics."
       }
     ],
@@ -680,7 +684,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: external/ObjectState/src/objectstate/lazy_factory.py; openhcs/core/config.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -842,7 +847,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
+        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
         "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
       },
       {
@@ -878,7 +883,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-26, re-read the complete page against ProcessingContext, CompiledExecutionBundle, worker-lane planning, and opaque-key regression evidence; revised it to identify the nominal axis owner.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `tests/unit/test_orchestrator_lane_planning.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -902,7 +908,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Declares the OpenHCS global, pipeline, step, and standalone configuration hierarchy."
       }
     ],
@@ -915,7 +921,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: external/ObjectState/src/objectstate/lazy_factory.py; external/ObjectState/src/objectstate/context_manager.py; openhcs/core/config.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1131,7 +1138,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Declares standalone ExperimentalAnalysisConfig options and all directory-workflow filenames."
       },
       {
@@ -1171,7 +1178,8 @@
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1789,7 +1797,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Declares the WellFilterConfig family preview policy and WellFilterMode member operators."
       },
       {
@@ -1863,7 +1871,8 @@
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative.",
       "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence).",
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
-      "2026-09-16: Re-read the complete integration page against the list delegate and wrapping-test delta. Delegate-painted rows now acknowledge their actual flash alpha to the shared playback owner; row wrapping defaults, explicit overrides, disclosure actions, refresh/reorder preservation, and OpenHCS preview policy remain unchanged. The changed pyqt-reactive regression selection passed 180 tests."
+      "2026-09-16: Re-read the complete integration page against the list delegate and wrapping-test delta. Delegate-painted rows now acknowledge their actual flash alpha to the shared playback owner; row wrapping defaults, explicit overrides, disclosure actions, refresh/reorder preservation, and OpenHCS preview policy remain unchanged. The changed pyqt-reactive regression selection passed 180 tests.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1878,12 +1887,12 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "961208f955c24d6a23063050eca770adc78b6dbc37c619dfd4042668a9c3bd18",
+        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
         "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "406e1923d7668e93bdba6dde1a8056117f880b5d0b480927d8fa87f1ad5dcafa",
+        "sha256": "e1c987624c76be157a6524cda985498351da3c77ef19c99b85e05dd5c2e9b970",
         "role": "Validates one-shot development commands against the selected surface before starting an MCP subprocess."
       },
       {
@@ -1898,7 +1907,7 @@
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "56f17a67d06fbfcb360eced05b21838b7ad0f5a10df6944441b00bfe317cf892",
+        "sha256": "ed65a008b52db505393413f0fbadf6b096c648ff48340c7e2dda8584750f6c68",
         "role": "Binds the selected declaration registry into the local stdio MCP server."
       },
       {
@@ -1913,7 +1922,7 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "61b239ff84ee90b37285f2b10ffac37357f179eaef860c6026cb239ec8f9fd80",
+        "sha256": "293ad9fcbd7570e74170e65f9e9d0c51eb78ead57f41213a2878ad6a95d055e3",
         "role": "Declares viewer control requests and their default timeout."
       },
       {
@@ -2003,7 +2012,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "dedb131fb88ba9b6f8e39253e6a016458592915930cb0fcc0ae5a7db2abd25aa",
+        "sha256": "cd47571edf7944fed90fb2e8ff2196acbbe7a8882572eb806645de2f52785b23",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2028,7 +2037,7 @@
       },
       {
         "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "c9bc92188c038c0282e78563310e2c046d05fdc3f0be2962e0c3a95d33110fc5",
+        "sha256": "353b21289cc1404b19924f46b70907622cfa9a8a457ba40a19b89a223ede383a",
         "role": "Composes operating-guide sections from nominal context facets and bounds returned guidance."
       },
       {
@@ -2143,7 +2152,8 @@
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Row actions delegate to generic declarations; automatic selection and explicit preview toggling share native item-model state.",
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
       "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules.",
-      "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests."
+      "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2315,7 +2325,7 @@
       },
       {
         "path": "tests/unit/agent/test_plate_inspection_service.py",
-        "sha256": "d0b78e88f4ee97e24ca0cb098cb74db53b0ae532bbb99986dfe270fcaa0c3434",
+        "sha256": "fafd340d60d66e21ca0ac42cdc1a7f0fee5672788fa219cf7f7a7fefe8841194",
         "role": "Verifies automatic inspection can reopen both native and SourceBindings virtual workspaces from persisted metadata."
       }
     ],
@@ -2334,7 +2344,8 @@
       "On 2026-08-23, re-read the complete explanation against the handler root, OpenHCS persisted-workspace reader, and inspection tests; 124 focused microscope, source-binding, workspace, and plate-inspection tests passed.",
       "On 2026-08-24, re-read the complete explanation after stdout containment moved from plate inspection to the MCP transport; microscope ownership and replay claims remain unchanged.",
       "On 2026-08-25, re-read the complete explanation against the handler root, metadata interface, persisted-workspace replay, source declarations, and handler tests; revised it to document the complete nominal metadata projection.",
-      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages."
+      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `tests/unit/agent/test_plate_inspection_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {

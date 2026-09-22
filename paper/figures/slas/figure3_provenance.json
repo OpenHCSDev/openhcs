@@ -13,7 +13,7 @@
     "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_cell_bodies_step1.labels.tif": "f81c3114dd4bf4797d79cd8aec29696d81a5725baecfe1e7cdd2b1bf8cfd6c55",
     "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_neurons_step1.labels.tif": "19659c41a8006e1d4bd51a300d25b32a440becbcd68f4a89235e48661a85f711"
   },
-  "generator_sha256": "c091435d7ab852bce97dc25acd41a159451acbc2f2795f70f1f4aacdf2393d26",
+  "generator_sha256": "a8315f9f435a36c30115a5655f040180e95db2022466ec3731dcd0e0c62040e9",
   "replay_execution_id": "e5d9067c-334b-46b7-853b-ca986f94137d",
   "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255",
   "viewer_display": "Panel C and the crossing detail are native Qt captures; the crossing detail is an unchanged canvas crop using xyxy=(580, 40, 1753, 720). Panel D is a deterministic overlay of retained input pixels and labels.",
@@ -51,6 +51,6 @@
   "output_sha256": {
     "figure3_agent_workflow.png": "9cacbe660cf64649c7596802d852c383f54766442003f5d1b3837dea314ebd42",
     "figure3_agent_workflow.pdf": "9e2329abde34358b0d057024da006e8fabd6c08f43f9e69caec87528f1748e6c",
-    "figure3_agent_workflow.svg": "b263db16bfee036f3f4674cbcf2bf1d5a5d92b6de9b88c2f34bf0f8e91dcba38"
+    "figure3_agent_workflow.svg": "8b933465f4d8a59fc8a5e9957dfc48906fe262c86346b23bf7cf8606599c0a51"
   }
 }

@@ -10,12 +10,12 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
+        "sha256": "64ccfef65a10e04878ef0806ae72d0446540efcbfc72af46c4e2ab785418a84c",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "57ea1759081d494713b2e2e11d04b55a96ccb82e5328635cfc2332f6561bf162",
+        "sha256": "86f4ab319c7c68b626e7e2a1adef81eb3d7244f044b5b3e4dddd78bbee2aa4b6",
         "role": "Napari route handlers that project typed received batches onto native viewer state."
       },
       {
@@ -32,7 +32,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/test_napari_streaming_handlers.py and tests/unit/test_viewer_protocol.py exercise the named OpenHCS and transport boundaries",
       "On 2026-08-25, re-read the complete redirect against the changed Napari endpoint owner; bounded payload projection and atomic layer isolation do not change this legacy route's current-owner destination.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/runtime/napari_viewer_server.py`, `openhcs/runtime/napari_streaming_handlers.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -46,12 +47,12 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
+        "sha256": "46982fd46f47b962033e02d82afb6c3ce2abbafdabfbce99e591d9c6dff2fbab",
         "role": "Compiled output streaming, viewer settlement, state evidence, and lifecycle cleanup."
       },
       {
         "path": "openhcs/runtime/napari_stream_visualizer.py",
-        "sha256": "67da123b2e74705d2f52951b145254cafa3031dce0dcb8b387d3da4deafc49c8",
+        "sha256": "a9ab90f3ddbfc2393683b4baf163fdb7030384b8985e8fee5b5aea20614ce2c1",
         "role": "OpenHCS Napari visualiser declaration and launch adapter."
       },
       {
@@ -67,7 +68,8 @@
     "validation": [
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/test_streaming_service.py and tests/unit/test_napari_streaming_handlers.py verify the current route",
-      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests."
+      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/viewer_streaming_service.py`, `openhcs/runtime/napari_stream_visualizer.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -208,7 +210,7 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/compiled_plate_execution.py",
-        "sha256": "1cdbea47df5d93bc74281fa28e6b3386e6b9e4ac845aace1bb900aff8ed1a283",
+        "sha256": "80998f355c3f4be9027cb91cabf581f51efd870fb86960f5f6ecd615bcdc89ef",
         "role": "Parent compiled-plate execution, terminal steps, viewer settlement, evidence, and cleanup ordering."
       },
       {
@@ -223,7 +225,7 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "69a509618d677be7de974b849457ffdbd2391dfe6c2229bf8584c4a517d4d9b5",
+        "sha256": "30441eab97da9ffcb5b9dc33d65c2ecc56c426e79bb2b27eedc78a68aaf13bc3",
         "role": "Distinguishes external viewer clients from owned viewer processes during failed-bootstrap rollback."
       },
       {
@@ -243,7 +245,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
+        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
         "role": "Proves partial viewer acquisition and readiness failures roll back every acquired viewer."
       },
       {
@@ -273,7 +275,8 @@
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-25, re-read the complete cleanup explanation against compiled viewer acquisition, lifecycle ownership, and rollback regressions; revised it to cover partial-bootstrap cleanup without claiming ownership of external endpoints.",
       "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/orchestrator/compiled_plate_execution.py`, `openhcs/runtime/viewer_protocol.py`, `tests/unit/test_orchestrator_lane_planning.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -509,7 +512,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -539,7 +542,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "On 2026-08-27, re-read the complete transition page after library registries gained declaration-owned runtime-parameter exclusions; grouping and output terminology remain unchanged."
+      "On 2026-08-27, re-read the complete transition page after library registries gained declaration-owned runtime-parameter exclusions; grouping and output terminology remain unchanged.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -578,12 +582,12 @@
       },
       {
         "path": "openhcs/core/orchestrator/compiled_plate_execution.py",
-        "sha256": "1cdbea47df5d93bc74281fa28e6b3386e6b9e4ac845aace1bb900aff8ed1a283",
+        "sha256": "80998f355c3f4be9027cb91cabf581f51efd870fb86960f5f6ecd615bcdc89ef",
         "role": "Parent execution ordering for plate-scoped work, completed-output metadata projection, and viewer settlement."
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "0a90e80c02fd19a9d8ae80e6c9b28345d616e47e3f82e999ce29b84ddb290218",
+        "sha256": "e02275c0c1d8ac00633d97f22d54bc5569dddc4f11971a0106743b94a78c8d5b",
         "role": "Declaration-owned OpenHCS metadata targets, typed projection persistence, and completed-plate deduplication across compiled axes."
       },
       {
@@ -635,7 +639,8 @@
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-16: Re-read the complete explanation against typed semantic projection persistence. Documented the distinction between complete storage addresses and semantic image metadata; 277 focused source, output, materialization, and provenance tests passed."
+      "2026-09-16: Re-read the complete explanation against typed semantic projection persistence. Documented the distinction between complete storage addresses and semantic image metadata; 277 focused source, output, materialization, and provenance tests passed.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/orchestrator/compiled_plate_execution.py`, `openhcs/core/steps/function_outputs.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -817,7 +822,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -860,7 +865,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-27, re-read the complete architecture explanation after library registries gained declaration-owned runtime-parameter exclusions; callable and compiler ownership claims remain accurate.",
       "On 2026-08-27, re-read and revised the complete explanation after callable contracts projected every artifact-, configuration-, context-, and adapter-owned input into shared authoring exclusions.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -904,12 +910,12 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "0229c06d84a0e7c56f9bb4c6d565c5ada9bbd67a79872a751913122f72542f0a",
+        "sha256": "f52f90cff600280d512bb504e595d850274768e41be65017ba65be2a1428627e",
         "role": "Declares the typed public job status and delegates terminal semantics to the generic lifecycle declaration."
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
+        "sha256": "566fbea8d8613ca590107a87bb39a8e6ac4dbc143e20204242b1c6b5ab2aceb0",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -925,7 +931,8 @@
       "On 2026-08-23, re-read the complete page against ZMQRuntime 0.2.11 and the retained OpenHCS agent client boundary; 138 generic tests, 388 focused OpenHCS tests, and a live MCP/ZMQ rehearsal with 35 progress events passed.",
       "On 2026-08-25, re-read the complete progress explanation after viewer regressions changed the shared agent-service test authority; those additions exercise viewer projection only and do not alter progress ownership or lifecycle claims.",
       "On 2026-08-26, re-read the complete explanation after execution submission gained its own declaration-owned default budget; retained-client progress observation and terminal-release semantics remain unchanged, and 98 focused submission and agent-service tests passed.",
-      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages."
+      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/dto/execution.py`, `tests/unit/agent/test_agent_services.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -969,12 +976,12 @@
       },
       {
         "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "c9bc92188c038c0282e78563310e2c046d05fdc3f0be2962e0c3a95d33110fc5",
+        "sha256": "353b21289cc1404b19924f46b70907622cfa9a8a457ba40a19b89a223ede383a",
         "role": "Renders the declaration-composed operating guides, discovery boundaries and workflow instructions."
       },
       {
         "path": "tests/unit/agent/test_progressive_authoring_context.py",
-        "sha256": "2779d5c7f387f09e3f1ff81133cd78948186428b395731a0509e65c137d081fe",
+        "sha256": "533f8c704914112479c8adcb78ee14a006f750d5894b334c29cbd1380bc899d7",
         "role": "Checks bounded guide rendering, nominal route projection and operating/profile boundaries."
       }
     ],
@@ -988,7 +995,8 @@
       "Passed the documentation validator and tests/unit/test_pipeline_document.py for parsing, defaulting, rejection, and canonical rendering behavior.",
       "On 2026-08-27, re-read and revised the complete explanation against the current CellProfiler importer and its focused regression; interactive modules now fail headless import explicitly instead of being silently omitted.",
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
-      "2026-09-14: Re-read the complete architecture entry point against the changed importer. The public PipelineConfig plus FunctionStep route, headless rejection, source-binding behavior, and compile/runtime guidance remain accurate; benchmark export planning reuses the parsed declaration graph without adding a public pipeline side channel."
+      "2026-09-14: Re-read the complete architecture entry point against the changed importer. The public PipelineConfig plus FunctionStep route, headless rejection, source-binding behavior, and compile/runtime guidance remain accurate; benchmark export planning reuses the parsed declaration graph without adding a public pipeline side channel.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/services/llm_context_service.py`, `tests/unit/agent/test_progressive_authoring_context.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1007,7 +1015,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "74759b37cb83a6c59f616b8b14fed21bbb187a8f489c4086bfb0fc7d380fddf0",
+        "sha256": "1372625f3d7dc04cf6822a1887871dfa9a149b2313df7d7acefd452a6ad0f932",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {
@@ -1029,7 +1037,8 @@
       "On 2026-08-24, rechecked the complete explanation after materialization outputs gained nominal text behavior; no ROI ownership or projection claim changed.",
       "On 2026-08-24, rechecked the explanation after every text-emitting writer adopted the nominal text output declaration; ROI ownership remains unchanged.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-16: Re-read the complete explanation against projected ROI filename resolution. Documented that complete record identity fills only missing filename coordinates while collapsed semantic axes remain absent; 249 focused materialization and adjacent runtime tests passed."
+      "2026-09-16: Re-read the complete explanation against projected ROI filename resolution. Documented that complete record identity fills only missing filename coordinates while collapsed semantic axes remain absent; 249 focused materialization and adjacent runtime tests passed.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/processing/materialization/core.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1436,7 +1445,7 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
+        "sha256": "46982fd46f47b962033e02d82afb6c3ce2abbafdabfbce99e591d9c6dff2fbab",
         "role": "Compiled output streaming, viewer settlement, state evidence, and lifecycle cleanup."
       },
       {
@@ -1446,22 +1455,22 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "69a509618d677be7de974b849457ffdbd2391dfe6c2229bf8584c4a517d4d9b5",
+        "sha256": "30441eab97da9ffcb5b9dc33d65c2ecc56c426e79bb2b27eedc78a68aaf13bc3",
         "role": "OpenHCS viewer persistence policy, exact process ownership, platform policy, readiness, and settlement contracts."
       },
       {
         "path": "openhcs/runtime/viewer_controls.py",
-        "sha256": "251b4469add763a3c6d8212d89836cb0a95e07cd3b2c1dbebd1f88b082bac301",
+        "sha256": "3227e6bf60e9b43fd792cc4299b6b50721741f012a0f7f856268b35022fd6062",
         "role": "Declares caller payload controls, runtime projection policy, global shape budgets, and one atomic layer-isolation request."
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
+        "sha256": "64ccfef65a10e04878ef0806ae72d0446540efcbfc72af46c4e2ab785418a84c",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {
         "path": "openhcs/agent/services/viewer_window_service.py",
-        "sha256": "2be1c0a11bd100323185ef17a20a76f330bf3789c1ee31dd39d57afa330656ec",
+        "sha256": "257718ca7da768132be2283326730f65d9b399f0ef852b2c7e1e9e48263f9eed",
         "role": "Projects one typed bulk viewer response into agent results without client-side state mirroring or per-layer round trips."
       },
       {
@@ -1476,7 +1485,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/compiled_plate_execution.py",
-        "sha256": "1cdbea47df5d93bc74281fa28e6b3386e6b9e4ac845aace1bb900aff8ed1a283",
+        "sha256": "80998f355c3f4be9027cb91cabf581f51efd870fb86960f5f6ecd615bcdc89ef",
         "role": "Acquires required viewers transactionally and rolls back the exact acquired set on launch or readiness failure."
       },
       {
@@ -1496,27 +1505,27 @@
       },
       {
         "path": "tests/unit/test_viewer_protocol.py",
-        "sha256": "91150953182f454c8931f831d42506c04700b6f4d48455f617b0bdb80dd7074b",
+        "sha256": "f2226d3674b56cd46d2f93ad6764df96616104485d5f8ae15469882854492eaa",
         "role": "Proves execution cleanup stops exact non-persistent processes while persistent viewers remain available for typed lifecycle shutdown."
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "a08532745300afb45d8ac3f5e6b5e186f1e28ec0e261876a7e87d9d0b5faba7f",
+        "sha256": "58480f4da61b427ec1c55560a77686e74df70404fbbf77e701ba386ad9f89a03",
         "role": "Proves bulk isolation validates every route and navigation before any visibility, selection, or axis mutation."
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "ff748551885454356def167c5661254440a705638fe5b6a98ef684bebc8dfc67",
+        "sha256": "a338d6f2ef3094fa429f3d640709c7231eb741a7bf2859318bf4bbfa196afc07",
         "role": "Proves one global ROI-member budget and metadata-only shape projection across payload records."
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
+        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
         "role": "Proves multi-viewer bootstrap rollback after partial acquisition and readiness failure."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "57ea1759081d494713b2e2e11d04b55a96ccb82e5328635cfc2332f6561bf162",
+        "sha256": "86f4ab319c7c68b626e7e2a1adef81eb3d7244f044b5b3e4dddd78bbee2aa4b6",
         "role": "Owns accepted intake-cycle and route error retention through settlement."
       },
       {
@@ -1552,7 +1561,8 @@
       "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
       "On 2026-08-26, re-read the complete page after the generic endpoint connection lifecycle gained shared cancellation authority; the viewer transport and lifecycle ownership claims remain accurate.",
       "On 2026-08-27, re-read the complete explanation against execution-server catalogue shutdown; the changed preparation process does not alter the documented viewer acquisition, settlement, or exact process-group ownership.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/viewer_streaming_service.py`, `openhcs/runtime/viewer_protocol.py`, `openhcs/runtime/viewer_controls.py`, `openhcs/runtime/napari_viewer_server.py`, `openhcs/agent/services/viewer_window_service.py`, `openhcs/core/orchestrator/compiled_plate_execution.py`, `tests/unit/test_viewer_protocol.py`, `tests/unit/test_viewer_result_element_selection.py`, `tests/unit/test_napari_streaming_handlers.py`, `tests/unit/test_orchestrator_lane_planning.py`, `openhcs/runtime/napari_streaming_handlers.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2101,7 +2111,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
+        "sha256": "566fbea8d8613ca590107a87bb39a8e6ac4dbc143e20204242b1c6b5ab2aceb0",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2157,7 +2167,8 @@
       "On 2026-08-27, re-read the complete transition explanation after library registries gained declaration-owned runtime-parameter exclusions; endpoint catalogue ownership and transport claims remain unchanged.",
       "On 2026-08-27, applied the Diataxis reference boundary and re-read the complete page against the server, preparation, registry, and cancellation tests; revised the cold-cache lifecycle to identify its exact child-process and joined-shutdown owners.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `tests/unit/agent/test_agent_services.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2359,7 +2370,7 @@
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "2d0ccc744689ccddb2314f2d5f412a8b020df726bf74d605ae2d2fa7eb5e4083",
+        "sha256": "bb958c74c98cb96c97c5ac1ea68ac997673aac6afcad57bdf0c9496065e895fa",
         "role": "Artifact type, specification, reference, relation, and plan declarations."
       },
       {
@@ -2369,7 +2380,7 @@
       },
       {
         "path": "tests/unit/test_artifact_spec_collection.py",
-        "sha256": "939bb08b0a8a76d7f21060ba34164abaca367e10176d041713ccbc1e0c6383e6",
+        "sha256": "09d66f7b67e2b281c911ba935d6a1b3ff2c790da3977184256302d24b7a6d548",
         "role": "Regression proof for role-neutral artifact specs, exact refs, relations, and collection validation."
       },
       {
@@ -2405,7 +2416,8 @@
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-27, re-read and revised the complete how-to after CallableContract began projecting runtime-owned parameters into the shared python-introspect exclusion boundary; the focused contract regression passed.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`, `tests/unit/test_artifact_spec_collection.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2876,7 +2888,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "406e1923d7668e93bdba6dde1a8056117f880b5d0b480927d8fa87f1ad5dcafa",
+        "sha256": "e1c987624c76be157a6524cda985498351da3c77ef19c99b85e05dd5c2e9b970",
         "role": "One-shot command orchestration and selected-surface preflight before subprocess construction."
       },
       {
@@ -2906,7 +2918,7 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "61b239ff84ee90b37285f2b10ffac37357f179eaef860c6026cb239ec8f9fd80",
+        "sha256": "293ad9fcbd7570e74170e65f9e9d0c51eb78ead57f41213a2878ad6a95d055e3",
         "role": "Declares the default viewer control timeout."
       },
       {
@@ -2916,12 +2928,12 @@
       },
       {
         "path": "openhcs/mcp/dev_client_commands/viewer.py",
-        "sha256": "32d4dd2f6bec46c9cfb1b5366be25a3cab85030eff026924ca9249b856a8f20e",
+        "sha256": "9d854b05a76d67dc2ba4c4f0873a77b95630269f60d4564f4630ab1e4e3e572e",
         "role": "Declares the development-client viewer state, payload, ROI-summary, navigation, and isolation command surfaces."
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "dedb131fb88ba9b6f8e39253e6a016458592915930cb0fcc0ae5a7db2abd25aa",
+        "sha256": "cd47571edf7944fed90fb2e8ff2196acbbe7a8882572eb806645de2f52785b23",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -2966,12 +2978,12 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_server.py",
-        "sha256": "462c028c14740a3b1ec053427bfcddc0733bb74e4d949274518c31b1eaaf9a7e",
+        "sha256": "667f582fffd4b489ca7274f8962a759c3d33d24b10ec8e6d1aa5cac01233b067",
         "role": "Rejects stale MCP request contracts before they reach live UI state."
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "9e5a9704ec0ee7d83575fc8f6bc2820a5aee382f33e7cfaddc6c27e3c02889dc",
+        "sha256": "1feee4bb413738f04e81cbdf26244dc0d585a68921e6c7749a941a08518007a1",
         "role": "Proves stale protocol and application versions fail before UI operation dispatch."
       },
       {
@@ -2981,17 +2993,17 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "0229c06d84a0e7c56f9bb4c6d565c5ada9bbd67a79872a751913122f72542f0a",
+        "sha256": "f52f90cff600280d512bb504e595d850274768e41be65017ba65be2a1428627e",
         "role": "Declares the public typed execution status and progress observation result."
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
+        "sha256": "566fbea8d8613ca590107a87bb39a8e6ac4dbc143e20204242b1c6b5ab2aceb0",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "56f17a67d06fbfcb360eced05b21838b7ad0f5a10df6944441b00bfe317cf892",
+        "sha256": "ed65a008b52db505393413f0fbadf6b096c648ff48340c7e2dda8584750f6c68",
         "role": "Owns declaration-derived progress execution and verbose delayed thread-stack diagnostics across the full invocation."
       },
       {
@@ -3048,7 +3060,8 @@
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/mcp/dev_client_commanding.py`, `openhcs/agent/dto/viewer.py`, `openhcs/mcp/dev_client_commands/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/pyqt_gui/services/ui_bridge_server.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`, `openhcs/agent/dto/execution.py`, `tests/unit/agent/test_agent_services.py`, `openhcs/mcp/server.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {

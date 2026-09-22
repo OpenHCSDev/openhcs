@@ -30,6 +30,14 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def normalize_generated_svg(path: Path) -> None:
+    """Remove generator-only end-of-line whitespace from an SVG artifact."""
+
+    text = path.read_text(encoding="utf-8")
+    normalized = "\n".join(line.rstrip() for line in text.splitlines()) + "\n"
+    path.write_text(normalized, encoding="utf-8")
+
+
 def verified_sources() -> tuple[dict[str, object], dict[str, Path]]:
     manifest = json.loads(SOURCE_MANIFEST.read_text(encoding="utf-8"))
     paths: dict[str, Path] = {}
@@ -331,6 +339,8 @@ def build() -> None:
     for suffix in ("png", "pdf", "svg"):
         destination = OUTPUT / f"figure3_agent_workflow.{suffix}"
         figure.savefig(destination, dpi=300)
+        if suffix == "svg":
+            normalize_generated_svg(destination)
         outputs.append(destination)
     plt.close(figure)
 

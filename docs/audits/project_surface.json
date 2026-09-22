@@ -37,7 +37,7 @@
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "2d0ccc744689ccddb2314f2d5f412a8b020df726bf74d605ae2d2fa7eb5e4083",
+        "sha256": "bb958c74c98cb96c97c5ac1ea68ac997673aac6afcad57bdf0c9496065e895fa",
         "role": "Declares image, object, measurement, relationship, table, and file artifact semantics used by materialization."
       },
       {
@@ -52,12 +52,12 @@
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
+        "sha256": "46982fd46f47b962033e02d82afb6c3ce2abbafdabfbce99e591d9c6dff2fbab",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "961208f955c24d6a23063050eca770adc78b6dbc37c619dfd4042668a9c3bd18",
+        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -134,7 +134,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-14: Re-read the complete project overview against the changed CellProfiler importer. Supported cppipe lowering, ordinary declaration output, and Official30 scope remain accurate; the new terminal-artifact projection is benchmark evidence machinery and does not change the installation or product workflow claims.",
-      "2026-09-16: Re-read the complete project README against package metadata, benchmark contracts/control, capability declarations, context composition, and focused tests. Added a bounded operator note identifying the installed CLI and expert read-only inspection tool, explicitly excluding launch, resume, cancellation, rerun, and scientific parity claims. Focused benchmark/control tests and README documentation validation passed."
+      "2026-09-16: Re-read the complete project README against package metadata, benchmark contracts/control, capability declarations, context composition, and focused tests. Added a bounded operator note identifying the installed CLI and expert read-only inspection tool, explicitly excluding launch, resume, cancellation, rerun, and scientific parity claims. Focused benchmark/control tests and README documentation validation passed.",
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`, `openhcs/core/viewer_streaming_service.py`, `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   }
 ]
