@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
+        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1893,7 +1893,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
+        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2018,7 +2018,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "341aa1f6f6fa55982a732441e5c518d62bcc0002c01fabfd0b1fb2b119276fd5",
+        "sha256": "50bf6a57bfc585bb05ef47850ba433a4681ea4face1198494ab325ed0ffbd002",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {

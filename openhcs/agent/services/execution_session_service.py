@@ -467,11 +467,6 @@ class PipelineSourceSessionRequest(ExecutionPipelineSessionRequest):
     pipeline_source: str
 
     def __post_init__(self) -> None:
-        if self.identity.execution_plate_id is not None:
-            raise ValueError(
-                "Pipeline source sessions execute plate_id directly; "
-                "execution_plate_id must be None."
-            )
         if self.identity.selected_pipeline_path is not None:
             raise ValueError(
                 "Pipeline source sessions use pipeline_source as the selected "
@@ -835,7 +830,10 @@ class ExecutionSessionService:
     ) -> OrchestratorSessionRef:
         return self.create_session_from_pipeline_source(
             PipelineSourceSessionRequest(
-                identity=ZMQExecutionIdentity(plate_id=request.plate_path),
+                identity=ZMQExecutionIdentity(
+                    plate_id=request.plate_path,
+                    execution_plate_id=request.execution_plate_path,
+                ),
                 pipeline_source=request.pipeline_source,
                 global_config_id=request.global_config_id,
                 connection=request.connection,

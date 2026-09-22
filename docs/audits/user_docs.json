@@ -1358,7 +1358,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
+        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -3896,7 +3896,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "05d3afa5614330044ad01cdd47403c28e0cd6774f70acdb0d0a1dcc28a2991e0",
+    "source_sha256": "792e45f3f20400a4b6078cc2e4257218c45e757b1cae528540537ac3d6d1f31e",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3921,7 +3921,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
+        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -3936,7 +3936,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "341aa1f6f6fa55982a732441e5c518d62bcc0002c01fabfd0b1fb2b119276fd5",
+        "sha256": "50bf6a57bfc585bb05ef47850ba433a4681ea4face1198494ab325ed0ffbd002",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {

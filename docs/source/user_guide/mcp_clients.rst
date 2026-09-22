@@ -63,6 +63,12 @@ When you need a runtime observation file for later analysis, pass a new
 ``openhcs_submit_pipeline_execution``. The ordinary job still uses the same
 status and cancellation tools; requesting an export does not itself compare
 outputs or establish scientific validity.
+If an import or preprocessing step created a separate plate workspace, pass
+the original ``plate_path`` and the prepared ``execution_plate_path`` to
+``openhcs_create_orchestrator_session_from_pipeline_source`` together with the
+generated Python ``pipeline_source``. Submit and monitor that session through
+the same ordinary execution tools. Do not pass the original external pipeline
+file as a second pipeline authority for a source-backed session.
 
 .. openhcs-gallery:: zmq-startup-compile
 

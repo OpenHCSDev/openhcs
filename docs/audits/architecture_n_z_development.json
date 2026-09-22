@@ -905,17 +905,17 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "75ddf320cc53deba36667c4c30e0f2fc6c606f32f31c7d46f78f581147ebbd71",
+        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
         "role": "Retains the exact submitting client and projects its authoritative progress observation."
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "b77ac84ddd2ad45c32b66084dc50a3168ded4569c54c01fa8df6a699caed45aa",
+        "sha256": "a91b8c7f636e27e8044fc5a7dbb2e744a8e0e371a9587ab3aab1bf6b1778160e",
         "role": "Declares the typed public job status and delegates terminal semantics to the generic lifecycle declaration."
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a1b12e953ddc909d4276441ad9de2c15067efe609f7408d4e78b99b6e9e741ff",
+        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -1937,7 +1937,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "027e75d6c5337d06e78b7f7d5c76ffc2cbaa9b936cdad9eced5757c3be7bcd42",
+    "source_sha256": "d0ea2b121c942790583ab0dc718c4a0d9805122d0e5c5b073bb80854f852c6bd",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -2006,7 +2006,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "75ddf320cc53deba36667c4c30e0f2fc6c606f32f31c7d46f78f581147ebbd71",
+        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
         "role": "Retains the exact submitting client, projects its authoritative progress, caches terminal status, and releases the client once."
       },
       {
@@ -2121,7 +2121,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a1b12e953ddc909d4276441ad9de2c15067efe609f7408d4e78b99b6e9e741ff",
+        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2951,7 +2951,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "341aa1f6f6fa55982a732441e5c518d62bcc0002c01fabfd0b1fb2b119276fd5",
+        "sha256": "50bf6a57bfc585bb05ef47850ba433a4681ea4face1198494ab325ed0ffbd002",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -2981,7 +2981,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "75ddf320cc53deba36667c4c30e0f2fc6c606f32f31c7d46f78f581147ebbd71",
+        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
         "role": "Retains the submitting execution client, distinguishes dispatch outcomes, and projects its exact progress observation."
       },
       {
@@ -3011,12 +3011,12 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "b77ac84ddd2ad45c32b66084dc50a3168ded4569c54c01fa8df6a699caed45aa",
+        "sha256": "a91b8c7f636e27e8044fc5a7dbb2e744a8e0e371a9587ab3aab1bf6b1778160e",
         "role": "Declares the public typed execution status and progress observation result."
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a1b12e953ddc909d4276441ad9de2c15067efe609f7408d4e78b99b6e9e741ff",
+        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {

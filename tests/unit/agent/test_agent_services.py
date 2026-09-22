@@ -3620,12 +3620,55 @@ def test_compile_inspection_requires_direct_pipeline_step_list(
     assert compile_gateway.requests == []
 
 
-def test_pipeline_source_session_rejects_execution_plate_path(tmp_path: Path):
-    with pytest.raises(ValueError, match="execution_plate_id must be None"):
+def test_pipeline_source_session_uses_prepared_execution_plate(tmp_path: Path):
+    source = tmp_path / "source"
+    prepared = tmp_path / "prepared"
+    source.mkdir()
+    prepared.mkdir()
+    request = PipelineSourceOrchestratorSessionRequest.from_fields(
+        plate_path=str(source),
+        execution_plate_path=str(prepared),
+        pipeline_source=_pipeline_document_source(),
+    )
+    fake_client = _FakeExecutionClient()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(fake_client),
+    )
+
+    session_ref = service.create_session_from_pipeline_source_request(request)
+    session = service.get_session(session_ref.session_id)
+
+    assert session.plate_path == str(source)
+    assert session.execution_plate_path == str(prepared)
+    assert session.selected_pipeline_path is None
+    job = service.submit_execution(session_ref.session_id)
+    assert job.server_execution_id == _ExecutionTestId.EXECUTE
+    assert fake_client.execution_submissions[0].execution_plate_id == str(prepared)
+    assert fake_client.execution_submissions[0].selected_pipeline_path is None
+
+    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+        service.create_session_from_pipeline_source_request(
+            PipelineSourceOrchestratorSessionRequest.from_fields(
+                plate_path=str(source),
+                execution_plate_path=str(tmp_path.parent / "outside"),
+                pipeline_source=_pipeline_document_source(),
+            )
+        )
+
+
+def test_pipeline_source_session_rejects_competing_selected_pipeline_path(
+    tmp_path: Path,
+):
+    with pytest.raises(ValueError, match="selected_pipeline_path must be None"):
         PipelineSourceSessionRequest(
             identity=ZMQExecutionIdentity(
                 plate_id=str(tmp_path),
-                execution_plate_id=str(tmp_path),
+                selected_pipeline_path=str(tmp_path / "pipeline.cppipe"),
             ),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,

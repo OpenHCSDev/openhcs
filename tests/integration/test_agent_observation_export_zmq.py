@@ -16,12 +16,13 @@ from benchmark.openhcs_measured_run import (
     execute_measured_openhcs_pipeline,
 )
 from benchmark.timing import PhaseTimingTrace
-from openhcs.agent.dto.execution import ExecutionConnectionSpec
+from openhcs.agent.dto.execution import (
+    PipelineSourceOrchestratorSessionRequest,
+)
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.execution_session_service import (
     ExecutionSessionService,
-    PipelineSourceSessionRequest,
 )
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -35,7 +36,6 @@ from openhcs.runtime.zmq_execution_observation import (
 )
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQExecutionIdentity,
 )
 
 
@@ -63,6 +63,8 @@ def _synthetic_plate_and_pipeline(tmp_path: Path):
 
 def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> None:
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    source_identity = tmp_path / "source_identity"
+    source_identity.mkdir()
     service = ExecutionSessionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,), writable_roots=(tmp_path,)
@@ -70,15 +72,13 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
         pipeline_service=PipelineAuthoringService(),
         config_service=ConfigService(),
     )
-    session = service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(plate)),
+    session = service.create_session_from_pipeline_source_request(
+        PipelineSourceOrchestratorSessionRequest.from_fields(
+            plate_path=str(source_identity),
+            execution_plate_path=str(plate),
             pipeline_source=PipelineDocumentAuthority.render(pipeline),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(
-                port=18000 + os.getpid() % 20000,
-                persistent=False,
-            ),
+            port=18000 + os.getpid() % 20000,
+            persistent=False,
         )
     )
     export_path = tmp_path / "runtime_observation.pkl"

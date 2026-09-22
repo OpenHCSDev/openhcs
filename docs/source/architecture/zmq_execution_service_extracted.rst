@@ -64,6 +64,13 @@ The ordinary compiled-run result also projects the server's completion summary
 and typed output-plate metadata; benchmark adapters consume those projections
 instead of decoding transport response keys themselves.
 
+A source-backed execution session may retain an original ``plate_path`` while
+declaring a different prepared ``execution_plate_path``. The shared ZMQ
+execution identity selects the prepared path when present, independently of a
+selected external pipeline file. The pycodified ``pipeline_source`` remains
+the pipeline authority; a second selected-pipeline path is rejected for that
+session. Both paths pass the ordinary agent read-path policy before submission.
+
 The execution server owns one ``FunctionCatalogPreparation``. On a cold cache,
 ``RegistryService`` launches the launcher's dedicated
 ``--prepare-capabilities`` mode as an isolated child so behaviour probing runs

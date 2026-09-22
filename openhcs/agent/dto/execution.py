@@ -265,6 +265,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
 
     plate_path: str
     pipeline_source: str
+    execution_plate_path: str | None = None
     global_config_id: str | None = None
 
     @classmethod
@@ -273,6 +274,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
         *,
         plate_path: str,
         pipeline_source: str,
+        execution_plate_path: str | None = None,
         global_config_id: str | None = None,
         host: str = "localhost",
         port: int | None = None,
@@ -282,6 +284,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
         return cls(
             plate_path=plate_path,
             pipeline_source=pipeline_source,
+            execution_plate_path=execution_plate_path,
             global_config_id=global_config_id,
             connection=ExecutionConnectionSpec(
                 host=host,

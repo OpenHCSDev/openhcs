@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
+        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
