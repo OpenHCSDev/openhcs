@@ -98,6 +98,13 @@ remain diagnostic only and must not be reported as canonical acceptance timing.
 Compared modalities and policy
 ------------------------------
 
+Measurement of an OpenHCS run is separate from CellProfiler comparison. The
+benchmark wrapper accepts the ordinary ``OpenHCSExecutionSubmission`` and uses
+the normal compile-then-execute path; it only requests runtime observation,
+records phase timing and provenance, and reads the resulting outputs. The
+CellProfiler adapter prepares one such submission and then applies its optional
+native-reference equivalence policy. It does not own a second execution engine.
+
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:
 

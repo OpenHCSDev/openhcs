@@ -54,6 +54,10 @@ declared surface when configuring the client:
 
 Changing the surface requires restarting the MCP client so it requests the new
 tool schemas.
+For a submitted headless compile or run, ``openhcs_cancel_execution`` accepts
+the job identifier and reports both whether cancellation was applied and the
+job status observed afterwards. A timed-out request is not proof that the job
+stopped.
 
 .. openhcs-gallery:: zmq-startup-compile
 

@@ -177,6 +177,9 @@ control-plane lifecycle status together with the submitting client's latest
 progress event and monotonic progress sequence. A changing sequence is exact
 activity evidence even when the coarse execution status remains ``running``.
 Terminal status is cached and releases that client's progress subscription.
+``openhcs_cancel_execution`` uses the same retained job/client relationship;
+its result distinguishes an applied server cancellation from the status
+observed afterwards. A timeout does not prove that the job stopped.
 
 The knowledge commands call the same MCP tools exposed to agents:
 

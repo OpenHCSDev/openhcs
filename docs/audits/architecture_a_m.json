@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7b787a7ae4f486e24be6e7875c46770b0f0048e34417f79d5b3598694f6b5e07",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -140,7 +140,8 @@
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
     ]
   },
   {
@@ -1891,7 +1892,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7b787a7ae4f486e24be6e7875c46770b0f0048e34417f79d5b3598694f6b5e07",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2016,7 +2017,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "cd47571edf7944fed90fb2e8ff2196acbbe7a8882572eb806645de2f52785b23",
+        "sha256": "a4e63b46917c0f84b10b6abc3c3fbcf0d1ce6ada317a5a56b6ff560bf32d888d",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2041,7 +2042,7 @@
       },
       {
         "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "353b21289cc1404b19924f46b70907622cfa9a8a457ba40a19b89a223ede383a",
+        "sha256": "f26b697684b185bd5ebe122de14f6211cf5377cc21f31c917cca53cea6b4e592",
         "role": "Composes operating-guide sections from nominal context facets and bounds returned guidance."
       },
       {
@@ -2157,12 +2158,13 @@
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
       "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules.",
       "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
     ]
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "9ecfea48eaa9e2600157e2be7a04b96084d68d8c17547a9ae1e793c843bd120e",
+    "source_sha256": "3e55aff0a605f09944eb202db04844b43477b8caa9f3127be13441958650942c",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2187,7 +2189,7 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "c744cbb54aa17a8fece9e193910ed0adf3e15750b24496acaac2840bd6883cc7",
+        "sha256": "b22bc5b3b72d40b6ffe4ce21df74016c9e602421d2fa6c7a2849ca906d5350cd",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
@@ -2212,7 +2214,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "626d5e7242e1265e590ecf3a2b8c3a2ebc25d264c0e283ce908be2556f690df2",
+        "sha256": "a9424f8e40a0c73a773e8c4140de3a001019260fe6f433ff581b596d03a59230",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       }
     ],
@@ -2225,7 +2227,8 @@
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
       "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate.",
-      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests."
+      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
     ]
   },
   {

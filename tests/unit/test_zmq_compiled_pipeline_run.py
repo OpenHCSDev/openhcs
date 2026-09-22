@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +14,7 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQPipelineRunPhase,
     run_compiled_pipeline,
 )
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 class FakeExecutionClient:
@@ -91,6 +93,30 @@ def test_compiled_pipeline_run_uses_one_document_and_source_owned_phases():
     assert observed_phases == [
         (event, phase) for phase in ZMQPipelineRunPhase for event in ("start", "end")
     ]
+
+
+def test_auxiliary_observation_request_is_shared_by_client_and_server():
+    path = Path("/tmp/observation.pkl")
+    submission = _submission().with_config_params({"unrelated": "kept"})
+
+    observed = submission.with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(runtime_observation_export_path=path)
+    )
+    compiled = observed.compile_request()
+    execution = compiled.with_compile_artifact_id("compiled-1")
+
+    assert submission.config_params == {"unrelated": "kept"}
+    assert execution.pipeline_document is submission.pipeline_document
+    assert execution.config_params == {
+        "unrelated": "kept",
+        "runtime_observation_export_path": str(path),
+    }
+    assert (
+        ZMQAuxiliaryExecutionParams.from_transport(
+            execution.config_params
+        ).runtime_observation_export_path
+        == path
+    )
 
 
 def test_compiled_pipeline_run_stops_before_execution_when_compile_fails():

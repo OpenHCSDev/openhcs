@@ -16,8 +16,8 @@ from zmqruntime import (
 )
 
 from benchmark.adapters.openhcs import (
-    OpenHCSRunRequest,
     ZMQ_RESULTS_SUMMARY_FILENAME,
+    OpenHCSRunRequest,
     _execute_pipeline_via_zmq_server,
     _openhcs_execution_watchdog,
     _reference_export_equivalence,
@@ -255,7 +255,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
             }
 
     monkeypatch.setattr(
-        "benchmark.adapters.openhcs.ZMQExecutionClient",
+        "benchmark.openhcs_measured_run.ZMQExecutionClient",
         FakeZMQExecutionClient,
     )
     timing = PhaseTimingTrace(run_id="run", pipeline_name="pipe", tool="OpenHCS")
@@ -344,7 +344,7 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
             )
 
     monkeypatch.setattr(
-        "benchmark.adapters.openhcs.ZMQExecutionClient",
+        "benchmark.openhcs_measured_run.ZMQExecutionClient",
         IncompatibleZMQExecutionClient,
     )
 
@@ -383,7 +383,7 @@ def test_openhcs_progress_timing_uses_completion_bound_without_axis_events() -> 
 def test_openhcs_progress_observer_tracks_every_server_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("benchmark.adapters.openhcs.time.monotonic", lambda: 14.5)
+    monkeypatch.setattr("benchmark.openhcs_measured_run.time.monotonic", lambda: 14.5)
     observer = _ZMQProgressTimingObserver(last_progress_monotonic=10.0)
 
     observer({"phase": "artifact_transfer", "status": "running"})
@@ -416,7 +416,7 @@ def test_openhcs_watchdog_renews_after_recent_server_progress(
     observer = _ZMQProgressTimingObserver(last_progress_monotonic=95.0)
     handlers: list[object] = []
     timers: list[float] = []
-    monkeypatch.setattr("benchmark.adapters.openhcs.time.monotonic", lambda: 100.0)
+    monkeypatch.setattr("benchmark.openhcs_measured_run.time.monotonic", lambda: 100.0)
     monkeypatch.setattr(
         "benchmark.adapters.openhcs.signal.getsignal", lambda _sig: None
     )
@@ -451,7 +451,7 @@ def test_openhcs_watchdog_reports_progress_inactivity(
         last_progress_status="running",
     )
     handlers: list[object] = []
-    monkeypatch.setattr("benchmark.adapters.openhcs.time.monotonic", lambda: 100.0)
+    monkeypatch.setattr("benchmark.openhcs_measured_run.time.monotonic", lambda: 100.0)
     monkeypatch.setattr(
         "benchmark.adapters.openhcs.signal.getsignal", lambda _sig: None
     )

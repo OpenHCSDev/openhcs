@@ -46,10 +46,10 @@ the generic measured-run boundary.
 
 ## Current duplication to retire
 
-- `benchmark/adapters/openhcs.py` owns a private compile-submit-wait-execute
-  sequence (`_execute_pipeline_via_zmq_server`) and rebuilds the same
-  `PipelineDocument` for both submissions. It correctly uses the production ZMQ
-  server, but still owns operational orchestration in the benchmark package.
+- The CellProfiler adapter historically owned compile-submit-wait-execute and
+  rebuilt one `PipelineDocument` for both submissions. The ordinary runtime now
+  owns that sequence and compile-artifact reuse; the remaining adapter helper
+  prepares a document and calls the generic measured-run wrapper.
 - `benchmark/contracts/pipeline.py` and `benchmark/pipelines/registry.py` name a
   `PipelineSpec`, but source tracing shows it currently selects a benchmark
   scenario (not executable steps). Keep that selection role; separate its
@@ -131,6 +131,18 @@ the generic measured-run boundary.
   of copying those facts into a second dataclass. This is a compatibility
   bridge, not the final generic benchmark scenario: the manifest and native
   adapter still pass open-ended parameter maps.
+- Auxiliary execution options are now one typed declaration shared by the
+  normal ZMQ client and server. The benchmark requests observation export
+  through `OpenHCSExecutionSubmission.with_auxiliary_params` instead of
+  spelling a transport key. NRA preflight identified the result-summary
+  filename as the complete dependency closure for extracting the generic
+  measured-run declarations; the clean extraction moved timing, endpoint
+  provenance, ordinary compile/run invocation, and observation loading into
+  `benchmark/openhcs_measured_run.py`. The CellProfiler adapter only prepares
+  the document and selects benchmark policy. The wrapper reuses
+  `EndpointClientSession` for compatibility admission and the normal client
+  context manager for one disconnect. A direct test of the new wrapper uses a
+  normal `PipelineDocument` with no `.cppipe` or native reference.
 - The post-change uncached NRA scan completed in `exact_compact_global` mode
   with 79 detectors analyzed, zero omitted, and seven findings. The quick
   cached scan was partial (43 analyzed, 36 omitted) and is not used as global

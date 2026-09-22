@@ -52,6 +52,11 @@ observation, and disconnects it after caching a terminal response. It does not
 recreate clients for polling or mirror transport progress in an OpenHCS-owned
 registry.
 
+The headless cancellation capability addresses that retained client's exact
+job identifier. Its service delegates the bounded request to the ordinary
+execution client and returns the server's applied flag with the observed job
+status; a client timeout alone is not treated as successful cancellation.
+
 The execution server owns one ``FunctionCatalogPreparation``. On a cold cache,
 ``RegistryService`` launches the launcher's dedicated
 ``--prepare-capabilities`` mode as an isolated child so behaviour probing runs

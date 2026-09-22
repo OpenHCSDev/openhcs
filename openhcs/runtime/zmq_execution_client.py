@@ -60,6 +60,7 @@ from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
     ZMQExecutionCompileControl,
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
@@ -223,6 +224,21 @@ class OpenHCSExecutionSubmission:
             pipeline_document=self.pipeline_document,
             global_pipeline_config=self.global_pipeline_config,
             config_boundary=ZMQConfigParamsBoundary(config_params),
+            compile_control=self.compile_control,
+        )
+
+    def with_auxiliary_params(
+        self, auxiliary_params: ZMQAuxiliaryExecutionParams
+    ) -> OpenHCSExecutionSubmission:
+        """Add ordinary runtime options without replacing existing transport params."""
+
+        return self._from_parts(
+            identity=self.identity,
+            pipeline_document=self.pipeline_document,
+            global_pipeline_config=self.global_pipeline_config,
+            config_boundary=self.config_boundary.with_updates(
+                auxiliary_params.to_transport()
+            ),
             compile_control=self.compile_control,
         )
 

@@ -5,12 +5,9 @@ from __future__ import annotations
 import logging
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
 
 from polystore import cleanup_backend_connections
 from zmqruntime.config import TransportMode
@@ -26,7 +23,6 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
@@ -42,6 +38,7 @@ from openhcs.runtime.zmq_control import (
 )
 from openhcs.runtime.zmq_execution_signature import (
     OpenHCSExecutionConfigBundle,
+    ZMQAuxiliaryExecutionParams,
     ZMQExecutionRequestPayload,
 )
 from openhcs.runtime.zmq_orchestrator_environment import (
@@ -56,95 +53,6 @@ from openhcs.runtime.zmq_server_hooks import (
 from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from openhcs.core.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.debug import DebugExecutionConfig
-
-
-@dataclass(frozen=True, slots=True)
-class ZMQAuxiliaryExecutionParams:
-    """Typed OpenHCS auxiliary fields carried by zmqruntime config_params."""
-
-    axis_filter: tuple[str, ...] | None = None
-    debug_execution_config: "DebugExecutionConfig | None" = None
-    runtime_observation_export_path: Path | None = None
-
-    def runtime_observation_mode_for(
-        self,
-        execution_bundle: CompiledExecutionBundle,
-    ) -> RuntimeObservationMode:
-        """Resolve retention from compiled needs plus an explicit export request."""
-
-        return RuntimeObservationMode.from_parent_requirement(
-            execution_bundle.requires_parent_runtime_observation
-        ).including_parent_requirement(self.runtime_observation_export_path is not None)
-
-    @classmethod
-    def from_transport(
-        cls,
-        config_params: Mapping[str, Any] | None,
-    ) -> "ZMQAuxiliaryExecutionParams":
-        if not config_params:
-            return cls()
-        return cls(
-            axis_filter=cls._axis_filter_from_transport(
-                config_params.get(ZMQAuxiliaryParamField.WELL_FILTER.value)
-            ),
-            debug_execution_config=cls._debug_config_from_transport(config_params),
-            runtime_observation_export_path=cls._path_from_transport(
-                config_params.get(
-                    ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value
-                )
-            ),
-        )
-
-    @staticmethod
-    def _axis_filter_from_transport(
-        axis_filter: list[str] | tuple[str, ...] | str | int | None,
-    ) -> tuple[str, ...] | None:
-        if axis_filter is None:
-            return None
-        if isinstance(axis_filter, list):
-            return tuple(str(axis_id) for axis_id in axis_filter)
-        if isinstance(axis_filter, tuple):
-            return tuple(str(axis_id) for axis_id in axis_filter)
-        raise TypeError(
-            "ZMQ config_params well_filter must be a concrete axis-id sequence, "
-            f"got {type(axis_filter).__name__}."
-        )
-
-    @staticmethod
-    def _debug_config_from_transport(
-        config_params: Mapping[str, Any],
-    ) -> "DebugExecutionConfig | None":
-        from openhcs.core.debug import DebugExecutionConfig
-
-        payload = config_params.get(DebugExecutionConfig.CONFIG_PARAMS_KEY)
-        if payload is None:
-            return None
-        return DebugExecutionConfig.from_payload(payload)
-
-    @staticmethod
-    def _path_from_transport(value: str | Path | None) -> Path | None:
-        if value is None:
-            return None
-        if isinstance(value, Path):
-            return value
-        if isinstance(value, str):
-            return Path(value)
-        raise TypeError(
-            "ZMQ config_params runtime observation export path must be a path "
-            f"string, got {type(value).__name__}."
-        )
-
-
-class ZMQAuxiliaryParamField(Enum):
-    """Transport keys consumed as typed auxiliary execution inputs."""
-
-    WELL_FILTER = "well_filter"
-    RUNTIME_OBSERVATION_EXPORT_PATH = "runtime_observation_export_path"
-
 
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionContext:
