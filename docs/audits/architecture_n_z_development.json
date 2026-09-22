@@ -1479,7 +1479,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "43fe88d08f6cfd2e3e74c89bba8280862d1da8f935c9d8cff73a08c57ce24e58",
+        "sha256": "78f054bc40a2a70de06030755b06b30628bd0825c27aacb6e9367ea8280bee40",
         "role": "Releases execution-session process resources when the execution server stops."
       },
       {
@@ -1950,7 +1950,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "43fe88d08f6cfd2e3e74c89bba8280862d1da8f935c9d8cff73a08c57ce24e58",
+        "sha256": "78f054bc40a2a70de06030755b06b30628bd0825c27aacb6e9367ea8280bee40",
         "role": "OpenHCS compiled-execution adapter over the generic execution server."
       },
       {

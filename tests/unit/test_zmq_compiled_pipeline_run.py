@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.debug import DebugExecutionConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
@@ -117,6 +118,16 @@ def test_auxiliary_observation_request_is_shared_by_client_and_server():
         ).runtime_observation_export_path
         == path
     )
+
+
+def test_auxiliary_options_round_trip_through_one_transport_declaration():
+    options = ZMQAuxiliaryExecutionParams(
+        axis_filter=("A01", "B02"),
+        debug_execution_config=DebugExecutionConfig(debug_session_id="debug-1"),
+        runtime_observation_export_path=Path("/tmp/observed.pkl"),
+    )
+
+    assert ZMQAuxiliaryExecutionParams.from_transport(options.to_transport()) == options
 
 
 def test_compiled_pipeline_run_stops_before_execution_when_compile_fails():

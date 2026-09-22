@@ -44,6 +44,18 @@ worker scheduling, or output routing. A scenario may refer to a source `.cppipe`
 only through the existing importer, which produces the ordinary document before
 the generic measured-run boundary.
 
+The ordinary `OpenHCSExecutionSubmission` is already the typed single-pipeline
+run declaration; do not invent a parallel measured-pipeline request just to
+rename it. An external CLI/MCP selector may resolve source and plate paths to
+that submission, then add only benchmark-specific observation, repetition and
+comparison policy. Its receipt should derive execution identity, outputs,
+phase timings and provenance from the submission and completed runtime result;
+it must not copy runtime job state into a second benchmark status enum. The existing
+`ComparisonSuiteRunDeclaration`/`Receipt` remains a specialised multi-case
+comparison-suite aggregate: native-reference paths and speedup targets do not
+belong in the generic single-pipeline contract. Likewise, legacy log parsing
+in `benchmark/progress.py` is diagnostic history, not the new status authority.
+
 ## Current duplication to retire
 
 - The CellProfiler adapter historically owned compile-submit-wait-execute and
@@ -81,14 +93,13 @@ the generic measured-run boundary.
 2. Add the minimum generic observation hook to the ordinary execution owner.
    Benchmark metric declarations select observations but do not implement
    transport, scheduling, or status. Do not add a benchmark-specific ZMQ client.
-3. Introduce one typed generic measured-run declaration: input/document
-   identity, repetition policy, requested runtime observations, optional
-   comparison policy, and retention policy. Parse old manifest parameter maps
-   once at its boundary; do not propagate raw keys through adapters. Convert
-   the OpenHCS adapter into a thin scenario-to-document preparation and
-   result-measurement wrapper. Use the ordinary compile/run lifecycle and
-   remove the private operational sequence only after same-output tests pass.
-   Keep CellProfiler import and native comparison as declared specializations.
+3. Reuse `OpenHCSExecutionSubmission` as the generic run declaration. Add only
+   benchmark-specific measurement/repetition, optional comparison, and
+   retention policy at the scenario boundary. Parse old manifest parameter
+   maps once; do not propagate raw keys through adapters. The OpenHCS adapter
+   should remain a thin scenario-to-document preparation and result-comparison
+   wrapper. Keep CellProfiler import and native comparison as declared
+   specialisations.
 4. Derive CLI and expert MCP projections from the same typed scenario and
    receipt. The MCP path should invoke or hand off to the ordinary pipeline
    operations; it should not reimplement run, cancel, or polling semantics.

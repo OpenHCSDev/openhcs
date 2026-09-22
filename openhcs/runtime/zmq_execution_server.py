@@ -54,6 +54,7 @@ from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionContext:
     """Request context shared by compile and execution completion phases."""
