@@ -243,6 +243,28 @@ class StreamViewerComponentMetadataProjector:
 
     component_order: tuple[str, ...]
 
+    @classmethod
+    def for_item_fields(
+        cls,
+        component_order: Iterable[str],
+        item_fields: Mapping[str, ViewerWireValue],
+    ) -> "StreamViewerComponentMetadataProjector":
+        """Exclude components represented by a payload-local plane axis."""
+
+        plane_component_values = item_fields.get(
+            ViewerWireField.PLANE_COMPONENT_VALUES.value,
+            {},
+        )
+        if not isinstance(plane_component_values, Mapping):
+            raise TypeError("Viewer stream plane_component_values must be a mapping.")
+        return cls(
+            tuple(
+                component
+                for component in component_order
+                if component not in plane_component_values
+            )
+        )
+
     def project_required(
         self,
         *,
@@ -826,7 +848,15 @@ class StreamComponentMessageExtraAuthority:
     def path_mapped_source_metadata(
         self,
         metadata_by_path: Mapping[str, StreamComponentMetadata],
+        *,
+        item_fields: Mapping[str, ViewerWireValue] | None = None,
     ) -> ViewerStreamSourceMetadata:
-        return StreamViewerComponentMetadataProjector(
+        projector = StreamViewerComponentMetadataProjector(
             self.layout.component_order
-        ).path_mapped_source_metadata(metadata_by_path)
+        )
+        if item_fields is not None:
+            projector = StreamViewerComponentMetadataProjector.for_item_fields(
+                self.layout.component_order,
+                item_fields,
+            )
+        return projector.path_mapped_source_metadata(metadata_by_path)

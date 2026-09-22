@@ -924,6 +924,7 @@ class ArtifactSidecarRole(str, Enum):
 
     CROP_MASK = "crop_mask"
     MATERIALIZED_IMAGE_COPY = "materialized_image_copy"
+    QA_CHECKPOINT = "qa_checkpoint"
 
     def name_for(
         self,
@@ -1308,6 +1309,22 @@ class InputStackBroadcastSourceRelation(ArtifactSourceContextSourceRelation):
 
     def stack_broadcast_source(self) -> ArtifactSpecRef:
         """Return the exact input whose runtime stack owns broadcast cardinality."""
+
+        return self.source
+
+
+class AssembledStackGroupLineageSourceRelation(ArtifactSpecRelation):
+    """Declare one contributor to an assembled stack output's group scope.
+
+    The runtime projected-image payload owns exact source-plane context. This
+    relation therefore carries grouping only; it does not manufacture a single
+    source-context owner for an output assembled from multiple image inputs.
+    """
+
+    relation_key: ClassVar[str] = "assembled_stack_group_lineage_source"
+
+    def group_scope_source(self) -> ArtifactSpecRef:
+        """Return one compiled main-flow contributor to the output group."""
 
         return self.source
 
@@ -1821,6 +1838,23 @@ class MainFlowStackOutputSpec(ArtifactSpec):
         return self.with_group_scope_relation(
             SourceStackLineageSourceRelation(source=sources[0].ref())
         )
+
+
+class MainFlowPlaneProjectionOutputSpec(ArtifactSpec):
+    """An explicit plane projection from the invocation's assembled image stack."""
+
+    def bind_main_flow_source(self, sources: "ArtifactSpecCollection") -> ArtifactSpec:
+        if not sources:
+            return self
+        declared_sources = frozenset(self.group_scope_sources())
+        new_relations = tuple(
+            AssembledStackGroupLineageSourceRelation(source=source.ref())
+            for source in sources
+            if source.ref() not in declared_sources
+        )
+        if not new_relations:
+            return self
+        return replace(self, relations=(*self.relations, *new_relations))
 
 
 @dataclass(frozen=True, slots=True)

@@ -235,6 +235,22 @@ def test_viewer_navigation_rejects_invalid_data_index(invalid_index: object) -> 
         )
 
 
+@pytest.mark.parametrize(
+    ("state_override", "message"),
+    (({"visible": False}, "hidden layer"), ({"selected": False}, "deselected layer")),
+)
+def test_viewer_navigation_rejects_data_index_without_visible_selection(
+    state_override: dict[str, bool],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        ViewerNavigationControlOptions(
+            route_key="result-rois",
+            data_index=0,
+            **state_override,
+        )
+
+
 def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbot):
     from napari.components import ViewerModel
     from openhcs.napari_roi_manager import QRoiManager
@@ -602,6 +618,25 @@ def test_navigate_viewer_cli_projects_data_index() -> None:
     assert call.arguments["data_index"] == 3
 
 
+def test_navigate_viewer_cli_rejects_hidden_data_index_before_mcp_call() -> None:
+    import openhcs.mcp.dev_client as dev_client
+
+    args = dev_client._build_parser().parse_args(
+        (
+            "navigate-viewer",
+            "5900",
+            "result-rois",
+            "--data-index",
+            "0",
+            "--hidden",
+            "--selected",
+        )
+    )
+
+    with pytest.raises(dev_client.McpDevCliUsageError, match="hidden layer"):
+        dev_client._calls_from_args(args)
+
+
 def test_mcp_navigation_schema_explains_linked_result_selection() -> None:
     if importlib.util.find_spec("mcp") is None:
         return
@@ -620,3 +655,6 @@ def test_mcp_navigation_schema_explains_linked_result_selection() -> None:
     assert "data_index" in navigation.inputSchema["properties"]
     assert "native feature-bearing result layer" in navigation.description
     assert "selected_data_indices" in navigation.description
+    assert "requires the target layer to remain visible and selected" in (
+        navigation.description
+    )

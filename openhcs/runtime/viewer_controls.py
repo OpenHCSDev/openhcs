@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from math import isfinite
 from numbers import Real
-from typing import Self, TypeAlias, TypeVar
+from typing import ClassVar, Self, TypeAlias, TypeVar
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
@@ -466,6 +466,11 @@ class ViewerIntensityWindowControlOptions:
 class ViewerNavigationControlOptions:
     """Formal viewer navigation controls shared by agent and viewer runtimes."""
 
+    DATA_INDEX_SEMANTICS: ClassVar[str] = (
+        "Selecting a native feature row by data_index requires the target layer "
+        "to remain visible and selected"
+    )
+
     route_key: str
     axis_indices: Mapping[str, int] = field(default_factory=dict)
     visible: bool | None = None
@@ -506,11 +511,14 @@ class ViewerNavigationControlOptions:
                 raise ValueError("Viewer navigation data_index must be nonnegative.")
             if self.visible is False:
                 raise ValueError(
-                    "Viewer navigation data_index cannot target a hidden layer."
+                    f"Viewer navigation: {self.DATA_INDEX_SEMANTICS}; it cannot "
+                    "target a hidden layer. Omit data_index when hiding the layer."
                 )
             if self.selected is False:
                 raise ValueError(
-                    "Viewer navigation data_index cannot target a deselected layer."
+                    f"Viewer navigation: {self.DATA_INDEX_SEMANTICS}; it cannot "
+                    "target a deselected layer. Omit data_index when deselecting "
+                    "the layer."
                 )
 
     @classmethod

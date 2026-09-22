@@ -527,6 +527,10 @@ def execute_plate_scoped_steps(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
             )
+            OpenHCSMetadataWriter.write(
+                owner_context,
+                owner_plan.require_function_execution_ready(),
+            )
         _emit_execution_progress(
             progress_queue=progress_queue,
             progress_context=progress_context,
@@ -1088,15 +1092,20 @@ def settle_viewer_state(
     progress_queue: ProgressQueue | None = None,
     progress_context: ProgressExecutionContext | None = None,
 ) -> Mapping[int, "ViewerControlResponse"]:
-    """Drain queued updates and capture state before transient viewer shutdown."""
+    """Drain every viewer and capture state before transient viewer shutdown.
+
+    Persistence determines process ownership, not whether accepted stream work is
+    part of execution completion. A persistent viewer must therefore settle its
+    queued display updates even though its process remains open and its state is
+    not captured for shutdown evidence.
+    """
 
     if (progress_queue is None) is not (progress_context is None):
         raise ValueError(
             "Viewer settlement progress requires both queue and execution context."
         )
 
-    owned_visualizers = execution_owned_visualizers(visualizers)
-    for vis in owned_visualizers:
+    for vis in visualizers:
         observer = (
             None
             if progress_queue is None or progress_context is None
@@ -1116,6 +1125,7 @@ def settle_viewer_state(
                 f"Failed to settle streamed updates for viewer on port {vis.port}."
             )
 
+    owned_visualizers = execution_owned_visualizers(visualizers)
     viewer_states: dict[int, ViewerControlResponse] = {}
     for vis in owned_visualizers:
         if vis.port in viewer_states:

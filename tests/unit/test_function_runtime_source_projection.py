@@ -5191,8 +5191,9 @@ def test_input_aligned_stack_output_uses_input_filename_identity(
     assert identity.filename_component_values["site"] == 2
 
 
+@pytest.mark.parametrize("retains_contributors", [False, True])
 def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
-    tmp_path: Path,
+    tmp_path: Path, retains_contributors: bool,
 ) -> None:
     payload = ImagePayloadMetadata(
         source_path="/source/A01_s001_w1_z001_t001.tif",
@@ -5203,6 +5204,17 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
             "z_index": "1",
             "timepoint": "1",
         },
+        source_image_provenance_planes=(
+            SourceImageProvenancePlanes.from_contributor_components(
+                paths=(
+                    "/source/A01_s001_w1_z001_t001.tif",
+                    "/source/A01_s002_w1_z001_t001.tif",
+                ),
+                component_metadata=({"site": "1"}, {"site": "2"}),
+            )
+            if retains_contributors
+            else SourceImageProvenancePlanes()
+        ),
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
     request = FunctionOutputPathRequest(
         parser=SourceSchemaFilenameParser(),

@@ -9,6 +9,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    MainFlowPlaneProjectionOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
@@ -171,3 +172,20 @@ def test_image_output_plan_requires_one_exact_source_context() -> None:
         relations=relations,
     )
     assert measurements.source_context_source() is None
+
+
+def test_main_flow_plane_projection_binds_group_lineage_without_fake_context() -> None:
+    first = ArtifactSpec.input("First", ImageArtifactType)
+    second = ArtifactSpec.input("Second", ImageArtifactType)
+    sources = ArtifactSpecCollection((first, second))
+    declared = MainFlowPlaneProjectionOutputSpec.output(
+        "Projected",
+        ImageArtifactType,
+    )
+
+    bound = declared.bind_main_flow_source(sources)
+
+    assert bound.group_scope_sources() == (first.ref(), second.ref())
+    assert bound.source_context_sources() == ()
+    assert bound.source_stack_scope_sources() == ()
+    assert bound.bind_main_flow_source(sources) is bound

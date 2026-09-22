@@ -1124,7 +1124,10 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
         return cls.config_type_for_key(config_key)().display_name
 
 
-from openhcs.core.streaming_config_factory import StreamingConfigBehaviorMixin
+from openhcs.core.streaming_config_factory import (
+    StreamingConfigBehaviorMixin,
+    ViewerProcessLaunchConfig,
+)
 
 
 @abbreviation("nap")
@@ -1140,6 +1143,20 @@ class NapariStreamingConfig(
     viewer_type_declaration: ClassVar[ViewerType] = ViewerType.NAPARI
     port: TcpPort = 5555
     """Napari viewer transport port; choose a free local port when streaming is enabled."""
+
+    font_dpi: Optional[PositiveInteger] = None
+    """Font DPI for the detached Napari interface.
+
+    ``None`` preserves the graphical session's declared DPI. Set an explicit
+    value when the X11 logical DPI does not match the desired Napari interface
+    scale. The value is applied before Qt constructs the viewer and therefore
+    requires the managed viewer process to restart.
+    """
+
+    def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
+        """Project Napari's process-global Qt setting onto viewer launch."""
+
+        return ViewerProcessLaunchConfig(qt_font_dpi=self.font_dpi)
 
 
 @abbreviation("fiji")

@@ -13,14 +13,16 @@ from typing import Any, Callable, TypeAlias
 from polystore.atomic import LOCK_CONFIG, FileLockError, atomic_update_json
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.artifacts import ArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.constants.constants import AllComponents
+from openhcs.core.artifacts import ArtifactType
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
+    SourceVoxelSpacing,
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -31,7 +33,6 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
-from openhcs.core.source_metadata import SourceVoxelSpacing
 
 
 @dataclass(frozen=True)
@@ -383,20 +384,6 @@ class VirtualWorkspaceSourceProjectionEntries:
                 "virtual_workspace source_projection records must be mappings."
             )
         virtual_path = cls._required_text(record, "virtual_path")
-        address_value = record.get("address")
-        if not isinstance(address_value, Mapping):
-            raise RuntimeError(
-                "virtual_workspace source_projection address must be a mapping."
-            )
-        address = OpenHCSPlaneAddress.from_values(
-            well=cls._required_text(address_value, "well"),
-            site=cls._required_text(address_value, "site"),
-            channel=cls._required_text(address_value, "channel"),
-            z_index=cls._required_text(address_value, "z_index"),
-            timepoint=cls._required_text(address_value, "timepoint"),
-        )
-        ref_value = record.get("ref")
-        ref = SourcePixelRef.from_workspace_mapping(ref_value)
         try:
             projection_role = SourceProjectionRole(
                 cls._required_text(record, "projection_role")
@@ -405,6 +392,31 @@ class VirtualWorkspaceSourceProjectionEntries:
             raise RuntimeError(
                 "virtual_workspace source_projection has an unknown projection_role."
             ) from exc
+        address_value = record.get("address")
+        if address_value is None:
+            address = None
+        elif isinstance(address_value, Mapping):
+            address = OpenHCSPlaneAddress.from_values(
+                well=cls._required_text(address_value, "well"),
+                site=cls._required_text(address_value, "site"),
+                channel=cls._required_text(address_value, "channel"),
+                z_index=cls._required_text(address_value, "z_index"),
+                timepoint=cls._required_text(address_value, "timepoint"),
+            )
+        else:
+            raise RuntimeError(
+                "virtual_workspace source_projection address must be a mapping or "
+                "null."
+            )
+        if (
+            projection_role is SourceProjectionRole.PRIMARY_PLANE
+            and address is None
+        ):
+            raise RuntimeError(
+                "Primary source projections require a complete plane address."
+            )
+        ref_value = record.get("ref")
+        ref = SourcePixelRef.from_workspace_mapping(ref_value)
         source_metadata = cls._optional_metadata(record, "source_metadata")
         component_labels = cls._optional_component_labels(record)
         source_alias = cls._optional_text(record, "source_alias")
@@ -430,6 +442,9 @@ class VirtualWorkspaceSourceProjectionEntries:
                     "Source-artifact projection records require source_alias."
                 )
             artifact_kind = cls._required_text(record, "artifact_kind")
+            image_metadata_value = record.get(
+                SourcePlaneProjection.image_metadata_wire_field()
+            )
             projection = SourceArtifactProjection(
                 address=address,
                 ref=ref,
@@ -437,8 +452,56 @@ class VirtualWorkspaceSourceProjectionEntries:
                 artifact_kind=ArtifactType.coerce(artifact_kind),
                 source_metadata=source_metadata,
                 component_labels=component_labels,
+                image_metadata=(
+                    None
+                    if image_metadata_value is None
+                    else ImagePayloadMetadata.from_mapping(image_metadata_value)
+                ),
+                execution_scope=cls._optional_execution_scope(record),
             )
         return virtual_path, projection
+
+    @classmethod
+    def _optional_execution_scope(
+        cls,
+        record: Mapping[str, JsonValue],
+    ) -> RuntimeExecutionAxisScope | None:
+        value = record.get("execution_scope")
+        if value is None:
+            return None
+        if not isinstance(value, Mapping):
+            raise RuntimeError(
+                "virtual_workspace source_projection execution_scope must be a "
+                "mapping."
+            )
+        fixed_value = value.get("fixed_component_values", ())
+        if not isinstance(fixed_value, Sequence) or isinstance(
+            fixed_value, (str, bytes)
+        ):
+            raise RuntimeError(
+                "virtual_workspace source_projection execution_scope fixed "
+                "components must be a sequence."
+            )
+        fixed_components: list[tuple[str, str]] = []
+        for item in fixed_value:
+            if (
+                not isinstance(item, Sequence)
+                or isinstance(item, (str, bytes))
+                or len(item) != 2
+            ):
+                raise RuntimeError(
+                    "virtual_workspace source_projection execution_scope fixed "
+                    "components must be two-item sequences."
+                )
+            fixed_components.append((str(item[0]), str(item[1])))
+        component = value.get("component")
+        scope_value = value.get("value")
+        return RuntimeExecutionAxisScope.from_raw(
+            cls._required_text(value, "axis_id"),
+            component=None if component is None else str(component),
+            value=None if scope_value is None else str(scope_value),
+            fixed_component_values=tuple(fixed_components),
+        )
 
     @staticmethod
     def _required_text(record: Mapping[str, JsonValue], field: str) -> str:

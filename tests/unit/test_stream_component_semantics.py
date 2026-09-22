@@ -121,6 +121,31 @@ def test_stream_viewer_component_metadata_projector_requires_source_metadata():
         projector.project_required(index=3, metadata=None)
 
 
+def test_stream_route_metadata_excludes_payload_local_plane_component() -> None:
+    projector = StreamViewerComponentMetadataProjector.for_item_fields(
+        ("well", "site", "channel", "z_index", "timepoint"),
+        {
+            "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+            "plane_component_values": {"channel": ("1", "2")},
+        },
+    )
+
+    assert projector.project_required(
+        index=0,
+        metadata={
+            "well": "A49",
+            "site": "1",
+            "z_index": "1",
+            "timepoint": "1",
+        },
+    ) == {
+        "well": "A49",
+        "site": 1,
+        "z_index": 1,
+        "timepoint": 1,
+    }
+
+
 @pytest.mark.parametrize("well", (1, "1", "A01"))
 def test_stream_source_declared_domains_reuse_route_component_projection(well):
     source_metadata = StreamSourceComponentMetadataItems.from_values(

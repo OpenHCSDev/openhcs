@@ -52,6 +52,7 @@ from openhcs.mcp.dev_client_core import (
     viewer_visible_route_keys_argument,
 )
 from openhcs.mcp.dev_client_rendering import ViewerImageSampleRenderOptions
+from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 
 
 class ViewerPayloadsCommandSpec(CapabilityBackedCommandSpec):
@@ -632,8 +633,9 @@ class NavigateViewerCommandSpec(SingleToolCommandSpec):
             "--data-index",
             type=int,
             help=(
-                "Select one zero-based row on a native feature-bearing result "
-                "layer so the overlay and feature table highlight stay linked."
+                f"{ViewerNavigationControlOptions.DATA_INDEX_SEMANTICS} "
+                "so the overlay and feature table highlight stay linked. Omit "
+                "--data-index when hiding or deselecting a layer."
             ),
         )
         visibility = parser.add_mutually_exclusive_group()

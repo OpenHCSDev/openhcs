@@ -10,6 +10,7 @@ import numpy as np
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
+from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
@@ -23,7 +24,9 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
+    SourceArtifactProjection,
     SourcePlaneProjection,
+    SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
 from openhcs.core.source_workspace_projection import (
@@ -129,6 +132,50 @@ def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
 
     assert projection.address.value_for(AllComponents.SITE) == "1"
     assert projection.image_metadata == _collapsed_metadata()
+
+
+def test_image_artifact_projection_round_trips_typed_pixel_metadata() -> None:
+    metadata = ImagePayloadMetadata(
+        source_component_metadata={
+            "well": "A01",
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+        },
+        source_dtype="uint8",
+    )
+    projection = SourceArtifactProjection(
+        address=OpenHCSPlaneAddress.from_values("A01", 1, 2, 1, 1),
+        ref=SourcePixelRef("disk", "analysis/A01_candidate.checkpoint.tif"),
+        source_alias="neurite_candidate_mask",
+        artifact_kind=ImageArtifactType,
+        source_metadata=metadata.source_component_metadata,
+        image_metadata=metadata,
+    )
+    virtual_path = "analysis/A01_candidate.checkpoint.tif"
+    projection_set = SourceProjectionSet((projection,))
+    subdirectory = SourceProjectionMetadataSerializer(
+        SourceSchemaFilenameParser()
+    ).metadata_dict(
+        projection_set,
+        microscope_handler_name="openhcs",
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        grid_dimensions=[1, 1],
+        pixel_size=1.0,
+        projection_paths=((projection, virtual_path),),
+    )
+    document = json.loads(json.dumps({"subdirectories": {"analysis": subdirectory}}))
+
+    restored = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path("/plate"), document
+    ).require_source_projection_for(
+        VirtualWorkspacePathLookup.from_paths(virtual_path, virtual_path)
+    )
+
+    assert restored.source_alias == "neurite_candidate_mask"
+    assert restored.artifact_kind is ImageArtifactType
+    assert restored.image_metadata == metadata
 
 
 def test_legacy_projection_replay_uses_complete_top_level_source_metadata() -> None:

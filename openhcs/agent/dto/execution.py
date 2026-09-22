@@ -706,7 +706,7 @@ class RuntimeServerExecutionStatusRequest(
     """Request bounded execution status from a runtime server."""
 
     execution_id: str | None = None
-    timeout_ms: int = OPENHCS_ZMQ_CONFIG.server_info_timeout_ms
+    timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
 
     @classmethod
     def from_fields(
@@ -717,7 +717,7 @@ class RuntimeServerExecutionStatusRequest(
         port: int | None = None,
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
-        timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.server_info_timeout_ms,
+        timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> "RuntimeServerExecutionStatusRequest":
         return cls(
             connection=ExecutionConnectionSpec(
@@ -728,7 +728,7 @@ class RuntimeServerExecutionStatusRequest(
             ),
             execution_id=execution_id,
             timeout_ms=(
-                OPENHCS_ZMQ_CONFIG.server_info_timeout_ms
+                OPENHCS_ZMQ_CONFIG.control_timeout_ms
                 if timeout_ms is None
                 else timeout_ms
             ),

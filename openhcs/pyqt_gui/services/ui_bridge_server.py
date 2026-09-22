@@ -21,7 +21,12 @@ from zmqruntime.messages import (
     PongResponse,
     ServerRole,
 )
-from zmqruntime.transport import resolve_transport_mode
+from zmqruntime.timeouts import OperationDeadline
+from zmqruntime.transport import (
+    TransportEndpoint,
+    endpoint_startup_lock,
+    resolve_transport_mode,
+)
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, JsonObject
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
@@ -178,6 +183,22 @@ class UiBridgeUnsupportedOperationError(LookupError):
 
     def __str__(self) -> str:
         return f"Unsupported UI bridge operation: {self.operation_name}"
+
+
+@dataclass(slots=True)
+class UiBridgeEndpointInUseError(RuntimeError):
+    """Raised before a UI bridge can replace another live endpoint pair."""
+
+    endpoint: TransportEndpoint
+    occupied_ports: frozenset[int]
+
+    def __str__(self) -> str:
+        ports = ", ".join(str(port) for port in sorted(self.occupied_ports))
+        return (
+            f"UI bridge endpoint {self.endpoint.transport_mode.value}://"
+            f"{self.endpoint.host}:{self.endpoint.port} is already in use "
+            f"(occupied ports: {ports})."
+        )
 
 
 class UiBridgeServerInProcessGateway(InProcessUiBridgeGateway):
@@ -503,6 +524,28 @@ class UiBridgeControlServer:
             return self.binding
         if self._stop_event.is_set():
             raise RuntimeError("A stopped UI bridge server cannot be restarted.")
+        deadline = OperationDeadline.after_milliseconds(
+            max(1, int(timeout_seconds * 1000)),
+            operation="UI bridge endpoint startup",
+        )
+        endpoint = self._requested_endpoint()
+        if endpoint is None:
+            return self._start_before_deadline(deadline)
+        with endpoint_startup_lock(
+            endpoint.port,
+            endpoint.transport_mode,
+            self._transport_config,
+            operation_deadline=deadline,
+        ) as acquired:
+            if not acquired:
+                raise TimeoutError("UI bridge endpoint startup was cancelled.")
+            self._require_available_endpoint(endpoint)
+            return self._start_before_deadline(deadline)
+
+    def _start_before_deadline(
+        self,
+        deadline: OperationDeadline,
+    ) -> UiBridgeServerBinding:
         self._ready_event.clear()
         self._startup_error = None
         self._thread = threading.Thread(
@@ -511,13 +554,20 @@ class UiBridgeControlServer:
             daemon=True,
         )
         self._thread.start()
-        if not self._ready_event.wait(timeout_seconds):
+        if not self._ready_event.wait(deadline.remaining_seconds()):
             self.stop()
-            raise TimeoutError("Timed out waiting for UI bridge server to start.")
+            if self._startup_error is not None:
+                error = self._startup_error
+                raise RuntimeError(
+                    f"Failed to start UI bridge server: {error}"
+                ) from error
+            raise deadline.timeout_error()
         if self._startup_error is not None:
             error = self._startup_error
             self.stop()
-            raise RuntimeError("Failed to start UI bridge server.") from error
+            raise RuntimeError(
+                f"Failed to start UI bridge server: {error}"
+            ) from error
         return self.binding
 
     def stop(self) -> None:
@@ -604,6 +654,22 @@ class UiBridgeControlServer:
             context.term()
             if connection is not None:
                 connection.transport_endpoint().cleanup(self._transport_config)
+
+    def _requested_endpoint(self) -> TransportEndpoint | None:
+        requested_connection = self._config
+        if requested_connection.port is None:
+            return None
+        return TransportEndpoint(
+            host=requested_connection.host,
+            port=requested_connection.port,
+            transport_mode=resolve_transport_mode(requested_connection.transport_mode),
+        )
+
+    def _require_available_endpoint(self, endpoint: TransportEndpoint) -> None:
+        endpoint.cleanup_stale_addresses(self._transport_config)
+        occupied_ports = endpoint.occupied_ports(self._transport_config)
+        if occupied_ports:
+            raise UiBridgeEndpointInUseError(endpoint, occupied_ports)
 
     def _write_descriptor_file(self, descriptor: UiBridgeDescriptorFile) -> Path:
         path = AgentRuntimePlatformAuthority.resolved_path(

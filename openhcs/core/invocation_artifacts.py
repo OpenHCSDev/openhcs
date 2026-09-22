@@ -381,7 +381,12 @@ class MainFlowArtifactContractProvider(
         ):
             return None
         source_refs = frozenset(
-            ref for output in outputs for ref in output.source_stack_scope_sources()
+            ref
+            for output in outputs
+            for ref in (
+                *output.source_stack_scope_sources(),
+                *output.group_scope_sources(),
+            )
         )
         inputs = ArtifactSpecCollection(
             (

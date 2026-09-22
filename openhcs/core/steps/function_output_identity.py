@@ -1056,6 +1056,9 @@ class FunctionOutputIdentityAuthority:
                 ):
                     continue
                 filename_component_values[component_name] = component_value
+            # Positional alignment fills unresolved storage coordinates; it
+            # cannot rename a component already identified by the payload.
+            filename_component_values.update(component_values)
             return replace(
                 identity,
                 component_values=component_values,

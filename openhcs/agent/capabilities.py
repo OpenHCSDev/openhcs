@@ -187,6 +187,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowViewportResult,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 
 
 class CapabilityKind(Enum):
@@ -3014,7 +3015,8 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
         "axis indices, and can select one zero-based data_index on a native "
         "feature-bearing result layer. The result reports feature_row_count and "
         "selected_data_indices so agents can verify the visible overlay and "
-        "Napari feature-table selection are linked."
+        "Napari feature-table selection are linked. "
+        f"{ViewerNavigationControlOptions.DATA_INDEX_SEMANTICS}."
     )
     service = "viewer_window"
     mutating = True

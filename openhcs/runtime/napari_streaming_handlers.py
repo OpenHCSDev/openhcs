@@ -28,6 +28,7 @@ from openhcs.runtime.viewer_component_system import (
     ComponentValue,
     ComponentValues,
     ViewerComponentAxisSemantics,
+    ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
 )
@@ -1107,12 +1108,31 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
                 f"order; got route {self.projection.projected_axis_components!r} "
                 f"within {self.display_axis_components!r}."
             )
-
     @property
     def display_axis_components(self) -> tuple[str, ...]:
         """Return the declaration-owned shared stack slots for this presentation."""
 
         return self.layout.components_for_mode(ViewerComponentMode.STACK)
+
+    def axis_projection_semantics(self) -> ViewerComponentAxisSemantics:
+        """Derive the route-addressable axes from its declared value domain."""
+
+        declared_components = self.component_values()
+        component_order = tuple(
+            component
+            for component in self.layout.component_order
+            if component in declared_components
+        )
+        return ViewerComponentAxisSemantics(
+            entries=self.entries,
+            layout=ViewerComponentLayout.from_parts(
+                component_modes={
+                    component: self.layout.component_modes[component]
+                    for component in component_order
+                },
+                component_order=component_order,
+            ),
+        )
 
     @property
     def projected_display_axis_indices(self) -> tuple[int, ...]:
@@ -1132,6 +1152,91 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             self.display_axis_components.index(component)
             for component in self.projection.projected_axis_components
         )
+
+    @property
+    def route_local_component_axes(self) -> tuple[str, ...]:
+        """Return component axes addressable in this route's local domain.
+
+        Multi-valued components remain projected axes. Components collapsed out
+        of the native payload shape still own one real route-local coordinate at
+        index zero; they are not display padding and remain valid selectors.
+        """
+
+        available = {
+            *self.projection.projected_axis_components,
+            *self.projection.scalar_component_values,
+        }
+        return tuple(
+            component
+            for component in self.display_axis_components
+            if component in available
+        )
+
+    def route_local_component_indices(
+        self,
+        projected_indices: Sequence[int],
+        *,
+        context: str,
+    ) -> dict[str, int]:
+        """Derive every component index from one projected payload coordinate."""
+
+        projected = tuple(projected_indices)
+        projected_axes = self.projection.projected_axis_components
+        if len(projected) != len(projected_axes):
+            raise ValueError(
+                f"{context} projected coordinate rank {len(projected)} does not "
+                f"match route axes {projected_axes!r}."
+            )
+        indices = dict(zip(projected_axes, projected, strict=True))
+        indices.update(
+            {
+                component: 0
+                for component in self.projection.scalar_component_values
+            }
+        )
+        return {
+            component: indices[component]
+            for component in self.route_local_component_axes
+        }
+
+    def route_local_component_indices_match(
+        self,
+        projected_indices: Sequence[int],
+        requested_indices: Mapping[str, int],
+        *,
+        context: str,
+    ) -> bool:
+        """Match projected and collapsed coordinates through one route authority."""
+
+        available_axes = self.route_local_component_axes
+        unknown_axes = tuple(
+            axis_name
+            for axis_name in requested_indices
+            if axis_name not in available_axes
+        )
+        if unknown_axes:
+            raise ValueError(
+                f"{context} contains unknown component axes {unknown_axes!r}; "
+                f"available route-local component axes are {available_axes!r}."
+            )
+
+        local_indices = self.route_local_component_indices(
+            projected_indices,
+            context=context,
+        )
+        for axis_name, requested_index in requested_indices.items():
+            if axis_name in self.projection.component_values:
+                extent = len(self.projection.component_values[axis_name])
+            else:
+                extent = len(self.projection.scalar_component_values[axis_name])
+            if requested_index >= extent:
+                raise ValueError(
+                    f"{context} index {requested_index} for axis {axis_name!r} is "
+                    f"outside the route-local extent {extent}."
+                )
+            if local_indices[axis_name] != requested_index:
+                return False
+        return True
 
     @property
     def axis_labels(self) -> tuple[str, ...]:
@@ -1182,6 +1287,17 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         ):
             aligned_stack_shape[display_index] = data.shape[projected_index]
         return data.reshape((*aligned_stack_shape, *data.shape[projected_rank:]))
+
+    def aligned_component_shape(self) -> tuple[int, ...]:
+        """Return the native layer extents owned by semantic display axes."""
+
+        shape = [1] * len(self.display_axis_components)
+        for projected_index, display_index in enumerate(
+            self.projected_display_axis_indices
+        ):
+            component = self.projection.projected_axis_components[projected_index]
+            shape[display_index] = len(self.projection.component_values[component])
+        return tuple(shape)
 
     def align_coordinates(self, coordinates: np.ndarray) -> np.ndarray:
         """Insert zero-valued columns for absent semantic display axes."""
@@ -1336,6 +1452,17 @@ class NapariLayerRouteStateStore:
         state: NapariDimensionLayerState,
     ) -> None:
         self.layer_dimension_states[layer_key] = state
+
+    def mounted_dimension_states(
+        self,
+    ) -> tuple[tuple[str, NapariDimensionLayerState], ...]:
+        """Return mounted route presentations in receiver insertion order."""
+
+        return tuple(
+            (layer_key, state)
+            for layer_key, state in self.layer_dimension_states.items()
+            if layer_key in self.layers
+        )
 
     def axis_origins_for(self, axis_labels: tuple[str, ...]) -> tuple[int, ...]:
         """Return normalized-viewer origins derived from mounted route offsets."""

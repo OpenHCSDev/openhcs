@@ -15,8 +15,10 @@ from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFile
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileRecord,
+    PlateFileRecordAmbiguityError,
     PlateImageRecord,
     PlateImageInventory,
+    PlateResultFileRecord,
     PlateResultFileInventory,
     PlateResultFilePreviewReader,
 )
@@ -203,3 +205,44 @@ def test_unified_image_record_preserves_declared_source_reference():
         )
     )
     assert unified.require_image_source_ref() is source_ref
+
+
+def test_stream_record_uses_declared_address_for_dual_image_result_projection():
+    relative_path = "images_results/A01_objects_step1.labels.tif"
+    full_path = f"/plate/{relative_path}"
+    inventory = PlateFileInventory(
+        plate_path=Path("/plate"),
+        image_records=(
+            PlateImageRecord(
+                virtual_path=relative_path,
+                full_virtual_path=full_path,
+                backend=Backend.VIRTUAL_WORKSPACE.value,
+                source_path=full_path,
+                source_ref=SourcePixelRef(
+                    backend=Backend.DISK.value,
+                    backend_address=relative_path,
+                ),
+            ),
+        ),
+        result_records=(
+            PlateResultFileRecord(
+                relative_path=relative_path,
+                full_path=full_path,
+                file_format=FileFormat.TIFF,
+                source_ref=SourcePixelRef(
+                    backend=Backend.DISK.value,
+                    backend_address=full_path,
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(PlateFileRecordAmbiguityError) as error:
+        inventory.require_file_record(relative_path)
+
+    assert {record.kind for record in error.value.records} == {
+        PlateFileKind.IMAGE,
+        PlateFileKind.RESULT,
+    }
+    assert inventory.require_stream_record(relative_path).kind is PlateFileKind.IMAGE
+    assert inventory.require_stream_record(full_path).kind is PlateFileKind.RESULT
