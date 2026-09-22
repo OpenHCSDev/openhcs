@@ -120,6 +120,10 @@ def test_operating_guides_cover_resume_and_safe_execution_boundaries() -> None:
     assert "preserve earlier outputs in a separate destination" in first_use
     assert "Confirm a named tool is exposed" in first_use
     assert agent_capabilities.ui_list_actions.name in first_use
+    assert agent_capabilities.ui_list_windows.name in first_use
+    assert agent_capabilities.ui_get_widget_tree.name in first_use
+    assert agent_capabilities.ui_invoke_widget_action.name in first_use
+    assert "cancel unsolicited update/restart prompts" in first_use
     assert "observation timeout does not mean the job failed" in ui
     assert "do not issue another Run" in ui
     assert ui.count("only for bridge receipt terminality") == 1
@@ -436,6 +440,10 @@ def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> N
     context_kind = ImageAnalysisWorkflowAuthoringContext.require_kind()
     for surface in (skill, default_prompt, client_guide, server_instructions):
         assert context_kind in surface
+
+    assert "inspect_metaxpress_round_objects" in skill
+    assert "typed labels" in skill
+    assert "measurements at the same raw coordinates" in skill
 
     canonical_rules = (
         "must not fit a separate percentile pair per field",

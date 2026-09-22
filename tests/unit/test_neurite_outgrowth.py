@@ -10,6 +10,9 @@ from scipy import ndimage as ndi
 from skimage.draw import disk, line
 
 from openhcs.core.artifacts import (
+    ArtifactSidecarRole,
+    ArtifactViewerStreaming,
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
@@ -28,15 +31,18 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
     NeuriteIllumination,
-    _adopt_secondary_owned_skeleton,
+    _adopt_secondary_owned_path_segments,
+    _analyze_owned_topology,
     _analyze_topology,
     _build_neurite_morphology_graph,
     _cell_body_contract_candidates,
     _derive_signal_cell_bodies,
     _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
+    _physically_soma_rooted_owner_mask,
     _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
+    _render_owned_skeleton,
     _seeded_candidate_components,
     _TopologyResult,
     count_neuronal_cell_bodies_metaxpress,
@@ -157,6 +163,11 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "neurite_outgrowth",
         "neurons",
         "nuclei",
+        "neurite_candidate_mask",
+        "neurite_unrooted_residual",
+        "neurite_secondary_ownership",
+        "neurite_topology_dropped_trace",
+        "neurite_topology_added_trace",
         "neurite_morphology",
     )
     (
@@ -166,6 +177,11 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         neurite_spec,
         neurons_spec,
         nuclei_spec,
+        candidate_spec,
+        residual_spec,
+        secondary_ownership_spec,
+        topology_dropped_trace_spec,
+        topology_added_trace_spec,
         morphology_spec,
     ) = contract.artifact_outputs
     assert summary_spec.artifact_type is MeasurementsArtifactType
@@ -180,6 +196,20 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         assert spec.materialization is NEURITE_OBJECT_LABEL_MATERIALIZATION
         assert tuple(type(output) for output in spec.materialization.outputs) == (
             ROIOptions,
+            ImageFileOptions,
+        )
+        assert spec.materialization.primary == 0
+    for spec in (
+        candidate_spec,
+        residual_spec,
+        secondary_ownership_spec,
+        topology_dropped_trace_spec,
+        topology_added_trace_spec,
+    ):
+        assert spec.artifact_type is ImageArtifactType
+        assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
+        assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert tuple(type(output) for output in spec.materialization.outputs) == (
             ImageFileOptions,
         )
         assert spec.materialization.primary == 0
@@ -413,7 +443,7 @@ def test_topology_metrics_and_significant_threshold_is_scoring_only():
 
 def test_unrooted_crossing_arm_is_not_reported_as_a_branch():
     image = _with_separate_body_channel(_draw_fluorescent_neuron(crossing=True))
-    _, summary_rows, cell_rows, _, neurite_labels, _, _, _ = _implementation()(
+    (_, summary_rows, cell_rows, _, neurite_labels, _, _, _, *_) = _implementation()(
         image,
         neurite_channel_index=1,
         cell_body=_cell_body_settings(channel_index=0),
@@ -495,6 +525,64 @@ def test_isolated_pixels_do_not_change_connected_path_geometry_or_ownership(diag
     )
 
 
+def test_three_pixel_cycle_has_empty_topology():
+    skeleton = np.zeros((17, 17), dtype=bool)
+    skeleton[7, 7] = skeleton[7, 8] = skeleton[8, 7] = True
+    original = skeleton.copy()
+
+    topology = _analyze_topology(
+        skeleton,
+        np.zeros(skeleton.shape, dtype=np.int32),
+        pixel_size_um=1.0,
+        outgrowth_width_px=3.0,
+    )
+
+    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+    np.testing.assert_array_equal(skeleton, original)
+
+
+def test_three_pixel_cycle_does_not_change_valid_path_topology():
+    skeleton = np.zeros((33, 33), dtype=bool)
+    skeleton[16, 8:25] = True
+    bodies = np.zeros(skeleton.shape, dtype=np.int32)
+    bodies[14:19, 6:10] = 1
+    expected = _analyze_topology(skeleton, bodies, 1.0, 3.0)
+
+    skeleton[2, 2] = skeleton[2, 3] = skeleton[3, 2] = True
+    actual = _analyze_topology(skeleton, bodies, 1.0, 3.0)
+
+    np.testing.assert_array_equal(actual.path_lengths, expected.path_lengths)
+    np.testing.assert_array_equal(actual.path_owners, expected.path_owners)
+    np.testing.assert_array_equal(actual.path_distances, expected.path_distances)
+    assert actual.path_endpoint_groups == expected.path_endpoint_groups
+    assert actual.transitions == expected.transitions
+    assert all(
+        np.array_equal(left, right)
+        for left, right in zip(actual.path_coordinates, expected.path_coordinates)
+    )
+
+
+def test_owned_topology_ignores_three_pixel_cycle_for_separate_owner():
+    owned = np.zeros((33, 33), dtype=np.int32)
+    owned[16, 8:25] = 1
+    owned[2, 2] = owned[2, 3] = owned[3, 2] = 2
+    bodies = np.zeros_like(owned)
+    bodies[14:19, 6:10] = 1
+    bodies[1:5, 1:5] = 2
+
+    topology = _analyze_owned_topology(
+        owned,
+        bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=3.0,
+    )
+    rendered = _render_owned_skeleton(owned.shape, topology)
+
+    assert len(topology.path_coordinates) == 1
+    assert np.all(topology.path_owners == 1)
+    np.testing.assert_array_equal(rendered > 0, owned == 1)
+
+
 def test_crossing_resolution_retains_two_logical_endpoint_groups():
     skeleton = np.zeros((65, 65), dtype=bool)
     skeleton[32, 5:60] = True
@@ -525,6 +613,27 @@ def test_crossing_resolution_retains_two_logical_endpoint_groups():
         2,
     ]
     assert np.all(topology.path_branch_types == 0)
+
+
+def test_owned_geometric_crossing_uses_nominal_owner_as_branch():
+    owned = np.zeros((65, 65), dtype=np.int32)
+    bodies = np.zeros_like(owned)
+    bodies[29:36, 2:9] = 1
+    owned[32, 9:57] = 1
+    owned[8:57, 32] = 1
+
+    topology = _analyze_owned_topology(
+        owned,
+        bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=2.0,
+    )
+    rendered = _render_owned_skeleton(owned.shape, topology)
+
+    np.testing.assert_array_equal(rendered > 0, owned > 0)
+    assert np.all(topology.path_owners == 1)
+    assert topology.crossing_nodes == frozenset()
+    assert len(topology.branch_nodes_by_cell[1]) == 1
 
 
 @pytest.mark.parametrize("pixel_size_um", [0.5, 1.0, 1.3556, 2.0])
@@ -920,6 +1029,11 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
         neurite_labels,
         neurons,
         nuclei,
+        candidate_mask,
+        unrooted_residual,
+        secondary_ownership,
+        topology_dropped_trace,
+        topology_added_trace,
         morphology,
     ) = _implementation()(
         image,
@@ -954,6 +1068,91 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     assert nuclei[0].max() == 1
     assert np.count_nonzero(nuclei[[1, 2]]) == 0
     assert isinstance(morphology, SpatialGraph)
+    assert candidate_mask.source_indices == (2,)
+    assert unrooted_residual.source_indices == (2,)
+    assert secondary_ownership.source_indices == (2,)
+    assert topology_dropped_trace.source_indices == (2,)
+    assert topology_added_trace.source_indices == (2,)
+    assert np.asarray(candidate_mask).shape == (1, *image.shape[1:])
+    assert np.asarray(unrooted_residual).shape == (1, *image.shape[1:])
+    assert np.asarray(secondary_ownership).shape == (1, *image.shape[1:])
+    assert np.asarray(topology_dropped_trace).shape == (1, *image.shape[1:])
+    assert np.asarray(topology_added_trace).shape == (1, *image.shape[1:])
+    assert not np.any(
+        np.asarray(topology_dropped_trace)[0] & (cell_bodies[1] > 0)
+    )
+    assert np.all(np.asarray(unrooted_residual) <= np.asarray(candidate_mask))
+    assert not np.any(np.asarray(unrooted_residual)[0] & (cell_bodies[1] > 0))
+    candidate_neurite = np.asarray(candidate_mask)[0].astype(bool) & (
+        cell_bodies[1] == 0
+    )
+    residual = np.asarray(unrooted_residual)[0].astype(bool)
+    secondary_owned_residual = residual & (
+        np.asarray(secondary_ownership)[0] > 0
+    )
+    assert summary["candidate_mask_pixels"] == np.count_nonzero(candidate_neurite)
+    assert summary["rooted_candidate_mask_pixels"] == np.count_nonzero(
+        candidate_neurite & (neurons[2] > 0)
+    )
+    assert summary["unrooted_residual_pixels"] == np.count_nonzero(residual)
+    assert summary["secondary_owned_residual_pixels"] == np.count_nonzero(
+        secondary_owned_residual
+    )
+    assert summary["secondary_unowned_residual_pixels"] == np.count_nonzero(
+        residual & ~secondary_owned_residual
+    )
+    assert summary["secondary_owned_residual_fraction"] == pytest.approx(
+        np.count_nonzero(secondary_owned_residual) / np.count_nonzero(residual)
+        if np.any(residual)
+        else 0.0
+    )
+    assert (
+        summary["rooted_candidate_trace_pixels"]
+        + summary["unrooted_candidate_trace_pixels"]
+        == summary["candidate_trace_pixels"]
+    )
+    assert summary["rooted_candidate_trace_yield"] == pytest.approx(
+        summary["rooted_candidate_trace_pixels"]
+        / summary["candidate_trace_pixels"]
+        if summary["candidate_trace_pixels"]
+        else 0.0
+    )
+    assert (
+        summary["secondary_owned_unrooted_trace_pixels"]
+        + summary["secondary_unowned_unrooted_trace_pixels"]
+        == summary["unrooted_candidate_trace_pixels"]
+    )
+    assert summary["initial_topology_owned_trace_pixels"] <= summary[
+        "secondary_adopted_trace_pixels"
+    ]
+    assert summary["published_owned_trace_pixels"] == np.count_nonzero(
+        neurite_labels[2]
+    )
+    assert summary["published_owned_trace_pixels"] >= summary[
+        "final_topology_owned_trace_pixels"
+    ]
+    assert summary["final_topology_dropped_trace_pixels"] == np.count_nonzero(
+        np.asarray(topology_dropped_trace)
+    )
+    assert summary[
+        "final_topology_dropped_crossing_support_trace_pixels"
+    ] <= summary["final_topology_dropped_trace_pixels"]
+    assert (
+        summary["final_topology_dropped_unrooted_path_trace_pixels"]
+        + summary["final_topology_dropped_unrepresented_trace_pixels"]
+        == summary["final_topology_dropped_trace_pixels"]
+    )
+    assert (
+        summary["final_topology_dropped_physically_rooted_path_trace_pixels"]
+        + summary["final_topology_dropped_physically_unrooted_path_trace_pixels"]
+        == summary["final_topology_dropped_unrooted_path_trace_pixels"]
+    )
+    assert summary["final_topology_added_trace_pixels"] == np.count_nonzero(
+        np.asarray(topology_added_trace)
+    )
+    assert summary["final_topology_added_trace_pixels"] <= summary[
+        "crossing_core_trace_pixels"
+    ]
 
 
 def test_expanded_ownership_preserves_response_repaired_trace_support():
@@ -988,14 +1187,17 @@ def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
         outgrowth=_outgrowth_settings(),
         pixel_size=1.0,
     )
+    summary = _rows(result[1])[0]
     bodies, traces, neurons = result[3][0], result[4][1], result[5][1]
     horizontal_owner = bodies[64, 20]
     vertical_owner = bodies[20, 75]
 
     assert horizontal_owner > 0 and vertical_owner > 0
     assert horizontal_owner != vertical_owner
+    assert summary["resolved_crossovers"] == 1
     assert traces[64, 105] == horizontal_owner
     assert traces[105, 75] == vertical_owner
+    assert traces[64, 75] in {horizontal_owner, vertical_owner}
     np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
 
@@ -1125,7 +1327,7 @@ def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():
     rows, columns = disk((42, 92), 5, shape=image.shape[1:])
     image[1, rows, columns] = 1200
 
-    _, summary_rows, _, cell_bodies, _, _, nuclei, _ = _implementation()(
+    _, summary_rows, _, cell_bodies, _, _, nuclei, *_ = _implementation()(
         image,
         cell_body=_cell_body_settings(),
         outgrowth=_outgrowth_settings(),
@@ -1151,7 +1353,7 @@ def test_transmission_mode_detects_dark_cell_and_neurite():
     transmission = np.full(fluorescence.shape, 2000, dtype=np.uint16)
     transmission[fluorescence > 0] = 500
 
-    _, summary_rows, cell_rows, _, _, _, _, _ = _implementation()(
+    _, summary_rows, cell_rows, _, _, _, _, *_ = _implementation()(
         transmission[None, ...],
         illumination=NeuriteIllumination.TRANSMISSION,
         cell_body=_cell_body_settings(),
@@ -1176,7 +1378,7 @@ def test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation(monkeyp
         "openhcs.processing.backends.cellprofiler.skeleton.measure_object_skeleton",
         forbidden_remeasurement,
     )
-    _, summary_rows, cell_rows, _, _, _, _, _ = _implementation()(
+    _, summary_rows, cell_rows, _, _, _, _, *_ = _implementation()(
         image,
         neurite_channel_index=1,
         cell_body=MetaXpressCellBodySettings(
@@ -1354,9 +1556,10 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
     assert cell_bodies[1].max() == 2
     assert nuclei[0].max() == 2
     assert np.count_nonzero(nuclei[1]) == 0
-    # The final owned path is 85 pixels long. Independent CP seed-relative
-    # remeasurement previously reported 42 for this same published path.
-    assert sorted(row["total_outgrowth_um"] for row in cell_rows) == [0.0, 85.0]
+    # The centroid-bounded soma leaves a final owned path 89 pixels long.
+    # Independent CP seed-relative remeasurement previously reported 42 for
+    # this same published path.
+    assert sorted(row["total_outgrowth_um"] for row in cell_rows) == [0.0, 89.0]
     zero_growth_cell = next(
         row["cell"] for row in cell_rows if row["total_outgrowth_um"] == 0.0
     )
@@ -1425,7 +1628,7 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     assert set(np.unique(bodies)) == {0, 1, 2}
     assert observed_shapes[0] == shape
-    assert len(observed_shapes) == 5
+    assert len(observed_shapes) == 3
     assert all(
         rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes[1:]
     )
@@ -1454,6 +1657,91 @@ def test_signal_body_derivation_partitions_shared_signal_by_nearest_nucleus():
     assert bodies[36, 44] == 2
     assert np.count_nonzero(bodies == 1) > 100
     assert np.count_nonzero(bodies == 2) > 100
+
+
+def test_signal_body_derivation_enforces_maximum_width_from_nuclear_centroid():
+    shape = (96, 96)
+    seeds = np.zeros(shape, dtype=np.int32)
+    seeds[44:52, 20:76] = 1
+    image = np.zeros(shape, dtype=np.uint16)
+    image[43:53, 10:86] = 1200
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        image,
+        MetaXpressCellBodySettings(
+            approximate_max_width=20.0,
+            minimum_area=10.0,
+            intensity_above_local_background=100.0,
+            channel_index=1,
+        ),
+        1.0,
+        bright_objects=True,
+    )
+
+    coordinates = np.argwhere(bodies == 1)
+    assert np.ptp(coordinates[:, 0]) <= 20
+    assert np.ptp(coordinates[:, 1]) <= 20
+
+
+def test_signal_body_derivation_rejects_nearby_signal_without_nuclear_overlap(
+    monkeypatch,
+):
+    shape = (64, 64)
+    seeds = np.zeros(shape, dtype=np.int32)
+    rows, columns = disk((32, 32), 4, shape=shape)
+    seeds[rows, columns] = 1
+    response = np.zeros(shape, dtype=float)
+    rows, columns = disk((32, 43), 4, shape=shape)
+    response[rows, columns] = 200.0
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "local_background_response",
+        lambda *args, **kwargs: response,
+    )
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        response,
+        MetaXpressCellBodySettings(
+            approximate_max_width=30.0,
+            minimum_area=10.0,
+            intensity_above_local_background=100.0,
+            channel_index=1,
+        ),
+        1.0,
+        bright_objects=True,
+    )
+
+    assert not np.any(bodies)
+
+
+def test_signal_body_derivation_reapplies_minimum_area_after_shared_pixel_overwrite():
+    shape = (72, 72)
+    seeds = np.zeros(shape, dtype=np.int32)
+    for owner, center in ((1, (36, 25)), (2, (36, 47))):
+        rows, columns = disk(center, 4, shape=shape)
+        seeds[rows, columns] = owner
+    image = np.zeros(shape, dtype=np.uint16)
+    rows, columns = disk((36, 36), 20, shape=shape)
+    image[rows, columns] = 1200
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        image,
+        MetaXpressCellBodySettings(
+            approximate_max_width=30.0,
+            minimum_area=500.0,
+            intensity_above_local_background=100.0,
+            channel_index=1,
+        ),
+        1.0,
+        bright_objects=True,
+    )
+
+    body_areas = np.bincount(bodies.ravel(), minlength=3)
+    assert body_areas[1] == 0
+    assert body_areas[2] >= 500
 
 
 def test_cell_body_contract_bounds_each_object_distance_transform(monkeypatch):
@@ -1519,29 +1807,150 @@ def test_signal_supported_repair_follows_curved_trace_instead_of_chord():
     assert not np.any(repaired[32, 16:43])
 
 
-def test_secondary_ownership_adopts_only_single_owner_components():
-    skeleton = np.zeros((24, 32), dtype=bool)
-    skeleton[4, 3:12] = True
-    skeleton[12, 3:12] = True
-    skeleton[20, 3:12] = True
-    owner_skeleton = np.zeros(skeleton.shape, dtype=np.int32)
-    owner_skeleton[4, 3] = 1
-    owner_skeleton[12, 3] = 2
-    secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
-    secondary_regions[3:6, 2:13] = 1
-    secondary_regions[11:14, 2:7] = 2
-    secondary_regions[11:14, 7:13] = 3
+def test_physical_soma_root_mask_distinguishes_attached_and_detached_components():
+    owned = np.zeros((32, 48), dtype=np.int32)
+    bodies = np.zeros_like(owned)
+    bodies[13:20, 3:10] = 1
+    owned[16, 10:27] = 1
+    owned[5, 34:43] = 1
 
-    adopted = _adopt_secondary_owned_skeleton(
+    rooted = _physically_soma_rooted_owner_mask(
+        owned,
+        bodies,
+        maximum_root_distance=3,
+    )
+
+    assert np.all(rooted[16, 10:27])
+    assert not np.any(rooted[5, 34:43])
+
+
+def test_secondary_ownership_adopts_logical_paths_not_whole_components():
+    skeleton = np.zeros((33, 33), dtype=bool)
+    skeleton[16, 4:29] = True
+    skeleton[16:29, 16] = True
+    topology = _analyze_topology(
         skeleton,
+        np.zeros(skeleton.shape, dtype=np.int32),
+        pixel_size_um=1.0,
+        outgrowth_width_px=2.0,
+    )
+    owner_skeleton = np.zeros(skeleton.shape, dtype=np.int32)
+    secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
+    secondary_regions[15:18, 3:16] = 1
+    secondary_regions[15:18, 17:30] = 2
+    secondary_regions[17:30, 15:18] = 3
+
+    adopted = _adopt_secondary_owned_path_segments(
+        topology,
         owner_skeleton,
         secondary_regions,
     )
 
-    assert np.all(adopted[4, 3:12] == 1)
-    assert adopted[12, 3] == 2
-    assert not np.any(adopted[12, 4:12])
-    assert not np.any(adopted[20, 3:12])
+    assert np.all(adopted[16, 4:16] == 1)
+    assert np.all(adopted[16, 17:29] == 2)
+    assert np.all(adopted[17:29, 16] == 3)
+    assert adopted[16, 16] == 0
+
+
+def test_secondary_ownership_partitions_a_path_at_nominal_owner_boundaries():
+    skeleton = np.zeros((24, 32), dtype=bool)
+    skeleton[12, 3:29] = True
+    topology = _analyze_topology(
+        skeleton,
+        np.zeros(skeleton.shape, dtype=np.int32),
+        pixel_size_um=1.0,
+        outgrowth_width_px=2.0,
+    )
+    secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
+    secondary_regions[11:14, 2:16] = 1
+    secondary_regions[11:14, 16:30] = 2
+
+    adopted = _adopt_secondary_owned_path_segments(
+        topology,
+        np.zeros(skeleton.shape, dtype=np.int32),
+        secondary_regions,
+    )
+
+    assert np.all(adopted[12, 3:16] == 1)
+    assert np.all(adopted[12, 16:29] == 2)
+
+
+def test_owned_topology_preserves_adjacent_nominal_neuron_paths():
+    owned = np.zeros((48, 64), dtype=np.int32)
+    bodies = np.zeros_like(owned)
+    bodies[20:27, 2:9] = 1
+    bodies[20:27, 55:62] = 2
+    owned[23, 9:32] = 1
+    owned[23, 32:55] = 2
+
+    topology = _analyze_owned_topology(
+        owned,
+        bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=2.0,
+    )
+    rendered = np.zeros_like(owned)
+    for path_index, coordinates in enumerate(topology.path_coordinates):
+        owner = int(topology.path_owners[path_index])
+        rendered[tuple(coordinates.T)] = owner
+
+    assert set(topology.path_owners) == {1, 2}
+    assert np.all(rendered[23, 9:32] == 1)
+    assert np.all(rendered[23, 32:55] == 2)
+    assert topology.root_paths_by_cell.keys() == {1, 2}
+
+
+def test_secondary_path_adoption_survives_only_with_soma_rooted_signal_support():
+    shape = (64, 64)
+    cell_bodies = np.zeros(shape, dtype=np.int32)
+    cell_bodies[29:36, 5:12] = 1
+    skeleton = np.zeros(shape, dtype=bool)
+    skeleton[32, 30:53] = True
+    topology = _analyze_topology(
+        skeleton,
+        cell_bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=2.0,
+    )
+    assert not np.any(topology.path_owners)
+
+    def repaired_topology(*, connected: bool):
+        owner_regions = np.zeros(shape, dtype=np.int32)
+        response = np.zeros(shape, dtype=float)
+        owner_regions[32, 30:53] = 1
+        response[32, 30:53] = 150.0
+        if connected:
+            owner_regions[29:36, 5:53] = 1
+            response[32, 11:53] = 150.0
+        adopted = _adopt_secondary_owned_path_segments(
+            topology,
+            np.zeros(shape, dtype=np.int32),
+            owner_regions,
+        )
+        assert np.all(adopted[32, 30:53] == 1)
+        repaired = _repair_signal_supported_skeleton(
+            adopted,
+            response,
+            owner_regions,
+            cell_bodies,
+            minimum_response=100.0,
+        )
+        repaired[cell_bodies > 0] = 0
+        return repaired, _analyze_topology(
+            repaired > 0,
+            cell_bodies,
+            pixel_size_um=1.0,
+            outgrowth_width_px=2.0,
+            assigned_path_labels=repaired,
+        )
+
+    disconnected_labels, disconnected_topology = repaired_topology(connected=False)
+    assert not np.any(disconnected_labels)
+    assert not np.any(disconnected_topology.path_owners)
+
+    connected_labels, connected_topology = repaired_topology(connected=True)
+    assert np.all(connected_labels[32, 12:53] == 1)
+    assert np.all(connected_topology.path_owners == 1)
 
 
 def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeypatch):
