@@ -374,6 +374,7 @@ def retain_measured_openhcs_completion(
         endpoint_provenance=endpoint_provenance,
         completed_at_epoch_seconds=time.time(),
         compile_artifact_id=compile_artifact_id,
+        server_environment=observation_export.server_environment,
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
     return _ZMQOpenHCSExecution(

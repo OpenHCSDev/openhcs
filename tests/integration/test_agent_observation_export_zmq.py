@@ -112,6 +112,13 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     observation = ZMQRuntimeExecutionObservationExport.read(export_path)
     observation.require_valid_observation()
     assert observation.output_roots
+    assert observation.server_environment is not None
+    assert observation.server_environment.python_version
+    assert observation.server_environment.python_executable
+    assert any(
+        distribution.name.casefold() == "numpy"
+        for distribution in observation.server_environment.installed_distributions
+    )
     built = server.build_server(
         OpenHCSAgentContext(path_policy=path_policy, execution_service=service)
     )
@@ -125,7 +132,8 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
             },
         )
     )
-    assert finalization[1]["execution_id"] == status.server_execution_id, finalization
+    assert "execution_id" in finalization[1], finalization
+    assert finalization[1]["execution_id"] == status.server_execution_id
     receipt = MeasuredPipelineRunReceipt.read(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
     )
@@ -133,6 +141,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     assert receipt.plate_id == str(source_identity)
     assert receipt.execution_plate_id == str(plate)
     assert receipt.compile_artifact_id is None
+    assert receipt.server_environment == observation.server_environment
     assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
     assert receipt.phase_timings[0].seconds >= 0
     assert all(

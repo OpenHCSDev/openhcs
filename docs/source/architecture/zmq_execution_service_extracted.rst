@@ -67,6 +67,10 @@ Optional runtime-observation export follows the same submission path: the
 agent path policy validates the destination, and the client/server shared
 auxiliary declaration carries it to the existing execution server. The
 benchmark layer need not submit a second kind of job to collect that evidence.
+The server-owned observation also carries a startup snapshot of its Python
+interpreter and installed distribution versions. Benchmark receipts project
+that observation without treating the client environment as the server's.
+The snapshot does not establish the environment of a remote worker.
 The ordinary compiled-run result also projects the server's completion summary
 and typed output-plate metadata; benchmark adapters consume those projections
 instead of decoding transport response keys themselves.

@@ -215,12 +215,14 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   converted-CellProfiler parity integration now uses distinct evidence
   directories for the reference and second run, preserving the first output
   while it is used as a comparison input.
-- Environment evidence is still incomplete: the receipt records client
-  interpreter/package location, OpenHCS application versions and endpoint
-  identity, but not the server/worker Python and dependency versions that a
-  matched comparison would need. Capture those at the ordinary runtime owner
-  and project them into the receipt; do not infer a remote server environment
-  from the client or add a benchmark-only server probe.
+- The ordinary execution server now captures its Python identity and installed
+  distribution versions once at startup and includes that snapshot in runtime
+  observation exports. The benchmark receipt projects the snapshot from that
+  export rather than guessing the remote environment from the client or adding
+  a benchmark-only probe. Version-5 observation exports remain readable with
+  no server snapshot. This establishes server provenance, not proof that remote
+  workers run in an identical environment; matched comparisons must retain or
+  verify worker provenance separately if workers can differ.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile

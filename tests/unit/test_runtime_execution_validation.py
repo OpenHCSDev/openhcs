@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import gzip
+import pickle
 from collections import OrderedDict
+from dataclasses import fields, make_dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -8,6 +11,8 @@ import numpy as np
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 
+import openhcs.runtime.zmq_execution_observation as observation_module
+from openhcs.constants.constants import VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ImageArtifactType,
@@ -17,20 +22,19 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.constants.constants import VariableComponents
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.config import NapariStreamingConfig
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
     FunctionInvocationKey,
 )
-from openhcs.core.orchestrator.execution_result import ExecutionResult
-from openhcs.core.pipeline.function_contracts import execution_scope
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
+from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.pipeline.function_contracts import execution_scope
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
     RuntimeValue,
@@ -43,14 +47,17 @@ from openhcs.core.runtime_execution_validation import (
 )
 from openhcs.core.runtime_exports import RuntimeExportExpectation
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
     CsvOptions,
@@ -490,6 +497,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
 
 def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     tmp_path,
+    monkeypatch,
 ) -> None:
     context = ProcessingContext(axis_id="A01")
     context.runtime_value_store.record(
@@ -527,3 +535,33 @@ def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     assert path.read_bytes()[:2] == b"\x1f\x8b"
     assert restored.expectation == export.expectation
     assert restored.records_by_axis == export.records_by_axis
+
+    legacy_fields = tuple(
+        field for field in fields(export) if field.name != "server_environment"
+    )
+    legacy_type = make_dataclass(
+        ZMQRuntimeExecutionObservationExport.__name__,
+        ((field.name, field.type) for field in legacy_fields),
+        frozen=True,
+        slots=True,
+    )
+    legacy_type.__module__ = observation_module.__name__
+    legacy_export = legacy_type(
+        *(
+            5 if field.name == "schema_version" else getattr(export, field.name)
+            for field in legacy_fields
+        )
+    )
+    monkeypatch.setattr(
+        observation_module, "ZMQRuntimeExecutionObservationExport", legacy_type
+    )
+    with gzip.open(path, "wb") as handle:
+        pickle.dump(legacy_export, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    monkeypatch.setattr(
+        observation_module,
+        "ZMQRuntimeExecutionObservationExport",
+        ZMQRuntimeExecutionObservationExport,
+    )
+    previous_schema = ZMQRuntimeExecutionObservationExport.read(path)
+    assert previous_schema.schema_version == 5
+    assert previous_schema.server_environment is None

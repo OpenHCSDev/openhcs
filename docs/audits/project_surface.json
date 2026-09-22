@@ -97,7 +97,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
+        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],

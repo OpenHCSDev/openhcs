@@ -98,6 +98,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             read=lambda path: SimpleNamespace(
                 output_roots=(tmp_path,),
                 axis_count=1,
+                server_environment=None,
                 require_valid_observation=validate_observation,
             )
         ),

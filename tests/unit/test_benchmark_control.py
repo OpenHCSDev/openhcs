@@ -55,6 +55,10 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.runtime.environment_provenance import (
+    InstalledDistributionVersion,
+    RuntimeEnvironmentSnapshot,
+)
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
@@ -351,9 +355,29 @@ def test_measured_receipt_reads_older_optional_compile_identity(
     path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
     payload = json.loads(path.read_text(encoding="utf-8"))
     payload.pop("compile_artifact_id")
+    payload.pop("server_environment")
     path.write_text(json.dumps(payload), encoding="utf-8")
 
     assert MeasuredPipelineRunReceipt.read(path).compile_artifact_id is None
+    assert MeasuredPipelineRunReceipt.read(path).server_environment is None
+
+
+def test_measured_receipt_round_trips_server_environment(tmp_path: Path) -> None:
+    output_dir = tmp_path / "measured"
+    receipt = _measured_run_receipt(output_dir)
+    environment = RuntimeEnvironmentSnapshot(
+        python_executable="/server/bin/python",
+        python_version="3.12.3",
+        python_implementation="CPython",
+        sys_platform="linux",
+        machine="x86_64",
+        installed_distributions=(InstalledDistributionVersion("numpy", "2.0.0"),),
+    )
+    path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+
+    replace(receipt, server_environment=environment).write(path)
+
+    assert MeasuredPipelineRunReceipt.read(path).server_environment == environment
 
 
 def test_measured_finalization_refuses_missing_server_timing_without_receipt(

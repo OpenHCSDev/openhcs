@@ -26,6 +26,7 @@ from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_compilation import (
     ZMQCompilationRequest,
@@ -147,6 +148,7 @@ class ZMQExecutionServer(ExecutionServer):
         self._worker_assignments_by_execution: dict[str, dict[str, list[str]]] = {}
         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
+        self._server_environment = RuntimeEnvironmentSnapshot.current()
         from openhcs.agent.services.function_catalog_service import (
             FunctionCatalogService,
         )
@@ -758,6 +760,7 @@ class ZMQExecutionServer(ExecutionServer):
             compiled_contexts=execution_bundle.runtime_contexts,
             execution_results=execution_results,
             output_roots=output_roots,
+            server_environment=self._server_environment,
         ).write(export_path)
         self.active_executions[request_context.execution_id].set_extra(
             "runtime_observation_export_path",

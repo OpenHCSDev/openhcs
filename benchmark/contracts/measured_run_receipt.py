@@ -12,6 +12,7 @@ from typing import Self
 from python_introspect import dataclass_from_mapping
 
 from benchmark.timing import PhaseTimingRecord
+from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.serialization.json import to_jsonable
 
 MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v1"
@@ -59,6 +60,7 @@ class MeasuredPipelineRunReceipt:
     endpoint_provenance: MeasuredEndpointProvenance
     completed_at_epoch_seconds: float
     compile_artifact_id: str | None = None
+    server_environment: RuntimeEnvironmentSnapshot | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version != MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION:

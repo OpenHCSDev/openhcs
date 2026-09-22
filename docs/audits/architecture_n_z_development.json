@@ -1480,7 +1480,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "78f054bc40a2a70de06030755b06b30628bd0825c27aacb6e9367ea8280bee40",
+        "sha256": "c92191c3c3d63254130c54bd745286fb2872590e87f82bcd1b05610a7994d28a",
         "role": "Releases execution-session process resources when the execution server stops."
       },
       {
@@ -1937,7 +1937,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "ea1463dc370c7fd96f6d9f047ea1c0a15bd8b5c16b555528ddafd5861f9768e1",
+    "source_sha256": "46a4169d34b567d06adce9d231af2d692500dae5dc6e23e3df8d17891a1298b7",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -1951,7 +1951,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "78f054bc40a2a70de06030755b06b30628bd0825c27aacb6e9367ea8280bee40",
+        "sha256": "c92191c3c3d63254130c54bd745286fb2872590e87f82bcd1b05610a7994d28a",
         "role": "OpenHCS compiled-execution adapter over the generic execution server."
       },
       {
@@ -2694,7 +2694,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
+        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],

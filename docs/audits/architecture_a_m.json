@@ -2093,7 +2093,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
+        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2166,7 +2166,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "2e836f957a5841aa3255ee820da779f7fce0876d3856050eab6eec154e7815c9",
+    "source_sha256": "37d598d06341b54a37ade8d0de32f066b84e2362bcaf5865525c572cc7834ae8",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2196,12 +2196,12 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "f97e07b6ccfad8de0f1360c498f39894b4597cb89d8cdf9b80e7694307c4ef6c",
+        "sha256": "d41d62133a65193ea71d38f715851ad8604e5bd856d4d0408d7500d0d568e371",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "b55ca7df1e186aaaf3505bba3fcc1517d3aa25e28a7b83b47b199765bedcd7f0",
+        "sha256": "c19c1fabbf3ea9a035feae87580b9cb4452d5c1c64ff74fd53ceb4f59426d818",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2231,7 +2231,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "2b3525018b2398e34e277e240bd949b7a98d0fcb7cdd320b06b180cf8990e768",
+        "sha256": "0f3d9719e8008e71fba5ef1844802ab8cc89adb623f26570c8512f09996a8d2c",
         "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
       }
     ],

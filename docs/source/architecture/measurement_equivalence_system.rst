@@ -104,9 +104,12 @@ the normal compile-then-execute path; it only requests runtime observation,
 validates that observation against compiled expectations, and records phase
 timing and provenance. A typed completed-run receipt derives execution identity,
 source/configuration digests, and output references from those same authorities;
-it does not become a second job-status store. The CellProfiler adapter prepares
-one such submission and then applies its optional native-reference equivalence
-policy. It does not own a second execution engine.
+it does not become a second job-status store. The ordinary server's runtime
+observation supplies its Python and installed-distribution snapshot to the
+receipt; that is server provenance, not proof of a remote worker environment.
+The CellProfiler adapter prepares one such submission and then applies its
+optional native-reference equivalence policy. It does not own a second execution
+engine.
 An agent can finalize the same receipt after a normal headless job completes:
 the execution service supplies the exact submission, endpoint handshake and
 server completion record, while the benchmark extension validates and retains

@@ -23,3 +23,18 @@ Evidence: the typed client/server auxiliary-request round trip, direct
 ordinary-document measured run, adapter path and server tests passed together
 (25 tests). The full PR CI and a real submitted-job cancellation test remain
 separate gates.
+
+## Server environment provenance delta
+
+The ordinary execution server now snapshots its Python interpreter and installed
+distribution versions at startup. Its runtime observation carries the snapshot;
+the measured-run receipt projects it without treating the client installation
+as the server environment. I rechecked the affected receipt and runtime
+paragraphs in the equivalence and ZMQ execution pages against the server,
+observation-export, and receipt owners. The benchmark inspection, CLI,
+biologist onboarding, research-impact, MCP distribution/client, README,
+extension-workflow, and streaming pages retain their existing scope: none
+claims remote worker environment identity. Version-5 observations remain
+readable with an absent server snapshot. This is a targeted authority review,
+not a claim that worker environments were measured or that comparative timing
+is publishable.
