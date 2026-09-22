@@ -15464,9 +15464,30 @@ def test_execution_capabilities_distinguish_headless_and_ui_owned_runs():
         in capabilities["openhcs_submit_pipeline_execution"].description
     )
     assert (
+        "runtime observation export path"
+        in capabilities["openhcs_submit_pipeline_execution"].description
+    )
+    assert (
         "ObjectState snapshots"
         in capabilities["openhcs_ui_selected_plate_workflow"].description
     )
+
+
+def test_mcp_headless_submission_projects_observation_export_request():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    built = server.build_server()
+    listed_tools = built.list_tools()
+    tools = (
+        asyncio.run(listed_tools) if inspect.isawaitable(listed_tools) else listed_tools
+    )
+    schema = {tool.name: tool.inputSchema for tool in tools}[
+        "openhcs_submit_pipeline_execution"
+    ]
+
+    assert "runtime_observation_export_path" in schema["properties"]
+    assert "runtime_observation_export_path" not in schema["required"]
 
 
 def test_viewer_capabilities_advertise_payload_coordinate_validation():

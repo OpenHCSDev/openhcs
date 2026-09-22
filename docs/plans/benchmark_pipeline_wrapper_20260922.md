@@ -154,6 +154,13 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   `EndpointClientSession` for compatibility admission and the normal client
   context manager for one disconnect. A direct test of the new wrapper uses a
   normal `PipelineDocument` with no `.cppipe` or native reference.
+- The normal headless `openhcs_submit_pipeline_execution` request now accepts
+  an optional runtime observation export path. The existing execution session
+  service checks its writable-root policy and rejects an existing target,
+  then composes the typed auxiliary option into its ordinary submission.
+  Existing status and cancellation job control remain unchanged. This is a
+  bridge toward measurement through MCP, not a generic benchmark receipt or
+  report generator yet.
 - The post-change uncached NRA scan completed in `exact_compact_global` mode
   with 79 detectors analyzed, zero omitted, and seven findings. The quick
   cached scan was partial (43 analyzed, 36 omitted) and is not used as global

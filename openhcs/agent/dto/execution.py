@@ -358,6 +358,7 @@ class CompileSubmissionRequest(OrchestratorSessionIdentity):
 @dataclass(frozen=True, slots=True)
 class PipelineExecutionSubmissionRequest(OrchestratorSessionIdentity):
     compile_artifact_id: str | None = None
+    runtime_observation_export_path: str | None = None
     wait: bool = False
     submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
     wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms

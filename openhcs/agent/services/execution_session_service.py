@@ -73,7 +73,10 @@ from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQExecutionIdentity,
+)
 from openhcs.serialization.json import to_jsonable
 
 MAX_INSPECTION_AXES = 8
@@ -499,15 +502,22 @@ class ExecutionSessionRecord:
     global_pipeline_config: GlobalPipelineConfig
 
     def submission(
-        self, compile_artifact_id: str | None = None
+        self,
+        compile_artifact_id: str | None = None,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
     ) -> OpenHCSExecutionSubmission:
-        return OpenHCSExecutionSubmission(
+        submission = OpenHCSExecutionSubmission(
             plate_id=self.session.plate_path,
             execution_plate_id=self.session.execution_plate_path,
             selected_pipeline_path=self.session.selected_pipeline_path,
             pipeline_document=self.pipeline_document,
             global_config=self.global_pipeline_config,
             compile_artifact_id=compile_artifact_id,
+        )
+        return (
+            submission.with_auxiliary_params(auxiliary_params)
+            if auxiliary_params is not None
+            else submission
         )
 
 
@@ -664,10 +674,11 @@ class ExecutionClientGateway:
         kind: ExecutionJobKind,
         compile_artifact_id: str | None = None,
         *,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
     ) -> ExecutionJobSubmission:
         client = self.factory.create_client(record.session.connection)
-        execution_request = record.submission(compile_artifact_id)
+        execution_request = record.submission(compile_artifact_id, auxiliary_params)
         try:
             response = kind.submit(
                 client,
@@ -970,14 +981,28 @@ class ExecutionSessionService:
         session_id: str,
         *,
         compile_artifact_id: str | None = None,
+        runtime_observation_export_path: str | None = None,
         wait: bool = False,
         submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
         wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> ExecutionJobRef | ExecutionJobStatus:
+        auxiliary_params = None
+        if runtime_observation_export_path is not None:
+            export_path = self._path_policy.assert_writable(
+                runtime_observation_export_path
+            )
+            if export_path.exists():
+                raise FileExistsError(
+                    f"Runtime observation export path already exists: {export_path}"
+                )
+            auxiliary_params = ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=export_path
+            )
         return self._submit_job(
             session_id,
             ExecutionJobKind.EXECUTE,
             compile_artifact_id=compile_artifact_id,
+            auxiliary_params=auxiliary_params,
             wait=wait,
             submit_timeout_ms=submit_timeout_ms,
             wait_timeout_ms=wait_timeout_ms,
@@ -1071,6 +1096,7 @@ class ExecutionSessionService:
         kind: ExecutionJobKind,
         *,
         compile_artifact_id: str | None = None,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
         wait: bool,
         submit_timeout_ms: int,
         wait_timeout_ms: int,
@@ -1081,6 +1107,7 @@ class ExecutionSessionService:
                 record,
                 kind,
                 compile_artifact_id,
+                auxiliary_params=auxiliary_params,
                 timeout_ms=submit_timeout_ms,
             )
         except Exception as exc:

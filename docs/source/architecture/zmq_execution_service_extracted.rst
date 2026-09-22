@@ -56,6 +56,10 @@ The headless cancellation capability addresses that retained client's exact
 job identifier. Its service delegates the bounded request to the ordinary
 execution client and returns the server's applied flag with the observed job
 status; a client timeout alone is not treated as successful cancellation.
+Optional runtime-observation export follows the same submission path: the
+agent path policy validates the destination, and the client/server shared
+auxiliary declaration carries it to the existing execution server. The
+benchmark layer need not submit a second kind of job to collect that evidence.
 
 The execution server owns one ``FunctionCatalogPreparation``. On a cold cache,
 ``RegistryService`` launches the launcher's dedicated

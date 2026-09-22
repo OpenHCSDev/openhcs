@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7b787a7ae4f486e24be6e7875c46770b0f0048e34417f79d5b3598694f6b5e07",
+        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -138,7 +138,8 @@
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`, `openhcs/core/viewer_streaming_service.py`, `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
     ]
   }
 ]

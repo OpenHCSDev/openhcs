@@ -2637,7 +2637,9 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
         "Submits a headless ZMQ pipeline execution job for an execution session. "
         "Use wait=False for normal agent workflows, then poll status by job_id; "
         "submit is bounded by submit_timeout_ms and wait=True is bounded by "
-        "wait_timeout_ms. This path does not update the running UI PlateManager; "
+        "wait_timeout_ms. An optional runtime observation export path must be "
+        "writable under the agent path policy. This path does not update the "
+        "running UI PlateManager; "
         "use openhcs_ui_selected_plate_workflow for user-visible UI runs."
     )
     service = "execution_session"
@@ -2650,6 +2652,7 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
         method=lambda service, request: service.submit_execution(
             request.session_id,
             compile_artifact_id=request.compile_artifact_id,
+            runtime_observation_export_path=request.runtime_observation_export_path,
             wait=request.wait,
             submit_timeout_ms=request.submit_timeout_ms,
             wait_timeout_ms=request.wait_timeout_ms,

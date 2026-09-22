@@ -58,6 +58,11 @@ For a submitted headless compile or run, ``openhcs_cancel_execution`` accepts
 the job identifier and reports both whether cancellation was applied and the
 job status observed afterwards. A timed-out request is not proof that the job
 stopped.
+When you need a runtime observation file for later analysis, pass a new
+``runtime_observation_export_path`` under an allowed writable root to
+``openhcs_submit_pipeline_execution``. The ordinary job still uses the same
+status and cancellation tools; requesting an export does not itself compare
+outputs or establish scientific validity.
 
 .. openhcs-gallery:: zmq-startup-compile
 

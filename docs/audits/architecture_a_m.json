@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7b787a7ae4f486e24be6e7875c46770b0f0048e34417f79d5b3598694f6b5e07",
+        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -141,7 +141,8 @@
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
     ]
   },
   {
@@ -1892,7 +1893,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7b787a7ae4f486e24be6e7875c46770b0f0048e34417f79d5b3598694f6b5e07",
+        "sha256": "193b7d60f10e9445eb1c96e1e2c1808af06b580e907b6dc9c79a578bf34e4b34",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2017,7 +2018,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "a4e63b46917c0f84b10b6abc3c3fbcf0d1ce6ada317a5a56b6ff560bf32d888d",
+        "sha256": "341aa1f6f6fa55982a732441e5c518d62bcc0002c01fabfd0b1fb2b119276fd5",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2159,7 +2160,8 @@
       "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules.",
       "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
     ]
   },
   {

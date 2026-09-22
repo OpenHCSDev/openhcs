@@ -51,7 +51,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationPolicy,
     ViewerWindowValidationRequest,
 )
-from openhcs.agent.path_policy import AgentPathPolicy
+from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services import function_catalog_service as function_catalog_module
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
@@ -3087,6 +3087,53 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
     assert type(fake_client.compile_submissions[0].pipeline_steps) is list
     assert len(fake_client.compile_submissions[0].pipeline_steps) == 1
     assert not hasattr(fake_client.compile_submissions[0], "submission_pipeline")
+
+
+def test_execution_session_observation_export_uses_ordinary_submission(
+    monkeypatch, tmp_path: Path
+) -> None:
+    fake_client = _FakeExecutionClient()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(fake_client),
+    )
+    session = service.create_session_from_pipeline_source(
+        PipelineSourceSessionRequest(
+            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
+            connection=ExecutionConnectionSpec(),
+        )
+    )
+    export_path = tmp_path / "evidence" / "observation.pkl"
+
+    job = service.submit_execution(
+        session.session_id,
+        runtime_observation_export_path=str(export_path),
+    )
+
+    assert job.server_execution_id == _ExecutionTestId.EXECUTE
+    assert fake_client.execution_submissions[0].config_params == {
+        "runtime_observation_export_path": str(export_path)
+    }
+
+    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+        service.submit_execution(
+            session.session_id,
+            runtime_observation_export_path=str(tmp_path.parent / "outside.pkl"),
+        )
+    export_path.parent.mkdir()
+    export_path.touch()
+    with pytest.raises(FileExistsError, match="already exists"):
+        service.submit_execution(
+            session.session_id,
+            runtime_observation_export_path=str(export_path),
+        )
+    assert len(fake_client.execution_submissions) == 1
 
 
 def test_execution_session_service_cancels_through_submitting_client(
