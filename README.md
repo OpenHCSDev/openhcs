@@ -350,6 +350,11 @@ For a single ordinary measured pipeline, `openhcs-benchmark inspect-measured --o
 and the expert MCP inspection/report tools read the same
 validated-run receipt and check retained source evidence. They do not create a
 second pipeline runner or job-status system.
+`openhcs-benchmark run-measured --plate PLATE --pipeline-source-file PIPELINE.py
+--output-dir EVIDENCE --run-id ID --wait-timeout-ms 120000` submits that
+pipeline through ordinary headless job control, then calls the same receipt
+finalizer as MCP. Use `--execution-plate PREPARED_PLATE` when the input workspace
+has been prepared separately; the evidence directory must be empty.
 After an ordinary headless job completes, the expert
 `openhcs_finalize_measured_pipeline_run` tool can validate its runtime
 observation and retain that receipt from the exact submitted pipeline and

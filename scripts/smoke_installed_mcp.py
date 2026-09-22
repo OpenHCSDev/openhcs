@@ -214,12 +214,18 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
+    from openhcs.agent.path_policy import AgentPathPolicy
+
     manifest_path = output_dir / "empty_benchmark_manifest.json"
     manifest_path.write_text('{"cases": []}\n', encoding="utf-8")
 
     parameters = StdioServerParameters(
         command=sys.executable,
         args=("-m", "openhcs.mcp", "--surface", "full"),
+        env={
+            AgentPathPolicy.readable_roots_environment_key: str(output_dir),
+            AgentPathPolicy.writable_roots_environment_key: str(output_dir),
+        },
     )
     async with stdio_client(parameters) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:

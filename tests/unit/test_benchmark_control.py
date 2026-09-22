@@ -73,6 +73,38 @@ def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None
     )
 
 
+def test_measured_cli_rejects_existing_evidence_before_execution(
+    tmp_path: Path,
+) -> None:
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    source_file = tmp_path / "pipeline.py"
+    source_file.write_text("pipeline_steps = []\n", encoding="utf-8")
+    output_dir = tmp_path / "evidence"
+    output_dir.mkdir()
+    sentinel = output_dir / "keep.txt"
+    sentinel.write_text("keep", encoding="utf-8")
+    args = create_benchmark_argument_parser().parse_args(
+        [
+            "run-measured",
+            "--plate",
+            str(plate),
+            "--pipeline-source-file",
+            str(source_file),
+            "--output-dir",
+            str(output_dir),
+            "--run-id",
+            "test",
+            "--wait-timeout-ms",
+            "1000",
+        ]
+    )
+
+    with pytest.raises(FileExistsError, match="must be empty"):
+        args.cli_command.run(args)
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
 def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:
     output_dir.mkdir()
     pipeline_source = b"pipeline_steps = []\n"

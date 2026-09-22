@@ -2073,7 +2073,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
@@ -2093,7 +2093,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
+        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2191,12 +2191,12 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "644f54fc8fa147139c2fa0780976019afcbb91eb98314245e2d6e6bbe28d806d",
+        "sha256": "a1fba13fe3c228a2339b97d1472aa45eae31fc3da1160a4be081776e9f3c3c38",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "50ddd0277928b1ccc78ac280a3d8a052e1664170c2be2e48bdd6f6ba0775a89f",
+        "sha256": "cf9f638a2e343944aec6db0a5ff44dc6a366738a8cd9d522be3222ef7504d858",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {

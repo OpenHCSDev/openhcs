@@ -35,6 +35,8 @@ class ComparisonRunArtifact(Enum):
 class MeasuredPipelineRunArtifact(Enum):
     """Evidence owned by a single measured ordinary pipeline execution."""
 
+    RUNTIME_OBSERVATION = "runtime_execution_server_observation.pkl"
+    RESULTS_SUMMARY = "zmq_results_summary.json"
     RECEIPT = "measured_pipeline_receipt.json"
     PIPELINE_SOURCE = "submitted_pipeline.py"
     GLOBAL_CONFIG_SOURCE = "submitted_global_config.py"

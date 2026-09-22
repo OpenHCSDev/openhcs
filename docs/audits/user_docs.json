@@ -176,7 +176,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -191,7 +191,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
+        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -765,7 +765,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
@@ -1388,7 +1388,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1403,7 +1403,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
+        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3896,7 +3896,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "88b37afac4a5752a725df1464b976b0d623fa64525ca30b99222fce899a5672c",
+    "source_sha256": "3bfaee4eaf8dfcea39e4fd0f8a51d66cae2cab24a6236ed2a23b51d7a812c0c5",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3946,7 +3946,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
@@ -3966,7 +3966,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
+        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],

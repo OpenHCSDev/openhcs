@@ -31,6 +31,7 @@ from benchmark.cellprofiler_reference_exports import (
     CellProfilerReferenceExportPlan,
 )
 from benchmark.contracts.metric import MetricCollector
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.contracts.tool_adapter import (
     BenchmarkResult,
     ToolAdapter,
@@ -419,7 +420,7 @@ class OpenHCSAdapter(ToolAdapter):
             GlobalPipelineConfig,
         )
         observation_export_path = (
-            request.output_dir / "runtime_execution_server_observation.pkl"
+            MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(request.output_dir)
         )
         with ExitStack() as stack:
             for metric in request.metrics:

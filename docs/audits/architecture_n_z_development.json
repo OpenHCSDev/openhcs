@@ -2684,7 +2684,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
+        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
         "role": "Owns registered benchmark command declarations and the derived installed parser."
       },
       {
@@ -2694,7 +2694,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
+        "sha256": "fc2ec1b80879eddf569a9b0cdb55b917ec46e6b74b617db96789f6a29d42e213",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],

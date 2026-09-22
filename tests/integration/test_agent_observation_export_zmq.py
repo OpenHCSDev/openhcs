@@ -6,6 +6,7 @@ import asyncio
 import os
 from pathlib import Path
 
+from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.control import (
@@ -177,3 +178,50 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.warnings == ()
     assert "EXECUTE_OPENHCS" in report_measured_pipeline_run(inspection).markdown
+
+
+def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
+    tmp_path: Path,
+) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    source_identity = tmp_path / "source_identity"
+    source_identity.mkdir()
+    source_file = tmp_path / "pipeline.py"
+    source_file.write_text(PipelineDocumentAuthority.render(pipeline), encoding="utf-8")
+    output_dir = tmp_path / "cli_evidence"
+    args = create_benchmark_argument_parser().parse_args(
+        [
+            "run-measured",
+            "--plate",
+            str(source_identity),
+            "--execution-plate",
+            str(plate),
+            "--pipeline-source-file",
+            str(source_file),
+            "--output-dir",
+            str(output_dir),
+            "--run-id",
+            "ordinary-cli",
+            "--port",
+            str(22000 + os.getpid() % 20000),
+            "--no-persistent",
+            "--submit-timeout-ms",
+            "120000",
+            "--wait-timeout-ms",
+            "120000",
+        ]
+    )
+
+    assert args.cli_command.run(args) == 0
+    receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    )
+    assert receipt.plate_id == str(source_identity)
+    assert receipt.execution_plate_id == str(plate)
+    assert receipt.run_id == "ordinary-cli"
+    assert receipt.pipeline_name == "pipeline"
+    assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
+    assert all(
+        evidence.valid
+        for evidence in inspect_measured_pipeline_run(output_dir).source_evidence
+    )

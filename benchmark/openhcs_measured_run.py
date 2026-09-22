@@ -47,7 +47,7 @@ from .timing import (
     PhaseTimingTrace,
 )
 
-ZMQ_RESULTS_SUMMARY_FILENAME = "zmq_results_summary.json"
+ZMQ_RESULTS_SUMMARY_FILENAME = MeasuredPipelineRunArtifact.RESULTS_SUMMARY.value
 
 
 def measured_endpoint_provenance(endpoint: PongResponse) -> MeasuredEndpointProvenance:

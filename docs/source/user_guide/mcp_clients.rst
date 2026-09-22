@@ -210,6 +210,11 @@ a short report with evidence warnings. The local CLI equivalent is
 ``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
 Markdown. These inspection routes do not submit a pipeline. Use the normal
 headless execution tools for submission, job status, and cancellation.
+The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
+pipeline source file, plate and empty evidence directory, then uses the same
+ordinary source-session execution service and receipt finalizer. It requires an
+explicit ``--wait-timeout-ms``; ``--execution-plate`` can identify a prepared
+input while preserving the original plate identity.
 
 Codex
 -----

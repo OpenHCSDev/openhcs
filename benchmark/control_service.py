@@ -48,7 +48,6 @@ class BenchmarkControlService:
         if self._execution_service is None:
             raise RuntimeError("Measured run finalization requires execution service.")
         from benchmark.openhcs_measured_run import (
-            ZMQ_RESULTS_SUMMARY_FILENAME,
             measured_endpoint_provenance,
             retain_measured_openhcs_completion,
         )
@@ -66,12 +65,10 @@ class BenchmarkControlService:
         observation_path = self._path_policy.assert_readable(observation_path)
         observation_path = self._path_policy.assert_writable(observation_path)
         artifact_root = observation_path.parent
-        evidence_paths = (
-            *(
-                artifact.path_in(artifact_root)
-                for artifact in MeasuredPipelineRunArtifact
-            ),
-            artifact_root / ZMQ_RESULTS_SUMMARY_FILENAME,
+        evidence_paths = tuple(
+            artifact.path_in(artifact_root)
+            for artifact in MeasuredPipelineRunArtifact
+            if artifact is not MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION
         )
         for evidence_path in evidence_paths:
             if evidence_path.exists():

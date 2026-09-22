@@ -107,6 +107,122 @@ class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
         return 0
 
 
+class RunMeasuredPipelineCommand(BenchmarkCliCommand):
+    """Measure one source-backed pipeline through ordinary job control."""
+
+    command_name = "run-measured"
+    help_text = "Run an ordinary Python pipeline and retain measured evidence."
+    sort_order = 6
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument("--plate", type=Path, required=True)
+        parser.add_argument("--execution-plate", type=Path)
+        parser.add_argument("--pipeline-source-file", type=Path, required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument("--run-id", required=True)
+        parser.add_argument("--pipeline-name")
+        parser.add_argument("--host", default="localhost")
+        parser.add_argument("--port", type=int)
+        parser.add_argument(
+            "--persistent",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help="Reuse an existing execution endpoint or close an ephemeral one.",
+        )
+        parser.add_argument("--submit-timeout-ms", type=int)
+        parser.add_argument(
+            "--wait-timeout-ms",
+            type=int,
+            required=True,
+            help="Explicit bound for the ordinary pipeline job's completion wait.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        if args.wait_timeout_ms <= 0:
+            raise ValueError("--wait-timeout-ms must be positive.")
+        if args.submit_timeout_ms is not None and args.submit_timeout_ms <= 0:
+            raise ValueError("--submit-timeout-ms must be positive.")
+
+        from zmqruntime.messages import ExecutionStatus
+
+        from benchmark.contracts.control import MeasuredPipelineRunFinalizationRequest
+        from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+        from benchmark.control_service import BenchmarkControlService
+        from openhcs.agent.dto.execution import (
+            ExecutionJobStatus,
+            PipelineSourceOrchestratorSessionRequest,
+        )
+        from openhcs.agent.path_policy import AgentPathPolicy
+        from openhcs.mcp.context import OpenHCSAgentContext
+        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.serialization.json import to_jsonable
+
+        output_dir = args.output_dir.expanduser().resolve()
+        policy = AgentPathPolicy.with_roots(
+            readable_roots=(
+                args.plate,
+                args.execution_plate or args.plate,
+                args.pipeline_source_file,
+                output_dir,
+            ),
+            writable_roots=(output_dir,),
+        )
+        plate = policy.assert_readable(args.plate)
+        execution_plate = policy.assert_readable(args.execution_plate or args.plate)
+        source_file = policy.assert_readable(args.pipeline_source_file)
+        if output_dir.exists() and any(output_dir.iterdir()):
+            raise FileExistsError(
+                f"Measured evidence directory must be empty: {output_dir}"
+            )
+        policy.assert_writable(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        context = OpenHCSAgentContext(path_policy=policy)
+        session = context.execution_service.create_session_from_pipeline_source_request(
+            PipelineSourceOrchestratorSessionRequest.from_fields(
+                plate_path=str(plate),
+                execution_plate_path=str(execution_plate),
+                pipeline_source=source_file.read_text(encoding="utf-8"),
+                host=args.host,
+                port=args.port,
+                persistent=args.persistent,
+            )
+        )
+        observation_path = MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
+            output_dir
+        )
+        status = context.execution_service.submit_execution(
+            session.session_id,
+            runtime_observation_export_path=str(observation_path),
+            wait=True,
+            submit_timeout_ms=(
+                args.submit_timeout_ms
+                or OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
+            ),
+            wait_timeout_ms=args.wait_timeout_ms,
+        )
+        if not isinstance(status, ExecutionJobStatus) or (
+            status.status != ExecutionStatus.COMPLETE.value
+        ):
+            raise RuntimeError(f"Ordinary pipeline job did not complete: {status}")
+        receipt = BenchmarkControlService(
+            policy, context.execution_service
+        ).finalize_measured_run(
+            MeasuredPipelineRunFinalizationRequest(
+                job_id=status.job_id,
+                run_id=args.run_id,
+                pipeline_name=args.pipeline_name or source_file.stem,
+            )
+        )
+        print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))
+        return 0
+
+
 class ListBenchmarkCasesCommand(BenchmarkCliCommand):
     """Inspect a manifest's declared work without acquiring or executing it."""
 

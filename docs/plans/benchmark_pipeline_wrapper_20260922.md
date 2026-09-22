@@ -186,6 +186,12 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   may include inline compilation; it retains the compile artifact identifier
   when one was supplied. This is infrastructure evidence, not a comparative
   throughput claim.
+- The registered ``openhcs-benchmark run-measured`` command now adapts a Python
+  source file and plate paths into that same ordinary source-backed session,
+  waits through its existing job control, then invokes the same finalization
+  service as MCP. The runtime observation filename is declared once by the
+  measured-run artifact enum and reused by the CLI and CellProfiler adapter.
+  A live synthetic-plate test verifies the CLI receipt and source evidence.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile
