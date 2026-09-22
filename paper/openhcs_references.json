@@ -1,5 +1,58 @@
 [
   {
+    "id": "Hinkel2023",
+    "type": "article-journal",
+    "title": "The Tecan SiLA2 SDK: A royalty-free, open-source framework to develop SiLA2 servers and clients",
+    "author": [
+      {"given": "Georg", "family": "Hinkel"},
+      {"given": "Jörg", "family": "Kunert"},
+      {"given": "Jason", "family": "Meredith"}
+    ],
+    "container-title": "SLAS Technology",
+    "volume": "28",
+    "issue": "5",
+    "page": "334-344",
+    "issued": {"date-parts": [[2023, 10]]},
+    "DOI": "10.1016/j.slast.2023.07.001",
+    "URL": "https://doi.org/10.1016/j.slast.2023.07.001"
+  },
+  {
+    "id": "Lange2026",
+    "type": "article-journal",
+    "title": "Implementation of a modular digital laboratory infrastructure for SiLA 2 based devices",
+    "author": [
+      {"given": "Ferdinand", "family": "Lange"},
+      {"given": "Tessa", "family": "Habich"},
+      {"given": "Sascha", "family": "Beutel"}
+    ],
+    "container-title": "SLAS Technology",
+    "volume": "36",
+    "page": "100380",
+    "issued": {"date-parts": [[2026, 1]]},
+    "DOI": "10.1016/j.slast.2025.100380",
+    "URL": "https://doi.org/10.1016/j.slast.2025.100380"
+  },
+  {
+    "id": "Courtney2025",
+    "type": "article-journal",
+    "title": "An out-of-hours cell culture autopilot proof of concept based on a modular architecture using the SiLA2 open standard",
+    "author": [
+      {"given": "Patrick", "family": "Courtney"},
+      {"given": "Raphael", "family": "Lieberherr"},
+      {"given": "William", "family": "Speed"},
+      {"given": "Ricardo", "family": "Gaviria"},
+      {"given": "Yordan", "family": "Alipiev"},
+      {"given": "Miguel", "family": "van der Heijden"},
+      {"given": "Oliver", "family": "Peter"}
+    ],
+    "container-title": "SLAS Technology",
+    "volume": "32",
+    "page": "100279",
+    "issued": {"date-parts": [[2025, 6]]},
+    "DOI": "10.1016/j.slast.2025.100279",
+    "URL": "https://doi.org/10.1016/j.slast.2025.100279"
+  },
+  {
     "id": "Lei2024",
     "type": "article-journal",
     "title": "BioImage.IO Chatbot: a community-driven AI assistant for integrative computational bioimaging",

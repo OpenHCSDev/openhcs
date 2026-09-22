@@ -11,6 +11,7 @@ import inspect
 import json
 from pathlib import Path
 
+import black
 from matplotlib.patches import Rectangle
 from objectstate import semantic_values_equal
 
@@ -72,7 +73,10 @@ def build():
     document_source = PipelineDocumentAuthority.render(
         PipelineDocument(config, steps), clean_mode=False
     )
+    document_source = black.format_str(document_source, mode=black.Mode())
     restored = PipelineDocumentAuthority.from_source(document_source)
+    if not semantic_values_equal(config, restored.pipeline_config):
+        raise ValueError("Generated Python did not preserve imported pipeline settings")
     for original, recovered in zip(steps, restored.pipeline_steps, strict=True):
         for before, after in zip(
             normalize_function_pattern(original.func).iter_items(),

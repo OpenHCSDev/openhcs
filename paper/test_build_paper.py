@@ -26,6 +26,15 @@ def test_local_declaration_has_one_source_authority_and_pair():
     )
 
 
+def test_upload_names_are_derived_from_the_paper_prefix():
+    assert PAPER.output_prefix == "openhcs"
+    for role in DocumentRole:
+        for extension in ("pdf", "docx"):
+            assert (
+                PAPER.filename(role, extension) == f"openhcs_{role.value}.{extension}"
+            )
+
+
 def test_ordinary_figure_validation_reuses_receipts(tmp_path):
     _, checks = resolve_inputs(
         PAPER,

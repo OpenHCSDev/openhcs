@@ -105,6 +105,40 @@ Supplementary Data 1.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 7. Held-out results from prospectively authored workflows
+
+![Held-out segmentation, boundary and translocation results from three public assays.](../figures/slas/independent_agent_validation.png){width=6in}
+
+Four development fields or wells were available to each fresh agent before its
+pipeline was frozen. \(A) BBBC039 object F1 and foreground Dice across 50
+held-out fields, ordered by object F1. \(B) The fraction of predicted BBBC007
+adjacent-cell boundary pixels within two pixels of a manual outline in each of
+12 held-out fields. This directed measure does not establish object
+correspondence. \(C, D) Held-out BBBC013 well means for cell-level nuclear to
+cytoplasmic GFP ratios. Points are wells; the line and error bars show the mean
+and sample standard deviation at each dose. Control means and Z-prime use four
+independent wells per control condition. BBBC013 supplies treatment truth, not
+manual segmentation truth.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 8. Per-workflow throughput and memory measurements
+
+![Per-workflow measurements underlying Figure 5.](../figures/slas/figure2_benchmarks_by_workflow.png){width=6in}
+
+The rows are the 30 imported CellProfiler workflows, ordered by median measured
+throughput. \(A) Completed repeated-image assignments per execution second for
+two, three and four workers, with four assignments queued per worker. The color
+scale is logarithmic. \(B) Peak process-tree RAM for one, two, three, four, six
+and eight assignments per worker with four workers. Figure 5 summarizes these
+same observations with individual points, interquartile ranges and medians.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts
@@ -117,6 +151,10 @@ The acquisition scripts pin the official CellProfiler examples to
 supplement to `40abc2e600fd46b74c213999dd25c5245048dc92`.
 
 ### OpenHCS 0.8.5 release comparison
+
+The release CI run executed all 30 workflows and supplied 25 reference-bearing
+comparisons. A later unified current-source run, described below, supplied
+reference-value comparisons for all 30 workflows in one execution.
 
 The [preserved CI evidence](ci_official30_085/README.md) contains the observations,
 summary, phase timings and suite metadata from the hosted Official30 job at
@@ -151,6 +189,61 @@ candidate output trees or individual pixel-difference reports. The native
 references' original dependency environments were not recorded. The evidence
 index supplies source and test permalinks, checksums and the separate
 14 September 2026 reference-inventory audit provenance.
+
+### Unified 30-workflow value comparison
+
+The [unified evidence directory](../../benchmark/results/official30_unified_value_comparison_20260916/README.md)
+preserves one immutable run in which all 30 workflows were compiled and executed
+afresh through isolated ZMQ execution endpoints. All 30 selected reference-value
+comparisons were equivalent and reported zero differences. Its fresh
+[reference inventory](../../benchmark/results/official30_unified_value_comparison_20260916/reference_inventory.csv)
+contains 21 CSV profiles, three SQLite profiles and six image- or array-only
+profiles. Image comparison executed for seven workflows, including the completed
+translocation overlay compared alongside its SQLite values.
+
+The [observations](../../benchmark/results/official30_unified_value_comparison_20260916/observations.csv),
+[phase timings](../../benchmark/results/official30_unified_value_comparison_20260916/phase_timing.csv),
+[summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
+and [run environment](../../benchmark/results/official30_unified_value_comparison_20260916/run_environment.json)
+retain the result and exact candidate source identities. The candidate used
+OpenHCS 0.8.5 current source on Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.1.
+The selected native references used CellProfiler 4.2.8.1 on Python 3.9.25,
+NumPy 1.24.4 and SciPy 1.9.0.
+
+### Five-workflow image and object-label exports
+
+Five source workflows compute images or objects without exporting files. The
+[export-extension manifest](../../benchmark/manifests/official30_value_completion_20260914.json)
+selects versions of those workflows with terminal exports added. Its generated
+pipelines retain the original processing modules and settings. Native CellProfiler
+produced the exported references; OpenHCS processed the same scoped inputs.
+
+| Workflow | Exported values compared | Result |
+| --- | --- | --- |
+| Combine objects | Combined-object labels | Exact label agreement |
+| Translocation starter | Nuclear labels | Exact label agreement |
+| Illumination Example 1, EachMethod | Corrected green image | Float-tolerance agreement |
+| Illumination Example 2 | Uncorrected, small-block-corrected and large-block-corrected nuclear labels | Exact agreement for all three label images |
+| Illumination Example 3 | Polynomial-corrected and convex-hull-corrected images | Float-tolerance agreement for both images |
+
+The [per-artifact comparison table](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/artifact_comparisons.csv)
+records eight passing artifacts. All five integer label images agree exactly
+after normalization of singleton dimensions. The three numerical images have
+zero pixels outside the absolute and relative tolerances of `1e-6`; their
+maximum absolute difference is `2.9802322387695312e-8`. The
+[per-workflow observations](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/observations.jsonl)
+link these comparisons to fresh candidate executions and the retained native
+outputs.
+
+The [run environment](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/run_environment.json)
+identifies OpenHCS execution source `7ca8ecb8e73a882ef0f15616d57b00f0dabf73e0`,
+Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.0. Native references were generated
+with CellProfiler 4.2.8.1 on Python 3.9.25, NumPy 1.24.4 and SciPy 1.9.0.
+Each candidate ran through a fresh matching OpenHCS endpoint. Source revisions,
+native-reference origin and endpoint identities are retained with the results.
+These exported references are incorporated into the unified 30-workflow run;
+the earlier five-workflow audit and release records retain their own protocols
+and identities.
 
 ### Retained single-sample timing records
 
@@ -272,8 +365,9 @@ steps. These conditions measure the configured execution workload; they do not
 establish throughput for every output-saving policy. Exact per-workflow retained
 work still depends on the compiled plans and historical run records.
 
-Each row retains its workflow, worker and well counts, completed-well count,
-execution and total time, memory, status and serial CellProfiler projection.
+Each row retains its workflow, worker count, assignment count, completed-assignment
+count, execution and total time, memory, status and serial CellProfiler projection.
+The source CSV uses well terminology for the virtual-well assignment fields.
 The projection multiplies the native single-sample command duration, including
 startup, by well count; it does not represent a measured persistent or parallel
 CellProfiler run. The source memory
@@ -389,8 +483,60 @@ execution hashes.
 
 Visual review identified a clustered neurite crossover classified as branching.
 The later record reports one resolved crossover after the graph-extraction
-correction. This table compares the retained run summaries; it does not supply
-manual reference annotations or a new controlled comparison of software versions.
+correction. Inspection of the retained ROI files also found two cell-body
+objects at the bottom soma and three nuclear objects in the same region.
+The table above preserves the separately recorded run summaries.
+
+### Current-source replay after algorithm development
+
+A separate OpenHCS 0.8.5 replay used the same two public images with
+nuclear-supported soma detection and soma-rooted path assignment. It produced
+eight neuronal cell bodies, eight nuclei, 18 processes, two branch events,
+one resolved crossover and 24 graph paths. The eight per-cell table totals
+agree with the graph distance features and sum to 2556.137 pixels under unit
+spacing. The [current replay summary](current_neurite_replay_summary.md)
+identifies its execution, saved source and native receipts separately from
+the original demonstration and the OpenHCS 0.7.14 correction.
+
+### Published manual-tracing references
+
+The [NeuronCyto II publication](https://doi.org/10.1002/cyto.a.22872) supplies independent measurements
+for image 1 in its supplementary files 8–10. The two input TIFFs used here are
+byte-identical to `CrossOvers_Images/1_w1.tif` and `1_w2.tif` in the public
+`Testing image.zip` archive. The checksums are listed in the original run record.
+
+| Published reference | Image 1 entry | Source file |
+| --- | --- | --- |
+| Manually traced neurons | Eight per-cell entries | Supplement 9 |
+| Neurite length by branch order | Primary 3,633.672; secondary 198.929; tertiary 0; total 3,832.601 | Supplement 8 |
+| Crossover count | Three crossovers; NeuronCyto II resolved two | Supplement 10 |
+
+Lengths above retain the numerical units of the source tables. The eight
+per-cell reference lengths are 426.82, 172.375, 751.962, 395.04, 669.783,
+343.629, 587.841 and 485.152. These entries give a reference against which to
+investigate the nine reported neurons. Spatial cell matching, measurement-unit
+alignment and agreement on the definition of neurite length are needed before
+computing per-cell accuracy. The public testing archive contains the images;
+downloadable manual trace coordinates have not been located. The published
+crossover count and the OpenHCS branch count measure different quantities.
+
+The [reference audit](neuroncyto_reference_audit.md) records the source links,
+file checksums and ROI identifiers. These measurements were examined after the
+recorded agent run and were not supplied to the agent during authoring.
+
+### Intermediate correction recorded on 15 September 2026
+
+Before the current-source replay, a separate GUI/MCP rerun (execution
+`b2a64589-6fc1-4ac2-8b2b-551818f6273b`) used the same field and pipeline
+settings. Width-scale nuclear peak suppression preserved the bottom nucleus
+as one object, and the filled neuron artifact was derived from final rooted
+trace ownership rather than earlier secondary propagation. The run produced
+eight nuclei and eight cell bodies, including one body at the bottom soma.
+Native viewer captures showed matching filled and thin-trace ownership at the
+two reviewed crossings, and total measured outgrowth was 1860 pixels. The audit
+records the execution identity, ROI locations, capture checksums and test
+results. This retained intermediate result preserves the development sequence;
+the current-source replay above supplies the current findings.
 
 ### Exact task prompt
 
@@ -439,18 +585,48 @@ controlled fixtures and isolate the stated behavior. The real-corpus execution
 and value comparisons are provided by the separate Official30 job in
 Supplementary Data 1.
 
+## Supplementary Data 7. Prospective agent-authored assay validation
+
+The [validation report](independent_agent_validation.md) records the prospective
+design, quantitative results, limitations, prediction-manifest hashes and
+infrastructure findings for BBBC039, BBBC007 and BBBC013. Each trial used a
+fresh gpt-5.6-sol author through the connected OpenHCS desktop and MCP surface.
+Four development fields or wells were visible before the scientific pipeline
+was frozen; held-out references and treatment metadata were then scored by the
+typed evaluator in
+[`benchmark/annotated_validation.py`](../../benchmark/annotated_validation.py).
+
+The tracked [evidence index](independent_validation/README.md) links each exact
+frozen pipeline and held-out score receipt. Prediction arrays and source-image
+archives remain outside the paper package because the BBBC013 held-out result
+tree alone contains 1,472 artifacts and 672 MB. The score receipts bind their
+prediction manifests and the common corpus manifest by SHA-256. The
+[preparation record](../../benchmark/annotated_validation_20260915.md) explains
+the deterministic partitions, image normalization and evaluation definitions;
+the preparation manifest records the downloaded source identities.
+
+Supplementary Figure 7 is regenerated by
+[`build_slas_independent_validation.py`](../figures/build_slas_independent_validation.py)
+from the three score receipts. Its
+[plot data](../figures/slas/independent_agent_validation_plot_data.csv) and
+[provenance receipt](../figures/slas/independent_agent_validation_provenance.json)
+retain the plotted rows and source/output hashes.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
 |------------------------------|------------------------------|----------------------------------------|
 | May CellProfiler benchmark | Co-committed source `f58bca4e9`; executed environment still to be recovered | Retained comparison and timing summaries, worker and memory observations |
 | Release Official30 comparison | OpenHCS 0.8.5, `e867013a8`; Linux, Python 3.12.14 | 30 fresh candidate executions; 25 retained-value comparisons; two selected image cases |
+| Unified Official30 comparison | OpenHCS 0.8.5 current source based on `b2f3cf83b`; Python 3.12.3, NumPy 2.1.3, SciPy 1.18.1 | 30 fresh candidate executions; 30 equivalent selected-value comparisons; seven workflows with image comparison; zero differences |
+| Five-workflow export extension | OpenHCS source `7ca8ecb8e`; Python 3.12.3, NumPy 2.1.3, SciPy 1.18.0 | Five fresh candidate executions; eight passing image or object-label comparisons; native and candidate environments retained |
 | Workflow regression tests | `7a7d21fee`; named test files unchanged from 0.8.5 | Successful unit-test job; representative authoring and validation cases |
 | Original unattended neurite run; Figure 3 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
 | Later corrected neurite demonstration; Supplementary Figure 4 | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
 | Parameter/code round trip; Figure 2 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
 | Comet Assay translation; Figure 4 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
 | Custom-function registration; Supplementary Figure 5 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
+| Prospective agent-authored assays; Supplementary Figure 7 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
 
 The full figure receipts retain source hashes and capture-specific changes.
 The custom-function example was registered and selected but not executed on

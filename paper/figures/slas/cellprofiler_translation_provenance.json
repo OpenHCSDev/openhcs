@@ -1,9 +1,9 @@
 {
-  "generator_sha256": "c0134cf20b33cc6048722dff5503f143b711ec56c2ef8f9036e5ee40d6db0999",
+  "generator_sha256": "fa19dc2a6f5e9b4992fd58686b6af2192e134e8137498cc1458f2e23eab2b147",
   "source_sha256": {
     "benchmark/native_refs/official30_scoped_rows/ExampleCometAssay_ExampleCometAssay_wells_include_first1/native_cellprofiler_headless/ExampleCometAssay.cppipe": "daec62eb90d9457a240bd28dcb3a1002b480db366a5d6aa849a8813f1073f8b6",
-    "paper/figures/build_slas_cellprofiler.py": "c0134cf20b33cc6048722dff5503f143b711ec56c2ef8f9036e5ee40d6db0999",
-    "paper/figures/slas/cellprofiler_translation_imported.py": "fb77e8e97af83376e6c66f7e8800a1dee3d814be19e2f013abf01ef903debab0",
+    "paper/figures/build_slas_cellprofiler.py": "fa19dc2a6f5e9b4992fd58686b6af2192e134e8137498cc1458f2e23eab2b147",
+    "paper/figures/slas/cellprofiler_translation_imported.py": "d933bad3b789811fb44669c4fe92ecb3d02b568acf09084de681232629520742",
     "openhcs/interop/cellprofiler/parser.py": "25fd96f8fdd4a4f02b01fc2f55e8fdb978efa331f16ca612b1466c9435e4ac89",
     "openhcs/interop/cellprofiler/pipeline_import.py": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
     "openhcs/interop/cellprofiler/module_declarations.py": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
@@ -18,17 +18,17 @@
     "openhcs/processing/backends/cellprofiler/morphology.py": "f174e6b6f940e083c904245354cdf384e81d287b1b2c6354eb7cb08aae4514ac",
     "openhcs/processing/backends/cellprofiler/shape.py": "ebf6bbde9013e99b1cf527386b0c9efd4ed10da369843864b4cfcf28340e2823",
     "openhcs/processing/backends/cellprofiler/texture.py": "640d9d2b5a17f643c3fe70b70bf424caa5b785693c7f6bae5d851942d52fb6f5",
-    "openhcs/processing/backends/cellprofiler/intensity.py": "f529b5bfc9c595a3f7017d2022d52425b05d2f5ed7e810823073f556e520cf1f",
+    "openhcs/processing/backends/cellprofiler/intensity.py": "646e837759d6504e496b09fd903744c95e020ae02d0a424bbe408cb772d8b2f0",
     "openhcs/processing/backends/cellprofiler/outlines.py": "82c865640a5d07401ce24fc3eeeef7fa61b1e27da45f6f0fb10348c942d8e0f9",
     "openhcs/processing/backends/cellprofiler/save_images.py": "0042b72bdc53fabbb93248aea61c3c7ed3f488e563e9d190b9f65746d434257c",
     "openhcs/processing/backends/cellprofiler/spreadsheet_export.py": "5787bab5727e85c045e3aed03135bb64ddc62c5a5796fea62f9570576681e6f2",
-    "paper/figures/build_slas_visual_story.py": "7eb189ca5fa55aff5c6dfdeac48da7dc5cb0af3217b214e836afeda3c0a7715d"
+    "paper/figures/build_slas_visual_story.py": "29f1936406b2453b90dae232bc8ec1bbea1e998145da6994c38ef397630db8eb"
   },
   "ui_crops": [],
   "output_sha256": {
     "cellprofiler_translation.png": "4a6c8f6708314c273c364abb3bb8ab2b9ee47ef0a403784116fe869018ba1fc7",
-    "cellprofiler_translation.pdf": "f881fe911aedf8e1e0f64a0d4af40953e237dfa1afaaae182b5732da3815dc2c",
-    "cellprofiler_translation.svg": "3e0685123106c42fded116f8277be1014140f1040cab01b4102d87b3f19d8f42"
+    "cellprofiler_translation.pdf": "5ec3ec0ca3ce0268230a948ddabfc09ebff1c3db8edf93dfc79239afda231880",
+    "cellprofiler_translation.svg": "f2c4adfe20ca0b86066200735d41bf9f9c446ebe0daf7b31aa6fe34ad8f0bad4"
   },
   "interpretation": "Current parser/importer translation of the retained public ExampleCometAssay benchmark pipeline. No analysis was run. Panel A shows all enabled modules and all imported steps; multiplicity counts actual callable invocations, not parallel workers. Panel B expands the actual MeasureObjectSizeShape function list; panel C shows the actual MaskObjects named-object selections and inverted-mask setting. Layout is specific to this example, not a universal one-module-to-one-step claim.",
   "imported_document": "paper/figures/slas/cellprofiler_translation_imported.py",

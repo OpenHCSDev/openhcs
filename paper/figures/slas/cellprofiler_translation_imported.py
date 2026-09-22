@@ -43,7 +43,10 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     SourceSetRole,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import (
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_scope import (
     CellProfilerMeasurementTargetScope,
@@ -184,7 +187,9 @@ pipeline_config = PipelineConfig(
         imported_metadata_tables=(),
         source_stack_components=(),
         grouping_metadata_fields=(),
-        source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.0, 1.0, 1.0)),
+        source_voxel_spacing=SourceVoxelSpacing(
+            values_zyx=(1.0, 1.0, 1.0), unit=SourceVoxelSpacingUnit.RELATIVE
+        ),
     ),
     step_source_bindings_config=LazyStepSourceBindingsConfig(
         enabled=None,
