@@ -2189,7 +2189,7 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "b22bc5b3b72d40b6ffe4ce21df74016c9e602421d2fa6c7a2849ca906d5350cd",
+        "sha256": "b5f936289fbf776d1dbbbbf14fc7e24bf3294bebfc419e720755d5d901550df3",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {

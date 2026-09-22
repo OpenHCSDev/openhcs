@@ -42,6 +42,7 @@ from openhcs.core.config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
+    PipelineConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
@@ -159,7 +160,7 @@ def _execute_pipeline_via_zmq_server(
     selected_pipeline_path: str | Path,
     pipeline_steps: Sequence[AbstractStep],
     global_config: GlobalPipelineConfig,
-    pipeline_config: Any,
+    pipeline_config: PipelineConfig,
     observation_export_path: Path,
     phase_timing: PhaseTimingTrace,
     timing_observer: _ZMQProgressTimingObserver,
