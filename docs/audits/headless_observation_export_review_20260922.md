@@ -18,5 +18,7 @@ re-audited.
 
 Evidence: 400 agent-service and MCP unit tests passed, including the service
 path-policy and submission-forwarding checks and the declaration-derived MCP
-input-schema check. No fresh installed-client or live execution proof is
-claimed by this review.
+input-schema check. A fresh-server integration test additionally ran an ordinary
+synthetic-plate pipeline through the service and validated the exported runtime
+observation. This does not establish fresh installed-client behavior or any
+comparative benchmark claim.

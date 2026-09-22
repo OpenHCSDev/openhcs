@@ -160,7 +160,10 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   then composes the typed auxiliary option into its ordinary submission.
   Existing status and cancellation job control remain unchanged. This is a
   bridge toward measurement through MCP, not a generic benchmark receipt or
-  report generator yet.
+  report generator yet. A fresh-server integration test executes an ordinary
+  synthetic-plate pipeline through that service and reads the valid exported
+  observation. This proves the option reaches the runtime; it does not establish
+  benchmark timing, repeated-run, or installed-client behavior.
 - The post-change uncached NRA scan completed in `exact_compact_global` mode
   with 79 detectors analyzed, zero omitted, and seven findings. The quick
   cached scan was partial (43 analyzed, 36 omitted) and is not used as global
