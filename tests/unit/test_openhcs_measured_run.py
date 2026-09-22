@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from zmqruntime import EndpointApplication, EndpointApplicationCompatibility
 
 import benchmark.openhcs_measured_run as measured_run
+from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -15,8 +17,9 @@ from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
-def test_measured_run_accepts_an_ordinary_pipeline_document(
-    monkeypatch, tmp_path: Path
+@pytest.mark.parametrize("valid_observation", (True, False))
+def test_measured_run_validates_an_ordinary_pipeline_document(
+    monkeypatch, tmp_path: Path, valid_observation: bool
 ) -> None:
     observation_path = tmp_path / "observation.pkl"
     document = PipelineDocumentAuthority.from_values(
@@ -85,14 +88,35 @@ def test_measured_run_accepts_an_ordinary_pipeline_document(
             }
 
     monkeypatch.setattr(measured_run, "ZMQExecutionClient", FakeClient)
+
+    def validate_observation():
+        if not valid_observation:
+            raise RuntimeError("compiled expectation failed")
+        return SimpleNamespace(records_by_axis={})
+
     monkeypatch.setattr(
         measured_run,
         "ZMQRuntimeExecutionObservationExport",
         SimpleNamespace(
-            read=lambda path: SimpleNamespace(output_roots=(tmp_path,), axis_count=1)
+            read=lambda path: SimpleNamespace(
+                output_roots=(tmp_path,),
+                axis_count=1,
+                require_valid_observation=validate_observation,
+            )
         ),
     )
     timing = PhaseTimingTrace(run_id="ordinary", pipeline_name="empty", tool="OpenHCS")
+
+    if not valid_observation:
+        with pytest.raises(ToolExecutionError, match="compiled expectation failed"):
+            measured_run.execute_measured_openhcs_pipeline(
+                submission=submission,
+                phase_timing=timing,
+                timing_observer=measured_run._ZMQProgressTimingObserver(),
+            )
+        assert clients[0].disconnect_count == 1
+        assert not (tmp_path / measured_run.ZMQ_RESULTS_SUMMARY_FILENAME).exists()
+        return
 
     result, source = measured_run.execute_measured_openhcs_pipeline(
         submission=submission,
@@ -103,6 +127,7 @@ def test_measured_run_accepts_an_ordinary_pipeline_document(
     assert result.execution_id == "execute-1"
     assert clients[0].disconnect_count == 1
     assert result.output_roots == (tmp_path,)
+    assert result.observation.records_by_axis == {}
     assert source == submission.pipeline_code()
     assert [record.phase for record in timing.records] == [
         BenchmarkPhase.SUBMIT_OPENHCS,
@@ -110,4 +135,5 @@ def test_measured_run_accepts_an_ordinary_pipeline_document(
         BenchmarkPhase.SUBMIT_OPENHCS,
         BenchmarkPhase.WAIT_OPENHCS,
         BenchmarkPhase.EXECUTE_OPENHCS,
+        BenchmarkPhase.VALIDATE_RUNTIME,
     ]

@@ -17,6 +17,9 @@ from typing import Any
 from zmqruntime.client import EndpointClientSession
 
 from benchmark.contracts.tool_adapter import ToolExecutionError
+from openhcs.core.runtime_execution_validation import (
+    RuntimeArtifactExecutionObservation,
+)
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -42,6 +45,7 @@ class _ZMQOpenHCSExecution:
 
     execution_id: str
     observation_export: ZMQRuntimeExecutionObservationExport
+    observation: RuntimeArtifactExecutionObservation
     output_roots: tuple[Path, ...]
     results_summary: Mapping[str, Any]
     endpoint_provenance: Mapping[str, Any]
@@ -261,6 +265,11 @@ def execute_measured_openhcs_pipeline(
     observation_export = ZMQRuntimeExecutionObservationExport.read(
         observation_export_path
     )
+    try:
+        with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
+            observation = observation_export.require_valid_observation()
+    except RuntimeError as exc:
+        raise ToolExecutionError(str(exc)) from exc
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
     results_summary_payload = run.completion_response.get(
         "results", {}
@@ -282,6 +291,7 @@ def execute_measured_openhcs_pipeline(
         _ZMQOpenHCSExecution(
             execution_id=run.execution_id,
             observation_export=observation_export,
+            observation=observation,
             output_roots=output_roots,
             results_summary=results_summary,
             endpoint_provenance=endpoint_provenance,

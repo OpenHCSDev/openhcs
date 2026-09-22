@@ -450,13 +450,7 @@ class OpenHCSAdapter(ToolAdapter):
             if server_execution.output_roots
             else request.output_dir
         )
-        try:
-            with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
-                observation = (
-                    server_execution.observation_export.require_valid_observation()
-                )
-        except RuntimeError as exc:
-            raise ToolExecutionError(str(exc)) from exc
+        observation = server_execution.observation
         axis_count = server_execution.axis_count
         executed_axes = tuple(observation.records_by_axis)
         csv_output_count = len(observation.exports.table_outputs)
