@@ -198,14 +198,21 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   The installed MCP smoke explicitly grants its fixture directory through the
   declared agent path-policy keys because macOS parent and child interpreters
   may resolve different temporary roots.
+- A fresh MCP stdio process now has an opt-in installed-client smoke that
+  generates a tiny synthetic plate, creates a normal source-backed session,
+  submits and waits for its pipeline job, finalizes measured evidence, and
+  checks the retained source. The wheel-integration CI job runs this one
+  end-to-end smoke; the installer matrix keeps its lightweight discovery and
+  inspection smoke. The same path passed locally against the development
+  environment, while installed-wheel CI remains the publication gate.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile
   or runtime validation into a successful observation.
 - Fresh-process installed CLI and full-profile MCP tests must agree on request
   identity and receipt projection. Default desktop and hosted surfaces must
-  remain intentionally bounded. The next installed-client test should submit,
-  complete and finalize a job through a fresh full-profile MCP process.
+  remain intentionally bounded. Verify the new wheel-integration smoke against
+  the exact PR head before calling the installed-client boundary closed.
 - Run a small deterministic fixture for lifecycle/overhead checks; do not run
   the 30-workflow corpus or publish performance numbers in this infrastructure
   phase. A later matched experiment needs separately approved design and

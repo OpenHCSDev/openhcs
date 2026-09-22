@@ -2374,6 +2374,9 @@ jobs:
             python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_gui.py" \
               --forbid-import-root "$GITHUB_WORKSPACE" \
               --evidence-directory "$RUNNER_TEMP/openhcs-wheel-gui-evidence"
+          python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_mcp.py" \
+            --forbid-import-root "$GITHUB_WORKSPACE" \
+            --exercise-measured-execution
           python scripts/run_installed_tests.py --repo-root "$GITHUB_WORKSPACE" -- \
             tests/unit/pyqt_gui/test_progress_tree_aggregation.py -q
           for group in 1 2 3 4 5 6; do

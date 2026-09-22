@@ -208,7 +208,122 @@ async def _run_protocol_smoke() -> dict:
     }
 
 
-async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
+async def _run_measured_execution_protocol_smoke(session, output_dir: Path) -> dict:
+    """Complete one ordinary source-backed job through the installed MCP process."""
+
+    from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+    from openhcs.core.config import PipelineConfig
+    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.steps import FunctionStep
+    from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+
+    plate = output_dir / "protocol_plate"
+    generated = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_generate_synthetic_plate",
+                {
+                    "output_dir": str(plate),
+                    "grid_rows": 1,
+                    "grid_cols": 1,
+                    "tile_width": 32,
+                    "tile_height": 32,
+                    "wavelengths": 1,
+                    "z_stack_levels": 1,
+                    "num_cells": 2,
+                    "wells": ["A01"],
+                    "format": "ImageXpress",
+                    "random_seed": 7,
+                },
+            ),
+            timeout=90,
+        )
+    )
+    if not plate.is_dir() or generated.get("errors"):
+        raise AssertionError(f"Installed MCP did not generate a plate: {generated}")
+
+    document = PipelineDocumentAuthority.from_values(
+        pipeline_config=PipelineConfig(),
+        pipeline_steps=[
+            FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
+        ],
+    )
+    created = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_create_orchestrator_session_from_pipeline_source",
+                {
+                    "plate_path": str(plate),
+                    "pipeline_source": PipelineDocumentAuthority.render(document),
+                    "port": 26000 + os.getpid() % 20000,
+                    "persistent": False,
+                },
+            ),
+            timeout=90,
+        )
+    )
+    session_id = created.get("session_id")
+    if not isinstance(session_id, str):
+        raise AssertionError(f"Installed MCP did not create a session: {created}")
+
+    evidence_dir = output_dir / "measured"
+    evidence_dir.mkdir()
+    status = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_submit_pipeline_execution",
+                {
+                    "session_id": session_id,
+                    "runtime_observation_export_path": str(
+                        MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
+                            evidence_dir
+                        )
+                    ),
+                    "wait": True,
+                    "submit_timeout_ms": 120_000,
+                    "wait_timeout_ms": 120_000,
+                },
+            ),
+            timeout=180,
+        )
+    )
+    if status.get("status") != "complete" or not isinstance(status.get("job_id"), str):
+        raise AssertionError(f"Installed MCP execution did not complete: {status}")
+
+    finalized = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_finalize_measured_pipeline_run",
+                {
+                    "job_id": status["job_id"],
+                    "run_id": "installed-protocol-smoke",
+                    "pipeline_name": "Blur",
+                },
+            ),
+            timeout=90,
+        )
+    )
+    inspected = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_inspect_measured_pipeline_run",
+                {"output_dir": str(evidence_dir)},
+            ),
+            timeout=90,
+        )
+    )
+    if finalized.get("execution_id") != status.get("server_execution_id"):
+        raise AssertionError(f"Installed MCP receipt changed job identity: {finalized}")
+    if not inspected.get("source_evidence") or any(
+        not item.get("valid") for item in inspected["source_evidence"]
+    ):
+        raise AssertionError(f"Installed MCP retained invalid evidence: {inspected}")
+    return {"measured_execution_id": finalized["execution_id"]}
+
+
+async def _run_benchmark_protocol_smoke(
+    output_dir: Path, *, exercise_measured_execution: bool = False
+) -> dict:
     """Prove the installed expert extension through a fresh MCP client."""
 
     from mcp import ClientSession, StdioServerParameters
@@ -288,7 +403,12 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
                     raise AssertionError(
                         f"Absent receipt was not reported by {name}: {payload}"
                     )
-    return {"benchmark_expert_tools": sorted(expected)}
+            measured_execution = (
+                await _run_measured_execution_protocol_smoke(session, output_dir)
+                if exercise_measured_execution
+                else {}
+            )
+    return {"benchmark_expert_tools": sorted(expected), **measured_execution}
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -298,6 +418,11 @@ def _build_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="Source checkout that must not own the imported openhcs package.",
+    )
+    parser.add_argument(
+        "--exercise-measured-execution",
+        action="store_true",
+        help="Run one ordinary source-backed job through the installed MCP process.",
     )
     return parser
 
@@ -360,7 +485,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
 
             result = asyncio.run(_run_protocol_smoke())
-            result.update(asyncio.run(_run_benchmark_protocol_smoke(working_directory)))
+            result.update(
+                asyncio.run(
+                    _run_benchmark_protocol_smoke(
+                        working_directory,
+                        exercise_measured_execution=args.exercise_measured_execution,
+                    )
+                )
+            )
             result.update(
                 {
                     "package_path": str(package_path),
