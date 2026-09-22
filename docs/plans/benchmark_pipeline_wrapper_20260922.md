@@ -211,7 +211,10 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   runtime execution and which by evidence finalization. The shared evidence
   writer checks for existing finalizer outputs before writing, so the direct
   wrapper, CLI, and MCP path all refuse to overwrite retained evidence under
-  one rule rather than maintaining a separate MCP-only collision guard.
+  one rule rather than maintaining a separate MCP-only collision guard. The
+  converted-CellProfiler parity integration now uses distinct evidence
+  directories for the reference and second run, preserving the first output
+  while it is used as a comparison input.
 - Environment evidence is still incomplete: the receipt records client
   interpreter/package location, OpenHCS application versions and endpoint
   identity, but not the server/worker Python and dependency versions that a

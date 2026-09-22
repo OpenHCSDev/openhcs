@@ -33,7 +33,7 @@ def test_openhcs_adapter_runs_converted_cppipe_pipeline(tmp_path: Path) -> None:
             "converted_cppipe_smoke",
             "synthetic_cppipe_smoke",
             cppipe_path,
-            tmp_path / "benchmark_outputs",
+            tmp_path / "benchmark_outputs_first",
         )
     )
 
@@ -43,13 +43,14 @@ def test_openhcs_adapter_runs_converted_cppipe_pipeline(tmp_path: Path) -> None:
     assert result.provenance["axis_count"] == 1
     assert result.provenance["image_output_count"] == 0
 
+    # Keep the first run immutable while using its outputs as the parity reference.
     parity_result = _run_openhcs_adapter(
         OpenHCSAdapterRunCase.local_cppipe(
             plate_path,
             "converted_cppipe_parity",
             "synthetic_cppipe_smoke",
             cppipe_path,
-            tmp_path / "benchmark_outputs",
+            tmp_path / "benchmark_outputs_parity",
             equivalence_reference_output_dir=result.output_path,
             compare_image_outputs=False,
         )
