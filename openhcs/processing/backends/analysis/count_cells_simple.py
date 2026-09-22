@@ -746,6 +746,14 @@ def inspect_metaxpress_round_objects(
     lineage distinguishes separate threshold-stage components from watershed
     splits. Inspect every diagnostic beside raw stain morphology; acceptance is
     not proof that an object is a biological nucleus or cell.
+
+    Args:
+        image: Input stack with shape ``(C, Y, X)``. The selected channel is
+            inspected and the complete stack is returned unchanged.
+        settings: Channel selection, expected object-width range, and minimum
+            intensity above local background used by the shared detector.
+        pixel_size: Plate pixel size in micrometers per pixel. OpenHCS injects
+            this value from source metadata and hides it from the editor.
     """
     settings.validate("settings")
     if image.ndim != 3 or not 0 <= settings.channel_index < image.shape[0]:
