@@ -33,9 +33,9 @@ OpenHCS-owned areas
 
 ``benchmark``
   Packaged comparison command declarations, manifests, adapters, typed run
-  receipts, result artifacts, and reporting helpers. The expert local MCP
-  capability inspects existing authorized run directories through these
-  contracts; it does not own benchmark execution.
+  receipts, result artifacts, and reporting helpers. Expert local MCP
+  capabilities inspect existing authorised run directories through these
+  contracts; they do not own pipeline execution or live job status.
 
 Extracted foundations
 ---------------------

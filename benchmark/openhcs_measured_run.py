@@ -206,6 +206,8 @@ def execute_measured_openhcs_pipeline(
     ).runtime_observation_export_path
     if observation_export_path is None:
         raise ValueError("Measured OpenHCS runs require runtime observation export.")
+    if not observation_export_path.is_absolute():
+        raise ValueError("Measured OpenHCS observation export path must be absolute.")
     pipeline_source = submission.pipeline_code()
     client = ZMQExecutionClient(
         port=execution_port,
@@ -301,6 +303,15 @@ def execute_measured_openhcs_pipeline(
         submission.global_pipeline_config,
         expected_config_type=GlobalPipelineConfig,
     )
+    artifact_root = observation_export_path.parent
+    for artifact, source in (
+        (MeasuredPipelineRunArtifact.PIPELINE_SOURCE, pipeline_source),
+        (MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE, global_config_source),
+    ):
+        source_path = artifact.path_in(artifact_root)
+        pending = source_path.with_name(f".{source_path.name}.pending")
+        pending.write_text(source, encoding="utf-8")
+        pending.replace(source_path)
     receipt = MeasuredPipelineRunReceipt(
         schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
         run_id=phase_timing.run_id,
@@ -322,9 +333,7 @@ def execute_measured_openhcs_pipeline(
         endpoint_provenance=endpoint_provenance,
         completed_at_epoch_seconds=time.time(),
     )
-    receipt.write(
-        MeasuredPipelineRunArtifact.RECEIPT.path_in(observation_export_path.parent)
-    )
+    receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
     return (
         _ZMQOpenHCSExecution(
             execution_id=run.execution_id,

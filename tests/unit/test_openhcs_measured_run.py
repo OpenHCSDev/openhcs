@@ -141,6 +141,20 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         retained.pipeline_source_sha256
         == hashlib.sha256(source.encode("utf-8")).hexdigest()
     )
+    assert (
+        MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(tmp_path).read_text(
+            encoding="utf-8"
+        )
+        == source
+    )
+    assert (
+        retained.global_config_source_sha256
+        == hashlib.sha256(
+            MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE.path_in(
+                tmp_path
+            ).read_bytes()
+        ).hexdigest()
+    )
     assert [record.phase for record in timing.records] == [
         BenchmarkPhase.SUBMIT_OPENHCS,
         BenchmarkPhase.WAIT_OPENHCS,

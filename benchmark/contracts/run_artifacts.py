@@ -36,6 +36,8 @@ class MeasuredPipelineRunArtifact(Enum):
     """Evidence owned by a single measured ordinary pipeline execution."""
 
     RECEIPT = "measured_pipeline_receipt.json"
+    PIPELINE_SOURCE = "submitted_pipeline.py"
+    GLOBAL_CONFIG_SOURCE = "submitted_global_config.py"
 
     def path_in(self, output_dir: Path) -> Path:
         return output_dir / self.value

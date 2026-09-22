@@ -5,6 +5,17 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+from benchmark.control import (
+    inspect_measured_pipeline_run,
+    report_measured_pipeline_run,
+)
+from benchmark.openhcs_measured_run import (
+    _ZMQProgressTimingObserver,
+    execute_measured_openhcs_pipeline,
+)
+from benchmark.timing import PhaseTimingTrace
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
@@ -13,18 +24,22 @@ from openhcs.agent.services.execution_session_service import (
     PipelineSourceSessionRequest,
 )
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQExecutionIdentity,
+)
 
 
-def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> None:
+def _synthetic_plate_and_pipeline(tmp_path: Path):
     plate = tmp_path / "plate"
     SyntheticMicroscopyGenerator(
         output_dir=str(plate),
@@ -43,6 +58,11 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
             FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
         ],
     )
+    return plate, pipeline
+
+
+def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
     service = ExecutionSessionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,), writable_roots=(tmp_path,)
@@ -67,6 +87,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
         session.session_id,
         runtime_observation_export_path=str(export_path),
         wait=True,
+        submit_timeout_ms=120_000,
         wait_timeout_ms=120_000,
     )
 
@@ -74,3 +95,46 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     observation = ZMQRuntimeExecutionObservationExport.read(export_path)
     observation.require_valid_observation()
     assert observation.output_roots
+
+
+def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
+    tmp_path: Path,
+) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    evidence_dir = tmp_path / "evidence"
+    submission = OpenHCSExecutionSubmission(
+        plate_id=plate,
+        pipeline_document=pipeline,
+        global_config=GlobalPipelineConfig(),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=evidence_dir / "observation.pkl"
+        )
+    )
+
+    execution, source = execute_measured_openhcs_pipeline(
+        submission=submission,
+        phase_timing=PhaseTimingTrace(
+            run_id="ordinary-live",
+            pipeline_name="Blur",
+            tool="OpenHCS",
+        ),
+        timing_observer=_ZMQProgressTimingObserver(),
+        execution_port=19000 + os.getpid() % 20000,
+    )
+
+    receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(evidence_dir)
+    )
+    inspection = inspect_measured_pipeline_run(evidence_dir)
+    assert execution.observation.records_by_axis
+    assert receipt == execution.receipt
+    assert (
+        MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(evidence_dir).read_text(
+            encoding="utf-8"
+        )
+        == source
+    )
+    assert all(item.valid for item in inspection.source_evidence)
+    assert inspection.warnings == ()
+    assert "EXECUTE_OPENHCS" in report_measured_pipeline_run(inspection).markdown

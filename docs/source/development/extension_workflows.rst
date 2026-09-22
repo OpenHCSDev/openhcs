@@ -49,6 +49,9 @@ that needs the behavior.
      - ``BenchmarkCliCommand`` registered declaration family
    * - Comparison-run provenance or lifecycle
      - ``ComparisonSuiteRunDeclaration`` and ``ComparisonSuiteRunReceipt``
+   * - Ordinary measured-pipeline evidence
+     - ``MeasuredPipelineRunReceipt`` derived from the normal submission and
+       validated observation; the runtime service retains live job status
 
 Common workflow
 ---------------

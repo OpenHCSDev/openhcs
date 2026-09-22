@@ -176,7 +176,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -186,12 +186,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "2a9f58ceed80c44830e6a1ccb0547d0ff1fe56a5db9f22847db73e796224ef14",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "bc1dd9cb494923cef8ce94f6677c33246a673be3a845809ea4a5e4570878d708",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -695,7 +695,7 @@
   },
   {
     "path": "docs/source/concepts/module_structure.rst",
-    "source_sha256": "aa225b19668b2883e6230bc05235fe5d0aa74b72ab258c2f149e58b334cb9d4b",
+    "source_sha256": "eeeb14a2f3e7167b345ffd8c4fe01e2bbfc19395ba9618f4154d7aa991df36d6",
     "audience": [
       "contributors",
       "integrators"
@@ -765,7 +765,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
@@ -775,7 +775,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "2a9f58ceed80c44830e6a1ccb0547d0ff1fe56a5db9f22847db73e796224ef14",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -1013,7 +1013,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "6a0cf0b77271a7b25539d53235bef0567c365b8cbcf9ab42bab3e68dcdf01e1e",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -1388,7 +1388,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1398,12 +1398,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "2a9f58ceed80c44830e6a1ccb0547d0ff1fe56a5db9f22847db73e796224ef14",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "bc1dd9cb494923cef8ce94f6677c33246a673be3a845809ea4a5e4570878d708",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -2450,7 +2450,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "a97cdebde99a0f82333f0711447f405e33bb6f99cbc89f7b9f24687e43437c9d",
+    "source_sha256": "82d14d7b3163bd6c7313922d7509cd80325e1021d83e80e50aa8775ac902e59b",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2470,7 +2470,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "6a0cf0b77271a7b25539d53235bef0567c365b8cbcf9ab42bab3e68dcdf01e1e",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -3896,7 +3896,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "29719ff9202f1da68406d7babbc833d6e485fcc04b2e9948fa4078bff8a06554",
+    "source_sha256": "8f90630af7e722b26637a0432203976f1b5a8d05006249e432deaa7da997e10f",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3946,7 +3946,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
@@ -3956,17 +3956,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "898d5639e8b53b5c04cd28f93c5cddd8b9388a5f79177f85ec80f9bbc7c74131",
+        "sha256": "67ae851277b0115f91a60ef27c8e1c1df173ae132db7590874a9fe57b471c9ff",
         "role": "Declares the expert MCP benchmark inspection request and result."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "2a9f58ceed80c44830e6a1ccb0547d0ff1fe56a5db9f22847db73e796224ef14",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "bc1dd9cb494923cef8ce94f6677c33246a673be3a845809ea4a5e4570878d708",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],

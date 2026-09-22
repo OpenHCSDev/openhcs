@@ -2630,7 +2630,7 @@
   },
   {
     "path": "docs/source/development/extension_workflows.rst",
-    "source_sha256": "3e5f07f4dec0ee0bf56d9b13260c2d1ea5dbf14f372f481adec04132afb8c944",
+    "source_sha256": "c3876941b4a4a87b838b9fff6fc26ce9e3f734824a28b097608069ab899625c4",
     "audience": [
       "OpenHCS extension authors"
     ],
@@ -2684,7 +2684,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
         "role": "Owns registered benchmark command declarations and the derived installed parser."
       },
       {
@@ -2694,7 +2694,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "bc1dd9cb494923cef8ce94f6677c33246a673be3a845809ea4a5e4570878d708",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],
@@ -3126,7 +3126,7 @@
   },
   {
     "path": "docs/source/development/mcp_release.rst",
-    "source_sha256": "bde1e30ebac6a94bd105ba50f059ec6309b590e2547ef01954f68be1e729f00f",
+    "source_sha256": "df77e028492fbfa6856545a9eb138959a3ad7535de2878ede2583fa2b39f5ab1",
     "audience": [
       "OpenHCS release maintainers"
     ],
@@ -3200,7 +3200,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "6a0cf0b77271a7b25539d53235bef0567c365b8cbcf9ab42bab3e68dcdf01e1e",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3440,7 +3440,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "6a0cf0b77271a7b25539d53235bef0567c365b8cbcf9ab42bab3e68dcdf01e1e",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],

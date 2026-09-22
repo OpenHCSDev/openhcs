@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from enum import Enum, auto
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import Iterator
 
@@ -19,7 +19,7 @@ from openhcs.core.config import Backend
 from openhcs.core.vfs_protocol import FileManagerLike
 
 
-class BenchmarkPhase(Enum):
+class BenchmarkPhase(StrEnum):
     """Semantic benchmark phases reported independently."""
 
     RESOLVE_SOURCE = auto()

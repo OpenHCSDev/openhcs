@@ -5,13 +5,13 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.util
-from importlib.metadata import distribution
 import json
 import os
 import shutil
 import sys
 import tempfile
 from collections.abc import Sequence
+from importlib.metadata import distribution
 from pathlib import Path
 
 
@@ -208,6 +208,63 @@ async def _run_protocol_smoke() -> dict:
     }
 
 
+async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
+    """Prove the installed expert extension through a fresh MCP client."""
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=("-m", "openhcs.mcp", "--surface", "full"),
+    )
+    async with stdio_client(parameters) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await asyncio.wait_for(session.initialize(), timeout=60)
+            listed = await asyncio.wait_for(session.list_tools(), timeout=60)
+            capabilities = _tool_payload(
+                await asyncio.wait_for(
+                    session.call_tool("openhcs_list_capabilities", {}), timeout=60
+                )
+            )
+            expected = {
+                "openhcs_inspect_measured_pipeline_run",
+                "openhcs_report_measured_pipeline_run",
+            }
+            listed_names = {tool.name for tool in listed.tools}
+            declared_names = {
+                item.get("name")
+                for item in capabilities.get("capabilities", ())
+                if isinstance(item, dict) and item.get("kind") == "tool"
+            }
+            if capabilities.get("surface_profile") != "full":
+                raise AssertionError(
+                    f"Installed benchmark MCP surface was not full: {capabilities}"
+                )
+            if not expected <= listed_names & declared_names:
+                raise AssertionError(
+                    "Installed benchmark tools are not both declared and listed: "
+                    f"expected={expected} listed={listed_names} declared={declared_names}"
+                )
+            for name in expected:
+                result = await asyncio.wait_for(
+                    session.call_tool(name, {"output_dir": str(output_dir)}),
+                    timeout=60,
+                )
+                if result.isError:
+                    raise AssertionError(f"Installed benchmark tool failed: {name}")
+                payload = _tool_payload(result)
+                if payload.get("output_dir") != str(output_dir):
+                    raise AssertionError(
+                        f"Installed benchmark tool inspected the wrong run: {payload}"
+                    )
+                if not payload.get("warnings"):
+                    raise AssertionError(
+                        f"Absent receipt was not reported by {name}: {payload}"
+                    )
+    return {"benchmark_expert_tools": sorted(expected)}
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -272,6 +329,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
 
             result = asyncio.run(_run_protocol_smoke())
+            result.update(asyncio.run(_run_benchmark_protocol_smoke(working_directory)))
             result.update(
                 {
                     "package_path": str(package_path),

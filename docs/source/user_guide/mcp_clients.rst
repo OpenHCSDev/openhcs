@@ -180,6 +180,16 @@ Inspection is read-only. The MCP capability cannot launch, resume, cancel, or
 rerun a benchmark. Review the recorded command and scientific inputs, then run
 ``openhcs-benchmark`` separately only when execution is explicitly authorized.
 
+For one ordinary measured OpenHCS pipeline, use
+``openhcs_inspect_measured_pipeline_run`` on its output directory. It checks the
+completed-run receipt, retained pipeline/configuration source digests, and the
+presence of declared observation and summary files without loading the runtime
+pickle. ``openhcs_report_measured_pipeline_run`` turns that same inspection into
+a short report with evidence warnings. The local CLI equivalent is
+``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
+Markdown. These inspection routes do not submit a pipeline. Use the normal
+headless execution tools for submission, job status, and cancellation.
+
 Codex
 -----
 

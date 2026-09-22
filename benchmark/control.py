@@ -2,19 +2,163 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from benchmark.contracts.control import (
     BenchmarkRunInspection,
     BenchmarkStructuredArtifact,
+    MeasuredPipelineRunInspection,
+    MeasuredPipelineRunReport,
+    MeasuredSourceEvidence,
 )
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import (
     ComparisonRunArtifact,
+    MeasuredPipelineRunArtifact,
     StructuredArtifactFormat,
 )
 from benchmark.contracts.run_receipt import ComparisonSuiteRunReceipt
 
 BENCHMARK_CONTROL_SCHEMA_VERSION = "openhcs.benchmark.control.v1"
+MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v1"
+MAX_MEASURED_RECEIPT_BYTES = 1_000_000
+MAX_SOURCE_SNAPSHOT_BYTES = 2_000_000
+
+
+def _contained_file(root: Path, candidate: Path) -> Path | None:
+    """Resolve a receipt path without allowing it to escape the selected run."""
+
+    try:
+        resolved = candidate.resolve(strict=False)
+        return (
+            resolved if resolved.is_relative_to(root) and resolved.is_file() else None
+        )
+    except (OSError, RuntimeError):
+        return None
+
+
+def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspection:
+    """Inspect one completed pipeline run without loading its pickle observation."""
+
+    root = Path(output_dir).resolve()
+    if not root.is_dir():
+        raise ValueError(f"Measured pipeline output path must be a directory: {root}")
+    warnings: list[str] = []
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(root)
+    retained_receipt = _contained_file(root, receipt_path)
+    receipt: MeasuredPipelineRunReceipt | None = None
+    if retained_receipt is None:
+        warnings.append("Measured pipeline success receipt is absent.")
+    elif retained_receipt.stat().st_size > MAX_MEASURED_RECEIPT_BYTES:
+        warnings.append("Measured pipeline receipt exceeds the inspection size limit.")
+    else:
+        try:
+            receipt = MeasuredPipelineRunReceipt.read(retained_receipt)
+        except (TypeError, ValueError, KeyError, AttributeError, OSError) as exc:
+            warnings.append(f"Measured pipeline receipt is invalid: {exc}")
+
+    source_evidence: list[MeasuredSourceEvidence] = []
+    observation_present = False
+    results_summary_present = False
+    if receipt is not None:
+        for artifact, expected in (
+            (
+                MeasuredPipelineRunArtifact.PIPELINE_SOURCE,
+                receipt.pipeline_source_sha256,
+            ),
+            (
+                MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE,
+                receipt.global_config_source_sha256,
+            ),
+        ):
+            path = artifact.path_in(root)
+            source_file = _contained_file(root, path)
+            actual = None
+            if source_file is None:
+                warnings.append(
+                    f"Declared source snapshot is absent or escapes the run: {path.name}"
+                )
+            elif source_file.stat().st_size > MAX_SOURCE_SNAPSHOT_BYTES:
+                warnings.append(
+                    f"Declared source snapshot exceeds the inspection size limit: {path.name}"
+                )
+            else:
+                actual = hashlib.sha256(source_file.read_bytes()).hexdigest()
+                if actual != expected:
+                    warnings.append(
+                        f"Declared source snapshot digest differs: {path.name}"
+                    )
+            source_evidence.append(
+                MeasuredSourceEvidence(
+                    artifact=artifact,
+                    path=str(path),
+                    expected_sha256=expected,
+                    actual_sha256=actual,
+                    valid=actual == expected,
+                )
+            )
+        observation_present = (
+            _contained_file(root, receipt.observation_export_path) is not None
+        )
+        results_summary_present = (
+            _contained_file(root, receipt.results_summary_path) is not None
+        )
+        if not observation_present:
+            warnings.append(
+                "Declared runtime observation is absent or escapes the run."
+            )
+        if not results_summary_present:
+            warnings.append("Declared execution summary is absent or escapes the run.")
+
+    return MeasuredPipelineRunInspection(
+        schema_version=MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION,
+        output_dir=str(root),
+        receipt=receipt,
+        source_evidence=tuple(source_evidence),
+        observation_present=observation_present,
+        results_summary_present=results_summary_present,
+        warnings=tuple(warnings),
+    )
+
+
+def report_measured_pipeline_run(
+    inspection: MeasuredPipelineRunInspection,
+) -> MeasuredPipelineRunReport:
+    """Render the bounded inspection as a report, without a second data loader."""
+
+    receipt = inspection.receipt
+    lines = ["# Measured OpenHCS pipeline run", ""]
+    if receipt is None:
+        lines.append("No valid completed-run receipt is available.")
+    else:
+        lines.extend(
+            (
+                f"- Run: `{receipt.run_id}`",
+                f"- Pipeline: `{receipt.pipeline_name}`",
+                f"- Execution: `{receipt.execution_id}`",
+                f"- Plate: `{receipt.plate_id}`",
+                f"- Output roots: {len(receipt.output_roots)}",
+                f"- Runtime observation retained: {inspection.observation_present}",
+                f"- Source snapshots verified: {sum(item.valid for item in inspection.source_evidence)}/{len(inspection.source_evidence)}",
+                "",
+                "## Measured phases",
+                "",
+            )
+        )
+        lines.extend(
+            f"- {record.phase.name}: {record.seconds:.6f} s"
+            for record in receipt.phase_timings
+        )
+    if inspection.warnings:
+        lines.extend(("", "## Evidence warnings", ""))
+        lines.extend(f"- {warning}" for warning in inspection.warnings)
+    return MeasuredPipelineRunReport(
+        schema_version=inspection.schema_version,
+        output_dir=inspection.output_dir,
+        markdown="\n".join(lines) + "\n",
+        warnings=inspection.warnings,
+    )
 
 
 def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:

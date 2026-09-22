@@ -85,17 +85,22 @@ append-only observations, and structured result artifacts through the benchmark
 contract package.
 
 The expert-only ``openhcs_inspect_benchmark_run`` capability is a read-only
-projection of one existing run directory. ``AgentPathPolicy`` first requires
+projection of one comparison-suite directory. ``AgentPathPolicy`` first requires
 that directory to be readable; the benchmark control service then reports the
 recorded status and rerun invocation, observation progress, and discovered
 JSON/JSONL/CSV artifacts. Historical or invalid metadata produces a warning
-rather than a guessed completion claim.
+rather than a guessed completion claim. A separate measured-pipeline receipt is
+produced only after an ordinary pipeline's runtime observation satisfies its
+compiled expectations. ``openhcs_inspect_measured_pipeline_run`` checks that
+receipt and bounded source/output evidence; ``openhcs_report_measured_pipeline_run``
+renders the same inspection rather than loading a second model. Neither tool
+reconstructs live job status or reads the pickled runtime observation.
 
-This capability does not launch, resume, cancel, or rerun a benchmark. An agent
-must treat the recorded invocation as reviewable provenance and use the CLI
-separately if execution is authorized. Lightweight request/result contracts are
-imported during capability discovery; benchmark execution modules remain
-outside the MCP startup path.
+These capabilities do not launch, resume, cancel, or rerun a benchmark. An agent
+must treat recorded evidence as reviewable provenance and use ordinary execution
+tools for job submission, progress, and cancellation. Lightweight request/result
+contracts are imported during capability discovery; benchmark execution modules
+remain outside the MCP startup path.
 
 Window-capture boundary
 -----------------------

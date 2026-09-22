@@ -64,6 +64,12 @@ from outside the checkout. The MCP smoke test asserts that:
   package; and
 * no knowledge path resolves back into the source checkout.
 
+The same smoke then starts a fresh full-surface stdio client. It checks that
+the installed benchmark extension declares and lists its measured-run
+inspection and report tools, and that both return structured warnings for an
+empty selected run. This checks extension packaging and protocol binding; it
+does not execute a benchmark or claim output equivalence.
+
 The GUI smoke allocates isolated execution and authenticated UI-bridge endpoints
 through the configured transport declaration, constructs the installed
 application with its declared logging configuration, and waits for its

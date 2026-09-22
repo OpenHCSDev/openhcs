@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import importlib.util
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -20,9 +22,18 @@ from benchmark.cellprofiler_comparison import (
     ComparisonMetricPolicy,
     run_comparison_suite,
 )
-from benchmark.contracts.control import BenchmarkRunInspectionRequest
+from benchmark.contracts.control import (
+    BenchmarkRunInspectionRequest,
+    MeasuredPipelineRunInspectionRequest,
+)
+from benchmark.contracts.measured_run_receipt import (
+    MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
+    MeasuredEndpointProvenance,
+    MeasuredPipelineRunReceipt,
+)
 from benchmark.contracts.run_artifacts import (
     ComparisonRunArtifact,
+    MeasuredPipelineRunArtifact,
     StructuredArtifactFormat,
 )
 from benchmark.contracts.run_receipt import (
@@ -32,6 +43,7 @@ from benchmark.contracts.run_receipt import (
     ComparisonSuiteRunStatus,
 )
 from benchmark.control_service import BenchmarkControlService
+from benchmark.timing import BenchmarkPhase, PhaseTimingRecord
 from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.mcp import server
@@ -50,6 +62,121 @@ def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None
     assert tuple(subparser_action.choices) == tuple(
         command.command_name for command in commands
     )
+
+
+def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:
+    output_dir.mkdir()
+    pipeline_source = b"pipeline_steps = []\n"
+    config_source = b"config = GlobalPipelineConfig()\n"
+    MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(output_dir).write_bytes(
+        pipeline_source
+    )
+    MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE.path_in(output_dir).write_bytes(
+        config_source
+    )
+    observation_path = output_dir / "observation.pkl"
+    observation_path.write_bytes(b"opaque runtime observation")
+    summary_path = output_dir / "zmq_results_summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+    receipt = MeasuredPipelineRunReceipt(
+        schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
+        run_id="run-1",
+        pipeline_name="ordinary",
+        plate_id=str(output_dir / "plate"),
+        execution_plate_id=None,
+        selected_pipeline_path=None,
+        execution_id="execution-1",
+        pipeline_source_sha256=hashlib.sha256(pipeline_source).hexdigest(),
+        global_config_source_sha256=hashlib.sha256(config_source).hexdigest(),
+        observation_export_path=observation_path,
+        results_summary_path=summary_path,
+        output_roots=(output_dir / "outputs",),
+        phase_timings=(
+            PhaseTimingRecord(
+                run_id="run-1",
+                pipeline_name="ordinary",
+                tool="OpenHCS",
+                phase=BenchmarkPhase.EXECUTE_OPENHCS,
+                seconds=0.25,
+            ),
+        ),
+        endpoint_provenance=MeasuredEndpointProvenance(
+            client_python_executable=sys.executable,
+            client_openhcs_file="/test/openhcs/__init__.py",
+            client_openhcs_version="0.8.6",
+            endpoint_application_identifier="openhcs",
+            endpoint_openhcs_version="0.8.6",
+            endpoint_pid=123,
+            endpoint_create_time_epoch_seconds=1.0,
+            endpoint_log_file_path=None,
+            endpoint_port=23456,
+        ),
+        completed_at_epoch_seconds=2.0,
+    )
+    receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir))
+    return receipt
+
+
+def test_measured_inspection_cli_and_report_share_one_receipt(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output_dir = tmp_path / "measured"
+    receipt = _measured_run_receipt(output_dir)
+    request = MeasuredPipelineRunInspectionRequest(output_dir=str(output_dir))
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+
+    inspection = service.inspect_measured_run(request)
+    report = service.report_measured_run(request)
+
+    assert inspection.receipt == receipt
+    assert all(item.valid for item in inspection.source_evidence)
+    assert inspection.observation_present is True
+    assert inspection.results_summary_present is True
+    assert inspection.warnings == ()
+    assert "EXECUTE_OPENHCS: 0.250000 s" in report.markdown
+
+    parser = create_benchmark_argument_parser()
+    args = parser.parse_args(("inspect-measured", "--output-dir", str(output_dir)))
+    assert args.cli_command.run(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["receipt"]["execution_id"] == receipt.execution_id
+    assert payload["receipt"]["phase_timings"][0]["phase"] == (
+        BenchmarkPhase.EXECUTE_OPENHCS.value
+    )
+    args = parser.parse_args(
+        ("inspect-measured", "--output-dir", str(output_dir), "--report")
+    )
+    assert args.cli_command.run(args) == 0
+    assert "EXECUTE_OPENHCS: 0.250000 s" in capsys.readouterr().out
+
+
+def test_measured_inspection_rejects_tampered_and_escaped_evidence(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "measured"
+    receipt = _measured_run_receipt(output_dir)
+    MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(output_dir).write_text(
+        "changed\n", encoding="utf-8"
+    )
+    escaped = tmp_path / "outside.pkl"
+    escaped.write_bytes(b"outside")
+    replace(receipt, observation_export_path=escaped).write(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    )
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
+    )
+
+    inspection = service.inspect_measured_run(
+        MeasuredPipelineRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert inspection.observation_present is False
+    assert inspection.source_evidence[0].valid is False
+    assert any("digest differs" in warning for warning in inspection.warnings)
+    assert any("escapes the run" in warning for warning in inspection.warnings)
 
 
 def test_empty_comparison_run_writes_completed_owned_receipt(tmp_path: Path) -> None:
@@ -283,6 +410,42 @@ def test_benchmark_capability_uses_generated_mcp_request_binding(
     assert metadata_artifact["declared_identity"] == (
         ComparisonRunArtifact.SUITE_METADATA.value
     )
+
+
+def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> None:
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    output_dir = tmp_path / "measured"
+    _measured_run_receipt(output_dir)
+    context = OpenHCSAgentContext(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=()
+        )
+    )
+    built = server.build_server(context)
+    names = {tool.name for tool in asyncio.run(built.list_tools())}
+    assert {
+        "openhcs_inspect_measured_pipeline_run",
+        "openhcs_report_measured_pipeline_run",
+    } <= names
+
+    inspected = asyncio.run(
+        built.call_tool(
+            "openhcs_inspect_measured_pipeline_run",
+            {"output_dir": str(output_dir)},
+        )
+    )
+    reported = asyncio.run(
+        built.call_tool(
+            "openhcs_report_measured_pipeline_run",
+            {"output_dir": str(output_dir)},
+        )
+    )
+
+    assert inspected[1]["receipt"]["execution_id"] == "execution-1"
+    assert inspected[1]["source_evidence"][0]["valid"] is True
+    assert "EXECUTE_OPENHCS" in reported[1]["markdown"]
 
 
 def test_benchmark_extension_projects_its_declared_capability() -> None:

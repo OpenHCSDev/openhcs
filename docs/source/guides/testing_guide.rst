@@ -76,6 +76,13 @@ importing NumPy and SciPy inside a tool. These tests exercise cold native-librar
 loading while the protocol reader is active, plus protocol-channel isolation
 and restoration when the transport exits.
 
+The ordinary-pipeline observation and measured-wrapper integration tests run
+once in the Linux installed-wheel lane, rather than in every backend/microscope
+matrix cell. The wrapper test checks retained source and receipt evidence, not
+a comparative speed or scientific-equivalence claim. The installed MCP smoke
+also verifies the read-only benchmark expert tools in a fresh full-surface
+client.
+
 Integration and Documentation runs use event-and-ref concurrency. Pushing a
 new commit to the same branch or updating the same pull request cancels its
 superseded run so hosted capacity is spent on the only commit that can become

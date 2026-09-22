@@ -161,9 +161,9 @@ Retain the generated files together with a receipt containing at least:
 recorded invocation, or a compatibility-matrix report is not a durable parity
 receipt. If Napari cases are closed by targeted reruns, report that topology
 explicitly rather than describing it as one uninterrupted all-case run.
-The separate single-pipeline measured-run receipt contains source digests, not
-the source documents themselves, and does not by itself satisfy this suite-level
-publication requirement.
+The separate single-pipeline measured-run receipt retains the submitted pipeline
+and global-configuration source documents alongside their digests. It is still
+not a native-reference comparison or a suite-level publication receipt by itself.
 
 Extension rule
 --------------

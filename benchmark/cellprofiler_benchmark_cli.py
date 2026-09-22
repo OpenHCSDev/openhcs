@@ -72,6 +72,41 @@ class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
         return parser
 
 
+class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
+    """Inspect or report one ordinary measured pipeline's retained evidence."""
+
+    command_name = "inspect-measured"
+    help_text = "Inspect a completed ordinary-pipeline measurement."
+    sort_order = 5
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument(
+            "--report",
+            action="store_true",
+            help="Render the same typed inspection as a concise Markdown report.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import (
+            inspect_measured_pipeline_run,
+            report_measured_pipeline_run,
+        )
+        from openhcs.serialization.json import to_jsonable
+
+        inspection = inspect_measured_pipeline_run(args.output_dir)
+        if args.report:
+            print(report_measured_pipeline_run(inspection).markdown, end="")
+        else:
+            print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
+        return 0
+
+
 class RunBenchmarkCommand(BenchmarkCliCommand):
     """Run benchmark cases and write complete benchmark artifacts."""
 
@@ -564,7 +599,7 @@ def create_benchmark_argument_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="openhcs-benchmark",
-        description="Generate CP-vs-OpenHCS runtime and parity benchmark artifacts.",
+        description="Inspect OpenHCS measurements or generate CP comparison artifacts.",
     )
     parser.set_defaults(cli_invocation=())
     parser.add_argument(
