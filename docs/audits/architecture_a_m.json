@@ -2191,7 +2191,7 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "b5f936289fbf776d1dbbbbf14fc7e24bf3294bebfc419e720755d5d901550df3",
+        "sha256": "517f8fc9122ed640b3e3a15ca81bde7aa4d0a90566813981ecfe990b77f3207b",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
@@ -2230,7 +2230,8 @@
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
       "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate.",
       "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests.",
-      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed."
     ]
   },
   {
