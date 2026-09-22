@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
       },
       {
@@ -136,7 +136,8 @@
       "2026-09-14: Re-read the complete project overview against the changed CellProfiler importer. Supported cppipe lowering, ordinary declaration output, and Official30 scope remain accurate; the new terminal-artifact projection is benchmark evidence machinery and does not change the installation or product workflow claims.",
       "2026-09-16: Re-read the complete project README against package metadata, benchmark contracts/control, capability declarations, context composition, and focused tests. Added a bounded operator note identifying the installed CLI and expert read-only inspection tool, explicitly excluding launch, resume, cancellation, rerun, and scientific parity claims. Focused benchmark/control tests and README documentation validation passed.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`, `openhcs/core/viewer_streaming_service.py`, `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   }
 ]

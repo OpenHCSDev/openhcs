@@ -1195,7 +1195,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1319,7 +1319,8 @@
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete reference against benchmark package discovery and the new console entry point in pyproject.toml. Extracted-package ownership, dependency constraints, and integration-page policy are unchanged; no prose change was required.",
       "2026-09-16: Re-read the complete ownership catalog against pyqt-reactive d751bf8..f246b58. The package added paint-observed flash playback and bounded renderer-frame observation to its existing Qt snapshot owner; these remain generic pyqt-reactive mechanisms and do not move OpenHCS domain ownership. The changed pyqt-reactive regression selection passed 180 tests.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1445,7 +1446,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/fiji_stream.py",
-        "sha256": "8172012f9a89a6b9729704277602f673664a7c4de0903c31ea0a0bedaccdd5a8",
+        "sha256": "62a60a36f1da5668f60bc0b4e3a5d0e65008042b2361787f4909224dd9b51db9",
         "role": "Implements generic Fiji streaming storage mechanics."
       },
       {
@@ -1460,7 +1461,8 @@
     "disposition": "redirect",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
-      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
+      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the PolyStore 0.2.18 `fiji_stream.py` change, which removed the subclass destructor and now relies on the shared `StreamingBackend` teardown authority for idempotent, destructor-safe cleanup. The page is a redirect stub with no subclass destructor or Fiji-internal lifecycle prose, so its reference disposition and navigation remain accurate. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {

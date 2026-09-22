@@ -103,6 +103,31 @@ ObjectState version. No prose correction was required. Only those 17 compared
 `pyproject.toml` hashes receive this follow-up refresh; the gitlink is not a
 recorded authority for these pages.
 
+## PolyStore release follow-up
+
+PolyStore 0.2.18 was subsequently published from tagged commit `6534b10e` and
+verified as installer-visible. Integration commit `376b364c8` advances the
+recorded submodule to that tag and raises the published dependency floor in
+`pyproject.toml` from 0.2.17 to 0.2.18. Its owner-package delta removes the
+`FijiStreamingBackend` and `NapariStreamingBackend` subclass `__del__` methods
+and moves teardown into a shared, idempotent `StreamingBackend` resource path
+that omits logger access during interpreter shutdown.
+
+The 18 invalidated edges are one semantic edge and 17 `pyproject.toml` edges.
+For the semantic edge, the complete `fiji_streaming_system` page was re-read
+against the changed `external/PolyStore/src/polystore/fiji_stream.py`. It is a
+redirect stub whose reference disposition delegates Fiji streaming facts to the
+current wrapper and package boundaries; it contains no subclass destructor or
+Fiji-internal lifecycle prose, so no correction was required. No other active
+page documents subclass `__del__` behavior. The `fiji_viewer_management` guide's
+statement that interpreter finalization is not a second resource-lifecycle
+authority remains consistent with, and is reinforced by, the shared-teardown
+change; it is not a recorded dependent of the changed PolyStore file. For the
+17 `pyproject.toml` edges, the same complete architecture, development,
+project-surface, installation, integration, and compatibility pages were
+re-read. None states a conflicting PolyStore version, and their package
+boundaries remain accurate. Only these 18 compared hashes receive the refresh.
+
 ## Validation boundary
 
 This editorial review does not waive runtime or release gates. At the initial
