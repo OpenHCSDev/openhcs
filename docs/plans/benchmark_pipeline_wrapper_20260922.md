@@ -79,6 +79,16 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   projection. It is expert-only and hidden by the default desktop MCP profile.
   Keep that profile policy; the integration should not make benchmark execution
   a default desktop action.
+- `benchmark/well_throughput_scaling.py::run_case_well_throughput` remains a
+  legacy direct-`PipelineOrchestrator` execution route, reached by
+  `scripts/benchmark_cppipe_well_throughput.py`. It owns compile/execute timing,
+  progress queues, and worker cleanup outside the ordinary measured-run path.
+  Its presentation/reporting code can remain benchmark-specific, but execution
+  must be migrated to the ordinary submission and observation owners before the
+  *whole* benchmark surface can be called nonduplicating. Preserve historical
+  CSV readers and figure inputs; do not reinterpret old timing rows as receipts
+  from the new boundary. `benchmark/throughput_scaling.py` already calls the
+  OpenHCS adapter and is a different, process-per-job workload.
 
 ## Migration sequence
 
