@@ -217,6 +217,13 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   environment, while installed-wheel CI remains the publication gate. The
   wheel workflow runs that smoke in its own step before the long integration
   suite so its installed-client verdict is visible independently.
+- The opt-in smoke now also invokes the installed `openhcs-benchmark
+  run-measured` console script against a separately copied execution plate
+  after the MCP process closes. It requires both receipts to agree on declared
+  source/configuration identities and original plate, to carry server
+  provenance, and to retain distinct job and output-root identities. This
+  passed once in a local editable-environment live run; the installed-wheel
+  step on the next exact CI head is still the publication gate.
 - The measured-run artifact declaration now owns which files are produced by
   runtime execution and which by evidence finalization. The shared evidence
   writer checks for existing finalizer outputs before writing, so the direct

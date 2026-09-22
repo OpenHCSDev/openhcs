@@ -8,11 +8,22 @@ import importlib.util
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections.abc import Sequence
+from dataclasses import dataclass
 from importlib.metadata import distribution
 from pathlib import Path
+
+
+@dataclass(frozen=True, slots=True)
+class _MeasuredSmokeEvidence:
+    source_plate: Path
+    cli_execution_plate: Path
+    source_file: Path
+    mcp_receipt_path: Path
+    mcp_execution_id: str
 
 
 def _load_installed_console_scripts() -> tuple[str, ...]:
@@ -208,7 +219,9 @@ async def _run_protocol_smoke() -> dict:
     }
 
 
-async def _run_measured_execution_protocol_smoke(session, output_dir: Path) -> dict:
+async def _run_measured_execution_protocol_smoke(
+    session, output_dir: Path
+) -> _MeasuredSmokeEvidence:
     """Complete one ordinary source-backed job through the installed MCP process."""
 
     from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
@@ -241,6 +254,8 @@ async def _run_measured_execution_protocol_smoke(session, output_dir: Path) -> d
     )
     if not plate.is_dir() or generated.get("errors"):
         raise AssertionError(f"Installed MCP did not generate a plate: {generated}")
+    cli_plate = output_dir / "cli_execution_plate"
+    shutil.copytree(plate, cli_plate)
 
     document = PipelineDocumentAuthority.from_values(
         pipeline_config=PipelineConfig(),
@@ -248,13 +263,16 @@ async def _run_measured_execution_protocol_smoke(session, output_dir: Path) -> d
             FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
         ],
     )
+    pipeline_source = PipelineDocumentAuthority.render(document)
+    source_file = output_dir / "pipeline.py"
+    source_file.write_text(pipeline_source, encoding="utf-8")
     created = _tool_payload(
         await asyncio.wait_for(
             session.call_tool(
                 "openhcs_create_orchestrator_session_from_pipeline_source",
                 {
                     "plate_path": str(plate),
-                    "pipeline_source": PipelineDocumentAuthority.render(document),
+                    "pipeline_source": pipeline_source,
                     "port": 26000 + os.getpid() % 20000,
                     "persistent": False,
                 },
@@ -318,7 +336,112 @@ async def _run_measured_execution_protocol_smoke(session, output_dir: Path) -> d
         not item.get("valid") for item in inspected["source_evidence"]
     ):
         raise AssertionError(f"Installed MCP retained invalid evidence: {inspected}")
-    return {"measured_execution_id": finalized["execution_id"]}
+    return _MeasuredSmokeEvidence(
+        source_plate=plate,
+        cli_execution_plate=cli_plate,
+        source_file=source_file,
+        mcp_receipt_path=MeasuredPipelineRunArtifact.RECEIPT.path_in(evidence_dir),
+        mcp_execution_id=finalized["execution_id"],
+    )
+
+
+def _run_installed_measured_cli_smoke(
+    evidence: _MeasuredSmokeEvidence, output_dir: Path
+) -> dict:
+    """Require installed CLI and MCP to retain the same declared run semantics."""
+
+    from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+    from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+    from benchmark.control import inspect_measured_pipeline_run
+
+    executable_search_path = os.pathsep.join(
+        (str(Path(sys.executable).parent), os.environ.get("PATH", ""))
+    )
+    executable = shutil.which("openhcs-benchmark", path=executable_search_path)
+    if executable is None:
+        raise AssertionError("Installed benchmark console script is missing.")
+    cli_dir = output_dir / "measured_cli"
+    command = (
+        executable,
+        "run-measured",
+        "--plate",
+        str(evidence.source_plate),
+        "--execution-plate",
+        str(evidence.cli_execution_plate),
+        "--pipeline-source-file",
+        str(evidence.source_file),
+        "--output-dir",
+        str(cli_dir),
+        "--run-id",
+        "installed-cli-smoke",
+        "--pipeline-name",
+        "Blur",
+        "--port",
+        str(30000 + os.getpid() % 20000),
+        "--no-persistent",
+        "--submit-timeout-ms",
+        "120000",
+        "--wait-timeout-ms",
+        "120000",
+    )
+    completed = subprocess.run(
+        command,
+        cwd=output_dir,
+        capture_output=True,
+        text=True,
+        timeout=240,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise AssertionError(
+            "Installed measured CLI failed: "
+            f"exit={completed.returncode} stderr={completed.stderr[-4000:]} "
+            f"stdout={completed.stdout[-2000:]}"
+        )
+    mcp_receipt = MeasuredPipelineRunReceipt.read(evidence.mcp_receipt_path)
+    cli_receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(cli_dir)
+    )
+    comparable_fields = (
+        "schema_version",
+        "pipeline_name",
+        "plate_id",
+        "pipeline_source_sha256",
+        "global_config_source_sha256",
+    )
+    for field_name in comparable_fields:
+        if getattr(cli_receipt, field_name) != getattr(mcp_receipt, field_name):
+            raise AssertionError(
+                f"Installed CLI and MCP receipts disagree on {field_name}."
+            )
+    if (
+        mcp_receipt.execution_id != evidence.mcp_execution_id
+        or cli_receipt.execution_id == mcp_receipt.execution_id
+    ):
+        raise AssertionError("Installed measured runs lost distinct job identities.")
+    if cli_receipt.execution_plate_id != str(evidence.cli_execution_plate):
+        raise AssertionError("Installed CLI ignored its prepared execution plate.")
+    if mcp_receipt.server_environment is None or cli_receipt.server_environment is None:
+        raise AssertionError("Installed measured receipt lacks server provenance.")
+    if cli_receipt.server_environment != mcp_receipt.server_environment:
+        raise AssertionError(
+            "Installed CLI and MCP used different server environments."
+        )
+    mcp_roots = {path.resolve() for path in mcp_receipt.output_roots}
+    cli_roots = {path.resolve() for path in cli_receipt.output_roots}
+    if not mcp_roots or not cli_roots or mcp_roots & cli_roots:
+        raise AssertionError("Installed MCP and CLI output roots are not independent.")
+    inspection = inspect_measured_pipeline_run(cli_dir)
+    if (
+        inspection.warnings
+        or not inspection.source_evidence
+        or not all(source.valid for source in inspection.source_evidence)
+    ):
+        raise AssertionError("Installed CLI source evidence failed inspection.")
+    return {
+        "measured_execution_id": mcp_receipt.execution_id,
+        "measured_cli_execution_id": cli_receipt.execution_id,
+    }
 
 
 async def _run_benchmark_protocol_smoke(
@@ -403,11 +526,16 @@ async def _run_benchmark_protocol_smoke(
                     raise AssertionError(
                         f"Absent receipt was not reported by {name}: {payload}"
                     )
-            measured_execution = (
+            measured_evidence = (
                 await _run_measured_execution_protocol_smoke(session, output_dir)
                 if exercise_measured_execution
-                else {}
+                else None
             )
+    measured_execution = (
+        _run_installed_measured_cli_smoke(measured_evidence, output_dir)
+        if measured_evidence is not None
+        else {}
+    )
     return {"benchmark_expert_tools": sorted(expected), **measured_execution}
 
 
@@ -422,7 +550,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--exercise-measured-execution",
         action="store_true",
-        help="Run one ordinary source-backed job through the installed MCP process.",
+        help="Run one ordinary source-backed job through installed MCP and CLI.",
     )
     return parser
 
