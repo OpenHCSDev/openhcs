@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Self
 
 from zmqruntime.execution import ExecutionProgressObservation
-from zmqruntime.messages import ExecutionStatus
+from zmqruntime.messages import ExecutionStatus, MessageFields, ResponseType
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -30,6 +30,7 @@ from openhcs.agent.dto.execution import (
     ArtifactPlanSummary,
     CompiledStepPlanSummary,
     ExecutionConnectionSpec,
+    ExecutionJobCancellationResult,
     ExecutionJobRef,
     ExecutionJobStatus,
     MainFlowMaterializationPlanSummary,
@@ -230,6 +231,15 @@ class ExecutionClientABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def cancel_execution(
+        self,
+        execution_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        raise NotImplementedError
+
+    @abstractmethod
     def wait_for_completion(self, execution_id: str) -> JsonObject:
         raise NotImplementedError
 
@@ -325,6 +335,14 @@ class ZMQExecutionClientAdapter(ExecutionClientABC):
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> JsonObject:
         return dict(self.client.get_status(execution_id, timeout_ms=timeout_ms))
+
+    def cancel_execution(
+        self,
+        execution_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        return dict(self.client.cancel_execution(execution_id, timeout_ms=timeout_ms))
 
     def wait_for_completion(self, execution_id: str) -> JsonObject:
         return dict(self.client.wait_for_completion(execution_id))
@@ -673,6 +691,15 @@ class ExecutionClientGateway:
     ) -> JsonObject:
         return dict(client.get_status(server_execution_id, timeout_ms=timeout_ms))
 
+    def cancel(
+        self,
+        client: ExecutionClientABC,
+        server_execution_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        return dict(client.cancel_execution(server_execution_id, timeout_ms=timeout_ms))
+
     def wait(
         self,
         client: ExecutionClientABC,
@@ -983,6 +1010,60 @@ class ExecutionSessionService:
         if updated.is_terminal:
             updated.release_client()
         return updated.status()
+
+    def cancel_job(
+        self,
+        job_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> ExecutionJobCancellationResult:
+        """Cancel a submitted job using the client that owns its progress stream."""
+
+        job = self._job_store.job_record(job_id)
+        if job.is_terminal or job.ref.server_execution_id is None:
+            return ExecutionJobCancellationResult(
+                schema_version=SCHEMA_VERSION,
+                applied=False,
+                job_status=job.status(),
+                warnings=(
+                    AgentWarning(
+                        code="execution_not_cancellable",
+                        message="Job is already terminal or was not accepted by the server.",
+                    ),
+                ),
+            )
+
+        try:
+            response = self._client_gateway.cancel(
+                job.require_client(),
+                job.ref.server_execution_id,
+                timeout_ms=timeout_ms,
+            )
+        except Exception as exc:
+            return ExecutionJobCancellationResult(
+                schema_version=SCHEMA_VERSION,
+                applied=False,
+                job_status=self.get_job_status(job_id, timeout_ms=timeout_ms),
+                errors=(AgentError.from_exception("execution_cancel_error", exc),),
+            )
+
+        applied = response.get(MessageFields.STATUS) == ResponseType.OK.value
+        error = response.get(MessageFields.ERROR)
+        return ExecutionJobCancellationResult(
+            schema_version=SCHEMA_VERSION,
+            applied=applied,
+            job_status=self.get_job_status(job_id, timeout_ms=timeout_ms),
+            errors=(
+                (
+                    AgentError(
+                        code="execution_cancel_rejected",
+                        message=str(error or "Execution server rejected cancellation."),
+                    ),
+                )
+                if not applied
+                else ()
+            ),
+        )
 
     def _submit_job(
         self,

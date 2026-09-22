@@ -7,11 +7,13 @@ import logging
 import subprocess
 import sys
 import time
+from contextlib import nullcontext
 from collections.abc import Mapping, Sequence
 from concurrent.futures import CancelledError
 from dataclasses import dataclass, replace
+from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, Callable, ContextManager, TypeAlias
 
 from arraybridge import MemoryType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
@@ -27,8 +29,17 @@ from zmqruntime.client import (
     EndpointProcess,
 )
 from zmqruntime.config import TransportMode
-from zmqruntime.execution import ExecutionClient
-from zmqruntime.messages import ControlMessageType, MessageFields, PongResponse
+from zmqruntime.execution import (
+    ExecutionClient,
+    ExecutionSubmissionResponse,
+    ExecutionWaitResult,
+)
+from zmqruntime.messages import (
+    CancelRequest,
+    ControlMessageType,
+    MessageFields,
+    PongResponse,
+)
 from zmqruntime.startup import (
     EndpointStartupPhase,
     EndpointStartupStatusCallback,
@@ -224,11 +235,98 @@ class OpenHCSExecutionSubmission:
             compile_control=self.compile_control.as_compile_request(),
         )
 
+    def with_compile_artifact_id(
+        self, compile_artifact_id: str
+    ) -> "OpenHCSExecutionSubmission":
+        """Execute the same declared pipeline using its completed compile artifact."""
+        return self._from_parts(
+            identity=self.identity,
+            pipeline_document=self.pipeline_document,
+            global_pipeline_config=self.global_pipeline_config,
+            config_boundary=self.config_boundary,
+            compile_control=self.compile_control.as_execution_request(
+                compile_artifact_id
+            ),
+        )
+
     def pipeline_code(self) -> str:
         return PipelineDocumentAuthority.execution_source(self.pipeline_document)
 
     def step_count_label(self) -> str:
         return str(len(self.pipeline_steps))
+
+
+class ZMQPipelineRunPhase(Enum):
+    """Source-owned boundaries for one compiled pipeline execution."""
+
+    SUBMIT_COMPILE = "submit_compile"
+    WAIT_COMPILE = "wait_compile"
+    SUBMIT_EXECUTION = "submit_execution"
+    WAIT_EXECUTION = "wait_execution"
+
+
+@dataclass(frozen=True, slots=True)
+class ZMQCompiledPipelineRun:
+    """Completed ordinary pipeline run using a server-retained compile artifact."""
+
+    compile_artifact_id: str
+    execution_id: str
+    completion_response: Mapping[str, Any]
+    completion_observed_at: float
+
+
+def run_compiled_pipeline(
+    client: ZMQExecutionClient,
+    submission: OpenHCSExecutionSubmission,
+    *,
+    phase_context: Callable[[ZMQPipelineRunPhase], ContextManager[None]] | None = None,
+) -> ZMQCompiledPipelineRun:
+    """Compile and execute one ordinary document with an optional phase observer."""
+
+    def phase_scope(phase: ZMQPipelineRunPhase) -> ContextManager[None]:
+        return nullcontext() if phase_context is None else phase_context(phase)
+
+    with phase_scope(ZMQPipelineRunPhase.SUBMIT_COMPILE):
+        compile_response = ExecutionSubmissionResponse.from_wire(
+            client.submit_compile(submission)
+        )
+    if not compile_response.accepted:
+        raise RuntimeError(
+            compile_response.require_failure_text("OpenHCS ZMQ compile submission")
+        )
+    compile_artifact_id = compile_response.require_execution_id(
+        "OpenHCS ZMQ compile submission"
+    )
+    with phase_scope(ZMQPipelineRunPhase.WAIT_COMPILE):
+        compile_wait_response = client.wait_for_completion(compile_artifact_id)
+    ExecutionWaitResult.from_wire(compile_wait_response).require_complete(
+        "OpenHCS ZMQ compilation failed"
+    )
+
+    execution_submission = submission.with_compile_artifact_id(compile_artifact_id)
+    with phase_scope(ZMQPipelineRunPhase.SUBMIT_EXECUTION):
+        execution_response = ExecutionSubmissionResponse.from_wire(
+            client.submit_pipeline(execution_submission)
+        )
+    if not execution_response.accepted:
+        raise RuntimeError(
+            execution_response.require_failure_text("OpenHCS ZMQ execution submission")
+        )
+    execution_id = execution_response.require_execution_id(
+        "OpenHCS ZMQ execution submission"
+    )
+    with phase_scope(ZMQPipelineRunPhase.WAIT_EXECUTION):
+        completion_response = client.wait_for_completion(execution_id)
+        completion_observed_at = time.time()
+    ExecutionWaitResult.from_wire(completion_response).require_complete(
+        "OpenHCS ZMQ execution failed"
+    )
+    return ZMQCompiledPipelineRun(
+        compile_artifact_id=compile_artifact_id,
+        execution_id=execution_id,
+        completion_response=completion_response,
+        completion_observed_at=completion_observed_at,
+    )
 
 
 def _pycodify_config_source(
@@ -543,6 +641,22 @@ class ZMQExecutionClient(
             request[MessageFields.EXECUTION_ID] = execution_id
         return self._send_control_request(
             request,
+            timeout_ms=self._control_timeout_ms(timeout_ms),
+        )
+
+    def cancel_execution(
+        self,
+        execution_id: str,
+        *,
+        timeout_ms: int | None = None,
+    ):
+        """Request cancellation through the ordinary bounded control channel."""
+        request = CancelRequest(execution_id)
+        validation_error = request.validate()
+        if validation_error is not None:
+            raise ValueError(validation_error)
+        return self._send_control_request(
+            request.to_dict(),
             timeout_ms=self._control_timeout_ms(timeout_ms),
         )
 

@@ -41,7 +41,9 @@ from openhcs.agent.dto.config import (
 from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     CompileSubmissionRequest,
+    ExecutionCancellationRequest,
     ExecutionJobRef,
+    ExecutionJobCancellationResult,
     ExecutionJobStatus,
     ExecutionStatusRequest,
     OrchestratorSession,
@@ -2669,6 +2671,33 @@ class GetExecutionStatusCapability(SubmittedJobCapability):
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.get_job_status(
+            request.job_id,
+            timeout_ms=request.timeout_ms,
+        ),
+    )
+
+
+class CancelExecutionCapability(HeadlessExecutionCapability):
+    name = "openhcs_cancel_execution"
+    kind = CapabilityKind.TOOL
+    title = "Cancel execution job"
+    description = (
+        "Requests cancellation of one submitted compile or pipeline job through "
+        "its ordinary execution server. Returns whether cancellation was applied "
+        "and the job status observed afterward."
+    )
+    service = "execution_session"
+    mutating = True
+    side_effects = ("requests_zmq_execution_cancellation",)
+    exposition = HeadlessExecutionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+        target_context=CapabilityTargetContext.SUBMITTED_JOB,
+    )
+    input_contract = ExecutionCancellationRequest
+    output_contract = ExecutionJobCancellationResult
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.execution_service,
+        method=lambda service, request: service.cancel_job(
             request.job_id,
             timeout_ms=request.timeout_ms,
         ),

@@ -81,6 +81,13 @@ class ZMQExecutionCompileControl:
             compile_only=True,
         )
 
+    def as_execution_request(
+        self, compile_artifact_id: str
+    ) -> "ZMQExecutionCompileControl":
+        if not compile_artifact_id:
+            raise ValueError("compile_artifact_id cannot be empty")
+        return ZMQExecutionCompileControl(compile_artifact_id=compile_artifact_id)
+
     def validate(self) -> None:
         if self.compile_only and self.compile_artifact_id:
             raise ValueError("compile_only and compile_artifact_id cannot both be set")

@@ -1,0 +1,154 @@
+# Benchmark integration: ordinary pipeline, measured execution
+
+## Scope decision
+
+The infrastructure is the current priority. Do not run a new comparative
+benchmark, change SLAS performance claims, or plot a speedup until this boundary
+is implemented and validated. A benchmark is an ordinary OpenHCS pipeline run
+with declared input selection, repetition, measurement, comparison, and retained
+evidence. It is not a second pipeline model or execution engine.
+
+The generic benchmark infrastructure must accept an ordinary OpenHCS pipeline
+document without requiring CellProfiler. `.cppipe` conversion is one optional
+scenario preparation path, and native CellProfiler comparison is one optional
+comparison path. Neither belongs in the generic measured-run lifecycle.
+
+Source baseline: `openhcsdev/main` at `0ba01b29c` (2026-09-22). The working tree
+already contains unrelated untracked pilot outputs and `uv.lock`; preserve them.
+
+## Ownership contract
+
+| Fact or behavior | Owner | Benchmark-specific addition |
+| --- | --- | --- |
+| Steps, configuration, source bindings | `PipelineDocument` and normal OpenHCS config declarations | Select an existing document and input scope; do not copy step/config semantics into a benchmark case. |
+| Compilation, execution, status, cancellation, worker scheduling | Ordinary runtime beneath the GUI and agent execution services | Request the same operation with an observation policy. If an operation is missing, add it once to the operational owner, not to an agent-only facade. |
+| CellProfiler translation | Public CellProfiler importer and source-workspace preparation | Select a source `.cppipe` and retain its identity; do not implement another translator. |
+| Inputs, repeat/group membership | Benchmark manifest/case declaration | State the scientific sampling design and exact source identities. |
+| Timing and resources | Source-owned runtime observations plus benchmark metric declarations | Declare measurement intervals, repetition and aggregation; never reconstruct execution state from logs or poll timing. |
+| Native reference and equivalence | Native adapter plus typed OpenHCS equivalence policies | Select reference artifacts and comparison tolerances, then retain per-artifact outcomes. |
+| Run lifecycle and provenance | One typed benchmark receipt derived from the request and ordinary execution observations | Record benchmark-only design, environment, versions and evidence paths; do not maintain another status authority. |
+| CLI and MCP | Existing benchmark command declarations and agent capability registry | Project the same benchmark request/receipt; MCP must not acquire a parallel run implementation. |
+
+The intended dependency direction is:
+
+```text
+benchmark scenario (inputs, repeats, observations, comparisons)
+    -> ordinary PipelineDocument + GlobalPipelineConfig
+    -> ordinary runtime compile / execute / status
+    -> runtime observation + materialized outputs
+    -> benchmark measurements / comparisons / immutable receipt
+```
+
+The benchmark scenario does not own steps, function parameters, compiled plans,
+worker scheduling, or output routing. A scenario may refer to a source `.cppipe`
+only through the existing importer, which produces the ordinary document before
+the generic measured-run boundary.
+
+## Current duplication to retire
+
+- `benchmark/adapters/openhcs.py` owns a private compile-submit-wait-execute
+  sequence (`_execute_pipeline_via_zmq_server`) and rebuilds the same
+  `PipelineDocument` for both submissions. It correctly uses the production ZMQ
+  server, but still owns operational orchestration in the benchmark package.
+- `benchmark/contracts/pipeline.py` and `benchmark/pipelines/registry.py` name a
+  `PipelineSpec`, but source tracing shows it currently selects a benchmark
+  scenario (not executable steps). Keep that selection role; separate its
+  input/reference/measurement choices from the actual `PipelineDocument` and
+  remove any suggestion that it is a second executable pipeline authority.
+- `ToolAdapter.run` and several callers pass open-ended `pipeline_params`
+  mappings. Move benchmark-only choices to a typed scenario/request; pass
+  OpenHCS pipeline state only as a `PipelineDocument`.
+- The current CLI is CellProfiler-comparison-oriented and the expert MCP
+  extension only inspects completed runs. Keep CP commands as a specialization,
+  but expose generic measured ordinary-pipeline operation through one typed
+  scenario and receipt shared by CLI and MCP. Do not build a separate MCP
+  runner or a second benchmark-only execution server.
+- Existing `openhcs_inspect_benchmark_run` is useful read-only evidence
+  projection. It is expert-only and hidden by the default desktop MCP profile.
+  Keep that profile policy; the integration should not make benchmark execution
+  a default desktop action.
+
+## Migration sequence
+
+1. Characterize ordinary pipeline execution and observation contracts across
+   GUI, agent, and benchmark clients. The agent session service currently
+   accepts authored source plus config IDs, while the benchmark needs a derived
+   `GlobalPipelineConfig`; it cannot be reused as a benchmark execution API
+   without introducing an agent-specific dependency. Test source identity,
+   compile artifact, execution completion, cancellation, and output retention.
+   Identify the real source-owned timing boundaries before exposing a
+   benchmark API.
+2. Add the minimum generic observation hook to the ordinary execution owner.
+   Benchmark metric declarations select observations but do not implement
+   transport, scheduling, or status. Do not add a benchmark-specific ZMQ client.
+3. Introduce one typed generic measured-run declaration: input/document
+   identity, repetition policy, requested runtime observations, optional
+   comparison policy, and retention policy. Parse old manifest parameter maps
+   once at its boundary; do not propagate raw keys through adapters. Convert
+   the OpenHCS adapter into a thin scenario-to-document preparation and
+   result-measurement wrapper. Use the ordinary compile/run lifecycle and
+   remove the private operational sequence only after same-output tests pass.
+   Keep CellProfiler import and native comparison as declared specializations.
+4. Derive CLI and expert MCP projections from the same typed scenario and
+   receipt. The MCP path should invoke or hand off to the ordinary pipeline
+   operations; it should not reimplement run, cancel, or polling semantics.
+5. Remove obsolete parameter maps, duplicate receipt/status projections and
+   dead compatibility code after whole-repository consumer checks. Preserve
+   historical file formats and read old receipts with explicit warnings.
+
+## Evidence gates
+
+- Full-context NRA scan: 79 detectors analyzed, zero omitted, seven reported
+  findings. This is architectural evidence, not proof that the unreported
+  execution duplication is absent. The certified mirrors in
+  `cellprofiler_reference_exports.py` and `throughput_scaling.py` should be
+  considered in the larger ownership migration, not patched in isolation.
+- First operational identity cleanup: `OpenHCSExecutionSubmission` can derive
+  its execution request from the same compile request and completed artifact
+  ID. The benchmark adapter now uses that method instead of rebuilding a
+  `PipelineDocument`; transport and adapter tests verify both submissions
+  share the exact document object. This does not yet eliminate the benchmark's
+  private submit/wait lifecycle.
+- The underlying `zmqruntime` client already owns cancellation. OpenHCS now
+  exposes a bounded cancellation request through its ordinary headless
+  execution service and declaration-derived MCP capability; the benchmark
+  layer must reuse this job control instead of introducing its own cancel
+  state. A fake-client service test verifies exact job routing, timeout
+  propagation, terminal status, and no duplicate request after cancellation.
+  A live-server cancellation test remains required.
+- The compile-then-execute ordering, accepted-response checks, compile-artifact
+  reuse, and terminal-result checks now live in ordinary
+  `openhcs.runtime.zmq_execution_client.run_compiled_pipeline`. Its phase
+  context is generic; the benchmark adapter projects those phases onto
+  benchmark timing records and retains benchmark-only observation/equivalence
+  handling. Direct runtime tests cover successful order and fail-closed compile
+  and execution results. The benchmark adapter still owns endpoint provenance
+  and observation-file handling; the generic measured-run declaration is not
+  implemented yet.
+- The converted-CellProfiler OpenHCS adapter now decodes its legacy parameter
+  map once into typed benchmark-policy fields. It retains the existing
+  `CPPipeSourceRequest` as the source of dataset ID and output directory instead
+  of copying those facts into a second dataclass. This is a compatibility
+  bridge, not the final generic benchmark scenario: the manifest and native
+  adapter still pass open-ended parameter maps.
+- The post-change uncached NRA scan completed in `exact_compact_global` mode
+  with 79 detectors analyzed, zero omitted, and seven findings. The quick
+  cached scan was partial (43 analyzed, 36 omitted) and is not used as global
+  evidence.
+- A fresh interpreter in the current editable environment discovers the
+  benchmark inspector in the full local capability profile but not desktop;
+  the new ordinary cancellation capability appears in both. This verifies
+  declaration/profile projection, not a fresh installed wheel or a live
+  server cancellation.
+- Source-level tests must show the benchmark wrapper selects the same
+  `PipelineDocument`, compiled plan, execution server, progress, and output
+  artifacts as a normal run. No benchmark-only bypass may turn a failed compile
+  or runtime validation into a successful observation.
+- Fresh-process installed CLI and full-profile MCP tests must agree on request
+  identity and receipt projection. Default desktop and hosted surfaces must
+  remain intentionally bounded. Cancellation, if exposed, must delegate to the
+  ordinary execution owner and be tested against an actual submitted job.
+- Run a small deterministic fixture for lifecycle/overhead checks; do not run
+  the 30-workflow corpus or publish performance numbers in this infrastructure
+  phase. A later matched experiment needs separately approved design and
+  evidence review.

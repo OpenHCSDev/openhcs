@@ -14,7 +14,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from zmqruntime.messages import MessageFields
+from zmqruntime.messages import ControlMessageType, MessageFields
 
 from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.config import (
@@ -214,15 +214,15 @@ def test_request_builder_stores_explicit_pipeline_code_directly() -> None:
     )
     compile_submission = submission.compile_request()
     builder = ZMQExecutionRequestBuilder.from_task(compile_submission)
-    artifact_submission = OpenHCSExecutionSubmission(
-        plate_id="/tmp/plate",
-        pipeline_document=PipelineDocumentAuthority.from_source(pipeline_source),
-        global_config=submission.global_pipeline_config,
-        compile_artifact_id="compile-1",
-    )
+    artifact_submission = submission.with_compile_artifact_id("compile-1")
     artifact_builder = ZMQExecutionRequestBuilder.from_task(artifact_submission)
 
     assert compile_submission.pipeline_steps is submission.pipeline_steps
+    assert artifact_submission.pipeline_document is submission.pipeline_document
+    assert (
+        artifact_submission.global_pipeline_config is submission.global_pipeline_config
+    )
+    assert artifact_submission.identity is submission.identity
     assert compile_submission.pipeline_code() == pipeline_source
     assert compile_submission.compile_only is True
     assert builder.pipeline_code == pipeline_source
@@ -235,6 +235,34 @@ def test_request_builder_stores_explicit_pipeline_code_directly() -> None:
         "compile-1"
     )
     assert MessageFields.COMPILE_ONLY not in artifact_builder.request().values
+
+    with pytest.raises(ValueError, match="compile_artifact_id cannot be empty"):
+        submission.with_compile_artifact_id("")
+
+
+def test_zmq_execution_cancellation_uses_bounded_control_request(monkeypatch) -> None:
+    client = ZMQExecutionClient()
+    captured = {}
+
+    def control_request(request, *, timeout_ms):
+        captured["request"] = request
+        captured["timeout_ms"] = timeout_ms
+        return {MessageFields.STATUS: "ok"}
+
+    monkeypatch.setattr(client, "_send_control_request", control_request)
+
+    assert client.cancel_execution("run-1", timeout_ms=1234) == {
+        MessageFields.STATUS: "ok"
+    }
+    assert captured == {
+        "request": {
+            MessageFields.TYPE: ControlMessageType.CANCEL.value,
+            MessageFields.EXECUTION_ID: "run-1",
+        },
+        "timeout_ms": 1234,
+    }
+    with pytest.raises(ValueError, match="Missing execution_id"):
+        client.cancel_execution("")
 
 
 def test_zmq_execution_submission_serializes_default_plate_config_on_client() -> None:

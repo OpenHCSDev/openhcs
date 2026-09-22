@@ -17,8 +17,6 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
-
 from benchmark.adapters.cppipe_source import (
     CPPipeSourceRequest,
     CPPipeSourceResolution,
@@ -66,7 +64,9 @@ from openhcs.interop.cellprofiler.plate_workspace import (
 )
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
+    ZMQPipelineRunPhase,
     ZMQExecutionClient,
+    run_compiled_pipeline,
 )
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
@@ -364,61 +364,28 @@ def _execute_pipeline_via_zmq_server(
                 "endpoint_log_file_path": endpoint.log_file_path,
                 "endpoint_port": endpoint.port,
             }
-            with phase_timing.phase(BenchmarkPhase.SUBMIT_OPENHCS):
-                compile_submission_response = ExecutionSubmissionResponse.from_wire(
-                    client.submit_compile(submission)
+            benchmark_phases = {
+                ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
+                ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
+                ZMQPipelineRunPhase.SUBMIT_EXECUTION: BenchmarkPhase.SUBMIT_OPENHCS,
+                ZMQPipelineRunPhase.WAIT_EXECUTION: BenchmarkPhase.WAIT_OPENHCS,
+            }
+            try:
+                run = run_compiled_pipeline(
+                    client,
+                    submission,
+                    phase_context=lambda phase: phase_timing.phase(
+                        benchmark_phases[phase]
+                    ),
                 )
-            if not compile_submission_response.accepted:
-                raise ToolExecutionError(
-                    compile_submission_response.require_failure_text(
-                        "OpenHCS ZMQ compile submission"
-                    )
-                )
-            compile_artifact_id = compile_submission_response.require_execution_id(
-                "OpenHCS ZMQ compile submission"
-            )
-            with phase_timing.phase(BenchmarkPhase.WAIT_OPENHCS):
-                compile_wait_response = client.wait_for_completion(compile_artifact_id)
-            compile_wait_result = ExecutionWaitResult.from_wire(compile_wait_response)
-            compile_wait_result.require_complete("OpenHCS ZMQ compilation failed")
-
-            execution_submission = OpenHCSExecutionSubmission(
-                plate_id=plate_id,
-                execution_plate_id=execution_plate_id,
-                selected_pipeline_path=selected_pipeline_path,
-                pipeline_document=PipelineDocumentAuthority.from_values(
-                    pipeline_config=pipeline_config, pipeline_steps=transport_pipeline
-                ),
-                global_config=global_config,
-                config_params={
-                    "runtime_observation_export_path": str(observation_export_path),
-                },
-                compile_artifact_id=compile_artifact_id,
-            )
-            with phase_timing.phase(BenchmarkPhase.SUBMIT_OPENHCS):
-                execution_submission_response = ExecutionSubmissionResponse.from_wire(
-                    client.submit_pipeline(execution_submission)
-                )
-            if not execution_submission_response.accepted:
-                raise ToolExecutionError(
-                    execution_submission_response.require_failure_text(
-                        "OpenHCS ZMQ execution submission"
-                    )
-                )
-            execution_id = execution_submission_response.require_execution_id(
-                "OpenHCS ZMQ execution submission"
-            )
-            with phase_timing.phase(BenchmarkPhase.WAIT_OPENHCS):
-                wait_response = client.wait_for_completion(execution_id)
-            completion_observed_at = time.time()
-            wait_result = ExecutionWaitResult.from_wire(wait_response)
-            wait_result.require_complete("OpenHCS ZMQ execution failed")
+            except RuntimeError as exc:
+                raise ToolExecutionError(str(exc)) from exc
     finally:
         client.disconnect()
 
     timing_observer.record_phase_timings(
         phase_timing,
-        completion_observed_at=completion_observed_at,
+        completion_observed_at=run.completion_observed_at,
     )
     if not observation_export_path.exists():
         raise ToolExecutionError(
@@ -429,7 +396,9 @@ def _execute_pipeline_via_zmq_server(
         observation_export_path
     )
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
-    results_summary_payload = wait_response.get("results", {}) or wait_response.get(
+    results_summary_payload = run.completion_response.get(
+        "results", {}
+    ) or run.completion_response.get(
         "results_summary",
         {},
     )
@@ -445,7 +414,7 @@ def _execute_pipeline_via_zmq_server(
     )
     return (
         _ZMQOpenHCSExecution(
-            execution_id=execution_id,
+            execution_id=run.execution_id,
             observation_export=observation_export,
             output_roots=output_roots,
             results_summary=results_summary,
@@ -457,71 +426,82 @@ def _execute_pipeline_via_zmq_server(
 
 @dataclass(frozen=True, slots=True)
 class OpenHCSRunRequest:
-    """Authoritative benchmark run request for one OpenHCS execution."""
+    """Decoded benchmark policy for one OpenHCS execution."""
 
     dataset_path: Path
     pipeline_name: str
-    pipeline_params: dict[str, Any]
+    microscope_type: str | None
+    cppipe_source: CPPipeSourceRequest
+    equivalence_reference_output_dir: Path | None
+    compare_image_outputs: bool
+    materialize_runtime_artifacts: bool
+    raise_on_equivalence_failure: bool
+    openhcs_timeout_seconds: float
+    dump_compiled_plans: bool
     metrics: tuple[MetricCollector, ...]
-    output_dir: Path
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "output_dir", Path(self.output_dir).resolve())
+        if self.openhcs_timeout_seconds <= 0:
+            raise ValueError("openhcs_timeout_seconds must be positive.")
 
     @property
     def dataset_id(self) -> str:
-        return str(self.pipeline_params.get("dataset_id", self.dataset_path.name))
+        return self.cppipe_source.dataset_id
 
     @property
-    def microscope_type(self) -> str | None:
-        value = self.pipeline_params.get("microscope_type")
-        if value is None:
-            return None
-        return str(value)
+    def output_dir(self) -> Path:
+        return self.cppipe_source.output_dir
 
-    @property
-    def cppipe_source(self) -> CPPipeSourceRequest:
-        return CPPipeSourceRequest.from_pipeline_params(
-            dataset_id=self.dataset_id,
-            output_dir=self.output_dir,
-            pipeline_params=self.pipeline_params,
+    @classmethod
+    def from_pipeline_params(
+        cls,
+        *,
+        dataset_path: Path,
+        pipeline_name: str,
+        pipeline_params: Mapping[str, Any],
+        metrics: tuple[MetricCollector, ...],
+        output_dir: Path,
+    ) -> "OpenHCSRunRequest":
+        """Decode the legacy parameter map once at the adapter boundary."""
+
+        resolved_dataset_path = Path(dataset_path)
+        resolved_output_dir = Path(output_dir).resolve()
+        dataset_id = str(pipeline_params.get("dataset_id", resolved_dataset_path.name))
+        microscope_type = pipeline_params.get("microscope_type")
+        reference_dir = pipeline_params.get("equivalence_reference_output_dir")
+        timeout = pipeline_params.get("openhcs_timeout_seconds")
+        if timeout is None:
+            timeout = os.environ.get("OPENHCS_BENCHMARK_OPENHCS_TIMEOUT_SECONDS", "120")
+        dump_compiled_plans = pipeline_params.get("dump_compiled_plans")
+        if dump_compiled_plans is None:
+            dump_compiled_plans = os.environ.get(_DUMP_COMPILED_PLANS_ENV)
+        return cls(
+            dataset_path=resolved_dataset_path,
+            pipeline_name=pipeline_name,
+            microscope_type=(
+                str(microscope_type) if microscope_type is not None else None
+            ),
+            cppipe_source=CPPipeSourceRequest.from_pipeline_params(
+                dataset_id=dataset_id,
+                output_dir=resolved_output_dir,
+                pipeline_params=pipeline_params,
+            ),
+            equivalence_reference_output_dir=(
+                Path(reference_dir) if reference_dir is not None else None
+            ),
+            compare_image_outputs=bool(
+                pipeline_params.get("compare_image_outputs", True)
+            ),
+            materialize_runtime_artifacts=bool(
+                pipeline_params.get("materialize_runtime_artifacts", True)
+            ),
+            raise_on_equivalence_failure=bool(
+                pipeline_params.get("raise_on_equivalence_failure", True)
+            ),
+            openhcs_timeout_seconds=float(timeout),
+            dump_compiled_plans=_truthy_debug_flag(dump_compiled_plans),
+            metrics=metrics,
         )
-
-    @property
-    def equivalence_reference_output_dir(self) -> Path | None:
-        value = self.pipeline_params.get("equivalence_reference_output_dir")
-        if value is None:
-            return None
-        return Path(value)
-
-    @property
-    def compare_image_outputs(self) -> bool:
-        return bool(self.pipeline_params.get("compare_image_outputs", True))
-
-    @property
-    def materialize_runtime_artifacts(self) -> bool:
-        return bool(self.pipeline_params.get("materialize_runtime_artifacts", True))
-
-    @property
-    def raise_on_equivalence_failure(self) -> bool:
-        return bool(self.pipeline_params.get("raise_on_equivalence_failure", True))
-
-    @property
-    def openhcs_timeout_seconds(self) -> float:
-        value = self.pipeline_params.get("openhcs_timeout_seconds")
-        if value is None:
-            value = os.environ.get("OPENHCS_BENCHMARK_OPENHCS_TIMEOUT_SECONDS", "120")
-        seconds = float(value)
-        if seconds <= 0:
-            raise ValueError("openhcs_timeout_seconds must be positive.")
-        return seconds
-
-    @property
-    def dump_compiled_plans(self) -> bool:
-        value = self.pipeline_params.get("dump_compiled_plans")
-        if value is None:
-            value = os.environ.get(_DUMP_COMPILED_PLANS_ENV)
-        return _truthy_debug_flag(value)
 
 
 class OpenHCSAdapter(ToolAdapter):
@@ -875,7 +855,7 @@ class OpenHCSAdapter(ToolAdapter):
         """Execute OpenHCS pipeline with metrics."""
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        request = OpenHCSRunRequest(
+        request = OpenHCSRunRequest.from_pipeline_params(
             dataset_path=dataset_path,
             pipeline_name=pipeline_name,
             pipeline_params=pipeline_params,

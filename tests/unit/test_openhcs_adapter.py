@@ -16,6 +16,7 @@ from zmqruntime import (
 )
 
 from benchmark.adapters.openhcs import (
+    OpenHCSRunRequest,
     ZMQ_RESULTS_SUMMARY_FILENAME,
     _execute_pipeline_via_zmq_server,
     _openhcs_execution_watchdog,
@@ -61,6 +62,42 @@ from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
 _HAS_INTERVAL_TIMER = all(
     hasattr(signal, attribute) for attribute in ("SIGALRM", "ITIMER_REAL", "setitimer")
 )
+
+
+def test_openhcs_benchmark_request_decodes_legacy_options_once(tmp_path: Path) -> None:
+    options = {
+        "dataset_id": "fixture-plate",
+        "cppipe_path": str(tmp_path / "pipeline.cppipe"),
+        "equivalence_reference_output_dir": str(tmp_path / "reference"),
+        "compare_image_outputs": False,
+        "openhcs_timeout_seconds": 45,
+    }
+
+    request = OpenHCSRunRequest.from_pipeline_params(
+        dataset_path=tmp_path,
+        pipeline_name="pipeline",
+        pipeline_params=options,
+        metrics=(),
+        output_dir=tmp_path / "outputs",
+    )
+    options.clear()
+
+    assert request.dataset_id == "fixture-plate"
+    assert request.output_dir == (tmp_path / "outputs").resolve()
+    assert request.cppipe_source.cppipe_path == tmp_path / "pipeline.cppipe"
+    assert request.equivalence_reference_output_dir == tmp_path / "reference"
+    assert request.compare_image_outputs is False
+    assert request.openhcs_timeout_seconds == 45.0
+    assert not hasattr(request, "pipeline_params")
+
+    with pytest.raises(ValueError, match="must be positive"):
+        OpenHCSRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"openhcs_timeout_seconds": 0},
+            metrics=(),
+            output_dir=tmp_path / "outputs",
+        )
 
 
 def _public_steps() -> list[FunctionStep]:
@@ -251,6 +288,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         == execution.results_summary
     )
     assert source == FakeZMQExecutionClient.submitted[0].pipeline_code()
+    assert (
+        FakeZMQExecutionClient.submitted[0].pipeline_document
+        is FakeZMQExecutionClient.submitted[1].pipeline_document
+    )
     assert all(
         submission.global_pipeline_config is global_config
         for submission in FakeZMQExecutionClient.submitted

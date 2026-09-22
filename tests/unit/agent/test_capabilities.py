@@ -228,6 +228,7 @@ def test_local_surface_profiles_filter_declaration_metadata_without_name_lists()
     assert "openhcs_ui_wait_for_operation" not in desktop_names
     assert "openhcs_create_orchestrator_session" in desktop_names
     assert "openhcs_submit_pipeline_execution" in desktop_names
+    assert "openhcs_cancel_execution" in desktop_names
     assert "openhcs_ui_invoke_widget_action" not in desktop_names
 
     desktop_capabilities = {
@@ -408,6 +409,9 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
         CapabilityRole.MODE_VARIANT
     )
     assert capabilities["openhcs_get_execution_status"].target_context is (
+        CapabilityTargetContext.SUBMITTED_JOB
+    )
+    assert capabilities["openhcs_cancel_execution"].target_context is (
         CapabilityTargetContext.SUBMITTED_JOB
     )
     assert (
