@@ -89,6 +89,16 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   CSV readers and figure inputs; do not reinterpret old timing rows as receipts
   from the new boundary. `benchmark/throughput_scaling.py` already calls the
   OpenHCS adapter and is a different, process-per-job workload.
+  The migration cannot simply request the current full runtime-observation
+  export: the legacy run explicitly uses `RuntimeObservationMode.OMIT` and
+  disables artifact materialization, whereas an export currently strengthens
+  retention to `MERGE_INTO_PARENT`. That would move potentially large runtime
+  values into the server process and change the resource/timing experiment.
+  First add an ordinary typed outcome-only observation that retains per-axis
+  success, progress/timing boundaries and environment without transferring
+  runtime arrays. Then make the legacy runner a scenario over the ordinary
+  submission/result, with a route/version marker so old CSV rows are not
+  silently pooled with new measurements.
 
 ## Migration sequence
 
