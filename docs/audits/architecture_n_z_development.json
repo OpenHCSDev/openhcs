@@ -1937,7 +1937,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "67c1106d45383c21c3be41d3afa77588315c415f238c6079f136d14cf985eef5",
+    "source_sha256": "027e75d6c5337d06e78b7f7d5c76ffc2cbaa9b936cdad9eced5757c3be7bcd42",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -1996,7 +1996,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "d89ec825bd93b83f0a78b32df856072d8f16c8fbc8d0b42c8c3371ecd060755d",
+        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
         "role": "Spawns the execution server with the ArrayBridge-projected child environment and carries typed execution transport."
       },
       {
@@ -2976,7 +2976,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "d89ec825bd93b83f0a78b32df856072d8f16c8fbc8d0b42c8c3371ecd060755d",
+        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
         "role": "Owns the total headless submission budget and the pre-dispatch timeout boundary documented for MCP developers."
       },
       {

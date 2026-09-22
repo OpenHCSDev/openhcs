@@ -2196,7 +2196,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "12ccc6992e7425157501bc7bcd7a7bedf9c5188cc172d210ad164bb5464e612e",
+        "sha256": "564b20faf6e101db930803e2464b3fd82671d44de3544dbb45413e018c6407db",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {

@@ -51,6 +51,7 @@ from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.debug import DebugExecutionConfig
+from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.pipeline_document import (
     PipelineDocument,
     PipelineDocumentAuthority,
@@ -289,6 +290,21 @@ class ZMQCompiledPipelineRun:
     execution_id: str
     completion_response: Mapping[str, Any]
     completion_observed_at: float
+
+    @property
+    def results_summary(self) -> Mapping[str, Any]:
+        """Project the completed wait response's ordinary result summary."""
+
+        value = self.completion_response.get("results")
+        if not value:
+            value = self.completion_response.get(MessageFields.RESULTS_SUMMARY)
+        return dict(value) if isinstance(value, Mapping) else {}
+
+    @property
+    def output_plate(self) -> ExecutionOutputPlateSummary:
+        """Decode output-plate metadata through its shared typed authority."""
+
+        return ExecutionOutputPlateSummary.from_results_summary(self.results_summary)
 
 
 def run_compiled_pipeline(

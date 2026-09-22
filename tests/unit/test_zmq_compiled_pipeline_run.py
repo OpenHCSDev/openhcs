@@ -96,6 +96,33 @@ def test_compiled_pipeline_run_uses_one_document_and_source_owned_phases():
     ]
 
 
+def test_compiled_pipeline_run_owns_completion_result_projection():
+    class ClientWithResults(FakeExecutionClient):
+        def wait_for_completion(self, execution_id):
+            response = super().wait_for_completion(execution_id)
+            if execution_id == "execute-1":
+                response["results"] = {"output_plate_root": "/output/plate"}
+            return response
+
+    run = run_compiled_pipeline(ClientWithResults(), _submission())
+
+    assert run.results_summary == {"output_plate_root": "/output/plate"}
+    assert run.output_plate.output_plate_root == "/output/plate"
+
+
+def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
+    class ClientWithLegacyResults(FakeExecutionClient):
+        def wait_for_completion(self, execution_id):
+            response = super().wait_for_completion(execution_id)
+            if execution_id == "execute-1":
+                response["results_summary"] = {"output_plate_root": "/legacy/plate"}
+            return response
+
+    run = run_compiled_pipeline(ClientWithLegacyResults(), _submission())
+
+    assert run.output_plate.output_plate_root == "/legacy/plate"
+
+
 def test_auxiliary_observation_request_is_shared_by_client_and_server():
     path = Path("/tmp/observation.pkl")
     submission = _submission().with_config_params({"unrelated": "kept"})

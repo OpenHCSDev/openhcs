@@ -26,6 +26,7 @@ from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
+from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
@@ -61,10 +62,14 @@ class _ZMQOpenHCSExecution:
     receipt: MeasuredPipelineRunReceipt
 
     @property
+    def output_plate(self) -> ExecutionOutputPlateSummary:
+        return ExecutionOutputPlateSummary.from_results_summary(self.results_summary)
+
+    @property
     def execution_output_root(self) -> Path:
         if len(self.output_roots) == 1:
             return self.output_roots[0]
-        summary_root = self.results_summary.get("output_plate_root")
+        summary_root = self.output_plate.output_plate_root
         if summary_root is not None:
             return Path(str(summary_root))
         return self.output_roots[0] if self.output_roots else Path(".")
@@ -283,15 +288,7 @@ def execute_measured_openhcs_pipeline(
     except RuntimeError as exc:
         raise ToolExecutionError(str(exc)) from exc
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
-    results_summary_payload = run.completion_response.get(
-        "results", {}
-    ) or run.completion_response.get(
-        "results_summary",
-        {},
-    )
-    if not isinstance(results_summary_payload, Mapping):
-        results_summary_payload = {}
-    results_summary = dict(results_summary_payload)
+    results_summary = run.results_summary
     results_summary_path = observation_export_path.with_name(
         ZMQ_RESULTS_SUMMARY_FILENAME
     )

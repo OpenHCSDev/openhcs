@@ -1826,7 +1826,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "d89ec825bd93b83f0a78b32df856072d8f16c8fbc8d0b42c8c3371ecd060755d",
+        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
         "role": "Implements execution-server connection, request submission, progress consumption, and connection-state reporting."
       },
       {
@@ -3864,7 +3864,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "d89ec825bd93b83f0a78b32df856072d8f16c8fbc8d0b42c8c3371ecd060755d",
+        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
         "role": "Implements execution-server connection, request submission, progress consumption, and connection-state reporting."
       },
       {
