@@ -273,6 +273,37 @@ def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
     assert text_item.metadata["type"] == "TEXT"
 
 
+def test_image_browser_projects_result_images_as_streamable_images(tmp_path: Path):
+    image_path = tmp_path / "plate" / "results" / "A01_labels.tif"
+    image_path.parent.mkdir(parents=True)
+    image_path.write_bytes(b"result image")
+    inventory = PlateResultFileInventory(
+        plate_path=tmp_path / "plate",
+        scanned_file_count=1,
+        records=(
+            PlateResultFileRecord(
+                relative_path="results/A01_labels.tif",
+                full_path=str(image_path),
+                file_format=FileFormat.TIFF,
+                metadata={
+                    "filename": "results/A01_labels.tif",
+                    "type": "TIFF",
+                    "well": "A01",
+                },
+            ),
+        ),
+    )
+
+    result_items = ImageBrowserWidget._result_items_from_inventory(inventory)
+
+    item = result_items["results/A01_labels.tif"]
+    assert item.file_kind is PlateFileKind.RESULT
+    assert item.is_result is True
+    assert item.streamable_image_path == str(image_path)
+    assert item.result_file_type is None
+    assert item.full_path == image_path
+
+
 def test_plate_file_inventory_reads_path_planned_result_only_output(
     tmp_path: Path,
 ) -> None:
