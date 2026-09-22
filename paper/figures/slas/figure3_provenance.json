@@ -1,39 +1,56 @@
 {
+  "source_manifest": "paper/figures/slas/figure3_current_replay_sources.json",
+  "source_manifest_sha256": "b6c92487fd58c8321978bc9399c0a45a1ad2de52856a8b295b66e5d6422d1110",
   "source_sha256": {
-    "website/assets/agent/cold-start-workflow-record.json": "52d126027b39a05cd5e799e4aca28e45fd8edd251c7b523204c33c14fa7de65c",
-    "website/assets/agent/cold-start-workflow-uncut.mp4": "e3c71086fbe6ea85bfb8ae557d3cc129c6a745779fcfa6c0c0b5388e13956c58",
     "mcp_outputs/website-agent-demo/candidate-20260804-13/plate/1_w1.tif": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
     "mcp_outputs/website-agent-demo/candidate-20260804-13/plate/1_w2.tif": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
-    "website/assets/agent/cold-start-workflow-pipeline.py": "48b6e4f9dbc54932df8a95c405f4b832c1ca35856d866a261faf15fa3c14b754"
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/ui_source.py": "7223915420bcd38d01f701ef239fcf48cd7e3f56cd5f5a92331cbb9e6132e3ad",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/gallery-final/raw/current-neurite-result.png": "0181f583a0342d501cfc416d8c761e42416013ac94e6964ed38365b7905a06a6",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/gallery-final/details/crossing/20260916T033359046025Z_napari_5631_OpenHCS_Napari_Visualization.png": "082caed2ae351ac0896468c8a924ff43e7d27735eaa2e712848d4d2da829aa66",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_neurite_outgrowth_cells_step1_details.csv": "b824bf1a9c2792b379200afd8aa24c49be7dc8e1d447e1304888d396537202fa",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_neurite_outgrowth_summary_step1_details.csv": "c498e24b684ecb7c09205d22a7b5f4997115ffa5411d2cd355d361db587a34fc",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_nuclei_step1.labels.tif": "e8a19236e36bb18a8950d15637eb9f5cdf9cfb12dfe233bb216fd0bd68e95381",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_cell_bodies_step1.labels.tif": "f81c3114dd4bf4797d79cd8aec29696d81a5725baecfe1e7cdd2b1bf8cfd6c55",
+    "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_neurons_step1.labels.tif": "19659c41a8006e1d4bd51a300d25b32a440becbcd68f4a89235e48661a85f711"
   },
-  "generator_sha256": "cea43b841d1c9517718545766bb572a908d38c64f2f6bcb722c43de8c3d87a35",
-  "run_id": "candidate-20260804-13",
-  "openhcs_version": "0.7.13",
-  "video_frame_seconds": 600,
-  "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255; no spatial crop",
-  "video_display": "Full original frame with labelled detail rectangles; D/E are unchanged pixel crops of the same frame, not the later corrected replay",
-  "video_detail_crops_xyxy": {
-    "D  Neuron and neurite outlines": [
-      380,
-      70,
-      725,
-      400
+  "generator_sha256": "a8315f9f435a36c30115a5655f040180e95db2022466ec3731dcd0e0c62040e9",
+  "replay_execution_id": "e5d9067c-334b-46b7-853b-ca986f94137d",
+  "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255",
+  "viewer_display": "Panel C and the crossing detail are native Qt captures; the crossing detail is an unchanged canvas crop using xyxy=(580, 40, 1753, 720). Panel D is a deterministic overlay of retained input pixels and labels.",
+  "soma_assignment_overlay": {
+    "cell_body_label": 8,
+    "nucleus_label": 8,
+    "neuron_label": 8,
+    "crop_xyxy": [
+      269,
+      576,
+      465,
+      780
     ],
-    "E  Three path measurements": [
-      691,
-      501,
-      978,
-      580
-    ]
+    "selection": "cell body with greatest image-row centroid",
+    "label_matching": "maximal nonzero pixel overlap with selected cell body",
+    "colors": {
+      "nucleus": "magenta",
+      "cell_body": "cyan",
+      "assigned_neuron": "yellow"
+    }
   },
+  "measurement_units": "Pixels: the retained source has unit spacing and no physical calibration",
   "step_labels": [
     "Enhanced neuronal signal\npercentile_normalize",
     "Per-neuron morphology and topology\nneurite_outgrowth_metaxpress"
   ],
+  "derived_summary": {
+    "Neurons": 8,
+    "Nuclei": 8,
+    "Processes": 18,
+    "Branch events": 2,
+    "Resolved crossovers": 1,
+    "Total path": "2556.1 px"
+  },
   "output_sha256": {
-    "figure3_original_video_frame.png": "c52154ecfa8f7ab3c9f8e24416b735e7ca79adf57111ba2b4dc3c824903d13c1",
-    "figure3_agent_workflow.png": "b9df5d31223d9785881f3903652f6bc8696637f3f627c2d7b48dcfd9e65de37a",
-    "figure3_agent_workflow.pdf": "6c6910a80b37f4d7087805b4b980bb4bf1e89f8dc1f639379cb53cf1f3eebe88",
-    "figure3_agent_workflow.svg": "a424c43b7c06454e87e3a342143e5046fc4dc36ecf597eaddf26238971d494a8"
+    "figure3_agent_workflow.png": "9cacbe660cf64649c7596802d852c383f54766442003f5d1b3837dea314ebd42",
+    "figure3_agent_workflow.pdf": "9e2329abde34358b0d057024da006e8fabd6c08f43f9e69caec87528f1748e6c",
+    "figure3_agent_workflow.svg": "8b933465f4d8a59fc8a5e9957dfc48906fe262c86346b23bf7cf8606599c0a51"
   }
 }

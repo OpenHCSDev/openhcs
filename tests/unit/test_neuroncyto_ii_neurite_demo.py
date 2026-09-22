@@ -126,6 +126,11 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_outgrowth",
         "neurons",
         "nuclei",
+        "neurite_candidate_mask",
+        "neurite_unrooted_residual",
+        "neurite_secondary_ownership",
+        "neurite_topology_dropped_trace",
+        "neurite_topology_added_trace",
         "neurite_morphology",
     )
     assert {spec.name: spec.viewer_streaming for spec in artifact_outputs} == {
@@ -135,6 +140,11 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
         "neurons": ArtifactViewerStreaming.AUTOMATIC,
         "nuclei": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_candidate_mask": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_unrooted_residual": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 
@@ -184,6 +194,11 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
         "neurons": ArtifactViewerStreaming.AUTOMATIC,
         "nuclei": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_candidate_mask": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_unrooted_residual": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 

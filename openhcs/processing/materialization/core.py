@@ -26,7 +26,7 @@ from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
 )
-from zmqruntime.viewer_protocol import ViewerWireField, ViewerWireValue
+from zmqruntime.viewer_protocol import ViewerWireValue
 
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactMaterializationPayload
@@ -1618,19 +1618,10 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 output.variable_components,
             )
         )
-        plane_component_values = item_fields.get(
-            ViewerWireField.PLANE_COMPONENT_VALUES.value,
-            {},
-        )
-        if not isinstance(plane_component_values, Mapping):
-            raise TypeError("Viewer stream plane_component_values must be a mapping.")
         display_semantics = self.values.stream_request.display_semantics
-        projected_metadata = StreamViewerComponentMetadataProjector(
-            tuple(
-                component
-                for component in display_semantics.component_order
-                if component not in plane_component_values
-            )
+        projected_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
+            display_semantics.component_order,
+            item_fields,
         ).project_required(index=0, metadata=component_metadata)
         return projected_metadata, item_fields
 

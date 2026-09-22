@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass, field, replace, fields
+from dataclasses import dataclass, field, fields, replace
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from functools import lru_cache
@@ -13,18 +13,19 @@ from typing import Any, ClassVar, Mapping, cast, get_type_hints
 from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.serialization.json import to_jsonable
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.components.component_values import OpenHCSComponentValues
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
     SourceProjectionRole,
 )
 from openhcs.core.source_matching import (
+    source_component_metadata_raw_value,
     source_component_metadata_values,
     source_metadata_component,
     source_metadata_values_equal,
@@ -40,6 +41,7 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
+from openhcs.serialization.json import to_jsonable
 
 
 class SourceDatasetConflictError(ValueError):
@@ -172,6 +174,26 @@ class OpenHCSPlaneAddress:
     ) -> "OpenHCSPlaneAddress":
         """Create an address from nominal OpenHCS component values."""
 
+        return cls(component_values)
+
+    @classmethod
+    def from_complete_source_metadata(
+        cls,
+        metadata: SourceMetadataMapping | None,
+    ) -> "OpenHCSPlaneAddress | None":
+        """Return one address only when every declared component is scalar."""
+
+        if metadata is None:
+            return None
+        component_values = tuple(
+            (
+                component,
+                source_component_metadata_raw_value(metadata, component),
+            )
+            for component in AllComponents
+        )
+        if any(value is None for _component, value in component_values):
+            return None
         return cls(component_values)
 
     _filename_pattern: ClassVar[re.Pattern[str]] = re.compile(
@@ -600,19 +622,54 @@ class SourceProjection:
     """Nominal root for typed source projections."""
 
     projection_role: ClassVar[SourceProjectionRole]
-    address: OpenHCSPlaneAddress
+    address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
     source_alias: str | None
     artifact_kind: type[ArtifactType]
     source_metadata: SourceMetadataMapping
     component_labels: Mapping[str, str | None]
     image_metadata: ClassVar[ImagePayloadMetadata | None] = None
+    execution_scope: ClassVar[RuntimeExecutionAxisScope | None] = None
 
     @property
     def identity_key(self) -> tuple[object, ...]:
         """Return the projection identity enforced within one source set."""
 
         return (self.projection_role, self.address)
+
+    def component_value(self, component: AllComponents) -> str | None:
+        """Return one scalar projection coordinate when the projection has one."""
+
+        if self.address is None:
+            return None
+        return self.address.value_for(component)
+
+    def source_component_values(
+        self,
+    ) -> tuple[tuple[AllComponents, str], ...]:
+        """Return scalar coordinates represented by this projection."""
+
+        if self.address is None:
+            return ()
+        return self.address.component_values().declared_values()
+
+    def serialized_address(self) -> dict[str, str] | None:
+        """Project the optional scalar address to the metadata boundary."""
+
+        if self.address is None:
+            return None
+        return self.address.as_component_metadata()
+
+    def serialized_execution_scope(self) -> Mapping[str, Any] | None:
+        """Return runtime scope metadata when the nominal leaf owns one."""
+
+        return None
+
+    @property
+    def requires_explicit_persisted_path(self) -> bool:
+        """Return whether a canonical filename cannot represent this projection."""
+
+        return False
 
     @property
     def payload_composition_alias(self) -> str | None:
@@ -726,7 +783,7 @@ class SourceArtifactProjection(SourceProjection):
         SourceProjectionRole.SOURCE_ARTIFACT
     )
 
-    address: OpenHCSPlaneAddress
+    address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
     source_alias: str
     artifact_kind: type[ArtifactType]
@@ -736,6 +793,8 @@ class SourceArtifactProjection(SourceProjection):
     component_labels: Mapping[str, str | None] = field(
         default_factory=lambda: MappingProxyType({})
     )
+    image_metadata: ImagePayloadMetadata | None = None
+    execution_scope: RuntimeExecutionAxisScope | None = None
 
     def __post_init__(self) -> None:
         normalized_alias = str(self.source_alias).strip()
@@ -749,11 +808,64 @@ class SourceArtifactProjection(SourceProjection):
         )
         _normalize_projection(self)
 
+    @classmethod
+    def scalar_address_for_image_metadata(
+        cls,
+        metadata: ImagePayloadMetadata,
+    ) -> OpenHCSPlaneAddress | None:
+        """Return a plane address only when the whole artifact is scalar."""
+
+        return OpenHCSPlaneAddress.from_complete_source_metadata(
+            metadata.source_component_metadata
+        )
+
     @property
     def identity_key(self) -> tuple[object, ...]:
         """Distinguish colocated source artifacts by their declared alias."""
 
-        return (*super(SourceArtifactProjection, self).identity_key, self.source_alias)
+        identity = (
+            *super(SourceArtifactProjection, self).identity_key,
+            self.source_alias,
+        )
+        if self.address is not None:
+            return identity
+        return (*identity, self.execution_scope, self.ref)
+
+    def component_value(self, component: AllComponents) -> str | None:
+        """Return scalar address or runtime-scope identity for one component."""
+
+        value = SourceProjection.component_value(self, component)
+        if value is not None or self.execution_scope is None:
+            return value
+        return self.execution_scope.value_text_for_component(component)
+
+    def source_component_values(
+        self,
+    ) -> tuple[tuple[AllComponents, str], ...]:
+        """Return scalar address or runtime execution-scope coordinates."""
+
+        values = SourceProjection.source_component_values(self)
+        if values or self.execution_scope is None:
+            return values
+        return self.execution_scope.source_component_values
+
+    def serialized_execution_scope(self) -> Mapping[str, Any] | None:
+        """Project the exact runtime scope for aggregate persisted artifacts."""
+
+        if self.execution_scope is None:
+            return None
+        payload = to_jsonable(self.execution_scope)
+        if not isinstance(payload, Mapping):
+            raise TypeError(
+                "Source artifact execution scope must serialize as a mapping."
+            )
+        return payload
+
+    @property
+    def requires_explicit_persisted_path(self) -> bool:
+        """Aggregate artifacts cannot synthesize a scalar plane filename."""
+
+        return self.address is None
 
     def virtual_workspace_path(
         self,
@@ -780,6 +892,15 @@ class SourceArtifactProjection(SourceProjection):
         """Declare this source artifact's nominal kind in its wire payload."""
 
         payload["artifact_kind"] = self.artifact_kind.require_value()
+        if self.image_metadata is not None:
+            payload[SourcePlaneProjection.image_metadata_wire_field()] = to_jsonable(
+                self.image_metadata
+            )
+
+    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
+        """Return pixel metadata when this artifact is independently loadable."""
+
+        return self.image_metadata
 
 
 @dataclass(frozen=True, slots=True)
@@ -1014,6 +1135,12 @@ class SourceProjectionMetadataSerializer:
         """Render and validate one canonical typed source virtual path."""
 
         address = projection.address
+        if projection.requires_explicit_persisted_path:
+            raise ValueError(
+                "Aggregate source artifacts require an explicit persisted path."
+            )
+        if address is None:  # pragma: no cover - nominal contract above
+            raise RuntimeError("Scalar projection has no address.")
         path = self.parser.construct_filename(
             self.parser.bind_declared_values(
                 (
@@ -1051,7 +1178,9 @@ class SourceProjectionMetadataSerializer:
     ) -> dict[str, str | None]:
         values: dict[str, str | None] = {}
         for projection in projection_set.projections:
-            key = projection.address.component_values()[component]
+            key = projection.component_value(component)
+            if key is None:
+                continue
             label = projection.component_labels.get(component.value)
             previous = values.get(key)
             if previous is not None and label is not None and previous != label:
@@ -1090,7 +1219,7 @@ class SourceProjectionMetadataSerializer:
                 path=projection.ref.backend_address,
             )
         original_metadata = dict(SourceMetadataRoleView(metadata).original_items())
-        for component, value in projection.address.component_values().items():
+        for component, value in projection.source_component_values():
             canonical_value = metadata.get(component.value)
             conflicts_with_address = (
                 canonical_value is not None
@@ -1128,7 +1257,7 @@ class SourceProjectionMetadataSerializer:
     ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "virtual_path": path,
-            "address": projection.address.as_component_metadata(),
+            "address": projection.serialized_address(),
             "ref": projection.ref.to_workspace_mapping(),
             "projection_role": projection.projection_role.value,
         }
@@ -1140,6 +1269,9 @@ class SourceProjectionMetadataSerializer:
             )
         if projection.component_labels:
             payload["component_labels"] = dict(projection.component_labels)
+        execution_scope = projection.serialized_execution_scope()
+        if execution_scope is not None:
+            payload["execution_scope"] = execution_scope
         projection.extend_serialized_payload(payload)
         return payload
 
@@ -1176,8 +1308,18 @@ def _normalized_source_metadata_value(
 def _normalize_projection(projection: SourceProjection) -> None:
     """Normalize fields shared by every nominal source projection."""
 
-    if not isinstance(projection.address, OpenHCSPlaneAddress):
+    if projection.address is not None and not isinstance(
+        projection.address, OpenHCSPlaneAddress
+    ):
         raise TypeError("Source projection address must be OpenHCSPlaneAddress.")
+    if projection.address is None and (
+        projection.projection_role is not SourceProjectionRole.SOURCE_ARTIFACT
+        or projection.execution_scope is None
+    ):
+        raise TypeError(
+            "Only a source artifact with an execution scope may omit its scalar "
+            "plane address."
+        )
     if not isinstance(projection.ref, SourcePixelRef):
         raise TypeError("Source projection ref must be SourcePixelRef.")
     object.__setattr__(

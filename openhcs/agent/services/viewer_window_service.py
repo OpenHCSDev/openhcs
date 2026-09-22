@@ -285,14 +285,6 @@ class ViewerLayerValidationProjection:
         cls,
         layer: ViewerWindowLayerState,
     ) -> "ViewerLayerValidationProjection":
-        routed_component_coordinates = tuple(
-            coordinate
-            for payload_summary in layer.payload_summaries
-            for coordinate in ViewerLayerPayloadCoordinateSet._payload_coordinates(
-                layer.stack_axes,
-                ViewerPayloadComponentProjection.from_summary(payload_summary),
-            )
-        )
         return cls(
             projection=ViewerLayerAxisProjection(
                 projected_axis_components=layer.stack_axes,
@@ -306,9 +298,7 @@ class ViewerLayerValidationProjection:
                     layer.stack_axes,
                     context="viewer layer routed domains",
                 ),
-                routed_component_coordinates=tuple(
-                    dict.fromkeys(routed_component_coordinates)
-                ),
+                routed_component_coordinates=layer.routed_component_coordinates,
                 axis_offsets=layer.axis_offsets,
             )
         )
@@ -2556,6 +2546,12 @@ class ViewerWindowService:
                 payload,
                 ViewerLayerField.ROUTED_COMPONENT_VALUES,
             ),
+            routed_component_coordinates=tuple(
+                self._required_sequence_tuple(
+                    payload,
+                    ViewerLayerField.ROUTED_COMPONENT_COORDINATES,
+                )
+            ),
             data_shape=self._required_typed_tuple(
                 payload,
                 ViewerLayerField.DATA_SHAPE,
@@ -2645,6 +2641,21 @@ class ViewerWindowService:
         if not isinstance(value, (list, tuple)):
             raise TypeError(f"Viewer response field {field_name!r} must be a sequence.")
         return tuple(value)
+
+    @staticmethod
+    def _required_sequence_tuple(
+        payload: Mapping[str, JsonValue],
+        field_name: str,
+    ) -> tuple[tuple[JsonValue, ...], ...]:
+        values = ViewerWindowService._required_sequence(payload, field_name)
+        coordinates: list[tuple[JsonValue, ...]] = []
+        for value in values:
+            if not isinstance(value, (list, tuple)):
+                raise TypeError(
+                    f"Viewer response field {field_name!r} values must be sequences."
+                )
+            coordinates.append(tuple(value))
+        return tuple(coordinates)
 
     @staticmethod
     def _sequence_length(

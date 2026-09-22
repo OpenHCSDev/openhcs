@@ -3,8 +3,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
-import tifffile
 import pytest
+import tifffile
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
@@ -13,6 +13,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamKwarg,
     ViewerStreamSourceIdentity,
 )
+from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
 from openhcs.constants.constants import AllComponents, Backend, VariableComponents
@@ -22,7 +23,12 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
-from openhcs.core.compiled_step_plan import CompiledStepPlan, MaterializedOutputPlan
+from openhcs.core.compiled_step_plan import (
+    CompiledStepPlan,
+    MaterializedOutputPlan,
+    RuntimeArtifactMaterializationPlan,
+)
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import WellFilterMode
 from openhcs.core.function_patterns import compile_function_pattern
@@ -57,16 +63,23 @@ from openhcs.core.steps.function_outputs import (
     MemoryOutputWriter,
     OpenHCSMetadataWriter,
     ProducedMemoryPathsAuthority,
+    RuntimeArtifactMaterializationAuthority,
     StreamOutputsAuthority,
+    finalize_function_step_outputs,
 )
-from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
-from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.core.virtual_workspace_metadata import (
+    FIELDS,
+    VirtualWorkspaceSourceProjectionEntries,
+)
+from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.processing.materialization.core import Output
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -87,6 +100,40 @@ def test_memory_output_writer_projects_runtime_image_payload_for_array_storage(
 
     assert len(prepared) == 1
     assert prepared[0] is image
+
+
+def test_function_step_metadata_follows_runtime_artifact_persistence(
+    monkeypatch,
+) -> None:
+    events = []
+    context = SimpleNamespace()
+    plan = SimpleNamespace()
+    for authority, method_name, event in (
+        (MemoryOutputWriter, "write_if_needed", "memory"),
+        (MaterializedImageOutputWriter, "write_if_needed", "materialized"),
+        (StreamOutputsAuthority, "stream_outputs", "stream"),
+        (
+            RuntimeArtifactMaterializationAuthority,
+            "materialize",
+            "runtime_artifacts",
+        ),
+        (OpenHCSMetadataWriter, "write", "metadata"),
+    ):
+        monkeypatch.setattr(
+            authority,
+            method_name,
+            lambda _context, _plan, event=event: events.append(event),
+        )
+
+    finalize_function_step_outputs(context, plan)
+
+    assert events == [
+        "memory",
+        "materialized",
+        "stream",
+        "runtime_artifacts",
+        "metadata",
+    ]
 
 
 def test_memory_output_writer_rejects_payload_path_cardinality_mismatch():
@@ -1482,6 +1529,237 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
 
 
+def test_runtime_image_artifact_projects_persisted_source_binding(
+    tmp_path, monkeypatch
+) -> None:
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "analysis_inputs"
+    output_dir.mkdir(parents=True)
+    output_path = (
+        output_dir / "A49_s001_w2_z001_t001_neurite_candidate_mask.checkpoint.tif"
+    )
+    pixels = np.ones((4, 5), dtype=np.uint8)
+    tifffile.imwrite(output_path, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        ),
+        parser=SourceSchemaFilenameParser(),
+    )
+    plan = function_step_plan("Neurite checkpoint")
+    plan.materialized_output = MaterializedOutputPlan(
+        output_dir=output_dir,
+        backend=Backend.DISK.value,
+        plate_root=str(plate_root),
+        sub_dir="analysis_inputs",
+        analysis_results_dir=str(plate_root / "analysis_inputs_results"),
+    )
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    metadata = ImagePayloadMetadata(
+        source_component_metadata={
+            "well": "A49",
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+        }
+    )
+    output = Output.from_metadata(
+        path=str(output_path),
+        content=pixels,
+        metadata=metadata,
+    )
+    materialization = SimpleNamespace(
+        spec=SimpleNamespace(participates_in_persistent_materialization=lambda: True),
+        output_plan=SimpleNamespace(
+            name="neurite_candidate_mask",
+            artifact_type=ImageArtifactType,
+        ),
+        record=SimpleNamespace(
+            key=SimpleNamespace(
+                scope=RuntimeExecutionAxisScope.from_raw(
+                    "A49",
+                    component=AllComponents.SITE,
+                    value="1",
+                    fixed_component_values=(
+                        (AllComponents.Z_INDEX, "1"),
+                        (AllComponents.TIMEPOINT, "1"),
+                    ),
+                )
+            )
+        ),
+        outputs=lambda _plan, _context, **_kwargs: (output,),
+    )
+    monkeypatch.setattr(
+        "openhcs.core.steps.function_outputs.runtime_artifact_materializations",
+        lambda _plan, _context: (materialization,),
+    )
+
+    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    assert target is not None
+    [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
+        context, plan
+    )
+
+    assert virtual_path == (
+        "analysis_inputs/A49_s001_w2_z001_t001_neurite_candidate_mask.checkpoint.tif"
+    )
+    assert projection.source_alias == "neurite_candidate_mask"
+    assert projection.artifact_kind is ImageArtifactType
+    assert projection.image_metadata is not None
+    assert projection.image_metadata.source_dtype == "uint8"
+    assert projection.ref == SourcePixelRef(Backend.DISK.value, virtual_path)
+    structured = target.produced_projection_metadata(context, plan)
+    assert structured is not None
+    [record] = structured[FIELDS.SOURCE_PROJECTION]
+    assert record["virtual_path"] == virtual_path
+    assert record["source_alias"] == "neurite_candidate_mask"
+    assert record["artifact_kind"] == ImageArtifactType.value
+    assert (
+        record[SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD]["source_dtype"]
+        == "uint8"
+    )
+
+
+def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
+    tmp_path, monkeypatch
+) -> None:
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "analysis_inputs"
+    output_dir.mkdir(parents=True)
+    output_path = (
+        plate_root
+        / "analysis_inputs_results"
+        / "A49_z_index-1_timepoint-1_neurite_outgrowth_step0.labels.tif"
+    )
+    output_path.parent.mkdir(parents=True)
+    pixels = np.ones((2, 4, 5), dtype=np.int32)
+    tifffile.imwrite(output_path, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        ),
+        parser=SourceSchemaFilenameParser(),
+    )
+    plan = function_step_plan("Neurite labels")
+    plan.materialized_output = MaterializedOutputPlan(
+        output_dir=output_dir,
+        backend=Backend.DISK.value,
+        plate_root=str(plate_root),
+        sub_dir="analysis_inputs",
+        analysis_results_dir=str(plate_root / "analysis_inputs_results"),
+    )
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    common_metadata = {
+        "well": "A49",
+        "site": "1",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    metadata = ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_component_metadata=common_metadata,
+            source_image_provenance_planes=(
+                SourceImageProvenancePlanes.from_components(
+                    paths=("/source/A49_w1.tif", "/source/A49_w2.tif"),
+                    component_metadata=(
+                        {**common_metadata, "channel": "1"},
+                        {**common_metadata, "channel": "2"},
+                    ),
+                )
+            ),
+        ),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    output = Output.from_metadata(
+        path=str(output_path),
+        content=pixels,
+        metadata=metadata,
+    )
+    materialization = SimpleNamespace(
+        spec=SimpleNamespace(participates_in_persistent_materialization=lambda: True),
+        output_plan=SimpleNamespace(
+            name="neurite_outgrowth",
+            artifact_type=ObjectLabelsArtifactType,
+        ),
+        record=SimpleNamespace(
+            key=SimpleNamespace(
+                scope=RuntimeExecutionAxisScope.from_raw(
+                    "A49",
+                    component=AllComponents.SITE,
+                    value="1",
+                    fixed_component_values=(
+                        (AllComponents.Z_INDEX, "1"),
+                        (AllComponents.TIMEPOINT, "1"),
+                    ),
+                )
+            )
+        ),
+        outputs=lambda _plan, _context, **_kwargs: (output,),
+    )
+    monkeypatch.setattr(
+        "openhcs.core.steps.function_outputs.runtime_artifact_materializations",
+        lambda _plan, _context: (materialization,),
+    )
+
+    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    assert target is not None
+    [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
+        context, plan
+    )
+
+    assert virtual_path == (
+        "analysis_inputs_results/"
+        "A49_z_index-1_timepoint-1_neurite_outgrowth_step0.labels.tif"
+    )
+    assert projection.artifact_kind is ObjectLabelsArtifactType
+    assert projection.address is None
+    assert projection.execution_scope == materialization.record.key.scope
+    assert projection.image_metadata is not None
+    assert projection.image_metadata.source_provenance.source_plane_count == 2
+    assert tuple(
+        projection.image_metadata.for_source_plane(index).source_component_metadata[
+            "channel"
+        ]
+        for index in range(2)
+    ) == ("1", "2")
+    structured = target.produced_projection_metadata(context, plan)
+    assert structured is not None
+    [record] = structured[FIELDS.SOURCE_PROJECTION]
+    assert record["artifact_kind"] == ObjectLabelsArtifactType.value
+    assert record["address"] is None
+    assert record["execution_scope"]["axis_id"] == "A49"
+    assert (
+        len(
+            record[SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD][
+                "source_provenance"
+            ]["source_image_provenance_planes"]
+        )
+        == 2
+    )
+    restored = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        structured
+    ).entries[virtual_path]
+    assert restored.address is None
+    assert restored.execution_scope == materialization.record.key.scope
+    assert restored.artifact_kind is ObjectLabelsArtifactType
+    assert restored.image_metadata is not None
+    assert restored.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert restored.image_metadata.source_provenance.source_plane_count == 2
+
+
 class _QualifierIgnoringParserStub:
     """Parse well/site/channel from filenames with an ignored output qualifier.
 
@@ -1600,6 +1878,7 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     first_image = images_dir / "A01_s1_w1.tif"
     later_image = images_dir / "B03_s1_w1.tif"
     from polystore.memory import MemoryStorageBackend
+
     from openhcs.core.image_file_serialization import ImageFileFormat
 
     first_pixels = np.zeros((4, 5), dtype=np.uint16)

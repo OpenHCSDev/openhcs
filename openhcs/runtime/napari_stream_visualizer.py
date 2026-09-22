@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Optional
 
@@ -22,12 +23,18 @@ import numpy as np
 from polystore.filemanager import FileManager
 
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
+from openhcs.core.streaming_config_factory import (
+    StreamingViewerRuntimeConfig,
+    ViewerProcessLaunchConfig,
+)
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerPythonArguments,
     DetachedViewerPythonExpression,
     DetachedViewerServerEntrypointSpec,
     ManagedViewerLifecycleMixin,
+    OpenHCSViewerControlMessageType,
+    ViewerControlField,
+    ViewerControlMessageRequest,
 )
 from openhcs.utils.import_utils import optional_import_or_none
 
@@ -86,7 +93,32 @@ class NapariStreamVisualizer(ManagedViewerLifecycleMixin):
         ).append(
             DetachedViewerPythonExpression.symbol("transport_mode"),
             DetachedViewerPythonExpression.literal(self.scope_accent_color),
+            DetachedViewerPythonExpression.literal(self.process_launch.qt_font_dpi),
         )
+
+    def existing_viewer_matches_process_launch(self) -> bool:
+        """Require exact process-global settings before reusing a viewer."""
+
+        try:
+            response = ViewerControlMessageRequest(
+                endpoint=self.runtime_endpoint,
+                message_type=(OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value),
+            ).send()
+            if not response.succeeded():
+                return False
+            wire_config = response.payload[ViewerControlField.PROCESS_LAUNCH.value]
+            if not isinstance(wire_config, Mapping):
+                raise TypeError(
+                    "Napari process-launch response must contain a mapping."
+                )
+            active_config = ViewerProcessLaunchConfig.from_wire_mapping(wire_config)
+        except Exception as error:
+            logger.warning(
+                "Napari viewer process-launch compatibility check failed: %s",
+                error,
+            )
+            return False
+        return active_config == self.process_launch
 
     def start_viewer(self, async_mode: bool = True):
         """

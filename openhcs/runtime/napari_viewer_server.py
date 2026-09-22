@@ -74,6 +74,7 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.napari_streaming_handlers import (
     DimensionLabelMap,
     LayerData,
@@ -113,10 +114,9 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
-    ViewerDisplayAxisDomain,
     ViewerDisplayBatchContext,
     ViewerLayerAxisProjection,
-    ViewerLayerAxisProjectionRequest,
+    ViewerLayerAxisProjectionRequestAuthority,
     ViewerLayerAxisProjector,
     ViewerMappingDisplayConfigInput,
     ViewerObjectDisplayConfigInput,
@@ -124,10 +124,15 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
-from openhcs.runtime.viewer_controls import ViewerResultElementCoordinateAuthority
+from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions,
+    ViewerResultElementCoordinateAuthority,
+)
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     NapariViewerServerRequest,
+    OpenHCSViewerServerABC,
+    OpenHCSViewerControlMessageType,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
@@ -141,10 +146,9 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLayerField,
     ViewerLayerIsolationControlOptions,
     ViewerLayerIsolationField,
-    ViewerLayerField,
     ViewerNavigationControlOptions,
-    ViewerPayloadProjectionOptions,
     ViewerPayloadField,
+    ViewerPayloadProjectionOptions,
     ViewerPayloadSummaryField,
     ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
@@ -917,13 +921,13 @@ class NapariComponentAwareDisplayCoordinator:
         server: "NapariViewerServer",
     ) -> None:
         routed_data = data
+        self._reconcile_deleted_layers(server)
         route = self._route(
             data=routed_data,
             stream_layer_context=stream_layer_context,
             server=server,
         )
         self._log_route(route)
-        self._reconcile_deleted_layer(server, route.route_key)
         group = self._group_for(server, route.route_key)
         self._clear_group_for_replace(server, route.route_key, group)
         self._upsert_item(
@@ -979,6 +983,18 @@ class NapariComponentAwareDisplayCoordinator:
         )
 
     @staticmethod
+    def _reconcile_deleted_layers(
+        server: "NapariViewerServer",
+    ) -> None:
+        """Purge every route whose native layer was removed from the viewer."""
+
+        for layer_key in tuple(server.layer_route_state.layers):
+            NapariComponentAwareDisplayCoordinator._reconcile_deleted_layer(
+                server,
+                layer_key,
+            )
+
+    @staticmethod
     def _reconcile_deleted_layer(
         server: "NapariViewerServer",
         layer_key: str,
@@ -990,6 +1006,7 @@ class NapariComponentAwareDisplayCoordinator:
             num_items = server.component_groups.item_count(layer_key)
             server.layer_route_state.purge_route(layer_key)
             server.component_groups.purge(layer_key)
+            server.component_values.purge(layer_key)
             logger.info(
                 "🔬 NAPARI PROCESS: Reconciling state — '%s' was deleted from viewer; "
                 "purged stale caches (had %d items in component_groups)",
@@ -1018,6 +1035,7 @@ class NapariComponentAwareDisplayCoordinator:
                 layer_key,
             )
             group.clear()
+            server.component_values.purge(layer_key)
 
     def _upsert_item(
         self,
@@ -2002,45 +2020,66 @@ class NapariLayerDisplayPipeline:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 
-        axis_components = component_axis_semantics.layout.components_for_mode(
-            ViewerComponentMode.STACK
-        )
-        self.server.component_values.update(
-            layer_key,
-            axis_components,
-            layer_items,
-        )
-        self.server.display_axis_domain.record_display_axis_values(
-            axis_components,
-            layer_items,
-        )
-
-        aggregate_component_values = aggregate_axis_bindings.component_values
-        if aggregate_component_values:
-            self.server.component_values.update_component_values(
-                layer_key,
-                axis_components,
-                aggregate_component_values,
+        projection_request = (
+            ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
+                route_key=layer_key,
+                component_axis_semantics=component_axis_semantics,
+                layer_items=layer_items,
+                route_value_tracker=self.server.component_values,
+                aggregate_component_values=aggregate_axis_bindings.component_values,
             )
-            self.server.display_axis_domain.record_display_component_values(
-                axis_components,
-                aggregate_component_values,
-            )
-
-        projection_request = ViewerLayerAxisProjectionRequest.from_component_values(
-            projected_axis_components=axis_components,
-            route_component_values=self.server.component_values.values_for(
-                self.server.component_values.domain_key(layer_key, axis_components),
-                axis_components,
-            ),
-            viewer_component_values=self.server.display_axis_domain.display_axis_values_for(
-                axis_components
-            ),
-            declared_component_values=component_axis_semantics.required_component_values(
-                axis_components
-            ),
         )
         return self.axis_projector.project(projection_request)
+
+    def reconcile_mounted_axis_projections(
+        self,
+        *,
+        updated_route_key: str,
+    ) -> None:
+        """Align mounted routes with the viewer-wide semantic coordinate domain.
+
+        Independently streamed routes can declare different subsets of the same
+        component axis.  A newly observed value may therefore change the shared
+        coordinate assigned to an already mounted singleton route.  Shape-neutral
+        changes are applied directly to that route's native transform and semantic
+        presentation.  A change that would alter stored array extents fails during
+        dispatch instead of leaving silently misaligned layers.
+        """
+
+        for (
+            route_key,
+            state,
+        ) in self.server.layer_route_state.mounted_dimension_states():
+            if route_key == updated_route_key or state.presentation is None:
+                continue
+            items = self.server.component_groups.existing_items_for(route_key)
+            if not items:
+                continue
+            axis_projection_semantics = state.presentation.axis_projection_semantics()
+            aggregate_axis_bindings = NapariAggregateAxisBindingAuthority.bindings(
+                items,
+                axis_projection_semantics,
+            )
+            projection = self.display_axis_projection(
+                route_key,
+                axis_projection_semantics,
+                items,
+                aggregate_axis_bindings,
+            )
+            presentation = replace(state.presentation, projection=projection)
+            if (
+                presentation.aligned_component_shape()
+                != state.presentation.aligned_component_shape()
+            ):
+                raise ValueError(
+                    "Napari shared semantic axis expansion requires route "
+                    f"{route_key!r} to be rematerialized; old component shape="
+                    f"{state.presentation.aligned_component_shape()!r}, new="
+                    f"{presentation.aligned_component_shape()!r}."
+                )
+            layer = self.server.layer_route_state.layer(route_key)
+            layer.translate = presentation.translate(presentation.payload_axis_labels)
+            self.dimension_label_store.apply(presentation)
 
     def schedule_layer_update(
         self,
@@ -2301,6 +2340,9 @@ class NapariLayerDisplayPipeline:
             items,
             aggregate_axis_bindings,
         )
+        self.reconcile_mounted_axis_projections(
+            updated_route_key=layer_key,
+        )
         work = NapariLayerDisplayHandler.for_data_type(data_type).display_work(
             NapariLayerDisplayRequest(
                 pipeline=self,
@@ -2439,6 +2481,36 @@ class NapariClearStateControlMessageAction(NapariControlMessageAction):
                 message="Component groups cleared",
             )
         ).to_wire_mapping()
+
+
+class NapariProcessLaunchControlMessageAction(NapariControlMessageAction):
+    """Report immutable process-global settings without entering the Qt thread."""
+
+    message_type = OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
+
+    def handle(
+        self,
+        server: "NapariViewerServer",
+        message: Mapping[str, object],
+    ) -> dict[str, object]:
+        del message
+        response = ViewerControlReplyPayload(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.SUCCESS,
+                response_type="process_launch_ack",
+            )
+        ).to_wire_mapping()
+        response[ViewerControlField.PROCESS_LAUNCH.value] = (
+            server.process_launch.to_wire_mapping()
+        )
+        return response
+
+    def transport_thread_response(
+        self,
+        server: "NapariViewerServer",
+        message: Mapping[str, object],
+    ) -> dict[str, object]:
+        return self.handle(server, message)
 
 
 class NapariSettleControlMessageAction(NapariControlMessageAction):
@@ -2850,11 +2922,27 @@ class NapariResultElementSelectionAuthority:
         layer: NapariLayerHandle,
         data_index: int,
     ) -> NapariResultElementSelectionState:
-        cls.require_data_index(layer, data_index)
+        return cls.select_indices(layer, (data_index,))
+
+    @classmethod
+    def select_indices(
+        cls,
+        layer: NapariLayerHandle,
+        data_indices: Iterable[int],
+    ) -> NapariResultElementSelectionState:
+        """Select one exact, validated set of native feature rows."""
+
+        indices = tuple(sorted(set(data_indices)))
+        if not indices:
+            raise ValueError("Napari result selection must contain at least one row.")
+        for data_index in indices:
+            if isinstance(data_index, bool) or not isinstance(data_index, Integral):
+                raise TypeError("Napari result selection indices must be integers.")
+            cls.require_data_index(layer, int(data_index))
         selectable_layer = cast(NapariShapesLayerHandle, layer)
-        selectable_layer.selected_data = {data_index}
+        selectable_layer.selected_data = set(indices)
         observed = cls.state(layer)
-        if observed.selected_data_indices != (data_index,):
+        if observed.selected_data_indices != indices:
             raise RuntimeError(
                 "Napari did not retain the requested native data selection."
             )
@@ -3188,6 +3276,16 @@ class NapariResultSelectionController:
         self._notify_selection_observers()
         return linked
 
+    def select_result_element(
+        self,
+        layer: NapariLayerHandle,
+        data_index: int,
+    ) -> tuple[tuple[NapariLayerHandle, tuple[int, ...]], ...]:
+        """Select the complete declared result subject containing one row."""
+
+        NapariResultElementSelectionAuthority.require_data_index(layer, data_index)
+        return self._synchronize_linked_group(layer, data_index)
+
     def _apply_selection(
         self,
         layer_reference: weakref.ReferenceType[object],
@@ -3440,6 +3538,9 @@ def _install_result_selection_toolbar(
 class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
     """Shared projection of live Napari route and component stores."""
 
+    MAX_NONZERO_COORDINATE_PROJECTION_COUNT: ClassVar[int] = 65_536
+    MAX_NONZERO_EXAMPLE_COORDINATE_COUNT: ClassVar[int] = 16
+
     server: "NapariViewerServer"
     viewer: NapariViewerLayerCreator
     request: NapariViewerProjectionRequestT
@@ -3541,6 +3642,9 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             ),
             ViewerLayerField.ROUTED_COMPONENT_VALUES.value: (
                 self.routed_component_values(dimension_state)
+            ),
+            ViewerLayerField.ROUTED_COMPONENT_COORDINATES.value: (
+                self.routed_component_coordinates(dimension_state)
             ),
             ViewerLayerField.DATA_SHAPE.value: self.layer_data_shape(layer),
             ViewerLayerField.NATIVE_TRANSFORM.value: native_transform.to_wire_mapping(),
@@ -3690,6 +3794,14 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             )
         }
 
+    @staticmethod
+    def routed_component_coordinates(
+        dimension_state: NapariDimensionLayerState,
+    ) -> tuple[tuple[ComponentValue, ...], ...]:
+        if dimension_state.presentation is None:
+            return ()
+        return dimension_state.presentation.projection.routed_component_coordinates
+
     @classmethod
     def payload_summary(
         cls,
@@ -3770,20 +3882,73 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             value_name="Napari shape payload",
         ).source_shape_yx
 
-    @staticmethod
-    def array_summary(array: np.ndarray) -> dict[str, NapariWireValue]:
+    @classmethod
+    def array_summary(cls, array: np.ndarray) -> dict[str, NapariWireValue]:
+        nonzero_count = int(np.count_nonzero(array))
         summary: dict[str, NapariWireValue] = {
             ViewerPayloadSummaryField.SHAPE.value: tuple(
                 int(axis) for axis in array.shape
             ),
             "dtype": str(array.dtype),
             "size": int(array.size),
-            ViewerPayloadSummaryField.NONZERO_COUNT.value: int(np.count_nonzero(array)),
+            ViewerPayloadSummaryField.NONZERO_COUNT.value: nonzero_count,
         }
+        summary.update(
+            cls.nonzero_coordinate_summary(
+                array,
+                nonzero_count=nonzero_count,
+            )
+        )
         if array.size:
-            summary["min"] = NapariViewerStateProjection.json_scalar(array.min())
-            summary["max"] = NapariViewerStateProjection.json_scalar(array.max())
+            summary["min"] = cls.json_scalar(array.min())
+            summary["max"] = cls.json_scalar(array.max())
         return summary
+
+    @classmethod
+    def nonzero_coordinate_summary(
+        cls,
+        array: np.ndarray,
+        *,
+        nonzero_count: int,
+    ) -> dict[str, NapariWireValue]:
+        """Project exact bounds and bounded examples for sparse array payloads."""
+
+        if nonzero_count > cls.MAX_NONZERO_COORDINATE_PROJECTION_COUNT:
+            return {
+                ViewerPayloadSummaryField.NONZERO_COORDINATE_OMISSION_REASON.value: (
+                    "nonzero count exceeds bounded coordinate projection limit "
+                    f"{cls.MAX_NONZERO_COORDINATE_PROJECTION_COUNT}"
+                )
+            }
+
+        coordinates = np.argwhere(array != 0)
+        if nonzero_count == 0:
+            return {
+                ViewerPayloadSummaryField.NONZERO_EXAMPLE_COORDINATES.value: (),
+            }
+
+        example_count = min(
+            nonzero_count,
+            cls.MAX_NONZERO_EXAMPLE_COORDINATE_COUNT,
+        )
+        example_indices = np.linspace(
+            0,
+            nonzero_count - 1,
+            num=example_count,
+            dtype=np.int64,
+        )
+        return {
+            ViewerPayloadSummaryField.NONZERO_MIN_COORDINATE.value: tuple(
+                int(value) for value in coordinates.min(axis=0)
+            ),
+            ViewerPayloadSummaryField.NONZERO_MAX_COORDINATE.value: tuple(
+                int(value) for value in coordinates.max(axis=0)
+            ),
+            ViewerPayloadSummaryField.NONZERO_EXAMPLE_COORDINATES.value: tuple(
+                tuple(int(value) for value in coordinates[index])
+                for index in example_indices
+            ),
+        }
 
     @staticmethod
     def json_scalar(value: np.generic | bool | int | float | str) -> NapariWireValue:
@@ -3984,18 +4149,17 @@ class NapariViewerPayloadProjection(
         semantic_axis_indices: Mapping[str, int],
     ) -> bool:
         if dimension_state.presentation is None:
-            return not semantic_axis_indices
-        axis_labels = dimension_state.presentation.projection.projected_axis_components
-        for axis_name, axis_index in semantic_axis_indices.items():
-            if axis_name not in axis_labels:
-                return False
-            tuple_index = axis_labels.index(axis_name)
-            if (
-                tuple_index >= len(axis_indices)
-                or axis_indices[tuple_index] != axis_index
-            ):
-                return False
-        return True
+            if semantic_axis_indices:
+                raise ValueError(
+                    "Napari payload axis_indices require a route with semantic "
+                    "axis presentation."
+                )
+            return True
+        return dimension_state.presentation.route_local_component_indices_match(
+            axis_indices,
+            semantic_axis_indices,
+            context="Napari payload axis_indices",
+        )
 
     @staticmethod
     def aggregate_index_tuples(
@@ -4601,18 +4765,6 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
                 for item in items
             )
 
-        axis_labels = presentation.projection.projected_axis_components
-        unknown_axes = tuple(
-            axis_name
-            for axis_name in request.axis_indices
-            if axis_name not in axis_labels
-        )
-        if unknown_axes:
-            raise ValueError(
-                f"Viewer intensity-window axis_indices contain unknown axes "
-                f"{unknown_axes!r}; available axes are {axis_labels!r}."
-            )
-
         aggregate_bindings = presentation.aggregate_axis_bindings
         records = []
         for item in items:
@@ -4629,10 +4781,10 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
                     components,
                     context="Napari intensity-window payload selection",
                 )
-                if not NapariViewerPayloadProjection.semantic_axis_indices_match(
+                if not presentation.route_local_component_indices_match(
                     axis_indices,
-                    dimension_state,
                     request.axis_indices,
+                    context="Viewer intensity-window axis_indices",
                 ):
                     continue
                 records.append(
@@ -5372,7 +5524,7 @@ class NapariControlTransportPump:
                     )
 
 
-class NapariViewerServer(StreamingVisualizerServer):
+class NapariViewerServer(OpenHCSViewerServerABC):
     """
     ZMQ server for Napari viewer that receives images from clients.
 
@@ -5413,9 +5565,9 @@ class NapariViewerServer(StreamingVisualizerServer):
         # Advertise the endpoint application identity on every heartbeat so
         # clients can reject stale viewer endpoints before dispatch.
         self.application = OPENHCS_ENDPOINT_APPLICATION
-
         self.napari_window_title = request.viewer_title
         self.replace_layers = request.replace_layers
+        self.process_launch = request.process_launch
         self.viewer = None
         self.result_selection_surface: NapariResultSelectionSurface | None = None
         self.result_selection_toolbar = None
@@ -5424,7 +5576,6 @@ class NapariViewerServer(StreamingVisualizerServer):
         self.component_name_metadata = ViewerComponentNameMetadata.empty()
 
         self.component_values = ViewerRouteComponentValueTracker()
-        self.display_axis_domain = ViewerDisplayAxisDomain()
         # Debouncing + locking for layer updates to prevent race conditions
         self.layer_update_lock = threading.Lock()  # Prevent concurrent updates
         self.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
@@ -5566,7 +5717,6 @@ class NapariViewerServer(StreamingVisualizerServer):
             )
         self.component_groups.clear()
         self.component_values = ViewerRouteComponentValueTracker()
-        self.display_axis_domain = ViewerDisplayAxisDomain()
         self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
         self.batch_processors = NapariBatchProcessorStore(
@@ -5744,6 +5894,7 @@ def run_napari_viewer_process(
     log_file_path: str | None = None,
     transport_mode: TransportMode = TransportMode.IPC,
     scope_accent_color: str | None = None,
+    font_dpi: int | None = None,
 ) -> None:
     """
     Napari viewer process entry point. Runs in a separate process.
@@ -5756,6 +5907,7 @@ def run_napari_viewer_process(
         log_file_path: Path to log file (for client discovery via ping/pong)
         transport_mode: ZMQ transport mode (IPC or TCP)
         scope_accent_color: Exact UI-owned scope accent used to frame this window
+        font_dpi: Explicit Qt font DPI applied before viewer construction
     """
     server: NapariViewerServer | None = None
     try:
@@ -5765,6 +5917,7 @@ def run_napari_viewer_process(
             replace_layers=replace_layers,
             log_file_path=log_file_path,
             transport_mode=transport_mode,
+            process_launch=ViewerProcessLaunchConfig(qt_font_dpi=font_dpi),
         )
 
         # Create ZMQ server instance (inherits from ZMQServer ABC)
@@ -5773,7 +5926,7 @@ def run_napari_viewer_process(
         # OpenCV wheels can replace Qt's platform-plugin path when imported.
         # Reassert the active binding's authoritative path after module imports
         # and immediately before native Qt/Napari construction.
-        ViewerQtEnvironmentPolicy().apply_to(os.environ)
+        ViewerQtEnvironmentPolicy(font_dpi=font_dpi).apply_to(os.environ)
 
         # Create napari viewer in this process (main thread)
         viewer = napari.Viewer(title=viewer_title, show=True)

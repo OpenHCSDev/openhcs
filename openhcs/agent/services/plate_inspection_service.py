@@ -1991,6 +1991,7 @@ class PlateInspectionService:
                 parser=parser,
                 filemanager=filemanager,
                 backend=handler.get_primary_backend(plate_path, filemanager),
+                source_projection=source_projection,
                 all_subdirs=True,
             )
         except Exception as exc:

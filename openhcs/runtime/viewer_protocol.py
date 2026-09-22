@@ -61,6 +61,7 @@ from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
+    ViewerProcessLaunchConfig,
 )
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 from openhcs.runtime.viewer_controls import (
@@ -120,6 +121,10 @@ class ViewerPayloadSummaryField(str, Enum):
 
     SHAPE = "shape"
     NONZERO_COUNT = "nonzero_count"
+    NONZERO_MIN_COORDINATE = "nonzero_min_coordinate"
+    NONZERO_MAX_COORDINATE = "nonzero_max_coordinate"
+    NONZERO_EXAMPLE_COORDINATES = "nonzero_example_coordinates"
+    NONZERO_COORDINATE_OMISSION_REASON = "nonzero_coordinate_omission_reason"
 
 
 class ViewerControlField(str, Enum):
@@ -139,6 +144,13 @@ class ViewerControlField(str, Enum):
     NATIVE_VIEWPORT = "native_viewport"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
+    PROCESS_LAUNCH = "process_launch"
+
+
+class OpenHCSViewerControlMessageType(str, Enum):
+    """OpenHCS-owned viewer control messages beyond the transport protocol."""
+
+    PROCESS_LAUNCH = "process_launch"
 
 
 class ViewerLayerIsolationField(str, Enum):
@@ -184,6 +196,7 @@ class ViewerLayerField(str, Enum):
     PAYLOAD_SUMMARIES_TRUNCATED = "payload_summaries_truncated"
     AXIS_COMPONENT_VALUES = "axis_component_values"
     ROUTED_COMPONENT_VALUES = "routed_component_values"
+    ROUTED_COMPONENT_COORDINATES = "routed_component_coordinates"
     DATA_SHAPE = "data_shape"
     NATIVE_TRANSFORM = "native_transform"
     NATIVE_INTENSITY = "native_intensity"
@@ -661,6 +674,9 @@ class ViewerServerLaunchRequest:
     port: int
     log_file_path: str | None = None
     transport_mode: TransportMode = TransportMode.IPC
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
 
 class OpenHCSViewerServerABC(StreamingVisualizerServer, ABC):
@@ -903,6 +919,9 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
     platform: ViewerProcessPlatform = field(
         default_factory=ViewerProcessPlatform.current
     )
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
     @classmethod
     def log_file_for(
@@ -941,7 +960,10 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
             )
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         launch_env = self.launch_context.child_environment(os.environ)
-        ViewerQtEnvironmentPolicy(self.platform).apply_to(launch_env)
+        ViewerQtEnvironmentPolicy(
+            platform=self.platform,
+            font_dpi=self.process_launch.qt_font_dpi,
+        ).apply_to(launch_env)
         log_handle = self.log_file.open("w")
         launch_policy = BackgroundProcessLaunchPolicy.current(detached=True)
         return subprocess.Popen(
@@ -1026,6 +1048,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
         cwd: Path | None = None,
         launch_context: ViewerLaunchContext | None = None,
         import_authority: OpenHCSRuntimeImportAuthority | None = None,
+        process_launch: ViewerProcessLaunchConfig | None = None,
     ) -> DetachedViewerLaunchRequest:
         if cwd is None:
             cwd = Path.cwd()
@@ -1033,6 +1056,8 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
             launch_context = ViewerLaunchContext.inherited_graphical_session()
         if import_authority is None:
             import_authority = OpenHCSRuntimeImportAuthority.current()
+        if process_launch is None:
+            process_launch = ViewerProcessLaunchConfig()
         return DetachedViewerLaunchRequest(
             viewer_type=self.viewer_type,
             port=port,
@@ -1044,6 +1069,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
             log_file=log_file,
             cwd=cwd,
             launch_context=launch_context,
+            process_launch=process_launch,
         )
 
 
@@ -1076,6 +1102,11 @@ class ViewerQtEnvironmentPolicy:
     platform: ViewerProcessPlatform = field(
         default_factory=ViewerProcessPlatform.current
     )
+    font_dpi: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.font_dpi is not None and self.font_dpi <= 0:
+            raise ValueError("Viewer Qt font DPI must be positive when provided.")
 
     @staticmethod
     def active_qt_plugin_path() -> str | None:
@@ -1094,6 +1125,8 @@ class ViewerQtEnvironmentPolicy:
         env: MutableMapping[str, str],
     ) -> MutableMapping[str, str]:
         self.platform.qt_environment_policy().apply_to(env)
+        if self.font_dpi is not None:
+            env["QT_FONT_DPI"] = str(self.font_dpi)
         plugin_path = self.active_qt_plugin_path()
         if plugin_path is not None:
             # Private plugin trees exported by dependencies such as OpenCV are
@@ -1284,6 +1317,7 @@ class ManagedViewerLifecycleMixin(
         self.persistent: bool = runtime_config.persistent
         self.display_enabled: bool = runtime_config.display_enabled
         self.scope_accent_color = runtime_config.scope_accent_color
+        self.process_launch = runtime_config.process_launch
         self._launch_context = ViewerLaunchContext.inherited_graphical_session()
         self.runtime_endpoint = ViewerRuntimeEndpoint(
             transport=runtime_config.transport_endpoint,
@@ -1379,6 +1413,14 @@ class ManagedViewerLifecycleMixin(
                 timeout_ms=request.timeout_ms,
                 require_ready=request.require_ready,
             ).require_match()
+            if not self.existing_viewer_matches_process_launch():
+                logging.getLogger(type(self).__module__).warning(
+                    "%s viewer on port %s has a different process-launch "
+                    "declaration and cannot be reused.",
+                    self.viewer_process_label,
+                    self.required_port,
+                )
+                return False
         except (RuntimeError, EndpointApplicationCompatibilityError) as error:
             logging.getLogger(type(self).__module__).warning(
                 "%s viewer on port %s cannot be reused: %s",
@@ -1387,6 +1429,11 @@ class ManagedViewerLifecycleMixin(
                 error,
             )
             return False
+        return True
+
+    def existing_viewer_matches_process_launch(self) -> bool:
+        """Return whether a reachable viewer matches process-global settings."""
+
         return True
 
     def wait_for_ready(self, timeout: float = 10.0) -> bool:
@@ -1420,6 +1467,7 @@ class ManagedViewerLifecycleMixin(
             arguments=self.detached_server_arguments(log_file=log_file),
             log_file=log_file,
             launch_context=self._launch_context,
+            process_launch=self.process_launch,
         )
 
     def launch_detached_viewer(self) -> subprocess.Popen[bytes]:

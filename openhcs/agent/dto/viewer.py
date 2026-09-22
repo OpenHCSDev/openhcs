@@ -776,6 +776,7 @@ class ViewerWindowLayerState(ViewerWindowLayerDescriptor):
     labels: JsonObject = field(default_factory=dict)
     axis_component_values: JsonObject = field(default_factory=dict)
     routed_component_values: JsonObject = field(default_factory=dict)
+    routed_component_coordinates: tuple[tuple[JsonValue, ...], ...] = ()
     data_shape: tuple[int, ...] = ()
     native_transform: ViewerNativeLayerTransform = field(
         default_factory=ViewerNativeLayerTransform

@@ -11,6 +11,8 @@ import zmq
 from pyqt_reactive.services.zmq_server_scan_service import ZMQServerScanService
 from zmqruntime import (
     ControlMessageType,
+    DataControlPortPairAuthority,
+    OperationTimeoutError,
     ResponseType,
     ServerRole,
     TcpDataControlPortPairAuthority,
@@ -32,6 +34,7 @@ from openhcs.pyqt_gui.services.ui_bridge_composition import (
 from openhcs.pyqt_gui.services.ui_bridge_server import (
     UI_BRIDGE_BROWSER_SERVER_NAME,
     UiBridgeControlServer,
+    UiBridgeEndpointInUseError,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
@@ -466,6 +469,120 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
     assert response["application"] == OPENHCS_ENDPOINT_APPLICATION.to_dict()
 
 
+def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> None:
+    transport_config = replace(
+        OPENHCS_ZMQ_CONFIG,
+        ipc_socket_dir=str(tmp_path / "ipc"),
+        ipc_socket_prefix="ui-bridge-collision",
+    )
+    endpoint_pair = DataControlPortPairAuthority.acquire(
+        transport_config,
+        transport_mode=TransportMode.IPC,
+    )
+    config = AgentUiBridgeConfig(
+        host="127.0.0.1",
+        port=endpoint_pair.data_port,
+        transport_mode=TransportMode.IPC,
+        descriptor_directory_path=tmp_path / "descriptors",
+    )
+    original = UiBridgeControlServer(
+        bridge=SimpleNamespace(close=lambda: None),
+        config=replace(config, bridge_instance_id="original"),
+        transport_config=transport_config,
+    )
+    contender = UiBridgeControlServer(
+        bridge=SimpleNamespace(close=lambda: None),
+        config=replace(config, bridge_instance_id="contender"),
+        transport_config=transport_config,
+    )
+
+    context = None
+    socket = None
+    original_binding = original.start()
+    try:
+        with pytest.raises(UiBridgeEndpointInUseError, match="already in use"):
+            contender.start()
+
+        assert original.is_running
+        assert Path(original_binding.descriptor_file_path).exists()
+        assert not (tmp_path / "descriptors" / "ui_bridge_contender.json").exists()
+
+        context = zmq.Context()
+        socket = context.socket(zmq.REQ)
+        socket.setsockopt(zmq.LINGER, 0)
+        socket.setsockopt(zmq.RCVTIMEO, 1000)
+        socket.connect(original_binding.connection.zmq_control_url(transport_config))
+        socket.send(pickle.dumps({"type": ControlMessageType.PING.value}))
+        response = pickle.loads(socket.recv())
+        assert response["bridge_instance_id"] == "original"
+    finally:
+        original.stop()
+        if contender.is_running:
+            contender.stop()
+        if socket is not None:
+            socket.close(linger=0)
+        if context is not None:
+            context.term()
+
+    assert (
+        original_binding.connection.transport_endpoint().occupied_ports(
+            transport_config
+        )
+        == frozenset()
+    )
+
+
+def test_ui_bridge_startup_lock_timeout_precedes_worker_readiness_wait(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    server = UiBridgeControlServer(
+        bridge=SimpleNamespace(close=lambda: None),
+        config=AgentUiBridgeConfig(
+            port=7999,
+            transport_mode=TransportMode.IPC,
+            descriptor_directory_path=tmp_path,
+        ),
+    )
+
+    class ExpiringStartupLock:
+        def __init__(self, deadline) -> None:
+            self.deadline = deadline
+
+        def __enter__(self):
+            assert server._thread is None
+            threading.Event().wait(0.01)
+            self.deadline.remaining_seconds()
+            raise AssertionError("Expired startup lock unexpectedly acquired")
+
+        def __exit__(self, exc_type, exc, traceback) -> None:
+            del exc_type, exc, traceback
+
+    def expiring_startup_lock(
+        port,
+        transport_mode,
+        transport_config,
+        *,
+        operation_deadline,
+    ):
+        del port, transport_mode, transport_config
+        return ExpiringStartupLock(operation_deadline)
+
+    monkeypatch.setattr(
+        "openhcs.pyqt_gui.services.ui_bridge_server.endpoint_startup_lock",
+        expiring_startup_lock,
+    )
+
+    with pytest.raises(
+        OperationTimeoutError,
+        match="UI bridge endpoint startup",
+    ):
+        server.start(timeout_seconds=0.001)
+
+    assert server._thread is None
+    assert not tuple(tmp_path.glob("ui_bridge_*.json"))
+
+
 def test_ui_bridge_matches_only_its_exact_live_declarations(tmp_path) -> None:
     transport_config = OpenHCSZMQConfig()
     port = TcpDataControlPortPairAuthority.acquire(transport_config).data_port
@@ -505,7 +622,10 @@ def test_ui_bridge_matches_only_its_exact_live_declarations(tmp_path) -> None:
 def test_zmq_browser_scan_service_discovers_ui_bridge_default_transport(
     tmp_path,
 ) -> None:
-    port = TcpDataControlPortPairAuthority.acquire(OPENHCS_ZMQ_CONFIG).data_port
+    port = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=get_default_transport_mode(),
+    ).data_port
     server = UiBridgeControlServer(
         bridge=SimpleNamespace(close=lambda: None),
         config=AgentUiBridgeConfig(

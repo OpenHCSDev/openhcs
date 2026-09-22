@@ -102,8 +102,14 @@ class PlateImageInventory:
             handler = orchestrator.microscope_handler
         if handler is None:
             return cls(plate_path=Path(orchestrator.plate_path), records=())
+        plate_path = Path(orchestrator.plate_path)
+        source_projection = cls._projection(
+            plate_path,
+            handler.metadata_handler,
+            orchestrator.filemanager,
+        )
         return cls.from_handler(
-            plate_path=Path(orchestrator.plate_path),
+            plate_path=plate_path,
             metadata_handler=handler.metadata_handler,
             parser=handler.parser,
             filemanager=orchestrator.filemanager,
@@ -111,6 +117,7 @@ class PlateImageInventory:
                 orchestrator.plate_path,
                 orchestrator.filemanager,
             ),
+            source_projection=source_projection,
             all_subdirs=all_subdirs,
         )
 
@@ -123,15 +130,11 @@ class PlateImageInventory:
         parser: "FilenameParser | None",
         filemanager: "FileManager",
         backend: str,
+        source_projection: VirtualWorkspaceSourceProjection | None,
         all_subdirs: bool = True,
     ) -> "PlateImageInventory":
-        projection = cls._projection(
-            plate_path,
-            metadata_handler,
-            filemanager,
-        )
         source_dataset = metadata_handler.source_dataset(plate_path)
-        if projection is None and source_dataset is not None:
+        if source_projection is None and source_dataset is not None:
             if parser is None:
                 raise ValueError(
                     "Exact source datasets require a filename parser for inventory "
@@ -150,8 +153,8 @@ class PlateImageInventory:
                 ),
             )
         image_files = (
-            tuple(sorted(projection.relative_virtual_paths()))
-            if projection is not None
+            tuple(sorted(source_projection.relative_virtual_paths()))
+            if source_projection is not None
             else tuple(
                 str(image_file)
                 for image_file in sorted(
@@ -167,7 +170,7 @@ class PlateImageInventory:
                 plate_path=plate_path,
                 image_file=image_file,
                 parser=parser,
-                projection=projection,
+                projection=source_projection,
                 filemanager=filemanager,
                 backend=backend,
             )
@@ -359,6 +362,11 @@ class PlateFileRecord:
         if self.kind is PlateFileKind.RESULT and self.file_format is FileFormat.ROI:
             return self.full_path or self.key
         return None
+
+    @property
+    def streamable_path(self) -> str | None:
+        """Return the exact address this record declares for viewer streaming."""
+        return self.streamable_image_path or self.streamable_roi_path
 
     @classmethod
     def from_image(cls, record: PlateImageRecord) -> "PlateFileRecord":
@@ -935,12 +943,18 @@ class PlateFileInventory:
         all_subdirs: bool = True,
     ) -> "PlateFileInventory":
         """Build the same file inventory shape when only a handler is available."""
+        source_projection = PlateImageInventory._projection(
+            plate_path,
+            metadata_handler,
+            filemanager,
+        )
         image_inventory = PlateImageInventory.from_handler(
             plate_path=plate_path,
             metadata_handler=metadata_handler,
             parser=parser,
             filemanager=filemanager,
             backend=backend,
+            source_projection=source_projection,
             all_subdirs=all_subdirs,
         )
         if path_config is None:
@@ -1053,6 +1067,29 @@ class PlateFileInventory:
                 f"requested kind filter ({requested})."
             ) from exc
 
+    def require_stream_record(
+        self,
+        file_path: str,
+        *,
+        kinds: tuple[PlateFileKind, ...] = (),
+    ) -> PlateFileRecord:
+        """Resolve one viewer-stream record by its declared streaming address.
+
+        A physical image may be projected both as a metadata-bearing image and
+        as a result artifact.  Those semantic records remain visible to general
+        inventory queries, while an explicit streaming address selects the one
+        that declares that exact address for streaming.
+        """
+        try:
+            return self.require_file_record(file_path, kinds=kinds)
+        except PlateFileRecordAmbiguityError as exc:
+            direct_stream_matches = tuple(
+                record for record in exc.records if record.streamable_path == file_path
+            )
+            if len(direct_stream_matches) == 1:
+                return direct_stream_matches[0]
+            raise
+
     @staticmethod
     def _require_file_record_from(
         file_path: str,
@@ -1079,7 +1116,11 @@ class PlateFileInventory:
         if len(exact_matches) == 1:
             return exact_matches[0]
         if len(exact_matches) > 1:
-            raise ValueError(f"File path {file_path!r} matched multiple records.")
+            raise PlateFileRecordAmbiguityError(
+                file_path,
+                exact_matches,
+                matched_basename=False,
+            )
 
         basename_matches = tuple(
             record
@@ -1100,7 +1141,11 @@ class PlateFileInventory:
         if len(basename_matches) == 1:
             return basename_matches[0]
         if len(basename_matches) > 1:
-            raise ValueError(f"File basename {file_path!r} is ambiguous.")
+            raise PlateFileRecordAmbiguityError(
+                file_path,
+                basename_matches,
+                matched_basename=True,
+            )
         raise PlateFileRecordNotFoundError(
             f"File path {file_path!r} was not found in the plate."
         )
@@ -1108,6 +1153,26 @@ class PlateFileInventory:
 
 class PlateFileRecordNotFoundError(ValueError):
     """Raised when no unified plate inventory record matches an explicit path."""
+
+
+class PlateFileRecordAmbiguityError(ValueError):
+    """Raised with the typed records behind an ambiguous file address."""
+
+    def __init__(
+        self,
+        file_path: str,
+        records: tuple[PlateFileRecord, ...],
+        *,
+        matched_basename: bool,
+    ) -> None:
+        self.file_path = file_path
+        self.records = records
+        self.matched_basename = matched_basename
+        if matched_basename:
+            message = f"File basename {file_path!r} is ambiguous."
+        else:
+            message = f"File path {file_path!r} matched multiple records."
+        super().__init__(message)
 
 
 @dataclass(frozen=True, slots=True)

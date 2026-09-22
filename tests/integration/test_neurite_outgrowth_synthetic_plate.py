@@ -2,6 +2,7 @@
 
 import csv
 import io
+import json
 import logging
 from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
@@ -36,7 +37,7 @@ from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import GroupBy, Microscope, VariableComponents
+from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
@@ -50,11 +51,17 @@ from openhcs.core.config import (
     VFSConfig,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import ProgressEvent, set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps import FunctionStep
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspacePathLookup,
+    VirtualWorkspaceSourceProjection,
+)
 from openhcs.processing.materialization.core import (
     Output,
     ViewerStreamBackendCallKwargs,
@@ -162,7 +169,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
 
     def observe_dense_output(output, components):
         projected = original_with_components(output, components)
-        if projected.path.endswith(".labels.tif"):
+        if projected.path.endswith((".labels.tif", ".checkpoint.tif")):
             dense_outputs[projected.path] = projected
         return projected
 
@@ -178,6 +185,14 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         )
         compiled_context = compilation.runtime_contexts["A01"]
         compiled_plan = compiled_context.step_plans[0]
+        checkpoint_plan = next(
+            output
+            for output in compiled_plan.artifact_outputs.values()
+            if output.name == "neurite_candidate_mask"
+        )
+        assert checkpoint_plan.group_component is AllComponents.SITE
+        assert checkpoint_plan.group_scope_sources()
+        assert checkpoint_plan.source_context_source() is None
         assert compiled_plan.variable_components == [VariableComponents.CHANNEL]
         assert compiled_plan.group_by is GroupBy.SITE
         compiled_pattern = compiled_plan.compiled_function_pattern
@@ -280,6 +295,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         assert all("_w2_" in path.name for path in roi_paths if "nuclei" in path.name)
         assert all(load_rois_from_zip(path) for path in roi_paths)
 
+        all_label_paths = []
         for artifact_name, expected_labels in zip(
             ("cell_bodies", "neurite_outgrowth", "neurons", "nuclei"),
             expected[3:7],
@@ -287,14 +303,66 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         ):
             label_paths = tuple(tmp_path.rglob(f"*_{artifact_name}_step0.labels.tif"))
             assert len(label_paths) == 2
+            all_label_paths.extend(label_paths)
             for label_path in label_paths:
                 retained = tifffile.imread(label_path)
                 assert retained.dtype == expected_labels.dtype
                 np.testing.assert_array_equal(retained, expected_labels)
 
-        # Exercise the real stream projection of the compiled writer outputs.
-        # Artifact storage axes are legitimately empty; source image planes are not.
-        assert len(dense_outputs) == 8
+        checkpoint_paths = []
+        for artifact_name, expected_checkpoint in zip(
+            (
+                "neurite_candidate_mask",
+                "neurite_unrooted_residual",
+                "neurite_secondary_ownership",
+                "neurite_topology_dropped_trace",
+                "neurite_topology_added_trace",
+            ),
+            expected[7:12],
+            strict=True,
+        ):
+            paths = tuple(tmp_path.rglob(f"*_{artifact_name}.checkpoint.tif"))
+            assert len(paths) == 2
+            checkpoint_paths.extend(paths)
+            for path in paths:
+                retained = tifffile.imread(path)
+                np.testing.assert_array_equal(
+                    retained,
+                    np.asarray(expected_checkpoint)[0],
+                )
+        assert len({path.name for path in checkpoint_paths}) == 10
+
+        assert compiled_plan.output_plate_root is not None
+        output_plate_root = Path(compiled_plan.output_plate_root)
+        projected_label_paths = tuple(
+            path for path in all_label_paths if path.is_relative_to(output_plate_root)
+        )
+        assert len(projected_label_paths) == 8
+        metadata_path = output_plate_root / "openhcs_metadata.json"
+        source_projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+            output_plate_root,
+            json.loads(metadata_path.read_text()),
+        )
+        for label_path in projected_label_paths:
+            virtual_path = str(label_path.relative_to(output_plate_root))
+            projection = source_projection.require_source_projection_for(
+                VirtualWorkspacePathLookup.from_paths(
+                    virtual_path,
+                    str(label_path),
+                )
+            )
+            assert projection.artifact_kind is ObjectLabelsArtifactType
+            assert projection.address is None
+            assert projection.execution_scope is not None
+            assert projection.image_metadata is not None
+            assert (
+                projection.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            )
+            assert projection.image_metadata.source_provenance.source_plane_count == 2
+
+            # Exercise the real stream projection of the compiled writer outputs.
+            # Artifact storage axes are legitimately empty; source image planes are not.
+            assert len(dense_outputs) == 18
         stream_kwargs = ViewerStreamBackendCallKwargs(
             ViewerStreamBackendKwargs(
                 ViewerStreamRequest(
@@ -324,9 +392,22 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 tuple(dense_outputs.values())
             ):
                 request = kwargs["stream_request"]
-                assert request.source.item_fields["plane_component_values"] == {
-                    "channel": ["1", "2"]
-                }
+                checkpoint_batch = all(
+                    output.path.endswith(".checkpoint.tif") for output in outputs
+                )
+                if checkpoint_batch:
+                    assert "plane_component_values" not in request.source.item_fields
+                    assert all(
+                        request.source.metadata.component_metadata_for_item(
+                            output.path, 0
+                        )["channel"]
+                        == 1
+                        for output in outputs
+                    )
+                else:
+                    assert request.source.item_fields["plane_component_values"] == {
+                        "channel": ["1", "2"]
+                    }
                 batch = StreamingBatchMessageBuilder.build(
                     backend,
                     StreamingBatchMessageRequest(
@@ -344,13 +425,16 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     # This fixture injects physical pixel_size into the callable,
                     # but does not declare voxel spacing on its runtime images.
                     assert output.metadata.source_voxel_spacing == SourceVoxelSpacing()
-                    assert item["plane_component_values"] == {"channel": ["1", "2"]}
-                    assert (
-                        "channel"
-                        not in request.source.metadata.component_metadata_for_item(
-                            output.path, 0
+                    if checkpoint_batch:
+                        assert "_w1_" in Path(output.path).name
+                    else:
+                        assert item["plane_component_values"] == {"channel": ["1", "2"]}
+                        assert (
+                            "channel"
+                            not in request.source.metadata.component_metadata_for_item(
+                                output.path, 0
+                            )
                         )
-                    )
                     memory = SharedMemory(name=item["shm_name"])
                     try:
                         transmitted = np.ndarray(

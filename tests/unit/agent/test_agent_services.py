@@ -32,6 +32,7 @@ from openhcs.agent.dto.execution import (
     OrchestratorSessionCreationRequest,
     PipelineSourceArtifactPlanInspectionRequest,
     PipelineSourceOrchestratorSessionRequest,
+    RuntimeServerExecutionStatusRequest,
 )
 from openhcs.agent.dto.functions import FunctionParameterSource
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
@@ -860,6 +861,10 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
                         "site": (1,),
                         "channel": (0,),
                     },
+                    "routed_component_coordinates": (
+                        ("A14", 1, 0),
+                        ("B13", 1, 0),
+                    ),
                     "data_shape": (2, 1, 1, 16, 16),
                     "native_transform": {
                         "scale": (1.0, 1.0, 1.0, 0.65, 0.65),
@@ -1122,6 +1127,12 @@ class _CoordinateGapViewerWindowGateway(_FakeViewerWindowGateway):
             "site": (1,),
             "channel": (0, 2),
         }
+        layer["routed_component_coordinates"] = (
+            ("A14", 1, 0),
+            ("A14", 1, 2),
+            ("B13", 1, 0),
+            ("B13", 1, 2),
+        )
         state["layers"] = (layer,)
         return state
 
@@ -1159,6 +1170,7 @@ class _CollapsedComponentViewerWindowGateway(_FakeViewerWindowGateway):
         layer["routed_component_values"] = {
             "channel": (0,),
         }
+        layer["routed_component_coordinates"] = ((0,),)
         layer["data_shape"] = (1, 16, 16)
         layer["native_transform"] = {
             "scale": (1.0, 0.65, 0.65),
@@ -1247,6 +1259,11 @@ class _AggregateStackViewerWindowGateway(_FakeViewerWindowGateway):
             "z_index": (1, 2, 3),
             "channel": (1,),
         }
+        layer["routed_component_coordinates"] = (
+            (1, 1),
+            (2, 1),
+            (3, 1),
+        )
         layer["data_shape"] = (3, 1, 16, 16)
         state["layers"] = (layer,)
         state["axis_labels"] = ("z_index", "channel", "y", "x")
@@ -3827,6 +3844,12 @@ def test_runtime_server_service_reads_runtime_server_state():
     assert (
         gateway.execution_status_requests[0][2] == OPENHCS_ZMQ_CONFIG.control_timeout_ms
     )
+
+
+def test_runtime_execution_status_request_uses_control_timeout_by_default():
+    request = RuntimeServerExecutionStatusRequest.from_fields(port=5555)
+
+    assert request.timeout_ms == OPENHCS_ZMQ_CONFIG.control_timeout_ms
 
 
 def test_runtime_server_scan_filters_by_declared_server_role():

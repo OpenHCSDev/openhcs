@@ -17,7 +17,10 @@ from zmqruntime.transport import TransportEndpoint
 import openhcs.runtime.viewer_protocol as viewer_protocol
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
+from openhcs.core.streaming_config_factory import (
+    StreamingViewerRuntimeConfig,
+    ViewerProcessLaunchConfig,
+)
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_controls import (
     ViewerIntensityWindowControlOptions,
@@ -370,6 +373,19 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
 
     assert viewer.existing_viewer_is_ready()
 
+    monkeypatch.setattr(
+        viewer,
+        "existing_viewer_matches_process_launch",
+        lambda: False,
+    )
+    assert not viewer.existing_viewer_is_ready()
+
+    monkeypatch.setattr(
+        viewer,
+        "existing_viewer_matches_process_launch",
+        lambda: True,
+    )
+
     observed_application = EndpointApplication(
         identifier="openhcs",
         version="stale",
@@ -637,6 +653,33 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
         expected_windows["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
     assert windows_env == expected_windows
 
+    explicit_font_dpi = ViewerQtEnvironmentPolicy(
+        ViewerProcessPlatform.LINUX,
+        font_dpi=96,
+    ).apply_to({})
+    assert explicit_font_dpi["QT_FONT_DPI"] == "96"
+
+    with pytest.raises(ValueError, match="font DPI must be positive"):
+        ViewerQtEnvironmentPolicy(
+            ViewerProcessPlatform.LINUX,
+            font_dpi=0,
+        )
+
+
+def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
+    config = ViewerProcessLaunchConfig(qt_font_dpi=96)
+
+    assert (
+        ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
+    )
+
+    with pytest.raises(KeyError):
+        ViewerProcessLaunchConfig.from_wire_mapping({})
+    with pytest.raises(TypeError):
+        ViewerProcessLaunchConfig.from_wire_mapping({"qt_font_dpi": True})
+    with pytest.raises(ValueError):
+        ViewerProcessLaunchConfig(qt_font_dpi=0)
+
 
 def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():
     launch_context = ViewerLaunchContext.projected_graphical_session(
@@ -877,6 +920,7 @@ def test_detached_viewer_launch_uses_console_free_gui_process_policy(
         port=5555,
         python_code="pass",
         log_file=tmp_path / f"{viewer_type.wire_value}.log",
+        process_launch=ViewerProcessLaunchConfig(qt_font_dpi=96),
     )
 
     request.launch()
@@ -884,6 +928,7 @@ def test_detached_viewer_launch_uses_console_free_gui_process_policy(
     assert captured["command"] == ["windowed-python", "-c", "pass"]
     assert captured["creationflags"] == 91
     assert "start_new_session" not in captured
+    assert captured["env"]["QT_FONT_DPI"] == "96"
     captured["stdout"].close()
 
 

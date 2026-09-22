@@ -7695,7 +7695,7 @@ def test_mcp_dev_client_runtime_status_command_renders_execution_counts():
     assert call.arguments["port"] == 7777
     assert call.arguments["execution_id"] == "run-1"
     assert call.arguments["transport_mode"] == "ipc"
-    assert call.arguments["timeout_ms"] == 500
+    assert call.arguments["timeout_ms"] == OPENHCS_ZMQ_CONFIG.control_timeout_ms
 
     response = {
         "errors": [],
@@ -8243,6 +8243,52 @@ def test_mcp_dev_client_code_documents_command_projects_tool_arguments():
         "bridge_instance_id": "ui-test",
         "timeout_ms": 1234,
     }
+
+
+def test_mcp_dev_client_code_documents_preserves_inner_bridge_timeout_payload():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    import openhcs.mcp.dev_client as dev_client
+    from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy
+    from openhcs.mcp.dev_client_core import MCP_TOOL_TIMEOUT_MARGIN_SECONDS
+
+    observed_timeout_seconds: list[float] = []
+
+    class RecordingSession:
+        server_spec = dev_client.McpDevServerSpec(sys.executable)
+
+        async def call_tool(self, name, arguments, *, timeout_seconds):
+            del name, arguments
+            observed_timeout_seconds.append(timeout_seconds)
+            return {
+                "structuredContent": {
+                    "schema_version": SCHEMA_VERSION,
+                    "documents": [],
+                    "errors": [
+                        {
+                            "code": "ui_bridge_timeout",
+                            "message": "UI bridge operation timed out after 5000ms.",
+                        }
+                    ],
+                }
+            }
+
+    parser = dev_client._build_parser()
+    args = parser.parse_args(("code-documents", "--json"))
+    response = asyncio.run(
+        dev_client.McpDevCommandSpec.for_name("code-documents").run_session(
+            RecordingSession(),
+            args,
+        )
+    )
+
+    inner_timeout_seconds = McpUiBridgeTimeoutPolicy.resolve(None) / 1000.0
+    assert observed_timeout_seconds == [
+        inner_timeout_seconds + MCP_TOOL_TIMEOUT_MARGIN_SECONDS
+    ]
+    assert observed_timeout_seconds[0] > inner_timeout_seconds
+    assert response.results[0].has_only_agent_error_code("ui_bridge_timeout")
 
 
 def test_mcp_dev_client_code_documents_command_renders_compact_summary():
@@ -13120,6 +13166,7 @@ def test_mcp_dev_client_viewer_state_command_renders_component_metadata(tmp_path
                                 ],
                                 "axis_component_values": {"channel": [1, 2]},
                                 "routed_component_values": {"channel": [1, 2]},
+                                "routed_component_coordinates": [[1], [2]],
                                 "payload_summary_count": 2,
                                 "payload_summaries_truncated": False,
                                 "payload_summaries": [
@@ -14730,7 +14777,14 @@ def test_mcp_dev_client_launches_fresh_current_source_server():
 
     async def call_health_through_dev_client():
         args = dev_client._build_parser().parse_args(
-            ("call", "openhcs_health_check", "--json", "--timeout-seconds", "5")
+            (
+                "call",
+                "openhcs_health_check",
+                "--json",
+                "--timeout-seconds",
+                str(dev_client.DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS),
+                "--no-resident",
+            )
         )
         return await dev_client.McpDevCommandSpec.for_name("call").run(
             dev_client.McpDevServerSpec(sys.executable),
@@ -15281,6 +15335,50 @@ def test_declared_progress_helper_emits_heartbeats_while_work_runs(monkeypatch):
         "Create source-backed orchestrator session: started",
     )
     assert len(context.progress) >= 3
+
+
+@pytest.mark.parametrize(
+    "error_type", [TimeoutError, ValueError, asyncio.CancelledError]
+)
+@pytest.mark.parametrize("after_heartbeat", [False, True])
+def test_declared_progress_propagates_terminal_operation_errors(
+    monkeypatch, error_type, after_heartbeat
+):
+    completed = False
+    heartbeat = asyncio.Event()
+
+    class RecordingMcpContext:
+        request_context = object()
+
+        async def report_progress(self, progress, total=None, message=None):
+            # Fail promptly even with the old loop rather than hanging the test.
+            assert not completed, "Terminal operation reported as still running"
+            if progress:
+                heartbeat.set()
+
+    monkeypatch.setattr(
+        CreateOrchestratorSessionFromPipelineSourceCapability,
+        "progress_heartbeat_seconds",
+        0.005,
+    )
+    capability = CreateOrchestratorSessionFromPipelineSourceCapability.to_spec()
+    error = error_type("operation terminated")
+
+    async def operation():
+        nonlocal completed
+        if after_heartbeat:
+            await heartbeat.wait()
+        completed = True
+        raise error
+
+    async def exercise():
+        with pytest.raises(error_type) as caught:
+            await server._await_with_declared_progress(
+                capability, RecordingMcpContext(), operation()
+            )
+        assert caught.value is error
+
+    asyncio.run(exercise())
 
 
 def test_verbose_blocking_operation_arms_bounded_stack_diagnostic(monkeypatch):

@@ -52,7 +52,7 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
     OBJECT_STATE_PATH_ROLE,
     SIG_DIFF_FIELDS_ROLE,
 )
-from zmqruntime import EndpointApplication
+from zmqruntime import DataControlPortPairAuthority, EndpointApplication
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
@@ -220,6 +220,7 @@ from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
 )
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementTableModel
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -5032,6 +5033,68 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
         server.stop()
 
     assert not Path(binding.descriptor_file_path).exists()
+
+
+def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
+    tmp_path: Path,
+) -> None:
+    first_pair = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=TransportMode.IPC,
+    )
+    second_pair = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=TransportMode.IPC,
+        excluded=first_pair.ports,
+    )
+    descriptor_directory = tmp_path / "descriptors"
+    first_server = UiBridgeControlServer(
+        UiAgentBridgeService(dispatcher=InlineDispatcher()),
+        AgentUiBridgeConfig(
+            port=first_pair.data_port,
+            transport_mode=TransportMode.IPC,
+            descriptor_directory_path=descriptor_directory,
+            bridge_instance_id="first-bridge",
+            auth_token="first-token",
+        ),
+    )
+    second_server = UiBridgeControlServer(
+        UiAgentBridgeService(dispatcher=InlineDispatcher()),
+        AgentUiBridgeConfig(
+            port=second_pair.data_port,
+            transport_mode=TransportMode.IPC,
+            descriptor_directory_path=descriptor_directory,
+            bridge_instance_id="second-bridge",
+            auth_token="second-token",
+        ),
+    )
+
+    first_binding = first_server.start()
+    try:
+        second_binding = second_server.start()
+        service = UiBridgeService()
+        first_status = service.status(
+            service.connection_from_args(
+                descriptor_file_path=first_binding.descriptor_file_path
+            )
+        )
+        second_status = service.status(
+            service.connection_from_args(
+                descriptor_file_path=second_binding.descriptor_file_path
+            )
+        )
+
+        assert first_status.reachable is True
+        assert first_status.bridge_instance_id == "first-bridge"
+        assert first_status.connection.port == first_pair.data_port
+        assert second_status.reachable is True
+        assert second_status.bridge_instance_id == "second-bridge"
+        assert second_status.connection.port == second_pair.data_port
+    finally:
+        if second_server.is_running:
+            second_server.stop()
+        if first_server.is_running:
+            first_server.stop()
 
 
 def test_ui_bridge_control_server_preserves_bad_auth_error(tmp_path: Path) -> None:

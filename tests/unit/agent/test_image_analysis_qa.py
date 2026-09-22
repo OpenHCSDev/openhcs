@@ -56,6 +56,13 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "subtract the accepted candidate mask" in guidance
     assert "diagnostic evidence rather than an automatic replacement" in guidance
     assert "owner cardinality per connected component" in guidance
+    assert "shared crossing-core trace pixels" in guidance
+    assert "dropped graph-path pixels rejected as unrooted" in guidance
+    assert "physically soma-rooted dropped path pixels" in guidance
+    assert "physically soma-detached dropped path pixels" in guidance
+    assert "dropped trace pixels absent from final path graph" in guidance
+    assert "owned trace pixels dropped by final topology" in guidance
+    assert "final-topology added shared-core pixels" in guidance
     assert "lowering the detection threshold cannot repair it" in guidance
     assert "declare the permissive value only on the dataset or preset" in guidance
     assert "distance, ownership, and response alone are insufficient" in guidance
@@ -80,6 +87,18 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "black, empty, stale, or mismatched capture" in guidance
     assert "verify every claimed durable label or measurement path exists" in guidance
     assert "same-identity containment" in guidance
+    assert "shared crossing-core mask" in guidance
+    assert "net pixel-count change is not evidence of pruning" in guidance
+    assert (
+        "require multiple independently supported nuclear intensity centres" in guidance
+    )
+    assert "outline shape alone does not prove multiple nuclei" in guidance
+    assert "round_object_prefilter" in guidance
+    assert "round_object_adjacent_satellite_candidates" in guidance
+    assert "source_component_output_count" in guidance
+    assert "separate threshold-stage component from a watershed split" in guidance
+    assert "Never globally reject weak-core objects" in guidance
+    assert "preserving isolated faint objects and multi-centre controls" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

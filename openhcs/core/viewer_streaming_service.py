@@ -10,10 +10,12 @@ from __future__ import annotations
 import logging
 import re
 import time
-from collections.abc import Mapping
-from dataclasses import dataclass, field
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, replace
+from hashlib import sha256
+from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import spawn_thread_with_context
 from polystore.streaming.identity import (
@@ -29,11 +31,13 @@ from zmqruntime.viewer_protocol import ViewerWireMapping
 
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
 )
 from openhcs.core.source_image_provenance import SourceImageIdentity
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -87,6 +91,36 @@ class ImageStreamingRequest(ViewerStreamingContext):
 
 
 @dataclass(frozen=True, slots=True)
+class ManualImageStreamProjectionIdentity:
+    """Exact route identity for one manually selected source-image set."""
+
+    plate_path: str
+    filenames: tuple[str, ...]
+
+    OUTPUT_KEY: ClassVar[str] = "selected_images"
+
+    def producer_identity(self) -> StreamProducerIdentity:
+        """Return the producer identity for this exact selection."""
+
+        canonical_selection = dumps(
+            {
+                "plate_path": self.plate_path,
+                "filenames": sorted(self.filenames),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        projection_digest = sha256(canonical_selection.encode("utf-8")).hexdigest()
+        return replace(
+            StreamProducerIdentity.fixed_output(
+                FixedStreamProducerIdentityKind.MANUAL,
+                self.OUTPUT_KEY,
+            ),
+            projection_key=f"{self.OUTPUT_KEY}_{projection_digest}",
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class RoiStreamingRequest(ViewerStreamingContext):
     """Request to stream ROI files to one viewer."""
 
@@ -94,6 +128,7 @@ class RoiStreamingRequest(ViewerStreamingContext):
     component_metadata_by_path: Mapping[str, ViewerWireMapping] = field(
         default_factory=dict
     )
+    producer: ViewerStreamProducer | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,6 +321,15 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
         ).projection_or_empty()
+
+    def roi_image_metadata(self) -> ImagePayloadMetadata:
+        """Return plate-owned physical calibration for ROI pixel coordinates."""
+        pixel_size = float(
+            self.microscope_handler.metadata_handler.get_pixel_size(self.plate_path)
+        )
+        return ImagePayloadMetadata(
+            source_voxel_spacing=SourceVoxelSpacing((pixel_size, pixel_size))
+        )
 
     def load_image(
         self,
@@ -578,10 +622,10 @@ class StreamingService:
             source_metadata_items=source_metadata_items,
         )
         producer = request.producer or ViewerStreamProducer.from_identity(
-            StreamProducerIdentity.fixed_output(
-                FixedStreamProducerIdentityKind.MANUAL,
-                "selected_images",
-            )
+            ManualImageStreamProjectionIdentity(
+                plate_path=str(self.source.plate_path),
+                filenames=request.filenames,
+            ).producer_identity()
         )
 
         for chunk_idx in range(num_chunks):
@@ -622,6 +666,14 @@ class StreamingService:
                 component_order,
             ):
                 metadata = image_payload_metadata(image_data_list[indices[0]])
+                item_fields = StreamImagePayloadMetadataProjector.item_fields(
+                    metadata,
+                    component_order,
+                )
+                partition_metadata_by_path = {
+                    file_paths[index]: all_metadata_by_path[file_paths[index]]
+                    for index in indices
+                }
                 producer_subset = producer.for_indices(
                     tuple(start_idx + index for index in indices), total_images
                 )
@@ -632,14 +684,11 @@ class StreamingService:
                     **message_authority.viewer_backend_kwargs(
                         producer=producer_subset,
                         source_metadata=message_authority.path_mapped_source_metadata(
-                            all_metadata_by_path
+                            partition_metadata_by_path,
+                            item_fields=item_fields,
                         ),
                     )
-                    .with_item_fields(
-                        StreamImagePayloadMetadataProjector.item_fields(
-                            metadata, component_order
-                        )
-                    )
+                    .with_item_fields(item_fields)
                     .to_kwargs(),
                 )
             logger.info(
@@ -714,6 +763,7 @@ class StreamingService:
 
         data_list: list = []
         paths: list[str] = []
+        loaded_indices: list[int] = []
 
         for i, filename in enumerate(request.roi_filenames, 1):
             file_path = Path(self.source.plate_path) / filename
@@ -724,6 +774,7 @@ class StreamingService:
 
             data_list.append(rois)
             paths.append(filename)
+            loaded_indices.append(i - 1)
 
             if i % 5 == 0 or i == total:
                 message = f"Loading ROIs: {i}/{total} file(s)..."
@@ -777,16 +828,25 @@ class StreamingService:
             viewer_surface,
             source_metadata_items=source_metadata_items,
         )
+        producer = request.producer or ViewerStreamProducer.from_identity(
+            StreamProducerIdentity.fixed_output(
+                FixedStreamProducerIdentityKind.MANUAL,
+                "selected_rois",
+            )
+        )
         stream_backend_kwargs = message_authority.viewer_backend_kwargs(
-            producer=ViewerStreamProducer.from_identity(
-                StreamProducerIdentity.fixed_output(
-                    FixedStreamProducerIdentityKind.MANUAL,
-                    "selected_rois",
-                )
+            producer=producer.for_indices(
+                loaded_indices,
+                total,
             ),
             source_metadata=message_authority.path_mapped_source_metadata(
                 metadata_by_path
             ),
+        ).with_item_fields(
+            StreamImagePayloadMetadataProjector.item_fields(
+                self.source.roi_image_metadata(),
+                message_authority.layout.component_order,
+            )
         )
 
         message = f"Streaming {len(paths)} ROI file(s) to {display_name}..."

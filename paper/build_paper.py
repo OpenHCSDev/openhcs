@@ -25,6 +25,7 @@ class SlasRetainedFigures(Preparation):
         for path in (
             root / "build_docx_from_markdown.py",
             root / "requirements-build.txt",
+            root.parent / "scripts/requirements-quality.txt",
             *sorted((root / "figures").glob("build_slas*.py")),
         ):
             observations.read(path)
@@ -41,6 +42,7 @@ class SlasRetainedFigures(Preparation):
 
 PAPER = PaperDefinition(
     identity="slas-openhcs",
+    output_prefix="openhcs",
     root=ROOT,
     declaration=Path(__file__).resolve(),
     documents=(

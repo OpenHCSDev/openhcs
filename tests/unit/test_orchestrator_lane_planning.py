@@ -1274,7 +1274,7 @@ def test_persistent_execution_viewer_is_settled_without_capture_or_cleanup():
     stop_execution_visualizers([persistent])
 
     assert viewer_states == {}
-    assert events == []
+    assert events == ["settle"]
 
 
 def test_execution_visualizer_readiness_timeout_is_fatal(monkeypatch):

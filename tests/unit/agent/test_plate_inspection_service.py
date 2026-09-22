@@ -30,6 +30,9 @@ from openhcs.constants.constants import AllComponents
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate_image_inventory import PlateFileKind
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionAuthority,
+)
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
@@ -1418,3 +1421,44 @@ def test_plate_inspection_reports_path_policy_errors(tmp_path: Path):
     )
     assert "arbitrary TIFF, PNG" in result.workflow_advice.message
     assert "CZI, OME" in result.workflow_advice.message
+
+
+def test_plate_file_query_resolves_source_projection_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plate = ImageXpressPlateFixture.write(tmp_path)
+    source_projection_resolution_count = 0
+    original_from_plate_metadata = (
+        VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata.__func__
+    )
+
+    def counted_from_plate_metadata(cls, **kwargs):
+        nonlocal source_projection_resolution_count
+        source_projection_resolution_count += 1
+        return original_from_plate_metadata(cls, **kwargs)
+
+    monkeypatch.setattr(
+        VirtualWorkspaceSourceProjectionAuthority,
+        "from_plate_metadata",
+        classmethod(counted_from_plate_metadata),
+    )
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(tmp_path,),
+        )
+    )
+
+    query = service.query_files(
+        PlateFileQueryRequest(
+            plate_path=str(plate),
+            microscope_type="imagexpress",
+            kind=PlateFileKind.IMAGE,
+            limit=1,
+        )
+    )
+
+    assert query.errors == ()
+    assert query.total_count == 2
+    assert source_projection_resolution_count == 1

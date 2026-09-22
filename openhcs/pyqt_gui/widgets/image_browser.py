@@ -78,12 +78,14 @@ class ImageBrowserItem(Mapping[str, ImageTableValue]):
 
     key: str
     metadata: dict[str, ImageTableValue]
+    file_kind: PlateFileKind = PlateFileKind.IMAGE
+    streamable_image_path: str | None = None
     result_file_type: FileFormat | None = None
     full_path: Path | None = None
 
     @property
     def is_result(self) -> bool:
-        return self.result_file_type is not None
+        return self.file_kind is PlateFileKind.RESULT
 
     @property
     def filename(self) -> str:
@@ -957,10 +959,16 @@ class ImageBrowserWidget(QWidget):
         image_items: dict[str, ImageBrowserItem] = {}
         result_items: dict[str, ImageBrowserItem] = {}
         for record in file_records:
-            if record.kind is PlateFileKind.IMAGE:
+            streamable_image_path = record.streamable_image_path
+            if streamable_image_path is not None:
                 image_items[record.key] = ImageBrowserItem(
                     key=record.key,
                     metadata=dict(record.metadata),
+                    file_kind=record.kind,
+                    streamable_image_path=streamable_image_path,
+                    full_path=(
+                        Path(record.full_path) if record.full_path is not None else None
+                    ),
                 )
             elif (
                 record.kind is PlateFileKind.RESULT
@@ -976,6 +984,7 @@ class ImageBrowserWidget(QWidget):
                 result_items[record.key] = ImageBrowserItem(
                     key=record.key,
                     metadata=dict(record.metadata),
+                    file_kind=record.kind,
                     result_file_type=record.file_format,
                     full_path=Path(record.full_path),
                 )
@@ -1000,27 +1009,17 @@ class ImageBrowserWidget(QWidget):
             logger.warning("IMAGE BROWSER RESULTS: No declared analysis result files")
             return {}
 
-        result_items: dict[str, ImageBrowserItem] = {}
-        for record in result_records:
-            action = RESULT_FILE_ACTIONS[record.file_format]
-            logger.info(
-                "IMAGE BROWSER RESULTS: matched as %s: %s",
-                action.display_name,
-                record.relative_path,
-            )
-            result_items[record.relative_path] = ImageBrowserItem(
-                key=record.relative_path,
-                metadata=dict(record.metadata),
-                result_file_type=record.file_format,
-                full_path=record.full_path_obj,
-            )
+        image_items, result_items = ImageBrowserWidget._items_from_file_records(
+            tuple(PlateFileRecord.from_result(record) for record in result_records)
+        )
+        projected_items = {**image_items, **result_items}
 
         logger.info(
             "IMAGE BROWSER RESULTS: Scanned %s total files, matched %s result files",
             scanned_file_count,
-            len(result_items),
+            len(projected_items),
         )
-        return result_items
+        return projected_items
 
     # Removed _populate_results_table - now using unified file table
     # Removed on_result_double_clicked - now using unified on_file_double_clicked
@@ -1185,10 +1184,10 @@ class ImageBrowserWidget(QWidget):
 
     def _on_file_double_clicked(self, key: str, item: ImageBrowserItem):
         """Handle double-click from ImageTableBrowser."""
-        if item.is_result:
-            self._handle_result_double_click(item)
-        else:
+        if item.streamable_image_path is not None:
             self._handle_image_double_click()
+        elif item.is_result:
+            self._handle_result_double_click(item)
 
     def _handle_image_double_click(self):
         """Handle double-click on an image - stream to enabled viewer(s)."""
@@ -1220,7 +1219,11 @@ class ImageBrowserWidget(QWidget):
             return
 
         selected_items = tuple(self.file_items[key] for key in selected_keys)
-        image_filenames = [item.key for item in selected_items if not item.is_result]
+        image_filenames = [
+            item.streamable_image_path
+            for item in selected_items
+            if item.streamable_image_path is not None
+        ]
         roi_filenames = [
             item.key
             for item in selected_items

@@ -3,47 +3,53 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import cast, ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, cast
 
+import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
+
 from openhcs.constants.constants import AllComponents, Backend, VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
+    ImageArtifactType,
     MeasurementsArtifactType,
 )
 from openhcs.core.axis_filter import step_axis_allows_config
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
+from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+    image_payload_metadata,
+)
+from openhcs.core.runtime_measurements import (
+    MeasurementTable,
+)
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,
     StoredRuntimeValue,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
-from openhcs.core.runtime_measurements import (
-    MeasurementTable,
-)
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenanceFields,
 )
-from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
+from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputIdentityAuthority,
@@ -69,11 +75,10 @@ from openhcs.processing.materialization.core import (
     ViewerStreamBackendCallKwargs,
     materialization_outputs,
 )
-from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.runtime_artifact_values import RuntimeValue
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
+
     from openhcs.core.context.processing_context import ProcessingContext
 
 
@@ -84,6 +89,17 @@ class ArtifactMaterializationRecordReducer(
     """Registered reducer from runtime store records to materialization records."""
 
     artifact_type: ClassVar[type[ArtifactType] | None] = ArtifactType
+
+    def records_for_output(
+        self,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        """Reduce records across every compiled group of one artifact output."""
+
+        del output_plan
+        return records
 
     def records_for_exact_scopes(
         self,
@@ -136,6 +152,106 @@ class ArtifactMaterializationRecordReducer(
             f"({records[0].key.artifact_type.value}) on axis "
             f"'{records[0].key.scope.axis_id}' group "
             f"{records[0].key.scope.value_text!r}: {record_locations!r}."
+        )
+
+
+class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordReducer):
+    """Reduce redundant scalar image records to their source-address owner."""
+
+    artifact_type = ImageArtifactType
+
+    def records_for_output(
+        self,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        if not output_plan.materialization_uses_source_identity_filename():
+            return records
+
+        addressed_records: list[
+            tuple[StoredRuntimeValue, OpenHCSPlaneAddress | None]
+        ] = []
+        records_by_address: dict[
+            OpenHCSPlaneAddress,
+            list[StoredRuntimeValue],
+        ] = {}
+        for record in records:
+            payload = output_plan.materialization_payload(record.value)
+            metadata = image_payload_metadata(payload)
+            address = OpenHCSPlaneAddress.from_complete_source_metadata(
+                metadata.source_component_metadata
+            )
+            addressed_records.append((record, address))
+            if address is not None:
+                records_by_address.setdefault(address, []).append(record)
+
+        reduced_records: list[StoredRuntimeValue] = []
+        emitted_addresses: set[OpenHCSPlaneAddress] = set()
+        for record, address in addressed_records:
+            if address is None:
+                reduced_records.append(record)
+                continue
+            if address in emitted_addresses:
+                continue
+            emitted_addresses.add(address)
+            reduced_records.append(
+                self._record_for_scalar_address(
+                    output_plan,
+                    address,
+                    tuple(records_by_address[address]),
+                )
+            )
+        return tuple(reduced_records)
+
+    @classmethod
+    def _record_for_scalar_address(
+        cls,
+        output_plan: ArtifactOutputPlan,
+        address: OpenHCSPlaneAddress,
+        records: tuple[StoredRuntimeValue, ...],
+    ) -> StoredRuntimeValue:
+        if len(records) == 1:
+            return records[0]
+
+        owner_records = tuple(
+            record
+            for record in records
+            if all(
+                address.value_for(component) == value
+                for component, value in record.key.scope.source_component_values
+            )
+        )
+        if len(owner_records) != 1:
+            raise ValueError(
+                "Scalar image materialization requires one execution scope matching "
+                f"source address {address!r} for artifact {output_plan.name!r}; "
+                f"found {len(owner_records)} among "
+                f"{tuple(record.key.scope for record in records)!r}."
+            )
+
+        owner_record = owner_records[0]
+        owner_payload = output_plan.materialization_payload(owner_record.value)
+        for record in records:
+            payload = output_plan.materialization_payload(record.value)
+            if not cls._payloads_are_equivalent(owner_payload, payload):
+                raise ValueError(
+                    "Conflicting scalar image materialization payloads for source "
+                    f"address {address!r} and artifact {output_plan.name!r}: "
+                    f"{owner_record.key.scope!r} != {record.key.scope!r}."
+                )
+        return owner_record
+
+    @staticmethod
+    def _payloads_are_equivalent(left: object, right: object) -> bool:
+        left_metadata = image_payload_metadata(left)
+        right_metadata = image_payload_metadata(right)
+        if left_metadata != right_metadata:
+            return False
+        left_data = np.asarray(image_payload_data(left))
+        right_data = np.asarray(image_payload_data(right))
+        return left_data.dtype == right_data.dtype and np.array_equal(
+            left_data, right_data, equal_nan=True
         )
 
 
@@ -810,6 +926,9 @@ def actual_materialization_records(
         raise RuntimeError(
             f"Artifact output plan '{output_plan.name}' has no group keys."
         )
+    reducer = ArtifactMaterializationRecordReducer.for_artifact_type(
+        output_plan.artifact_type
+    )
 
     if output_plan.group_component is not None and tuple(output_plan.group_keys) == (
         None,
@@ -826,9 +945,6 @@ def actual_materialization_records(
             and store.get(record.key).location == record.location
         )
         if dynamic_records:
-            reducer = ArtifactMaterializationRecordReducer.for_artifact_type(
-                output_plan.artifact_type
-            )
             record_sort_items = []
             dynamic_group_keys = tuple(
                 dict.fromkeys(
@@ -852,9 +968,15 @@ def actual_materialization_records(
                     group_key=group_key,
                 ):
                     record_sort_items.append((group_order[group_key], record))
-            return tuple(
-                record
-                for _, record in sorted(record_sort_items, key=lambda item: item[0])
+            return reducer.records_for_output(
+                records=tuple(
+                    record
+                    for _, record in sorted(
+                        record_sort_items,
+                        key=lambda item: item[0],
+                    )
+                ),
+                output_plan=output_plan,
             )
 
     group_order = {
@@ -878,9 +1000,7 @@ def actual_materialization_records(
         if not records:
             missing_group_keys.append(group_key)
             continue
-        for record in ArtifactMaterializationRecordReducer.for_artifact_type(
-            output_plan.artifact_type
-        ).records_for_exact_scopes(
+        for record in reducer.records_for_exact_scopes(
             records=records,
             output_plan=output_plan,
             axis_id=plan.axis_id,
@@ -912,7 +1032,10 @@ def actual_materialization_records(
             and store.get(candidate.key).location == candidate.location
         )
         if identity_records:
-            return identity_records
+            return reducer.records_for_output(
+                records=identity_records,
+                output_plan=output_plan,
+            )
         raise RuntimeError(
             f"Missing RuntimeValueStore record for planned artifact materialization "
             f"'{output_plan.name}' ({output_plan.artifact_type.value}) on axis "
@@ -920,8 +1043,11 @@ def actual_materialization_records(
             f"Candidate same-name records: "
             f"{candidate_locations!r}."
         )
-    return tuple(
-        record for _, record in sorted(record_sort_items, key=lambda item: item[0])
+    return reducer.records_for_output(
+        records=tuple(
+            record for _, record in sorted(record_sort_items, key=lambda item: item[0])
+        ),
+        output_plan=output_plan,
     )
 
 
@@ -1104,22 +1230,35 @@ def runtime_artifact_materializations_from_records(
 ) -> tuple[RuntimeArtifactMaterialization, ...]:
     """Derive materializations from one caller-owned runtime observation."""
 
-    return tuple(
-        RuntimeArtifactMaterialization.from_record(
+    materializations: list[RuntimeArtifactMaterialization] = []
+    for output_plan in plan.artifact_outputs.values():
+        if output_plan.materialization is None:
+            continue
+        output_records = tuple(
+            record
+            for record in records
+            if RuntimeValueStore.address_matches_plan(
+                RuntimeArtifactAddress.from_record(record),
+                output_plan,
+                axis_id=plan.axis_id,
+            )
+        )
+        reducer = ArtifactMaterializationRecordReducer.for_artifact_type(
+            output_plan.artifact_type
+        )
+        for record in reducer.records_for_output(
+            records=output_records,
             output_plan=output_plan,
-            record=record,
-            plan=plan,
-            context=context,
-        )
-        for output_plan in plan.artifact_outputs.values()
-        if output_plan.materialization is not None
-        for record in records
-        if RuntimeValueStore.address_matches_plan(
-            RuntimeArtifactAddress.from_record(record),
-            output_plan,
-            axis_id=plan.axis_id,
-        )
-    )
+        ):
+            materializations.append(
+                RuntimeArtifactMaterialization.from_record(
+                    output_plan=output_plan,
+                    record=record,
+                    plan=plan,
+                    context=context,
+                )
+            )
+    return tuple(materializations)
 
 
 def materialized_artifact_output_paths(

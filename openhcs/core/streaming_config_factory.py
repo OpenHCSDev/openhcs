@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import DataclassFieldAccess, get_base_config_type
@@ -74,6 +76,44 @@ class StreamingViewerSurface:
         )
 
 
+class ViewerProcessLaunchField(str, Enum):
+    """Wire fields projected from the viewer process-launch declaration."""
+
+    QT_FONT_DPI = "qt_font_dpi"
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerProcessLaunchConfig:
+    """Process-global settings that must exist before viewer construction."""
+
+    qt_font_dpi: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.qt_font_dpi is not None and self.qt_font_dpi <= 0:
+            raise ValueError("Viewer Qt font DPI must be positive when provided.")
+
+    def to_wire_mapping(self) -> dict[str, int | None]:
+        """Project the launch declaration onto the viewer control boundary."""
+
+        return {
+            ViewerProcessLaunchField.QT_FONT_DPI.value: self.qt_font_dpi,
+        }
+
+    @classmethod
+    def from_wire_mapping(
+        cls,
+        payload: Mapping[str, object],
+    ) -> "ViewerProcessLaunchConfig":
+        """Rehydrate an exact launch declaration from viewer state."""
+
+        value = payload[ViewerProcessLaunchField.QT_FONT_DPI.value]
+        if value is not None and (
+            not isinstance(value, int) or isinstance(value, bool)
+        ):
+            raise TypeError("Viewer Qt font DPI must be an integer or None.")
+        return cls(qt_font_dpi=value)
+
+
 @dataclass(frozen=True, slots=True)
 class StreamingViewerRuntimeConfig:
     """Concrete runtime objects shared by viewer lifecycle and backend dispatch."""
@@ -84,6 +124,9 @@ class StreamingViewerRuntimeConfig:
     transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG
     display_enabled: bool = True
     scope_accent_color: str | None = None
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
 
 class StreamingConfigBehaviorMixin:
@@ -141,7 +184,13 @@ class StreamingConfigBehaviorMixin:
             display_enabled=self.enabled,
             viewer_type=self.viewer_type,
             scope_accent_color=self.scope_accent_color,
+            process_launch=self.viewer_process_launch_config(),
         )
+
+    def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
+        """Return process-launch settings owned by this viewer declaration."""
+
+        return ViewerProcessLaunchConfig()
 
     def viewer_surface(
         self,

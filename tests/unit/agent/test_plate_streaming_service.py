@@ -6,8 +6,8 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
 )
-from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionContext
+from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.constants.constants import FileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
@@ -15,8 +15,8 @@ from openhcs.core.plate_image_inventory import (
     PlateImageRecord,
     PlateResultFileRecord,
 )
-from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
@@ -445,6 +445,42 @@ def test_plate_streaming_service_reports_explicit_result_excluded_by_default_kin
     assert "excluded by the requested kind filter (image)" in result.errors[0].message
 
 
+def test_explicit_stream_path_selects_its_declared_dual_projection():
+    relative_path = "images_results/A01_objects_step1.labels.tif"
+    full_path = f"/plate/{relative_path}"
+    inventory = PlateFileInventory(
+        plate_path=Path("/plate"),
+        image_records=(
+            PlateImageRecord(
+                virtual_path=relative_path,
+                full_virtual_path=full_path,
+                backend="virtual_workspace",
+                source_path=full_path,
+            ),
+        ),
+        result_records=(
+            PlateResultFileRecord(
+                relative_path=relative_path,
+                full_path=full_path,
+                file_format=FileFormat.TIFF,
+            ),
+        ),
+    )
+
+    records = PlateStreamingService._resolve_records(
+        PlateFileStreamRequest(
+            plate_path="/plate",
+            file_paths=(relative_path,),
+            kind=None,
+        ),
+        inventory,
+    )
+
+    assert len(records) == 1
+    assert records[0].kind is PlateFileKind.IMAGE
+    assert records[0].streamable_image_path == relative_path
+
+
 def test_plate_streaming_service_query_limit_counts_streamable_roi_results(monkeypatch):
     captured = {}
     roi_one_path = "/plate_openhcs/checkpoints_step7_results/A01_w1_rois.roi.zip"
@@ -489,6 +525,9 @@ def test_plate_streaming_service_query_limit_counts_streamable_roi_results(monke
         del self
         captured["roi_filenames"] = request.roi_filenames
         captured["component_metadata_by_path"] = request.component_metadata_by_path
+        captured["producer_output_keys"] = tuple(
+            identity.output_key for identity in request.producer.identities
+        )
         request.status_callback("streamed query rois")
 
     monkeypatch.setattr(
@@ -520,6 +559,10 @@ def test_plate_streaming_service_query_limit_counts_streamable_roi_results(monke
             roi_one_path: {"well": "A01", "channel": 1},
             roi_two_path: {"well": "A01", "channel": 2},
         },
+        "producer_output_keys": (
+            "checkpoints_step7_results/A01_w1_rois.roi.zip",
+            "checkpoints_step7_results/A01_w2_rois.roi.zip",
+        ),
     }
     assert result.status_messages == ("streamed query rois",)
 

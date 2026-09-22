@@ -14,3 +14,20 @@ description: Operate local OpenHCS microscopy workflows through the bundled MCP 
 7. Validate and compile before execution. Do not infer that source code, UI state, or an earlier validation result implies a current compiled plan.
 8. Start read-only. Use capability-registry metadata as the authority for mutation and exposure; before mutation, execution, UI actions, viewer launch, network use, or external data exposure, show the target/change, obtain approval, and refresh revision or request tokens.
 9. Preserve the active ownership route. Discover the GUI bridge before UI tools and apply code/state changes with current tokens. Use headless tools only when their workflow group is exposed. Treat structured errors and recovery hints as authoritative; never bypass path policy, stale-process checks, compile requirements, or bridge authentication.
+
+## Image-analysis QA
+
+For segmentation, neurite tracing, faint structures, or a report that an overlay
+looks wrong, load both `image_analysis_workflow` and `viewer_review` before
+tuning or judging the result. These MCP contexts supply the shared raw-first
+biological interpretation, native-coordinate inspection, display-window,
+stage-diagnostic, and validation-split rules; do not depend on a prior agent's
+conversation or on a separately installed assay skill. Follow the earliest
+failed-stage decision through one bounded diagnostic and inspect its retained
+artifacts before expanding the run.
+
+For apparent round-object over-segmentation, discover the registered
+`inspect_metaxpress_round_objects` function and inspect its typed labels and
+measurements at the same raw coordinates. Interpret them by the canonical
+`image_analysis_workflow` policy; do not invent a second segmentation or a
+viewer-only diagnosis.

@@ -544,12 +544,55 @@ def count_cells_simple_dual_channel(
     )
 
 
+@dataclass(frozen=True)
+class LabelShapeStatistics:
+    """Vectorized per-label geometry indexed by the label value."""
+
+    counts: np.ndarray
+    centroid_rows_px: np.ndarray
+    centroid_columns_px: np.ndarray
+    major_axis_lengths_px: np.ndarray
+    minor_axis_lengths_px: np.ndarray
+
+
+@dataclass(frozen=True)
+class RoundObjectSegmentationStages:
+    """Exact pre-filter labels and acceptance evidence for round objects."""
+
+    prefilter_labels: np.ndarray
+    source_component_by_label: np.ndarray
+    shape_statistics: LabelShapeStatistics
+    peak_response_by_label: np.ndarray
+    mean_response_by_label: np.ndarray
+    width_keep_mask: np.ndarray
+    adjacent_satellite_mask: np.ndarray
+
+    @property
+    def keep_mask(self) -> np.ndarray:
+        return self.width_keep_mask & ~self.adjacent_satellite_mask
+
+    @property
+    def accepted_labels(self) -> np.ndarray:
+        return _relabel_by_keep_mask(self.prefilter_labels, self.keep_mask)
+
+
 def segment_metaxpress_round_objects(
     slice_data: np.ndarray,
     settings: MetaXpressWavelengthSettings,
     pixel_size_um: float,
 ) -> np.ndarray:
     """Segment bright round objects using shared MetaXpress-style controls."""
+    return round_object_segmentation_stages(
+        slice_data, settings, pixel_size_um
+    ).accepted_labels
+
+
+def round_object_segmentation_stages(
+    slice_data: np.ndarray,
+    settings: MetaXpressWavelengthSettings,
+    pixel_size_um: float,
+) -> RoundObjectSegmentationStages:
+    """Run the shared detector once and retain its exact acceptance evidence."""
 
     min_width_px = settings.approx_min_width / pixel_size_um
     max_width_px = settings.approx_max_width / pixel_size_um
@@ -560,30 +603,315 @@ def segment_metaxpress_round_objects(
     )
     binary = intensity_above_background >= settings.intensity_above_local_background
 
-    max_object_area = max(1, int(np.ceil(np.pi * (max_width_px / 2.0) ** 2)))
+    minimum_pair_area = max(
+        1,
+        int(np.ceil(2.0 * np.pi * (min_width_px / 2.0) ** 2)),
+    )
     seed_spacing = max(1, int(round(min_width_px / 2.0)))
     seed_footprint = odd_size(max(1.0, min_width_px / 2.0))
-    labeled = _label_binary_components(
+    seed_prominence = max(1.0, min_width_px / 4.0)
+    intensity_smoothing_sigma = max(0.5, min_width_px / 4.0)
+    component_stages = _label_binary_component_stages(
         binary,
         watershed_large_objects=True,
-        watershed_split_size=max_object_area,
+        watershed_split_size=minimum_pair_area,
         watershed_max_size=None,
         watershed_min_distance=seed_spacing,
         watershed_footprint_size=seed_footprint,
-        watershed_peak_prominence=min_width_px / 2.0,
+        watershed_peak_prominence=seed_prominence,
+        watershed_marker_image=intensity_above_background,
+        watershed_marker_smoothing_sigma=intensity_smoothing_sigma,
+        watershed_marker_peak_prominence=(
+            settings.intensity_above_local_background / 4.0
+        ),
+    )
+    labeled = component_stages.output_labels
+
+    shape_statistics = _shape_statistics_by_label(labeled)
+    peak_response, mean_response = _response_statistics_by_label(
+        labeled,
+        intensity_above_background,
+    )
+    width_keep_mask = (shape_statistics.minor_axis_lengths_px >= min_width_px) & (
+        shape_statistics.minor_axis_lengths_px <= max_width_px
+    )
+    if width_keep_mask.size:
+        width_keep_mask[0] = False
+    adjacent_satellite_mask = _adjacent_satellite_mask(
+        labeled,
+        shape_statistics.counts,
+        peak_response,
+        width_keep_mask,
+        maximum_candidate_area=minimum_pair_area,
+        minimum_core_response=(2.0 * settings.intensity_above_local_background),
+        maximum_gap_px=seed_spacing,
+    )
+    return RoundObjectSegmentationStages(
+        labeled,
+        component_stages.source_component_by_output,
+        shape_statistics,
+        peak_response,
+        mean_response,
+        width_keep_mask,
+        adjacent_satellite_mask,
     )
 
-    _, minor_axis_lengths = _axis_lengths_by_label(labeled)
-    keep_mask = (minor_axis_lengths >= min_width_px) & (
-        minor_axis_lengths <= max_width_px
+
+@dataclass(frozen=True)
+class RoundObjectWidthResult:
+    """Width-gate evidence keyed to an object before final label filtering."""
+
+    object_label: int
+    accepted_label: int
+    source_component_label: int
+    source_component_output_count: int
+    split_from_source_component: bool
+    area_pixels: int
+    centroid_row_px: float
+    centroid_column_px: float
+    peak_intensity_above_local_background: float
+    mean_intensity_above_local_background: float
+    core_support_threshold: float
+    weak_core_candidate: bool
+    rejected_as_adjacent_satellite: bool
+    major_axis_um: float
+    minor_axis_um: float
+    minimum_width_um: float
+    maximum_width_um: float
+
+
+ROUND_OBJECT_PREFILTER_OUTPUT = ArtifactSpec.output(
+    "round_object_prefilter",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_ACCEPTED_OUTPUT = ArtifactSpec.output(
+    "round_object_accepted",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_WEAK_CORE_OUTPUT = ArtifactSpec.output(
+    "round_object_weak_core_candidates",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_ADJACENT_SATELLITE_OUTPUT = ArtifactSpec.output(
+    "round_object_adjacent_satellite_candidates",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_WIDTHS_OUTPUT = ArtifactSpec.output(
+    "round_object_widths",
+    MeasurementsArtifactType,
+    materialization=MaterializationSpec(CsvOptions()),
+    relations=(
+        ObjectMeasurementSubjectRelation(
+            source=ROUND_OBJECT_PREFILTER_OUTPUT.ref(),
+            id_field="object_label",
+        ),
+    ),
+)
+
+
+@numpy
+@artifact_inputs("pixel_size")
+@artifact_outputs(
+    ROUND_OBJECT_WIDTHS_OUTPUT,
+    ROUND_OBJECT_PREFILTER_OUTPUT,
+    ROUND_OBJECT_ACCEPTED_OUTPUT,
+    ROUND_OBJECT_WEAK_CORE_OUTPUT,
+    ROUND_OBJECT_ADJACENT_SATELLITE_OUTPUT,
+)
+def inspect_metaxpress_round_objects(
+    image: np.ndarray,
+    settings: MetaXpressWavelengthSettings = MetaXpressWavelengthSettings(),
+    pixel_size: HiddenPixelSize = HiddenPixelSize(1.0),
+) -> tuple[
+    np.ndarray,
+    DataclassMeasurementColumnarRows,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Diagnose round-object admission stages without changing the detector.
+
+    Input is a CHANNEL,Y,X stack. Only the selected channel is analysed; the
+    main image is returned unchanged. Prefilter and accepted object labels share
+    the input channel axis, with other channels empty. The typed outputs are the
+    per-object ``round_object_widths`` measurements plus
+    ``round_object_prefilter``, ``round_object_accepted``,
+    ``round_object_weak_core_candidates``, and
+    ``round_object_adjacent_satellite_candidates`` labels. Source-component
+    lineage distinguishes separate threshold-stage components from watershed
+    splits. Inspect every diagnostic beside raw stain morphology; acceptance is
+    not proof that an object is a biological nucleus or cell.
+
+    Args:
+        image: Input stack with shape ``(C, Y, X)``. The selected channel is
+            inspected and the complete stack is returned unchanged.
+        settings: Channel selection, expected object-width range, and minimum
+            intensity above local background used by the shared detector.
+        pixel_size: Plate pixel size in micrometers per pixel. OpenHCS injects
+            this value from source metadata and hides it from the editor.
+    """
+    settings.validate("settings")
+    if image.ndim != 3 or not 0 <= settings.channel_index < image.shape[0]:
+        raise ValueError("Expected CHANNEL,Y,X with the selected channel present")
+    pixel_size_um = float(pixel_size)
+    if not np.isfinite(pixel_size_um) or pixel_size_um <= 0:
+        raise ValueError("Pixel size must be finite and positive")
+    stages = round_object_segmentation_stages(
+        image[settings.channel_index], settings, pixel_size_um
     )
-    if keep_mask.size:
-        keep_mask[0] = False
-    return _relabel_by_keep_mask(labeled, keep_mask)
+    prefilter = np.zeros(image.shape, dtype=np.int32)
+    prefilter[settings.channel_index] = stages.prefilter_labels
+    accepted = np.zeros(image.shape, dtype=np.int32)
+    accepted[settings.channel_index] = stages.accepted_labels
+    core_support_threshold = 2.0 * settings.intensity_above_local_background
+    weak_core_mask = stages.width_keep_mask & (
+        stages.peak_response_by_label < core_support_threshold
+    )
+    weak_core = np.zeros(image.shape, dtype=np.int32)
+    weak_core[settings.channel_index] = _relabel_by_keep_mask(
+        stages.prefilter_labels,
+        weak_core_mask,
+    )
+    adjacent_satellites = np.zeros(image.shape, dtype=np.int32)
+    adjacent_satellites[settings.channel_index] = _relabel_by_keep_mask(
+        stages.prefilter_labels,
+        stages.adjacent_satellite_mask,
+    )
+    accepted_ids = np.cumsum(stages.keep_mask) * stages.keep_mask
+    source_output_counts = np.bincount(stages.source_component_by_label[1:])
+    rows = tuple(
+        RoundObjectWidthResult(
+            object_label=int(label),
+            accepted_label=int(accepted_ids[label]),
+            source_component_label=int(stages.source_component_by_label[label]),
+            source_component_output_count=int(
+                source_output_counts[stages.source_component_by_label[label]]
+            ),
+            split_from_source_component=bool(
+                source_output_counts[stages.source_component_by_label[label]] > 1
+            ),
+            area_pixels=int(stages.shape_statistics.counts[label]),
+            centroid_row_px=float(stages.shape_statistics.centroid_rows_px[label]),
+            centroid_column_px=float(
+                stages.shape_statistics.centroid_columns_px[label]
+            ),
+            peak_intensity_above_local_background=float(
+                stages.peak_response_by_label[label]
+            ),
+            mean_intensity_above_local_background=float(
+                stages.mean_response_by_label[label]
+            ),
+            core_support_threshold=float(core_support_threshold),
+            weak_core_candidate=bool(weak_core_mask[label]),
+            rejected_as_adjacent_satellite=bool(stages.adjacent_satellite_mask[label]),
+            major_axis_um=float(
+                stages.shape_statistics.major_axis_lengths_px[label] * pixel_size_um
+            ),
+            minor_axis_um=float(
+                stages.shape_statistics.minor_axis_lengths_px[label] * pixel_size_um
+            ),
+            minimum_width_um=settings.approx_min_width,
+            maximum_width_um=settings.approx_max_width,
+        )
+        for label in np.flatnonzero(stages.shape_statistics.counts[1:]) + 1
+    )
+    return (
+        image,
+        DataclassMeasurementColumnarRows(rows, row_type=RoundObjectWidthResult),
+        prefilter,
+        accepted,
+        weak_core,
+        adjacent_satellites,
+    )
 
 
-def _axis_lengths_by_label(labeled: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Return major and minor axis lengths indexed by 2D object label."""
+def _adjacent_satellite_mask(
+    labeled: np.ndarray,
+    counts: np.ndarray,
+    peak_response: np.ndarray,
+    width_keep_mask: np.ndarray,
+    *,
+    maximum_candidate_area: int,
+    minimum_core_response: float,
+    maximum_gap_px: int,
+) -> np.ndarray:
+    """Identify small weak fragments adjacent to a supported round object.
+
+    The rule is deliberately conjunctive: an object must already pass the
+    declared width gate, lack a supported intensity core, be smaller than the
+    area needed for two minimum-width nuclei, and sit within the existing
+    watershed seed spacing of a larger width-accepted object with a supported
+    core. Isolated faint objects are retained for downstream QA rather than
+    being rejected by intensity alone.
+    """
+
+    if labeled.ndim != 2:
+        raise ValueError("Adjacent-satellite detection requires a 2D label plane")
+    if not (
+        counts.shape == peak_response.shape == width_keep_mask.shape
+        and counts.shape[0] == int(labeled.max()) + 1
+    ):
+        raise ValueError("Adjacent-satellite evidence must share label indexing")
+    if maximum_gap_px < 1:
+        raise ValueError("maximum_gap_px must be >= 1")
+
+    weak_small = (
+        width_keep_mask
+        & (counts < maximum_candidate_area)
+        & (peak_response < minimum_core_response)
+    )
+    if weak_small.size:
+        weak_small[0] = False
+    candidates = np.flatnonzero(weak_small)
+    rejected = np.zeros_like(width_keep_mask, dtype=bool)
+    if not len(candidates):
+        return rejected
+
+    offsets = np.arange(-maximum_gap_px, maximum_gap_px + 1)
+    offset_rows, offset_columns = np.meshgrid(offsets, offsets, indexing="ij")
+    neighborhood = (
+        np.square(offset_rows) + np.square(offset_columns) <= maximum_gap_px**2
+    )
+    object_slices = ndi.find_objects(labeled)
+    for candidate in candidates:
+        object_slice = object_slices[candidate - 1]
+        if object_slice is None:
+            continue
+        expanded_slice = tuple(
+            slice(
+                max(0, axis_slice.start - maximum_gap_px),
+                min(axis_size, axis_slice.stop + maximum_gap_px),
+            )
+            for axis_slice, axis_size in zip(
+                object_slice,
+                labeled.shape,
+                strict=True,
+            )
+        )
+        local_labels = labeled[expanded_slice]
+        nearby = ndi.binary_dilation(
+            local_labels == candidate,
+            structure=neighborhood,
+        )
+        neighbor_labels = np.unique(
+            local_labels[nearby & (local_labels != 0) & (local_labels != candidate)]
+        )
+        if np.any(
+            width_keep_mask[neighbor_labels]
+            & (counts[neighbor_labels] >= maximum_candidate_area)
+            & (peak_response[neighbor_labels] >= minimum_core_response)
+        ):
+            rejected[candidate] = True
+    return rejected
+
+
+def _shape_statistics_by_label(labeled: np.ndarray) -> LabelShapeStatistics:
+    """Return vectorized geometry indexed by 2D object label."""
 
     labels = np.asarray(labeled)
     if labels.ndim != 2:
@@ -596,7 +924,13 @@ def _axis_lengths_by_label(labeled: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     foreground_indices = np.flatnonzero(flat_labels)
     if not len(foreground_indices):
         empty = np.zeros(output_size, dtype=float)
-        return empty, empty.copy()
+        return LabelShapeStatistics(
+            empty,
+            empty.copy(),
+            empty.copy(),
+            empty.copy(),
+            empty.copy(),
+        )
 
     object_labels = flat_labels[foreground_indices]
     rows = (foreground_indices // labels.shape[1]).astype(float, copy=False)
@@ -664,7 +998,47 @@ def _axis_lengths_by_label(labeled: np.ndarray) -> tuple[np.ndarray, np.ndarray]
         0.0,
         0.5 * (row_variances + column_variances - discriminant),
     )
-    return 4.0 * np.sqrt(major_variances), 4.0 * np.sqrt(minor_variances)
+    return LabelShapeStatistics(
+        counts,
+        mean_rows,
+        mean_columns,
+        4.0 * np.sqrt(major_variances),
+        4.0 * np.sqrt(minor_variances),
+    )
+
+
+def _response_statistics_by_label(
+    labeled: np.ndarray,
+    response: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return peak and mean response values indexed by object label."""
+
+    if response.shape != labeled.shape:
+        raise ValueError("Response image must match the object-label plane")
+    output_size = int(labeled.max()) + 1
+    foreground = labeled > 0
+    if not np.any(foreground):
+        empty = np.zeros(output_size, dtype=float)
+        return empty, empty.copy()
+
+    object_labels = labeled[foreground]
+    object_responses = np.asarray(response, dtype=float)[foreground]
+    counts = np.bincount(object_labels, minlength=output_size)
+    response_sums = np.bincount(
+        object_labels,
+        weights=object_responses,
+        minlength=output_size,
+    )
+    mean_response = np.divide(
+        response_sums,
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    )
+    peak_response = np.full(output_size, -np.inf, dtype=float)
+    np.maximum.at(peak_response, object_labels, object_responses)
+    peak_response[~np.isfinite(peak_response)] = 0.0
+    return peak_response, mean_response
 
 
 def _build_w2_compartments(
@@ -769,20 +1143,81 @@ def _label_binary_components(
     watershed_min_distance: int,
     watershed_footprint_size: int,
     watershed_peak_prominence: float = 0.0,
+    watershed_marker_image: Optional[np.ndarray] = None,
+    watershed_marker_smoothing_sigma: float = 0.0,
+    watershed_marker_peak_prominence: float = 0.0,
 ) -> np.ndarray:
     """Label a binary mask and optionally split large connected components."""
 
-    labeled, num_objects = ndi.label(binary)
+    return _label_binary_component_stages(
+        binary,
+        watershed_large_objects=watershed_large_objects,
+        watershed_split_size=watershed_split_size,
+        watershed_max_size=watershed_max_size,
+        watershed_min_distance=watershed_min_distance,
+        watershed_footprint_size=watershed_footprint_size,
+        watershed_peak_prominence=watershed_peak_prominence,
+        watershed_marker_image=watershed_marker_image,
+        watershed_marker_smoothing_sigma=watershed_marker_smoothing_sigma,
+        watershed_marker_peak_prominence=watershed_marker_peak_prominence,
+    ).output_labels
+
+
+@dataclass(frozen=True)
+class BinaryComponentStages:
+    """Connected-component identities before and after optional splitting."""
+
+    source_labels: np.ndarray
+    output_labels: np.ndarray
+    source_component_by_output: np.ndarray
+
+
+def _label_binary_component_stages(
+    binary: np.ndarray,
+    *,
+    watershed_large_objects: bool,
+    watershed_split_size: int,
+    watershed_max_size: Optional[int],
+    watershed_min_distance: int,
+    watershed_footprint_size: int,
+    watershed_peak_prominence: float = 0.0,
+    watershed_marker_image: Optional[np.ndarray] = None,
+    watershed_marker_smoothing_sigma: float = 0.0,
+    watershed_marker_peak_prominence: float = 0.0,
+) -> BinaryComponentStages:
+    """Retain source-component lineage across optional watershed splitting."""
+
+    source_labels, num_objects = ndi.label(binary)
+    output_labels = source_labels
     if watershed_large_objects and num_objects > 0:
-        labeled = _watershed_large_objects(
-            labeled,
+        output_labels = _watershed_large_objects(
+            source_labels,
             split_size=watershed_split_size,
             watershed_max_size=watershed_max_size,
             min_distance=watershed_min_distance,
             footprint_size=watershed_footprint_size,
             peak_prominence=watershed_peak_prominence,
+            marker_image=watershed_marker_image,
+            marker_smoothing_sigma=watershed_marker_smoothing_sigma,
+            marker_peak_prominence=watershed_marker_peak_prominence,
         )
-    return labeled.astype(np.int32, copy=False)
+    source_labels = source_labels.astype(np.int32, copy=False)
+    output_labels = output_labels.astype(np.int32, copy=False)
+    source_component_by_output = np.zeros(
+        int(output_labels.max()) + 1,
+        dtype=np.int32,
+    )
+    foreground = output_labels > 0
+    np.maximum.at(
+        source_component_by_output,
+        output_labels[foreground],
+        source_labels[foreground],
+    )
+    return BinaryComponentStages(
+        source_labels,
+        output_labels,
+        source_component_by_output,
+    )
 
 
 def _filter_labels_by_area(
@@ -842,6 +1277,9 @@ def _watershed_large_objects(
     min_distance: int,
     footprint_size: int,
     peak_prominence: float = 0.0,
+    marker_image: Optional[np.ndarray] = None,
+    marker_smoothing_sigma: float = 0.0,
+    marker_peak_prominence: float = 0.0,
 ) -> np.ndarray:
     """Split components above split_size and at or below watershed_max_size."""
     counts = np.bincount(labeled.ravel())
@@ -855,10 +1293,34 @@ def _watershed_large_objects(
     if split_labels.size == 0:
         return labeled.astype(np.int32, copy=False)
 
+    footprint = np.ones((footprint_size, footprint_size), dtype=bool)
+
+    def peak_coordinates(
+        surface: np.ndarray,
+        component: np.ndarray,
+        prominence: float,
+    ) -> np.ndarray:
+        peak_support = h_maxima(surface, prominence) if prominence > 0.0 else component
+        peak_components, _ = ndi.label(peak_support & component)
+        return peak_local_max(
+            surface,
+            min_distance=min_distance,
+            footprint=footprint,
+            labels=peak_components,
+            num_peaks_per_label=1 if prominence > 0.0 else np.inf,
+            exclude_border=False,
+        )
+
+    marker_array = None
+    if marker_image is not None:
+        marker_array = np.asarray(marker_image, dtype=float)
+        if marker_array.shape != labeled.shape:
+            raise ValueError("watershed marker image must match the label plane")
+
     output = labeled.astype(np.int32, copy=True)
     object_slices = ndi.find_objects(labeled)
     next_label = int(labeled.max()) + 1
-    footprint = np.ones((footprint_size, footprint_size), dtype=bool)
+    minimum_fragment_area = max(1, int(np.floor(split_size / 2.0)))
 
     for label_id in split_labels:
         component_slice = object_slices[label_id - 1]
@@ -866,28 +1328,53 @@ def _watershed_large_objects(
             continue
 
         component = labeled[component_slice] == label_id
-        distance = ndi.distance_transform_edt(np.pad(component, 1))[1:-1, 1:-1]
-        # Width-based detection needs distinct object-scale peaks, not multiple
-        # pixel-scale maxima on the medial ridge of one elongated nucleus.
-        peak_support = (
-            h_maxima(distance, peak_prominence) if peak_prominence > 0.0 else component
-        )
-        peak_components, _ = ndi.label(peak_support)
-        seeds = peak_local_max(
-            distance,
-            min_distance=min_distance,
-            footprint=footprint,
-            labels=peak_components,
-            num_peaks_per_label=1 if peak_prominence > 0.0 else np.inf,
-            exclude_border=False,
+        filled_component = ndi.binary_fill_holes(component)
+        distance = ndi.distance_transform_edt(np.pad(filled_component, 1))[1:-1, 1:-1]
+        shape_seeds = peak_coordinates(distance, component, peak_prominence)
+        substantial_hole = (
+            np.count_nonzero(filled_component) - np.count_nonzero(component)
+            >= minimum_fragment_area
         )
 
+        marker_surface = None
+        intensity_seeds = np.empty((0, 2), dtype=np.intp)
+        if marker_array is not None and not substantial_hole:
+            marker_component = marker_array[component_slice]
+            if marker_smoothing_sigma > 0.0:
+                weights = ndi.gaussian_filter(
+                    component.astype(float), marker_smoothing_sigma
+                )
+                weighted = ndi.gaussian_filter(
+                    np.where(component, marker_component, 0.0),
+                    marker_smoothing_sigma,
+                )
+                marker_surface = np.divide(
+                    weighted,
+                    weights,
+                    out=np.zeros_like(weighted),
+                    where=weights > np.finfo(float).eps,
+                )
+            else:
+                marker_surface = marker_component
+            intensity_seeds = peak_coordinates(
+                marker_surface,
+                component,
+                marker_peak_prominence,
+            )
+
+        use_intensity = marker_surface is not None
+        seeds = intensity_seeds if use_intensity else shape_seeds
         if len(seeds) <= 1:
             continue
 
         markers = np.zeros_like(component, dtype=np.int32)
         markers[seeds[:, 0], seeds[:, 1]] = np.arange(1, len(seeds) + 1)
-        component_splits = watershed(-distance, markers, mask=component)
+        split_surface = marker_surface if use_intensity else distance
+        component_splits = watershed(-split_surface, markers, mask=component)
+        if use_intensity:
+            fragment_areas = np.bincount(component_splits.ravel())[1:]
+            if np.any(fragment_areas < minimum_fragment_area):
+                continue
 
         output_view = output[component_slice]
         output_view[component] = 0

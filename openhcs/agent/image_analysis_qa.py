@@ -42,11 +42,46 @@ class ImageQaMeasure(Enum):
     SENSITIVITY_DELTA_BACKGROUND_GROWTH = (
         "unsupported background growth in the sensitivity delta"
     )
-    CANDIDATE_TRACE_PIXELS = "current candidate-skeleton pixels"
-    ROOTED_CANDIDATE_YIELD = "fraction of candidate-skeleton pixels retained as rooted"
+    CANDIDATE_TRACE_PIXELS = "candidate-skeleton pixels"
+    ROOTED_CANDIDATE_YIELD = "candidate-skeleton fraction retained as rooted"
     TOTAL_TRACE_PIXELS = "total trace pixels"
     ROOTED_TRACE_PIXELS = "root-connected trace pixels"
     UNROOTED_TRACE_PIXELS = "unrooted trace pixels"
+    INITIAL_TOPOLOGY_OWNED_TRACE_PIXELS = "initial-topology owned trace pixels"
+    SECONDARY_ADOPTED_TRACE_PIXELS = "trace pixels after secondary-owner adoption"
+    SIGNAL_REPAIRED_TRACE_PIXELS = "trace pixels after signal-supported soma repair"
+    CROSSING_CORE_TRACE_PIXELS = "shared crossing-core trace pixels"
+    FINAL_TOPOLOGY_DROPPED_TRACE_PIXELS = "owned trace pixels dropped by final topology"
+    FINAL_TOPOLOGY_DROPPED_CROSSING_SUPPORT_TRACE_PIXELS = (
+        "dropped crossing-support trace pixels"
+    )
+    FINAL_TOPOLOGY_DROPPED_UNROOTED_PATH_TRACE_PIXELS = (
+        "dropped graph-path pixels rejected as unrooted"
+    )
+    FINAL_TOPOLOGY_DROPPED_PHYSICALLY_ROOTED_PATH_TRACE_PIXELS = (
+        "physically soma-rooted dropped path pixels"
+    )
+    FINAL_TOPOLOGY_DROPPED_PHYSICALLY_UNROOTED_PATH_TRACE_PIXELS = (
+        "physically soma-detached dropped path pixels"
+    )
+    FINAL_TOPOLOGY_DROPPED_UNREPRESENTED_TRACE_PIXELS = (
+        "dropped trace pixels absent from final path graph"
+    )
+    FINAL_TOPOLOGY_ADDED_TRACE_PIXELS = "final-topology added shared-core pixels"
+    FINAL_TOPOLOGY_OWNED_TRACE_PIXELS = "final-topology owned trace pixels"
+    PUBLISHED_OWNED_TRACE_PIXELS = "published single-owner trace pixels"
+    OWNERSHIP_SUPPORTED_UNROOTED_TRACE_PIXELS = (
+        "unrooted trace pixels inside a declared owner region"
+    )
+    OWNERSHIP_UNSUPPORTED_UNROOTED_TRACE_PIXELS = (
+        "unrooted trace pixels outside every declared owner region"
+    )
+    OWNERSHIP_SUPPORTED_RESIDUAL_PIXELS = (
+        "residual candidate pixels inside a declared owner region"
+    )
+    OWNERSHIP_UNSUPPORTED_RESIDUAL_PIXELS = (
+        "residual candidate pixels outside every declared owner region"
+    )
     OWNERSHIP_CROSSOVER_COMPONENTS = "components touching multiple owners"
     CANDIDATE_COMPONENT_OWNER_CARDINALITY = (
         "number of owner identities touching each candidate component"
@@ -58,6 +93,33 @@ class ImageQaMeasure(Enum):
 class ImageQaPrecondition(Enum):
     """Evidence required before a reported miss can justify parameter tuning."""
 
+    RAW_BIOLOGICAL_CONTRACT = (
+        "record stain targets; inspect every raw channel at identical native "
+        "coordinates under full, moderate, and dim windows, then the composite; freeze "
+        "a raw-only ledger of plausible objects, processes, ambiguities, and debris. "
+        "DAPI supports a nuclear anchor, broader colocalised process-channel signal a "
+        "soma, and thin continuous signal from that soma a neurite; brightness, labels, "
+        "or proximity alone prove none, and nucleus count is not cell count. Before "
+        "splitting a lobed nucleus, inspect a less-saturated window and require multiple "
+        "independently supported nuclear intensity centres; outline shape alone does not "
+        "prove multiple nuclei"
+    )
+    EARLIEST_FAILED_DEPENDENCY = (
+        "review nuclear anchors, somata, candidates, rooted paths, and ownership in "
+        "dependency order; stop downstream tuning at the earliest failure. If final "
+        "masks cannot distinguish response, threshold, split, or size rejection, expose "
+        "typed intermediates before changing parameters. Seed hysteresis can discard a "
+        "dim component despite local response; compare pre/post-seed candidates first. "
+        "Disabling it is a diagnostic ablation, not acceptance: require rooted recovery "
+        "without added background at the same coordinates"
+    )
+    VALIDATION_EXPOSURE = (
+        "record which fields informed pipeline or parameter decisions; a field "
+        "used for tuning is development evidence even if its directory says "
+        "held-out. Preserve treatment blinding separately from the development "
+        "split; select an untouched validation reserve before freezing, or report "
+        "that only development validation is available"
+    )
     CURRENT_OUTPUT_CONCORDANCE = (
         "localize the reported view to source coordinates and reproduce it from "
         "the current raw and output artifacts"
@@ -132,6 +194,11 @@ class ImageQaEvidenceRule(Enum):
         "reject a black, empty, stale, or mismatched capture when its active route, "
         "component values, or routed payload identity do not match the intended evidence"
     )
+    SPARSE_DIAGNOSTIC_LOCALIZATION = (
+        "for a sparse diagnostic mask, use its viewer-reported exact nonzero bounds "
+        "and bounded example coordinates to navigate to evidence before judging a "
+        "full-field capture where one-pixel structures may be subpixel"
+    )
     DURABLE_ARTIFACT_EXISTENCE = (
         "before freezing, verify every claimed durable label or measurement path exists "
         "and preserves the typed artifact identity rather than inferring persistence "
@@ -141,6 +208,22 @@ class ImageQaEvidenceRule(Enum):
         "reconcile source and target label cardinality, same-identity containment, "
         "foreground fraction, and per-object area distributions; equal counts alone "
         "do not establish spatial concordance"
+    )
+    FINAL_TOPOLOGY_REWRITE_ACCOUNTING = (
+        "when final topology both removes and introduces trace pixels, compare the "
+        "dropped mask, added mask, shared crossing-core mask, and owner identities at "
+        "the same raw coordinates; net pixel-count change is not evidence of pruning"
+    )
+    ROUND_OBJECT_SOURCE_LINEAGE = (
+        "for apparent nuclear over-segmentation, compare raw stain with "
+        "round_object_prefilter, round_object_accepted, "
+        "round_object_weak_core_candidates, "
+        "round_object_adjacent_satellite_candidates, and round_object_widths at "
+        "fixed coordinates. Use source_component_label and "
+        "source_component_output_count to distinguish a separate threshold-stage "
+        "component from a watershed split. Never globally reject weak-core objects: "
+        "reject only an adjacent weak fragment while preserving isolated faint objects "
+        "and multi-centre controls"
     )
 
 
@@ -250,6 +333,19 @@ class SemanticGate(Enum):
             ImageQaMeasure.TOTAL_TRACE_PIXELS,
             ImageQaMeasure.ROOTED_TRACE_PIXELS,
             ImageQaMeasure.UNROOTED_TRACE_PIXELS,
+            ImageQaMeasure.INITIAL_TOPOLOGY_OWNED_TRACE_PIXELS,
+            ImageQaMeasure.SECONDARY_ADOPTED_TRACE_PIXELS,
+            ImageQaMeasure.SIGNAL_REPAIRED_TRACE_PIXELS,
+            ImageQaMeasure.CROSSING_CORE_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_CROSSING_SUPPORT_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_UNROOTED_PATH_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_PHYSICALLY_ROOTED_PATH_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_PHYSICALLY_UNROOTED_PATH_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_DROPPED_UNREPRESENTED_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_ADDED_TRACE_PIXELS,
+            ImageQaMeasure.FINAL_TOPOLOGY_OWNED_TRACE_PIXELS,
+            ImageQaMeasure.PUBLISHED_OWNED_TRACE_PIXELS,
             ImageQaMeasure.RESIDUAL_STRUCTURE_COUNT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_SIGNAL_SUPPORT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_DISPOSITION,
@@ -267,6 +363,10 @@ class SemanticGate(Enum):
         (
             ImageQaMeasure.OWNERSHIP_CROSSOVER_COMPONENTS,
             ImageQaMeasure.CANDIDATE_COMPONENT_OWNER_CARDINALITY,
+            ImageQaMeasure.OWNERSHIP_SUPPORTED_UNROOTED_TRACE_PIXELS,
+            ImageQaMeasure.OWNERSHIP_UNSUPPORTED_UNROOTED_TRACE_PIXELS,
+            ImageQaMeasure.OWNERSHIP_SUPPORTED_RESIDUAL_PIXELS,
+            ImageQaMeasure.OWNERSHIP_UNSUPPORTED_RESIDUAL_PIXELS,
             ImageQaMeasure.TOPOLOGY_PLAUSIBILITY,
         ),
     )
@@ -427,40 +527,25 @@ class ImageAnalysisQaPolicy:
             disposition.value for disposition in ResidualStructureDisposition
         )
         return (
-            f"Before tuning, require that each precondition holds: {precondition_text}. "
-            f"Accept visual or artifact evidence only when: {evidence_rule_text}. "
-            f"When a reference exists: {reference_evidence_text}. "
-            f"For seeded secondary segmentation: {seeded_segmentation_text}. "
-            "Classify the current-output "
-            f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
-            f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
-            "For thin structures, retain a fixed-coordinate four-panel view: raw, "
-            "candidate, rooted, and candidate-only residual. For source-assisted "
-            "admission, rank nuclei without a nearby accepted soma by same-coordinate "
-            "body-channel support. Test source admission and target-body response as "
-            "separate attempts; accept a recovered source only when it maps plausibly, "
-            "rather than splitting an already admitted source. Threshold effects need "
-            "spatial deltas: a stricter threshold can split a merged object, while a "
-            "permissive one can merge neighbors. "
-            "Inspect the source channel (for example DAPI), target or process channel "
-            "(for example FITC), response, accepted-label overlay, bodies, and traces; "
-            f"record candidate reasons ({rejection_reasons}) and residual dispositions "
-            f"({residual_dispositions}). For an unexplained miss, make one adjacent "
-            "higher-sensitivity diagnostic attempt, subtract the accepted candidate mask, "
-            "rank connected additions by signal/root support, and treat the permissive "
-            "result as diagnostic evidence rather than an automatic replacement. Accept "
-            "only signal-supported, connected, plausible topology. If candidate signal is "
-            "lost from the rooted result, report candidate pixels, rooted-candidate yield, "
-            "and owner cardinality per connected component; multi-owner loss implicates "
-            "ownership, so lowering the detection threshold cannot repair it. If a "
-            "permissive setting harms a reference, declare the permissive value only on "
-            "the dataset or preset that needs it. "
-            "For thin-structure endpoint continuation, require every proposed path "
-            f"to be {continuation_constraint_text}; distance, ownership, and response "
-            "alone are insufficient. "
-            "When faint signal motivates monotone, ridge, or contrast preprocessing, "
-            f"require the transform to {signal_transform_constraint_text}. Aggregate "
-            "length or object-count agreement alone cannot accept it. Reject growth "
-            "without root-connected continuity, and preserve rejected parameter changes "
-            "with the evidence for each decision."
+            f"Preconditions—{precondition_text}. Evidence—{evidence_rule_text}. "
+            f"References—{reference_evidence_text}. Seeds—{seeded_segmentation_text}. "
+            f"Stages—{miss_stage_text}. Gates/measures—{gate_text}. Reasons—"
+            f"{rejection_reasons}. Residuals—{residual_dispositions}. Change one gate "
+            "per attempt. Keep a fixed-coordinate four-panel "
+            "view: raw, candidate, rooted, and candidate-only residual. Rank nuclei "
+            "without a nearby accepted soma by same-coordinate body-channel support; "
+            "test source admission and target-body response as separate attempts without "
+            "splitting an already admitted source. A stricter threshold can split a "
+            "merged object. Inspect source (for example DAPI), target, response, "
+            "accepted-label overlay, bodies, and traces. For one higher-sensitivity "
+            "diagnostic attempt, subtract the accepted candidate mask and treat gains as "
+            "diagnostic evidence rather than an automatic replacement. Report stage "
+            "counts and owner cardinality per connected component. Multi-owner loss is "
+            "ownership failure; lowering the detection threshold cannot repair it. "
+            "If permissiveness harms a reference, declare the permissive value only on "
+            "the dataset or preset that needs it. Thin-structure continuation must be "
+            f"{continuation_constraint_text}; distance, ownership, and response alone "
+            "are insufficient. For monotone, ridge, or contrast preprocessing require "
+            f"{signal_transform_constraint_text}. Aggregate length or object-count "
+            "agreement alone cannot accept it. Preserve rejected parameter changes."
         )

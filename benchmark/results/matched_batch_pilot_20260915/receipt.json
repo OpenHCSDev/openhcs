@@ -1,0 +1,234 @@
+{
+  "status": "blocked_pilot_no_matched_timing_claim",
+  "source_commit": "b2f3cf83b70238856193d669c0893d32ad958362",
+  "processing_dirty_diff_sha256": "441e265e0720bb4efbaafb9caac258e82d1d1979ff1ba4d885e13f56c3aaaa12",
+  "native_runner_sha256": "3d9f5b079509ba53f03e3f2b124a3c32de5156b0d8247afb6491ab142de811e1",
+  "executed_driver_sha256": "9b5c88e9728e8f4a5a2794303e49953d4a431eb6aca9ebda6a9f9ad760dfddf8",
+  "retained_driver_sha256": "694d83bbb4879a9dea5b0ac4cb33c110711911b06bb4e49af8d314f59266c32d",
+  "manifest_sha256": "a4a7c23ac2414614678012b05b058bc9c18cf3668b105cd663528a38ef2b437e",
+  "original_pipeline_sha256": "a1600b567d0212ab29d4e86cc4da52bf278500fc820775ccd0d4ed4761b4e2de",
+  "candidate_environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "python_version": "3.12.3",
+    "openhcs_version": "0.8.5",
+    "numpy_version": "2.1.3",
+    "scipy_version": "1.18.0",
+    "platform": "Linux-7.1.5-arch1-2-x86_64-with-glibc2.44"
+  },
+  "requested_thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+  },
+  "numpy_disabled_cpu_features": "AVX512_SKX,X86_V4",
+  "python_hash_seed": "0",
+  "candidate_runtime_materialize_flag": false,
+  "object_counts_by_image": {
+    "native": [
+      [
+        1,
+        306
+      ],
+      [
+        2,
+        182
+      ],
+      [
+        3,
+        150
+      ],
+      [
+        4,
+        147
+      ],
+      [
+        5,
+        142
+      ],
+      [
+        6,
+        194
+      ],
+      [
+        7,
+        160
+      ],
+      [
+        8,
+        167
+      ]
+    ],
+    "candidate": [
+      [
+        1,
+        306
+      ],
+      [
+        2,
+        182
+      ],
+      [
+        3,
+        150
+      ],
+      [
+        4,
+        147
+      ],
+      [
+        5,
+        142
+      ],
+      [
+        6,
+        194
+      ],
+      [
+        7,
+        160
+      ],
+      [
+        8,
+        167
+      ]
+    ]
+  },
+  "database_difference_count": 4,
+  "database_differences": [
+    {
+      "kind": "measurement_content",
+      "message": "SQLite database 'DefaultDB.db' table 'Per_Image': measurement feature object:cytoplasm/mean(k_raw_dna_raw_gfp) values differ"
+    },
+    {
+      "kind": "measurement_content",
+      "message": "SQLite database 'DefaultDB.db' table 'Per_Image': measurement feature object:cytoplasm/mean(k_raw_gfp_raw_dna) values differ"
+    },
+    {
+      "kind": "measurement_content",
+      "message": "SQLite database 'DefaultDB.db' table 'Per_Image': measurement feature object:cytoplasm/mean(overlap_raw_dna_raw_gfp) values differ"
+    },
+    {
+      "kind": "table_content",
+      "message": "SQLite database 'DefaultDB.db' table 'Per_Object': table schema ('Cells_Children_Cytoplasm_Count', 'Cells_Location_Center_X', 'Cells_Location_Center_Y', 'Cells_Location_Center_Z', 'Cells_Number_Object_Number', 'Cells_Parent_Nuclei', 'Cytoplasm_Correlation_Correlation_rawDNA_rawGFP', 'Cytoplasm_Correlation_Costes_rawDNA_rawGFP', 'Cytoplasm_Correlation_Costes_rawGFP_rawDNA', 'Cytoplasm_Correlation_K_rawDNA_rawGFP', 'Cytoplasm_Correlation_K_rawGFP_rawDNA', 'Cytoplasm_Correlation_Manders_rawDNA_rawGFP', 'Cytoplasm_Correlation_Manders_rawGFP_rawDNA', 'Cytoplasm_Correlation_Overlap_rawDNA_rawGFP', 'Cytoplasm_Correlation_RWC_rawDNA_rawGFP', 'Cytoplasm_Correlation_RWC_rawGFP_rawDNA', 'Cytoplasm_Intensity_IntegratedIntensityEdge_rawGFP', 'Cytoplasm_Intensity_IntegratedIntensity_rawGFP', 'Cytoplasm_Intensity_LowerQuartileIntensity_rawGFP', 'Cytoplasm_Intensity_MADIntensity_rawGFP', 'Cytoplasm_Intensity_MassDisplacement_rawGFP', 'Cytoplasm_Intensity_MaxIntensityEdge_rawGFP', 'Cytoplasm_Intensity_MaxIntensity_rawGFP', 'Cytoplasm_Intensity_MeanIntensityEdge_rawGFP', 'Cytoplasm_Intensity_MeanIntensity_rawGFP', 'Cytoplasm_Intensity_MedianIntensity_rawGFP', 'Cytoplasm_Intensity_MinIntensityEdge_rawGFP', 'Cytoplasm_Intensity_MinIntensity_rawGFP', 'Cytoplasm_Intensity_StdIntensityEdge_rawGFP', 'Cytoplasm_Intensity_StdIntensity_rawGFP', 'Cytoplasm_Intensity_UpperQuartileIntensity_rawGFP', 'Cytoplasm_Location_CenterMassIntensity_X_rawGFP', 'Cytoplasm_Location_CenterMassIntensity_Y_rawGFP', 'Cytoplasm_Location_CenterMassIntensity_Z_rawGFP', 'Cytoplasm_Location_Center_X', 'Cytoplasm_Location_Center_Y', 'Cytoplasm_Location_MaxIntensity_X_rawGFP', 'Cytoplasm_Location_MaxIntensity_Y_rawGFP', 'Cytoplasm_Location_MaxIntensity_Z_rawGFP', 'Cytoplasm_Math_IntensityRatio', 'Cytoplasm_Number_Object_Number', 'Cytoplasm_Parent_Cells', 'Cytoplasm_Parent_Nuclei', 'ImageNumber', 'Nuclei_Children_Cells_Count', 'Nuclei_Children_Cytoplasm_Count', 'Nuclei_Correlation_Correlation_rawDNA_rawGFP', 'Nuclei_Correlation_Costes_rawDNA_rawGFP', 'Nuclei_Correlation_Costes_rawGFP_rawDNA', 'Nuclei_Correlation_K_rawDNA_rawGFP', 'Nuclei_Correlation_K_rawGFP_rawDNA', 'Nuclei_Correlation_Manders_rawDNA_rawGFP', 'Nuclei_Correlation_Manders_rawGFP_rawDNA', 'Nuclei_Correlation_Overlap_rawDNA_rawGFP', 'Nuclei_Correlation_RWC_rawDNA_rawGFP', 'Nuclei_Correlation_RWC_rawGFP_rawDNA', 'Nuclei_Intensity_IntegratedIntensityEdge_rawGFP', 'Nuclei_Intensity_IntegratedIntensity_rawGFP', 'Nuclei_Intensity_LowerQuartileIntensity_rawGFP', 'Nuclei_Intensity_MADIntensity_rawGFP', 'Nuclei_Intensity_MassDisplacement_rawGFP', 'Nuclei_Intensity_MaxIntensityEdge_rawGFP', 'Nuclei_Intensity_MaxIntensity_rawGFP', 'Nuclei_Intensity_MeanIntensityEdge_rawGFP', 'Nuclei_Intensity_MeanIntensity_rawGFP', 'Nuclei_Intensity_MedianIntensity_rawGFP', 'Nuclei_Intensity_MinIntensityEdge_rawGFP', 'Nuclei_Intensity_MinIntensity_rawGFP', 'Nuclei_Intensity_StdIntensityEdge_rawGFP', 'Nuclei_Intensity_StdIntensity_rawGFP', 'Nuclei_Intensity_UpperQuartileIntensity_rawGFP', 'Nuclei_Location_CenterMassIntensity_X_rawGFP', 'Nuclei_Location_CenterMassIntensity_Y_rawGFP', 'Nuclei_Location_CenterMassIntensity_Z_rawGFP', 'Nuclei_Location_Center_X', 'Nuclei_Location_Center_Y', 'Nuclei_Location_Center_Z', 'Nuclei_Location_MaxIntensity_X_rawGFP', 'Nuclei_Location_MaxIntensity_Y_rawGFP', 'Nuclei_Location_MaxIntensity_Z_rawGFP', 'Nuclei_Math_IntensityRatio', 'Nuclei_Number_Object_Number', 'ObjectNumber') values differ"
+    }
+  ],
+  "specific_correlation_cell_differences": [
+    {
+      "image_number": 3,
+      "object_number": 91,
+      "native": [
+        null,
+        null,
+        null
+      ],
+      "candidate": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "image_number": 3,
+      "object_number": 108,
+      "native": [
+        null,
+        null,
+        null
+      ],
+      "candidate": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "image_number": 7,
+      "object_number": 7,
+      "native": [
+        null,
+        null,
+        null
+      ],
+      "candidate": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "native_image_count": 8,
+  "candidate_image_count": 8,
+  "image_difference_count": 0,
+  "image_pixel_digests": {
+    "native": [
+      {
+        "name": "BBBC013_A01_s1_w1_Overlay.tiff",
+        "digest": "de4166afb448fb9a85af20da2d390c7da7ca1183d0aa9412a4f7b9b132c38754"
+      },
+      {
+        "name": "BBBC013_A12_s1_w1_Overlay.tiff",
+        "digest": "67e96ad1c5e14bbd9066c33819c3e01b593f92c78fb8b5ad724ec698b14fbb59"
+      },
+      {
+        "name": "BBBC013_B01_s1_w1_Overlay.tiff",
+        "digest": "c58c22ec95c0fce93fa787aad42061be2ab77221c68973d4b6bc83701c2544ae"
+      },
+      {
+        "name": "BBBC013_B12_s1_w1_Overlay.tiff",
+        "digest": "548433113c4f7c9f52c8d25c16738a9d5ffc97daecc2399fd33278aa92eb3aff"
+      },
+      {
+        "name": "BBBC013_C01_s1_w1_Overlay.tiff",
+        "digest": "b95191b91ddc1bddd16c80f1f79ff1cd8672489f071430d3166353d9b6fe52dc"
+      },
+      {
+        "name": "BBBC013_C12_s1_w1_Overlay.tiff",
+        "digest": "f6529e87b91f2278d4c8d1bb7e1ff8259b838176857e5dc0cb40359b9dcbb58f"
+      },
+      {
+        "name": "BBBC013_D01_s1_w1_Overlay.tiff",
+        "digest": "3dd05fc67f0138833dddd0b16c737701b900ad08e38b8ff97ef7b88a87b39677"
+      },
+      {
+        "name": "BBBC013_D12_s1_w1_Overlay.tiff",
+        "digest": "4ca8bbf6403076ff800a48295e1fc8f61120108333bfc3e063bae92ba04a1d65"
+      }
+    ],
+    "candidate": [
+      {
+        "name": "A01_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "de4166afb448fb9a85af20da2d390c7da7ca1183d0aa9412a4f7b9b132c38754"
+      },
+      {
+        "name": "A12_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "67e96ad1c5e14bbd9066c33819c3e01b593f92c78fb8b5ad724ec698b14fbb59"
+      },
+      {
+        "name": "B01_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "c58c22ec95c0fce93fa787aad42061be2ab77221c68973d4b6bc83701c2544ae"
+      },
+      {
+        "name": "B12_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "548433113c4f7c9f52c8d25c16738a9d5ffc97daecc2399fd33278aa92eb3aff"
+      },
+      {
+        "name": "C01_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "b95191b91ddc1bddd16c80f1f79ff1cd8672489f071430d3166353d9b6fe52dc"
+      },
+      {
+        "name": "C12_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "f6529e87b91f2278d4c8d1bb7e1ff8259b838176857e5dc0cb40359b9dcbb58f"
+      },
+      {
+        "name": "D01_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "3dd05fc67f0138833dddd0b16c737701b900ad08e38b8ff97ef7b88a87b39677"
+      },
+      {
+        "name": "D12_s001_w1_z001_t001_Overlay.tiff",
+        "digest": "4ca8bbf6403076ff800a48295e1fc8f61120108333bfc3e063bae92ba04a1d65"
+      }
+    ]
+  }
+}

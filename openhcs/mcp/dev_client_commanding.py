@@ -30,6 +30,7 @@ from openhcs.agent.dto.execution import (
     RuntimeServerConnectionToolRequest,
     RuntimeServerToolRequest,
 )
+from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy
 from openhcs.mcp.dev_client_core import (
     DEFAULT_CALL_TIMEOUT_SECONDS,
     McpDevCliUsageError,
@@ -50,6 +51,7 @@ from openhcs.mcp.dev_client_core import (
     captured_server_stderr_tail,
     list_mcp_session_tools,
     mcp_dev_command_key,
+    mcp_tool_timeout_seconds,
     ui_tool_arguments,
     viewer_connection_arguments,
 )
@@ -399,10 +401,19 @@ class SingleToolCommandSpec(CapabilityBackedCommandSpec):
         self,
         args: argparse.Namespace,
     ) -> tuple[McpDevToolCall, ...]:
+        try:
+            tool_arguments = self.tool_arguments(args)
+        except McpDevCliUsageError:
+            raise
+        except (TypeError, ValueError) as exc:
+            # Manual command projections construct the same declaration-owned
+            # request DTOs as generated commands. Preserve their validation as
+            # a local usage failure instead of a transport failure or traceback.
+            raise McpDevCliUsageError(str(exc)) from exc
         return (
             McpDevToolCall(
                 self.tool_name,
-                self.tool_arguments(args),
+                tool_arguments,
             ),
         )
 
@@ -439,6 +450,25 @@ class SingleUiBridgeToolCommandSpec(UiBridgeCommandSpec, CapabilityBackedCommand
             McpDevToolCall(
                 self.tool_name,
                 ui_tool_arguments(args, timeout_ms=args.timeout_ms),
+            ),
+        )
+
+    async def run_session(
+        self,
+        session: McpDevStdioSession,
+        args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
+    ) -> McpDevToolBatchResponse:
+        """Keep the MCP deadline outside the request-owned bridge deadline."""
+
+        timeout_ms = McpUiBridgeTimeoutPolicy.resolve(args.timeout_ms)
+        return await call_mcp_session(
+            session,
+            self.calls_from_args(args) if prepared_calls is None else prepared_calls,
+            timeout_seconds=mcp_tool_timeout_seconds(
+                timeout_ms,
+                timeout_seconds=self.timeout_seconds(args),
             ),
         )
 

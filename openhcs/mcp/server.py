@@ -458,18 +458,16 @@ async def _await_with_declared_progress(
     )
     task = asyncio.ensure_future(operation)
     while True:
-        try:
-            return await asyncio.wait_for(
-                asyncio.shield(task),
-                timeout=heartbeat_seconds,
-            )
-        except TimeoutError:
-            elapsed_seconds += heartbeat_seconds
-            await _report_progress_if_available(
-                mcp_context,
-                elapsed_seconds,
-                message=f"{capability.title}: still running",
-            )
+        completed, _ = await asyncio.wait({task}, timeout=heartbeat_seconds)
+        if completed:
+            # An operation's own TimeoutError is terminal, not a heartbeat.
+            return task.result()
+        elapsed_seconds += heartbeat_seconds
+        await _report_progress_if_available(
+            mcp_context,
+            elapsed_seconds,
+            message=f"{capability.title}: still running",
+        )
 
 
 async def _report_progress_if_available(

@@ -6,6 +6,11 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
+from polystore.streaming.identity import (
+    FixedStreamProducerIdentityKind,
+    StreamProducerIdentity,
+)
+from polystore.streaming.viewer_transport import ViewerStreamProducer
 from zmqruntime.viewer_protocol import ViewerSourceSpatialDomainPayload
 
 from openhcs.agent.dto.common import (
@@ -22,16 +27,20 @@ from openhcs.agent.dto.plate import (
 from openhcs.agent.dto.ui_bridge import UiBridgeConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowStateResult
 from openhcs.agent.services.plate_inspection_service import (
-    PlateInspectionFileQueryProjection,
     PlateInspectionContext,
+    PlateInspectionFileQueryProjection,
     PlateInspectionService,
 )
 from openhcs.agent.services.ui_bridge_service import (
     DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     UiBridgeService,
 )
+from openhcs.constants import AllComponents, Backend
 from openhcs.core.config import StreamingConfig
-from openhcs.constants import Backend, AllComponents
+from openhcs.core.plate_image_inventory import (
+    PlateFileInventoryQuery,
+    PlateFileRecord,
+)
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
@@ -44,25 +53,20 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionBuilder,
 )
-from openhcs.core.virtual_workspace_metadata import (
-    VirtualWorkspaceSourceProjectionEntries,
-)
-from openhcs.core.plate_image_inventory import (
-    PlateFileInventoryQuery,
-    PlateFileRecord,
-)
 from openhcs.core.viewer_streaming_service import (
     ImageStreamingRequest,
     RoiStreamingRequest,
     StreamingService,
     StreamingViewerLifecycle,
 )
-from polystore.streaming.viewer_transport import ViewerStreamProducer
+from openhcs.core.virtual_workspace_metadata import (
+    VirtualWorkspaceSourceProjectionEntries,
+)
+from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )
-from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
 
 
 class PlateStreamingService:
@@ -228,6 +232,14 @@ class PlateStreamingService:
                     )
                 )
             if roi_paths:
+                roi_producer = ViewerStreamProducer.from_identities(
+                    StreamProducerIdentity.fixed_output(
+                        FixedStreamProducerIdentityKind.MANUAL,
+                        record.key,
+                    )
+                    for record in resolved_records
+                    if record.streamable_roi_path is not None
+                )
                 streaming_service.stream_rois(
                     RoiStreamingRequest(
                         viewer=viewer,
@@ -236,6 +248,7 @@ class PlateStreamingService:
                         error_callback=status_messages.append,
                         roi_filenames=roi_paths,
                         component_metadata_by_path=roi_component_metadata_by_path,
+                        producer=roi_producer,
                     )
                 )
         except Exception as exc:
@@ -415,7 +428,7 @@ class PlateStreamingService:
         kinds = PlateFileInventoryQuery.kinds_for(request.kind)
         if request.file_paths:
             return tuple(
-                inventory.require_file_record(file_path, kinds=kinds)
+                inventory.require_stream_record(file_path, kinds=kinds)
                 for file_path in request.file_paths
             )
         requested_limit = max(0, int(request.limit))
