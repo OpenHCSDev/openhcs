@@ -2357,7 +2357,7 @@ jobs:
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb
 
-      - name: Install candidate wheel and run integration tests
+      - name: Install candidate wheel
         run: |
           python -m venv test_wheel
           source test_wheel/bin/activate
@@ -2368,15 +2368,23 @@ jobs:
             --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
             --extras "dev,dev-gui,cellprofiler-compat,$desktop_extras" \
             --requirement pytest-split==0.11.0
+
+      - name: Smoke installed measured MCP protocol
+        run: |
+          source test_wheel/bin/activate
+          python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_mcp.py" \
+            --forbid-import-root "$GITHUB_WORKSPACE" \
+            --exercise-measured-execution
+
+      - name: Run installed GUI and integration tests
+        run: |
+          source test_wheel/bin/activate
           XDG_CACHE_HOME="$RUNNER_TEMP/openhcs-live-mcp-cache" \
           XDG_CONFIG_HOME="$RUNNER_TEMP/openhcs-live-mcp-config" \
           XDG_DATA_HOME="$RUNNER_TEMP/openhcs-live-mcp-data" \
             python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_gui.py" \
               --forbid-import-root "$GITHUB_WORKSPACE" \
               --evidence-directory "$RUNNER_TEMP/openhcs-wheel-gui-evidence"
-          python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_mcp.py" \
-            --forbid-import-root "$GITHUB_WORKSPACE" \
-            --exercise-measured-execution
           python scripts/run_installed_tests.py --repo-root "$GITHUB_WORKSPACE" -- \
             tests/unit/pyqt_gui/test_progress_tree_aggregation.py -q
           for group in 1 2 3 4 5 6; do

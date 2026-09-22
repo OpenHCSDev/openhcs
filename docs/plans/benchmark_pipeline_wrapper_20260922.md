@@ -204,12 +204,20 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   checks the retained source. The wheel-integration CI job runs this one
   end-to-end smoke; the installer matrix keeps its lightweight discovery and
   inspection smoke. The same path passed locally against the development
-  environment, while installed-wheel CI remains the publication gate.
+  environment, while installed-wheel CI remains the publication gate. The
+  wheel workflow runs that smoke in its own step before the long integration
+  suite so its installed-client verdict is visible independently.
 - The measured-run artifact declaration now owns which files are produced by
   runtime execution and which by evidence finalization. The shared evidence
   writer checks for existing finalizer outputs before writing, so the direct
   wrapper, CLI, and MCP path all refuse to overwrite retained evidence under
   one rule rather than maintaining a separate MCP-only collision guard.
+- Environment evidence is still incomplete: the receipt records client
+  interpreter/package location, OpenHCS application versions and endpoint
+  identity, but not the server/worker Python and dependency versions that a
+  matched comparison would need. Capture those at the ordinary runtime owner
+  and project them into the receipt; do not infer a remote server environment
+  from the client or add a benchmark-only server probe.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile
