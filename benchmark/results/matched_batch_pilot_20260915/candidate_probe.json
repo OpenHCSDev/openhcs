@@ -1,0 +1,35 @@
+{
+  "repetition": -1,
+  "execution_id": "ab12ffcc-d468-4c4c-96a5-97f69d7c1c1a",
+  "compile_artifact_id": "2403deda-1311-4927-bad7-0fa95c61022f",
+  "compile_api_seconds": 15.630939054302871,
+  "invocation_seconds": 20.70744155300781,
+  "first_axis_through_completion_observed_seconds": 20.41277503967285,
+  "pre_first_axis_seconds": 0.29466819763183594,
+  "axis_count": 8,
+  "endpoint_pid": 2453602,
+  "endpoint_log_path": "/home/ts/.local/share/openhcs/logs/openhcs_zmq_server_port_7777_1789493936246341.log",
+  "endpoint_application_version": "0.8.5",
+  "output_files": [
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images_results/DefaultDB.db",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images_results/DefaultDB.properties",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/A12_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/B01_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/B12_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/C01_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/C12_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/D01_s001_w1_z001_t001_Overlay.tiff",
+    "/tmp/openhcs-matched-batch-pilot-1ayGug/candidate/source_workspace_matched_pilot/images/D12_s001_w1_z001_t001_Overlay.tiff"
+  ],
+  "execution_failures": [],
+  "validation_failures": [
+    "axis 'A12' produced no runtime records for declared artifact kind 'special'",
+    "axis 'B01' produced no runtime records for declared artifact kind 'special'",
+    "axis 'B12' produced no runtime records for declared artifact kind 'special'",
+    "axis 'C01' produced no runtime records for declared artifact kind 'special'",
+    "axis 'C12' produced no runtime records for declared artifact kind 'special'",
+    "axis 'D01' produced no runtime records for declared artifact kind 'special'",
+    "axis 'D12' produced no runtime records for declared artifact kind 'special'"
+  ]
+}
