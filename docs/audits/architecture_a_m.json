@@ -2196,7 +2196,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "cf9f638a2e343944aec6db0a5ff44dc6a366738a8cd9d522be3222ef7504d858",
+        "sha256": "f97e07b6ccfad8de0f1360c498f39894b4597cb89d8cdf9b80e7694307c4ef6c",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
@@ -2231,7 +2231,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "cba214dd86dca2bd0ba63c1666fa41d422d4399d13bca604c47b0cff7a2ab7c1",
+        "sha256": "2b3525018b2398e34e277e240bd949b7a98d0fcb7cdd320b06b180cf8990e768",
         "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
       }
     ],

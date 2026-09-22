@@ -326,6 +326,12 @@ def retain_measured_openhcs_completion(
             observation = observation_export.require_valid_observation()
     except RuntimeError as exc:
         raise ToolExecutionError(str(exc)) from exc
+    artifact_root = observation_export_path.parent
+    for artifact in MeasuredPipelineRunArtifact:
+        if artifact.finalizer_output and artifact.path_in(artifact_root).exists():
+            raise FileExistsError(
+                f"Measured run evidence already exists: {artifact.path_in(artifact_root)}"
+            )
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
     pipeline_source = submission.pipeline_code()
     results_summary_path = observation_export_path.with_name(
@@ -339,7 +345,6 @@ def retain_measured_openhcs_completion(
         submission.global_pipeline_config,
         expected_config_type=GlobalPipelineConfig,
     )
-    artifact_root = observation_export_path.parent
     for artifact, source in (
         (MeasuredPipelineRunArtifact.PIPELINE_SOURCE, pipeline_source),
         (MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE, global_config_source),

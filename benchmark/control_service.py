@@ -15,7 +15,6 @@ from benchmark.contracts.control import (
     MeasuredPipelineRunReport,
 )
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
-from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.control import (
     discover_benchmark_cases,
     inspect_benchmark_run,
@@ -64,17 +63,6 @@ class BenchmarkControlService:
             raise ValueError("Completed job has no runtime observation export.")
         observation_path = self._path_policy.assert_readable(observation_path)
         observation_path = self._path_policy.assert_writable(observation_path)
-        artifact_root = observation_path.parent
-        evidence_paths = tuple(
-            artifact.path_in(artifact_root)
-            for artifact in MeasuredPipelineRunArtifact
-            if artifact is not MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION
-        )
-        for evidence_path in evidence_paths:
-            if evidence_path.exists():
-                raise FileExistsError(
-                    f"Measured run evidence already exists: {evidence_path}"
-                )
         record = completed.record
         if record.start_time is None or record.end_time is None:
             raise ValueError("Completed job has no server execution time bounds.")

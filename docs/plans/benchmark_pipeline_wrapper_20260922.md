@@ -205,6 +205,11 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   end-to-end smoke; the installer matrix keeps its lightweight discovery and
   inspection smoke. The same path passed locally against the development
   environment, while installed-wheel CI remains the publication gate.
+- The measured-run artifact declaration now owns which files are produced by
+  runtime execution and which by evidence finalization. The shared evidence
+  writer checks for existing finalizer outputs before writing, so the direct
+  wrapper, CLI, and MCP path all refuse to overwrite retained evidence under
+  one rule rather than maintaining a separate MCP-only collision guard.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile

@@ -35,11 +35,17 @@ class ComparisonRunArtifact(Enum):
 class MeasuredPipelineRunArtifact(Enum):
     """Evidence owned by a single measured ordinary pipeline execution."""
 
-    RUNTIME_OBSERVATION = "runtime_execution_server_observation.pkl"
-    RESULTS_SUMMARY = "zmq_results_summary.json"
-    RECEIPT = "measured_pipeline_receipt.json"
-    PIPELINE_SOURCE = "submitted_pipeline.py"
-    GLOBAL_CONFIG_SOURCE = "submitted_global_config.py"
+    RUNTIME_OBSERVATION = ("runtime_execution_server_observation.pkl", False)
+    RESULTS_SUMMARY = ("zmq_results_summary.json", True)
+    RECEIPT = ("measured_pipeline_receipt.json", True)
+    PIPELINE_SOURCE = ("submitted_pipeline.py", True)
+    GLOBAL_CONFIG_SOURCE = ("submitted_global_config.py", True)
+
+    def __new__(cls, filename: str, finalizer_output: bool) -> Self:
+        member = object.__new__(cls)
+        member._value_ = filename
+        member.finalizer_output = finalizer_output
+        return member
 
     def path_in(self, output_dir: Path) -> Path:
         return output_dir / self.value

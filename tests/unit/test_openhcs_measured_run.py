@@ -158,3 +158,55 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         BenchmarkPhase.EXECUTE_OPENHCS,
         BenchmarkPhase.VALIDATE_RUNTIME,
     ]
+
+
+def test_shared_evidence_writer_never_overwrites_existing_artifact(
+    monkeypatch, tmp_path: Path
+) -> None:
+    observation_path = tmp_path / "observation.pkl"
+    observation_path.touch()
+    existing_source = MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(tmp_path)
+    existing_source.write_text("keep this evidence", encoding="utf-8")
+    submission = OpenHCSExecutionSubmission(
+        plate_id=tmp_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(), pipeline_steps=[]
+        ),
+        global_config=GlobalPipelineConfig(),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(runtime_observation_export_path=observation_path)
+    )
+    monkeypatch.setattr(
+        measured_run,
+        "ZMQRuntimeExecutionObservationExport",
+        SimpleNamespace(
+            read=lambda path: SimpleNamespace(
+                output_roots=(tmp_path,),
+                require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
+            )
+        ),
+    )
+    endpoint = measured_run.measured_endpoint_provenance(
+        SimpleNamespace(
+            application=OPENHCS_ENDPOINT_APPLICATION,
+            process_identity=None,
+            log_file_path=None,
+            port=5555,
+        )
+    )
+
+    with pytest.raises(FileExistsError, match="Measured run evidence already exists"):
+        measured_run.retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id="execution-1",
+            results_summary={},
+            endpoint_provenance=endpoint,
+            phase_timing=PhaseTimingTrace(
+                run_id="ordinary", pipeline_name="empty", tool="OpenHCS"
+            ),
+            compile_artifact_id=None,
+        )
+
+    assert existing_source.read_text(encoding="utf-8") == "keep this evidence"
+    assert not MeasuredPipelineRunArtifact.RESULTS_SUMMARY.path_in(tmp_path).exists()
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
