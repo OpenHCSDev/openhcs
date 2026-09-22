@@ -192,14 +192,20 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   service as MCP. The runtime observation filename is declared once by the
   measured-run artifact enum and reused by the CLI and CellProfiler adapter.
   A live synthetic-plate test verifies the CLI receipt and source evidence.
+- A separate live-server test submits an ordinary source-backed job, cancels it
+  through the existing session service, observes the terminal cancelled state,
+  and proves that a cancelled job cannot be finalized as successful evidence.
+  The installed MCP smoke explicitly grants its fixture directory through the
+  declared agent path-policy keys because macOS parent and child interpreters
+  may resolve different temporary roots.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile
   or runtime validation into a successful observation.
 - Fresh-process installed CLI and full-profile MCP tests must agree on request
   identity and receipt projection. Default desktop and hosted surfaces must
-  remain intentionally bounded. Cancellation, if exposed, must delegate to the
-  ordinary execution owner and be tested against an actual submitted job.
+  remain intentionally bounded. The next installed-client test should submit,
+  complete and finalize a job through a fresh full-profile MCP process.
 - Run a small deterministic fixture for lifecycle/overhead checks; do not run
   the 30-workflow corpus or publish performance numbers in this infrastructure
   phase. A later matched experiment needs separately approved design and

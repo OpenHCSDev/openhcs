@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from pathlib import Path
+
+import pytest
+from zmqruntime.messages import ExecutionStatus
 
 from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
@@ -19,6 +23,7 @@ from benchmark.openhcs_measured_run import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.agent.dto.execution import (
+    ExecutionJobRef,
     PipelineSourceOrchestratorSessionRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -225,3 +230,42 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
         evidence.valid
         for evidence in inspect_measured_pipeline_run(output_dir).source_evidence
     )
+
+
+def test_live_cancellation_uses_ordinary_job_and_rejects_finalization(
+    tmp_path: Path,
+) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    path_policy = AgentPathPolicy.with_roots(
+        readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+    )
+    service = ExecutionSessionService(
+        path_policy=path_policy,
+        pipeline_service=PipelineAuthoringService(),
+        config_service=ConfigService(),
+    )
+    session = service.create_session_from_pipeline_source_request(
+        PipelineSourceOrchestratorSessionRequest.from_fields(
+            plate_path=str(plate),
+            pipeline_source=PipelineDocumentAuthority.render(pipeline),
+            port=24000 + os.getpid() % 20000,
+            persistent=False,
+        )
+    )
+    job = service.submit_execution(
+        session.session_id,
+        runtime_observation_export_path=str(tmp_path / "cancelled_observation.pkl"),
+        submit_timeout_ms=120_000,
+    )
+    assert isinstance(job, ExecutionJobRef), job
+
+    deadline = time.monotonic() + 60
+    cancellation = service.cancel_job(job.job_id, timeout_ms=30_000)
+    assert cancellation.applied, cancellation
+    status = cancellation.job_status
+    while not status.is_terminal and time.monotonic() < deadline:
+        time.sleep(0.2)
+        status = service.get_job_status(job.job_id)
+    assert status.status == ExecutionStatus.CANCELLED.value, status
+    with pytest.raises(RuntimeError, match="not complete"):
+        service.require_completed_pipeline_execution(job.job_id)
