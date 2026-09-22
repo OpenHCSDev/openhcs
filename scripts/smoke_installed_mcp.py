@@ -230,11 +230,12 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
                     session.call_tool("openhcs_list_capabilities", {}), timeout=60
                 )
             )
-            expected = {
+            callable_read_only = {
                 "openhcs_list_benchmark_cases",
                 "openhcs_inspect_measured_pipeline_run",
                 "openhcs_report_measured_pipeline_run",
             }
+            expected = callable_read_only | {"openhcs_finalize_measured_pipeline_run"}
             listed_names = {tool.name for tool in listed.tools}
             declared_names = {
                 item.get("name")
@@ -250,7 +251,7 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
                     "Installed benchmark tools are not both declared and listed: "
                     f"expected={expected} listed={listed_names} declared={declared_names}"
                 )
-            for name in expected:
+            for name in callable_read_only:
                 request = (
                     {"manifest_path": str(manifest_path)}
                     if name == "openhcs_list_benchmark_cases"
@@ -319,7 +320,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     forbidden_root = args.forbid_import_root.resolve()
     original_working_directory = Path.cwd()
-    with tempfile.TemporaryDirectory(prefix="openhcs-installed-mcp-") as directory:
+    from openhcs.agent.path_policy import AgentPathLocationAuthority
+
+    with tempfile.TemporaryDirectory(
+        prefix="openhcs-installed-mcp-",
+        dir=AgentPathLocationAuthority.temporary_root(),
+    ) as directory:
         working_directory = Path(directory).resolve()
         os.chdir(working_directory)
         try:

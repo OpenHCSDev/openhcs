@@ -185,6 +185,7 @@ def report_measured_pipeline_run(
                 f"- Pipeline: `{receipt.pipeline_name}`",
                 f"- Execution: `{receipt.execution_id}`",
                 f"- Plate: `{receipt.plate_id}`",
+                f"- Compile artifact: `{receipt.compile_artifact_id or 'none; server job may include compilation'}`",
                 f"- Output roots: {len(receipt.output_roots)}",
                 f"- Runtime observation retained: {inspection.observation_present}",
                 f"- Source snapshots verified: {sum(item.valid for item in inspection.source_evidence)}/{len(inspection.source_evidence)}",

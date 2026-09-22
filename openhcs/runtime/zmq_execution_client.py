@@ -598,6 +598,13 @@ class ZMQExecutionClient(
             raise RuntimeError("ZMQ endpoint compatibility requires a connection")
         return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(handshake.application)
 
+    def require_compatible_endpoint(self) -> EndpointApplicationCompatibility:
+        """Admit only the OpenHCS application version declared by this client."""
+
+        compatibility = self.endpoint_compatibility()
+        compatibility.require_match()
+        return compatibility
+
     def serialize_task(
         self,
         task: OpenHCSExecutionSubmission,
@@ -723,6 +730,7 @@ class ZMQExecutionClient(
                 if deadline.expired():
                     raise deadline.timeout_error()
                 raise RuntimeError("Failed to connect to execution server")
+            self.require_compatible_endpoint()
             self._ensure_progress_subscription(
                 timeout_ms=deadline.remaining_milliseconds()
             )

@@ -89,6 +89,15 @@ class MeasuredPipelineRunInspectionRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class MeasuredPipelineRunFinalizationRequest:
+    """Label evidence for an already-completed ordinary execution job."""
+
+    job_id: str
+    run_id: str
+    pipeline_name: str
+
+
+@dataclass(frozen=True, slots=True)
 class MeasuredSourceEvidence:
     """Bounded digest check for one declared source snapshot."""
 

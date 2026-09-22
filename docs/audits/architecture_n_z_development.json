@@ -905,7 +905,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
+        "sha256": "1f59b1bdaf74533fc62bc89a63a3b1a37e48700c62e683139fb84d690c356253",
         "role": "Retains the exact submitting client and projects its authoritative progress observation."
       },
       {
@@ -915,7 +915,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
+        "sha256": "54fc8c6ff0c42273ac8bb94a657870280b7cb0f5417ff0a3467164f4ef6d0f00",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -1937,7 +1937,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "d0ea2b121c942790583ab0dc718c4a0d9805122d0e5c5b073bb80854f852c6bd",
+    "source_sha256": "ea1463dc370c7fd96f6d9f047ea1c0a15bd8b5c16b555528ddafd5861f9768e1",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -1996,7 +1996,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
+        "sha256": "31081f2a323a81c060aede1201a4bf1a1b39a51f37928c281a419ffaceadfe60",
         "role": "Spawns the execution server with the ArrayBridge-projected child environment and carries typed execution transport."
       },
       {
@@ -2006,7 +2006,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
+        "sha256": "1f59b1bdaf74533fc62bc89a63a3b1a37e48700c62e683139fb84d690c356253",
         "role": "Retains the exact submitting client, projects its authoritative progress, caches terminal status, and releases the client once."
       },
       {
@@ -2121,7 +2121,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
+        "sha256": "54fc8c6ff0c42273ac8bb94a657870280b7cb0f5417ff0a3467164f4ef6d0f00",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2694,7 +2694,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8ea6dbc1838730cc4f7b13b0f4d38aaabf45f6295bab32504c1196040ca12bd1",
+        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],
@@ -2976,12 +2976,12 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "315952e5f8d32b8b84f3e869aef3fd494130ef1d1e843b161066beab18dc65d2",
+        "sha256": "31081f2a323a81c060aede1201a4bf1a1b39a51f37928c281a419ffaceadfe60",
         "role": "Owns the total headless submission budget and the pre-dispatch timeout boundary documented for MCP developers."
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "98cc9e85b996507a1b024d5f6810dd47777c2491b8b3785b4007e8e608de6c08",
+        "sha256": "1f59b1bdaf74533fc62bc89a63a3b1a37e48700c62e683139fb84d690c356253",
         "role": "Retains the submitting execution client, distinguishes dispatch outcomes, and projects its exact progress observation."
       },
       {
@@ -3016,7 +3016,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "a0a85fcbd68858a0ca15bd0beedeb8117c65aebe9a0bb5e94376b6f00ed90d14",
+        "sha256": "54fc8c6ff0c42273ac8bb94a657870280b7cb0f5417ff0a3467164f4ef6d0f00",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {

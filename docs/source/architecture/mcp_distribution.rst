@@ -76,8 +76,8 @@ Installing the GUI with the MCP server is a packaging convenience, not a reason
 to merge their process lifetimes. MCP startup must remain usable in a headless
 environment, and GUI launch must be an explicit human-approved action.
 
-Benchmark inspection boundary
------------------------------
+Benchmark evidence boundary
+---------------------------
 
 The installed ``openhcs-benchmark`` entry point owns benchmark execution and
 report-generation commands. Comparison runs persist a typed lifecycle receipt,
@@ -94,12 +94,16 @@ recorded status and rerun invocation, observation progress, and discovered
 JSON/JSONL/CSV artifacts. Historical or invalid metadata produces a warning
 rather than a guessed completion claim. A separate measured-pipeline receipt is
 produced only after an ordinary pipeline's runtime observation satisfies its
-compiled expectations. ``openhcs_inspect_measured_pipeline_run`` checks that
+compiled expectations. The expert-only
+``openhcs_finalize_measured_pipeline_run`` capability consumes the exact
+completed ordinary job, validates that observation, and retains the submitted
+source, server result and timing receipt. It does not create another execution
+or status authority. ``openhcs_inspect_measured_pipeline_run`` checks that
 receipt and bounded source/output evidence; ``openhcs_report_measured_pipeline_run``
 renders the same inspection rather than loading a second model. Neither tool
 reconstructs live job status or reads the pickled runtime observation.
 
-These capabilities do not launch, resume, cancel, or rerun a benchmark. An agent
+These benchmark capabilities do not launch, resume, cancel, or rerun a job. An agent
 must treat recorded evidence as reviewable provenance and use ordinary execution
 tools for job submission, progress, and cancellation. Lightweight request/result
 contracts are imported during capability discovery; benchmark execution modules

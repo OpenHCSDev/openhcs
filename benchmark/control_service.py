@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from benchmark.contracts.control import (
     BenchmarkCaseCatalog,
     BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
+    MeasuredPipelineRunFinalizationRequest,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunInspectionRequest,
     MeasuredPipelineRunReport,
 )
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.control import (
     discover_benchmark_cases,
     inspect_benchmark_run,
@@ -19,12 +24,86 @@ from benchmark.control import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy
 
+if TYPE_CHECKING:
+    from openhcs.agent.services.execution_session_service import ExecutionSessionService
+
 
 class BenchmarkControlService:
-    """Apply agent path policy before projecting benchmark run state."""
+    """Guard benchmark evidence while delegating job state to ordinary execution."""
 
-    def __init__(self, path_policy: AgentPathPolicy) -> None:
+    def __init__(
+        self,
+        path_policy: AgentPathPolicy,
+        execution_service: ExecutionSessionService | None = None,
+    ) -> None:
         self._path_policy = path_policy
+        self._execution_service = execution_service
+
+    def finalize_measured_run(
+        self,
+        request: MeasuredPipelineRunFinalizationRequest,
+    ) -> MeasuredPipelineRunReceipt:
+        """Write benchmark evidence from the ordinary job's exact completion."""
+
+        if self._execution_service is None:
+            raise RuntimeError("Measured run finalization requires execution service.")
+        from benchmark.openhcs_measured_run import (
+            ZMQ_RESULTS_SUMMARY_FILENAME,
+            measured_endpoint_provenance,
+            retain_measured_openhcs_completion,
+        )
+        from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
+        from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+
+        completed = self._execution_service.require_completed_pipeline_execution(
+            request.job_id
+        )
+        observation_path = ZMQAuxiliaryExecutionParams.from_transport(
+            completed.submission.config_params
+        ).runtime_observation_export_path
+        if observation_path is None:
+            raise ValueError("Completed job has no runtime observation export.")
+        observation_path = self._path_policy.assert_readable(observation_path)
+        observation_path = self._path_policy.assert_writable(observation_path)
+        artifact_root = observation_path.parent
+        evidence_paths = (
+            *(
+                artifact.path_in(artifact_root)
+                for artifact in MeasuredPipelineRunArtifact
+            ),
+            artifact_root / ZMQ_RESULTS_SUMMARY_FILENAME,
+        )
+        for evidence_path in evidence_paths:
+            if evidence_path.exists():
+                raise FileExistsError(
+                    f"Measured run evidence already exists: {evidence_path}"
+                )
+        record = completed.record
+        if record.start_time is None or record.end_time is None:
+            raise ValueError("Completed job has no server execution time bounds.")
+        if record.end_time < record.start_time:
+            raise ValueError("Completed job has reversed server execution time bounds.")
+        if record.results_summary is None:
+            raise ValueError("Completed job has no server results summary.")
+        if completed.endpoint is None:
+            raise ValueError("Completed job has no accepting endpoint handshake.")
+        phase_timing = PhaseTimingTrace(
+            run_id=request.run_id,
+            pipeline_name=request.pipeline_name,
+            tool="OpenHCS",
+        )
+        phase_timing.record(
+            BenchmarkPhase.SERVER_PIPELINE_JOB,
+            seconds=record.end_time - record.start_time,
+        )
+        return retain_measured_openhcs_completion(
+            submission=completed.submission,
+            execution_id=record.execution_id,
+            results_summary=record.results_summary,
+            endpoint_provenance=measured_endpoint_provenance(completed.endpoint),
+            phase_timing=phase_timing,
+            compile_artifact_id=completed.submission.compile_artifact_id,
+        ).receipt
 
     def discover_cases(
         self,

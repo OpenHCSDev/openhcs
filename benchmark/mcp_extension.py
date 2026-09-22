@@ -12,10 +12,12 @@ from benchmark.contracts.control import (
     BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
+    MeasuredPipelineRunFinalizationRequest,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunInspectionRequest,
     MeasuredPipelineRunReport,
 )
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.control_service import BenchmarkControlService
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
@@ -100,6 +102,32 @@ class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     )
 
 
+class FinalizeMeasuredPipelineRunCapability(BenchmarkCapability):
+    name = "openhcs_finalize_measured_pipeline_run"
+    kind = CapabilityKind.TOOL
+    title = "Finalize measured pipeline run"
+    description = (
+        "Validate the runtime observation and retain a typed benchmark receipt "
+        "for an already-completed ordinary headless execution job. Job status, "
+        "submission, result and endpoint identity come from the normal execution "
+        "service; this tool does not submit or poll a separate benchmark job."
+    )
+    mutating = True
+    side_effects = ("writes_measured_run_evidence",)
+    exposition = BenchmarkCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+        target_context=CapabilityTargetContext.SUBMITTED_JOB,
+    )
+    input_contract = MeasuredPipelineRunFinalizationRequest
+    output_contract = MeasuredPipelineRunReceipt
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: BenchmarkControlService(
+            context.path_policy, context.execution_service
+        ),
+        method=lambda service, request: service.finalize_measured_run(request),
+    )
+
+
 class ReportMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     name = "openhcs_report_measured_pipeline_run"
     kind = CapabilityKind.TOOL
@@ -122,5 +150,6 @@ __all__ = (
     "DiscoverBenchmarkCasesCapability",
     "InspectBenchmarkRunCapability",
     "InspectMeasuredPipelineRunCapability",
+    "FinalizeMeasuredPipelineRunCapability",
     "ReportMeasuredPipelineRunCapability",
 )

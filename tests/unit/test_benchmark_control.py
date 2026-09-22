@@ -11,6 +11,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from zmqruntime.messages import ExecutionRecord
 
 import benchmark.cellprofiler_comparison as comparison_module
 from benchmark.cellprofiler_benchmark_cli import (
@@ -25,6 +26,7 @@ from benchmark.cellprofiler_comparison import (
 from benchmark.contracts.control import (
     BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspectionRequest,
+    MeasuredPipelineRunFinalizationRequest,
     MeasuredPipelineRunInspectionRequest,
 )
 from benchmark.contracts.measured_run_receipt import (
@@ -48,8 +50,13 @@ from benchmark.control_service import BenchmarkControlService
 from benchmark.timing import BenchmarkPhase, PhaseTimingRecord
 from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
 from openhcs.agent.path_policy import AgentPathPolicy
+from openhcs.agent.services.execution_session_service import CompletedPipelineExecution
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
 def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None:
@@ -304,6 +311,66 @@ def test_measured_inspection_rejects_tampered_and_escaped_evidence(
     assert any("escapes the run" in warning for warning in inspection.warnings)
 
 
+def test_measured_receipt_reads_older_optional_compile_identity(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "measured"
+    _measured_run_receipt(output_dir)
+    path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload.pop("compile_artifact_id")
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert MeasuredPipelineRunReceipt.read(path).compile_artifact_id is None
+
+
+def test_measured_finalization_refuses_missing_server_timing_without_receipt(
+    tmp_path: Path,
+) -> None:
+    observation_path = tmp_path / "observation.pkl"
+    observation_path.touch()
+    submission = OpenHCSExecutionSubmission(
+        plate_id=tmp_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(), pipeline_steps=[]
+        ),
+        global_config=GlobalPipelineConfig(),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(runtime_observation_export_path=observation_path)
+    )
+
+    class CompletedJobService:
+        def require_completed_pipeline_execution(self, job_id: str):
+            assert job_id == "job-1"
+            return CompletedPipelineExecution(
+                submission=submission,
+                record=ExecutionRecord(
+                    execution_id="execution-1",
+                    plate_id=str(tmp_path),
+                    client_address=None,
+                    status="complete",
+                    results_summary={},
+                ),
+                endpoint=None,
+            )
+
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        CompletedJobService(),
+    )
+
+    with pytest.raises(ValueError, match="no server execution time bounds"):
+        service.finalize_measured_run(
+            MeasuredPipelineRunFinalizationRequest(
+                job_id="job-1", run_id="run-1", pipeline_name="empty"
+            )
+        )
+
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+
+
 def test_empty_comparison_run_writes_completed_owned_receipt(tmp_path: Path) -> None:
     output_dir = tmp_path / "run"
     rerun_command = (
@@ -553,7 +620,16 @@ def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> 
     assert {
         "openhcs_inspect_measured_pipeline_run",
         "openhcs_report_measured_pipeline_run",
+        "openhcs_finalize_measured_pipeline_run",
     } <= names
+    finalizer = next(
+        tool
+        for tool in asyncio.run(built.list_tools())
+        if tool.name == "openhcs_finalize_measured_pipeline_run"
+    )
+    assert {"job_id", "run_id", "pipeline_name"} <= set(
+        finalizer.inputSchema["properties"]
+    )
 
     inspected = asyncio.run(
         built.call_tool(

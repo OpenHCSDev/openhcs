@@ -69,6 +69,13 @@ the original ``plate_path`` and the prepared ``execution_plate_path`` to
 generated Python ``pipeline_source``. Submit and monitor that session through
 the same ordinary execution tools. Do not pass the original external pipeline
 file as a second pipeline authority for a source-backed session.
+On the expert ``full`` surface, once the ordinary job reports ``complete``, call
+``openhcs_finalize_measured_pipeline_run`` with its ``job_id`` and benchmark
+``run_id`` and ``pipeline_name``. The tool validates the exported observation
+against compiled expectations and retains the exact submitted source, server
+result and measured-run receipt beside it. Use the measured-run inspection and
+report tools on that directory afterward. This records one run; it does not
+compare against a native reference or establish a performance advantage.
 
 .. openhcs-gallery:: zmq-startup-compile
 

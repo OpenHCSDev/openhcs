@@ -12,6 +12,7 @@ from openhcs.core.debug import DebugExecutionConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
+    ZMQExecutionClient,
     ZMQPipelineRunPhase,
     run_compiled_pipeline,
 )
@@ -121,6 +122,33 @@ def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
     run = run_compiled_pipeline(ClientWithLegacyResults(), _submission())
 
     assert run.output_plate.output_plate_root == "/legacy/plate"
+
+
+def test_ordinary_submission_rejects_incompatible_endpoint_before_request(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    client = ZMQExecutionClient(port=5555, persistent=True)
+    sent_requests = []
+
+    def reject_endpoint():
+        raise ValueError("incompatible OpenHCS endpoint")
+
+    monkeypatch.setattr(client, "is_connected", lambda: True)
+    monkeypatch.setattr(
+        client,
+        "require_compatible_endpoint",
+        reject_endpoint,
+    )
+    monkeypatch.setattr(
+        client,
+        "_send_control_request",
+        lambda *args, **kwargs: sent_requests.append((args, kwargs)),
+    )
+
+    with pytest.raises(ValueError, match="incompatible OpenHCS endpoint"):
+        client.submit_pipeline(_submission())
+
+    assert sent_requests == []
 
 
 def test_auxiliary_observation_request_is_shared_by_client_and_server():

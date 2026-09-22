@@ -309,6 +309,9 @@ class _FakeExecutionClient:
         self.progress_by_execution_id = {}
         self.disconnect_count = 0
 
+    def endpoint_handshake(self):
+        return None
+
     def submit_compile(
         self,
         submission,
@@ -3659,6 +3662,92 @@ def test_pipeline_source_session_uses_prepared_execution_plate(tmp_path: Path):
                 pipeline_source=_pipeline_document_source(),
             )
         )
+
+
+def test_completed_pipeline_job_retains_exact_submission_and_server_result(
+    tmp_path: Path,
+):
+    class CompleteClient(_FakeExecutionClient):
+        def get_status(
+            self,
+            execution_id=None,
+            *,
+            timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+        ):
+            self.status_requests.append((execution_id, timeout_ms))
+            return {
+                "status": "ok",
+                "execution": {
+                    "execution_id": execution_id,
+                    "plate_id": str(tmp_path),
+                    "client_address": None,
+                    "status": "complete",
+                    "start_time": 10.0,
+                    "end_time": 12.0,
+                    "results_summary": {"output_plate_root": str(tmp_path)},
+                },
+            }
+
+    fake_client = CompleteClient()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(fake_client),
+    )
+    session = service.create_session_from_pipeline_source_request(
+        PipelineSourceOrchestratorSessionRequest.from_fields(
+            plate_path=str(tmp_path),
+            pipeline_source=_pipeline_document_source(),
+        )
+    )
+    job = service.submit_execution(session.session_id)
+
+    completed = service.require_completed_pipeline_execution(job.job_id)
+
+    assert completed.submission is fake_client.execution_submissions[0]
+    assert completed.record.start_time == 10.0
+    assert completed.record.end_time == 12.0
+    assert completed.record.results_summary == {"output_plate_root": str(tmp_path)}
+    assert fake_client.disconnect_count == 1
+    assert service.require_completed_pipeline_execution(job.job_id) == completed
+    assert fake_client.disconnect_count == 1
+
+    compile_job = service.submit_compile(session.session_id)
+    with pytest.raises(ValueError, match="not a pipeline execution"):
+        service.require_completed_pipeline_execution(compile_job.job_id)
+
+
+def test_accepted_job_survives_optional_endpoint_observation_failure(
+    tmp_path: Path,
+):
+    class UnreadableEndpointClient(_FakeExecutionClient):
+        def endpoint_handshake(self):
+            raise RuntimeError("endpoint metadata unavailable")
+
+    fake_client = UnreadableEndpointClient()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(fake_client),
+    )
+    session = service.create_session_from_pipeline_source_request(
+        PipelineSourceOrchestratorSessionRequest.from_fields(
+            plate_path=str(tmp_path),
+            pipeline_source=_pipeline_document_source(),
+        )
+    )
+
+    job = service.submit_execution(session.session_id)
+
+    assert job.server_execution_id == _ExecutionTestId.EXECUTE
+    assert service.get_job_status(job.job_id).status == "complete"
+    assert fake_client.disconnect_count == 1
 
 
 def test_pipeline_source_session_rejects_competing_selected_pipeline_path(

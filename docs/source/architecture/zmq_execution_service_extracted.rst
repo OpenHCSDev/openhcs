@@ -50,7 +50,14 @@ An accepted headless job retains the exact client that submitted it. Status
 polling reuses that client, projects its ZMQRuntime-owned latest progress
 observation, and disconnects it after caching a terminal response. It does not
 recreate clients for polling or mirror transport progress in an OpenHCS-owned
-registry.
+registry. The job also retains the exact typed submission and accepting endpoint
+handshake. A successful completion projects those facts with the server's typed
+execution record, including its results and timing boundaries, so evidence
+writers need not reconstruct the pipeline or parse a separate status source.
+
+The ordinary ZMQ client checks the endpoint's OpenHCS application compatibility
+before sending any compile or execution request. Benchmark callers use that same
+admission method; they do not maintain a separate version rule.
 
 The headless cancellation capability addresses that retained client's exact
 job identifier. Its service delegates the bounded request to the ordinary

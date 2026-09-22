@@ -350,6 +350,10 @@ For a single ordinary measured pipeline, `openhcs-benchmark inspect-measured --o
 and the expert MCP inspection/report tools read the same
 validated-run receipt and check retained source evidence. They do not create a
 second pipeline runner or job-status system.
+After an ordinary headless job completes, the expert
+`openhcs_finalize_measured_pipeline_run` tool can validate its runtime
+observation and retain that receipt from the exact submitted pipeline and
+server completion record. It does not submit another job.
 
 <details>
 <summary><b>📦 All installation options</b></summary>

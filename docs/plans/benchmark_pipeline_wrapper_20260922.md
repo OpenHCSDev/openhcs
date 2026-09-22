@@ -151,8 +151,8 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   provenance, ordinary compile/run invocation, and observation loading into
   `benchmark/openhcs_measured_run.py`. The CellProfiler adapter only prepares
   the document and selects benchmark policy. The wrapper reuses
-  `EndpointClientSession` for compatibility admission and the normal client
-  context manager for one disconnect. A direct test of the new wrapper uses a
+  ordinary ZMQ client's application-version admission and context manager for
+  one disconnect. A direct test of the new wrapper uses a
   normal `PipelineDocument` with no `.cppipe` or native reference.
 - The normal headless `openhcs_submit_pipeline_execution` request now accepts
   an optional runtime observation export path. The existing execution session
@@ -173,6 +173,19 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   the new ordinary cancellation capability appears in both. This verifies
   declaration/profile projection, not a fresh installed wheel or a live
   server cancellation.
+- Ordinary source-backed execution sessions now accept an explicit prepared
+  plate while retaining the original plate identity and one Python pipeline
+  authority. The execution service retains the exact submitted request,
+  accepting endpoint handshake, and typed server completion record after job
+  termination. The expert benchmark finalizer consumes that completed ordinary
+  job and the shared measured-run evidence writer; it does not submit a second
+  job or mirror status. The normal ZMQ client now enforces application-version
+  admission before either compile or execute submission. A live synthetic-plate
+  MCP call proves finalization and receipt retention. The finalizer labels its
+  server start/end interval ``SERVER_PIPELINE_JOB`` because an execution request
+  may include inline compilation; it retains the compile artifact identifier
+  when one was supplied. This is infrastructure evidence, not a comparative
+  throughput claim.
 - Source-level tests must show the benchmark wrapper selects the same
   `PipelineDocument`, compiled plan, execution server, progress, and output
   artifacts as a normal run. No benchmark-only bypass may turn a failed compile

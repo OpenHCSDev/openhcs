@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "701a8b6ea2f9985a28a2b9f4d722da62477a2441aeabf9abe6313cf403de1ec2",
+    "source_sha256": "559dcc74b07d68222067ded732d04ac98b596cb4f698bf9f3ccbb73b60949bec",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -87,17 +87,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "5a504353bd9c1713fcd4a0a1d001df9a66ebcc2eec99a5bc94a9a1993ad8c33e",
+        "sha256": "19b019a1a76aaeae1ddd0567b1c012f101d8aaf99126ec1cac35d2e33743f83c",
         "role": "Declares the typed benchmark inspection request and result exposed through MCP."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "c7f29101836b778e15eb18043894858f391c164dcd545ad3306cf60822430aae",
+        "sha256": "892ffc5edf927b9837ada2d02b01420ac1e635f45e9d56c3c7be2bbfa77f994e",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8ea6dbc1838730cc4f7b13b0f4d38aaabf45f6295bab32504c1196040ca12bd1",
+        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],

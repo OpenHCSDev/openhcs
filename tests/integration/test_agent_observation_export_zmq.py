@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline,
 )
-from benchmark.timing import PhaseTimingTrace
+from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.agent.dto.execution import (
     PipelineSourceOrchestratorSessionRequest,
 )
@@ -29,6 +30,8 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
+from openhcs.mcp import server
+from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_observation import (
@@ -65,10 +68,11 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
     source_identity = tmp_path / "source_identity"
     source_identity.mkdir()
+    path_policy = AgentPathPolicy.with_roots(
+        readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+    )
     service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
+        path_policy=path_policy,
         pipeline_service=PipelineAuthoringService(),
         config_service=ConfigService(),
     )
@@ -92,9 +96,43 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     )
 
     assert status.status == "complete", status
+    completed = service.require_completed_pipeline_execution(status.job_id)
+    assert completed.submission.plate_id == str(source_identity)
+    assert completed.submission.execution_plate_id == str(plate)
+    assert completed.record.execution_id == status.server_execution_id
+    assert completed.record.results_summary is not None
+    assert completed.record.end_time is not None
+    assert completed.endpoint is not None
     observation = ZMQRuntimeExecutionObservationExport.read(export_path)
     observation.require_valid_observation()
     assert observation.output_roots
+    built = server.build_server(
+        OpenHCSAgentContext(path_policy=path_policy, execution_service=service)
+    )
+    finalization = asyncio.run(
+        built.call_tool(
+            "openhcs_finalize_measured_pipeline_run",
+            {
+                "job_id": status.job_id,
+                "run_id": "headless-ordinary",
+                "pipeline_name": "Blur",
+            },
+        )
+    )
+    assert finalization[1]["execution_id"] == status.server_execution_id, finalization
+    receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+    )
+    assert receipt.execution_id == status.server_execution_id
+    assert receipt.plate_id == str(source_identity)
+    assert receipt.execution_plate_id == str(plate)
+    assert receipt.compile_artifact_id is None
+    assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
+    assert receipt.phase_timings[0].seconds >= 0
+    assert all(
+        evidence.valid
+        for evidence in inspect_measured_pipeline_run(tmp_path).source_evidence
+    )
 
 
 def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
@@ -129,6 +167,7 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     inspection = inspect_measured_pipeline_run(evidence_dir)
     assert execution.observation.records_by_axis
     assert receipt == execution.receipt
+    assert receipt.compile_artifact_id is not None
     assert (
         MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(evidence_dir).read_text(
             encoding="utf-8"

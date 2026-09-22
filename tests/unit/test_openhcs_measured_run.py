@@ -7,7 +7,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from zmqruntime import EndpointApplication, EndpointApplicationCompatibility
 
 import benchmark.openhcs_measured_run as measured_run
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
@@ -16,6 +15,7 @@ from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
@@ -42,7 +42,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             assert port is None
             assert persistent is False
             self.connected_endpoint = SimpleNamespace(
-                application=EndpointApplication("openhcs", "test"),
+                application=OPENHCS_ENDPOINT_APPLICATION,
                 process_identity=None,
                 log_file_path=None,
                 port=5555,
@@ -59,12 +59,6 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
 
         def disconnect(self):
             self.disconnect_count += 1
-
-        def endpoint_compatibility(self):
-            application = self.connected_endpoint.application
-            return EndpointApplicationCompatibility(
-                expected=application, observed=application
-            )
 
         def submit_compile(self, submitted):
             assert submitted.pipeline_document is submission.pipeline_document
@@ -137,6 +131,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
     )
     assert retained == result.receipt
+    assert retained.compile_artifact_id == "compile-1"
     assert (
         retained.pipeline_source_sha256
         == hashlib.sha256(source.encode("utf-8")).hexdigest()

@@ -107,6 +107,14 @@ source/configuration digests, and output references from those same authorities;
 it does not become a second job-status store. The CellProfiler adapter prepares
 one such submission and then applies its optional native-reference equivalence
 policy. It does not own a second execution engine.
+An agent can finalize the same receipt after a normal headless job completes:
+the execution service supplies the exact submission, endpoint handshake and
+server completion record, while the benchmark extension validates and retains
+the observation. It records the server's start/end time as
+``SERVER_PIPELINE_JOB`` and retains the submitted compile-artifact identity,
+because an ordinary execution request without one may include inline
+compilation. The synchronous wrapper may additionally record client submit/wait
+phases and an execution-specific interval from progress events.
 
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:

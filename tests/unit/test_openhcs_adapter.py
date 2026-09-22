@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 from zmqruntime import (
     EndpointApplication,
-    EndpointApplicationCompatibility,
     ProcessIdentity,
 )
 
@@ -49,6 +48,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
 from openhcs.pyqt_gui.widgets.shared.services.plate_pipeline_request_builder import (
     PlatePipelineRequest,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionRequestBuilder,
@@ -182,7 +182,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
             assert port is None
             self.progress_callback = progress_callback
             self.connected_endpoint = SimpleNamespace(
-                application=EndpointApplication("openhcs", "0.8.5"),
+                application=OPENHCS_ENDPOINT_APPLICATION,
                 process_identity=ProcessIdentity(pid=321, create_time=123.0),
                 log_file_path="/tmp/benchmark-server.log",
                 port=7777,
@@ -196,12 +196,6 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
         def disconnect(self):
             return None
-
-        def endpoint_compatibility(self):
-            return EndpointApplicationCompatibility(
-                expected=EndpointApplication("openhcs", "0.8.5"),
-                observed=self.connected_endpoint.application,
-            )
 
         def submit_compile(self, submission):
             compile_submission = submission.compile_request()
@@ -278,7 +272,10 @@ def test_benchmark_executes_pipeline_via_zmq_client(
     assert execution.execution_id == "exec-1"
     assert execution.output_roots == (tmp_path,)
     assert execution.results_summary == {"output_plate_root": str(tmp_path)}
-    assert execution.endpoint_provenance.endpoint_openhcs_version == "0.8.5"
+    assert (
+        execution.endpoint_provenance.endpoint_openhcs_version
+        == OPENHCS_ENDPOINT_APPLICATION.version
+    )
     assert execution.endpoint_provenance.endpoint_pid == 321
     assert execution.endpoint_provenance.endpoint_create_time_epoch_seconds == 123.0
     assert (
@@ -336,12 +333,6 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
 
         def disconnect(self):
             return None
-
-        def endpoint_compatibility(self):
-            return EndpointApplicationCompatibility(
-                expected=EndpointApplication("openhcs", "0.8.5"),
-                observed=self.connected_endpoint.application,
-            )
 
     monkeypatch.setattr(
         "benchmark.openhcs_measured_run.ZMQExecutionClient",

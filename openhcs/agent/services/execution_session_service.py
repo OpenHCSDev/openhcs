@@ -14,7 +14,14 @@ from pathlib import Path
 from typing import Self
 
 from zmqruntime.execution import ExecutionProgressObservation
-from zmqruntime.messages import ExecutionStatus, MessageFields, ResponseType
+from zmqruntime.messages import (
+    ExecutionRecord,
+    ExecutionStatus,
+    ExecutionStatusSnapshot,
+    MessageFields,
+    PongResponse,
+    ResponseType,
+)
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -206,6 +213,11 @@ class GlobalConfigSelection:
 
 
 class ExecutionClientABC(ABC):
+    def endpoint_handshake(self) -> PongResponse | None:
+        """Return the endpoint that accepted this client's submission, if known."""
+
+        return None
+
     @abstractmethod
     def submit_compile(
         self,
@@ -314,6 +326,9 @@ class ExecutionClientFactoryABC(ABC):
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionClientAdapter(ExecutionClientABC):
     client: ZMQExecutionClient
+
+    def endpoint_handshake(self) -> PongResponse | None:
+        return self.client.connected_endpoint
 
     def submit_compile(
         self,
@@ -521,6 +536,8 @@ class ExecutionJobRecord:
     ref: ExecutionJobRef
     response: JsonObject
     client: ExecutionClientABC | None
+    submission: OpenHCSExecutionSubmission | None = None
+    endpoint: PongResponse | None = None
 
     def status(self, response: JsonObject | None = None) -> ExecutionJobStatus:
         payload = self.response if response is None else response
@@ -613,6 +630,9 @@ class ExecutionJobStore:
         kind: ExecutionJobKind,
         response: JsonObject,
         client: ExecutionClientABC | None,
+        *,
+        submission: OpenHCSExecutionSubmission | None = None,
+        endpoint: PongResponse | None = None,
     ) -> ExecutionJobRef:
         job_id = f"job-{next(self._counter)}"
         ref = ExecutionJobRef(
@@ -628,6 +648,8 @@ class ExecutionJobStore:
             ref=ref,
             response=response,
             client=client,
+            submission=submission,
+            endpoint=endpoint,
         )
         return ref
 
@@ -657,6 +679,17 @@ class ExecutionJobSubmission:
 
     client: ExecutionClientABC
     response: JsonObject
+    submission: OpenHCSExecutionSubmission
+    endpoint: PongResponse | None
+
+
+@dataclass(frozen=True, slots=True)
+class CompletedPipelineExecution:
+    """The exact ordinary submission and server-owned successful result."""
+
+    submission: OpenHCSExecutionSubmission
+    record: ExecutionRecord
+    endpoint: PongResponse | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -686,7 +719,20 @@ class ExecutionClientGateway:
             except Exception:
                 logger.exception("Failed to close rejected execution client")
             raise
-        return ExecutionJobSubmission(client=client, response=dict(response))
+        try:
+            endpoint = client.endpoint_handshake()
+        except Exception:
+            logger.exception(
+                "Accepted %s job has no readable endpoint handshake",
+                kind.value,
+            )
+            endpoint = None
+        return ExecutionJobSubmission(
+            client=client,
+            response=dict(response),
+            submission=execution_request,
+            endpoint=endpoint,
+        )
 
     def status(
         self,
@@ -1034,6 +1080,43 @@ class ExecutionSessionService:
             updated.release_client()
         return updated.status()
 
+    def require_completed_pipeline_execution(
+        self, job_id: str
+    ) -> CompletedPipelineExecution:
+        """Expose a successful execution's submitted input and server result.
+
+        The operational job remains the status authority; callers such as a
+        benchmark evidence writer need not reconstruct its source or result.
+        """
+
+        job = self._job_store.job_record(job_id)
+        if job.ref.kind != ExecutionJobKind.EXECUTE.value:
+            raise ValueError(f"Job {job_id} is not a pipeline execution.")
+        status = self.get_job_status(job_id)
+        if status.status != ExecutionStatus.COMPLETE.value:
+            raise RuntimeError(
+                f"Pipeline execution {job_id} is not complete: {status.status}."
+            )
+        job = self._job_store.job_record(job_id)
+        snapshot = ExecutionStatusSnapshot.from_dict(job.response)
+        if (
+            snapshot.status is not ResponseType.OK
+            or snapshot.execution is None
+            or snapshot.execution.status != ExecutionStatus.COMPLETE.value
+        ):
+            raise RuntimeError(
+                f"Pipeline execution {job_id} has no successful server result."
+            )
+        if job.submission is None:
+            raise RuntimeError(
+                f"Pipeline execution {job_id} has no retained submission."
+            )
+        return CompletedPipelineExecution(
+            submission=job.submission,
+            record=snapshot.execution,
+            endpoint=job.endpoint,
+        )
+
     def cancel_job(
         self,
         job_id: str,
@@ -1130,6 +1213,8 @@ class ExecutionSessionService:
             kind,
             submission.response,
             client=submission.client,
+            submission=submission.submission,
+            endpoint=submission.endpoint,
         )
         if wait and ref.server_execution_id is not None:
             wait_response = self._client_gateway.wait(

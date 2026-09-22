@@ -15,7 +15,7 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
-from zmqruntime.client import EndpointClientSession
+from zmqruntime.messages import PongResponse
 
 from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
@@ -30,6 +30,7 @@ from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -47,6 +48,40 @@ from .timing import (
 )
 
 ZMQ_RESULTS_SUMMARY_FILENAME = "zmq_results_summary.json"
+
+
+def measured_endpoint_provenance(endpoint: PongResponse) -> MeasuredEndpointProvenance:
+    """Project one admitted endpoint through the shared application authority."""
+
+    compatibility = OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
+        endpoint.application
+    )
+    compatibility.require_match()
+    return MeasuredEndpointProvenance(
+        client_python_executable=sys.executable,
+        client_openhcs_file=str(
+            Path(importlib.util.find_spec("openhcs").origin).resolve()
+        ),
+        client_openhcs_version=compatibility.expected.version,
+        endpoint_application_identifier=(
+            endpoint.application.identifier
+            if endpoint.application is not None
+            else None
+        ),
+        endpoint_openhcs_version=compatibility.observed_version_label,
+        endpoint_pid=(
+            endpoint.process_identity.pid
+            if endpoint.process_identity is not None
+            else None
+        ),
+        endpoint_create_time_epoch_seconds=(
+            endpoint.process_identity.create_time
+            if endpoint.process_identity is not None
+            else None
+        ),
+        endpoint_log_file_path=endpoint.log_file_path,
+        endpoint_port=endpoint.port,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,37 +260,10 @@ def execute_measured_openhcs_pipeline(
             raise ToolExecutionError(
                 "OpenHCS ZMQ client entered without a connected endpoint."
             )
-        endpoint_session = EndpointClientSession(client)
-        compatibility = endpoint_session.observe_compatibility()
         try:
-            endpoint_session.require_admitted_client()
+            endpoint_provenance = measured_endpoint_provenance(endpoint)
         except ValueError as exc:
             raise ToolExecutionError(str(exc)) from exc
-        endpoint_provenance = MeasuredEndpointProvenance(
-            client_python_executable=sys.executable,
-            client_openhcs_file=str(
-                Path(importlib.util.find_spec("openhcs").origin).resolve()
-            ),
-            client_openhcs_version=compatibility.expected.version,
-            endpoint_application_identifier=(
-                endpoint.application.identifier
-                if endpoint.application is not None
-                else None
-            ),
-            endpoint_openhcs_version=compatibility.observed_version_label,
-            endpoint_pid=(
-                endpoint.process_identity.pid
-                if endpoint.process_identity is not None
-                else None
-            ),
-            endpoint_create_time_epoch_seconds=(
-                endpoint.process_identity.create_time
-                if endpoint.process_identity is not None
-                else None
-            ),
-            endpoint_log_file_path=endpoint.log_file_path,
-            endpoint_port=endpoint.port,
-        )
         benchmark_phases = {
             ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
             ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
@@ -274,6 +282,37 @@ def execute_measured_openhcs_pipeline(
         phase_timing,
         completion_observed_at=run.completion_observed_at,
     )
+    return (
+        retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id=run.execution_id,
+            results_summary=run.results_summary,
+            endpoint_provenance=endpoint_provenance,
+            phase_timing=phase_timing,
+            compile_artifact_id=run.compile_artifact_id,
+        ),
+        pipeline_source,
+    )
+
+
+def retain_measured_openhcs_completion(
+    *,
+    submission: OpenHCSExecutionSubmission,
+    execution_id: str,
+    results_summary: Mapping[str, Any],
+    endpoint_provenance: MeasuredEndpointProvenance,
+    phase_timing: PhaseTimingTrace,
+    compile_artifact_id: str | None,
+) -> _ZMQOpenHCSExecution:
+    """Validate and retain evidence after an ordinary execution completes."""
+
+    observation_export_path = ZMQAuxiliaryExecutionParams.from_transport(
+        submission.config_params
+    ).runtime_observation_export_path
+    if observation_export_path is None:
+        raise ValueError("Measured OpenHCS runs require runtime observation export.")
+    if not observation_export_path.is_absolute():
+        raise ValueError("Measured OpenHCS observation export path must be absolute.")
     if not observation_export_path.exists():
         raise ToolExecutionError(
             "OpenHCS ZMQ execution completed without writing runtime observation "
@@ -288,7 +327,7 @@ def execute_measured_openhcs_pipeline(
     except RuntimeError as exc:
         raise ToolExecutionError(str(exc)) from exc
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
-    results_summary = run.results_summary
+    pipeline_source = submission.pipeline_code()
     results_summary_path = observation_export_path.with_name(
         ZMQ_RESULTS_SUMMARY_FILENAME
     )
@@ -316,7 +355,7 @@ def execute_measured_openhcs_pipeline(
         plate_id=submission.plate_id,
         execution_plate_id=submission.execution_plate_id,
         selected_pipeline_path=submission.selected_pipeline_path,
-        execution_id=run.execution_id,
+        execution_id=execution_id,
         pipeline_source_sha256=hashlib.sha256(
             pipeline_source.encode("utf-8")
         ).hexdigest(),
@@ -329,17 +368,15 @@ def execute_measured_openhcs_pipeline(
         phase_timings=phase_timing.records,
         endpoint_provenance=endpoint_provenance,
         completed_at_epoch_seconds=time.time(),
+        compile_artifact_id=compile_artifact_id,
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
-    return (
-        _ZMQOpenHCSExecution(
-            execution_id=run.execution_id,
-            observation_export=observation_export,
-            observation=observation,
-            output_roots=output_roots,
-            results_summary=results_summary,
-            endpoint_provenance=endpoint_provenance,
-            receipt=receipt,
-        ),
-        pipeline_source,
+    return _ZMQOpenHCSExecution(
+        execution_id=execution_id,
+        observation_export=observation_export,
+        observation=observation,
+        output_roots=output_roots,
+        results_summary=results_summary,
+        endpoint_provenance=endpoint_provenance,
+        receipt=receipt,
     )

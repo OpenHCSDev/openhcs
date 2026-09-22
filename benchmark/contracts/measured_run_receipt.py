@@ -58,6 +58,7 @@ class MeasuredPipelineRunReceipt:
     phase_timings: tuple[PhaseTimingRecord, ...]
     endpoint_provenance: MeasuredEndpointProvenance
     completed_at_epoch_seconds: float
+    compile_artifact_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version != MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION:
@@ -78,6 +79,8 @@ class MeasuredPipelineRunReceipt:
                 )
         if self.completed_at_epoch_seconds <= 0:
             raise ValueError("Completion time must be a positive epoch timestamp.")
+        if self.compile_artifact_id == "":
+            raise ValueError("Compile artifact id cannot be empty when declared.")
 
     @classmethod
     def read(cls, path: Path) -> Self:

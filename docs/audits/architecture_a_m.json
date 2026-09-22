@@ -1883,7 +1883,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "f86ec7b5a140c89af783ea6f81a5f0121a58e9c49e5019e04fda0465723feee6",
+    "source_sha256": "3d4441e9874015e1b4710784a97ea2fc3d9d4d31518aa9e09410edfcd16c6abc",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -2083,17 +2083,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "5a504353bd9c1713fcd4a0a1d001df9a66ebcc2eec99a5bc94a9a1993ad8c33e",
+        "sha256": "19b019a1a76aaeae1ddd0567b1c012f101d8aaf99126ec1cac35d2e33743f83c",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "c7f29101836b778e15eb18043894858f391c164dcd545ad3306cf60822430aae",
+        "sha256": "892ffc5edf927b9837ada2d02b01420ac1e635f45e9d56c3c7be2bbfa77f994e",
         "role": "Implements read-only receipt, observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8ea6dbc1838730cc4f7b13b0f4d38aaabf45f6295bab32504c1196040ca12bd1",
+        "sha256": "85b114b7a1daf5b2bca8a386b9c2ca84a985d7bcd912487d7653f75a03c7e3ed",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2166,7 +2166,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "6daacb95b44ac02a5dcd9199028c6803c591b0b642cbb2bd22726da2ee85cb70",
+    "source_sha256": "2e836f957a5841aa3255ee820da779f7fce0876d3856050eab6eec154e7815c9",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2196,12 +2196,12 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "564b20faf6e101db930803e2464b3fd82671d44de3544dbb45413e018c6407db",
+        "sha256": "50ddd0277928b1ccc78ac280a3d8a052e1664170c2be2e48bdd6f6ba0775a89f",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "ba10cea2b54072ebbcfa5abef9c96464d956d37263c9a29df954ffcc91492579",
+        "sha256": "b55ca7df1e186aaaf3505bba3fcc1517d3aa25e28a7b83b47b199765bedcd7f0",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2226,12 +2226,12 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "d807ee5ed7b3dd564b324e3aa3c2aa4e80697bcca5b5a98dc70a8c0048c22300",
+        "sha256": "ff2f9cc2fb1de4d27070b03a60dc17f663cff47ceb56715579e236a8c00ea027",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "b0e7c7b04ca50831d04926e18311ad629d2a5f13660184314f3d083bb17592ba",
+        "sha256": "cba214dd86dca2bd0ba63c1666fa41d422d4399d13bca604c47b0cff7a2ab7c1",
         "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
       }
     ],
