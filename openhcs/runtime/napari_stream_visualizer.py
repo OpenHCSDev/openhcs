@@ -102,9 +102,7 @@ class NapariStreamVisualizer(ManagedViewerLifecycleMixin):
         try:
             response = ViewerControlMessageRequest(
                 endpoint=self.runtime_endpoint,
-                message_type=(
-                    OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
-                ),
+                message_type=(OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value),
             ).send()
             if not response.succeeded():
                 return False

@@ -355,11 +355,13 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             assert projection.address is None
             assert projection.execution_scope is not None
             assert projection.image_metadata is not None
-            assert projection.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            assert (
+                projection.image_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            )
             assert projection.image_metadata.source_provenance.source_plane_count == 2
 
-        # Exercise the real stream projection of the compiled writer outputs.
-        # Artifact storage axes are legitimately empty; source image planes are not.
+            # Exercise the real stream projection of the compiled writer outputs.
+            # Artifact storage axes are legitimately empty; source image planes are not.
             assert len(dense_outputs) == 18
         stream_kwargs = ViewerStreamBackendCallKwargs(
             ViewerStreamBackendKwargs(

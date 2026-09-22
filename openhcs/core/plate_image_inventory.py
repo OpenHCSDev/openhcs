@@ -1084,9 +1084,7 @@ class PlateFileInventory:
             return self.require_file_record(file_path, kinds=kinds)
         except PlateFileRecordAmbiguityError as exc:
             direct_stream_matches = tuple(
-                record
-                for record in exc.records
-                if record.streamable_path == file_path
+                record for record in exc.records if record.streamable_path == file_path
             )
             if len(direct_stream_matches) == 1:
                 return direct_stream_matches[0]

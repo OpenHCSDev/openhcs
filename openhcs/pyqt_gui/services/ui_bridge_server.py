@@ -565,9 +565,7 @@ class UiBridgeControlServer:
         if self._startup_error is not None:
             error = self._startup_error
             self.stop()
-            raise RuntimeError(
-                f"Failed to start UI bridge server: {error}"
-            ) from error
+            raise RuntimeError(f"Failed to start UI bridge server: {error}") from error
         return self.binding
 
     def stop(self) -> None:

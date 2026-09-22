@@ -823,7 +823,10 @@ class SourceArtifactProjection(SourceProjection):
     def identity_key(self) -> tuple[object, ...]:
         """Distinguish colocated source artifacts by their declared alias."""
 
-        identity = (*super(SourceArtifactProjection, self).identity_key, self.source_alias)
+        identity = (
+            *super(SourceArtifactProjection, self).identity_key,
+            self.source_alias,
+        )
         if self.address is not None:
             return identity
         return (*identity, self.execution_scope, self.ref)
@@ -853,7 +856,9 @@ class SourceArtifactProjection(SourceProjection):
             return None
         payload = to_jsonable(self.execution_scope)
         if not isinstance(payload, Mapping):
-            raise TypeError("Source artifact execution scope must serialize as a mapping.")
+            raise TypeError(
+                "Source artifact execution scope must serialize as a mapping."
+            )
         return payload
 
     @property

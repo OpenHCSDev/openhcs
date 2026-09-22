@@ -15337,7 +15337,9 @@ def test_declared_progress_helper_emits_heartbeats_while_work_runs(monkeypatch):
     assert len(context.progress) >= 3
 
 
-@pytest.mark.parametrize("error_type", [TimeoutError, ValueError, asyncio.CancelledError])
+@pytest.mark.parametrize(
+    "error_type", [TimeoutError, ValueError, asyncio.CancelledError]
+)
 @pytest.mark.parametrize("after_heartbeat", [False, True])
 def test_declared_progress_propagates_terminal_operation_errors(
     monkeypatch, error_type, after_heartbeat

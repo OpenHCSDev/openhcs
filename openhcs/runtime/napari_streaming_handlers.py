@@ -1108,6 +1108,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
                 f"order; got route {self.projection.projected_axis_components!r} "
                 f"within {self.display_axis_components!r}."
             )
+
     @property
     def display_axis_components(self) -> tuple[str, ...]:
         """Return the declaration-owned shared stack slots for this presentation."""
@@ -1189,10 +1190,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             )
         indices = dict(zip(projected_axes, projected, strict=True))
         indices.update(
-            {
-                component: 0
-                for component in self.projection.scalar_component_values
-            }
+            {component: 0 for component in self.projection.scalar_component_values}
         )
         return {
             component: indices[component]

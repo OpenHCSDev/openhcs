@@ -443,7 +443,7 @@ def test_topology_metrics_and_significant_threshold_is_scoring_only():
 
 def test_unrooted_crossing_arm_is_not_reported_as_a_branch():
     image = _with_separate_body_channel(_draw_fluorescent_neuron(crossing=True))
-    (_, summary_rows, cell_rows, _, neurite_labels, _, _, _, *_) = _implementation()(
+    _, summary_rows, cell_rows, _, neurite_labels, _, _, _, *_ = _implementation()(
         image,
         neurite_channel_index=1,
         cell_body=_cell_body_settings(channel_index=0),
@@ -1078,18 +1078,14 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     assert np.asarray(secondary_ownership).shape == (1, *image.shape[1:])
     assert np.asarray(topology_dropped_trace).shape == (1, *image.shape[1:])
     assert np.asarray(topology_added_trace).shape == (1, *image.shape[1:])
-    assert not np.any(
-        np.asarray(topology_dropped_trace)[0] & (cell_bodies[1] > 0)
-    )
+    assert not np.any(np.asarray(topology_dropped_trace)[0] & (cell_bodies[1] > 0))
     assert np.all(np.asarray(unrooted_residual) <= np.asarray(candidate_mask))
     assert not np.any(np.asarray(unrooted_residual)[0] & (cell_bodies[1] > 0))
     candidate_neurite = np.asarray(candidate_mask)[0].astype(bool) & (
         cell_bodies[1] == 0
     )
     residual = np.asarray(unrooted_residual)[0].astype(bool)
-    secondary_owned_residual = residual & (
-        np.asarray(secondary_ownership)[0] > 0
-    )
+    secondary_owned_residual = residual & (np.asarray(secondary_ownership)[0] > 0)
     assert summary["candidate_mask_pixels"] == np.count_nonzero(candidate_neurite)
     assert summary["rooted_candidate_mask_pixels"] == np.count_nonzero(
         candidate_neurite & (neurons[2] > 0)
@@ -1112,8 +1108,7 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
         == summary["candidate_trace_pixels"]
     )
     assert summary["rooted_candidate_trace_yield"] == pytest.approx(
-        summary["rooted_candidate_trace_pixels"]
-        / summary["candidate_trace_pixels"]
+        summary["rooted_candidate_trace_pixels"] / summary["candidate_trace_pixels"]
         if summary["candidate_trace_pixels"]
         else 0.0
     )
@@ -1122,21 +1117,24 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
         + summary["secondary_unowned_unrooted_trace_pixels"]
         == summary["unrooted_candidate_trace_pixels"]
     )
-    assert summary["initial_topology_owned_trace_pixels"] <= summary[
-        "secondary_adopted_trace_pixels"
-    ]
+    assert (
+        summary["initial_topology_owned_trace_pixels"]
+        <= summary["secondary_adopted_trace_pixels"]
+    )
     assert summary["published_owned_trace_pixels"] == np.count_nonzero(
         neurite_labels[2]
     )
-    assert summary["published_owned_trace_pixels"] >= summary[
-        "final_topology_owned_trace_pixels"
-    ]
+    assert (
+        summary["published_owned_trace_pixels"]
+        >= summary["final_topology_owned_trace_pixels"]
+    )
     assert summary["final_topology_dropped_trace_pixels"] == np.count_nonzero(
         np.asarray(topology_dropped_trace)
     )
-    assert summary[
-        "final_topology_dropped_crossing_support_trace_pixels"
-    ] <= summary["final_topology_dropped_trace_pixels"]
+    assert (
+        summary["final_topology_dropped_crossing_support_trace_pixels"]
+        <= summary["final_topology_dropped_trace_pixels"]
+    )
     assert (
         summary["final_topology_dropped_unrooted_path_trace_pixels"]
         + summary["final_topology_dropped_unrepresented_trace_pixels"]
@@ -1150,9 +1148,10 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     assert summary["final_topology_added_trace_pixels"] == np.count_nonzero(
         np.asarray(topology_added_trace)
     )
-    assert summary["final_topology_added_trace_pixels"] <= summary[
-        "crossing_core_trace_pixels"
-    ]
+    assert (
+        summary["final_topology_added_trace_pixels"]
+        <= summary["crossing_core_trace_pixels"]
+    )
 
 
 def test_expanded_ownership_preserves_response_repaired_trace_support():

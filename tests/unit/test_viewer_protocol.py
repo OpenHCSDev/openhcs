@@ -669,9 +669,9 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
 def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
     config = ViewerProcessLaunchConfig(qt_font_dpi=96)
 
-    assert ViewerProcessLaunchConfig.from_wire_mapping(
-        config.to_wire_mapping()
-    ) == config
+    assert (
+        ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
+    )
 
     with pytest.raises(KeyError):
         ViewerProcessLaunchConfig.from_wire_mapping({})

@@ -851,9 +851,7 @@ class StreamComponentMessageExtraAuthority:
         *,
         item_fields: Mapping[str, ViewerWireValue] | None = None,
     ) -> ViewerStreamSourceMetadata:
-        projector = StreamViewerComponentMetadataProjector(
-            self.layout.component_order
-        )
+        projector = StreamViewerComponentMetadataProjector(self.layout.component_order)
         if item_fields is not None:
             projector = StreamViewerComponentMetadataProjector.for_item_fields(
                 self.layout.component_order,

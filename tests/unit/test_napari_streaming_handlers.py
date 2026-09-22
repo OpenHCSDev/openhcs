@@ -323,9 +323,10 @@ def test_napari_viewer_state_projection_bounds_dense_coordinate_work():
     assert "nonzero_min_coordinate" not in summary
     assert "nonzero_max_coordinate" not in summary
     assert "nonzero_example_coordinates" not in summary
-    assert "exceeds bounded coordinate projection limit" in summary[
-        "nonzero_coordinate_omission_reason"
-    ]
+    assert (
+        "exceeds bounded coordinate projection limit"
+        in summary["nonzero_coordinate_omission_reason"]
+    )
 
 
 def test_napari_viewer_state_projection_reports_shape_spatial_evidence():
@@ -4324,9 +4325,7 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
     deleted_layer = object()
     server.layer_route_state.set_title(route_key, "Deleted channel 1")
     server.layer_route_state.set_layer(route_key, deleted_layer)
-    server.component_groups.items_for(route_key).append(
-        _layer_item({"channel": 1})
-    )
+    server.component_groups.items_for(route_key).append(_layer_item({"channel": 1}))
     server.component_values.update(
         route_key,
         ["channel"],

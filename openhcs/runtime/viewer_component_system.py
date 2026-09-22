@@ -958,9 +958,7 @@ class ViewerComponentValueDomain:
         self,
         layer_items: Sequence[ViewerComponentAddressedItem],
     ) -> None:
-        self.observed_values = {
-            component: set() for component in self.axis_components
-        }
+        self.observed_values = {component: set() for component in self.axis_components}
         for item in layer_items:
             components = item.address.components
             for component in self.axis_components:

@@ -632,9 +632,7 @@ def round_object_segmentation_stages(
         labeled,
         intensity_above_background,
     )
-    width_keep_mask = (
-        shape_statistics.minor_axis_lengths_px >= min_width_px
-    ) & (
+    width_keep_mask = (shape_statistics.minor_axis_lengths_px >= min_width_px) & (
         shape_statistics.minor_axis_lengths_px <= max_width_px
     )
     if width_keep_mask.size:
@@ -645,9 +643,7 @@ def round_object_segmentation_stages(
         peak_response,
         width_keep_mask,
         maximum_candidate_area=minimum_pair_area,
-        minimum_core_response=(
-            2.0 * settings.intensity_above_local_background
-        ),
+        minimum_core_response=(2.0 * settings.intensity_above_local_background),
         maximum_gap_px=seed_spacing,
     )
     return RoundObjectSegmentationStages(
@@ -804,9 +800,7 @@ def inspect_metaxpress_round_objects(
             ),
             core_support_threshold=float(core_support_threshold),
             weak_core_candidate=bool(weak_core_mask[label]),
-            rejected_as_adjacent_satellite=bool(
-                stages.adjacent_satellite_mask[label]
-            ),
+            rejected_as_adjacent_satellite=bool(stages.adjacent_satellite_mask[label]),
             major_axis_um=float(
                 stages.shape_statistics.major_axis_lengths_px[label] * pixel_size_um
             ),
@@ -873,8 +867,7 @@ def _adjacent_satellite_mask(
     offsets = np.arange(-maximum_gap_px, maximum_gap_px + 1)
     offset_rows, offset_columns = np.meshgrid(offsets, offsets, indexing="ij")
     neighborhood = (
-        np.square(offset_rows) + np.square(offset_columns)
-        <= maximum_gap_px**2
+        np.square(offset_rows) + np.square(offset_columns) <= maximum_gap_px**2
     )
     object_slices = ndi.find_objects(labeled)
     for candidate in candidates:
@@ -898,11 +891,7 @@ def _adjacent_satellite_mask(
             structure=neighborhood,
         )
         neighbor_labels = np.unique(
-            local_labels[
-                nearby
-                & (local_labels != 0)
-                & (local_labels != candidate)
-            ]
+            local_labels[nearby & (local_labels != 0) & (local_labels != candidate)]
         )
         if np.any(
             width_keep_mask[neighbor_labels]

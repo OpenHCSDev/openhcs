@@ -610,9 +610,7 @@ def test_round_object_diagnostics_preserve_kernel_output_and_rejection_identity(
         is weak_core
     )
     assert (
-        matched[
-            count_cells_simple_module.ROUND_OBJECT_ADJACENT_SATELLITE_OUTPUT.ref()
-        ]
+        matched[count_cells_simple_module.ROUND_OBJECT_ADJACENT_SATELLITE_OUTPUT.ref()]
         is adjacent_satellites
     )
     assert raw is image
@@ -641,9 +639,10 @@ def test_round_object_diagnostics_preserve_kernel_output_and_rejection_identity(
         expected_centroid = regionprops(support.astype(np.uint8))[0].centroid
         assert row["centroid_row_px"] == pytest.approx(expected_centroid[0])
         assert row["centroid_column_px"] == pytest.approx(expected_centroid[1])
-        assert row["peak_intensity_above_local_background"] >= row[
-            "mean_intensity_above_local_background"
-        ]
+        assert (
+            row["peak_intensity_above_local_background"]
+            >= row["mean_intensity_above_local_background"]
+        )
         assert row["core_support_threshold"] == 400.0
         assert row["weak_core_candidate"] == (
             bool(stages.width_keep_mask[row["object_label"]])

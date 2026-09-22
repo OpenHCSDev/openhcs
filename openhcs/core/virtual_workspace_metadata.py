@@ -408,10 +408,7 @@ class VirtualWorkspaceSourceProjectionEntries:
                 "virtual_workspace source_projection address must be a mapping or "
                 "null."
             )
-        if (
-            projection_role is SourceProjectionRole.PRIMARY_PLANE
-            and address is None
-        ):
+        if projection_role is SourceProjectionRole.PRIMARY_PLANE and address is None:
             raise RuntimeError(
                 "Primary source projections require a complete plane address."
             )

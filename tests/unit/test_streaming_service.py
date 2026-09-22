@@ -594,9 +594,7 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
         source_refs_by_virtual_path=MappingProxyType({path.name: projection.ref}),
         source_metadata_by_path=MappingProxyType({path.name: source_metadata}),
         workspace_root=str(tmp_path),
-        source_projections_by_virtual_path=MappingProxyType(
-            {path.name: projection}
-        ),
+        source_projections_by_virtual_path=MappingProxyType({path.name: projection}),
     )
     filemanager = AggregateFileManager()
     service = StreamingService(

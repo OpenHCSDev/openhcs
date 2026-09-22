@@ -47,21 +47,11 @@ class ImageQaMeasure(Enum):
     TOTAL_TRACE_PIXELS = "total trace pixels"
     ROOTED_TRACE_PIXELS = "root-connected trace pixels"
     UNROOTED_TRACE_PIXELS = "unrooted trace pixels"
-    INITIAL_TOPOLOGY_OWNED_TRACE_PIXELS = (
-        "initial-topology owned trace pixels"
-    )
-    SECONDARY_ADOPTED_TRACE_PIXELS = (
-        "trace pixels after secondary-owner adoption"
-    )
-    SIGNAL_REPAIRED_TRACE_PIXELS = (
-        "trace pixels after signal-supported soma repair"
-    )
-    CROSSING_CORE_TRACE_PIXELS = (
-        "shared crossing-core trace pixels"
-    )
-    FINAL_TOPOLOGY_DROPPED_TRACE_PIXELS = (
-        "owned trace pixels dropped by final topology"
-    )
+    INITIAL_TOPOLOGY_OWNED_TRACE_PIXELS = "initial-topology owned trace pixels"
+    SECONDARY_ADOPTED_TRACE_PIXELS = "trace pixels after secondary-owner adoption"
+    SIGNAL_REPAIRED_TRACE_PIXELS = "trace pixels after signal-supported soma repair"
+    CROSSING_CORE_TRACE_PIXELS = "shared crossing-core trace pixels"
+    FINAL_TOPOLOGY_DROPPED_TRACE_PIXELS = "owned trace pixels dropped by final topology"
     FINAL_TOPOLOGY_DROPPED_CROSSING_SUPPORT_TRACE_PIXELS = (
         "dropped crossing-support trace pixels"
     )
@@ -77,15 +67,9 @@ class ImageQaMeasure(Enum):
     FINAL_TOPOLOGY_DROPPED_UNREPRESENTED_TRACE_PIXELS = (
         "dropped trace pixels absent from final path graph"
     )
-    FINAL_TOPOLOGY_ADDED_TRACE_PIXELS = (
-        "final-topology added shared-core pixels"
-    )
-    FINAL_TOPOLOGY_OWNED_TRACE_PIXELS = (
-        "final-topology owned trace pixels"
-    )
-    PUBLISHED_OWNED_TRACE_PIXELS = (
-        "published single-owner trace pixels"
-    )
+    FINAL_TOPOLOGY_ADDED_TRACE_PIXELS = "final-topology added shared-core pixels"
+    FINAL_TOPOLOGY_OWNED_TRACE_PIXELS = "final-topology owned trace pixels"
+    PUBLISHED_OWNED_TRACE_PIXELS = "published single-owner trace pixels"
     OWNERSHIP_SUPPORTED_UNROOTED_TRACE_PIXELS = (
         "unrooted trace pixels inside a declared owner region"
     )

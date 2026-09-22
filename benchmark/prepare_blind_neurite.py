@@ -3,6 +3,7 @@
 The private receipt contains original identities/XML. Do not expose that receipt,
 this preparation context, or the source tree to the blinded pipeline author.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -99,20 +100,41 @@ class AbortedPreparationCleanup:
     files: tuple[DiscardedTaskFile, ...]
 
 
-IDENTITY_PROPERTIES = frozenset({
-    "plane-guid", "acquisition-time-local", "modification-time-local",
-    "stage-position-x", "stage-position-y", "z-position",
-    "ImageXpress Micro X", "ImageXpress Micro Y", "ImageXpress Micro Z",
-    "Instrument Serial Number",
-})
+IDENTITY_PROPERTIES = frozenset(
+    {
+        "plane-guid",
+        "acquisition-time-local",
+        "modification-time-local",
+        "stage-position-x",
+        "stage-position-y",
+        "z-position",
+        "ImageXpress Micro X",
+        "ImageXpress Micro Y",
+        "ImageXpress Micro Z",
+        "Instrument Serial Number",
+    }
+)
 IDENTITY_TOKENS = (
-    "F04", "analogs", "controls", "24098", "24099", "Tristan",
-    "09-027", "06-049", "09-037", "08-115", "09-079",
-    "FC-A", "EpoB", "DMSO", "Y27",
+    "F04",
+    "analogs",
+    "controls",
+    "24098",
+    "24099",
+    "Tristan",
+    "09-027",
+    "06-049",
+    "09-037",
+    "08-115",
+    "09-079",
+    "FC-A",
+    "EpoB",
+    "DMSO",
+    "Y27",
 )
 SOURCE_FILENAME = re.compile(r".+_([B-G](?:0[2-9]|1[01]))_s([1-9])_w([12])\.TIF")
-SOURCE_TAG_CODES = frozenset({254, 256, 257, 258, 259, 262, 270, 273,
-                              274, 277, 278, 279, 305, 306})
+SOURCE_TAG_CODES = frozenset(
+    {254, 256, 257, 258, 259, 262, 270, 273, 274, 277, 278, 279, 305, 306}
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -134,18 +156,27 @@ def assert_no_identity_leak(text: str) -> None:
         raise ValueError(f"Identity-bearing metadata survived: {found}")
 
 
-def sanitize_metadata(original_xml: str, coded_well: str, site: int,
-                      channel: Channel) -> SanitizedMetadata:
+def sanitize_metadata(
+    original_xml: str, coded_well: str, site: int, channel: Channel
+) -> SanitizedMetadata:
     root = ET.fromstring(original_xml)
-    props = {element.attrib["id"]: element for element in root.iter()
-             if "id" in element.attrib}
+    props = {
+        element.attrib["id"]: element
+        for element in root.iter()
+        if "id" in element.attrib
+    }
     if props["_IllumSetting_"].attrib["value"] != channel.illumination:
         raise ValueError("Filename channel differs from acquisition illumination")
     if props["spatial-calibration-state"].attrib["value"] != "on":
         raise ValueError("Spatial calibration disabled")
-    calibration = tuple(float(props[key].attrib["value"]) for key in
-                        ("spatial-calibration-x", "spatial-calibration-y"))
-    if calibration != (1.3556, 1.3556) or props["spatial-calibration-units"].attrib["value"] != "um":
+    calibration = tuple(
+        float(props[key].attrib["value"])
+        for key in ("spatial-calibration-x", "spatial-calibration-y")
+    )
+    if (
+        calibration != (1.3556, 1.3556)
+        or props["spatial-calibration-units"].attrib["value"] != "um"
+    ):
         raise ValueError("Unexpected calibration; refuse silent geometry changes")
     description = props["Description"].attrib["value"]
     prefix, separator, acquisition = description.partition("Exposure:")
@@ -173,39 +204,66 @@ def inventory_plate(root: Path) -> tuple[SourceImage, ...]:
         if match is None:
             raise ValueError(f"Unexpected raw filename: {path}")
         well, site, channel = match.groups()
-        images.append(SourceImage(path, well, int(site), Channel.from_number(int(channel))))
-    expected = {(f"{row}{column:02}", site, channel)
-                for row in "BCDEFG" for column in range(2, 12)
-                for site in range(1, 10) for channel in Channel}
+        images.append(
+            SourceImage(path, well, int(site), Channel.from_number(int(channel)))
+        )
+    expected = {
+        (f"{row}{column:02}", site, channel)
+        for row in "BCDEFG"
+        for column in range(2, 12)
+        for site in range(1, 10)
+        for channel in Channel
+    }
     actual = {(image.well, image.site, image.channel) for image in images}
     if len(images) != 1080 or actual != expected:
-        raise ValueError("Incomplete/duplicate acquisition; no missing field is filled with zero")
+        raise ValueError(
+            "Incomplete/duplicate acquisition; no missing field is filled with zero"
+        )
     return tuple(images)
 
 
-def stage_image(source: SourceImage, destination: Path, coded_well: str) -> PrivateImageReceipt:
+def stage_image(
+    source: SourceImage, destination: Path, coded_well: str
+) -> PrivateImageReceipt:
     original_hash = sha256_file(source.path)
     with tifffile.TiffFile(source.path) as tiff:
-        if len(tiff.pages) != 1 or {tag.code for tag in tiff.pages[0].tags.values()} != SOURCE_TAG_CODES:
+        if (
+            len(tiff.pages) != 1
+            or {tag.code for tag in tiff.pages[0].tags.values()} != SOURCE_TAG_CODES
+        ):
             raise ValueError("Unexpected TIFF page/tag schema")
         page = tiff.pages[0]
         pixels = page.asarray()
         if pixels.shape != (1024, 1024) or pixels.dtype != np.dtype("uint16"):
             raise ValueError("Unexpected raw image geometry")
-        source_props = {e.attrib["id"]: e.attrib["value"]
-                        for e in ET.fromstring(page.description).iter()
-                        if "id" in e.attrib}
+        source_props = {
+            e.attrib["id"]: e.attrib["value"]
+            for e in ET.fromstring(page.description).iter()
+            if "id" in e.attrib
+        }
         if source_props["stage-label"] != f"{source.well} : Site {source.site}":
             raise ValueError("Filename and acquisition field identity differ")
-        metadata = sanitize_metadata(page.description, coded_well, source.site, source.channel)
-        if page.photometric != tifffile.PHOTOMETRIC.MINISBLACK or int(page.tags[274].value) != 1:
+        metadata = sanitize_metadata(
+            page.description, coded_well, source.site, source.channel
+        )
+        if (
+            page.photometric != tifffile.PHOTOMETRIC.MINISBLACK
+            or int(page.tags[274].value) != 1
+        ):
             raise ValueError("Unexpected pixel display/orientation semantics")
         destination.parent.mkdir(parents=True, exist_ok=True)
-        tifffile.imwrite(destination, pixels, photometric="minisblack", metadata=None,
-                         description=metadata.xml, software=page.tags[305].value,
-                         byteorder=tiff.byteorder, rowsperstrip=page.rowsperstrip,
-                         subfiletype=int(page.tags[254].value),
-                         extratags=[(274, "H", 1, 1, False)])
+        tifffile.imwrite(
+            destination,
+            pixels,
+            photometric="minisblack",
+            metadata=None,
+            description=metadata.xml,
+            software=page.tags[305].value,
+            byteorder=tiff.byteorder,
+            rowsperstrip=page.rowsperstrip,
+            subfiletype=int(page.tags[254].value),
+            extratags=[(274, "H", 1, 1, False)],
+        )
     with tifffile.TiffFile(destination) as staged:
         copied = staged.asarray()
         if not np.array_equal(copied, pixels) or copied.dtype != pixels.dtype:
@@ -213,28 +271,53 @@ def stage_image(source: SourceImage, destination: Path, coded_well: str) -> Priv
         assert_no_identity_leak(staged.pages[0].description)
         if 306 in staged.pages[0].tags:
             raise ValueError("Original acquisition timestamp survived")
-        copied_props = {e.attrib["id"]: e.attrib["value"]
-                        for e in ET.fromstring(staged.pages[0].description).iter()
-                        if "id" in e.attrib}
-        if tuple(float(copied_props[k]) for k in ("spatial-calibration-x", "spatial-calibration-y")) != metadata.calibration_um:
+        copied_props = {
+            e.attrib["id"]: e.attrib["value"]
+            for e in ET.fromstring(staged.pages[0].description).iter()
+            if "id" in e.attrib
+        }
+        if (
+            tuple(
+                float(copied_props[k])
+                for k in ("spatial-calibration-x", "spatial-calibration-y")
+            )
+            != metadata.calibration_um
+        ):
             raise ValueError("Staged calibration differs")
     if sha256_file(source.path) != original_hash:
         raise ValueError("Original source changed while staging")
     # Neutral filesystem timestamps also avoid disclosing acquisition/write order.
     os.utime(destination, (1789430400, 1789430400))
-    return PrivateImageReceipt(str(source.path), source.well, source.site, source.channel,
-                               str(destination.name), original_hash, sha256_file(destination),
-                               pixel_sha256(pixels), pixels.shape, str(pixels.dtype),
-                               metadata.original_xml, metadata.removed_property_ids,
-                               metadata.calibration_um)
+    return PrivateImageReceipt(
+        str(source.path),
+        source.well,
+        source.site,
+        source.channel,
+        str(destination.name),
+        original_hash,
+        sha256_file(destination),
+        pixel_sha256(pixels),
+        pixels.shape,
+        str(pixels.dtype),
+        metadata.original_xml,
+        metadata.removed_property_ids,
+        metadata.calibration_um,
+    )
 
 
-def prepare(source_root: Path, author_root: Path, private_root: Path) -> PrivatePreparationReceipt:
+def prepare(
+    source_root: Path, author_root: Path, private_root: Path
+) -> PrivatePreparationReceipt:
     if author_root.exists() or private_root.exists():
-        raise FileExistsError("Task roots must be new; never overwrite a staged corpus/key")
+        raise FileExistsError(
+            "Task roots must be new; never overwrite a staged corpus/key"
+        )
     if source_root.resolve() in (author_root.resolve(), private_root.resolve()):
         raise ValueError("Source and task roots must differ")
-    if author_root.resolve() in private_root.resolve().parents or private_root.resolve() in author_root.resolve().parents:
+    if (
+        author_root.resolve() in private_root.resolve().parents
+        or private_root.resolve() in author_root.resolve().parents
+    ):
         raise ValueError("Private evaluation and author roots must be disjoint")
     plates = tuple(sorted(path for path in source_root.iterdir() if path.is_dir()))
     if len(plates) != 2:
@@ -256,18 +339,39 @@ def prepare(source_root: Path, author_root: Path, private_root: Path) -> Private
         generator.shuffle(wells)
         well_codes = {well: f"A{number:02}" for number, well in enumerate(wells, 1)}
         # Create files in coded order, not the original physical-well order.
-        for source in sorted(inventories[plate], key=lambda image:
-                             (well_codes[image.well], image.site, image.channel.number)):
+        for source in sorted(
+            inventories[plate],
+            key=lambda image: (
+                well_codes[image.well],
+                image.site,
+                image.channel.number,
+            ),
+        ):
             coded_well = well_codes[source.well]
-            filename = f"{coded_well}_s{source.site:03}_w{source.channel.number}_z001_t001.tif"
+            filename = (
+                f"{coded_well}_s{source.site:03}_w{source.channel.number}_z001_t001.tif"
+            )
             destination = staging_root / plate_id / filename
             receipt = stage_image(source, destination, coded_well)
-            receipts.append(replace(receipt, coded_relative_path=f"{plate_id}/{filename}"))
-        print(f"Staged {plate_id}: 1080 images, 60 coded wells, 9 sites, 2 channels", flush=True)
+            receipts.append(
+                replace(receipt, coded_relative_path=f"{plate_id}/{filename}")
+            )
+        print(
+            f"Staged {plate_id}: 1080 images, 60 coded wells, 9 sites, 2 channels",
+            flush=True,
+        )
     receipt = PrivatePreparationReceipt(
-        1, seed, str(author_root),
-        ("Description identity/treatment prefix", "stage-label replaced with coded identity",
-         "TIFF DateTime omitted", *tuple(sorted(IDENTITY_PROPERTIES))), tuple(receipts))
+        1,
+        seed,
+        str(author_root),
+        (
+            "Description identity/treatment prefix",
+            "stage-label replaced with coded identity",
+            "TIFF DateTime omitted",
+            *tuple(sorted(IDENTITY_PROPERTIES)),
+        ),
+        tuple(receipts),
+    )
     private_manifest = private_root / "private_source_key.json"
     private_manifest.write_text(json.dumps(to_jsonable(receipt), indent=2) + "\n")
     private_manifest.chmod(0o600)
@@ -290,7 +394,9 @@ def prepare(source_root: Path, author_root: Path, private_root: Path) -> Private
     return receipt
 
 
-def cleanup_aborted_identity_order(author_root: Path, private_root: Path) -> AbortedPreparationCleanup:
+def cleanup_aborted_identity_order(
+    author_root: Path, private_root: Path
+) -> AbortedPreparationCleanup:
     """Authorized cleanup of one exact, validated interrupted task-copy directory."""
     aborted = private_root.with_name("neurite-source-key-aborted-identity-order")
     if private_root.name != "neurite-source-key" or aborted.is_symlink():
@@ -299,7 +405,9 @@ def cleanup_aborted_identity_order(author_root: Path, private_root: Path) -> Abo
         raise ValueError("Final private receipt missing")
     if len(tuple(author_root.rglob("*.tif"))) != 2160:
         raise ValueError("Final author corpus incomplete")
-    if not aborted.is_dir() or tuple(aborted.iterdir()) != (aborted / "staging-residue",):
+    if not aborted.is_dir() or tuple(aborted.iterdir()) != (
+        aborted / "staging-residue",
+    ):
         raise ValueError("Unexpected aborted contents; refuse deletion")
     files: list[DiscardedTaskFile] = []
     for item in sorted(aborted.rglob("*")):
@@ -311,12 +419,18 @@ def cleanup_aborted_identity_order(author_root: Path, private_root: Path) -> Abo
             continue
         if item.suffix != ".tif" or item.parent.name not in {"P001", "P002"}:
             raise ValueError("Unexpected aborted non-TIFF file")
-        files.append(DiscardedTaskFile(str(item.relative_to(aborted)), item.stat().st_size,
-                                       sha256_file(item)))
-    receipt = AbortedPreparationCleanup(str(aborted.resolve()), len(files),
-                                        sum(file.bytes for file in files),
-                                        "Interrupted preparation was superseded by coded-order creation and neutral timestamps",
-                                        tuple(files))
+        files.append(
+            DiscardedTaskFile(
+                str(item.relative_to(aborted)), item.stat().st_size, sha256_file(item)
+            )
+        )
+    receipt = AbortedPreparationCleanup(
+        str(aborted.resolve()),
+        len(files),
+        sum(file.bytes for file in files),
+        "Interrupted preparation was superseded by coded-order creation and neutral timestamps",
+        tuple(files),
+    )
     receipt_path = private_root / "aborted_preparation_cleanup.json"
     receipt_path.write_text(json.dumps(to_jsonable(receipt), indent=2) + "\n")
     receipt_path.chmod(0o600)

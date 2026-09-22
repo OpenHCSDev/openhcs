@@ -897,7 +897,9 @@ class OpenHCSMetadataWriter:
                 )
             projection_paths = []
             for materialization in runtime_artifact_materializations(plan, context):
-                if not materialization.spec.participates_in_persistent_materialization():
+                if (
+                    not materialization.spec.participates_in_persistent_materialization()
+                ):
                     continue
                 for output in materialization.outputs(
                     plan,
@@ -919,8 +921,10 @@ class OpenHCSMetadataWriter:
                         destination=destination,
                         payload=payload,
                     )
-                    address = SourceArtifactProjection.scalar_address_for_image_metadata(
-                        metadata
+                    address = (
+                        SourceArtifactProjection.scalar_address_for_image_metadata(
+                            metadata
+                        )
                     )
                     source_metadata = metadata.source_component_metadata or {}
                     persisted_source_metadata = dict(source_metadata)
@@ -1012,9 +1016,9 @@ class OpenHCSMetadataWriter:
     ) -> None:
         """Write each populated metadata target after all axis outputs exist."""
 
-        target_contexts: dict[
-            OpenHCSMetadataWriter.OutputTarget, ProcessingContext
-        ] = {}
+        target_contexts: dict[OpenHCSMetadataWriter.OutputTarget, ProcessingContext] = (
+            {}
+        )
         for context in compiled_contexts.values():
             for plan in context.step_plans.values():
                 if not plan.create_openhcs_metadata:

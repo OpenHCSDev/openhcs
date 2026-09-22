@@ -524,9 +524,12 @@ def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> Non
         if context is not None:
             context.term()
 
-    assert original_binding.connection.transport_endpoint().occupied_ports(
-        transport_config
-    ) == frozenset()
+    assert (
+        original_binding.connection.transport_endpoint().occupied_ports(
+            transport_config
+        )
+        == frozenset()
+    )
 
 
 def test_ui_bridge_startup_lock_timeout_precedes_worker_readiness_wait(

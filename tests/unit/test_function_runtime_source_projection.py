@@ -5193,7 +5193,8 @@ def test_input_aligned_stack_output_uses_input_filename_identity(
 
 @pytest.mark.parametrize("retains_contributors", [False, True])
 def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
-    tmp_path: Path, retains_contributors: bool,
+    tmp_path: Path,
+    retains_contributors: bool,
 ) -> None:
     payload = ImagePayloadMetadata(
         source_path="/source/A01_s001_w1_z001_t001.tif",

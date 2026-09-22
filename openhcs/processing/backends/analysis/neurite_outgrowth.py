@@ -980,13 +980,8 @@ def neurite_outgrowth_metaxpress(
         & (neurite_skeleton == 0)
         & ~crossing_core_mask
     )
-    topology_added_trace = (
-        (neurite_skeleton > 0)
-        & (pre_topology_owner_skeleton == 0)
-    )
-    final_topology_owned_trace_pixels = int(
-        np.count_nonzero(neurite_skeleton)
-    )
+    topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
+    final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
     # A physical crossing core supports two logical paths, but an object-label
     # raster can store only one identity per pixel. The topology above remains
     # authoritative for both neurites; publish the already-resolved nearest
@@ -1025,9 +1020,7 @@ def neurite_outgrowth_metaxpress(
     )
     secondary_owned_unrooted_trace_pixels = int(
         np.count_nonzero(
-            candidate_trace_mask
-            & ~rooted_trace_mask
-            & (secondary_owner_regions > 0)
+            candidate_trace_mask & ~rooted_trace_mask & (secondary_owner_regions > 0)
         )
     )
     candidate_mask_pixels = int(np.count_nonzero(candidate_neurite_mask))
@@ -1035,9 +1028,7 @@ def neurite_outgrowth_metaxpress(
         np.count_nonzero(candidate_neurite_mask & rooted_mask)
     )
     unrooted_residual_pixels = int(np.count_nonzero(unrooted_residual))
-    secondary_owned_residual_pixels = int(
-        np.count_nonzero(secondary_owned_residual)
-    )
+    secondary_owned_residual_pixels = int(np.count_nonzero(secondary_owned_residual))
 
     cell_results = _build_cell_results(
         cell_body_labels,
@@ -1101,14 +1092,10 @@ def neurite_outgrowth_metaxpress(
         final_topology_dropped_unrepresented_trace_pixels=int(
             np.count_nonzero(topology_dropped_trace & ~topology_path_mask)
         ),
-        final_topology_added_trace_pixels=int(
-            np.count_nonzero(topology_added_trace)
-        ),
+        final_topology_added_trace_pixels=int(np.count_nonzero(topology_added_trace)),
         final_topology_owned_trace_pixels=final_topology_owned_trace_pixels,
         published_owned_trace_pixels=int(np.count_nonzero(rooted_trace_mask)),
-        secondary_owned_unrooted_trace_pixels=(
-            secondary_owned_unrooted_trace_pixels
-        ),
+        secondary_owned_unrooted_trace_pixels=(secondary_owned_unrooted_trace_pixels),
         secondary_unowned_unrooted_trace_pixels=(
             candidate_trace_pixels
             - rooted_candidate_trace_pixels
@@ -1659,9 +1646,9 @@ def _derive_signal_cell_bodies(
         nearest_seed = local_seeds[tuple(nearest_seed_coordinates)]
         local_body_foreground = body_foreground[owner_slice]
         rows, columns = np.ogrid[: seed.shape[0], : seed.shape[1]]
-        distance_from_centroid_squared = (
-            (rows - seed_center[0]) ** 2 + (columns - seed_center[1]) ** 2
-        )
+        distance_from_centroid_squared = (rows - seed_center[0]) ** 2 + (
+            columns - seed_center[1]
+        ) ** 2
         candidate = (
             (nearest_seed == owner)
             & (distance_from_centroid_squared <= maximum_radius_px**2)
@@ -2109,9 +2096,7 @@ def _analyze_topology(
     crossing_branch_owners: dict[int, set[int]] = defaultdict(set)
     for node, (crossing_pairs, _) in crossing_clusters.items():
         endpoints_by_owner: dict[int, list[tuple[int, int]]] = defaultdict(list)
-        for endpoint in (
-            endpoint for pair in crossing_pairs for endpoint in pair
-        ):
+        for endpoint in (endpoint for pair in crossing_pairs for endpoint in pair):
             owner = int(path_owners[endpoint[0]])
             if owner > 0:
                 endpoints_by_owner[owner].append(endpoint)
@@ -2237,9 +2222,7 @@ def _analyze_owned_topology(
     owned = np.asarray(owner_skeleton, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
     if owned.shape != bodies.shape:
-        raise ValueError(
-            "owner_skeleton and cell_body_labels must have the same shape"
-        )
+        raise ValueError("owner_skeleton and cell_body_labels must have the same shape")
     crossing_mask = (
         np.zeros(owned.shape, dtype=bool)
         if shared_crossing_mask is None
@@ -2263,10 +2246,13 @@ def _analyze_owned_topology(
     shared_crossings_by_owner: dict[int, set[int]] = defaultdict(set)
     for component in range(1, crossing_component_count + 1):
         component_mask = crossing_components == component
-        adjacent = ndi.binary_dilation(
-            component_mask,
-            structure=connectivity,
-        ) & ~component_mask
+        adjacent = (
+            ndi.binary_dilation(
+                component_mask,
+                structure=connectivity,
+            )
+            & ~component_mask
+        )
         for owner in np.unique(owned[adjacent]):
             if owner > 0:
                 shared_crossings_by_owner[int(owner)].add(component)
@@ -2342,8 +2328,7 @@ def _analyze_owned_topology(
 
         local_group_ids = set(local.endpoint_group_coordinates)
         group_mapping = {
-            group_id: group_id + endpoint_group_offset
-            for group_id in local_group_ids
+            group_id: group_id + endpoint_group_offset for group_id in local_group_ids
         }
         path_endpoint_groups.extend(
             tuple(group_mapping[group_id] for group_id in groups)
@@ -2360,22 +2345,17 @@ def _analyze_owned_topology(
         )
         transitions.update(
             {
-                path_index + path_offset: tuple(
-                    neighbor + path_offset for neighbor in neighbors
-                )
+                path_index
+                + path_offset: tuple(neighbor + path_offset for neighbor in neighbors)
                 for path_index, neighbors in local.transitions.items()
             }
         )
         for cell, roots in local.root_paths_by_cell.items():
-            root_paths_by_cell[int(cell)] = tuple(
-                root + path_offset for root in roots
-            )
+            root_paths_by_cell[int(cell)] = tuple(root + path_offset for root in roots)
 
         local_node_ids = set(local.crossing_nodes)
         local_node_ids.update(
-            node
-            for nodes in local.branch_nodes_by_cell.values()
-            for node in nodes
+            node for nodes in local.branch_nodes_by_cell.values() for node in nodes
         )
         branch_nodes_by_cell.update(
             {
@@ -2963,9 +2943,7 @@ def _physically_soma_rooted_owner_mask(
     owned = np.asarray(owner_skeleton, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
     if owned.shape != bodies.shape:
-        raise ValueError(
-            "owner_skeleton and cell_body_labels must have the same shape"
-        )
+        raise ValueError("owner_skeleton and cell_body_labels must have the same shape")
     if maximum_root_distance < 0:
         raise ValueError("maximum_root_distance must be >= 0")
 
@@ -3069,10 +3047,13 @@ def _count_multi_owner_crossings(
     resolved = 0
     for component in range(1, component_count + 1):
         component_mask = components == component
-        adjacent = ndi.binary_dilation(
-            component_mask,
-            structure=connectivity,
-        ) & ~component_mask
+        adjacent = (
+            ndi.binary_dilation(
+                component_mask,
+                structure=connectivity,
+            )
+            & ~component_mask
+        )
         adjacent_owners = np.unique(owners[adjacent])
         if np.count_nonzero(adjacent_owners > 0) >= 2:
             resolved += 1
@@ -3297,9 +3278,7 @@ def _build_summary(
         final_topology_added_trace_pixels=final_topology_added_trace_pixels,
         final_topology_owned_trace_pixels=final_topology_owned_trace_pixels,
         published_owned_trace_pixels=published_owned_trace_pixels,
-        secondary_owned_unrooted_trace_pixels=(
-            secondary_owned_unrooted_trace_pixels
-        ),
+        secondary_owned_unrooted_trace_pixels=(secondary_owned_unrooted_trace_pixels),
         secondary_unowned_unrooted_trace_pixels=(
             secondary_unowned_unrooted_trace_pixels
         ),
