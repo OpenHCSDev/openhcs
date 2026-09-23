@@ -224,6 +224,10 @@ def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:
         execution_id="execution-1",
         pipeline_source_sha256=hashlib.sha256(pipeline_source).hexdigest(),
         global_config_source_sha256=hashlib.sha256(config_source).hexdigest(),
+        observation_export_sha256=hashlib.sha256(
+            observation_path.read_bytes()
+        ).hexdigest(),
+        results_summary_sha256=hashlib.sha256(summary_path.read_bytes()).hexdigest(),
         observation_export_path=observation_path,
         results_summary_path=summary_path,
         output_roots=(output_dir / "outputs",),
@@ -394,6 +398,8 @@ def test_measured_inspection_cli_and_report_share_one_receipt(
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.observation_present is True
     assert inspection.results_summary_present is True
+    assert inspection.observation_integrity_verified is True
+    assert inspection.results_summary_integrity_verified is True
     assert inspection.warnings == ()
     assert "EXECUTE_OPENHCS: 0.250000 s" in report.markdown
 
@@ -483,6 +489,54 @@ def test_measured_inspection_rejects_tampered_and_escaped_evidence(
     assert inspection.source_evidence[0].valid is False
     assert any("digest differs" in warning for warning in inspection.warnings)
     assert any("escapes the run" in warning for warning in inspection.warnings)
+
+
+def test_measured_inspection_detects_tampered_runtime_and_summary(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "measured"
+    _measured_run_receipt(output_dir)
+    (output_dir / "observation.pkl").write_bytes(b"changed runtime observation")
+    MeasuredPipelineRunArtifact.RESULTS_SUMMARY.path_in(output_dir).write_text(
+        '{"changed": true}', encoding="utf-8"
+    )
+
+    inspection = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
+    ).inspect_measured_run(
+        MeasuredPipelineRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert inspection.observation_present is True
+    assert inspection.results_summary_present is True
+    assert inspection.observation_integrity_verified is False
+    assert inspection.results_summary_integrity_verified is False
+    assert "Declared runtime observation digest differs." in inspection.warnings
+    assert "Declared execution summary digest differs." in inspection.warnings
+
+
+def test_measured_inspection_reads_archived_receipt_without_claiming_integrity(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "measured"
+    _measured_run_receipt(output_dir)
+    path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["schema_version"] = "openhcs.benchmark.measured-pipeline.v1"
+    payload.pop("observation_export_sha256")
+    payload.pop("results_summary_sha256")
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    inspection = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
+    ).inspect_measured_run(
+        MeasuredPipelineRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert inspection.receipt is not None
+    assert inspection.observation_integrity_verified is False
+    assert inspection.results_summary_integrity_verified is False
+    assert any("integrity is unverified" in item for item in inspection.warnings)
 
 
 def test_measured_receipt_reads_older_optional_compile_identity(

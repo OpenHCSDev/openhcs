@@ -22,7 +22,10 @@ from benchmark.contracts.control import (
     MeasuredPipelineRunReport,
     MeasuredSourceEvidence,
 )
-from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from benchmark.contracts.measured_run_receipt import (
+    MeasuredPipelineRunReceipt,
+    retained_artifact_sha256,
+)
 from benchmark.contracts.run_artifacts import (
     ComparisonRunArtifact,
     MeasuredPipelineRunArtifact,
@@ -31,7 +34,7 @@ from benchmark.contracts.run_artifacts import (
 from benchmark.contracts.run_receipt import ComparisonSuiteRunReceipt
 
 BENCHMARK_CONTROL_SCHEMA_VERSION = "openhcs.benchmark.control.v1"
-MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v1"
+MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v2"
 MAX_MEASURED_RECEIPT_BYTES = 1_000_000
 MAX_COMPARISON_RECEIPT_BYTES = 1_000_000
 MAX_SOURCE_SNAPSHOT_BYTES = 2_000_000
@@ -99,6 +102,31 @@ def _contained_file(root: Path, candidate: Path) -> Path | None:
         return None
 
 
+def _verify_retained_digest(
+    file: Path | None,
+    expected: str | None,
+    label: str,
+    warnings: list[str],
+) -> bool:
+    """Verify a receipt-declared artifact without promoting a legacy receipt."""
+
+    if file is None:
+        return False
+    if expected is None:
+        warnings.append(
+            f"Archived receipt has no {label} digest; integrity is unverified."
+        )
+        return False
+    try:
+        verified = retained_artifact_sha256(file) == expected
+    except OSError as exc:
+        warnings.append(f"Declared {label} could not be hashed: {exc}")
+        return False
+    if not verified:
+        warnings.append(f"Declared {label} digest differs.")
+    return verified
+
+
 def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspection:
     """Inspect one completed pipeline run without loading its pickle observation."""
 
@@ -139,6 +167,8 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
     source_evidence: list[MeasuredSourceEvidence] = []
     observation_present = False
     results_summary_present = False
+    observation_integrity_verified = False
+    results_summary_integrity_verified = False
     if receipt is not None:
         for artifact, expected in (
             (
@@ -176,18 +206,28 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
                     valid=actual == expected,
                 )
             )
-        observation_present = (
-            _contained_file(root, receipt.observation_export_path) is not None
-        )
-        results_summary_present = (
-            _contained_file(root, receipt.results_summary_path) is not None
-        )
+        observation_file = _contained_file(root, receipt.observation_export_path)
+        summary_file = _contained_file(root, receipt.results_summary_path)
+        observation_present = observation_file is not None
+        results_summary_present = summary_file is not None
         if not observation_present:
             warnings.append(
                 "Declared runtime observation is absent or escapes the run."
             )
         if not results_summary_present:
             warnings.append("Declared execution summary is absent or escapes the run.")
+        observation_integrity_verified = _verify_retained_digest(
+            observation_file,
+            receipt.observation_export_sha256,
+            "runtime observation",
+            warnings,
+        )
+        results_summary_integrity_verified = _verify_retained_digest(
+            summary_file,
+            receipt.results_summary_sha256,
+            "execution summary",
+            warnings,
+        )
 
     return MeasuredPipelineRunInspection(
         schema_version=MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION,
@@ -197,6 +237,8 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
         source_evidence=tuple(source_evidence),
         observation_present=observation_present,
         results_summary_present=results_summary_present,
+        observation_integrity_verified=observation_integrity_verified,
+        results_summary_integrity_verified=results_summary_integrity_verified,
         warnings=tuple(warnings),
     )
 
@@ -227,6 +269,8 @@ def report_measured_pipeline_run(
                     else ""
                 ),
                 f"- Runtime observation retained: {inspection.observation_present}",
+                f"- Runtime observation digest verified: {inspection.observation_integrity_verified}",
+                f"- Execution summary digest verified: {inspection.results_summary_integrity_verified}",
                 f"- Source snapshots verified: {sum(item.valid for item in inspection.source_evidence)}/{len(inspection.source_evidence)}",
                 "",
                 "## Measured phases",

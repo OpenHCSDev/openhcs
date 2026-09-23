@@ -22,6 +22,7 @@ from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
     MeasuredEndpointProvenance,
     MeasuredPipelineRunReceipt,
+    retained_artifact_sha256,
 )
 from benchmark.contracts.run_artifacts import (
     MeasuredPipelineRunArtifact,
@@ -485,6 +486,8 @@ def retain_measured_openhcs_completion(
         observation_export_scope=auxiliary_params.runtime_observation_export_scope,
         expected_axis_count=expected_axis_count,
         observed_axis_count=observation_export.axis_count,
+        observation_export_sha256=retained_artifact_sha256(observation_export_path),
+        results_summary_sha256=retained_artifact_sha256(results_summary_path),
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
     return _ZMQOpenHCSExecution(

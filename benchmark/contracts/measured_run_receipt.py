@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections.abc import Mapping
@@ -17,8 +18,21 @@ from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 from openhcs.serialization.json import to_jsonable
 
-MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v1"
+MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v2"
+_ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = (
+    "openhcs.benchmark.measured-pipeline.v1"
+)
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}\Z")
+
+
+def retained_artifact_sha256(path: Path) -> str:
+    """Hash retained evidence without loading a possibly large export into memory."""
+
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,9 +82,14 @@ class MeasuredPipelineRunReceipt:
     )
     expected_axis_count: int | None = None
     observed_axis_count: int | None = None
+    observation_export_sha256: str | None = None
+    results_summary_sha256: str | None = None
 
     def __post_init__(self) -> None:
-        if self.schema_version != MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION:
+        if self.schema_version not in (
+            _ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
+            MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
+        ):
             raise ValueError(
                 f"Unsupported measured pipeline receipt schema: {self.schema_version!r}."
             )
@@ -86,6 +105,21 @@ class MeasuredPipelineRunReceipt:
                 raise ValueError(
                     "Measured pipeline source digests must be SHA-256 hex."
                 )
+        retained_digests = (
+            self.observation_export_sha256,
+            self.results_summary_sha256,
+        )
+        if self.schema_version == MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION and any(
+            digest is None for digest in retained_digests
+        ):
+            raise ValueError(
+                "Current measured receipts require retained-artifact digests."
+            )
+        if any(
+            digest is not None and _SHA256_HEX.fullmatch(digest) is None
+            for digest in retained_digests
+        ):
+            raise ValueError("Measured retained-artifact digests must be SHA-256 hex.")
         if self.completed_at_epoch_seconds <= 0:
             raise ValueError("Completion time must be a positive epoch timestamp.")
         if self.compile_artifact_id == "":

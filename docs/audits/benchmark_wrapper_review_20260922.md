@@ -38,3 +38,14 @@ claims remote worker environment identity. Version-5 observations remain
 readable with an absent server snapshot. This is a targeted authority review,
 not a claim that worker environments were measured or that comparative timing
 is publishable.
+
+## Retained-evidence integrity delta
+
+Measured-run receipt v2 records SHA-256 digests for the runtime observation
+export and execution summary as well as the submitted source snapshots. The
+shared CLI/MCP inspection streams the retained export when checking its digest
+and reports each result separately; mere file presence is not an integrity
+claim. Archived v1 receipts remain readable, but inspection explicitly marks
+those two artifacts unverified because v1 did not record their digests. The
+receipt still does not certify the image or table files under its output roots;
+their value and output-policy checks belong to the comparison evidence.

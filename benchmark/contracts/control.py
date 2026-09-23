@@ -150,6 +150,8 @@ class MeasuredPipelineRunInspection:
     source_evidence: tuple[MeasuredSourceEvidence, ...]
     observation_present: bool
     results_summary_present: bool
+    observation_integrity_verified: bool
+    results_summary_integrity_verified: bool
     warnings: tuple[str, ...]
 
 
