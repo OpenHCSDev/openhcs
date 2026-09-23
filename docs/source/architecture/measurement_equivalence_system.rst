@@ -104,8 +104,10 @@ the normal compile-then-execute path. It requests either full runtime values or
 outcome-only evidence through the ordinary auxiliary execution declaration,
 validates the selected export and any declared axis count, and records phase
 timing and provenance. Outcome-only evidence proves per-axis completion but
-cannot support value-equivalence claims. A typed completed-run receipt derives execution identity,
-source/configuration digests, and output references from those same authorities;
+cannot support value-equivalence claims.
+
+A typed completed-run receipt derives execution identity, source/configuration
+digests, and output references from those same authorities;
 it does not become a second job-status store. The ordinary server's runtime
 observation supplies its Python and installed-distribution snapshot to the
 receipt; that is server provenance, not proof of a remote worker environment.

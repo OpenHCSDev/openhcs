@@ -73,11 +73,20 @@ def test_native_run_request_decodes_legacy_params_once(tmp_path: Path) -> None:
     assert request.image_set_reference_slug() == "image_sets_first2_last4"
     assert not hasattr(request, "pipeline_params")
 
-    with pytest.raises(ValueError, match="must be positive"):
+    with pytest.raises(ValueError, match="finite and positive"):
         CellProfilerRunRequest.from_pipeline_params(
             dataset_path=tmp_path,
             pipeline_name="pipeline",
             pipeline_params={"cellprofiler_timeout_seconds": 0},
+            metrics=(),
+            output_dir=tmp_path / "output",
+            global_config=GlobalPipelineConfig(),
+        )
+    with pytest.raises(ValueError, match="finite and positive"):
+        CellProfilerRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"cellprofiler_timeout_seconds": float("nan")},
             metrics=(),
             output_dir=tmp_path / "output",
             global_config=GlobalPipelineConfig(),

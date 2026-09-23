@@ -2169,7 +2169,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "6f95b36066850c61820ff99e4f68210f230cbf4ab9eba2e253d3936868629d0f",
+    "source_sha256": "9c5e6a2a74d5caefd195679936108317e591fd7ecf623e236115be5a59fa750e",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2194,7 +2194,7 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "8ad0878f8c274da14367510a10f0d887c52c9caced547aeb6748c651c4e18598",
+        "sha256": "2a9460a6632e75116612845e7826cf56f9a7e40a9bc9c4223f3a39769a15f424",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
@@ -2229,7 +2229,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "0483697c579e180d614052e1391c0f4439310c9137dbc4a3ccb73b19427ec4cd",
+        "sha256": "1001e42e59b4d629069d293c90b83d4ff55033a76d8d2613d8fc00d8bf450a62",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       },
       {
@@ -2251,7 +2251,8 @@
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed.",
       "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof.",
-      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Re-read this explanation against the OpenHCS adapter's strict Boolean and finite timeout decoding. These checks reject invalid benchmark requests before execution; they do not alter the equivalence policy or make outcome-only evidence comparable values. Forty-six affected adapter, comparison, and manifest tests passed."
     ]
   },
   {

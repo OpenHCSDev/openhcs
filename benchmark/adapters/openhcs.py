@@ -8,6 +8,7 @@ import logging
 import os
 import signal
 import threading
+from math import isfinite
 from collections.abc import Mapping, Sequence
 from contextlib import ExitStack, contextmanager
 from dataclasses import (
@@ -210,8 +211,11 @@ class OpenHCSRunRequest:
     metrics: tuple[MetricCollector, ...]
 
     def __post_init__(self) -> None:
-        if self.openhcs_timeout_seconds <= 0:
-            raise ValueError("openhcs_timeout_seconds must be positive.")
+        if (
+            not isfinite(self.openhcs_timeout_seconds)
+            or self.openhcs_timeout_seconds <= 0
+        ):
+            raise ValueError("openhcs_timeout_seconds must be finite and positive.")
 
     @property
     def dataset_id(self) -> str:
@@ -258,14 +262,14 @@ class OpenHCSRunRequest:
             equivalence_reference_output_dir=(
                 Path(reference_dir) if reference_dir is not None else None
             ),
-            compare_image_outputs=bool(
-                pipeline_params.get("compare_image_outputs", True)
+            compare_image_outputs=_boolean_pipeline_option(
+                pipeline_params, "compare_image_outputs", default=True
             ),
-            materialize_runtime_artifacts=bool(
-                pipeline_params.get("materialize_runtime_artifacts", True)
+            materialize_runtime_artifacts=_boolean_pipeline_option(
+                pipeline_params, "materialize_runtime_artifacts", default=True
             ),
-            raise_on_equivalence_failure=bool(
-                pipeline_params.get("raise_on_equivalence_failure", True)
+            raise_on_equivalence_failure=_boolean_pipeline_option(
+                pipeline_params, "raise_on_equivalence_failure", default=True
             ),
             openhcs_timeout_seconds=float(timeout),
             dump_compiled_plans=_truthy_debug_flag(dump_compiled_plans),
@@ -688,6 +692,16 @@ def _openhcs_execution_watchdog(
     finally:
         set_interval_timer(interval_timer, 0.0)
         signal.signal(alarm_signal, previous_handler)
+
+
+def _boolean_pipeline_option(
+    pipeline_params: Mapping[str, Any], name: str, *, default: bool
+) -> bool:
+    """Decode a legacy map flag without silently treating text as true."""
+    value = pipeline_params.get(name, default)
+    if type(value) is not bool:
+        raise TypeError(f"{name} must be a boolean, got {type(value).__name__}.")
+    return value
 
 
 def _truthy_debug_flag(value: object) -> bool:

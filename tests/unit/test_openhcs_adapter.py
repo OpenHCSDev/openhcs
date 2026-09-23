@@ -90,11 +90,27 @@ def test_openhcs_benchmark_request_decodes_legacy_options_once(tmp_path: Path) -
     assert request.openhcs_timeout_seconds == 45.0
     assert not hasattr(request, "pipeline_params")
 
-    with pytest.raises(ValueError, match="must be positive"):
+    with pytest.raises(ValueError, match="finite and positive"):
         OpenHCSRunRequest.from_pipeline_params(
             dataset_path=tmp_path,
             pipeline_name="pipeline",
             pipeline_params={"openhcs_timeout_seconds": 0},
+            metrics=(),
+            output_dir=tmp_path / "outputs",
+        )
+    with pytest.raises(ValueError, match="finite and positive"):
+        OpenHCSRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"openhcs_timeout_seconds": float("nan")},
+            metrics=(),
+            output_dir=tmp_path / "outputs",
+        )
+    with pytest.raises(TypeError, match="compare_image_outputs must be a boolean"):
+        OpenHCSRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"compare_image_outputs": "false"},
             metrics=(),
             output_dir=tmp_path / "outputs",
         )

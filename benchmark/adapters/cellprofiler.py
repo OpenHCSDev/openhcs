@@ -7,6 +7,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+from math import isfinite
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from dataclasses import dataclass
@@ -271,8 +272,12 @@ class CellProfilerRunRequest:
         resolved_dataset_path = Path(dataset_path)
         timeout = pipeline_params.get("cellprofiler_timeout_seconds")
         timeout_seconds = float(timeout) if timeout is not None else None
-        if timeout_seconds is not None and timeout_seconds <= 0:
-            raise ValueError("cellprofiler_timeout_seconds must be positive.")
+        if timeout_seconds is not None and (
+            not isfinite(timeout_seconds) or timeout_seconds <= 0
+        ):
+            raise ValueError(
+                "cellprofiler_timeout_seconds must be finite and positive."
+            )
         dataset_id = str(pipeline_params.get("dataset_id", resolved_dataset_path.name))
         return cls(
             dataset_path=resolved_dataset_path,
