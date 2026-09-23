@@ -425,6 +425,10 @@ def retain_measured_openhcs_completion(
             f"Expected {expected_axis_count} execution axes, observed "
             f"{observation_export.axis_count}; no success receipt was written."
         )
+    if observation_export.axis_count == 0:
+        raise ToolExecutionError(
+            "Measured execution has no completed axes; no success receipt was written."
+        )
     artifact_root = observation_export_path.parent
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
     pipeline_source = submission.pipeline_code()

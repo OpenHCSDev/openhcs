@@ -886,6 +886,9 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
             SimpleNamespace(
                 execution_id="job-1",
                 observation_export=ZMQRuntimeExecutionOutcomeExport.from_execution(
+                    compiled_axis_ids=(
+                        f"W{index:03d}" for index in range(1, well_count + 1)
+                    ),
                     execution_results={
                         f"W{index:03d}": ExecutionResult.success(f"W{index:03d}")
                         for index in range(1, well_count + 1)

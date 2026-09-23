@@ -31,6 +31,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
         ),
     }
     exported = ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01", "B01"),
         execution_results=execution_results,
         output_roots=(tmp_path / "output",),
         execution_id="execution-1",
@@ -61,6 +62,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
 
 def test_successful_outcome_export_accepts_all_axes(tmp_path: Path) -> None:
     exported = ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01",),
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(tmp_path,),
     )
@@ -68,10 +70,42 @@ def test_successful_outcome_export_accepts_all_axes(tmp_path: Path) -> None:
     exported.require_successful_axes()
 
 
+def test_outcome_export_rejects_missing_and_uncompiled_axes(tmp_path: Path) -> None:
+    missing = ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01", "B01"),
+        execution_results={"A01": ExecutionResult.success("A01")},
+        output_roots=(tmp_path,),
+    )
+    with pytest.raises(RuntimeError, match="compiled axes have no execution outcome"):
+        missing.require_successful_axes()
+
+    unexpected = ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01",),
+        execution_results={
+            "A01": ExecutionResult.success("A01"),
+            "B01": ExecutionResult.success("B01"),
+        },
+        output_roots=(tmp_path,),
+    )
+    with pytest.raises(RuntimeError, match="execution outcomes have no compiled axis"):
+        unexpected.require_successful_axes()
+
+
+def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
+    exported = ZMQRuntimeExecutionObservationExport.from_execution(
+        compiled_contexts={},
+        execution_results={"A01": ExecutionResult.success("A01")},
+        output_roots=(),
+    )
+    with pytest.raises(RuntimeError, match="execution outcomes have no compiled axis"):
+        exported.require_valid_observation()
+
+
 def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> None:
     outcome_path = tmp_path / "outcome-v1.pkl.gz"
     replace(
         ZMQRuntimeExecutionOutcomeExport.from_execution(
+            compiled_axis_ids=("A01",),
             execution_results={"A01": ExecutionResult.success("A01")},
             output_roots=(tmp_path,),
             execution_id="new-job",
@@ -80,6 +114,21 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
         execution_id=None,
     ).write(outcome_path)
     assert ZMQRuntimeExecutionOutcomeExport.read(outcome_path).execution_id is None
+
+    outcome_v2_path = tmp_path / "outcome-v2.pkl.gz"
+    replace(
+        ZMQRuntimeExecutionOutcomeExport.from_execution(
+            compiled_axis_ids=("A01",),
+            execution_results={"A01": ExecutionResult.success("A01")},
+            output_roots=(tmp_path,),
+            execution_id="old-job",
+        ),
+        schema_version=2,
+        compiled_axis_ids=None,
+    ).write(outcome_v2_path)
+    restored_v2 = ZMQRuntimeExecutionOutcomeExport.read(outcome_v2_path)
+    assert restored_v2.execution_id == "old-job"
+    assert restored_v2.compiled_axis_ids is None
 
     observation_path = tmp_path / "observation-v6.pkl.gz"
     replace(

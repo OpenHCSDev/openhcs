@@ -72,6 +72,9 @@ benchmark layer need not submit a second kind of job to collect that evidence.
 Both export scopes carry the producing server execution ID, and the ordinary
 export writer will not replace an existing file. The benchmark finaliser
 checks that ID against the completed ordinary job before retaining its receipt.
+The current value and outcome exports also compare execution-result membership
+with the compiled axis set; a successful subset cannot become a completed
+measurement merely because its reported axes succeeded.
 The server-owned observation also carries a startup snapshot of its Python
 interpreter and installed distribution versions. Benchmark receipts project
 that observation without treating the client environment as the server's.

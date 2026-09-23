@@ -92,8 +92,8 @@ class MeasuredPipelineRunReceipt:
             raise ValueError("Compile artifact id cannot be empty when declared.")
         if self.expected_axis_count is not None and self.expected_axis_count < 1:
             raise ValueError("Expected axis count must be positive when declared.")
-        if self.observed_axis_count is not None and self.observed_axis_count < 0:
-            raise ValueError("Observed axis count cannot be negative.")
+        if self.observed_axis_count is not None and self.observed_axis_count < 1:
+            raise ValueError("Observed axis count must be positive.")
         if (
             self.expected_axis_count is not None
             and self.observed_axis_count != self.expected_axis_count

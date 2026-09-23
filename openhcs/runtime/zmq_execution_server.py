@@ -766,6 +766,7 @@ class ZMQExecutionServer(ExecutionServer):
             is ZMQRuntimeObservationExportScope.OUTCOMES
         ):
             export = ZMQRuntimeExecutionOutcomeExport.from_execution(
+                compiled_axis_ids=execution_bundle.runtime_contexts,
                 execution_results=execution_results,
                 output_roots=output_roots,
                 server_environment=self._server_environment,

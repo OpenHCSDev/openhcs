@@ -2172,7 +2172,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "a41922add5436312982d3c4b6c0df375d1c783a763d34eeaee240d4722e82278",
+    "source_sha256": "fd044cc928eb0b10766ed9bc3f3de7e94674051866003fc022250e46eafa5ad7",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2202,7 +2202,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "8f581ecc4b421a79958b2b3c53699cfb19e4fe4b59dc27cafcc3d692513f64a5",
+        "sha256": "173cc4596a88ccba097b6604d9a869651a66d22ae6158ec57ceb9061202750d4",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
       },
       {
@@ -2222,12 +2222,12 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "487e9fba2c107c7aea869f362c62a88a813404e809cbe6e490c2552502ffd00f",
+        "sha256": "56ec4a0f103be7f9f20e6de5b44ed2ee99dd01f9ad8789a2bfc0bb3e51eda60e",
         "role": "Declares ordinary value and outcome exports, compiled axis-owned value expectations, producing execution identity, and exclusive evidence-file creation."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "f3ba1439d1ec9ebdf98b672a4fa2096195445cce1b4fd6a21bb000e2a3c8d308",
+        "sha256": "122b0bce92fa53bd4a6fb66c3a2b4eedbf5596d13a169bbc9b08e84c3a93fc57",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2257,7 +2257,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "a55fe8b74a89a9500529133f73a34e0430e336cc7942e314a84da6bf412a87b5",
+        "sha256": "321d8a508b0e55dbf4ed2deb86cba99000c6d0e6e63fac9cf2965b4133f836fa",
         "role": "Proves ordinary non-CellProfiler observation validation, execution-ID admission, pre-connect rejection, and distinct receipts for repeated measurements on one client."
       },
       {
@@ -2292,7 +2292,8 @@
       "2026-09-23: Re-read the complete explanation after value-export expectations began retaining compiled axis ownership. Added the plate-scoped owner distinction and archived-export interpretation; see docs/audits/runtime_axis_ownership_review_20260923.md. Thirty affected validation and adapter tests and a live two-well translocation run passed locally; the historical matched pilot remains unrerun.",
       "2026-09-23: Re-read the complete explanation against the reusable connected-client measured-run path. Added one architecture sentence separating warm-server reuse from a second execution engine. Ten focused unit tests and a live two-repetition ordinary ZMQ test passed locally; this does not yet validate matched CellProfiler timing or equivalence.",
       "2026-09-23: Rechecked the measured-run wrapper and its focused tests after progress timing changed to use the earliest axis start and latest completion independent of event arrival order. The explanation already distinguishes this diagnostic interval from authoritative completed-server time; no prose change was needed. This is a targeted authority-delta review, not a new suite-level publication claim.",
-      "2026-09-23: Re-read the complete explanation after comparison-run output admission gained an exclusive receipt. Retained the distinction between typed run metadata and durable publication evidence; see benchmark_report_and_run_claim_review_20260923.md."
+      "2026-09-23: Re-read the complete explanation after comparison-run output admission gained an exclusive receipt. Retained the distinction between typed run metadata and durable publication evidence; see benchmark_report_and_run_claim_review_20260923.md.",
+      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added the exact-membership and nonempty-execution boundary while retaining archived-export caveats; 84 focused unit tests and two live ordinary ZMQ integration tests passed locally. Exact-head CI remains separate."
     ]
   },
   {

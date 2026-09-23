@@ -105,6 +105,12 @@ outcome-only evidence through the ordinary auxiliary execution declaration,
 validates the selected export and any declared axis count, and records phase
 timing and provenance. Outcome-only evidence proves per-axis completion but
 cannot support value-equivalence claims.
+Current exports also retain the compiler's exact axis membership: a missing
+compiled axis or an outcome for an uncompiled axis invalidates the run even if
+every retained outcome reports success. The measured-run finaliser refuses an
+empty execution. Archived outcome-only exports that predate this membership
+field remain readable, but their observed axes alone cannot prove complete
+compiled coverage.
 Repeated measurements can share one connected ordinary execution server while
 each run compiles its own artifact and retains a distinct observation and
 receipt. The benchmark does not create a second execution path to keep that

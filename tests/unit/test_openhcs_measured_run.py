@@ -364,6 +364,7 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
             read=lambda path: SimpleNamespace(
                 output_roots=(tmp_path,),
                 execution_id="execution-1",
+                axis_count=1,
                 require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
             )
         ),
@@ -453,6 +454,7 @@ def test_partial_measured_evidence_requires_the_declared_artifact_set(
 def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> None:
     observation_path = tmp_path / "outcomes.pkl.gz"
     ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01",),
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(tmp_path / "output",),
         execution_id="execution-1",
@@ -504,6 +506,33 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
             expected_axis_count=2,
         )
     assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+
+    observation_path.unlink()
+    ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=(),
+        execution_results={},
+        output_roots=(tmp_path / "output",),
+        execution_id="execution-1",
+    ).write(observation_path)
+    with pytest.raises(ToolExecutionError, match="no completed axes"):
+        measured_run.retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id="execution-1",
+            results_summary={"well_count": 0},
+            endpoint_provenance=endpoint,
+            phase_timing=PhaseTimingTrace(
+                run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
+            ),
+            compile_artifact_id="compile-1",
+        )
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+    observation_path.unlink()
+    ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01",),
+        execution_results={"A01": ExecutionResult.success("A01")},
+        output_roots=(tmp_path / "output",),
+        execution_id="execution-1",
+    ).write(observation_path)
 
     completion = measured_run.retain_measured_openhcs_completion(
         submission=submission,
