@@ -20,8 +20,20 @@ from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 
-ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 7
+ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 8
 ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 2
+
+
+def _restore_legacy_axis_expectation(
+    expectation: RuntimeArtifactExecutionExpectation,
+) -> RuntimeArtifactExecutionExpectation:
+    """Rebuild archived expectations before compiled axis ownership existed."""
+
+    return RuntimeArtifactExecutionExpectation(
+        artifact_kinds=expectation.artifact_kinds,
+        exports=expectation.exports,
+        artifact_viewer=getattr(expectation, "artifact_viewer", ()),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,7 +197,7 @@ class ZMQRuntimeExecutionObservationExport:
             # Rebuild explicitly so archived ordinary observations stay readable.
             return cls(
                 schema_version=payload.schema_version,
-                expectation=payload.expectation,
+                expectation=_restore_legacy_axis_expectation(payload.expectation),
                 records_by_axis=payload.records_by_axis,
                 exports=payload.exports,
                 output_roots=payload.output_roots,
@@ -200,7 +212,7 @@ class ZMQRuntimeExecutionObservationExport:
             # Version 6 predates the execution identity slot.
             return cls(
                 schema_version=payload.schema_version,
-                expectation=payload.expectation,
+                expectation=_restore_legacy_axis_expectation(payload.expectation),
                 records_by_axis=payload.records_by_axis,
                 exports=payload.exports,
                 output_roots=payload.output_roots,
@@ -210,6 +222,22 @@ class ZMQRuntimeExecutionObservationExport:
                 ),
                 server_environment=payload.server_environment,
                 execution_id=None,
+            )
+        if payload.schema_version == 7:
+            # Version 7 predates compiled axis ownership expectations. Keep its
+            # all-axes validation semantics for archived observations.
+            return cls(
+                schema_version=payload.schema_version,
+                expectation=_restore_legacy_axis_expectation(payload.expectation),
+                records_by_axis=payload.records_by_axis,
+                exports=payload.exports,
+                output_roots=payload.output_roots,
+                execution_success_by_axis=payload.execution_success_by_axis,
+                source_image_set_identity_policy=(
+                    payload.source_image_set_identity_policy
+                ),
+                server_environment=payload.server_environment,
+                execution_id=payload.execution_id,
             )
         if payload.schema_version != ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION:
             raise ValueError(

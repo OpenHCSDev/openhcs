@@ -41,6 +41,7 @@ from openhcs.core.artifacts import (
     ObjectLineageArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
+    SpecialArtifactType,
     SpatialGridArtifactType,
 )
 from openhcs.core.config import (
@@ -89,6 +90,7 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionClient,
 )
 from openhcs.runtime.zmq_execution_observation import (
+    ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.demo.synthetic_data import (
@@ -1298,6 +1300,34 @@ def _execute_official_cellprofiler3_pipeline(
         well_filter=1,
         materialize_runtime_artifacts=materialize_runtime_artifacts,
     )
+
+
+def test_two_well_plate_export_observation_uses_compiled_owner(
+    tmp_path: Path,
+) -> None:
+    case = _official_cellprofiler3_case("cp_tutorial_translocation_final")
+    if not case.cppipe_path.is_file() or not case.dataset_path.is_dir():
+        pytest.skip("Official translocation inputs are not available locally.")
+
+    _, export = _execute_imported_cppipe_via_zmq(
+        tmp_path,
+        cppipe_path=case.cppipe_path,
+        source_root=case.dataset_path,
+        well_filter=("A01", "A12"),
+        materialize_runtime_artifacts=False,
+    )
+
+    assert export.axis_count == 2
+    assert export.schema_version == ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION
+    assert export.expectation.axis_expectations is not None
+    assert (
+        sum(
+            SpecialArtifactType in item.artifact_kinds
+            for item in export.expectation.axis_expectations
+        )
+        == 1
+    )
+    export.require_valid_observation()
 
 
 def _generate_plate(plate_path: Path) -> Path:

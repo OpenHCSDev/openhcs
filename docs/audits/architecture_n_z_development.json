@@ -1959,7 +1959,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "6606742566e153f97f306627b65d3f8afa4a097a2db532657253a338cdb2529a",
+        "sha256": "487e9fba2c107c7aea869f362c62a88a813404e809cbe6e490c2552502ffd00f",
         "role": "Owns the ordinary value/outcome export schemas, producing execution identity, and exclusive evidence-file creation."
       },
       {

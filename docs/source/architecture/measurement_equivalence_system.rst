@@ -106,6 +106,11 @@ validates the selected export and any declared axis count, and records phase
 timing and provenance. Outcome-only evidence proves per-axis completion but
 cannot support value-equivalence claims.
 
+Full-value observation expectations retain the compiled axis that owns each
+artifact kind. A plate-scoped export is checked on its one owning axis rather
+than required independently on every image axis. Archived observation exports
+keep their earlier all-axis expectation when read.
+
 A typed completed-run receipt derives execution identity, source/configuration
 digests, and output references from those same authorities;
 it does not become a second job-status store. The ordinary server's runtime

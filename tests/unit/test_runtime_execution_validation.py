@@ -45,7 +45,10 @@ from openhcs.core.runtime_execution_validation import (
     _runtime_artifact_viewer_output_payloads,
     runtime_artifact_execution_failures,
 )
-from openhcs.core.runtime_exports import RuntimeExportExpectation
+from openhcs.core.runtime_exports import (
+    RuntimeExportExpectation,
+    RuntimeExportObservation,
+)
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -129,6 +132,36 @@ def test_runtime_execution_validation_detects_missing_artifact_kind() -> None:
     )
 
     assert failures == (
+        "axis 'A01' produced no runtime records for declared artifact kind "
+        "'measurements'",
+    )
+
+
+def test_v7_observation_preserves_legacy_all_axis_expectation(tmp_path: Path) -> None:
+    expectation = RuntimeArtifactExecutionExpectation(
+        artifact_kinds=frozenset((MeasurementsArtifactType,)),
+        exports=RuntimeExportExpectation.from_output_specs(()),
+    )
+    del expectation.axis_expectations
+    archived = ZMQRuntimeExecutionObservationExport(
+        schema_version=7,
+        expectation=expectation,
+        records_by_axis={"A01": ()},
+        exports=RuntimeExportObservation.from_output_paths(()),
+        output_roots=(),
+        execution_success_by_axis={"A01": True},
+    )
+    path = tmp_path / "legacy_observation.pkl.gz"
+    with gzip.open(path, "wb") as handle:
+        pickle.dump(archived, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    restored = ZMQRuntimeExecutionObservationExport.read(path)
+
+    assert restored.schema_version == 7
+    assert restored.expectation.axis_expectations is None
+    assert runtime_artifact_execution_failures(
+        restored.expectation, restored.observation()
+    ) == (
         "axis 'A01' produced no runtime records for declared artifact kind "
         "'measurements'",
     )
@@ -490,9 +523,24 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
     )
 
     observation = RuntimeArtifactExecutionObservation.from_contexts(contexts)
+    expectation = RuntimeArtifactExecutionExpectation.from_compiled_contexts(contexts)
 
     assert observed_axes == ["A01"]
     assert observation.exports.table_outputs == (contracted_output,)
+    assert expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))
+    assert tuple(
+        (item.axis_id, item.artifact_kinds)
+        for item in expectation.axis_expectations or ()
+    ) == (
+        ("A01", frozenset((MeasurementsArtifactType,))),
+        ("A02", frozenset()),
+    )
+    assert runtime_artifact_execution_failures(expectation, observation) == (
+        "axis 'A01' produced no runtime records for declared artifact kind "
+        "'measurements'",
+        "produced no runtime record for materialized artifact "
+        "'PlateMeasurements' (measurements)",
+    )
 
 
 def test_zmq_observation_compresses_and_preserves_exact_runtime_records(

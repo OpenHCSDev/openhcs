@@ -2171,7 +2171,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "fa3b6e4ef6ae6183ef67f26c07c9f0eab5c94accbb901d0346febf814ef901ab",
+    "source_sha256": "38fd5d789c140ffea822d3fec83585f01ded5bb4497a1f2c816597d0230429e5",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2221,8 +2221,8 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "6606742566e153f97f306627b65d3f8afa4a097a2db532657253a338cdb2529a",
-        "role": "Declares ordinary value and outcome exports, their producing execution identity, and exclusive evidence-file creation."
+        "sha256": "487e9fba2c107c7aea869f362c62a88a813404e809cbe6e490c2552502ffd00f",
+        "role": "Declares ordinary value and outcome exports, compiled axis-owned value expectations, producing execution identity, and exclusive evidence-file creation."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
@@ -2287,7 +2287,8 @@
       "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed.",
       "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending.",
       "2026-09-23: Re-read the complete Diátaxis explanation after the adapter began preserving caller-declared path-planning policy while choosing its output location. This changes output retention selection, not runtime equivalence or job ownership; no prose change was needed. Nineteen affected adapter and converted-CellProfiler tests passed locally. The pilot's proposed no-extra-main-flow policy still needs live validation.",
-      "2026-09-23: Reviewed the nested-config authority delta: the adapter now preserves caller VFS and consolidation fields outside its declared benchmark overrides, as it already does for path planning. The explanation's ownership boundary remains accurate without a prose change. Unit coverage and three live ordinary/converted-pipeline checks passed; these fixtures do not validate the historical matched pilot."
+      "2026-09-23: Reviewed the nested-config authority delta: the adapter now preserves caller VFS and consolidation fields outside its declared benchmark overrides, as it already does for path planning. The explanation's ownership boundary remains accurate without a prose change. Unit coverage and three live ordinary/converted-pipeline checks passed; these fixtures do not validate the historical matched pilot.",
+      "2026-09-23: Re-read the complete explanation after value-export expectations began retaining compiled axis ownership. Added the plate-scoped owner distinction and archived-export interpretation; see docs/audits/runtime_axis_ownership_review_20260923.md. Thirty affected validation and adapter tests and a live two-well translocation run passed locally; the historical matched pilot remains unrerun."
     ]
   },
   {
