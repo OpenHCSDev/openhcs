@@ -11,11 +11,56 @@ from benchmark.matched_cellprofiler_batch import (
     _global_config,
     _native_python_executable,
     _output_inventory,
+    _parser,
+    _select_genuine_wells,
     _source_input_inventory,
     _worker_axis_evidence,
 )
 from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
 from openhcs.core.progress.types import ProgressEvent
+
+
+def test_pilot_parser_requires_one_sampling_declaration() -> None:
+    parser = _parser()
+    common = (
+        "--manifest",
+        "manifest.json",
+        "--case",
+        "advanced",
+        "--output-dir",
+        "output",
+        "--native-python",
+        "native-python",
+    )
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(common)
+    assert parser.parse_args((*common, "--well-count", "8")).well_count == 8
+    assert parser.parse_args(
+        (*common, "--well", "A01", "--well", "B12")
+    ).requested_wells == ["A01", "B12"]
+    with pytest.raises(SystemExit):
+        parser.parse_args((*common, "--well-count", "2", "--well", "A01"))
+
+
+def test_pilot_sampling_resolves_only_genuine_declared_wells() -> None:
+    available = {"A01", "A12", "B01", "B12"}
+
+    assert _select_genuine_wells(available, well_count=2, requested_wells=()) == (
+        "A01",
+        "A12",
+    )
+    assert _select_genuine_wells(
+        available, well_count=None, requested_wells=("B12", "A01")
+    ) == ("B12", "A01")
+    with pytest.raises(ValueError, match="unique"):
+        _select_genuine_wells(
+            available, well_count=None, requested_wells=("A01", "A01")
+        )
+    with pytest.raises(ValueError, match="absent"):
+        _select_genuine_wells(available, well_count=None, requested_wells=("C01",))
+    with pytest.raises(ValueError, match="lacks a declared well"):
+        _select_genuine_wells({"A01", None}, well_count=1, requested_wells=())
 
 
 def test_native_python_keeps_virtual_environment_symlink(tmp_path: Path) -> None:

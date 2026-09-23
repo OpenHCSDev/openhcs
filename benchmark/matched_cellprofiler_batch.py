@@ -87,13 +87,52 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--case", required=True)
-    parser.add_argument("--well-count", type=int, required=True)
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument(
+        "--well-count", type=int, help="Select the first N declared source wells."
+    )
+    selection.add_argument(
+        "--well",
+        dest="requested_wells",
+        action="append",
+        help="Select one declared source well; repeat for an explicit sample.",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--openhcs-workers", type=int, default=1)
     parser.add_argument("--native-jobs", type=int, default=1)
     parser.add_argument("--native-python", type=Path, required=True)
     return parser
+
+
+def _select_genuine_wells(
+    available_wells: set[str | None],
+    *,
+    well_count: int | None,
+    requested_wells: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Resolve one declared sampling choice against imported source metadata."""
+
+    if None in available_wells or "" in available_wells:
+        raise ValueError("Imported source metadata lacks a declared well identity.")
+    if requested_wells and well_count is not None:
+        raise ValueError("Select wells by count or by identity, not both.")
+    available = {well for well in available_wells if well is not None}
+    if requested_wells:
+        if len(set(requested_wells)) != len(requested_wells):
+            raise ValueError("Requested pilot wells must be unique.")
+        missing = set(requested_wells) - available
+        if missing:
+            raise ValueError(f"Requested pilot wells are absent: {sorted(missing)!r}.")
+        return requested_wells
+    if well_count is None or well_count < 1:
+        raise ValueError("Well count must be positive when selecting by count.")
+    wells = tuple(sorted(available)[:well_count])
+    if len(wells) != well_count:
+        raise ValueError(
+            f"Expected {well_count} genuine source wells, found {wells!r}."
+        )
+    return wells
 
 
 def _sha256(path: Path) -> str:
@@ -276,19 +315,11 @@ def _candidate_pipeline_config(
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    if (
-        args.repetitions < 1
-        or args.well_count < 1
-        or args.openhcs_workers < 1
-        or args.native_jobs < 1
-    ):
-        raise ValueError("Repetitions, well count and worker counts must be positive.")
-    if args.well_count % args.native_jobs or (
-        args.native_jobs > 1 and args.native_jobs != args.openhcs_workers
-    ):
+    if args.repetitions < 1 or args.openhcs_workers < 1 or args.native_jobs < 1:
+        raise ValueError("Repetitions and worker counts must be positive.")
+    if args.native_jobs > 1 and args.native_jobs != args.openhcs_workers:
         raise ValueError(
-            "Native jobs must partition the selected wells evenly and match the "
-            "OpenHCS worker count in a concurrency pilot."
+            "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
     root = args.output_dir.expanduser().resolve()
     if root.exists() and any(root.iterdir()):
@@ -320,12 +351,16 @@ def main(argv: list[str] | None = None) -> int:
         source_component_metadata_value(metadata, AllComponents.WELL)
         for metadata in prepared.materialization.source_metadata.values()
     }
-    if None in source_wells:
-        raise ValueError("Imported source metadata lacks a declared well identity.")
-    wells = tuple(sorted(source_wells)[: args.well_count])
-    if len(wells) != args.well_count:
+    wells = _select_genuine_wells(
+        source_wells,
+        well_count=args.well_count,
+        requested_wells=tuple(args.requested_wells or ()),
+    )
+    well_count = len(wells)
+    if well_count % args.native_jobs:
         raise ValueError(
-            f"Expected {args.well_count} genuine source wells, found {wells!r}."
+            "Native jobs must partition the selected wells evenly in a "
+            "concurrency pilot."
         )
     provenance = {
         "case": case.name,
@@ -597,7 +632,7 @@ def main(argv: list[str] | None = None) -> int:
                     tool="OpenHCS",
                 ),
                 timing_observer=timing_observer,
-                expected_axis_count=args.well_count,
+                expected_axis_count=well_count,
                 require_owned_server=True,
             )
             status = ExecutionStatusSnapshot.from_dict(
@@ -616,14 +651,14 @@ def main(argv: list[str] | None = None) -> int:
             worker_evidence = _worker_axis_evidence(
                 tuple(axis_events),
                 execution_id=completed.execution_id,
-                expected_axes=args.well_count,
+                expected_axes=well_count,
                 expected_workers=args.openhcs_workers,
             )
             _write_progress_diagnostics(
                 evidence_dir,
                 case_name=case.name,
                 worker_count=args.openhcs_workers,
-                well_count=args.well_count,
+                well_count=well_count,
                 events=progress_events,
             )
             if (
