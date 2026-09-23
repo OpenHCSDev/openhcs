@@ -77,7 +77,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns the installed registry-derived benchmark execution and report command surface."
       },
       {
@@ -97,7 +97,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
+        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],

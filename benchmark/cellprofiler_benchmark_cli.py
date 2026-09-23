@@ -207,6 +207,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
         from benchmark.control_service import BenchmarkControlService
         from openhcs.agent.dto.execution import (
+            ExecutionJobRef,
             ExecutionJobStatus,
             PipelineSourceOrchestratorSessionRequest,
         )
@@ -252,22 +253,45 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         observation_path = MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
             output_dir
         )
-        status = context.execution_service.submit_execution(
+        submitted = context.execution_service.submit_execution(
             session.session_id,
             runtime_observation_export_path=str(observation_path),
             runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
                 args.observation_scope
             ),
-            wait=True,
+            wait=False,
             submit_timeout_ms=(
                 args.submit_timeout_ms
                 or OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
             ),
-            wait_timeout_ms=args.wait_timeout_ms,
         )
-        if not isinstance(status, ExecutionJobStatus) or (
-            status.status != ExecutionStatus.COMPLETE.value
-        ):
+        if isinstance(submitted, ExecutionJobStatus):
+            raise RuntimeError(f"Ordinary pipeline job was not accepted: {submitted}")
+        if not isinstance(submitted, ExecutionJobRef):
+            raise TypeError(
+                f"Ordinary pipeline submission returned {type(submitted).__name__}."
+            )
+        print(f"Ordinary pipeline job submitted: {submitted.job_id}", file=sys.stderr)
+        try:
+            status = context.execution_service.wait_job(
+                submitted.job_id,
+                timeout_ms=args.wait_timeout_ms,
+            )
+        except KeyboardInterrupt:
+            cancellation = context.execution_service.cancel_job(submitted.job_id)
+            print(
+                json.dumps(to_jsonable(cancellation), sort_keys=True), file=sys.stderr
+            )
+            return 130
+        if not isinstance(status, ExecutionJobStatus):
+            raise TypeError(f"Ordinary pipeline wait returned {type(status).__name__}.")
+        if status.status != ExecutionStatus.COMPLETE.value:
+            if not status.is_terminal:
+                cancellation = context.execution_service.cancel_job(submitted.job_id)
+                print(
+                    json.dumps(to_jsonable(cancellation), sort_keys=True),
+                    file=sys.stderr,
+                )
             raise RuntimeError(f"Ordinary pipeline job did not complete: {status}")
         receipt = BenchmarkControlService(
             policy, context.execution_service

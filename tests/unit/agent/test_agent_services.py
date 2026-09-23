@@ -3904,6 +3904,39 @@ def test_execution_session_service_wait_true_is_bounded_polling(
     assert fake_client.wait_requests == []
 
 
+def test_execution_session_service_wait_job_keeps_accepted_job_addressable(
+    monkeypatch,
+    tmp_path: Path,
+):
+    fake_client = _EnvelopeStatusExecutionClient()
+    execution_service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(tmp_path,),
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(fake_client),
+    )
+    session_ref = execution_service.create_session_from_pipeline_source(
+        PipelineSourceSessionRequest(
+            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
+            connection=ExecutionConnectionSpec(),
+        )
+    )
+    submitted = execution_service.submit_execution(session_ref.session_id, wait=False)
+
+    status = execution_service.wait_job(submitted.job_id, timeout_ms=1)
+
+    assert status.job_id == submitted.job_id
+    assert status.response["wait_timed_out"] is True
+    assert status.status == "running"
+    assert execution_service.get_job_status(submitted.job_id).job_id == submitted.job_id
+    assert fake_client.disconnect_count == 0
+
+
 def test_execution_session_service_wait_true_converts_status_timeout_to_warning(
     monkeypatch,
     tmp_path: Path,

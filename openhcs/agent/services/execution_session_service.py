@@ -1091,6 +1091,27 @@ class ExecutionSessionService:
             updated.release_client()
         return updated.status()
 
+    def wait_job(
+        self,
+        job_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> ExecutionJobStatus:
+        """Wait on an accepted ordinary job while retaining its cancellation handle."""
+
+        job = self._job_store.job_record(job_id)
+        if job.ref.server_execution_id is None or job.is_terminal:
+            return job.status()
+        response = self._client_gateway.wait(
+            job.require_client(),
+            job.ref.server_execution_id,
+            timeout_ms=timeout_ms,
+        )
+        updated = self._job_store.update_response(job_id, dict(response))
+        if updated.is_terminal:
+            updated.release_client()
+        return updated.status()
+
     def require_completed_pipeline_execution(
         self, job_id: str
     ) -> CompletedPipelineExecution:
@@ -1228,15 +1249,7 @@ class ExecutionSessionService:
             endpoint=submission.endpoint,
         )
         if wait and ref.server_execution_id is not None:
-            wait_response = self._client_gateway.wait(
-                submission.client,
-                ref.server_execution_id,
-                timeout_ms=wait_timeout_ms,
-            )
-            updated = self._job_store.update_response(ref.job_id, dict(wait_response))
-            if updated.is_terminal:
-                updated.release_client()
-            return updated.status()
+            return self.wait_job(ref.job_id, timeout_ms=wait_timeout_ms)
         return ref
 
 

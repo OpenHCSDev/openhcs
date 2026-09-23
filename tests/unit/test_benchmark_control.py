@@ -9,6 +9,7 @@ import subprocess
 import sys
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from zmqruntime.messages import ExecutionRecord
@@ -49,6 +50,7 @@ from benchmark.control import discover_benchmark_cases
 from benchmark.control_service import BenchmarkControlService
 from benchmark.timing import BenchmarkPhase, PhaseTimingRecord
 from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
+from openhcs.agent.dto.execution import ExecutionJobRef, ExecutionJobStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.execution_session_service import CompletedPipelineExecution
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -107,6 +109,92 @@ def test_measured_cli_rejects_existing_evidence_before_execution(
     with pytest.raises(FileExistsError, match="must be empty"):
         args.cli_command.run(args)
     assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+@pytest.mark.parametrize("wait_outcome", ("interrupt", "timeout"))
+def test_measured_cli_cancels_accepted_ordinary_job_when_wait_stops(
+    monkeypatch,
+    tmp_path: Path,
+    capsys,
+    wait_outcome: str,
+) -> None:
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    source_file = tmp_path / "pipeline.py"
+    source_file.write_text("pipeline_steps = []\n", encoding="utf-8")
+    output_dir = tmp_path / "evidence"
+    submitted = ExecutionJobRef(
+        schema_version="test",
+        session_id="session-1",
+        job_id="job-1",
+        kind="execute",
+        uri="test",
+        server_execution_id="execution-1",
+        status="accepted",
+    )
+    calls: list[tuple[str, object]] = []
+
+    class FakeExecutionService:
+        def create_session_from_pipeline_source_request(self, request):
+            return SimpleNamespace(session_id="session-1")
+
+        def submit_execution(self, session_id, **kwargs):
+            calls.append(("submit", kwargs["wait"]))
+            return submitted
+
+        def wait_job(self, job_id, *, timeout_ms):
+            calls.append(("wait", (job_id, timeout_ms)))
+            if wait_outcome == "interrupt":
+                raise KeyboardInterrupt
+            return ExecutionJobStatus(
+                schema_version="test",
+                session_id="session-1",
+                job_id="job-1",
+                kind="execute",
+                uri="test",
+                server_execution_id="execution-1",
+                status="running",
+                response={"wait_timed_out": True},
+            )
+
+        def cancel_job(self, job_id):
+            calls.append(("cancel", job_id))
+            return {"applied": True}
+
+    monkeypatch.setattr(
+        "openhcs.mcp.context.OpenHCSAgentContext",
+        lambda *, path_policy: SimpleNamespace(
+            execution_service=FakeExecutionService()
+        ),
+    )
+    args = create_benchmark_argument_parser().parse_args(
+        [
+            "run-measured",
+            "--plate",
+            str(plate),
+            "--pipeline-source-file",
+            str(source_file),
+            "--output-dir",
+            str(output_dir),
+            "--run-id",
+            "test",
+            "--wait-timeout-ms",
+            "1000",
+        ]
+    )
+
+    if wait_outcome == "interrupt":
+        assert args.cli_command.run(args) == 130
+    else:
+        with pytest.raises(RuntimeError, match="did not complete"):
+            args.cli_command.run(args)
+    assert calls == [
+        ("submit", False),
+        ("wait", ("job-1", 1000)),
+        ("cancel", "job-1"),
+    ]
+    assert "job-1" in capsys.readouterr().err
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir).exists()
 
 
 def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:

@@ -905,7 +905,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "5101ab29aba88b6cc5f54f05910619cac07a7bf178884878ba58d2c4e1085ba1",
+        "sha256": "1a9a70d2924b1854338612b212f00888bacba5cd33eb23608be294bb06c76399",
         "role": "Retains the exact submitting client and projects its authoritative progress observation."
       },
       {
@@ -915,7 +915,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "f4ac1923489e47acc6953b0c1c5fb18631d30ffb88f2a6d5b8ac38b1e4f6c1f3",
+        "sha256": "0c3a5225c1e832d9fbd5a423ef0cfd495451c0872b6b718d5fd66726f0758fdf",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -2014,7 +2014,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "5101ab29aba88b6cc5f54f05910619cac07a7bf178884878ba58d2c4e1085ba1",
+        "sha256": "1a9a70d2924b1854338612b212f00888bacba5cd33eb23608be294bb06c76399",
         "role": "Retains the exact submitting client, projects its authoritative progress, caches terminal status, and releases the client once."
       },
       {
@@ -2129,7 +2129,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "f4ac1923489e47acc6953b0c1c5fb18631d30ffb88f2a6d5b8ac38b1e4f6c1f3",
+        "sha256": "0c3a5225c1e832d9fbd5a423ef0cfd495451c0872b6b718d5fd66726f0758fdf",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2694,7 +2694,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns registered benchmark command declarations and the derived installed parser."
       },
       {
@@ -2704,7 +2704,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
+        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],
@@ -2992,7 +2992,7 @@
       },
       {
         "path": "openhcs/agent/services/execution_session_service.py",
-        "sha256": "5101ab29aba88b6cc5f54f05910619cac07a7bf178884878ba58d2c4e1085ba1",
+        "sha256": "1a9a70d2924b1854338612b212f00888bacba5cd33eb23608be294bb06c76399",
         "role": "Retains the submitting execution client, distinguishes dispatch outcomes, and projects its exact progress observation."
       },
       {
@@ -3027,7 +3027,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "f4ac1923489e47acc6953b0c1c5fb18631d30ffb88f2a6d5b8ac38b1e4f6c1f3",
+        "sha256": "0c3a5225c1e832d9fbd5a423ef0cfd495451c0872b6b718d5fd66726f0758fdf",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {

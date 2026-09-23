@@ -229,7 +229,12 @@ input while preserving the original plate identity. For large pipelines,
 ``--observation-scope outcomes`` retains per-axis status, output roots, and
 server environment without transferring runtime array values to the parent.
 The default ``values`` scope retains the full runtime observation needed for
-value-equivalence checks. The normal
+value-equivalence checks. The CLI prints the accepted ordinary job ID to
+standard error before waiting. Ctrl-C requests cancellation through the
+ordinary job service and exits with status 130; a nonterminal wait timeout
+also requests cancellation. Neither path writes a success receipt. Inspect
+the reported cancellation result: a request that was not applied does not
+prove the server stopped. The normal
 ``openhcs_submit_pipeline_execution`` tool exposes the same typed scope when
 an observation export path is requested; status and cancellation remain the
 ordinary job operations.

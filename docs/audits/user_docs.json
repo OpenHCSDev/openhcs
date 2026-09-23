@@ -176,7 +176,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -191,7 +191,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
+        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -766,7 +766,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
@@ -1390,7 +1390,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1405,7 +1405,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
+        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3899,7 +3899,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "272a16ee98228dfde30045f9b11aed76a559426375de3a67f2ac40b0141f09dd",
+    "source_sha256": "35fad0c7e4425b95160fa0a85d82d1cf28d717f6a5cb65a61b43e3fc2e20c459",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3949,7 +3949,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
+        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
@@ -3969,7 +3969,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
+        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],
@@ -4014,7 +4014,8 @@
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
       "2026-09-22: Targeted review of the benchmark inspection how-to after CLI and MCP gained shared bounded artifact paging. The page now gives the next-offset procedure without implying inspection launches a job or proves parity; 28 focused control tests passed. Fresh installed-wheel CI remains separate.",
       "2026-09-22: Re-reviewed the measured-run inspection instruction after adding declaration-derived unreceipted artifacts. The action is to preserve incomplete evidence for diagnosis and withhold a completion claim; the architecture page explains why. Thirty-five focused control and wrapper tests passed locally.",
-      "2026-09-22: Re-reviewed the measured-run recovery how-to. It now permits retrying finalisation only for the same completed ordinary job; byte-identical partial evidence is reused, conflicts require diagnosis, and inspection alone never proves completion. Thirty-seven focused tests passed locally."
+      "2026-09-22: Re-reviewed the measured-run recovery how-to. It now permits retrying finalisation only for the same completed ordinary job; byte-identical partial evidence is reused, conflicts require diagnosis, and inspection alone never proves completion. Thirty-seven focused tests passed locally.",
+      "2026-09-23: Re-read the complete MCP client how-to after the measured CLI gained ordinary-job interrupt and timeout cancellation. The action and its limits are now explicit; the other ownership and safety claims remain supported. See docs/audits/benchmark_cli_interrupt_review_20260923.md; 143 affected tests passed locally."
     ]
   },
   {
