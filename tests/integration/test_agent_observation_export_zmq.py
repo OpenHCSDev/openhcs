@@ -38,7 +38,7 @@ from openhcs.agent.services.execution_session_service import (
     ExecutionSessionService,
 )
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps import FunctionStep
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
@@ -191,6 +191,12 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     )
     inspection = inspect_measured_pipeline_run(evidence_dir)
     assert execution.observation.records_by_axis
+    assert any(
+        path.suffix.lower() in {".tif", ".tiff"}
+        for root in execution.output_roots
+        for path in root.rglob("*")
+        if path.is_file()
+    )
     assert receipt == execution.receipt
     assert receipt.compile_artifact_id is not None
     assert (
@@ -202,6 +208,50 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.warnings == ()
     assert "EXECUTE_OPENHCS" in report_measured_pipeline_run(inspection).markdown
+
+
+def test_measured_wrapper_uses_declared_main_flow_output_policy(
+    tmp_path: Path,
+) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    evidence_dir = tmp_path / "evidence"
+    output_dir = tmp_path / "outputs"
+    submission = OpenHCSExecutionSubmission(
+        plate_id=plate,
+        pipeline_document=pipeline,
+        global_config=GlobalPipelineConfig(
+            path_planning_config=PathPlanningConfig(
+                well_filter=0,
+                global_output_folder=output_dir,
+            ),
+            materialize_runtime_artifacts=False,
+        ),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=evidence_dir / "observation.pkl",
+        )
+    )
+
+    execution, _ = execute_measured_openhcs_pipeline(
+        submission=submission,
+        phase_timing=PhaseTimingTrace(
+            run_id="runtime-only",
+            pipeline_name="Blur",
+            tool="OpenHCS",
+        ),
+        timing_observer=_ZMQProgressTimingObserver(),
+        execution_port=21000 + os.getpid() % 20000,
+    )
+
+    assert execution.receipt.observed_axis_count == 1
+    assert execution.output_roots
+    assert all(root.is_relative_to(output_dir) for root in execution.output_roots)
+    assert not any(
+        path.suffix.lower() in {".tif", ".tiff"}
+        for root in execution.output_roots
+        for path in root.rglob("*")
+        if path.is_file()
+    )
 
 
 def test_ordinary_execution_can_export_outcomes_without_value_observation(
