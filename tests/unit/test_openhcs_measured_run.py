@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 from types import SimpleNamespace
 
 import pytest
 
 import benchmark.openhcs_measured_run as measured_run
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
-from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+from benchmark.contracts.run_artifacts import (
+    MeasuredPipelineRunArtifact,
+    write_new_measured_artifact,
+)
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -60,7 +65,6 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
 
         def __exit__(self, exc_type, exc, traceback):
             self.disconnect()
-            return None
 
         def disconnect(self):
             self.disconnect_count += 1
@@ -232,6 +236,27 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
     assert existing_source.read_text(encoding="utf-8") == "keep this evidence"
     assert not MeasuredPipelineRunArtifact.RESULTS_SUMMARY.path_in(tmp_path).exists()
     assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+
+
+def test_measured_evidence_publication_is_exclusive_under_concurrent_writers(
+    tmp_path: Path,
+) -> None:
+    target = MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+    barrier = Barrier(2)
+
+    def publish(contents: str) -> None:
+        barrier.wait()
+        write_new_measured_artifact(target, contents)
+
+    candidates = ("first " * 10000, "second " * 10000)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        attempts = [executor.submit(publish, candidate) for candidate in candidates]
+        failures = [attempt.exception() for attempt in attempts]
+
+    assert sum(failure is None for failure in failures) == 1
+    assert sum(isinstance(failure, FileExistsError) for failure in failures) == 1
+    assert target.read_text(encoding="utf-8") in candidates
+    assert not tuple(tmp_path.glob(".*.pending"))
 
 
 def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> None:

@@ -2095,7 +2095,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "5b0b36912e383ac043f93ed608150b53da33627eaad9e3aeb957fef81b57fd60",
+        "sha256": "6bd7d0428e90ee4dc8902548408cf0fab08c70ba20dcdb16c5ef1446f94b864a",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2171,7 +2171,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "3c01e83995cd35d049a96754edd7450f0fb996d03f2cbd1941d9b7c442b7ce20",
+    "source_sha256": "18f211e3dd9b7d4c6a10e0b15dab936c3f8255fd053bc90e444834263ab27358",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2201,8 +2201,13 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "fe16cb9e0587d6ed574b2435b444e5053ad8cce16fb0c318b66d25afb505b635",
+        "sha256": "ac495c171ac2f8922d8f0cc1d9d9e42df896cbb4a7fe0a8d5d707450d56dc2c1",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt."
+      },
+      {
+        "path": "benchmark/contracts/run_artifacts.py",
+        "sha256": "0cca8c8cd27901330f8c4fdb41bae20e9744a7cfc5b9918241c2873737bac101",
+        "role": "Owns measured-run artifact identities and complete, exclusive publication of finaliser-owned evidence files."
       },
       {
         "path": "benchmark/timing.py",
@@ -2221,7 +2226,7 @@
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "88ca689aaa1b879e46553c4ac3f2fb83ec659ba00d619b4f542f66a7c915d9b1",
+        "sha256": "f3ba1439d1ec9ebdf98b672a4fa2096195445cce1b4fd6a21bb000e2a3c8d308",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2251,7 +2256,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "c4b5b266f29cc27d4bb81d89f958d9724511e795ee8cf79ad9bd439b52598cc5",
+        "sha256": "6624404baf02c53f3304ed14b5f542aca2d9d8242e3c734aaa97c2c6b17e5358",
         "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
       },
       {
@@ -2276,7 +2281,8 @@
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
       "2026-09-22: Re-read this explanation against the OpenHCS adapter's strict Boolean and finite timeout decoding. These checks reject invalid benchmark requests before execution; they do not alter the equivalence policy or make outcome-only evidence comparable values. Forty-six affected adapter, comparison, and manifest tests passed.",
       "2026-09-22: Re-read the complete explanation against the ordinary value/outcome export declaration and shared finaliser. Added the execution-ID and exclusive-file evidence boundary without implying outcome-only value equivalence. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
-      "2026-09-22: Re-read the explanation against the central benchmark timing owner and both ordinary completion paths. Clarified that the execution-only duration comes from the completed server job, a missing progress interval is not inferred, and additive totals exclude nested timing observations. Ninety affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate."
+      "2026-09-22: Re-read the explanation against the central benchmark timing owner and both ordinary completion paths. Clarified that the execution-only duration comes from the completed server job, a missing progress interval is not inferred, and additive totals exclude nested timing observations. Ninety affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
+      "2026-09-22: Re-reviewed the evidence boundary after making benchmark finaliser writes complete and exclusive per file. This prevents concurrent finalisers from replacing retained artifacts but is not a multi-file transaction; 34 focused wrapper/control tests passed locally."
     ]
   },
   {

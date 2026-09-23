@@ -22,7 +22,10 @@ from benchmark.contracts.measured_run_receipt import (
     MeasuredEndpointProvenance,
     MeasuredPipelineRunReceipt,
 )
-from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+from benchmark.contracts.run_artifacts import (
+    MeasuredPipelineRunArtifact,
+    write_new_measured_artifact,
+)
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -375,9 +378,9 @@ def retain_measured_openhcs_completion(
     results_summary_path = observation_export_path.with_name(
         ZMQ_RESULTS_SUMMARY_FILENAME
     )
-    results_summary_path.write_text(
+    write_new_measured_artifact(
+        results_summary_path,
         json.dumps(results_summary, indent=2, sort_keys=True),
-        encoding="utf-8",
     )
     global_config_source = ConfigDocumentAuthority.render(
         submission.global_pipeline_config,
@@ -387,10 +390,7 @@ def retain_measured_openhcs_completion(
         (MeasuredPipelineRunArtifact.PIPELINE_SOURCE, pipeline_source),
         (MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE, global_config_source),
     ):
-        source_path = artifact.path_in(artifact_root)
-        pending = source_path.with_name(f".{source_path.name}.pending")
-        pending.write_text(source, encoding="utf-8")
-        pending.replace(source_path)
+        write_new_measured_artifact(artifact.path_in(artifact_root), source)
     receipt = MeasuredPipelineRunReceipt(
         schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
         run_id=phase_timing.run_id,

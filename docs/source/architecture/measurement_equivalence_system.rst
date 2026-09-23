@@ -120,7 +120,10 @@ server completion record, while the benchmark extension validates and retains
 the observation. Both ordinary export scopes carry the producing server
 execution ID. The shared finaliser rejects an export from a different job
 before writing a success receipt; the runtime export writer also refuses to
-replace an existing file. It records the server's start/end time as
+replace an existing file. The benchmark finaliser publishes each evidence file
+completely and exclusively, so competing finalisers cannot replace one
+another's retained evidence. This protects individual files, not the entire
+group of files as one transaction. It records the server's start/end time as
 ``SERVER_PIPELINE_JOB`` and retains the submitted compile-artifact identity,
 because an ordinary execution request without one may include inline
 compilation. The synchronous wrapper may additionally record client submit/wait

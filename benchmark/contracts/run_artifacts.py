@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Self
@@ -49,6 +51,31 @@ class MeasuredPipelineRunArtifact(Enum):
 
     def path_in(self, output_dir: Path) -> Path:
         return output_dir / self.value
+
+
+def write_new_measured_artifact(path: Path, contents: str) -> None:
+    """Publish complete measured-run evidence without replacing another writer."""
+
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    pending_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f".{target.name}.",
+            suffix=".pending",
+            delete=False,
+        ) as pending:
+            pending_path = Path(pending.name)
+            pending.write(contents)
+            pending.flush()
+            os.fsync(pending.fileno())
+        os.link(pending_path, target)
+    finally:
+        if pending_path is not None:
+            pending_path.unlink(missing_ok=True)
 
 
 class StructuredArtifactFormat(Enum):

@@ -330,9 +330,9 @@ def test_measured_inspection_rejects_tampered_and_escaped_evidence(
     )
     escaped = tmp_path / "outside.pkl"
     escaped.write_bytes(b"outside")
-    replace(receipt, observation_export_path=escaped).write(
-        MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
-    )
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    receipt_path.unlink()  # Construct a tampered fixture, not a production rewrite.
+    replace(receipt, observation_export_path=escaped).write(receipt_path)
     service = BenchmarkControlService(
         AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
     )
@@ -375,6 +375,7 @@ def test_measured_receipt_round_trips_server_environment(tmp_path: Path) -> None
     )
     path = MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
 
+    path.unlink()  # Serialize the variant as a fresh receipt.
     replace(receipt, server_environment=environment).write(path)
 
     assert MeasuredPipelineRunReceipt.read(path).server_environment == environment

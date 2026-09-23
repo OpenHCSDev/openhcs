@@ -11,6 +11,7 @@ from typing import Self
 
 from python_introspect import dataclass_from_mapping
 
+from benchmark.contracts.run_artifacts import write_new_measured_artifact
 from benchmark.timing import PhaseTimingRecord
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
@@ -128,7 +129,7 @@ class MeasuredPipelineRunReceipt:
         )
 
     def write(self, path: Path) -> None:
-        """Atomically retain a completed receipt after observation validation."""
+        """Retain a completed receipt once after observation validation."""
 
         payload = to_jsonable(self)
         if not isinstance(payload, dict):
@@ -136,10 +137,7 @@ class MeasuredPipelineRunReceipt:
         payload["phase_timings"] = [
             record.as_payload() for record in self.phase_timings
         ]
-        target = Path(path)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        pending = target.with_name(f".{target.name}.pending")
-        pending.write_text(
-            json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+        write_new_measured_artifact(
+            path,
+            json.dumps(payload, indent=2, sort_keys=True),
         )
-        pending.replace(target)
