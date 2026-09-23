@@ -87,17 +87,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "38e2d5092aa172a7d2dc9c129268cc023863abd36e7938e419ae163c22b5b194",
+        "sha256": "d3371aef3519e0c8a42ff834e38b19bcda529ec4366598205a6128c97df30ddb",
         "role": "Declares the typed benchmark inspection request and result exposed through MCP."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
+        "sha256": "4a3dafbf5f7b51340fa7fe8c837bed5fe3ad7c1c447b4cf2677fb10190a0b2f6",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "6bd7d0428e90ee4dc8902548408cf0fab08c70ba20dcdb16c5ef1446f94b864a",
+        "sha256": "bc0f0d9620b2048281300981dbefc5274e4581610146cb1ec304cba692b16f16",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],

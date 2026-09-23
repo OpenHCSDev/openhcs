@@ -134,6 +134,11 @@ used to guess it. Server, progress, and client wait intervals overlap, so
 additive phase totals count the client submit/wait phases but not their nested
 server or progress observations.
 
+If finalisation stops between evidence files, inspection derives the
+``unreceipted_artifacts`` list from the measured-artifact declarations. Their
+presence is reported separately from a valid success receipt; no partial
+directory is promoted to a completed measurement.
+
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:
 

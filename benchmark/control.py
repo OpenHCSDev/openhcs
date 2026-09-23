@@ -107,6 +107,23 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
         except (TypeError, ValueError, KeyError, AttributeError, OSError) as exc:
             warnings.append(f"Measured pipeline receipt is invalid: {exc}")
 
+    unreceipted_artifacts = (
+        tuple(
+            artifact
+            for artifact in MeasuredPipelineRunArtifact
+            if artifact.finalizer_output
+            and artifact is not MeasuredPipelineRunArtifact.RECEIPT
+            and _contained_file(root, artifact.path_in(root)) is not None
+        )
+        if receipt is None
+        else ()
+    )
+    if unreceipted_artifacts:
+        names = ", ".join(artifact.value for artifact in unreceipted_artifacts)
+        warnings.append(
+            f"Finaliser artifacts exist without a valid success receipt: {names}."
+        )
+
     source_evidence: list[MeasuredSourceEvidence] = []
     observation_present = False
     results_summary_present = False
@@ -164,6 +181,7 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
         schema_version=MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION,
         output_dir=str(root),
         receipt=receipt,
+        unreceipted_artifacts=unreceipted_artifacts,
         source_evidence=tuple(source_evidence),
         observation_present=observation_present,
         results_summary_present=results_summary_present,

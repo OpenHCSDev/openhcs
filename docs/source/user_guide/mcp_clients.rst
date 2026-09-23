@@ -212,7 +212,9 @@ presence of declared observation and summary files without loading the runtime
 pickle. ``openhcs_report_measured_pipeline_run`` turns that same inspection into
 a short report with evidence warnings. The local CLI equivalent is
 ``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
-Markdown. These inspection routes do not submit a pipeline. Use the normal
+Markdown. If ``unreceipted_artifacts`` is nonempty, preserve that directory
+for diagnosis and do not report the run as a completed measurement. These
+inspection routes do not submit a pipeline. Use the normal
 headless execution tools for submission, job status, and cancellation.
 The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
 pipeline source file, plate and empty evidence directory, then uses the same

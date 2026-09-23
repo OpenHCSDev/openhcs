@@ -299,6 +299,7 @@ def test_measured_inspection_cli_and_report_share_one_receipt(
     report = service.report_measured_run(request)
 
     assert inspection.receipt == receipt
+    assert inspection.unreceipted_artifacts == ()
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.observation_present is True
     assert inspection.results_summary_present is True
@@ -318,6 +319,52 @@ def test_measured_inspection_cli_and_report_share_one_receipt(
     )
     assert args.cli_command.run(args) == 0
     assert "EXECUTE_OPENHCS: 0.250000 s" in capsys.readouterr().out
+
+
+def test_measured_inspection_exposes_artifacts_without_a_valid_receipt(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output_dir = tmp_path / "measured"
+    output_dir.mkdir()
+    MeasuredPipelineRunArtifact.RESULTS_SUMMARY.path_in(output_dir).write_text(
+        "{}\n", encoding="utf-8"
+    )
+    MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(output_dir).write_text(
+        "pipeline_steps = []\n", encoding="utf-8"
+    )
+    outside = tmp_path / "outside.py"
+    outside.write_text("unrelated\n", encoding="utf-8")
+    MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE.path_in(output_dir).symlink_to(
+        outside
+    )
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
+    )
+    request = MeasuredPipelineRunInspectionRequest(output_dir=str(output_dir))
+
+    inspection = service.inspect_measured_run(request)
+    assert inspection.receipt is None
+    assert inspection.unreceipted_artifacts == (
+        MeasuredPipelineRunArtifact.RESULTS_SUMMARY,
+        MeasuredPipelineRunArtifact.PIPELINE_SOURCE,
+    )
+    assert any(
+        "without a valid success receipt" in item for item in inspection.warnings
+    )
+    assert (
+        "without a valid success receipt"
+        in service.report_measured_run(request).markdown
+    )
+
+    args = create_benchmark_argument_parser().parse_args(
+        ("inspect-measured", "--output-dir", str(output_dir))
+    )
+    assert args.cli_command.run(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["unreceipted_artifacts"] == [
+        "zmq_results_summary.json",
+        "submitted_pipeline.py",
+    ]
 
 
 def test_measured_inspection_rejects_tampered_and_escaped_evidence(
@@ -802,8 +849,24 @@ def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> 
     )
 
     assert inspected[1]["receipt"]["execution_id"] == "execution-1"
+    assert inspected[1]["unreceipted_artifacts"] == []
     assert inspected[1]["source_evidence"][0]["valid"] is True
     assert "EXECUTE_OPENHCS" in reported[1]["markdown"]
+
+    MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir).unlink()
+    interrupted = asyncio.run(
+        built.call_tool(
+            "openhcs_inspect_measured_pipeline_run",
+            {"output_dir": str(output_dir)},
+        )
+    )
+    assert interrupted[1]["receipt"] is None
+    assert set(interrupted[1]["unreceipted_artifacts"]) == {
+        artifact.value
+        for artifact in MeasuredPipelineRunArtifact
+        if artifact.finalizer_output
+        and artifact is not MeasuredPipelineRunArtifact.RECEIPT
+    }
 
 
 def test_benchmark_extension_projects_its_declared_capability() -> None:

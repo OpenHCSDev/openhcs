@@ -134,6 +134,7 @@ class MeasuredPipelineRunInspection:
     schema_version: str
     output_dir: str
     receipt: MeasuredPipelineRunReceipt | None
+    unreceipted_artifacts: tuple[MeasuredPipelineRunArtifact, ...]
     source_evidence: tuple[MeasuredSourceEvidence, ...]
     observation_present: bool
     results_summary_present: bool
