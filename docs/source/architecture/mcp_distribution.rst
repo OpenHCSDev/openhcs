@@ -82,7 +82,8 @@ Benchmark evidence boundary
 The installed ``openhcs-benchmark`` entry point owns benchmark execution and
 report-generation commands. Comparison runs persist a typed lifecycle receipt,
 append-only observations, and structured result artifacts through the benchmark
-contract package.
+contract package. A new run rejects an occupied output directory and claims its
+first receipt exclusively before publishing observations.
 The read-only ``openhcs_list_benchmark_cases`` capability and CLI
 ``list-cases`` command share exact manifest-case selection. Discovery disables
 manifest acquisition, so inspecting proposed work cannot download data.
@@ -97,7 +98,10 @@ cannot turn run inspection into access to another path. The typed inspection
 request also bounds and pages its artifact projection; both the packaged CLI
 and expert MCP capability consume that request rather than owning separate
 artifact inventories. Historical or invalid metadata produces a warning rather
-than a guessed completion claim. A separate
+than a guessed completion claim. ``openhcs_report_benchmark_run`` uses that
+same typed receipt and declared observation artifact to render bounded case
+outcomes. It rejects observations outside the declared suite and does not
+turn recorded intervals into a matched-concurrency speedup claim. A separate
 measured-pipeline receipt is
 produced only after an ordinary pipeline's selected value or outcome export
 passes its validation. Outcome-only export retains per-axis status without

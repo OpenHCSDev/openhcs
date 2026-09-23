@@ -142,6 +142,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.processing.backends.cellprofiler.colocalization_costes import (
     UnitIntervalDenseRankSemantics,
+    _cellprofiler_mean_variance_float32,
     _correlation_slopes_numba,
     _costes_manders_numba,
     _linear_costes_numba,
@@ -1311,23 +1312,49 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
         non_zero = (first > 0.0) | (second > 0.0)
         first_non_zero = first[non_zero]
         second_non_zero = second[non_zero]
-        first_variance = np.var(first_non_zero, axis=0, ddof=1)
-        second_variance = np.var(second_non_zero, axis=0, ddof=1)
-        first_mean = np.mean(first_non_zero, axis=0)
-        second_mean = np.mean(second_non_zero, axis=0)
-        summed_variance = np.var(
-            first_non_zero + second_non_zero,
-            axis=0,
-            ddof=1,
-        )
-        covariance = 0.5 * (summed_variance - (first_variance + second_variance))
-        variance_delta = second_variance - first_variance
+        if (
+            first.dtype == np.float32
+            and second.dtype == np.float32
+            and first_non_zero.size > 1
+        ):
+            first_mean, first_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(first_non_zero)
+            )
+            second_mean, second_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(second_non_zero)
+            )
+            _, summed_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(first_non_zero + second_non_zero)
+            )
+            # CellProfiler's NumPy 1.24 promoted Python scalars only after
+            # float32 array reductions. NumPy 2.x changed that scalar rule.
+            covariance = 0.5 * float(
+                np.float32(
+                    summed_variance - np.float32(first_variance + second_variance)
+                )
+            )
+            variance_delta = np.float32(second_variance - first_variance)
+            variance_delta_squared = float(np.float32(variance_delta * variance_delta))
+            first_mean = float(first_mean)
+            second_mean = float(second_mean)
+            variance_delta = float(variance_delta)
+        else:
+            first_variance = np.var(first_non_zero, axis=0, ddof=1)
+            second_variance = np.var(second_non_zero, axis=0, ddof=1)
+            first_mean = np.mean(first_non_zero, axis=0)
+            second_mean = np.mean(second_non_zero, axis=0)
+            summed_variance = np.var(
+                first_non_zero + second_non_zero,
+                axis=0,
+                ddof=1,
+            )
+            covariance = 0.5 * (summed_variance - (first_variance + second_variance))
+            variance_delta = second_variance - first_variance
+            variance_delta_squared = variance_delta * variance_delta
         with np.errstate(divide="ignore", invalid="ignore"):
             slope = (
                 variance_delta
-                + np.sqrt(
-                    variance_delta * variance_delta + 4.0 * covariance * covariance
-                )
+                + np.sqrt(variance_delta_squared + 4.0 * covariance * covariance)
             ) / (2.0 * covariance)
         intercept = second_mean - slope * first_mean
 

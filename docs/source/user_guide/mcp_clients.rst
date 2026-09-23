@@ -179,6 +179,9 @@ Inspect benchmark cases and runs
 The OpenHCS package installs ``openhcs-benchmark`` for benchmark execution and
 report generation. Its comparison runs write a typed lifecycle receipt,
 append-only observations, and structured JSON, JSONL, and CSV artifacts.
+Use a new or empty output directory for each run; the CLI rejects an occupied
+destination before loading the manifest and exclusively claims its first
+receipt, so an earlier run is not overwritten.
 
 Before starting a comparison, list the manifest's declared work with
 ``openhcs-benchmark list-cases --manifest PATH``. Add ``--case NAME`` to select
@@ -195,7 +198,7 @@ from the checkout.
 ``openhcs_inspect_benchmark_run`` is an expert-only local capability, so select
 the ``full`` surface and restart the client before using it. Grant the result
 directory through ``OPENHCS_AGENT_READ_ROOTS``, then ask the agent to inspect
-that directory. The result reports recorded lifecycle status, live observation
+that directory. The result reports recorded lifecycle status, retained observation
 count relative to declared work, the exact recorded rerun invocation, and
 discoverable structured artifacts. Use ``artifact_limit`` to bound the returned
 artifact page and pass ``next_artifact_offset`` back as ``artifact_offset`` until
@@ -205,7 +208,15 @@ it is null. The CLI reads the same contract with
 directory without a current typed receipt is reported with warnings instead
 of an inferred completion claim.
 
-Inspection is read-only. The MCP capability cannot launch, resume, cancel, or
+``openhcs_report_benchmark_run`` uses the same output directory and typed
+receipt to render a bounded case-outcome report from validated observation
+records. The CLI equivalent is ``openhcs-benchmark inspect-run --output-dir
+PATH --report``. Recorded execution intervals in this report are not, by
+themselves, a matched-concurrency speedup claim. Missing, invalid, or
+out-of-declaration observations appear as evidence warnings rather than being
+counted as validated case outcomes.
+
+Inspection and reporting are read-only. These MCP capabilities cannot launch, resume, cancel, or
 rerun a benchmark. Review the recorded command and scientific inputs, then run
 ``openhcs-benchmark`` separately only when execution is explicitly authorized.
 

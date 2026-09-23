@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 from openhcs.processing.backends.cellprofiler.colocalization_costes_prefix_numba_pearson import (
     _correlation_slopes_numba,
+    _cellprofiler_mean_variance_float32,
     _costes_manders_numba,
     _event_count_for_threshold_numba,
     _integer_unit_interval_codes_for_scale_numba,

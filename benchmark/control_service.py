@@ -10,6 +10,7 @@ from benchmark.contracts.control import (
     BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
+    BenchmarkRunReport,
     MeasuredPipelineRunFinalizationRequest,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunInspectionRequest,
@@ -20,6 +21,7 @@ from benchmark.control import (
     discover_benchmark_cases,
     inspect_benchmark_run,
     inspect_measured_pipeline_run,
+    report_benchmark_run,
     report_measured_pipeline_run,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -126,6 +128,12 @@ class BenchmarkControlService:
     ) -> MeasuredPipelineRunInspection:
         output_dir = self._path_policy.assert_readable(request.output_dir)
         return inspect_measured_pipeline_run(output_dir)
+
+    def report_run(
+        self,
+        request: BenchmarkRunInspectionRequest,
+    ) -> BenchmarkRunReport:
+        return report_benchmark_run(self.inspect_run(request))
 
     def report_measured_run(
         self,

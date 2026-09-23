@@ -98,11 +98,16 @@ class InspectBenchmarkRunCommand(BenchmarkCliCommand):
             type=int,
             default=BenchmarkRunInspectionRequest.DEFAULT_ARTIFACT_LIMIT,
         )
+        parser.add_argument(
+            "--report",
+            action="store_true",
+            help="Render the same typed comparison inspection as Markdown.",
+        )
         return parser
 
     def run(self, args: argparse.Namespace) -> int:
         from benchmark.contracts.control import BenchmarkRunInspectionRequest
-        from benchmark.control import inspect_benchmark_run
+        from benchmark.control import inspect_benchmark_run, report_benchmark_run
         from openhcs.serialization.json import to_jsonable
 
         inspection = inspect_benchmark_run(
@@ -112,7 +117,10 @@ class InspectBenchmarkRunCommand(BenchmarkCliCommand):
                 artifact_limit=args.artifact_limit,
             )
         )
-        print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
+        if args.report:
+            print(report_benchmark_run(inspection).markdown, end="")
+        else:
+            print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
         return 0
 
 
@@ -550,10 +558,12 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
         from benchmark.cellprofiler_comparison import (
             ComparisonMetricPolicy,
             load_comparison_cases,
+            require_new_comparison_output_root,
             run_comparison_suite,
             select_comparison_cases,
         )
 
+        require_new_comparison_output_root(args.output_dir)
         suite_id = args.suite_id or datetime.now().strftime(
             "cp_vs_openhcs_%Y%m%d_%H%M%S"
         )

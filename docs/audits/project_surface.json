@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "fa71582fe3ba80c455c4701f5e8628918e8e78da0cda08b6bd4f8c3cd4a1f8c3",
+    "source_sha256": "399b7c38087d3230562bd434de78e43e64008b7cdc74714c084c7ebaa9714a51",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -77,27 +77,27 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "aa146f15d2a135ce333c8fd69792c3b124b7852fe340bca007d958ac42af0ac7",
+        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
         "role": "Owns the installed registry-derived benchmark execution and report command surface."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed run provenance, lifecycle status, exact rerun arguments, and receipt validation."
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "d3371aef3519e0c8a42ff834e38b19bcda529ec4366598205a6128c97df30ddb",
+        "sha256": "bf9554cd2cca683e8081c5121615c018b18e8aedde8e9e77f96af29f5a4e9426",
         "role": "Declares the typed benchmark inspection request and result exposed through MCP."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "4a3dafbf5f7b51340fa7fe8c837bed5fe3ad7c1c447b4cf2677fb10190a0b2f6",
+        "sha256": "ce06d2c7949da905d0d32b03b7e755b76142dda8e35537a9f7fa5c24c78dd408",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
+        "sha256": "ba3d2ded5b74b0cefbcd36bd934bb3b7fd9a072d3db6b82712c8460301a9a44e",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
@@ -141,7 +141,8 @@
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
-      "2026-09-22: Targeted review of the public benchmark paragraph after inspect-run joined the registered CLI and artifact paging became a shared request contract. The README retains the inspect-only and scientific-evidence boundaries; 28 focused control tests passed, while fresh installed-wheel CI remains separate."
+      "2026-09-22: Targeted review of the public benchmark paragraph after inspect-run joined the registered CLI and artifact paging became a shared request contract. The README retains the inspect-only and scientific-evidence boundaries; 28 focused control tests passed, while fresh installed-wheel CI remains separate.",
+      "2026-09-23: Re-read the public overview after adding the read-only expert comparison report and occupied-destination guard. No MCP suite submission or scientific speedup is claimed; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   }
 ]

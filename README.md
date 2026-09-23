@@ -341,12 +341,16 @@ checks declared case sources without acquiring data or starting a run; the
 expert `openhcs_list_benchmark_cases` MCP tool exposes the same selection.
 Each comparison run records a typed receipt with
 its lifecycle state, exact rerun command, declared work, and structured result
-artifacts. On the expert `full` MCP surface, `openhcs_inspect_benchmark_run`
+artifacts. Use a new or empty output directory; an occupied one is rejected
+before the run loads its manifest. On the expert `full` MCP surface,
+`openhcs_inspect_benchmark_run`
 can inspect an existing result directory allowed by the local read-path policy.
 `openhcs-benchmark inspect-run --output-dir PATH` reads the same typed inspection;
 both routes page structured artifacts through `artifact_limit` and
 `artifact_offset` instead of returning an unbounded inventory.
-That MCP tool is read-only: it does not launch, resume, cancel, or rerun a
+`openhcs_report_benchmark_run` and `openhcs-benchmark inspect-run --output-dir
+PATH --report` render bounded case outcomes from the typed receipt and
+observations. These MCP routes are read-only: they do not launch, resume, cancel, or rerun a
 benchmark, and a recorded receipt is provenance rather than a scientific parity
 claim.
 For a single ordinary measured pipeline, `openhcs-benchmark inspect-measured --output-dir PATH`

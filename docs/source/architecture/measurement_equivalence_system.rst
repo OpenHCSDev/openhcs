@@ -186,7 +186,8 @@ The runner emits ``observations.jsonl``, ``observations.csv``,
 record case/suite identity, success, equivalence, difference count, numeric
 tolerances, output paths, timing, platform, and native-reference root. They do
 not currently record every source identity required for a durable publication
-claim.
+claim. A comparison run requires a new or empty destination and exclusively
+claims its first typed receipt rather than replacing another run's evidence.
 
 Retain the generated files together with a receipt containing at least:
 

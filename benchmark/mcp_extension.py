@@ -12,6 +12,7 @@ from benchmark.contracts.control import (
     BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
+    BenchmarkRunReport,
     MeasuredPipelineRunFinalizationRequest,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunInspectionRequest,
@@ -87,6 +88,23 @@ class InspectBenchmarkRunCapability(BenchmarkCapability):
     )
 
 
+class ReportBenchmarkRunCapability(BenchmarkCapability):
+    name = "openhcs_report_benchmark_run"
+    kind = CapabilityKind.TOOL
+    title = "Report benchmark run"
+    description = (
+        "Render a bounded comparison-suite report from the same typed receipt "
+        "and validated observation artifact used for run inspection. Recorded "
+        "intervals are not presented as a matched-concurrency speedup."
+    )
+    input_contract = BenchmarkRunInspectionRequest
+    output_contract = BenchmarkRunReport
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: BenchmarkControlService(context.path_policy),
+        method=lambda service, request: service.report_run(request),
+    )
+
+
 class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     name = "openhcs_inspect_measured_pipeline_run"
     kind = CapabilityKind.TOOL
@@ -150,6 +168,7 @@ __all__ = (
     "BenchmarkControlService",
     "DiscoverBenchmarkCasesCapability",
     "InspectBenchmarkRunCapability",
+    "ReportBenchmarkRunCapability",
     "InspectMeasuredPipelineRunCapability",
     "FinalizeMeasuredPipelineRunCapability",
     "ReportMeasuredPipelineRunCapability",

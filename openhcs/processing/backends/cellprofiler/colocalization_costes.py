@@ -6,6 +6,7 @@ import numpy as np
 from numba import njit
 
 from openhcs.processing.backends.cellprofiler.colocalization_costes_prefix import (
+    _cellprofiler_mean_variance_float32,
     _correlation_slopes_numba,
     _costes_manders_numba,
     _event_count_for_threshold_numba,

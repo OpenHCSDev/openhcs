@@ -84,6 +84,9 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     object_colocalization_threshold_reductions,
     thresholded_colocalization_metrics,
 )
+from openhcs.processing.backends.cellprofiler.colocalization_costes import (
+    _cellprofiler_mean_variance_float32,
+)
 from openhcs.processing.backends.cellprofiler.morphology import opening
 from openhcs.processing.backends.cellprofiler.outlines import (
     LineMode,
@@ -1517,6 +1520,28 @@ def test_faster_costes_preserves_native_float32_threshold_comparison() -> None:
     # Captured from CellProfiler 4.2.8.1 on NumPy 1.24.4 for these same arrays.
     assert observed[0] == 0.001083390554665446
     assert observed[1] == pytest.approx(0.001717834549060869, abs=1e-8)
+
+
+def test_faster_costes_preserves_native_float32_reduction_order() -> None:
+    """The native NumPy 1.24 reduction must survive later NumPy releases."""
+
+    indices = np.arange(361_920, dtype=np.int64)
+    first_codes = ((indices * 151 + 7) % 8192).astype(np.float32)
+    second_codes = np.clip(
+        2 * first_codes + ((indices * 37 + 3) % 401) - 200,
+        0,
+        16383,
+    ).astype(np.float32)
+    first = first_codes / np.float32(65535)
+    second = second_codes / np.float32(65535)
+
+    mean, variance = _cellprofiler_mean_variance_float32(first)
+    observed = costes_backend().scaled_second_channel_costes(first, second, 65535)
+
+    # Captured from CellProfiler 4.2.8.1 with NumPy 1.24.4 on these arrays.
+    assert np.float32(mean).view(np.uint32) == 0x3D7FF705
+    assert np.float32(variance).view(np.uint32) == 0x3AAAAD4D
+    assert observed == (0.0008850232700083925, 0.0017297637983499296)
 
 
 def test_measure_colocalization_respects_masked_payload_pixels():

@@ -21,7 +21,10 @@ from benchmark.cellprofiler_benchmark_cli import (
 )
 from benchmark.cellprofiler_comparison import (
     CellProfilerComparisonCase,
+    CellProfilerComparisonObservation,
     ComparisonMetricPolicy,
+    ToolExecutionSummary,
+    append_observations_jsonl,
     run_comparison_suite,
 )
 from benchmark.contracts.control import (
@@ -607,6 +610,48 @@ def test_empty_comparison_run_writes_completed_owned_receipt(tmp_path: Path) -> 
     assert receipt.rerun_command == rerun_command
 
 
+def test_comparison_run_rejects_occupied_destination_before_loading_manifest(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    sentinel = output_dir / "preserve.txt"
+    sentinel.write_text("preserve", encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="must be empty"):
+        run_comparison_suite((), output_root=output_dir, suite_id="blocked")
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run",
+            "--manifest",
+            str(tmp_path / "missing-manifest.json"),
+            "--output-dir",
+            str(output_dir),
+        )
+    )
+    with pytest.raises(FileExistsError, match="must be empty"):
+        args.cli_command.run(args)
+
+    assert sentinel.read_text(encoding="utf-8") == "preserve"
+    assert tuple(output_dir.iterdir()) == (sentinel,)
+
+
+def test_comparison_first_receipt_claim_is_exclusive(tmp_path: Path) -> None:
+    receipt = _run_receipt(
+        suite_id="first",
+        status=ComparisonSuiteRunStatus.RUNNING,
+        case_names=(),
+        repeats=1,
+        completed_observation_count=0,
+    )
+    path = ComparisonRunArtifact.SUITE_METADATA.path_in(tmp_path)
+    receipt.write_new(path)
+
+    with pytest.raises(FileExistsError):
+        replace(receipt, suite_id="second").write_new(path)
+    assert ComparisonSuiteRunReceipt.read(path).suite_id == "first"
+
+
 def test_comparison_run_records_failed_status_before_propagating(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -747,6 +792,170 @@ def test_benchmark_artifact_paging_is_shared_by_cli_and_service(
         "c.jsonl"
     ]
     assert payload["next_artifact_offset"] is None
+
+
+def test_comparison_report_uses_typed_observations_for_cli_and_mcp(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    _run_receipt(
+        suite_id="suite-report",
+        status=ComparisonSuiteRunStatus.COMPLETED,
+        case_names=("one",),
+        repeats=2,
+        completed_observation_count=2,
+    ).write(ComparisonRunArtifact.SUITE_METADATA.path_in(output_dir))
+    native = ToolExecutionSummary(
+        tool="CellProfiler",
+        success=True,
+        output_path=str(output_dir),
+        execution_seconds=2.0,
+        total_metric_seconds=2.0,
+        peak_memory_mb=None,
+        cached=False,
+        error_message=None,
+        phase_seconds={},
+    )
+    candidate = replace(native, tool="OpenHCS", execution_seconds=1.0)
+    observations = tuple(
+        CellProfilerComparisonObservation(
+            suite_id="suite-report",
+            case_name="one",
+            repetition=repetition,
+            dataset_id="one",
+            assay_category=None,
+            module_category=None,
+            cppipe_path="one.cppipe",
+            equivalent=True,
+            difference_count=0,
+            numeric_abs_tolerance=1e-6,
+            numeric_rel_tolerance=1e-6,
+            native_cellprofiler=native,
+            openhcs=candidate,
+        )
+        for repetition in (1, 2)
+    )
+    append_observations_jsonl(
+        ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(output_dir),
+        observations,
+    )
+    request = BenchmarkRunInspectionRequest(output_dir=str(output_dir))
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    report = service.report_run(request)
+    assert "| one | 2 | 2 | 2 | 2.000 | 1.000 |" in report.markdown
+    assert "not, by themselves, a matched-concurrency performance claim" in (
+        report.markdown
+    )
+    assert report.warnings == ()
+
+    args = create_benchmark_argument_parser().parse_args(
+        ("inspect-run", "--output-dir", str(output_dir), "--report")
+    )
+    assert args.cli_command.run(args) == 0
+    assert capsys.readouterr().out == report.markdown
+
+    if importlib.util.find_spec("mcp") is not None:
+        built = server.build_server(
+            OpenHCSAgentContext(
+                path_policy=AgentPathPolicy.with_roots(
+                    readable_roots=(tmp_path,), writable_roots=()
+                )
+            )
+        )
+        result = asyncio.run(
+            built.call_tool(
+                "openhcs_report_benchmark_run",
+                {"output_dir": str(output_dir)},
+            )
+        )
+        assert result[1]["markdown"] == report.markdown
+
+    append_observations_jsonl(
+        ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(output_dir),
+        (replace(observations[0], suite_id="foreign"),),
+    )
+    foreign_report = service.report_run(request)
+    assert "| one | 2 | 2 | 2 | 2.000 | 1.000 |" in foreign_report.markdown
+    assert any("another suite identity" in item for item in foreign_report.warnings)
+
+
+def test_comparison_report_warns_on_invalid_observation(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    _run_receipt(
+        suite_id="suite-report",
+        status=ComparisonSuiteRunStatus.COMPLETED,
+        case_names=("one",),
+        repeats=1,
+        completed_observation_count=1,
+    ).write(ComparisonRunArtifact.SUITE_METADATA.path_in(output_dir))
+    ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(output_dir).write_text(
+        '{"suite_id": "other", "case_name": "one", "repetition": 1}\n',
+        encoding="utf-8",
+    )
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    report = service.report_run(
+        BenchmarkRunInspectionRequest(output_dir=str(output_dir))
+    )
+    assert "No validated comparison observations are available." in report.markdown
+    assert any("invalid" in warning for warning in report.warnings)
+
+
+def test_comparison_report_bounds_invalid_observation_warnings(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    _run_receipt(
+        suite_id="suite-report",
+        status=ComparisonSuiteRunStatus.COMPLETED,
+        case_names=("one",),
+        repeats=1,
+        completed_observation_count=0,
+    ).write(ComparisonRunArtifact.SUITE_METADATA.path_in(output_dir))
+    ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(output_dir).write_text(
+        "{}\n" * 100,
+        encoding="utf-8",
+    )
+
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    report = service.report_run(
+        BenchmarkRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert len(report.warnings) == 32
+    assert report.warnings[-1] == "Additional evidence warnings omitted."
+    assert len(report.markdown) < 5_000
+
+
+def test_comparison_inspection_refuses_oversized_receipt(tmp_path: Path) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    ComparisonRunArtifact.SUITE_METADATA.path_in(output_dir).write_text(
+        " " * 1_000_001,
+        encoding="utf-8",
+    )
+
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    inspection = service.inspect_run(
+        BenchmarkRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert inspection.suite_id is None
+    assert inspection.warnings == (
+        "suite_metadata.json exceeds the inspection size limit.",
+    )
 
 
 @pytest.mark.parametrize(

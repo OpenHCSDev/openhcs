@@ -7,6 +7,69 @@ from numba import njit
 
 
 @njit(cache=True)
+def _cellprofiler_pairwise_sum_float32(
+    values: np.ndarray, start: int, length: int
+) -> np.float32:
+    """Reduce one float32 buffer in the order used by native NumPy 1.24."""
+
+    if length < 8:
+        result = np.float32(-0.0)
+        for index in range(length):
+            result += values[start + index]
+        return result
+    if length <= 128:
+        partials = np.empty(8, dtype=np.float32)
+        for lane in range(8):
+            partials[lane] = values[start + lane]
+        index = 8
+        while index < length - length % 8:
+            for lane in range(8):
+                partials[lane] += values[start + index + lane]
+            index += 8
+        result = ((partials[0] + partials[1]) + (partials[2] + partials[3])) + (
+            (partials[4] + partials[5]) + (partials[6] + partials[7])
+        )
+        while index < length:
+            result += values[start + index]
+            index += 1
+        return result
+    midpoint = length // 2
+    midpoint -= midpoint % 8
+    return _cellprofiler_pairwise_sum_float32(
+        values, start, midpoint
+    ) + _cellprofiler_pairwise_sum_float32(values, start + midpoint, length - midpoint)
+
+
+@njit(cache=True)
+def _cellprofiler_chunked_sum_float32(values: np.ndarray) -> np.float32:
+    """Preserve native 8,192-element reduction-buffer accumulation order."""
+
+    total = np.float32(0.0)
+    for start in range(0, values.size, 8192):
+        length = min(8192, values.size - start)
+        total += _cellprofiler_pairwise_sum_float32(values, start, length)
+    return total
+
+
+@njit(cache=True)
+def _cellprofiler_mean_variance_float32(
+    values: np.ndarray,
+) -> tuple[np.float32, np.float32]:
+    """Return native float32 mean and sample variance for Costes regression."""
+
+    count = values.size
+    mean = np.float32(_cellprofiler_chunked_sum_float32(values) / np.float32(count))
+    squared_deviations = np.empty(count, dtype=np.float32)
+    for index in range(count):
+        delta = np.float32(values[index] - mean)
+        squared_deviations[index] = np.float32(delta * delta)
+    variance = np.float32(
+        _cellprofiler_chunked_sum_float32(squared_deviations) / np.float32(count - 1)
+    )
+    return mean, variance
+
+
+@njit(cache=True)
 def _correlation_slopes_numba(
     first: np.ndarray,
     second: np.ndarray,

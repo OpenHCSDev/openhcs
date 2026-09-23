@@ -825,6 +825,7 @@ def run_comparison_suite(
     """Run all cases and write raw benchmark observations."""
     if repeats < 1:
         raise ValueError("repeats must be at least 1.")
+    require_new_comparison_output_root(output_root)
     selected_cases = tuple(cases)
     context = ComparisonSuiteRunContext(
         suite_id=suite_id,
@@ -850,6 +851,7 @@ def run_comparison_suite(
         context=context,
         status=ComparisonSuiteRunStatus.RUNNING,
         completed_observation_count=0,
+        new=True,
     )
     try:
         for repetition in range(1, repeats + 1):
@@ -914,6 +916,18 @@ def run_comparison_suite(
         completed_observation_count=len(observations),
     )
     return tuple(observations)
+
+
+def require_new_comparison_output_root(output_root: Path) -> None:
+    """Reject an occupied destination before a run can replace its evidence."""
+
+    path = Path(output_root)
+    if not path.exists():
+        return
+    if not path.is_dir():
+        raise FileExistsError(f"Benchmark output path is not a directory: {path}")
+    if any(path.iterdir()):
+        raise FileExistsError(f"Benchmark output directory must be empty: {path}")
 
 
 def load_observations_jsonl(
@@ -1155,14 +1169,19 @@ def write_suite_metadata(
     context: ComparisonSuiteRunContext,
     status: ComparisonSuiteRunStatus,
     completed_observation_count: int,
+    new: bool = False,
 ) -> None:
     """Write the typed reproducibility receipt for the benchmark suite."""
     updated_at_epoch_seconds = time.time()
-    context.run_receipt(
+    receipt = context.run_receipt(
         status=status,
         completed_observation_count=completed_observation_count,
         updated_at_epoch_seconds=updated_at_epoch_seconds,
-    ).write(path)
+    )
+    if new:
+        receipt.write_new(path)
+    else:
+        receipt.write(path)
 
 
 def _run_comparison_case(

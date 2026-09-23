@@ -93,10 +93,22 @@ class BenchmarkRunInspection:
     expected_observation_count: int | None
     progress_fraction: float | None
     manifest_path: str | None
+    case_names: tuple[str, ...]
+    repeats: int | None
     rerun_command: tuple[str, ...]
     rerun_working_directory: str | None
     structured_artifacts: tuple[BenchmarkStructuredArtifact, ...]
     next_artifact_offset: int | None
+    warnings: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkRunReport:
+    """Bounded human-readable report derived from a comparison-run receipt."""
+
+    schema_version: str
+    output_dir: str
+    markdown: str
     warnings: tuple[str, ...]
 
 

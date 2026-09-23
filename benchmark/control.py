@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
+from collections import defaultdict
+from collections.abc import Mapping
+from dataclasses import fields
 from pathlib import Path
+from statistics import median
 
 from benchmark.contracts.control import (
     BenchmarkCaseCatalog,
     BenchmarkCaseSummary,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
+    BenchmarkRunReport,
     BenchmarkStructuredArtifact,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunReport,
@@ -27,7 +33,13 @@ from benchmark.contracts.run_receipt import ComparisonSuiteRunReceipt
 BENCHMARK_CONTROL_SCHEMA_VERSION = "openhcs.benchmark.control.v1"
 MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v1"
 MAX_MEASURED_RECEIPT_BYTES = 1_000_000
+MAX_COMPARISON_RECEIPT_BYTES = 1_000_000
 MAX_SOURCE_SNAPSHOT_BYTES = 2_000_000
+MAX_REPORT_OBSERVATION_FILE_BYTES = 20_000_000
+MAX_REPORT_OBSERVATIONS = 2_048
+MAX_REPORT_CASES = 128
+MAX_REPORT_WARNINGS = 32
+MAX_REPORT_WARNING_CHARS = 256
 BENCHMARK_CASE_CATALOG_SCHEMA_VERSION = "openhcs.benchmark.case-catalog.v1"
 
 
@@ -255,13 +267,16 @@ def inspect_benchmark_run(
     receipt: ComparisonSuiteRunReceipt | None = None
     retained_metadata = _contained_file(resolved_output_dir, metadata_path)
     if retained_metadata is not None:
-        try:
-            receipt = ComparisonSuiteRunReceipt.read(retained_metadata)
-        except (TypeError, ValueError) as error:
-            warnings.append(
-                "suite_metadata.json is not a current typed run receipt; lifecycle "
-                f"and rerun claims are unavailable: {error}"
-            )
+        if retained_metadata.stat().st_size > MAX_COMPARISON_RECEIPT_BYTES:
+            warnings.append("suite_metadata.json exceeds the inspection size limit.")
+        else:
+            try:
+                receipt = ComparisonSuiteRunReceipt.read(retained_metadata)
+            except (TypeError, ValueError) as error:
+                warnings.append(
+                    "suite_metadata.json is not a current typed run receipt; lifecycle "
+                    f"and rerun claims are unavailable: {error}"
+                )
     else:
         warnings.append(
             "suite_metadata.json is absent or escapes the run; lifecycle and "
@@ -307,6 +322,8 @@ def inspect_benchmark_run(
             if receipt is not None and receipt.manifest_path is not None
             else None
         ),
+        case_names=receipt.case_names if receipt is not None else (),
+        repeats=receipt.repeats if receipt is not None else None,
         rerun_command=receipt.rerun_command if receipt is not None else (),
         rerun_working_directory=(
             str(receipt.rerun_working_directory)
@@ -315,6 +332,152 @@ def inspect_benchmark_run(
         ),
         structured_artifacts=structured_artifacts,
         next_artifact_offset=next_artifact_offset,
+        warnings=tuple(warnings),
+    )
+
+
+def report_benchmark_run(
+    inspection: BenchmarkRunInspection,
+) -> BenchmarkRunReport:
+    """Summarize typed comparison observations under the inspected run receipt.
+
+    This report does not infer an observed speedup from unmatched timing scopes.
+    It reads only the declared JSONL artifact and caps both input and output.
+    """
+
+    from python_introspect import dataclass_from_mapping
+
+    from benchmark.cellprofiler_comparison import CellProfilerComparisonObservation
+
+    root = Path(inspection.output_dir).resolve()
+    warnings = [
+        warning[:MAX_REPORT_WARNING_CHARS]
+        for warning in inspection.warnings[:MAX_REPORT_WARNINGS]
+    ]
+
+    def warn(message: str) -> None:
+        if len(warnings) < MAX_REPORT_WARNINGS:
+            warnings.append(message[:MAX_REPORT_WARNING_CHARS])
+        elif warnings[-1] != "Additional evidence warnings omitted.":
+            warnings[-1] = "Additional evidence warnings omitted."
+
+    lines = [
+        "# CellProfiler–OpenHCS comparison run",
+        "",
+        f"- Suite: {inspection.suite_id or 'unavailable'}",
+        f"- Recorded status: {inspection.recorded_status.value if inspection.recorded_status else 'unavailable'}",
+        f"- Observations: {inspection.completed_observation_count} / {inspection.expected_observation_count if inspection.expected_observation_count is not None else 'unknown'}",
+        "",
+    ]
+    observation_path = _contained_file(
+        root,
+        ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(root),
+    )
+    observations_by_case: dict[str, list[CellProfilerComparisonObservation]] = (
+        defaultdict(list)
+    )
+    if inspection.suite_id is None:
+        warn("A typed suite receipt is required for observation reporting.")
+    elif observation_path is None:
+        warn("Declared observations.jsonl is absent or escapes the run.")
+    elif observation_path.stat().st_size > MAX_REPORT_OBSERVATION_FILE_BYTES:
+        warn("Declared observations.jsonl exceeds the report size limit.")
+    else:
+        declared_fields = frozenset(
+            field.name for field in fields(CellProfilerComparisonObservation)
+        )
+        seen: set[tuple[str, int]] = set()
+        with observation_path.open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                if len(seen) >= MAX_REPORT_OBSERVATIONS:
+                    warn("Observation report limit reached; case results are partial.")
+                    break
+                try:
+                    payload = json.loads(line)
+                    if not isinstance(payload, Mapping):
+                        raise TypeError("observation must be a JSON object")
+                    observation = dataclass_from_mapping(
+                        CellProfilerComparisonObservation,
+                        {
+                            key: value
+                            for key, value in payload.items()
+                            if key in declared_fields
+                        },
+                    )
+                except (TypeError, ValueError, KeyError, AttributeError) as exc:
+                    warn(
+                        f"Observation line {line_number} is invalid "
+                        f"({type(exc).__name__})."
+                    )
+                    continue
+                if observation.suite_id != inspection.suite_id:
+                    warn(f"Observation line {line_number} has another suite identity.")
+                    continue
+                if observation.case_name not in inspection.case_names or not (
+                    1 <= observation.repetition <= (inspection.repeats or 0)
+                ):
+                    warn(f"Observation line {line_number} is outside declared work.")
+                    continue
+                key = (observation.case_name, observation.repetition)
+                if key in seen:
+                    warn(f"Observation line {line_number} repeats declared work.")
+                    continue
+                seen.add(key)
+                observations_by_case[observation.case_name].append(observation)
+
+    if observations_by_case:
+        lines.extend(
+            (
+                "## Recorded case outcomes",
+                "",
+                "| Case | Observed repeats | Both executions succeeded | Equivalent results | Native median (s) | OpenHCS median (s) |",
+                "| --- | ---: | ---: | ---: | ---: | ---: |",
+            )
+        )
+        for case_name in inspection.case_names[:MAX_REPORT_CASES]:
+            case_observations = observations_by_case.get(case_name, ())
+            if not case_observations:
+                continue
+            displayed_case_name = case_name.replace("|", "\\|").replace("\n", " ")
+            native_times = tuple(
+                item.native_cellprofiler.execution_seconds
+                for item in case_observations
+                if item.native_cellprofiler.success
+                and item.native_cellprofiler.execution_seconds is not None
+            )
+            openhcs_times = tuple(
+                item.openhcs.execution_seconds
+                for item in case_observations
+                if item.openhcs.success and item.openhcs.execution_seconds is not None
+            )
+            native_median = f"{median(native_times):.3f}" if native_times else "—"
+            openhcs_median = f"{median(openhcs_times):.3f}" if openhcs_times else "—"
+            lines.append(
+                f"| {displayed_case_name} "
+                f"| {len(case_observations)} "
+                f"| {sum(item.native_cellprofiler.success and item.openhcs.success for item in case_observations)} "
+                f"| {sum(item.equivalent for item in case_observations)} "
+                f"| {native_median} | {openhcs_median} |"
+            )
+        if len(inspection.case_names) > MAX_REPORT_CASES:
+            warn("Case table is truncated at the report case limit.")
+        lines.extend(
+            (
+                "",
+                "Recorded execution intervals are not, by themselves, a matched-concurrency performance claim.",
+            )
+        )
+    else:
+        lines.append("No validated comparison observations are available.")
+    if warnings:
+        lines.extend(("", "## Evidence warnings", ""))
+        lines.extend(f"- {warning}" for warning in warnings)
+    return BenchmarkRunReport(
+        schema_version=inspection.schema_version,
+        output_dir=inspection.output_dir,
+        markdown="\n".join(lines) + "\n",
         warnings=tuple(warnings),
     )
 
