@@ -386,6 +386,19 @@ while OpenHCS created workers per job. This one-workflow, different-lifecycle
 pilot is not pooled into Figure 5 and does not establish general comparative
 throughput.
 
+A second [matched BBBC022 advanced-segmentation pilot](../../benchmark/results/matched_bbbc022_20260923_rc5/README.md)
+used eight distinct wells (16 image sets), two native CellProfiler jobs and
+two observed OpenHCS worker processes. One warm-up and one timed repetition
+each emitted one SQLite database and seven CellProfiler Analyst properties
+files on both sides. Native shards reconstructed their whole-batch outputs;
+the OpenHCS value comparisons reported no SQLite or normalized-properties
+differences, and no images were saved. The timed native two-job invocation
+makespan was 206.459 s, versus a 189.933 s OpenHCS completed-server job. The
+native process startup and OpenHCS compilation were excluded, but the job
+boundaries and process lifecycles still differ. This single timed repetition
+is retained as a matched-concurrency diagnostic, not a cross-system speedup
+claim or a Figure 5 input.
+
 Each row retains its workflow, worker count, assignment count, completed-assignment
 count, execution and total time, memory, status and serial CellProfiler projection.
 The source CSV uses well terminology for the virtual-well assignment fields.

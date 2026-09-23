@@ -1,0 +1,50 @@
+{
+  "startup_seconds": 0.906588620506227,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_tmp"
+  },
+  "request": {
+    "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+    "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native",
+    "expected_image_sets": null,
+    "repetitions": 1,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": null,
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native/-1",
+      "image_set_count": 16,
+      "invocation_seconds": 379.7145328531042,
+      "pre_first_module_seconds": 1.3423859234899282,
+      "first_module_through_post_run_seconds": 378.37214692961425,
+      "invocation_started_monotonic_seconds": 4568409.213008837,
+      "first_module_started_monotonic_seconds": 4568410.55539476,
+      "completed_monotonic_seconds": 4568788.92754169
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native/0",
+      "image_set_count": 16,
+      "invocation_seconds": 356.6440155422315,
+      "pre_first_module_seconds": 0.5369470557197928,
+      "first_module_through_post_run_seconds": 356.1070684865117,
+      "invocation_started_monotonic_seconds": 4568788.927574682,
+      "first_module_started_monotonic_seconds": 4568789.464521738,
+      "completed_monotonic_seconds": 4569145.571590224
+    }
+  ]
+}

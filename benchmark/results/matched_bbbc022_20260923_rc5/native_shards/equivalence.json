@@ -1,0 +1,22 @@
+[
+  {
+    "repetition": -1,
+    "invocation_start_skew_seconds": 0.0012791464105248451,
+    "invocation_overlap_seconds": 159.56195499934256,
+    "invocation_through_completion_makespan_seconds": 211.02551015093923,
+    "first_module_start_skew_seconds": 0.001257023774087429,
+    "first_module_overlap_seconds": 158.35456142853945,
+    "first_module_through_completion_makespan_seconds": 209.81809445749968,
+    "differences": []
+  },
+  {
+    "repetition": 0,
+    "invocation_start_skew_seconds": 0.009696470573544502,
+    "invocation_overlap_seconds": 158.97703184280545,
+    "invocation_through_completion_makespan_seconds": 206.45865529589355,
+    "first_module_start_skew_seconds": 0.0023507578298449516,
+    "first_module_overlap_seconds": 158.39744199812412,
+    "first_module_through_completion_makespan_seconds": 205.87171973846853,
+    "differences": []
+  }
+]
