@@ -2037,6 +2037,7 @@ class ObjectColocalizationThresholdStage:
     threshold_2: np.ndarray
     threshold_counts: np.ndarray
     combined_threshold_has_values: bool
+    combined_costes_has_values: bool
     total_first_threshold: np.ndarray
     total_second_threshold: np.ndarray
     threshold_sum1: np.ndarray
@@ -2104,6 +2105,7 @@ class ObjectColocalizationThresholdStage:
                 threshold_sum2_sq,
                 threshold_product_sum,
                 threshold_counts,
+                combined_costes_has_values,
                 total_first_costes,
                 total_second_costes,
                 costes_sum1,
@@ -2128,6 +2130,7 @@ class ObjectColocalizationThresholdStage:
             threshold_sum2_sq = empty.copy()
             threshold_product_sum = empty.copy()
             threshold_counts = empty.copy()
+            combined_costes_has_values = False
             total_first_costes = empty.copy()
             total_second_costes = empty.copy()
             costes_sum1 = empty.copy()
@@ -2137,6 +2140,7 @@ class ObjectColocalizationThresholdStage:
             threshold_2=threshold_2,
             threshold_counts=threshold_counts,
             combined_threshold_has_values=bool(np.any(threshold_counts > 0.0)),
+            combined_costes_has_values=combined_costes_has_values,
             total_first_threshold=total_first_threshold,
             total_second_threshold=total_second_threshold,
             threshold_sum1=threshold_sum1,
@@ -2328,7 +2332,11 @@ def _populate_object_costes_metrics(
     threshold: ObjectColocalizationThresholdStage,
     metrics: ObjectColocalizationMetricArrays,
 ) -> None:
-    if not (options.do_costes and base.full_first_pixels.size):
+    if not (
+        options.do_costes
+        and base.full_first_pixels.size
+        and threshold.combined_costes_has_values
+    ):
         return
     metrics.costes_m1 = _divide_measurements(
         threshold.costes_sum1, threshold.total_first_costes

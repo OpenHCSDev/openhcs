@@ -95,6 +95,7 @@ def object_colocalization_base_reductions(
     np.ndarray,
     np.ndarray,
     np.ndarray,
+    bool,
     np.ndarray,
     np.ndarray,
     np.ndarray,
@@ -206,6 +207,7 @@ def object_colocalization_threshold_reductions(
     total_second_costes = np.zeros(object_count, dtype=np.float64)
     costes_sum1 = np.zeros(object_count, dtype=np.float64)
     costes_sum2 = np.zeros(object_count, dtype=np.float64)
+    combined_costes_has_values = False
     for index in range(object_labels.size):
         label_index = int(object_labels[index]) - 1
         first_value = float(first_pixels[index])
@@ -223,21 +225,14 @@ def object_colocalization_threshold_reductions(
             threshold_sum1_sq[label_index] += first_value * first_value
             threshold_sum2_sq[label_index] += second_value * second_value
             threshold_product_sum[label_index] += first_value * second_value
-        first_above_costes = (
-            first_value >= costes_threshold_1
-            if costes_threshold_1 <= 0.0
-            else first_value > costes_threshold_1
-        )
-        second_above_costes = (
-            second_value >= costes_threshold_2
-            if costes_threshold_2 <= 0.0
-            else second_value > costes_threshold_2
-        )
+        first_above_costes = first_value > costes_threshold_1
+        second_above_costes = second_value > costes_threshold_2
         if first_value >= costes_threshold_1:
             total_first_costes[label_index] += first_value
         if second_value >= costes_threshold_2:
             total_second_costes[label_index] += second_value
         if first_above_costes and second_above_costes:
+            combined_costes_has_values = True
             costes_sum1[label_index] += first_value
             costes_sum2[label_index] += second_value
     return (
@@ -249,6 +244,7 @@ def object_colocalization_threshold_reductions(
         threshold_sum2_sq,
         threshold_product_sum,
         threshold_counts,
+        combined_costes_has_values,
         total_first_costes,
         total_second_costes,
         costes_sum1,

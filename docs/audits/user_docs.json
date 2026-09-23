@@ -3026,7 +3026,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_library_loading.py",
-        "sha256": "ba0cfe8ffd253c601fb2e320ee8a09e7e41283fa69c0f5915b7390b146a3374f",
+        "sha256": "c756d24a1cd9469505d94de5cabe4cdb3129e67c4e1bd6c66ad02588274a8e5c",
         "role": "Proves object intensity measures a 3D object as one volume and emits Z features."
       },
       {
@@ -3054,7 +3054,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "2026-09-14: Re-read the complete dimensionality reference against the changed library-loading test. The changed assertion corrects ConvertObjectsToImage uint16 output in an unrelated 2-D conversion test; the authority test for one-row 3-D object intensity and Z features is unchanged, so every published volumetric claim remains accurate.",
       "2026-09-23: Re-read the complete dimensionality and measurement reference after adding the native float32 Costes threshold regression to the shared library-loading test file. The new assertion concerns 2-D colocalisation threshold membership; the existing test_measure_object_intensity_measures_3d_objects_as_single_volume_domain still proves one row per 3-D object, integrated intensity and Z features, and the callable-backed dimensionality claims are unchanged. The affected CellProfiler suite passed 680 tests.",
-      "2026-09-23: Re-read this reference against the scoped measurement-table row-axis regression. The changed tests rebase a single-site table's runtime slice index to its one-plane source provenance and check RelateObjects alignment; they do not change the declared 3-D segmentation or measurement schemas cited by this reference. The relevant CellProfiler and runtime-artifact suites passed 438 tests."
+      "2026-09-23: Re-read this reference against the scoped measurement-table row-axis regression. The changed tests rebase a single-site table's runtime slice index to its one-plane source provenance and check RelateObjects alignment; they do not change the declared 3-D segmentation or measurement schemas cited by this reference. The relevant CellProfiler and runtime-artifact suites passed 438 tests.",
+      "2026-09-23: Re-read this reference after the shared library-loading test gained 2-D Costes empty-threshold and per-object undefined-value regressions. The cited 3-D object-intensity and Z-feature assertions remain unchanged. The affected CellProfiler library-loading and module-execution suites passed 595 tests."
     ]
   },
   {

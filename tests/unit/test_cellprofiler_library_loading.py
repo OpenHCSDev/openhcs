@@ -1034,6 +1034,58 @@ def test_object_costes_threshold_boundary_uses_native_operators():
     assert costes_sum2[0] == 3.0
 
 
+def test_object_costes_without_jointly_qualifying_pixels_keeps_native_zero():
+    image = np.zeros((2, 1, 2), dtype=np.float32)
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones((1, 2), dtype=np.int32))
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_manders=False,
+        do_rwc=False,
+        do_overlap=False,
+        costes_thresholds=ColocalizationCostesThresholds.from_thresholds(0.0, 0.0),
+    )
+
+    (row,) = tuple(rows)
+    assert row.costes_m1 == 0.0
+    assert row.costes_m2 == 0.0
+
+
+def test_object_costes_preserves_undefined_object_when_another_qualifies():
+    image = np.asarray(
+        (
+            ((1.0, 1.0, 0.0, 0.0),),
+            ((1.0, 1.0, 0.0, 0.0),),
+        ),
+        dtype=np.float32,
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(
+            labels=np.asarray(((1, 1, 2, 2),), dtype=np.int32)
+        )
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_manders=False,
+        do_rwc=False,
+        do_overlap=False,
+        costes_thresholds=ColocalizationCostesThresholds.from_thresholds(0.0, 0.0),
+    )
+
+    first, second = tuple(rows)
+    assert first.costes_m1 == 1.0
+    assert first.costes_m2 == 1.0
+    assert np.isnan(second.costes_m1)
+    assert np.isnan(second.costes_m2)
+
+
 def test_object_costes_thresholds_are_compared_in_pixel_dtype():
     raw_threshold = 25.0 / 255.0
     pixel_threshold = np.float32(raw_threshold)
