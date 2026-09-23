@@ -3899,7 +3899,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "35fad0c7e4425b95160fa0a85d82d1cf28d717f6a5cb65a61b43e3fc2e20c459",
+    "source_sha256": "e517e368ccc402f981c8c07214ac25c9724f2bef9bd2d9be0f8dfc5b00b29dbe",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3968,6 +3968,16 @@
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
+        "path": "benchmark/control_service.py",
+        "sha256": "558abc103772e1c5de787d73767d45d0439d1b00681a59a12ef1f643a84c63dc",
+        "role": "Requires manifest and every declared benchmark source location to satisfy the agent read policy."
+      },
+      {
+        "path": "openhcs/agent/path_policy.py",
+        "sha256": "6ee0dc362b52d147586e9e61ea89499f5b35355ff697a2bfe5bbcc33febc45ba",
+        "role": "Owns explicit MCP readable roots and rejection of paths outside them."
+      },
+      {
         "path": "tests/unit/test_benchmark_control.py",
         "sha256": "d4a525e88a10c85459b08cec1d9784b4e1c81591f6c7c4b7e279791d6e3e952b",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
@@ -4015,7 +4025,8 @@
       "2026-09-22: Targeted review of the benchmark inspection how-to after CLI and MCP gained shared bounded artifact paging. The page now gives the next-offset procedure without implying inspection launches a job or proves parity; 28 focused control tests passed. Fresh installed-wheel CI remains separate.",
       "2026-09-22: Re-reviewed the measured-run inspection instruction after adding declaration-derived unreceipted artifacts. The action is to preserve incomplete evidence for diagnosis and withhold a completion claim; the architecture page explains why. Thirty-five focused control and wrapper tests passed locally.",
       "2026-09-22: Re-reviewed the measured-run recovery how-to. It now permits retrying finalisation only for the same completed ordinary job; byte-identical partial evidence is reused, conflicts require diagnosis, and inspection alone never proves completion. Thirty-seven focused tests passed locally.",
-      "2026-09-23: Re-read the complete MCP client how-to after the measured CLI gained ordinary-job interrupt and timeout cancellation. The action and its limits are now explicit; the other ownership and safety claims remain supported. See docs/audits/benchmark_cli_interrupt_review_20260923.md; 143 affected tests passed locally."
+      "2026-09-23: Re-read the complete MCP client how-to after the measured CLI gained ordinary-job interrupt and timeout cancellation. The action and its limits are now explicit; the other ownership and safety claims remain supported. See docs/audits/benchmark_cli_interrupt_review_20260923.md; 143 affected tests passed locally.",
+      "2026-09-23: Re-read the complete page after a fresh current-checkout MCP client rejected an official benchmark manifest whose resolved dataset lay outside the configured read roots. Compared the benchmark service with AgentPathPolicy, granted the dataset cache explicitly, and verified the same expert discovery call returned the declared source. Clarified the existing filesystem setup step without changing benchmark execution authority; 63 focused benchmark control and equivalence tests passed. Fresh wheel CI remains separate."
     ]
   },
   {
