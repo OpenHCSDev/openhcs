@@ -395,7 +395,7 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
     monkeypatch.setattr(
         throughput,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, _well_ids: ("A01",),
+        lambda _path, _well_ids, *, source_well_filter: ("A01",),
     )
     output_root = tmp_path / "throughput"
 
@@ -447,7 +447,7 @@ def test_paper_two_worker_geometry_uses_one_ordinary_measured_run(
     monkeypatch.setattr(
         throughput,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, _well_ids: wells,
+        lambda _path, _well_ids, *, source_well_filter: wells,
     )
     output_root = tmp_path / "throughput"
 

@@ -237,7 +237,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -333,7 +333,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -462,7 +462,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -633,7 +633,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -678,7 +678,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],
@@ -846,7 +846,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1507,7 +1507,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1711,7 +1711,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1800,7 +1800,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/troubleshooting_FAQ.rst",
-    "source_sha256": "0f7869c544946353a5dab1bfc1ae1fd686c1bb9dc005edeb41e7f0dcfab7fcf1",
+    "source_sha256": "0c2fb0dbb43ec18efb8d4aeff2a728a35630516a6e506de677de5d070089f428",
     "audience": [
       "desktop operators diagnosing a failed workflow"
     ],
@@ -1814,7 +1814,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -2098,7 +2098,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -2410,7 +2410,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -3812,7 +3812,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],

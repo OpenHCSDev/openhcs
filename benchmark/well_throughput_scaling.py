@@ -2211,6 +2211,7 @@ def run_case_well_throughput(
     )
     pipeline_config = replace(
         prepared.pipeline_config,
+        materialize_runtime_artifacts=False,
         well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
         path_planning_config=LazyPathPlanningConfig(
             well_filter=0,

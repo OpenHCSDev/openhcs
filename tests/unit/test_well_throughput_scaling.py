@@ -891,6 +891,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert submissions[0].pipeline_document.pipeline_steps == []
     pipeline_config = submissions[0].pipeline_document.pipeline_config
     assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].config_params["runtime_observation_export_scope"] == (
         ZMQRuntimeObservationExportScope.OUTCOMES.value

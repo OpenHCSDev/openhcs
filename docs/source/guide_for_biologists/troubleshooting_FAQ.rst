@@ -107,10 +107,12 @@ execution endpoint.
 Where are outputs?
 ------------------
 
-Only explicitly materialized image outputs and declared analysis artifacts are
-persisted. Inspect the resolved step materialization and analysis-results
-configuration; intermediate main-flow values may exist only in the runtime
-backend.
+Explicitly declared exports persist. When automatic runtime materialisation is
+enabled, the compiler may also persist terminal artifacts such as object labels.
+To keep those automatic outputs runtime-only, set
+``materialize_runtime_artifacts=False`` in the effective pipeline configuration;
+explicit exports still write. Inspect the resolved configuration and output-plate
+inventory rather than assuming every intermediate main-flow value is a file.
 
 For developer diagnosis, see
 :doc:`../development/pipeline_debugging_guide`.
