@@ -58,7 +58,7 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 
 
-def _synthetic_plate_and_pipeline(tmp_path: Path):
+def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("A01",)):
     plate = tmp_path / "plate"
     SyntheticMicroscopyGenerator(
         output_dir=str(plate),
@@ -67,7 +67,7 @@ def _synthetic_plate_and_pipeline(tmp_path: Path):
         wavelengths=1,
         z_stack_levels=1,
         num_cells=2,
-        wells=["A01"],
+        wells=list(wells),
         format="ImageXpress",
         random_seed=7,
     ).generate_dataset()
@@ -355,6 +355,54 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
     assert receipt.execution_plate_id == str(plate)
     assert receipt.expected_axis_count == receipt.observed_axis_count == 1
     assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
+
+
+def test_paper_two_worker_geometry_uses_one_ordinary_measured_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import benchmark.well_throughput_scaling as throughput
+
+    wells = tuple(f"A{index:02d}" for index in range(1, 9))
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path, wells=wells)
+    source_identity = tmp_path / "original_source"
+    source_identity.mkdir()
+    monkeypatch.setattr(
+        throughput,
+        "prepare_cellprofiler_input_workspace",
+        lambda _request: SimpleNamespace(
+            pipeline_import_error=None,
+            pipeline_steps=pipeline.pipeline_steps,
+            pipeline_config=pipeline.pipeline_config,
+            materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
+            execution_plate_path=plate,
+        ),
+    )
+    monkeypatch.setattr(throughput, "_synthetic_well_ids", lambda _count: wells)
+    monkeypatch.setattr(
+        throughput,
+        "_replicate_source_binding_workspace_wells",
+        lambda _path, _well_ids: wells,
+    )
+    output_root = tmp_path / "throughput"
+
+    result = run_case_well_throughput(
+        case_name="synthetic-blur-eight-well",
+        dataset_path=source_identity,
+        cppipe_path=tmp_path / "synthetic.cppipe",
+        output_root=output_root,
+        mode=WellThroughputMode("8w_2c", 8, 2),
+        execution_port=26000 + os.getpid() % 20000,
+    )
+
+    assert result.is_successful(), result.error_message
+    assert result.execution_route is ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
+    assert result.successful_wells == 8
+    (receipt_path,) = output_root.glob(
+        "ordinary_run_evidence/*/measured_pipeline_receipt.json"
+    )
+    receipt = MeasuredPipelineRunReceipt.read(receipt_path)
+    assert receipt.expected_axis_count == receipt.observed_axis_count == 8
+    assert receipt.phase_timings
 
 
 def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(

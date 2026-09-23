@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from polystore.virtual_workspace import SourcePixelRef
 
+from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
 from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
 from benchmark.timing import BenchmarkPhase
 from benchmark.well_throughput_scaling import (
@@ -24,16 +27,30 @@ from benchmark.well_throughput_scaling import (
     WellThroughputPreset,
     WellThroughputResult,
     WellThroughputStatus,
+    _replicate_source_binding_workspace_wells,
     generate_well_throughput_figures,
     native_execution_baselines_from_summary_csv,
     read_well_throughput_csv,
     run_case_well_throughput,
     run_well_throughput_suite,
     well_throughput_plan_from_manifest,
+    well_throughput_start_method_from_manifest,
     write_well_throughput_csv,
 )
-from openhcs.core.config import PipelineConfig
+from openhcs.constants.constants import AllComponents
+from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
 from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourcePlaneProjection,
+    SourceProjectionMetadataSerializer,
+)
+from openhcs.core.virtual_workspace_metadata import (
+    FIELDS,
+    VirtualWorkspaceMapping,
+    VirtualWorkspaceSourceProjectionEntries,
+)
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
@@ -121,6 +138,245 @@ def test_well_throughput_plan_from_manifest_reads_declared_modes(
         "12w_3c",
         "16w_4c",
     )
+
+
+def test_paper_manifest_declares_paired_sweep_modes_and_start_method() -> None:
+    manifest_path = Path("benchmark/manifests/official30_portable_axis1.json")
+
+    plan = well_throughput_plan_from_manifest(manifest_path)
+
+    assert plan is not None
+    assert tuple((mode.well_count, mode.worker_count) for mode in plan.modes) == (
+        (1, 1),
+        (8, 2),
+        (12, 3),
+        (16, 4),
+    )
+    assert well_throughput_start_method_from_manifest(manifest_path) is (
+        MultiprocessingStartMethod.FORK
+    )
+
+
+def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        '{"cases": [], "well_throughput_modes": ["8w_2c", "12w_3c"], '
+        '"well_throughput_start_method": "spawn"}',
+        encoding="utf-8",
+    )
+    case = SimpleNamespace(
+        name="Example",
+        dataset_path=tmp_path / "dataset",
+        cppipe_path=tmp_path / "pipeline.cppipe",
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "load_comparison_cases",
+        lambda _manifest_path: (case,),
+    )
+    submitted: list[tuple[str, MultiprocessingStartMethod]] = []
+
+    def fake_run_case_well_throughput(**kwargs):
+        mode = kwargs["mode"]
+        submitted.append((mode.name, kwargs["start_method"]))
+        return WellThroughputResult(
+            case_name="Example",
+            mode_name=mode.name,
+            worker_count=mode.worker_count,
+            well_count=mode.well_count,
+            compile_seconds=1.0,
+            prepare_seconds=0.0,
+            execute_seconds=2.0,
+            total_seconds=3.0,
+            wells_per_second=mode.well_count / 2.0,
+            successful_wells=mode.well_count,
+            execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+        )
+
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "run_case_well_throughput",
+        fake_run_case_well_throughput,
+    )
+
+    rows = run_well_throughput_suite(
+        manifest_path,
+        output_root=tmp_path / "outputs",
+        well_counts=(),
+        worker_counts=(),
+    )
+
+    assert submitted == [
+        ("8w_2c", MultiprocessingStartMethod.SPAWN),
+        ("12w_3c", MultiprocessingStartMethod.SPAWN),
+    ]
+    assert tuple(row.mode_name for row in rows) == ("8w_2c", "12w_3c")
+
+
+def test_sweep_cli_plan_resolves_paper_manifest_without_acquiring_data(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output_dir = tmp_path / "unused"
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-well-throughput",
+            "--manifest",
+            "benchmark/manifests/official30_portable_axis1.json",
+            "--output-dir",
+            str(output_dir),
+            "--plan-only",
+        )
+    )
+
+    assert args.cli_command.run(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert tuple(
+        (mode["well_count"], mode["worker_count"]) for mode in payload["modes"]
+    ) == ((1, 1), (8, 2), (12, 3), (16, 4))
+    assert payload["start_method"] == "fork"
+    assert not output_dir.exists()
+
+
+def test_sweep_cli_refuses_to_mix_existing_output_without_resume(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "Example",
+                        "dataset_path": str(tmp_path / "dataset"),
+                        "cppipe_path": str(tmp_path / "pipeline.cppipe"),
+                    }
+                ],
+                "well_throughput_modes": ["8w_2c"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "outputs"
+    output_dir.mkdir()
+    sentinel = output_dir / "keep.txt"
+    sentinel.write_text("keep", encoding="utf-8")
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-well-throughput",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(output_dir),
+        )
+    )
+
+    with pytest.raises(FileExistsError, match="must be empty"):
+        args.cli_command.run(args)
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_sweep_cli_reports_recorded_failure_with_nonzero_exit(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import benchmark.cellprofiler_benchmark_cli as cli
+    import benchmark.well_throughput_scaling as throughput
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "Example",
+                        "dataset_path": str(tmp_path / "dataset"),
+                        "cppipe_path": str(tmp_path / "pipeline.cppipe"),
+                    }
+                ],
+                "well_throughput_modes": ["8w_2c"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "configure_headless_cpu_benchmark_runtime", lambda _: None)
+    monkeypatch.setattr(
+        throughput,
+        "run_well_throughput_suite",
+        lambda *_args, **_kwargs: (
+            WellThroughputResult.failed(
+                case_name="Example",
+                mode=WellThroughputMode("8w_2c", 8, 2),
+                compile_seconds=0.0,
+                prepare_seconds=0.0,
+                execute_seconds=0.0,
+                total_seconds=1.0,
+                peak_memory_mb=None,
+                native_execution_baseline=None,
+                error_message="compile failed",
+                execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+            ),
+        ),
+    )
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-well-throughput",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+        )
+    )
+
+    assert args.cli_command.run(args) == 1
+
+
+def test_repeated_wells_keep_all_declared_projection_fields_coherent(
+    tmp_path: Path,
+) -> None:
+    parser = SourceSchemaFilenameParser()
+    original = SourcePlaneProjection(
+        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        ref=SourcePixelRef("disk", "/source/blue.tif"),
+        source_alias="Blue",
+        source_metadata={"Well": "A01", "site": "1", "channel": "1"},
+    )
+    serializer = SourceProjectionMetadataSerializer(parser=parser)
+    original_path = serializer.virtual_path(original, execution_anchor=True)
+    main = {
+        **serializer.projection_fields(((original, original_path),)),
+        FIELDS.IMAGE_FILES: [original_path],
+        FIELDS.WELLS: {"A01": None},
+    }
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    metadata_path.write_text(
+        json.dumps({FIELDS.SUBDIRECTORIES: {FIELDS.DEFAULT_SUBDIRECTORY: main}}),
+        encoding="utf-8",
+    )
+
+    wells = _replicate_source_binding_workspace_wells(metadata_path, ("W001", "W002"))
+
+    assert wells == ("W001", "W002")
+    updated = json.loads(metadata_path.read_text(encoding="utf-8"))[
+        FIELDS.SUBDIRECTORIES
+    ][FIELDS.DEFAULT_SUBDIRECTORY]
+    mapping = VirtualWorkspaceMapping.from_subdirectory(updated).entries
+    projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        updated
+    ).entries
+    assert set(mapping) == set(projections) == set(updated[FIELDS.IMAGE_FILES])
+    assert len(projections) == 2
+    assert {
+        projection.address.value_for(AllComponents.WELL)
+        for projection in projections.values()
+    } == {
+        "W001",
+        "W002",
+    }
+    assert all(projection.ref == original.ref for projection in projections.values())
+    assert set(updated[FIELDS.SOURCE_METADATA]) == set(projections)
 
 
 def test_requested_well_throughput_axes_override_manifest_modes(
@@ -379,6 +635,7 @@ def test_rerun_missing_memory_filters_completed_rows(
         ),
         existing_results=(completed, missing_memory),
         rerun_missing_memory=True,
+        start_method=MultiprocessingStartMethod.FORK,
     )
 
     assert calls == [("Example", "12w_3c")]
@@ -444,6 +701,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
         worker_counts=(),
         plan=WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),)),
         existing_results=(existing_error,),
+        start_method=MultiprocessingStartMethod.FORK,
     )
 
     assert rows == (rerun,)
@@ -625,6 +883,7 @@ def test_run_suite_passes_memory_limit_to_case_runner(
         worker_counts=(),
         plan=WellThroughputBenchmarkPlan((WellThroughputMode("8w_2c", 8, 2),)),
         max_memory_mb=4096.0,
+        start_method=MultiprocessingStartMethod.FORK,
     )
 
     assert observed_limits == [4096.0]

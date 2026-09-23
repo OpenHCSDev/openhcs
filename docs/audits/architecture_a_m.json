@@ -2075,7 +2075,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "e2dbf06b99aebb59c684952d9db792670cfbbb779ccd253f12b784c17250bbc7",
+        "sha256": "aa146f15d2a135ce333c8fd69792c3b124b7852fe340bca007d958ac42af0ac7",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {

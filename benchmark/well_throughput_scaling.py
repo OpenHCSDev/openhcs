@@ -45,10 +45,20 @@ from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_matching import with_source_component_metadata
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourceProjectionMetadataSerializer,
+    SourceProjectionSet,
+)
+from openhcs.core.virtual_workspace_metadata import (
+    AtomicMetadataWriter,
+    FIELDS,
+    VirtualWorkspaceMapping,
+    VirtualWorkspaceSourceProjectionEntries,
+)
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.microscopes.openhcs import FIELDS
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
@@ -2064,7 +2074,7 @@ def run_well_throughput_suite(
     case_names: Sequence[str] = (),
     well_counts: Sequence[int],
     worker_counts: Sequence[int],
-    start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
+    start_method: MultiprocessingStartMethod | None = None,
     plan: WellThroughputBenchmarkPlan | None = None,
     native_execution_baselines: (
         Mapping[
@@ -2089,10 +2099,19 @@ def run_well_throughput_suite(
             "execution route; use a new output root."
         )
     cases = load_comparison_cases(manifest_path)
+    if not cases:
+        raise ValueError("Well-throughput manifest contains no executable cases.")
     selected = set(case_names)
-    benchmark_plan = plan or WellThroughputBenchmarkPlan.from_axes(
+    unknown_cases = selected.difference(case.name for case in cases)
+    if unknown_cases:
+        raise ValueError(f"Unknown well-throughput cases: {sorted(unknown_cases)!r}.")
+    benchmark_plan = plan or WellThroughputBenchmarkPlan.from_requested_modes(
         well_counts=well_counts,
         worker_counts=worker_counts,
+        manifest_path=manifest_path,
+    )
+    effective_start_method = start_method or well_throughput_start_method_from_manifest(
+        manifest_path
     )
     native_baselines = dict(native_execution_baselines or {})
     results: list[WellThroughputResult] = [
@@ -2124,7 +2143,7 @@ def run_well_throughput_suite(
                     / f"workers_{mode.worker_count}"
                 ),
                 mode=mode,
-                start_method=start_method,
+                start_method=effective_start_method,
                 native_execution_baseline=native_baselines.get(case.name),
                 max_memory_mb=max_memory_mb,
                 execution_port=execution_port,
@@ -2390,7 +2409,7 @@ def well_throughput_plan_from_manifest(
     manifest_path: Path,
 ) -> WellThroughputBenchmarkPlan | None:
     """Load optional well-throughput modes declared by a comparison manifest."""
-    manifest = ComparisonManifest.load(manifest_path)
+    manifest = ComparisonManifest.load(manifest_path, materialize_roots=False)
     raw_modes = manifest.payload.get("well_throughput_modes")
     if raw_modes is None:
         return None
@@ -2399,6 +2418,18 @@ def well_throughput_plan_from_manifest(
     return WellThroughputBenchmarkPlan.from_presets(
         tuple(WellThroughputPreset(str(raw_mode)) for raw_mode in raw_modes)
     )
+
+
+def well_throughput_start_method_from_manifest(
+    manifest_path: Path,
+) -> MultiprocessingStartMethod:
+    """Resolve the sweep's declared worker start method without acquiring data."""
+
+    manifest = ComparisonManifest.load(manifest_path, materialize_roots=False)
+    raw_method = manifest.payload.get("well_throughput_start_method")
+    if raw_method is None:
+        return MultiprocessingStartMethod.FORK
+    return MultiprocessingStartMethod(str(raw_method))
 
 
 def write_well_throughput_csv(
@@ -3129,7 +3160,7 @@ def _replicate_source_binding_workspace_wells(
     metadata_path: Path,
     well_ids: Iterable[str],
 ) -> tuple[str, ...]:
-    """Replicate one benchmark source workspace without copying source pixels."""
+    """Replicate typed source projections without copying source pixels."""
 
     target_wells = tuple(dict.fromkeys(str(well_id) for well_id in well_ids))
     if not target_wells:
@@ -3145,24 +3176,48 @@ def _replicate_source_binding_workspace_wells(
         raise ValueError(
             f"OpenHCS metadata lacks its main source workspace: {metadata_path}"
         )
-    workspace_mapping = main_metadata.get(FIELDS.WORKSPACE_MAPPING)
-    if not isinstance(workspace_mapping, dict) or not workspace_mapping:
-        raise ValueError(f"OpenHCS metadata lacks source mappings: {metadata_path}")
-    source_metadata = main_metadata.get(FIELDS.SOURCE_METADATA) or {}
-    if not isinstance(source_metadata, dict):
-        raise ValueError(f"OpenHCS source metadata is not a mapping: {metadata_path}")
+    workspace_mapping = VirtualWorkspaceMapping.from_subdirectory(main_metadata)
+    source_projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        main_metadata
+    )
+    if not workspace_mapping.entries or not source_projections.entries:
+        raise ValueError(
+            f"OpenHCS metadata lacks declared source projections: {metadata_path}"
+        )
+    if set(workspace_mapping.entries) != set(source_projections.entries):
+        raise ValueError(
+            "OpenHCS source projections and workspace mappings have different paths."
+        )
+    image_files = main_metadata.get(FIELDS.IMAGE_FILES)
+    if not isinstance(image_files, list) or not set(image_files).issubset(
+        source_projections.entries
+    ):
+        raise ValueError("OpenHCS image files must reference declared projections.")
 
     parser = SourceSchemaFilenameParser()
-    expanded_mapping: dict[str, object] = {}
-    expanded_metadata: dict[str, dict[str, object]] = {}
+    expanded_projection_paths = []
+    expanded_image_files: list[str] = []
     used_paths: set[str] = set()
-    for virtual_path, source_ref in workspace_mapping.items():
-        parsed = parser.parse_filename(str(virtual_path))
+    for virtual_path, projection in source_projections.entries.items():
+        if projection.address is None:
+            raise ValueError(
+                "Well-throughput repetition requires scalar source projections; "
+                f"{virtual_path!r} declares an aggregate source."
+            )
+        if projection.ref != workspace_mapping.require_source_ref(virtual_path):
+            raise ValueError(
+                f"Source projection ref disagrees with workspace mapping: {virtual_path!r}"
+            )
+        parsed = parser.parse_filename(Path(virtual_path).name)
         if parsed is None:
             raise ValueError(f"Cannot parse source-binding path {virtual_path!r}.")
-        path_metadata = source_metadata.get(str(virtual_path), {})
-        if not isinstance(path_metadata, dict):
-            raise ValueError(f"Source metadata for {virtual_path!r} is not a mapping.")
+        if (
+            OpenHCSPlaneAddress.from_component_values(parsed.declared_values())
+            != projection.address
+        ):
+            raise ValueError(
+                f"Source projection address disagrees with virtual path: {virtual_path!r}"
+            )
         for well_id in target_wells:
             site = parsed.required_value(AllComponents.SITE)
             expanded_path = _synthetic_well_virtual_path(
@@ -3183,20 +3238,45 @@ def _replicate_source_binding_workspace_wells(
                 )
                 ordinal_site += 1
             used_paths.add(expanded_path)
-            expanded_mapping[expanded_path] = source_ref
-            expanded_metadata[expanded_path] = dict(
-                with_source_component_metadata(
-                    path_metadata,
-                    AllComponents.WELL,
-                    well_id,
+            expanded_parsed = parser.parse_filename(Path(expanded_path).name)
+            if expanded_parsed is None:
+                raise ValueError(
+                    f"Cannot parse repeated source path {expanded_path!r}."
+                )
+            expanded_address = OpenHCSPlaneAddress.from_component_values(
+                expanded_parsed.declared_values()
+            )
+            expanded_metadata = dict(projection.source_metadata)
+            for component, value in expanded_address.component_values().items():
+                expanded_metadata = with_source_component_metadata(
+                    expanded_metadata, component, value
+                )
+            expanded_projection_paths.append(
+                (
+                    replace(
+                        projection,
+                        address=expanded_address,
+                        source_metadata=expanded_metadata,
+                    ),
+                    expanded_path,
                 )
             )
+            if virtual_path in image_files:
+                expanded_image_files.append(expanded_path)
 
-    main_metadata[FIELDS.IMAGE_FILES] = list(expanded_mapping)
-    main_metadata[FIELDS.WORKSPACE_MAPPING] = expanded_mapping
-    main_metadata[FIELDS.SOURCE_METADATA] = expanded_metadata
+    SourceProjectionSet(
+        tuple(projection for projection, _ in expanded_projection_paths)
+    )
+    main_metadata.update(
+        SourceProjectionMetadataSerializer(parser=parser).projection_fields(
+            tuple(expanded_projection_paths)
+        )
+    )
+    main_metadata[FIELDS.IMAGE_FILES] = expanded_image_files
     main_metadata[FIELDS.WELLS] = {well_id: None for well_id in target_wells}
-    metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    AtomicMetadataWriter().replace_subdirectory_metadata(
+        metadata_path, FIELDS.DEFAULT_SUBDIRECTORY, main_metadata
+    )
     return target_wells
 
 

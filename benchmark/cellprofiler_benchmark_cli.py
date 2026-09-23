@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -331,6 +332,144 @@ class ListBenchmarkCasesCommand(BenchmarkCliCommand):
             requested_names=tuple(args.case_names or ()),
         )
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+
+
+class RunWellThroughputCommand(BenchmarkCliCommand):
+    """Run a declared sweep through the ordinary measured-pipeline wrapper."""
+
+    command_name = "run-well-throughput"
+    help_text = "Run a CellProfiler-imported well-throughput sweep with receipts."
+    sort_order = 7
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        from benchmark.well_throughput_scaling import WellThroughputPreset
+        from openhcs.core.config import MultiprocessingStartMethod
+
+        parser = self._parser(subparsers)
+        parser.add_argument("--manifest", type=Path, required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument("--case", action="append", dest="case_names")
+        parser.add_argument(
+            "--preset",
+            action="append",
+            choices=tuple(preset.value for preset in WellThroughputPreset),
+        )
+        parser.add_argument("--well-count", type=int, action="append")
+        parser.add_argument("--worker-count", type=int, action="append")
+        parser.add_argument(
+            "--start-method",
+            choices=tuple(method.value for method in MultiprocessingStartMethod),
+            help="Override the manifest's declared worker start method.",
+        )
+        parser.add_argument("--max-memory-mb", type=float)
+        parser.add_argument("--execution-port", type=int)
+        parser.add_argument("--resume", action="store_true")
+        parser.add_argument(
+            "--plan-only",
+            action="store_true",
+            help="Show the resolved sweep without acquiring data or executing it.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import discover_benchmark_cases
+        from benchmark.well_throughput_scaling import (
+            WELL_THROUGHPUT_ROWS_CSV,
+            WellThroughputBenchmarkPlan,
+            WellThroughputPreset,
+            read_well_throughput_csv,
+            run_well_throughput_suite,
+            well_throughput_start_method_from_manifest,
+        )
+        from openhcs.core.config import MultiprocessingStartMethod
+        from openhcs.serialization.json import to_jsonable
+
+        if args.max_memory_mb is not None and (
+            not math.isfinite(args.max_memory_mb) or args.max_memory_mb <= 0
+        ):
+            raise ValueError("--max-memory-mb must be finite and positive.")
+        if args.preset and (args.well_count or args.worker_count):
+            raise ValueError("Choose presets or explicit well/worker counts, not both.")
+        if args.execution_port is not None and not 1 <= args.execution_port <= 65535:
+            raise ValueError("--execution-port must be between 1 and 65535.")
+        case_catalog = discover_benchmark_cases(
+            args.manifest,
+            requested_names=tuple(args.case_names or ()),
+        )
+        plan = WellThroughputBenchmarkPlan.from_requested_modes(
+            presets=tuple(WellThroughputPreset(value) for value in args.preset or ()),
+            well_counts=tuple(args.well_count or ()),
+            worker_counts=tuple(args.worker_count or ()),
+            manifest_path=args.manifest,
+        )
+        start_method = (
+            MultiprocessingStartMethod(args.start_method)
+            if args.start_method is not None
+            else well_throughput_start_method_from_manifest(args.manifest)
+        )
+        if args.plan_only:
+            print(
+                json.dumps(
+                    to_jsonable(
+                        {
+                            "manifest": str(args.manifest),
+                            "case_names": tuple(
+                                case.name for case in case_catalog.cases
+                            ),
+                            "modes": plan.modes,
+                            "start_method": start_method.value,
+                            "warnings": case_catalog.warnings,
+                        }
+                    ),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return 0
+
+        output_dir = args.output_dir.expanduser().resolve()
+        rows_path = output_dir / WELL_THROUGHPUT_ROWS_CSV
+        if args.resume:
+            if not rows_path.is_file():
+                raise FileNotFoundError(
+                    f"Cannot resume without a throughput CSV: {rows_path}"
+                )
+            existing_results = read_well_throughput_csv(rows_path)
+        else:
+            if output_dir.exists() and any(output_dir.iterdir()):
+                raise FileExistsError(
+                    f"Well-throughput output directory must be empty: {output_dir}"
+                )
+            existing_results = ()
+        if not case_catalog.cases:
+            raise ValueError("Well-throughput manifest contains no selected cases.")
+        configure_headless_cpu_benchmark_runtime(args.log_level)
+        rows = run_well_throughput_suite(
+            args.manifest,
+            output_root=output_dir,
+            case_names=tuple(args.case_names or ()),
+            well_counts=(),
+            worker_counts=(),
+            start_method=start_method,
+            plan=plan,
+            existing_results=existing_results,
+            max_memory_mb=args.max_memory_mb,
+            execution_port=args.execution_port,
+        )
+        print(f"rows={len(rows)}")
+        print(f"results={rows_path}")
+        failures = tuple(row for row in rows if not row.is_successful())
+        if failures:
+            print(
+                f"well-throughput observations failed: "
+                f"{tuple((row.case_name, row.mode_name) for row in failures)!r}",
+                file=sys.stderr,
+            )
+            return 1
         return 0
 
 
