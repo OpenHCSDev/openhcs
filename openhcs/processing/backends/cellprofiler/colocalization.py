@@ -2300,10 +2300,10 @@ def _populate_object_costes_metrics(
 ) -> None:
     if not (options.do_costes and base.full_first_pixels.size):
         return
-    metrics.costes_m1 = _divide_costes_measurements(
+    metrics.costes_m1 = _divide_measurements(
         threshold.costes_sum1, threshold.total_first_costes
     )
-    metrics.costes_m2 = _divide_costes_measurements(
+    metrics.costes_m2 = _divide_measurements(
         threshold.costes_sum2, threshold.total_second_costes
     )
 
@@ -3230,15 +3230,6 @@ measure_colocalization_objects.__openhcs_prepare__ = (
 
 
 def _divide_measurements(numerator: object, denominator: object) -> np.ndarray:
-    numerator_array = np.asarray(numerator, dtype=float)
-    denominator_array = np.asarray(denominator, dtype=float)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        result = numerator_array / denominator_array
-    result[~np.isfinite(result)] = 0
-    return result
-
-
-def _divide_costes_measurements(numerator: object, denominator: object) -> np.ndarray:
     numerator_array = np.asarray(numerator, dtype=float)
     denominator_array = np.asarray(denominator, dtype=float)
     with np.errstate(divide="ignore", invalid="ignore"):

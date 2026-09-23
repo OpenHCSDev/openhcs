@@ -70,7 +70,7 @@ import openhcs.processing.backends.cellprofiler.thresholding as thresholding_bac
 from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization,
     measure_colocalization_objects,
-    _divide_costes_measurements,
+    _divide_measurements,
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationCostesThresholdBatch,
@@ -969,12 +969,47 @@ def test_dilate_objects_rejects_volumetric_structuring_element_for_2d_labels():
 
 
 def test_measure_colocalization_object_costes_preserves_undefined_ratios():
-    ratios = _divide_costes_measurements([0.0, 2.0], [0.0, 4.0])
+    ratios = _divide_measurements([0.0, 2.0], [0.0, 4.0])
     metrics = ObjectColocalizationMetricArrays.empty(1)
     metrics.costes_m1[0], metrics.costes_m2[0] = ratios
     row = next(iter(metrics.rows_for(np.asarray((1,), dtype=np.int32))))
     assert np.isnan(row.costes_m1)
     assert row.costes_m2 == 0.5
+
+
+def test_measure_colocalization_objects_preserves_undefined_threshold_ratios():
+    # Native MeasureColocalization divides each object's threshold reductions
+    # once any object has qualifying pixels. A zero-denominator object is NaN,
+    # not a measured zero, so exported image means omit it.
+    image = np.stack(
+        (
+            np.array([[1.0, 2.0], [0.0, 0.0]], dtype=np.float32),
+            np.array([[2.0, 1.0], [0.0, 0.0]], dtype=np.float32),
+        )
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(
+            labels=np.array([[1, 1], [2, 2]], dtype=np.int32)
+        )
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_costes=False,
+    )
+    first, second = tuple(rows)
+    assert np.isfinite(first.overlap)
+    assert np.isfinite(first.k1)
+    assert np.isfinite(first.k2)
+    assert np.isnan(second.overlap)
+    assert np.isnan(second.k1)
+    assert np.isnan(second.k2)
+    assert np.isnan(second.manders_m1)
+    assert np.isnan(second.manders_m2)
+    assert np.isnan(second.rwc1)
+    assert np.isnan(second.rwc2)
 
 
 def test_object_costes_threshold_boundary_uses_native_operators():
