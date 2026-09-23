@@ -4,13 +4,16 @@ import hashlib
 from pathlib import Path
 
 import pytest
+from objectstate.context_manager import config_context
 
 from benchmark.matched_cellprofiler_batch import (
+    _candidate_pipeline_config,
     _global_config,
     _native_python_executable,
     _output_inventory,
     _worker_axis_evidence,
 )
+from openhcs.core.config import PipelineConfig
 from openhcs.core.progress.types import ProgressEvent
 
 
@@ -49,6 +52,18 @@ def test_candidate_worker_count_uses_ordinary_global_config(tmp_path: Path) -> N
 
     assert config.num_workers == 2
     assert config.materialize_runtime_artifacts is False
+
+
+def test_candidate_pipeline_inherits_benchmark_worker_count(tmp_path: Path) -> None:
+    global_config = _global_config(tmp_path, ("A01", "A12"), worker_count=2)
+
+    with config_context(global_config):
+        imported = PipelineConfig(num_workers=1)
+        candidate = _candidate_pipeline_config(
+            imported, global_config, tmp_path, ("A01", "A12")
+        )
+
+        assert candidate.num_workers == 2
 
 
 def _axis_event(axis_id: str, phase: str, pid: int, timestamp: float) -> ProgressEvent:

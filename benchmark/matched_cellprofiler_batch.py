@@ -49,6 +49,7 @@ from openhcs.core.config import (
     LazyWellFilterConfig,
     MaterializationBackend,
     PathPlanningConfig,
+    PipelineConfig,
     VFSConfig,
     WellFilterConfig,
 )
@@ -221,6 +222,30 @@ def _global_config(
         vfs_config=VFSConfig(materialization_backend=MaterializationBackend.DISK),
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
+    )
+
+
+def _candidate_pipeline_config(
+    imported: PipelineConfig,
+    global_config: GlobalPipelineConfig,
+    output_dir: Path,
+    wells: tuple[str, ...],
+) -> PipelineConfig:
+    """Inherit the benchmark worker count from the one global authority."""
+
+    pipeline_config = replace(
+        imported,
+        num_workers=None,
+        materialize_runtime_artifacts=False,
+        well_filter_config=LazyWellFilterConfig(well_filter=list(wells)),
+        path_planning_config=LazyPathPlanningConfig(
+            well_filter=0,
+            global_output_folder=output_dir,
+            output_dir_suffix="_matched_pilot",
+        ),
+    )
+    return rebuild_lazy_config_with_new_global_reference(
+        pipeline_config, global_config, GlobalPipelineConfig
     )
 
 
@@ -466,18 +491,8 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir, wells, worker_count=args.openhcs_workers
             )
             ensure_global_config_context(GlobalPipelineConfig, global_config)
-            pipeline_config = replace(
-                prepared.pipeline_config,
-                materialize_runtime_artifacts=False,
-                well_filter_config=LazyWellFilterConfig(well_filter=list(wells)),
-                path_planning_config=LazyPathPlanningConfig(
-                    well_filter=0,
-                    global_output_folder=output_dir,
-                    output_dir_suffix="_matched_pilot",
-                ),
-            )
-            pipeline_config = rebuild_lazy_config_with_new_global_reference(
-                pipeline_config, global_config, GlobalPipelineConfig
+            pipeline_config = _candidate_pipeline_config(
+                prepared.pipeline_config, global_config, output_dir, wells
             )
             submission = OpenHCSExecutionSubmission(
                 plate_id=case.dataset_path,
