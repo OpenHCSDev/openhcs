@@ -2201,7 +2201,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "2c93d5d8ee52d48bf92a0be7a0612937297df948e43a1d2f1fb5358aa2845071",
+        "sha256": "44844d268c31d576e300a972d5fe2a62aa1269dd78f0e3aeeb20e7dec8bfcbdf",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
@@ -2256,7 +2256,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "c9402517a081ef36a1e2383dc54031812a16cb94bb4e4b31b4f11b35caa7c811",
+        "sha256": "0b262822ce0ff4a0125e65a61ac6dd466a08ab12c00ce2fba9498c6c0d22aedc",
         "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
       },
       {
@@ -2377,7 +2377,7 @@
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Declares named source bindings independently of concrete microscope handlers."
       },
       {

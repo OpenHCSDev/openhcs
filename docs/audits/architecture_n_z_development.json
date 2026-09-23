@@ -478,7 +478,7 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
@@ -1274,7 +1274,7 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
@@ -3894,7 +3894,7 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
