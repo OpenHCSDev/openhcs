@@ -2,14 +2,17 @@
 
 import hashlib
 from pathlib import Path
+from subprocess import CompletedProcess
 
 import pytest
 from objectstate.context_manager import config_context
 
+import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.matched_cellprofiler_batch import (
     _candidate_pipeline_config,
     _global_config,
     _native_python_executable,
+    _invoke_native_worker,
     _output_inventory,
     _parser,
     _select_genuine_wells,
@@ -73,6 +76,38 @@ def test_native_python_keeps_virtual_environment_symlink(tmp_path: Path) -> None
 
     assert selected == venv_python
     assert selected != selected.resolve()
+
+
+def test_native_worker_receives_an_owned_temporary_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    invocation: dict[str, object] = {}
+
+    def fake_run(command: tuple[str, ...], **kwargs: object) -> CompletedProcess[str]:
+        invocation.update(kwargs)
+        return CompletedProcess(command, 0, stdout="{}\n", stderr="")
+
+    monkeypatch.setattr(matched_batch.subprocess, "run", fake_run)
+    evidence_prefix = tmp_path / "native"
+
+    assert (
+        _invoke_native_worker(
+            native_python=Path("native-python"),
+            worker_script=Path("worker.py"),
+            request_path=Path("request.json"),
+            evidence_prefix=evidence_prefix,
+            project_root=tmp_path,
+            repetitions=1,
+        )
+        == {}
+    )
+    temporary_root = tmp_path / "native_tmp"
+    assert temporary_root.is_dir()
+    native_environment = invocation["env"]
+    assert isinstance(native_environment, dict)
+    assert native_environment["TMPDIR"] == str(temporary_root)
+    assert native_environment["TMP"] == str(temporary_root)
+    assert native_environment["TEMP"] == str(temporary_root)
 
 
 def test_output_inventory_retains_relative_paths_and_content_digests(

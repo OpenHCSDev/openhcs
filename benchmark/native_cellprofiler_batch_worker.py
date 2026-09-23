@@ -11,6 +11,7 @@ import json
 import logging
 import platform
 import sys
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -83,6 +84,7 @@ class NativeBatchEnvironment:
     cellprofiler_core_version: str
     numpy_version: str
     scipy_version: str
+    temporary_root: str
 
 
 @dataclass(frozen=True)
@@ -196,6 +198,7 @@ def main() -> None:
                     cellprofiler_core_version=cellprofiler_core.__version__,
                     numpy_version=numpy.__version__,
                     scipy_version=scipy.__version__,
+                    temporary_root=tempfile.gettempdir(),
                 ),
                 request=request,
                 observations=tuple(observations),

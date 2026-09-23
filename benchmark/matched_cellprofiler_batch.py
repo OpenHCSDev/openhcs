@@ -183,10 +183,16 @@ def _invoke_native_worker(
     project_root: Path,
     repetitions: int,
 ) -> dict[str, object]:
+    temporary_root = evidence_prefix.with_name(evidence_prefix.name + "_tmp")
+    temporary_root.mkdir(parents=True, exist_ok=False)
+    native_environment = os.environ.copy()
+    native_environment.update(
+        {name: str(temporary_root) for name in ("TMPDIR", "TMP", "TEMP")}
+    )
     process = subprocess.run(
         (str(native_python), str(worker_script), str(request_path)),
         cwd=project_root,
-        env=os.environ.copy(),
+        env=native_environment,
         capture_output=True,
         text=True,
         timeout=900 * (repetitions + 1),
