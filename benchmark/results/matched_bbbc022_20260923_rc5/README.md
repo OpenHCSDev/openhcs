@@ -44,7 +44,9 @@ local rather than being added to git; the compact bundle records their hashes
 and comparison outcomes, not standalone copies of their values. Original
 absolute paths in receipts will not resolve in a separate checkout. Diagnostic
 CSVs have LF line endings in this bundle; source snapshots, receipts and
-outcome files retain their original bytes.
+outcome files retain their original bytes. Generated Python source snapshots
+are stored as `.py.txt` so the repository's implementation formatter does not
+rewrite measured source; the local run retains the original `.py` files.
 
 This run used OpenHCS source commit `f0dc3193983d16de27b1e9c0164880dc99aa8b81`
 and reports `source_dirty=true` because unrelated untracked work and prior
