@@ -93,10 +93,11 @@ that directory to be readable; the benchmark control service then reports the
 recorded status and rerun invocation, observation progress, and discovered
 JSON/JSONL/CSV artifacts. Historical or invalid metadata produces a warning
 rather than a guessed completion claim. A separate measured-pipeline receipt is
-produced only after an ordinary pipeline's runtime observation satisfies its
-compiled expectations. The expert-only
+produced only after an ordinary pipeline's selected value or outcome export
+passes its validation. Outcome-only export retains per-axis status without
+claiming value equivalence. The expert-only
 ``openhcs_finalize_measured_pipeline_run`` capability consumes the exact
-completed ordinary job, validates that observation, and retains the submitted
+completed ordinary job, validates the selected export, and retains the submitted
 source, server result and timing receipt. It does not create another execution
 or status authority. ``openhcs_inspect_measured_pipeline_run`` checks that
 receipt and bounded source/output evidence; ``openhcs_report_measured_pipeline_run``

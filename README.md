@@ -355,6 +355,8 @@ second pipeline runner or job-status system.
 pipeline through ordinary headless job control, then calls the same receipt
 finalizer as MCP. Use `--execution-plate PREPARED_PLATE` when the input workspace
 has been prepared separately; the evidence directory must be empty.
+Use `--observation-scope outcomes` to retain per-axis success and provenance
+without transferring runtime arrays; this does not compare output values.
 After an ordinary headless job completes, the expert
 `openhcs_finalize_measured_pipeline_run` tool can validate its runtime
 observation and retain that receipt from the exact submitted pipeline and

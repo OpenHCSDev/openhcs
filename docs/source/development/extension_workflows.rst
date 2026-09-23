@@ -51,7 +51,8 @@ that needs the behavior.
      - ``ComparisonSuiteRunDeclaration`` and ``ComparisonSuiteRunReceipt``
    * - Ordinary measured-pipeline evidence
      - ``MeasuredPipelineRunReceipt`` derived from the normal submission and
-       validated observation; the runtime service retains live job status
+       validated value-or-outcome export; the runtime service retains live job
+       status
 
 Common workflow
 ---------------

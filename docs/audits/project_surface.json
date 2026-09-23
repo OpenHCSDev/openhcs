@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "e5723adf4fd5c9a645dbe721b286f6f46bf45bb24c2b1ab174765b4ed6cffe19",
+    "source_sha256": "5683e255975cec3533f3f513e50c326a3e77e26537ea120721dce39b9bb1ecb9",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -77,7 +77,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
+        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
         "role": "Owns the installed registry-derived benchmark execution and report command surface."
       },
       {
@@ -92,7 +92,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "892ffc5edf927b9837ada2d02b01420ac1e635f45e9d56c3c7be2bbfa77f994e",
+        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
@@ -139,7 +139,8 @@
       "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
-      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   }
 ]

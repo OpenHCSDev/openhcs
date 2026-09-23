@@ -100,9 +100,11 @@ Compared modalities and policy
 
 Measurement of an OpenHCS run is separate from CellProfiler comparison. The
 benchmark wrapper accepts the ordinary ``OpenHCSExecutionSubmission`` and uses
-the normal compile-then-execute path; it only requests runtime observation,
-validates that observation against compiled expectations, and records phase
-timing and provenance. A typed completed-run receipt derives execution identity,
+the normal compile-then-execute path. It requests either full runtime values or
+outcome-only evidence through the ordinary auxiliary execution declaration,
+validates the selected export and any declared axis count, and records phase
+timing and provenance. Outcome-only evidence proves per-axis completion but
+cannot support value-equivalence claims. A typed completed-run receipt derives execution identity,
 source/configuration digests, and output references from those same authorities;
 it does not become a second job-status store. The ordinary server's runtime
 observation supplies its Python and installed-distribution snapshot to the

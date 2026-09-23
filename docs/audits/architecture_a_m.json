@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -142,7 +142,8 @@
       "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
-      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change and its affected owner; reviewed its Diátaxis need and claim boundary. The comparison is recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {
@@ -1377,7 +1378,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_server_hooks.py",
-        "sha256": "03b95e1761f06d70b3dcf2fb4a27090e7281fdfba66c5c2e24599fb487d463e7",
+        "sha256": "b10f2a9a409ea1b97ad04ab4fa1fcea2fb41b9fbeaa43f7f31f0371be6ef484c",
         "role": "Maps generic targeted interruption onto the exact OpenHCS orchestrator and its owned workers."
       },
       {
@@ -1399,7 +1400,8 @@
       "On 2026-08-27, re-read the complete explanation against the current CellProfiler importer, nominal module declarations, and direct import test; added the explicit interactive-only rejection boundary.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "2026-09-14: Re-read the complete integration explanation against the changed importer. Public PipelineConfig/FunctionStep lowering, declaration-owned headless rejection, and the no-parallel-runtime boundary remain accurate; the new read-only terminal-artifact projection serves benchmark evidence planning and does not change this overview."
+      "2026-09-14: Re-read the complete integration explanation against the changed importer. Public PipelineConfig/FunctionStep lowering, declaration-owned headless rejection, and the no-parallel-runtime boundary remain accurate; the new read-only terminal-artifact projection serves benchmark evidence planning and does not change this overview.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {
@@ -1883,7 +1885,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "3d4441e9874015e1b4710784a97ea2fc3d9d4d31518aa9e09410edfcd16c6abc",
+    "source_sha256": "e71511f188038cb64c4a9fcdf2cc01b7f485574eb1e24e981acb4c3280126fd5",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1893,7 +1895,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "fd09d1d873415616a1874946dddd6c242bcf0c0a40b7bd3f60adc772e0a47855",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2018,7 +2020,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "50bf6a57bfc585bb05ef47850ba433a4681ea4face1198494ab325ed0ffbd002",
+        "sha256": "b99b6ca27be471f95ddf0852f8f94ce02797a459bf98bf6e0fa4851c0bb8c698",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2073,7 +2075,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "aa5471947c0f594722c224caefcdc1847db88736c1cdcec5cf382f84a6c4d973",
+        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
@@ -2088,7 +2090,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "892ffc5edf927b9837ada2d02b01420ac1e635f45e9d56c3c7be2bbfa77f994e",
+        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
         "role": "Implements read-only receipt, observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
@@ -2161,12 +2163,13 @@
       "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
-      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate."
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "37d598d06341b54a37ade8d0de32f066b84e2362bcaf5865525c572cc7834ae8",
+    "source_sha256": "6f95b36066850c61820ff99e4f68210f230cbf4ab9eba2e253d3936868629d0f",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2191,17 +2194,17 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "a1fba13fe3c228a2339b97d1472aa45eae31fc3da1160a4be081776e9f3c3c38",
+        "sha256": "8ad0878f8c274da14367510a10f0d887c52c9caced547aeb6748c651c4e18598",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "d41d62133a65193ea71d38f715851ad8604e5bd856d4d0408d7500d0d568e371",
+        "sha256": "a184bea76225924c08a18ab18310d72dafec2388a987341db94505fba2c8d608",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "c19c1fabbf3ea9a035feae87580b9cb4452d5c1c64ff74fd53ceb4f59426d818",
+        "sha256": "88ca689aaa1b879e46553c4ac3f2fb83ec659ba00d619b4f542f66a7c915d9b1",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2226,12 +2229,12 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "ff2f9cc2fb1de4d27070b03a60dc17f663cff47ceb56715579e236a8c00ea027",
+        "sha256": "0483697c579e180d614052e1391c0f4439310c9137dbc4a3ccb73b19427ec4cd",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "0f3d9719e8008e71fba5ef1844802ab8cc89adb623f26570c8512f09996a8d2c",
+        "sha256": "77a17cdf454822f0773787b0f78b07a495e5345dd6e8a5d55d635c79b9a2e1d6",
         "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
       }
     ],
@@ -2247,7 +2250,8 @@
       "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed.",
-      "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof."
+      "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {

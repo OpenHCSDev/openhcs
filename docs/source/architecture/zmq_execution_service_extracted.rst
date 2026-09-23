@@ -65,7 +65,9 @@ execution client and returns the server's applied flag with the observed job
 status; a client timeout alone is not treated as successful cancellation.
 Optional runtime-observation export follows the same submission path: the
 agent path policy validates the destination, and the client/server shared
-auxiliary declaration carries it to the existing execution server. The
+auxiliary declaration carries it and its typed value-or-outcome scope to the
+existing execution server. Outcome-only export does not require runtime array
+values to return to the parent when the compiled plan does not need them. The
 benchmark layer need not submit a second kind of job to collect that evidence.
 The server-owned observation also carries a startup snapshot of its Python
 interpreter and installed distribution versions. Benchmark receipts project
