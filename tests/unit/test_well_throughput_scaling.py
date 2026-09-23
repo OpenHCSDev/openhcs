@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from objectstate.context_manager import config_context
 from polystore.virtual_workspace import SourcePixelRef
 
 from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
@@ -28,6 +29,7 @@ from benchmark.well_throughput_scaling import (
     WellThroughputResult,
     WellThroughputStatus,
     _replicate_source_binding_workspace_wells,
+    _require_declared_worker_observation,
     generate_well_throughput_figures,
     native_execution_baselines_from_summary_csv,
     read_well_throughput_csv,
@@ -814,8 +816,9 @@ def test_legacy_rows_cannot_be_resumed_or_plotted_with_ordinary_rows(
         generate_well_throughput_figures(csv_path, tmp_path / "figures")
 
 
+@pytest.mark.parametrize(("well_count", "worker_count"), ((1, 1), (8, 2)))
 def test_well_throughput_case_submits_one_ordinary_outcome_run(
-    monkeypatch, tmp_path: Path
+    monkeypatch, tmp_path: Path, well_count: int, worker_count: int
 ) -> None:
     from benchmark import well_throughput_scaling
 
@@ -847,20 +850,44 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         require_owned_server,
     ):
         submissions.append(submission)
-        assert expected_axis_count == 1
+        assert expected_axis_count == well_count
         assert execution_port == 18088
         assert require_owned_server is True
         assert timing_observer.on_event is not None
+        for index in range(1, well_count + 1):
+            for phase, status in (
+                ("axis_started", "started"),
+                ("axis_completed", "success"),
+            ):
+                timing_observer(
+                    {
+                        "execution_id": "job-1",
+                        "plate_id": "plate-1",
+                        "axis_id": f"W{index:03d}",
+                        "step_name": "pipeline",
+                        "phase": phase,
+                        "status": status,
+                        "percent": 0.0 if phase == "axis_started" else 100.0,
+                        "completed": 0 if phase == "axis_started" else 1,
+                        "total": 1,
+                        "timestamp": float(index),
+                        "pid": 100 + (index % worker_count),
+                    }
+                )
         phase_timing.record(BenchmarkPhase.COMPILE_OPENHCS, seconds=1.25)
         phase_timing.record(BenchmarkPhase.EXECUTE_OPENHCS, seconds=2.5)
         phase_timing.record(BenchmarkPhase.SERVER_COMPILATION_JOB, seconds=1.5)
         phase_timing.record(BenchmarkPhase.SERVER_PIPELINE_JOB, seconds=2.75)
         return (
             SimpleNamespace(
+                execution_id="job-1",
                 observation_export=ZMQRuntimeExecutionOutcomeExport.from_execution(
-                    execution_results={"W001": ExecutionResult.success("W001")},
+                    execution_results={
+                        f"W{index:03d}": ExecutionResult.success(f"W{index:03d}")
+                        for index in range(1, well_count + 1)
+                    },
                     output_roots=(tmp_path / "output",),
-                )
+                ),
             ),
             "source",
         )
@@ -876,12 +903,14 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         dataset_path=tmp_path / "input",
         cppipe_path=tmp_path / "pipeline.cppipe",
         output_root=tmp_path / "case",
-        mode=WellThroughputMode("1w_1t", 1, 1),
+        mode=WellThroughputMode(
+            f"{well_count}w_{worker_count}c", well_count, worker_count
+        ),
         execution_port=18088,
     )
 
     assert result.is_successful()
-    assert result.successful_wells == 1
+    assert result.successful_wells == well_count
     assert result.compile_seconds == 1.5
     assert result.execute_seconds == 2.75
     assert result.execution_route == ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
@@ -890,12 +919,50 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert submissions[0].execution_plate_id == str(tmp_path / "plate")
     assert submissions[0].pipeline_document.pipeline_steps == []
     pipeline_config = submissions[0].pipeline_document.pipeline_config
+    assert object.__getattribute__(pipeline_config, "num_workers") is None
+    with config_context(submissions[0].global_pipeline_config):
+        assert pipeline_config.num_workers == worker_count
+    assert submissions[0].global_pipeline_config.num_workers == worker_count
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].config_params["runtime_observation_export_scope"] == (
         ZMQRuntimeObservationExportScope.OUTCOMES.value
     )
+
+
+def test_well_throughput_rejects_two_worker_label_from_one_pid() -> None:
+    events = [
+        {
+            "execution_id": "job-1",
+            "plate_id": "plate-1",
+            "axis_id": axis_id,
+            "step_name": "pipeline",
+            "phase": phase,
+            "status": "started" if phase == "axis_started" else "success",
+            "percent": 0.0 if phase == "axis_started" else 100.0,
+            "completed": 0 if phase == "axis_started" else 1,
+            "total": 1,
+            "timestamp": float(index),
+            "pid": 123,
+        }
+        for index, (axis_id, phase) in enumerate(
+            (
+                ("W001", "axis_started"),
+                ("W001", "axis_completed"),
+                ("W002", "axis_started"),
+                ("W002", "axis_completed"),
+            ),
+            start=1,
+        )
+    ]
+
+    with pytest.raises(RuntimeError, match="used 1 worker processes, expected 2"):
+        _require_declared_worker_observation(
+            events,
+            execution_id="job-1",
+            mode=WellThroughputMode("2w_2c", 2, 2),
+        )
 
 
 def test_run_suite_passes_memory_limit_to_case_runner(

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import psutil
+from objectstate.lazy_factory import rebuild_lazy_config_with_new_global_reference
 
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
@@ -45,19 +46,20 @@ from openhcs.core.config import (
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.source_matching import with_source_component_metadata
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
+from openhcs.core.utils import WellFilterProcessor
 from openhcs.core.virtual_workspace_metadata import (
-    AtomicMetadataWriter,
     FIELDS,
+    AtomicMetadataWriter,
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.core.utils import WellFilterProcessor
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -1951,6 +1953,46 @@ class WorkerLaneEventPhase(str, Enum):
             return
 
 
+def _require_declared_worker_observation(
+    events: Sequence[dict[str, Any]],
+    *,
+    execution_id: str,
+    mode: WellThroughputMode,
+) -> None:
+    """Reject a throughput row unless its progress proves the declared workers."""
+
+    axis_phases = {ProgressPhase.AXIS_STARTED.value, ProgressPhase.AXIS_COMPLETED.value}
+    axis_events = tuple(
+        ProgressEvent.from_dict(event)
+        for event in events
+        if event.get("execution_id") == execution_id
+        and event.get("phase") in axis_phases
+    )
+    starts = tuple(
+        event for event in axis_events if event.phase is ProgressPhase.AXIS_STARTED
+    )
+    completions = tuple(
+        event for event in axis_events if event.phase is ProgressPhase.AXIS_COMPLETED
+    )
+    started_axes = tuple(event.axis_id for event in starts)
+    completed_axes = tuple(event.axis_id for event in completions)
+    if (
+        len(starts) != mode.well_count
+        or len(completions) != mode.well_count
+        or len(set(started_axes)) != mode.well_count
+        or set(started_axes) != set(completed_axes)
+    ):
+        raise RuntimeError(
+            "OpenHCS throughput progress does not cover each declared well exactly once."
+        )
+    worker_pids = {event.pid for event in starts}
+    if len(worker_pids) != mode.worker_count:
+        raise RuntimeError(
+            f"OpenHCS used {len(worker_pids)} worker processes, "
+            f"expected {mode.worker_count}."
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class WellThroughputResult:
     """One compile-once, execute-many-wells throughput observation."""
@@ -2209,16 +2251,23 @@ def run_case_well_throughput(
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )
-    pipeline_config = replace(
-        prepared.pipeline_config,
-        materialize_runtime_artifacts=False,
-        well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
-        path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
-            global_output_folder=output_root,
-            output_dir_suffix="_well_throughput",
+    pipeline_config = rebuild_lazy_config_with_new_global_reference(
+        replace(
+            prepared.pipeline_config,
+            num_workers=None,
+            materialize_runtime_artifacts=False,
+            well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
+            path_planning_config=LazyPathPlanningConfig(
+                well_filter=0,
+                global_output_folder=output_root,
+                output_dir_suffix="_well_throughput",
+            ),
+            vfs_config=LazyVFSConfig(
+                materialization_backend=MaterializationBackend.DISK
+            ),
         ),
-        vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK),
+        global_config,
+        GlobalPipelineConfig,
     )
     run_id = f"{case_name}-{mode.name}-{time.time_ns()}"
     observation_path = (
@@ -2278,6 +2327,9 @@ def run_case_well_throughput(
                     raise TypeError(
                         "Well-throughput execution requires an outcome-only export."
                     )
+                _require_declared_worker_observation(
+                    progress_events, execution_id=completed.execution_id, mode=mode
+                )
                 successful_wells = outcome.successful_axis_count
                 compile_seconds = _required_phase_seconds(
                     phase_timing, BenchmarkPhase.SERVER_COMPILATION_JOB
