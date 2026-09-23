@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 
 from benchmark.contracts.control import (
     BenchmarkCaseCatalog,
     BenchmarkCaseSummary,
     BenchmarkRunInspection,
+    BenchmarkRunInspectionRequest,
     BenchmarkStructuredArtifact,
     MeasuredPipelineRunInspection,
     MeasuredPipelineRunReport,
@@ -216,10 +218,16 @@ def report_measured_pipeline_run(
     )
 
 
-def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
+def inspect_benchmark_run(
+    request: BenchmarkRunInspectionRequest,
+) -> BenchmarkRunInspection:
     """Inspect one comparison-run directory without executing benchmark code."""
 
-    resolved_output_dir = Path(output_dir).resolve()
+    resolved_output_dir = Path(request.output_dir).resolve()
+    if not resolved_output_dir.is_dir():
+        raise ValueError(
+            f"Benchmark output path must be a directory: {resolved_output_dir}"
+        )
     metadata_path = ComparisonRunArtifact.SUITE_METADATA.path_in(resolved_output_dir)
     observation_path = ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(
         resolved_output_dir
@@ -258,6 +266,12 @@ def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
     expected_observation_count = (
         receipt.expected_observation_count if receipt is not None else None
     )
+    structured_artifacts, next_artifact_offset = _structured_artifacts(
+        resolved_output_dir,
+        warnings,
+        offset=request.artifact_offset,
+        limit=request.artifact_limit,
+    )
     return BenchmarkRunInspection(
         schema_version=BENCHMARK_CONTROL_SCHEMA_VERSION,
         output_dir=str(resolved_output_dir),
@@ -281,7 +295,8 @@ def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
             if receipt is not None and receipt.rerun_working_directory is not None
             else None
         ),
-        structured_artifacts=_structured_artifacts(resolved_output_dir, warnings),
+        structured_artifacts=structured_artifacts,
+        next_artifact_offset=next_artifact_offset,
         warnings=tuple(warnings),
     )
 
@@ -296,31 +311,45 @@ def _observation_count(path: Path | None) -> int:
 def _structured_artifacts(
     output_dir: Path,
     warnings: list[str],
-) -> tuple[BenchmarkStructuredArtifact, ...]:
-    artifacts = []
-    for path in sorted(output_dir.rglob("*")):
-        if not path.is_file():
-            continue
-        format_ = StructuredArtifactFormat.from_path(path)
-        if format_ is None:
-            continue
-        contained = _contained_file(output_dir, path)
-        if contained is None:
-            warnings.append(
-                f"Structured artifact escapes the run: {path.relative_to(output_dir)}"
+    *,
+    offset: int,
+    limit: int,
+) -> tuple[tuple[BenchmarkStructuredArtifact, ...], int | None]:
+    artifacts: list[BenchmarkStructuredArtifact] = []
+    eligible_count = 0
+    escaped_reported = False
+    for directory, subdirectories, filenames in os.walk(output_dir, followlinks=False):
+        subdirectories[:] = sorted(subdirectories)
+        for filename in sorted(filenames):
+            path = Path(directory) / filename
+            format_ = StructuredArtifactFormat.from_path(path)
+            if format_ is None:
+                continue
+            contained = _contained_file(output_dir, path)
+            if contained is None:
+                if not escaped_reported:
+                    warnings.append("Structured artifact escapes the run.")
+                    escaped_reported = True
+                continue
+            if eligible_count < offset:
+                eligible_count += 1
+                continue
+            if len(artifacts) == limit:
+                return tuple(artifacts), eligible_count
+            declared_identity = (
+                ComparisonRunArtifact.from_path(path)
+                if path.parent == output_dir
+                else None
             )
-            continue
-        declared_identity = (
-            ComparisonRunArtifact.from_path(path) if path.parent == output_dir else None
-        )
-        artifacts.append(
-            BenchmarkStructuredArtifact(
-                path=str(path),
-                relative_path=str(path.relative_to(output_dir)),
-                format=format_,
-                mime_type=format_.mime_type,
-                size_bytes=contained.stat().st_size,
-                declared_identity=declared_identity,
+            artifacts.append(
+                BenchmarkStructuredArtifact(
+                    path=str(path),
+                    relative_path=str(path.relative_to(output_dir)),
+                    format=format_,
+                    mime_type=format_.mime_type,
+                    size_bytes=contained.stat().st_size,
+                    declared_identity=declared_identity,
+                )
             )
-        )
-    return tuple(artifacts)
+            eligible_count += 1
+    return tuple(artifacts), None

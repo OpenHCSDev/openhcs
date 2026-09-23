@@ -76,7 +76,8 @@ class InspectBenchmarkRunCapability(BenchmarkCapability):
     description = (
         "Returns the typed recorded rerun invocation and lifecycle status, "
         "append-only observation progress, and discovered structured result "
-        "artifacts for one local output directory."
+        "artifacts for one local output directory. Page artifacts with "
+        "artifact_offset and artifact_limit until next_artifact_offset is null."
     )
     input_contract = BenchmarkRunInspectionRequest
     output_contract = BenchmarkRunInspection

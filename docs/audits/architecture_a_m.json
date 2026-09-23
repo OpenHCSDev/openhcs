@@ -1885,7 +1885,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "d00a66e9bbb35862ef1d7828edc31391d9e3bc10f76142c45998564f1cfb957c",
+    "source_sha256": "290d9bd1438d23900a2b4f4cb37c12e1082968ef0af79974d8be9effaf0daec9",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -2075,7 +2075,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
+        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
@@ -2085,17 +2085,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "19b019a1a76aaeae1ddd0567b1c012f101d8aaf99126ec1cac35d2e33743f83c",
+        "sha256": "38e2d5092aa172a7d2dc9c129268cc023863abd36e7938e419ae163c22b5b194",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
+        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
         "role": "Implements contained read-only receipt, streamed observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
+        "sha256": "5b0b36912e383ac043f93ed608150b53da33627eaad9e3aeb957fef81b57fd60",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2165,7 +2165,8 @@
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
-      "2026-09-22: Rechecked the benchmark evidence boundary as an explanation after suite inspection began containing every declared and discovered file. Clarified that escaping symlinks are not followed; 22 focused control tests passed. This is a targeted authority review, not a fresh installed-client proof."
+      "2026-09-22: Rechecked the benchmark evidence boundary as an explanation after suite inspection began containing every declared and discovered file. Clarified that escaping symlinks are not followed; 22 focused control tests passed. This is a targeted authority review, not a fresh installed-client proof.",
+      "2026-09-22: Targeted review of the benchmark evidence paragraph after the typed inspection request gained bounded artifact paging and an installed CLI projection. The explanation names one request owner rather than duplicating a procedure; 28 control tests passed. Fresh installed-wheel CI remains the separate protocol gate."
     ]
   },
   {
@@ -2210,7 +2211,7 @@
       },
       {
         "path": "benchmark/control_service.py",
-        "sha256": "d60b5655ad88752b267e41110836d33733af4b24545d96b057db40c4d7440063",
+        "sha256": "558abc103772e1c5de787d73767d45d0439d1b00681a59a12ef1f643a84c63dc",
         "role": "Finalises benchmark evidence from the ordinary execution service's exact completed submission and job record."
       },
       {

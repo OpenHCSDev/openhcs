@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import (
@@ -48,7 +49,24 @@ class BenchmarkCaseCatalog:
 class BenchmarkRunInspectionRequest:
     """Select one benchmark output directory for read-only inspection."""
 
+    DEFAULT_ARTIFACT_OFFSET: ClassVar[int] = 0
+    DEFAULT_ARTIFACT_LIMIT: ClassVar[int] = 128
+    MAX_ARTIFACT_LIMIT: ClassVar[int] = 512
+
     output_dir: str
+    artifact_offset: int = DEFAULT_ARTIFACT_OFFSET
+    artifact_limit: int = DEFAULT_ARTIFACT_LIMIT
+
+    def __post_init__(self) -> None:
+        if type(self.artifact_offset) is not int or self.artifact_offset < 0:
+            raise ValueError("artifact_offset must be a non-negative integer.")
+        if (
+            type(self.artifact_limit) is not int
+            or not 1 <= self.artifact_limit <= self.MAX_ARTIFACT_LIMIT
+        ):
+            raise ValueError(
+                f"artifact_limit must be between 1 and {self.MAX_ARTIFACT_LIMIT}."
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +96,7 @@ class BenchmarkRunInspection:
     rerun_command: tuple[str, ...]
     rerun_working_directory: str | None
     structured_artifacts: tuple[BenchmarkStructuredArtifact, ...]
+    next_artifact_offset: int | None
     warnings: tuple[str, ...]
 
 

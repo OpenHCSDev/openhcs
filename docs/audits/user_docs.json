@@ -176,7 +176,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
+        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -186,12 +186,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
+        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
+        "sha256": "5b0b36912e383ac043f93ed608150b53da33627eaad9e3aeb957fef81b57fd60",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -766,7 +766,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
+        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
@@ -776,7 +776,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
+        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -1390,7 +1390,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
+        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1400,12 +1400,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
+        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
+        "sha256": "5b0b36912e383ac043f93ed608150b53da33627eaad9e3aeb957fef81b57fd60",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3899,7 +3899,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "b832b015d2fd2038e997b7c139131f67efa7100c8346e52d07ef31f88c77ff90",
+    "source_sha256": "f859a3268e635b3820d6fec656ab37445b55a394b724390107386c35896150e1",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3949,7 +3949,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "ad3a962f58ffe74923446cfdae7ac51f136145f3884c707cb4e46fb828e6ad8e",
+        "sha256": "7ccd85e859ae184bb07c05d2ef511d0dff98f98fcf8937d2d26470d670b7f112",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
@@ -3959,17 +3959,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "19b019a1a76aaeae1ddd0567b1c012f101d8aaf99126ec1cac35d2e33743f83c",
+        "sha256": "38e2d5092aa172a7d2dc9c129268cc023863abd36e7938e419ae163c22b5b194",
         "role": "Declares the expert MCP benchmark inspection request and result."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
+        "sha256": "1f2af033ed3587ba2122dcb1a0f106d88f7a4c9afbd43587da3563e20f5c0ad9",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
+        "sha256": "5b0b36912e383ac043f93ed608150b53da33627eaad9e3aeb957fef81b57fd60",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],
@@ -4011,7 +4011,8 @@
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `tests/unit/agent/test_mcp_server.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
-      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Targeted review of the benchmark inspection how-to after CLI and MCP gained shared bounded artifact paging. The page now gives the next-offset procedure without implying inspection launches a job or proves parity; 28 focused control tests passed. Fresh installed-wheel CI remains separate."
     ]
   },
   {

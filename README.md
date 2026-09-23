@@ -343,6 +343,9 @@ Each comparison run records a typed receipt with
 its lifecycle state, exact rerun command, declared work, and structured result
 artifacts. On the expert `full` MCP surface, `openhcs_inspect_benchmark_run`
 can inspect an existing result directory allowed by the local read-path policy.
+`openhcs-benchmark inspect-run --output-dir PATH` reads the same typed inspection;
+both routes page structured artifacts through `artifact_limit` and
+`artifact_offset` instead of returning an unbounded inventory.
 That MCP tool is read-only: it does not launch, resume, cancel, or rerun a
 benchmark, and a recorded receipt is provenance rather than a scientific parity
 claim.

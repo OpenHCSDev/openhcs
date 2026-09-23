@@ -193,9 +193,13 @@ the ``full`` surface and restart the client before using it. Grant the result
 directory through ``OPENHCS_AGENT_READ_ROOTS``, then ask the agent to inspect
 that directory. The result reports recorded lifecycle status, live observation
 count relative to declared work, the exact recorded rerun invocation, and
-discoverable structured artifacts. A historical directory without a current
-typed receipt is reported with warnings instead of an inferred completion
-claim.
+discoverable structured artifacts. Use ``artifact_limit`` to bound the returned
+artifact page and pass ``next_artifact_offset`` back as ``artifact_offset`` until
+it is null. The CLI reads the same contract with
+``openhcs-benchmark inspect-run --output-dir PATH``; add
+``--artifact-limit N --artifact-offset N`` to page its artifacts. A historical
+directory without a current typed receipt is reported with warnings instead
+of an inferred completion claim.
 
 Inspection is read-only. The MCP capability cannot launch, resume, cancel, or
 rerun a benchmark. Review the recorded command and scientific inputs, then run

@@ -72,6 +72,49 @@ class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
         return parser
 
 
+class InspectBenchmarkRunCommand(BenchmarkCliCommand):
+    """Inspect one existing comparison run through the shared typed contract."""
+
+    command_name = "inspect-run"
+    help_text = "Inspect an existing comparison run without executing it."
+    sort_order = 3
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        from benchmark.contracts.control import BenchmarkRunInspectionRequest
+
+        parser = self._parser(subparsers)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument(
+            "--artifact-offset",
+            type=int,
+            default=BenchmarkRunInspectionRequest.DEFAULT_ARTIFACT_OFFSET,
+        )
+        parser.add_argument(
+            "--artifact-limit",
+            type=int,
+            default=BenchmarkRunInspectionRequest.DEFAULT_ARTIFACT_LIMIT,
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.contracts.control import BenchmarkRunInspectionRequest
+        from benchmark.control import inspect_benchmark_run
+        from openhcs.serialization.json import to_jsonable
+
+        inspection = inspect_benchmark_run(
+            BenchmarkRunInspectionRequest(
+                output_dir=str(args.output_dir),
+                artifact_offset=args.artifact_offset,
+                artifact_limit=args.artifact_limit,
+            )
+        )
+        print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
+        return 0
+
+
 class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
     """Inspect or report one ordinary measured pipeline's retained evidence."""
 

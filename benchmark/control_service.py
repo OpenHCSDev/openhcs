@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from benchmark.contracts.control import (
@@ -117,7 +118,7 @@ class BenchmarkControlService:
         output_dir = self._path_policy.assert_readable(request.output_dir)
         if not output_dir.is_dir():
             raise ValueError(f"Benchmark output path must be a directory: {output_dir}")
-        return inspect_benchmark_run(output_dir)
+        return inspect_benchmark_run(replace(request, output_dir=str(output_dir)))
 
     def inspect_measured_run(
         self,

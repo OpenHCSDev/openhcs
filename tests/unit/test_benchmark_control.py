@@ -568,6 +568,64 @@ def test_benchmark_control_inspects_progress_rerun_and_discovered_artifacts(
     )
 
 
+def test_benchmark_artifact_paging_is_shared_by_cli_and_service(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    for name in ("a.csv", "b.json", "c.jsonl"):
+        (output_dir / name).write_text("{}\n", encoding="utf-8")
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    first = service.inspect_run(
+        BenchmarkRunInspectionRequest(output_dir=str(output_dir), artifact_limit=2)
+    )
+    second = service.inspect_run(
+        BenchmarkRunInspectionRequest(
+            output_dir=str(output_dir), artifact_offset=2, artifact_limit=2
+        )
+    )
+    assert [item.relative_path for item in first.structured_artifacts] == [
+        "a.csv",
+        "b.json",
+    ]
+    assert first.next_artifact_offset == 2
+    assert [item.relative_path for item in second.structured_artifacts] == ["c.jsonl"]
+    assert second.next_artifact_offset is None
+
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "inspect-run",
+            "--output-dir",
+            str(output_dir),
+            "--artifact-offset",
+            "2",
+            "--artifact-limit",
+            "2",
+        )
+    )
+    assert args.cli_command.run(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [item["relative_path"] for item in payload["structured_artifacts"]] == [
+        "c.jsonl"
+    ]
+    assert payload["next_artifact_offset"] is None
+
+
+@pytest.mark.parametrize(
+    ("offset", "limit"),
+    ((-1, 1), (False, 1), (0, 0), (0, 513), (0, True)),
+)
+def test_benchmark_artifact_page_request_rejects_invalid_bounds(
+    offset: int, limit: int
+) -> None:
+    with pytest.raises(ValueError, match="artifact_(offset|limit)"):
+        BenchmarkRunInspectionRequest(
+            output_dir="run", artifact_offset=offset, artifact_limit=limit
+        )
+
+
 def test_benchmark_control_rejects_paths_outside_agent_policy(
     tmp_path: Path,
 ) -> None:
@@ -683,13 +741,14 @@ def test_benchmark_capability_uses_generated_mcp_request_binding(
     result = asyncio.run(
         built.call_tool(
             "openhcs_inspect_benchmark_run",
-            {"output_dir": str(output_dir)},
+            {"output_dir": str(output_dir), "artifact_limit": 1},
         )
     )
     assert isinstance(result, tuple)
     payload = result[1]
     assert payload["output_dir"] == str(output_dir)
     assert payload["recorded_status"] == ComparisonSuiteRunStatus.COMPLETED.value
+    assert payload["next_artifact_offset"] is None
     metadata_artifact = next(
         artifact
         for artifact in payload["structured_artifacts"]

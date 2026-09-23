@@ -484,6 +484,7 @@ async def _run_benchmark_protocol_smoke(
             )
             callable_read_only = {
                 "openhcs_list_benchmark_cases",
+                "openhcs_inspect_benchmark_run",
                 "openhcs_inspect_measured_pipeline_run",
                 "openhcs_report_measured_pipeline_run",
             }
@@ -504,11 +505,12 @@ async def _run_benchmark_protocol_smoke(
                     f"expected={expected} listed={listed_names} declared={declared_names}"
                 )
             for name in callable_read_only:
-                request = (
-                    {"manifest_path": str(manifest_path)}
-                    if name == "openhcs_list_benchmark_cases"
-                    else {"output_dir": str(output_dir)}
-                )
+                if name == "openhcs_list_benchmark_cases":
+                    request = {"manifest_path": str(manifest_path)}
+                elif name == "openhcs_inspect_benchmark_run":
+                    request = {"output_dir": str(output_dir), "artifact_limit": 1}
+                else:
+                    request = {"output_dir": str(output_dir)}
                 result = await asyncio.wait_for(
                     session.call_tool(name, request),
                     timeout=60,
@@ -529,6 +531,13 @@ async def _run_benchmark_protocol_smoke(
                 if payload.get("output_dir") != str(output_dir):
                     raise AssertionError(
                         f"Installed benchmark tool inspected the wrong run: {payload}"
+                    )
+                if (
+                    name == "openhcs_inspect_benchmark_run"
+                    and len(payload.get("structured_artifacts", ())) > 1
+                ):
+                    raise AssertionError(
+                        f"Installed benchmark artifact page exceeded its bound: {payload}"
                     )
                 if not payload.get("warnings"):
                     raise AssertionError(

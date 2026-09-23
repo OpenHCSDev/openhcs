@@ -93,8 +93,11 @@ that directory to be readable; the benchmark control service then reports the
 recorded status and rerun invocation, observation progress, and discovered
 JSON/JSONL/CSV artifacts. It resolves declared files and discovered artifacts
 within the selected directory before reading them, so an escaping symlink
-cannot turn run inspection into access to another path. Historical or invalid
-metadata produces a warning rather than a guessed completion claim. A separate
+cannot turn run inspection into access to another path. The typed inspection
+request also bounds and pages its artifact projection; both the packaged CLI
+and expert MCP capability consume that request rather than owning separate
+artifact inventories. Historical or invalid metadata produces a warning rather
+than a guessed completion claim. A separate
 measured-pipeline receipt is
 produced only after an ordinary pipeline's selected value or outcome export
 passes its validation. Outcome-only export retains per-axis status without
