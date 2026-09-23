@@ -1,0 +1,17 @@
+{
+  "auto_add_output_plate_to_plate_manager": false,
+  "output_plate_root": "/tmp/openhcs-matched-strict-1WGfOg2J/candidate/0/source_workspace_matched_pilot",
+  "runtime_observation_export_path": "/tmp/openhcs-matched-strict-1WGfOg2J/candidate_evidence/0/observation.pkl",
+  "runtime_observation_export_scope": "values",
+  "well_count": 8,
+  "wells": [
+    "A01",
+    "A12",
+    "B01",
+    "B12",
+    "C01",
+    "C12",
+    "D01",
+    "D12"
+  ]
+}

@@ -1,0 +1,270 @@
+{
+  "case": "cp_tutorial_translocation_final",
+  "wells": [
+    "A01",
+    "A12",
+    "B01",
+    "B12",
+    "C01",
+    "C12",
+    "D01",
+    "D12"
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "a1600b567d0212ab29d4e86cc4da52bf278500fc820775ccd0d4ed4761b4e2de",
+  "driver_sha256": "748ce5342bdcfb64e2e9d386c02987b15446b7d78c7a15e0e79bfefcee2f7f6a",
+  "native_worker_sha256": "0d292c369868d7f7c24fdf06f3972a2c544f9e76aa5f7ab2b169a542aba32f5b",
+  "source_commit": "394734f8bf96488bbcf156c17b1271606f619051",
+  "source_dirty": true,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native": {
+    "startup_seconds": 0.8411449091508985,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0"
+    },
+    "request": {
+      "pipeline_path": "/tmp/openhcs-matched-strict-1WGfOg2J/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+      "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+      "output_root": "/tmp/openhcs-matched-strict-1WGfOg2J/native",
+      "expected_image_sets": 8,
+      "repetitions": 1,
+      "file_list_path": null
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/tmp/openhcs-matched-strict-1WGfOg2J/native/-1",
+        "image_set_count": 8,
+        "invocation_seconds": 12.15788759663701,
+        "pre_first_module_seconds": 0.3771158764138818,
+        "first_module_through_post_run_seconds": 11.780771720223129
+      },
+      {
+        "repetition": 0,
+        "output_root": "/tmp/openhcs-matched-strict-1WGfOg2J/native/0",
+        "image_set_count": 8,
+        "invocation_seconds": 9.65442062355578,
+        "pre_first_module_seconds": 0.10694549418985844,
+        "first_module_through_post_run_seconds": 9.547475129365921
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "28197ac9-6ea4-4c4f-87b9-238590c28529",
+      "compile_artifact_id": "8f363ee8-2e30-406c-a75c-7345bcc4370d",
+      "endpoint_pid": 616639,
+      "axis_count": 8,
+      "native_image_count": 8,
+      "candidate_image_count": 8,
+      "native_output_file_count": 10,
+      "candidate_output_file_count": 10,
+      "declared_output_file_count": 10,
+      "native_output_inventory": [
+        {
+          "path": "BBBC013_A01_s1_w1_Overlay.tiff",
+          "sha256": "a8dd29f39f592308c65f5dd20e27fdcf56292fda62a0b09ed6b4a253f3a7429e"
+        },
+        {
+          "path": "BBBC013_A12_s1_w1_Overlay.tiff",
+          "sha256": "e6e433653667592f4730eb153f96634fd1dbf55a58d147e4a279d79b8bd5b537"
+        },
+        {
+          "path": "BBBC013_B01_s1_w1_Overlay.tiff",
+          "sha256": "caec2dc0509fc7268e794ccb2e4f11b7ad2315458ccc8414f770bfc9c7eaa1a2"
+        },
+        {
+          "path": "BBBC013_B12_s1_w1_Overlay.tiff",
+          "sha256": "81b04bd6c51f4e4cff81a85cbaf7423ff66552dc5f96a98ca557f9a8c6503556"
+        },
+        {
+          "path": "BBBC013_C01_s1_w1_Overlay.tiff",
+          "sha256": "cd8b3d7d8051c8936b08cc276796a0ec5ab03a2463d73d741aa8cb03b0618ab8"
+        },
+        {
+          "path": "BBBC013_C12_s1_w1_Overlay.tiff",
+          "sha256": "bcc024bd66e6e616763a96623939eac30633033e319c7d8dafaf08aa6d609ea5"
+        },
+        {
+          "path": "BBBC013_D01_s1_w1_Overlay.tiff",
+          "sha256": "e6c3101960b814a814ff035c9b9a541628c26a412bbe9e9eaf5dbf5f57193c9d"
+        },
+        {
+          "path": "BBBC013_D12_s1_w1_Overlay.tiff",
+          "sha256": "c6328843bdeb534a6103556e4415dca1d79148add508870d49fc1a21f8706414"
+        },
+        {
+          "path": "DefaultDB.db",
+          "sha256": "2e73856776b73a9e123cc0b53cfe3d2055045037413394c1e1d51ceaf20b8b73"
+        },
+        {
+          "path": "DefaultDB.properties",
+          "sha256": "6dcd9963e5a8578e7dd1a43a8c98511e98944a099a2ddddb96f0c03358bd7e52"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "4bdc8e3891c6b1212388ec6b16bd2e132079c6237ed1b19498708f43e1447b1f"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "c43e70fced76d364f92bd4ec142b16f4a8ae7a85ae5c82f97f776eb8eec6aefb"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/B01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "ba3b85ae87ccda8188b58856285aeccb426eb664d9fa2b0dfebea38c939c1ee5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/B12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "9b281baa8425a6f636bc89e762e361e3bfec7c9c7414481a7b849dd1fbccbe59"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/C01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "516bc7f496d554152a0cd668948d2cdbce2fa174557c6fd6d65e13d29a3ab048"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/C12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "90170f165a4f34b338156acc6f2558c491b9077f560f611bdff5d7f8293e0df0"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/D01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "13518a68ea40f0ee5de4f24364f0ecc650f7fbb26a0ce29dad541dbcf1ffcaca"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/D12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "fab61794a630fa24681f9be65f5fab58c2006e55ff6f0a69b0b3912329826f4b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/DefaultDB.db",
+          "sha256": "1ab39bb913a5be58cb526b71407105071cbf9126710ffa63d9f3747c1bf2fcaa"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/DefaultDB.properties",
+          "sha256": "9c9a10d9f5e0c51fd2cbe6ee5fd55fd18508e305d06814d8924a7952135d12c9"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "image_differences": [],
+      "receipt_path": "/tmp/openhcs-matched-strict-1WGfOg2J/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "f0ff54db-68fa-481b-ba54-509b525309c4",
+      "compile_artifact_id": "5bfe8dd8-8d6b-407b-bab5-8a2b75f5fc2d",
+      "endpoint_pid": 616639,
+      "axis_count": 8,
+      "native_image_count": 8,
+      "candidate_image_count": 8,
+      "native_output_file_count": 10,
+      "candidate_output_file_count": 10,
+      "declared_output_file_count": 10,
+      "native_output_inventory": [
+        {
+          "path": "BBBC013_A01_s1_w1_Overlay.tiff",
+          "sha256": "a8dd29f39f592308c65f5dd20e27fdcf56292fda62a0b09ed6b4a253f3a7429e"
+        },
+        {
+          "path": "BBBC013_A12_s1_w1_Overlay.tiff",
+          "sha256": "e6e433653667592f4730eb153f96634fd1dbf55a58d147e4a279d79b8bd5b537"
+        },
+        {
+          "path": "BBBC013_B01_s1_w1_Overlay.tiff",
+          "sha256": "caec2dc0509fc7268e794ccb2e4f11b7ad2315458ccc8414f770bfc9c7eaa1a2"
+        },
+        {
+          "path": "BBBC013_B12_s1_w1_Overlay.tiff",
+          "sha256": "81b04bd6c51f4e4cff81a85cbaf7423ff66552dc5f96a98ca557f9a8c6503556"
+        },
+        {
+          "path": "BBBC013_C01_s1_w1_Overlay.tiff",
+          "sha256": "cd8b3d7d8051c8936b08cc276796a0ec5ab03a2463d73d741aa8cb03b0618ab8"
+        },
+        {
+          "path": "BBBC013_C12_s1_w1_Overlay.tiff",
+          "sha256": "bcc024bd66e6e616763a96623939eac30633033e319c7d8dafaf08aa6d609ea5"
+        },
+        {
+          "path": "BBBC013_D01_s1_w1_Overlay.tiff",
+          "sha256": "e6c3101960b814a814ff035c9b9a541628c26a412bbe9e9eaf5dbf5f57193c9d"
+        },
+        {
+          "path": "BBBC013_D12_s1_w1_Overlay.tiff",
+          "sha256": "c6328843bdeb534a6103556e4415dca1d79148add508870d49fc1a21f8706414"
+        },
+        {
+          "path": "DefaultDB.db",
+          "sha256": "3d911582ef391373f19e664dac06426d637594e608fd85d4ce7b93dc32934937"
+        },
+        {
+          "path": "DefaultDB.properties",
+          "sha256": "e2e2c3e0237075a1f54550c56838b9af4e4af0202e92e60610df0381bd6b6b40"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/images/A01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "4bdc8e3891c6b1212388ec6b16bd2e132079c6237ed1b19498708f43e1447b1f"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/A12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "c43e70fced76d364f92bd4ec142b16f4a8ae7a85ae5c82f97f776eb8eec6aefb"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/B01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "ba3b85ae87ccda8188b58856285aeccb426eb664d9fa2b0dfebea38c939c1ee5"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/B12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "9b281baa8425a6f636bc89e762e361e3bfec7c9c7414481a7b849dd1fbccbe59"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/C01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "516bc7f496d554152a0cd668948d2cdbce2fa174557c6fd6d65e13d29a3ab048"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/C12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "90170f165a4f34b338156acc6f2558c491b9077f560f611bdff5d7f8293e0df0"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/D01_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "13518a68ea40f0ee5de4f24364f0ecc650f7fbb26a0ce29dad541dbcf1ffcaca"
+        },
+        {
+          "path": "source_workspace_matched_pilot/images/D12_s001_w1_z001_t001_Overlay.tiff",
+          "sha256": "fab61794a630fa24681f9be65f5fab58c2006e55ff6f0a69b0b3912329826f4b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/DefaultDB.db",
+          "sha256": "1ab39bb913a5be58cb526b71407105071cbf9126710ffa63d9f3747c1bf2fcaa"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/DefaultDB.properties",
+          "sha256": "9c9a10d9f5e0c51fd2cbe6ee5fd55fd18508e305d06814d8924a7952135d12c9"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "image_differences": [],
+      "receipt_path": "/tmp/openhcs-matched-strict-1WGfOg2J/candidate_evidence/0/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "none: boundary and concurrency matching remain under review"
+}

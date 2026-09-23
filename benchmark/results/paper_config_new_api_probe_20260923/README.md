@@ -1,8 +1,10 @@
 # Paper throughput configuration: new-API probe (2026-09-23)
 
-Status: **one workflow and one declared paper mode completed; the full paper
-sweep and matched CellProfiler comparison have not been rerun.** These are
-readiness probes, not replacement data for Figure 5 or Supplementary Figure 6.
+Status: **the declared `8w_2c` paper mode completed through the new ordinary
+pipeline API, and a separate genuine-well CellProfiler/OpenHCS output pilot
+completed.** The full 30-workflow, four-mode sweep and a matched timing study
+have not been rerun. These are readiness probes, not replacement data for
+Figure 5 or Supplementary Figure 6.
 
 The source is `benchmark/manifests/official30_portable_axis1.json`. Its
 `default_well_filter: 1` selects the first source well. The ordinary throughput
@@ -13,16 +15,25 @@ regular compiled ZMQ execution route and its outcome receipts. It keeps
 automatic final main-flow images runtime-only while preserving the pipeline's
 explicit image exports.
 
-| Translocation case | Completed wells | Server execution | Peak process-tree RSS | Requested overlays | Extra final overlays |
+| Translocation case | Completed wells | Server execution | Peak process-tree RSS | Declared output files | Undeclared side writes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 8 wells, 1 worker (bounded control) | 8/8 | 40.095 s | 1379.9 MB | 8 | 0 |
-| 8 wells, 2 workers (`8w_2c` paper mode) | 8/8 | 36.779 s | 1351.7 MB | 8 | 0 |
+| 8 wells, 2 workers (`8w_2c` paper mode, corrected export policy) | 8/8 | 26.962 s | 1380.2 MB | 10 (8 TIFF, SQLite, CPA properties) | 0 |
 
-Each mode has one observation only. Do not infer a worker speedup from these
-numbers: runs were not a controlled timing pair. The retained `*.csv` files,
-`*_receipt.json` files and `*_outcomes.pkl.gz` files contain the measured rows,
+This corrected mode has one observation only. The earlier `8w_1c` and `8w_2c`
+files remain as diagnostic history, but are **superseded**: their imported
+pipeline config enabled automatic segmentation-artifact writes beyond the
+requested exports. They must not be used as timing or output-equivalence
+evidence. Do not infer a worker speedup from any of these rows. The retained
+`*.csv`, `*_receipt.json`, and `*_outcomes.pkl.gz` files contain measured rows,
 endpoint identity/environment, compiled-pipeline hashes, successful-axis
-outcomes and timing boundaries. The microscopy outputs are not tracked here.
+outcomes, and timing boundaries. The microscopy outputs are not tracked here.
+
+The [matched genuine-well pilot](../matched_batch_pilot_v2_20260923/README.md)
+used the same new submission path on eight real source wells, with warm-up and
+three observations. Each had eight completed axes, ten declared/native/candidate
+files, and zero database or image differences. A separate confirmation used
+the strict shared CellProfiler equivalence policy. It is not a matched
+throughput benchmark: timing boundaries and concurrency remain to be aligned.
 
 On commit `150699499`, the CLI's `--plan-only` route resolved this paper
 manifest to 30 cases and its four declared modes without warnings. A separate
@@ -43,13 +54,12 @@ unfiltered workload completed, proving execution but not the declared scope.
 The task-created large outputs from the failed attempt were removed after its
 status was recorded.
 
-The September matched-batch pilot is separate. Its archived driver uses an
-obsolete direct `CellProfilerRunRequest` constructor and is intentionally not
-edited in place. Undefined object threshold ratios and compiled plate-artifact
-axis ownership have owner-level repairs with focused tests, but the eight
-*genuine*-well native/output-equivalence comparison, matched concurrency and
-timing-boundary study remain outstanding. The full 30-case, four-mode sweep has
-not been run with this API.
+The *older* September matched-batch pilot is separate and retains an obsolete
+direct `CellProfilerRunRequest` constructor. The new genuine-well driver above
+uses the current request and measured-submission APIs. Undefined object
+threshold ratios and compiled plate-artifact axis ownership have owner-level
+repairs with focused tests. Matched concurrency and timing-boundary study remain
+outstanding. The full 30-case, four-mode sweep has not been run with this API.
 
 To reproduce the paper mode from a fresh empty output directory on a checkout
 containing this report:
