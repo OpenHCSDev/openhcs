@@ -257,6 +257,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 exports=RuntimeExportObservation.from_output_roots((tmp_path,)),
                 output_roots=(tmp_path,),
                 execution_success_by_axis={"A01": True},
+                execution_id=execution_id,
             ).write(observation_path)
             return {
                 "status": "complete",

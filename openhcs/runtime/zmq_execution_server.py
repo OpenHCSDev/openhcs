@@ -769,6 +769,7 @@ class ZMQExecutionServer(ExecutionServer):
                 execution_results=execution_results,
                 output_roots=output_roots,
                 server_environment=self._server_environment,
+                execution_id=request_context.execution_id,
             )
         else:
             export = ZMQRuntimeExecutionObservationExport.from_execution(
@@ -776,6 +777,7 @@ class ZMQExecutionServer(ExecutionServer):
                 execution_results=execution_results,
                 output_roots=output_roots,
                 server_environment=self._server_environment,
+                execution_id=request_context.execution_id,
             )
         export.write(export_path)
         self.active_executions[request_context.execution_id].set_extra(

@@ -20,8 +20,8 @@ from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 
-ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 6
-ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 1
+ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 7
+ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +49,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     outcomes_by_axis: Mapping[str, ZMQExecutionAxisOutcome]
     output_roots: tuple[Path, ...]
     server_environment: RuntimeEnvironmentSnapshot | None = None
+    execution_id: str | None = None
 
     @classmethod
     def from_execution(
@@ -57,6 +58,7 @@ class ZMQRuntimeExecutionOutcomeExport:
         execution_results: Mapping[str, ExecutionResult],
         output_roots: tuple[Path, ...],
         server_environment: RuntimeEnvironmentSnapshot | None = None,
+        execution_id: str | None = None,
     ) -> ZMQRuntimeExecutionOutcomeExport:
         return cls(
             schema_version=ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION,
@@ -66,6 +68,7 @@ class ZMQRuntimeExecutionOutcomeExport:
             },
             output_roots=tuple(Path(root) for root in output_roots),
             server_environment=server_environment,
+            execution_id=execution_id,
         )
 
     @classmethod
@@ -77,6 +80,15 @@ class ZMQRuntimeExecutionOutcomeExport:
                 "ZMQ runtime outcome export must contain "
                 f"{cls.__name__}, got {type(payload).__name__}."
             )
+        if payload.schema_version == 1:
+            # Older slotted pickles have no execution identity slot.
+            return cls(
+                schema_version=payload.schema_version,
+                outcomes_by_axis=payload.outcomes_by_axis,
+                output_roots=payload.output_roots,
+                server_environment=payload.server_environment,
+                execution_id=None,
+            )
         if payload.schema_version != ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION:
             raise ValueError(
                 "Unsupported ZMQ runtime outcome export schema version "
@@ -87,7 +99,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     def write(self, path: Path) -> None:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        with gzip.open(target, "wb", compresslevel=1) as handle:
+        with gzip.open(target, "xb", compresslevel=1) as handle:
             pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     @property
@@ -125,6 +137,7 @@ class ZMQRuntimeExecutionObservationExport:
         default_factory=SourceImageSetIdentityPolicy
     )
     server_environment: RuntimeEnvironmentSnapshot | None = None
+    execution_id: str | None = None
 
     @classmethod
     def from_execution(
@@ -134,6 +147,7 @@ class ZMQRuntimeExecutionObservationExport:
         execution_results: Mapping[str, ExecutionResult],
         output_roots: tuple[Path, ...],
         server_environment: RuntimeEnvironmentSnapshot | None = None,
+        execution_id: str | None = None,
     ) -> ZMQRuntimeExecutionObservationExport:
         observation = RuntimeArtifactExecutionObservation.from_contexts(
             compiled_contexts
@@ -154,6 +168,7 @@ class ZMQRuntimeExecutionObservationExport:
                 observation.source_image_set_identity_policy
             ),
             server_environment=server_environment,
+            execution_id=execution_id,
         )
 
     @classmethod
@@ -179,6 +194,22 @@ class ZMQRuntimeExecutionObservationExport:
                     payload.source_image_set_identity_policy
                 ),
                 server_environment=None,
+                execution_id=None,
+            )
+        if payload.schema_version == 6:
+            # Version 6 predates the execution identity slot.
+            return cls(
+                schema_version=payload.schema_version,
+                expectation=payload.expectation,
+                records_by_axis=payload.records_by_axis,
+                exports=payload.exports,
+                output_roots=payload.output_roots,
+                execution_success_by_axis=payload.execution_success_by_axis,
+                source_image_set_identity_policy=(
+                    payload.source_image_set_identity_policy
+                ),
+                server_environment=payload.server_environment,
+                execution_id=None,
             )
         if payload.schema_version != ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION:
             raise ValueError(
@@ -190,7 +221,7 @@ class ZMQRuntimeExecutionObservationExport:
     def write(self, path: Path) -> None:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        with gzip.open(target, "wb", compresslevel=1) as handle:
+        with gzip.open(target, "xb", compresslevel=1) as handle:
             pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def observation(self) -> RuntimeArtifactExecutionObservation:

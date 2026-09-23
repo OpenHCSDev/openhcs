@@ -382,6 +382,12 @@ def retain_measured_openhcs_completion(
         observation_export = ZMQRuntimeExecutionObservationExport.read(
             observation_export_path
         )
+    if observation_export.execution_id != execution_id:
+        raise ToolExecutionError(
+            "Runtime observation export execution identity does not match the "
+            f"completed job {execution_id!r}: {observation_export.execution_id!r}. "
+            "No success receipt was written."
+        )
     try:
         with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
             if isinstance(observation_export, ZMQRuntimeExecutionOutcomeExport):

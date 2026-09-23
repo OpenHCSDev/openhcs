@@ -116,6 +116,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             read=lambda path: SimpleNamespace(
                 output_roots=(tmp_path,),
                 axis_count=1,
+                execution_id="execute-1",
                 server_environment=None,
                 require_valid_observation=validate_observation,
             )
@@ -203,6 +204,7 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
         SimpleNamespace(
             read=lambda path: SimpleNamespace(
                 output_roots=(tmp_path,),
+                execution_id="execution-1",
                 require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
             )
         ),
@@ -238,6 +240,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ZMQRuntimeExecutionOutcomeExport.from_execution(
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(tmp_path / "output",),
+        execution_id="execution-1",
     ).write(observation_path)
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
@@ -259,6 +262,19 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
             port=5555,
         )
     )
+
+    with pytest.raises(ToolExecutionError, match="execution identity does not match"):
+        measured_run.retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id="stale-job",
+            results_summary={"well_count": 1},
+            endpoint_provenance=endpoint,
+            phase_timing=PhaseTimingTrace(
+                run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
+            ),
+            compile_artifact_id="compile-1",
+        )
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
 
     with pytest.raises(ToolExecutionError, match="Expected 2 execution axes"):
         measured_run.retain_measured_openhcs_completion(
