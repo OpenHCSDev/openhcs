@@ -1303,8 +1303,11 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
     def scaled_second_channel_costes(
         self, first_pixels: np.ndarray, second_pixels: np.ndarray, scale_max: int
     ) -> tuple[float, float]:
-        first = np.ascontiguousarray(first_pixels, dtype=np.float64)
-        second = np.ascontiguousarray(second_pixels, dtype=np.float64)
+        # CellProfiler retains the pixel dtype through its threshold search.
+        # Promoting float32 pixels to float64 changes membership at quantized
+        # boundaries and can select a different Costes threshold entirely.
+        first = np.ascontiguousarray(first_pixels)
+        second = np.ascontiguousarray(second_pixels)
         non_zero = (first > 0.0) | (second > 0.0)
         first_non_zero = first[non_zero]
         second_non_zero = second[non_zero]
@@ -1340,8 +1343,8 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
             count, correlation = _pearson_below_threshold_numba(
                 first,
                 second,
-                first_threshold,
-                second_threshold,
+                first.dtype.type(first_threshold),
+                second.dtype.type(second_threshold),
             )
             if count <= 2:
                 left = mid - 1

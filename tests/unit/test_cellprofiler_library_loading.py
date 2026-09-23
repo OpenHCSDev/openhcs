@@ -1503,6 +1503,22 @@ def test_measure_colocalization_faster_costes_matches_native_extracted_vectors(
     assert observed_thresholds == expected_thresholds
 
 
+def test_faster_costes_preserves_native_float32_threshold_comparison() -> None:
+    """Native CellProfiler compares its float32 pixels at float32 thresholds."""
+    rng = np.random.default_rng(2)
+    first_codes = rng.integers(0, 650, size=4096, dtype=np.uint16)
+    noise = rng.integers(-200, 201, size=4096, dtype=np.int32)
+    second_codes = np.clip(first_codes.astype(np.int32) * 2 + noise, 0, 2000)
+    first = first_codes.astype(np.float32) / np.float32(65535.0)
+    second = second_codes.astype(np.float32) / np.float32(65535.0)
+
+    observed = costes_backend().scaled_second_channel_costes(first, second, 65535)
+
+    # Captured from CellProfiler 4.2.8.1 on NumPy 1.24.4 for these same arrays.
+    assert observed[0] == 0.001083390554665446
+    assert observed[1] == pytest.approx(0.001717834549060869, abs=1e-8)
+
+
 def test_measure_colocalization_respects_masked_payload_pixels():
     image = np.stack(
         (
