@@ -41,6 +41,10 @@ from benchmark.openhcs_measured_run import (
     execute_measured_openhcs_pipeline_on_client,
 )
 from benchmark.timing import PhaseTimingTrace, completed_server_execution_seconds
+from benchmark.well_throughput_scaling import (
+    _write_progress_diagnostics,
+    well_throughput_start_method_from_manifest,
+)
 from openhcs.constants.constants import AllComponents
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
@@ -48,6 +52,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyWellFilterConfig,
     MaterializationBackend,
+    MultiprocessingStartMethod,
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
@@ -226,10 +231,12 @@ def _global_config(
     wells: tuple[str, ...],
     *,
     worker_count: int = 1,
+    start_method: MultiprocessingStartMethod,
 ) -> GlobalPipelineConfig:
     return GlobalPipelineConfig(
         num_workers=worker_count,
         use_threading=False,
+        multiprocessing_start_method=start_method,
         well_filter_config=WellFilterConfig(well_filter=list(wells)),
         path_planning_config=PathPlanningConfig(
             well_filter=0,
@@ -253,6 +260,8 @@ def _candidate_pipeline_config(
     pipeline_config = replace(
         imported,
         num_workers=None,
+        use_threading=None,
+        multiprocessing_start_method=None,
         materialize_runtime_artifacts=False,
         well_filter_config=LazyWellFilterConfig(well_filter=list(wells)),
         path_planning_config=LazyPathPlanningConfig(
@@ -283,6 +292,7 @@ def main(argv: list[str] | None = None) -> int:
     root.mkdir(parents=True, exist_ok=True)
     project_root = Path(__file__).resolve().parent.parent
     manifest = args.manifest.expanduser().resolve()
+    start_method = well_throughput_start_method_from_manifest(manifest)
     (case,) = (
         case for case in load_comparison_cases(manifest) if case.name == CASE_NAME
     )
@@ -330,6 +340,7 @@ def main(argv: list[str] | None = None) -> int:
         ),
         "native_job_count": args.native_jobs,
         "candidate_worker_count": args.openhcs_workers,
+        "candidate_worker_start_method": start_method.value,
         "thread_environment": {
             key: os.environ.get(key)
             for key in (
@@ -346,7 +357,9 @@ def main(argv: list[str] | None = None) -> int:
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
 
     native_preparation = root / "native_preparation"
-    native_global_config = _global_config(root / "native", wells)
+    native_global_config = _global_config(
+        root / "native", wells, start_method=start_method
+    )
     native_request = CellProfilerRunRequest(
         dataset_path=case.dataset_path,
         pipeline_name=case.name,
@@ -451,6 +464,10 @@ def main(argv: list[str] | None = None) -> int:
             observations_for_repetition = tuple(
                 report["observations"][repetition + 1] for report in shard_reports
             )
+            invocations = tuple(
+                observation["invocation_started_monotonic_seconds"]
+                for observation in observations_for_repetition
+            )
             starts = tuple(
                 observation["first_module_started_monotonic_seconds"]
                 for observation in observations_for_repetition
@@ -459,8 +476,23 @@ def main(argv: list[str] | None = None) -> int:
                 observation["completed_monotonic_seconds"]
                 for observation in observations_for_repetition
             )
+            if any(
+                invocation > first_module or first_module > completed
+                for invocation, first_module, completed in zip(
+                    invocations, starts, completions, strict=True
+                )
+            ):
+                raise RuntimeError(
+                    "Native batch invocation, first-module and completion "
+                    "timestamps are not ordered."
+                )
             result = {
                 "repetition": repetition,
+                "invocation_start_skew_seconds": max(invocations) - min(invocations),
+                "invocation_overlap_seconds": min(completions) - max(invocations),
+                "invocation_through_completion_makespan_seconds": (
+                    max(completions) - min(invocations)
+                ),
                 "first_module_start_skew_seconds": max(starts) - min(starts),
                 "first_module_overlap_seconds": min(completions) - max(starts),
                 "first_module_through_completion_makespan_seconds": (
@@ -481,15 +513,17 @@ def main(argv: list[str] | None = None) -> int:
             "Native sharded batches overlap and match whole-batch outputs.", flush=True
         )
     axis_events: list[ProgressEvent] = []
+    progress_events: list[dict[str, Any]] = []
 
-    def capture_axis_event(event: Mapping[str, Any]) -> None:
-        if event.get("phase") in (
+    def capture_progress_event(event: Mapping[str, Any]) -> None:
+        progress_events.append(dict(event))
+        if event["phase"] in (
             ProgressPhase.AXIS_STARTED.value,
             ProgressPhase.AXIS_COMPLETED.value,
         ):
             axis_events.append(ProgressEvent.from_dict(dict(event)))
 
-    timing_observer = _ZMQProgressTimingObserver(on_event=capture_axis_event)
+    timing_observer = _ZMQProgressTimingObserver(on_event=capture_progress_event)
     port = DataControlPortPairAuthority.acquire(
         OPENHCS_ZMQ_CONFIG,
         transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
@@ -500,6 +534,7 @@ def main(argv: list[str] | None = None) -> int:
     ) as client:
         for repetition in range(-1, args.repetitions):
             axis_events.clear()
+            progress_events.clear()
             print(f"OpenHCS batch {repetition} starting.", flush=True)
             export_scope = (
                 ZMQRuntimeObservationExportScope.VALUES
@@ -509,7 +544,10 @@ def main(argv: list[str] | None = None) -> int:
             evidence_dir = root / "candidate_evidence" / str(repetition)
             output_dir = root / "candidate" / str(repetition)
             global_config = _global_config(
-                output_dir, wells, worker_count=args.openhcs_workers
+                output_dir,
+                wells,
+                worker_count=args.openhcs_workers,
+                start_method=start_method,
             )
             ensure_global_config_context(GlobalPipelineConfig, global_config)
             pipeline_config = _candidate_pipeline_config(
@@ -560,6 +598,13 @@ def main(argv: list[str] | None = None) -> int:
                 execution_id=completed.execution_id,
                 expected_axes=WELL_COUNT,
                 expected_workers=args.openhcs_workers,
+            )
+            _write_progress_diagnostics(
+                evidence_dir,
+                case_name=CASE_NAME,
+                worker_count=args.openhcs_workers,
+                well_count=WELL_COUNT,
+                events=progress_events,
             )
             if (
                 record.start_time is None
@@ -683,6 +728,12 @@ def main(argv: list[str] | None = None) -> int:
                     f"Matched output equivalence failed in repetition {repetition}: "
                     f"{result}"
                 )
+
+    final_input_inventory = _source_input_inventory(native_domain.input_dir)
+    if final_input_inventory != provenance["native_input_inventory"]:
+        raise RuntimeError("Native source images or metadata changed during pilot.")
+    provenance["native_input_inventory_after"] = final_input_inventory
+    (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
 
     report = {
         **provenance,

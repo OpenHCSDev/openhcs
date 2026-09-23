@@ -14,7 +14,7 @@ from benchmark.matched_cellprofiler_batch import (
     _source_input_inventory,
     _worker_axis_evidence,
 )
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
 from openhcs.core.progress.types import ProgressEvent
 
 
@@ -68,22 +68,39 @@ def test_source_input_inventory_hashes_symlink_target(tmp_path: Path) -> None:
 
 
 def test_candidate_worker_count_uses_ordinary_global_config(tmp_path: Path) -> None:
-    config = _global_config(tmp_path, ("A01", "A12"), worker_count=2)
+    config = _global_config(
+        tmp_path,
+        ("A01", "A12"),
+        worker_count=2,
+        start_method=MultiprocessingStartMethod.FORK,
+    )
 
     assert config.num_workers == 2
+    assert config.multiprocessing_start_method is MultiprocessingStartMethod.FORK
     assert config.materialize_runtime_artifacts is False
 
 
 def test_candidate_pipeline_inherits_benchmark_worker_count(tmp_path: Path) -> None:
-    global_config = _global_config(tmp_path, ("A01", "A12"), worker_count=2)
+    global_config = _global_config(
+        tmp_path,
+        ("A01", "A12"),
+        worker_count=2,
+        start_method=MultiprocessingStartMethod.FORK,
+    )
 
     with config_context(global_config):
-        imported = PipelineConfig(num_workers=1)
+        imported = PipelineConfig(
+            num_workers=1,
+            use_threading=True,
+            multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
+        )
         candidate = _candidate_pipeline_config(
             imported, global_config, tmp_path, ("A01", "A12")
         )
 
         assert candidate.num_workers == 2
+        assert candidate.use_threading is False
+        assert candidate.multiprocessing_start_method is MultiprocessingStartMethod.FORK
 
 
 def _axis_event(axis_id: str, phase: str, pid: int, timestamp: float) -> ProgressEvent:

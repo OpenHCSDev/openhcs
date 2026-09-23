@@ -65,6 +65,7 @@ class NativeBatchObservation:
     invocation_seconds: float
     pre_first_module_seconds: float
     first_module_through_post_run_seconds: float
+    invocation_started_monotonic_seconds: float
     first_module_started_monotonic_seconds: float
     completed_monotonic_seconds: float
 
@@ -118,12 +119,13 @@ def main() -> None:
         startup_seconds = time.perf_counter() - startup_started
         observations = []
         for repetition in range(-1, request.repetitions):
+            invocation_started = time.perf_counter()
             output_root = Path(request.output_root) / str(repetition)
             output_root.mkdir(parents=True, exist_ok=False)
             set_default_output_directory(str(output_root))
             measurements = Measurements(image_set_start=request.first_image_set)
             measurements.is_first_image = True
-            clock = NativeBatchClock(time.perf_counter())
+            clock = NativeBatchClock(invocation_started)
             try:
                 for measurements in pipeline.run_with_yield(
                     image_set_start=request.first_image_set,
@@ -133,7 +135,6 @@ def main() -> None:
                     initial_measurements=measurements,
                 ):
                     pass
-                completed = time.perf_counter()
                 status = measurements.get_experiment_measurement(EXIT_STATUS)
                 if status != "Complete":
                     raise RuntimeError(
@@ -145,24 +146,24 @@ def main() -> None:
                     )
                 if clock.first_module_started is None:
                     raise RuntimeError("Native batch executed no analysis modules")
-                observations.append(
-                    NativeBatchObservation(
-                        repetition=repetition,
-                        output_root=str(output_root),
-                        image_set_count=clock.image_set_count,
-                        invocation_seconds=completed - clock.invocation_started,
-                        pre_first_module_seconds=clock.first_module_started
-                        - clock.invocation_started,
-                        first_module_through_post_run_seconds=completed
-                        - clock.first_module_started,
-                        first_module_started_monotonic_seconds=(
-                            clock.first_module_started
-                        ),
-                        completed_monotonic_seconds=completed,
-                    )
-                )
             finally:
                 measurements.close()
+            completed = time.perf_counter()
+            observations.append(
+                NativeBatchObservation(
+                    repetition=repetition,
+                    output_root=str(output_root),
+                    image_set_count=clock.image_set_count,
+                    invocation_seconds=completed - clock.invocation_started,
+                    pre_first_module_seconds=clock.first_module_started
+                    - clock.invocation_started,
+                    first_module_through_post_run_seconds=completed
+                    - clock.first_module_started,
+                    invocation_started_monotonic_seconds=clock.invocation_started,
+                    first_module_started_monotonic_seconds=clock.first_module_started,
+                    completed_monotonic_seconds=completed,
+                )
+            )
         report = asdict(
             NativeBatchReport(
                 startup_seconds=startup_seconds,
