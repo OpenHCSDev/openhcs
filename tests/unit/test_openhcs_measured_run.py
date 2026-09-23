@@ -186,6 +186,149 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
     ]
 
 
+def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
+    monkeypatch, tmp_path: Path
+) -> None:
+    observer = measured_run._ZMQProgressTimingObserver()
+
+    class FakeClient:
+        connected_endpoint = SimpleNamespace(
+            application=OPENHCS_ENDPOINT_APPLICATION,
+            process_identity=None,
+            log_file_path=None,
+            port=5555,
+        )
+
+        def __init__(self) -> None:
+            self.run_number = 0
+
+        def owned_server_process_is_alive(self) -> bool:
+            return True
+
+        def submit_compile(self, submission):
+            self.run_number += 1
+            observer({"phase": "compile", "status": "started", "timestamp": 10.0})
+            return {
+                "status": "accepted",
+                "execution_id": f"compile-{self.run_number}",
+            }
+
+        def submit_pipeline(self, submission):
+            assert submission.compile_artifact_id == f"compile-{self.run_number}"
+            observer({"phase": "axis_started", "timestamp": 11.0})
+            return {
+                "status": "accepted",
+                "execution_id": f"execute-{self.run_number}",
+            }
+
+        def wait_for_completion(self, execution_id):
+            if execution_id.startswith("compile-"):
+                observer({"phase": "compile", "status": "success", "timestamp": 10.5})
+            else:
+                observer({"phase": "axis_completed", "timestamp": 12.0})
+                (tmp_path / f"run-{self.run_number - 1}" / "observation.pkl").touch()
+            return {
+                "status": "complete",
+                "execution_id": execution_id,
+                "results": {"output_plate_root": str(tmp_path)},
+            }
+
+        def poll_status(self, execution_id):
+            return {
+                "status": "ok",
+                "execution": {
+                    "execution_id": execution_id,
+                    "plate_id": str(tmp_path),
+                    "client_address": None,
+                    "status": "complete",
+                    "start_time": 10.0,
+                    "end_time": 12.0,
+                },
+            }
+
+    monkeypatch.setattr(
+        measured_run,
+        "ZMQRuntimeExecutionObservationExport",
+        SimpleNamespace(
+            read=lambda path: SimpleNamespace(
+                output_roots=(tmp_path,),
+                axis_count=1,
+                execution_id=f"execute-{int(path.parent.name.removeprefix('run-')) + 1}",
+                server_environment=None,
+                require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
+            )
+        ),
+    )
+    client = FakeClient()
+    receipts = []
+    for index in range(2):
+        observation_path = tmp_path / f"run-{index}" / "observation.pkl"
+        observation_path.parent.mkdir()
+        submission = OpenHCSExecutionSubmission(
+            plate_id=tmp_path,
+            pipeline_document=PipelineDocumentAuthority.from_values(
+                pipeline_config=PipelineConfig(), pipeline_steps=[]
+            ),
+            global_config=GlobalPipelineConfig(),
+        ).with_auxiliary_params(
+            ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=observation_path
+            )
+        )
+        result, _ = measured_run.execute_measured_openhcs_pipeline_on_client(
+            client=client,
+            submission=submission,
+            phase_timing=PhaseTimingTrace(
+                run_id=f"run-{index}", pipeline_name="empty", tool="OpenHCS"
+            ),
+            timing_observer=observer,
+            expected_axis_count=1,
+            require_owned_server=True,
+        )
+        receipts.append(result.receipt)
+
+    assert client.run_number == 2
+    assert tuple(receipt.execution_id for receipt in receipts) == (
+        "execute-1",
+        "execute-2",
+    )
+    assert tuple(receipt.endpoint_provenance.endpoint_port for receipt in receipts) == (
+        5555,
+        5555,
+    )
+    assert all(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path / f"run-{index}").is_file()
+        for index in range(2)
+    )
+    assert observer.compile_started_at == 10.0
+    assert observer.execution_started_at == 11.0
+
+
+def test_measured_run_requires_observation_before_connecting(
+    monkeypatch, tmp_path: Path
+) -> None:
+    def unexpected_client(**kwargs):
+        raise AssertionError("Invalid measurement request opened a server connection")
+
+    monkeypatch.setattr(measured_run, "ZMQExecutionClient", unexpected_client)
+    submission = OpenHCSExecutionSubmission(
+        plate_id=tmp_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(), pipeline_steps=[]
+        ),
+        global_config=GlobalPipelineConfig(),
+    )
+
+    with pytest.raises(ValueError, match="require runtime observation export"):
+        measured_run.execute_measured_openhcs_pipeline(
+            submission=submission,
+            phase_timing=PhaseTimingTrace(
+                run_id="invalid", pipeline_name="empty", tool="OpenHCS"
+            ),
+            timing_observer=measured_run._ZMQProgressTimingObserver(),
+        )
+
+
 def test_shared_evidence_writer_never_overwrites_existing_artifact(
     monkeypatch, tmp_path: Path
 ) -> None:

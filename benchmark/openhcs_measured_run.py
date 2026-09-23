@@ -139,6 +139,17 @@ class _ZMQProgressTimingObserver:
     last_progress_status: str = ""
     on_event: Callable[[Mapping[str, Any]], None] | None = None
 
+    def begin_run(self) -> None:
+        """Discard prior phase bounds when one client observes repeated runs."""
+
+        self.compile_started_at = None
+        self.compile_completed_at = None
+        self.execution_started_at = None
+        self.execution_completed_at = None
+        self.last_progress_monotonic = time.monotonic()
+        self.last_progress_phase = ""
+        self.last_progress_status = ""
+
     def __call__(self, event: Mapping[str, Any]) -> None:
         if self.on_event is not None:
             self.on_event(event)
@@ -229,16 +240,11 @@ def _completed_server_job_seconds(
         raise ToolExecutionError(str(exc)) from exc
 
 
-def execute_measured_openhcs_pipeline(
-    *,
+def _require_measured_submission(
     submission: OpenHCSExecutionSubmission,
-    phase_timing: PhaseTimingTrace,
-    timing_observer: _ZMQProgressTimingObserver,
-    execution_port: int | None = None,
-    expected_axis_count: int | None = None,
-    require_owned_server: bool = False,
-) -> tuple[_ZMQOpenHCSExecution, str]:
-    """Measure an ordinary pipeline submission with its requested observation."""
+    expected_axis_count: int | None,
+) -> None:
+    """Fail before connecting when a measured request lacks its evidence target."""
 
     if expected_axis_count is not None and expected_axis_count < 1:
         raise ValueError("Expected axis count must be positive when declared.")
@@ -250,7 +256,20 @@ def execute_measured_openhcs_pipeline(
         raise ValueError("Measured OpenHCS runs require runtime observation export.")
     if not observation_export_path.is_absolute():
         raise ValueError("Measured OpenHCS observation export path must be absolute.")
-    pipeline_source = submission.pipeline_code()
+
+
+def execute_measured_openhcs_pipeline(
+    *,
+    submission: OpenHCSExecutionSubmission,
+    phase_timing: PhaseTimingTrace,
+    timing_observer: _ZMQProgressTimingObserver,
+    execution_port: int | None = None,
+    expected_axis_count: int | None = None,
+    require_owned_server: bool = False,
+) -> tuple[_ZMQOpenHCSExecution, str]:
+    """Measure an ordinary pipeline submission with its requested observation."""
+
+    _require_measured_submission(submission, expected_axis_count)
     client_port = execution_port
     if client_port is None and require_owned_server:
         client_port = DataControlPortPairAuthority.acquire(
@@ -263,42 +282,65 @@ def execute_measured_openhcs_pipeline(
         progress_callback=timing_observer,
     )
     with client:
-        endpoint = client.connected_endpoint
-        if endpoint is None:
-            raise ToolExecutionError(
-                "OpenHCS ZMQ client entered without a connected endpoint."
-            )
-        try:
-            endpoint_provenance = measured_endpoint_provenance(endpoint)
-        except ValueError as exc:
-            raise ToolExecutionError(str(exc)) from exc
-        if require_owned_server and client.owned_server_process_is_alive() is not True:
-            raise ToolExecutionError(
-                "Measured run requires a client-owned execution server. "
-                "The selected endpoint was already in use; choose an unused port."
-            )
-        benchmark_phases = {
-            ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
-            ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
-            ZMQPipelineRunPhase.SUBMIT_EXECUTION: BenchmarkPhase.SUBMIT_OPENHCS,
-            ZMQPipelineRunPhase.WAIT_EXECUTION: BenchmarkPhase.WAIT_OPENHCS,
-        }
-        try:
-            run = run_compiled_pipeline(
-                client,
-                submission,
-                phase_context=lambda phase: phase_timing.phase(benchmark_phases[phase]),
-            )
-        except RuntimeError as exc:
-            raise ToolExecutionError(str(exc)) from exc
-        phase_timing.record(
-            BenchmarkPhase.SERVER_COMPILATION_JOB,
-            seconds=_completed_server_job_seconds(client, run.compile_artifact_id),
+        return execute_measured_openhcs_pipeline_on_client(
+            client=client,
+            submission=submission,
+            phase_timing=phase_timing,
+            timing_observer=timing_observer,
+            expected_axis_count=expected_axis_count,
+            require_owned_server=require_owned_server,
         )
-        phase_timing.record(
-            BenchmarkPhase.SERVER_PIPELINE_JOB,
-            seconds=_completed_server_job_seconds(client, run.execution_id),
+
+
+def execute_measured_openhcs_pipeline_on_client(
+    *,
+    client: ZMQExecutionClient,
+    submission: OpenHCSExecutionSubmission,
+    phase_timing: PhaseTimingTrace,
+    timing_observer: _ZMQProgressTimingObserver,
+    expected_axis_count: int | None = None,
+    require_owned_server: bool = False,
+) -> tuple[_ZMQOpenHCSExecution, str]:
+    """Measure one ordinary run on a connected client observing ``timing_observer``."""
+
+    _require_measured_submission(submission, expected_axis_count)
+    endpoint = client.connected_endpoint
+    if endpoint is None:
+        raise ToolExecutionError(
+            "OpenHCS ZMQ client entered without a connected endpoint."
         )
+    try:
+        endpoint_provenance = measured_endpoint_provenance(endpoint)
+    except ValueError as exc:
+        raise ToolExecutionError(str(exc)) from exc
+    if require_owned_server and client.owned_server_process_is_alive() is not True:
+        raise ToolExecutionError(
+            "Measured run requires a client-owned execution server. "
+            "The selected endpoint was already in use; choose an unused port."
+        )
+    timing_observer.begin_run()
+    benchmark_phases = {
+        ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
+        ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
+        ZMQPipelineRunPhase.SUBMIT_EXECUTION: BenchmarkPhase.SUBMIT_OPENHCS,
+        ZMQPipelineRunPhase.WAIT_EXECUTION: BenchmarkPhase.WAIT_OPENHCS,
+    }
+    try:
+        run = run_compiled_pipeline(
+            client,
+            submission,
+            phase_context=lambda phase: phase_timing.phase(benchmark_phases[phase]),
+        )
+    except RuntimeError as exc:
+        raise ToolExecutionError(str(exc)) from exc
+    phase_timing.record(
+        BenchmarkPhase.SERVER_COMPILATION_JOB,
+        seconds=_completed_server_job_seconds(client, run.compile_artifact_id),
+    )
+    phase_timing.record(
+        BenchmarkPhase.SERVER_PIPELINE_JOB,
+        seconds=_completed_server_job_seconds(client, run.execution_id),
+    )
     timing_observer.record_phase_timings(phase_timing)
     return (
         retain_measured_openhcs_completion(
@@ -310,7 +352,7 @@ def execute_measured_openhcs_pipeline(
             compile_artifact_id=run.compile_artifact_id,
             expected_axis_count=expected_axis_count,
         ),
-        pipeline_source,
+        submission.pipeline_code(),
     )
 
 

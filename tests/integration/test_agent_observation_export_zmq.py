@@ -9,6 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import ExecutionStatus
 
 from benchmark.cellprofiler_benchmark_cli import create_benchmark_argument_parser
@@ -21,6 +22,7 @@ from benchmark.control import (
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline,
+    execute_measured_openhcs_pipeline_on_client,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from benchmark.well_throughput_scaling import (
@@ -47,6 +49,7 @@ from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
+    ZMQExecutionClient,
 )
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
@@ -56,6 +59,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("A01",)):
@@ -304,6 +308,68 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
             MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
         )
         == completed.receipt
+    )
+
+
+def test_measured_repetitions_share_one_owned_ordinary_server(tmp_path: Path) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    observer = _ZMQProgressTimingObserver()
+    port = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+    ).data_port
+    receipts = []
+
+    with ZMQExecutionClient(
+        port=port, persistent=False, progress_callback=observer
+    ) as client:
+        for repetition in range(2):
+            evidence_dir = tmp_path / f"evidence-{repetition}"
+            submission = OpenHCSExecutionSubmission(
+                plate_id=plate,
+                pipeline_document=pipeline,
+                global_config=GlobalPipelineConfig(
+                    path_planning_config=PathPlanningConfig(
+                        well_filter=0,
+                        global_output_folder=tmp_path / f"outputs-{repetition}",
+                    ),
+                    materialize_runtime_artifacts=False,
+                ),
+            ).with_auxiliary_params(
+                ZMQAuxiliaryExecutionParams(
+                    runtime_observation_export_path=(
+                        evidence_dir / "observation.pkl.gz"
+                    ),
+                    runtime_observation_export_scope=(
+                        ZMQRuntimeObservationExportScope.OUTCOMES
+                    ),
+                )
+            )
+            completed, _ = execute_measured_openhcs_pipeline_on_client(
+                client=client,
+                submission=submission,
+                phase_timing=PhaseTimingTrace(
+                    run_id=f"repetition-{repetition}",
+                    pipeline_name="Blur",
+                    tool="OpenHCS",
+                ),
+                timing_observer=observer,
+                expected_axis_count=1,
+                require_owned_server=True,
+            )
+            receipts.append(completed.receipt)
+
+    assert receipts[0].execution_id != receipts[1].execution_id
+    assert receipts[0].endpoint_provenance.endpoint_pid == (
+        receipts[1].endpoint_provenance.endpoint_pid
+    )
+    assert receipts[0].endpoint_provenance.endpoint_pid is not None
+    assert all(receipt.observed_axis_count == 1 for receipt in receipts)
+    assert all(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(
+            tmp_path / f"evidence-{repetition}"
+        ).is_file()
+        for repetition in range(2)
     )
 
 

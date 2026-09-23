@@ -105,6 +105,10 @@ outcome-only evidence through the ordinary auxiliary execution declaration,
 validates the selected export and any declared axis count, and records phase
 timing and provenance. Outcome-only evidence proves per-axis completion but
 cannot support value-equivalence claims.
+Repeated measurements can share one connected ordinary execution server while
+each run compiles its own artifact and retains a distinct observation and
+receipt. The benchmark does not create a second execution path to keep that
+server warm.
 
 Full-value observation expectations retain the compiled axis that owns each
 artifact kind. A plate-scoped export is checked on its one owning axis rather

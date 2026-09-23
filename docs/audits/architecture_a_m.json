@@ -2171,7 +2171,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "38fd5d789c140ffea822d3fec83585f01ded5bb4497a1f2c816597d0230429e5",
+    "source_sha256": "bc2d84e44cdc95680c39acfb3d65264106ee244ae71463718e81eb6d3295bf17",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2201,8 +2201,8 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "44844d268c31d576e300a972d5fe2a62aa1269dd78f0e3aeeb20e7dec8bfcbdf",
-        "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt."
+        "sha256": "3909254e2159ebdd7207a012e6bcb3f76bbfd43a886fb58c98d20e784fd5799d",
+        "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
       },
       {
         "path": "benchmark/contracts/run_artifacts.py",
@@ -2256,8 +2256,8 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "0b262822ce0ff4a0125e65a61ac6dd466a08ab12c00ce2fba9498c6c0d22aedc",
-        "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
+        "sha256": "98b1dd2e585cf0fb24ed65ff2399ce2802be72f3b7a7bb9e33f20d337d3a433f",
+        "role": "Proves ordinary non-CellProfiler observation validation, execution-ID admission, pre-connect rejection, and distinct receipts for repeated measurements on one client."
       },
       {
         "path": "tests/unit/test_benchmark_timing.py",
@@ -2288,7 +2288,8 @@
       "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending.",
       "2026-09-23: Re-read the complete Diátaxis explanation after the adapter began preserving caller-declared path-planning policy while choosing its output location. This changes output retention selection, not runtime equivalence or job ownership; no prose change was needed. Nineteen affected adapter and converted-CellProfiler tests passed locally. The pilot's proposed no-extra-main-flow policy still needs live validation.",
       "2026-09-23: Reviewed the nested-config authority delta: the adapter now preserves caller VFS and consolidation fields outside its declared benchmark overrides, as it already does for path planning. The explanation's ownership boundary remains accurate without a prose change. Unit coverage and three live ordinary/converted-pipeline checks passed; these fixtures do not validate the historical matched pilot.",
-      "2026-09-23: Re-read the complete explanation after value-export expectations began retaining compiled axis ownership. Added the plate-scoped owner distinction and archived-export interpretation; see docs/audits/runtime_axis_ownership_review_20260923.md. Thirty affected validation and adapter tests and a live two-well translocation run passed locally; the historical matched pilot remains unrerun."
+      "2026-09-23: Re-read the complete explanation after value-export expectations began retaining compiled axis ownership. Added the plate-scoped owner distinction and archived-export interpretation; see docs/audits/runtime_axis_ownership_review_20260923.md. Thirty affected validation and adapter tests and a live two-well translocation run passed locally; the historical matched pilot remains unrerun.",
+      "2026-09-23: Re-read the complete explanation against the reusable connected-client measured-run path. Added one architecture sentence separating warm-server reuse from a second execution engine. Ten focused unit tests and a live two-repetition ordinary ZMQ test passed locally; this does not yet validate matched CellProfiler timing or equivalence."
     ]
   },
   {
