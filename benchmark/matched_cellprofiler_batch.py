@@ -483,6 +483,9 @@ def main(argv: list[str] | None = None) -> int:
                 "expected_image_sets": partition_size,
                 "first_image_set": index * partition_size + 1,
                 "last_image_set": (index + 1) * partition_size,
+                "start_barrier_root": str(root / "native_shards" / "start_barrier"),
+                "start_barrier_job_count": args.native_jobs,
+                "start_barrier_job_index": index,
             }
             request_path = root / "native_shards" / f"request_{index}.json"
             request_path.parent.mkdir(parents=True, exist_ok=True)

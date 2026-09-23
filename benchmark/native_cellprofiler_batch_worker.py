@@ -31,6 +31,8 @@ from cellprofiler_core.preferences import (
 )
 from cellprofiler_core.utilities.java import start_java, stop_java
 
+from native_batch_barrier import NativeBatchStartBarrier
+
 
 @dataclass(frozen=True)
 class NativeBatchRequest:
@@ -43,6 +45,9 @@ class NativeBatchRequest:
     first_image_set: int = 1
     last_image_set: Optional[int] = None
     report_path: Optional[str] = None
+    start_barrier_root: Optional[str] = None
+    start_barrier_job_count: int = 1
+    start_barrier_job_index: int = 0
 
 
 @dataclass
@@ -99,6 +104,16 @@ def main() -> None:
         and request.last_image_set < request.first_image_set
     ):
         raise ValueError("Native image-set range must be positive and ordered")
+    if request.start_barrier_root is None:
+        if request.start_barrier_job_count != 1 or request.start_barrier_job_index != 0:
+            raise ValueError("Native batch barrier membership requires a root.")
+        start_barrier = None
+    else:
+        start_barrier = NativeBatchStartBarrier(
+            Path(request.start_barrier_root),
+            request.start_barrier_job_count,
+            request.start_barrier_job_index,
+        )
     logging.basicConfig(level=logging.WARNING)
     set_headless()
     set_awt_headless(True)
@@ -121,6 +136,8 @@ def main() -> None:
         startup_seconds = time.perf_counter() - startup_started
         observations = []
         for repetition in range(-1, request.repetitions):
+            if repetition >= 0 and start_barrier is not None:
+                start_barrier.wait(repetition)
             invocation_started = time.perf_counter()
             output_root = Path(request.output_root) / str(repetition)
             output_root.mkdir(parents=True, exist_ok=False)
