@@ -408,6 +408,17 @@ def retain_measured_openhcs_completion(
             f"completed job {execution_id!r}: {observation_export.execution_id!r}. "
             "No success receipt was written."
         )
+    if isinstance(observation_export, ZMQRuntimeExecutionOutcomeExport):
+        if observation_export.compiled_axis_ids is None:
+            raise ToolExecutionError(
+                "Legacy outcome export lacks compiled axis membership; "
+                "no success receipt was written."
+            )
+    elif observation_export.expectation.axis_expectations is None:
+        raise ToolExecutionError(
+            "Legacy value export lacks compiled axis membership; "
+            "no success receipt was written."
+        )
     try:
         with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
             if isinstance(observation_export, ZMQRuntimeExecutionOutcomeExport):

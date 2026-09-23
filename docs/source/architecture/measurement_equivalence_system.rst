@@ -110,7 +110,7 @@ compiled axis or an outcome for an uncompiled axis invalidates the run even if
 every retained outcome reports success. The measured-run finaliser refuses an
 empty execution. Archived outcome-only exports that predate this membership
 field remain readable, but their observed axes alone cannot prove complete
-compiled coverage.
+compiled coverage and cannot be finalised as a new success receipt.
 Repeated measurements can share one connected ordinary execution server while
 each run compiles its own artifact and retains a distinct observation and
 receipt. The benchmark does not create a second execution path to keep that

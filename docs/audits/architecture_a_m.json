@@ -2172,7 +2172,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "fd044cc928eb0b10766ed9bc3f3de7e94674051866003fc022250e46eafa5ad7",
+    "source_sha256": "0fc65d39fb294290ea1a4e9b876d5e186e0720ef926ff5fb837dcba79d8825b5",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2202,7 +2202,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "173cc4596a88ccba097b6604d9a869651a66d22ae6158ec57ceb9061202750d4",
+        "sha256": "9a8c3cc24fa32e0602d00f617b5e7c5f718c9b79f3315d6a9eed42a5f0675967",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
       },
       {
@@ -2252,12 +2252,12 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "8061536460320849f089af689c9a284baa999a510053cfaae01672d2406c55c8",
+        "sha256": "2f117fab8c889fb50a2ee734fe802b0ac6cbcbe9945a33d24c1482fbcd7eb955",
         "role": "Proves validated reference-export comparisons and retention of caller-declared path-planning, VFS, and consolidation settings not overridden by benchmark policy."
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "321d8a508b0e55dbf4ed2deb86cba99000c6d0e6e63fac9cf2965b4133f836fa",
+        "sha256": "ebb8b7741eec1130969325ed30f425752f6b47aaa59a5c03655002bc3bb53690",
         "role": "Proves ordinary non-CellProfiler observation validation, execution-ID admission, pre-connect rejection, and distinct receipts for repeated measurements on one client."
       },
       {
@@ -2293,7 +2293,7 @@
       "2026-09-23: Re-read the complete explanation against the reusable connected-client measured-run path. Added one architecture sentence separating warm-server reuse from a second execution engine. Ten focused unit tests and a live two-repetition ordinary ZMQ test passed locally; this does not yet validate matched CellProfiler timing or equivalence.",
       "2026-09-23: Rechecked the measured-run wrapper and its focused tests after progress timing changed to use the earliest axis start and latest completion independent of event arrival order. The explanation already distinguishes this diagnostic interval from authoritative completed-server time; no prose change was needed. This is a targeted authority-delta review, not a new suite-level publication claim.",
       "2026-09-23: Re-read the complete explanation after comparison-run output admission gained an exclusive receipt. Retained the distinction between typed run metadata and durable publication evidence; see benchmark_report_and_run_claim_review_20260923.md.",
-      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added the exact-membership and nonempty-execution boundary while retaining archived-export caveats; 84 focused unit tests and two live ordinary ZMQ integration tests passed locally. Exact-head CI remains separate."
+      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added exact membership and nonempty-execution boundaries; archived exports remain readable but cannot justify a new success receipt without compiler membership. Affected unit and live ordinary ZMQ tests passed locally; exact-head CI remains separate."
     ]
   },
   {

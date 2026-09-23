@@ -45,6 +45,7 @@ from openhcs.core.config import (
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.runtime_execution_validation import (
+    RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
 )
 from openhcs.core.runtime_exports import (
@@ -308,6 +309,9 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 expectation=RuntimeArtifactExecutionExpectation(
                     artifact_kinds=frozenset(),
                     exports=RuntimeExportExpectation(),
+                    axis_expectations=(
+                        RuntimeArtifactAxisExpectation("A01", frozenset()),
+                    ),
                 ),
                 records_by_axis={},
                 exports=RuntimeExportObservation.from_output_roots((tmp_path,)),

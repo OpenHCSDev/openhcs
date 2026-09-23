@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 from threading import Barrier
 from types import SimpleNamespace
@@ -123,6 +124,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
                 axis_count=1,
                 execution_id="execute-1",
                 server_environment=None,
+                expectation=SimpleNamespace(axis_expectations=("A01",)),
                 require_valid_observation=validate_observation,
             )
         ),
@@ -267,6 +269,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
                 axis_count=1,
                 execution_id=f"execute-{int(path.parent.name.removeprefix('run-')) + 1}",
                 server_environment=None,
+                expectation=SimpleNamespace(axis_expectations=("A01",)),
                 require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
             )
         ),
@@ -365,6 +368,7 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
                 output_roots=(tmp_path,),
                 execution_id="execution-1",
                 axis_count=1,
+                expectation=SimpleNamespace(axis_expectations=("A01",)),
                 require_valid_observation=lambda: SimpleNamespace(records_by_axis={}),
             )
         ),
@@ -519,6 +523,29 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
             submission=submission,
             execution_id="execution-1",
             results_summary={"well_count": 0},
+            endpoint_provenance=endpoint,
+            phase_timing=PhaseTimingTrace(
+                run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
+            ),
+            compile_artifact_id="compile-1",
+        )
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+    observation_path.unlink()
+    replace(
+        ZMQRuntimeExecutionOutcomeExport.from_execution(
+            compiled_axis_ids=("A01",),
+            execution_results={"A01": ExecutionResult.success("A01")},
+            output_roots=(tmp_path / "output",),
+            execution_id="execution-1",
+        ),
+        schema_version=2,
+        compiled_axis_ids=None,
+    ).write(observation_path)
+    with pytest.raises(ToolExecutionError, match="lacks compiled axis membership"):
+        measured_run.retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id="execution-1",
+            results_summary={"well_count": 1},
             endpoint_provenance=endpoint,
             phase_timing=PhaseTimingTrace(
                 run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
