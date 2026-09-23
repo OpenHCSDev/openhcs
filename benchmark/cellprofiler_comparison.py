@@ -37,6 +37,7 @@ from benchmark.runner import (
     CellProfilerCompatibilityResult,
     run_cellprofiler_cppipe_parity,
 )
+from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
 from openhcs.core.equivalence.outputs import image_paths, table_paths
 
@@ -1353,7 +1354,7 @@ def comparison_observation_from_result(
     """Convert adapter results into a stable observation payload."""
     native_summary = _tool_execution_summary(
         result.native_cellprofiler,
-        execution_phase="EXECUTE_NATIVE_CP",
+        execution_phase=BenchmarkPhase.EXECUTE_NATIVE_CP,
     )
     return CellProfilerComparisonObservation(
         suite_id=suite_id,
@@ -1370,7 +1371,7 @@ def comparison_observation_from_result(
         native_cellprofiler=native_summary,
         openhcs=_tool_execution_summary(
             result.openhcs_converted,
-            execution_phase="EXECUTE_OPENHCS",
+            execution_phase=BenchmarkPhase.SERVER_PIPELINE_JOB,
         ),
     )
 
@@ -1378,18 +1379,18 @@ def comparison_observation_from_result(
 def _tool_execution_summary(
     result: BenchmarkResult,
     *,
-    execution_phase: str,
+    execution_phase: BenchmarkPhase,
     cached: bool | None = None,
 ) -> ToolExecutionSummary:
     phase_seconds = _phase_seconds(result)
     metric_seconds = result.metrics.get("execution_time_seconds")
     peak_memory_mb = result.metrics.get("peak_memory_mb")
-    total_phase_seconds = sum(phase_seconds.values()) if phase_seconds else None
+    total_phase_seconds = additive_phase_total_seconds(phase_seconds)
     return ToolExecutionSummary(
         tool=result.tool_name,
         success=result.success,
         output_path=str(result.output_path),
-        execution_seconds=phase_seconds.get(execution_phase),
+        execution_seconds=phase_seconds.get(execution_phase.name),
         total_metric_seconds=(
             total_phase_seconds
             if total_phase_seconds is not None

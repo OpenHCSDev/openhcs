@@ -5,11 +5,14 @@ import json
 from pathlib import Path
 
 import pytest
+from zmqruntime.messages import ExecutionRecord
 
 from benchmark.timing import (
     BenchmarkPhase,
     PhaseTimingRecord,
     PhaseTimingTrace,
+    additive_phase_total_seconds,
+    completed_server_execution_seconds,
     write_phase_timing_csv,
     write_phase_timing_jsonl,
 )
@@ -59,6 +62,70 @@ def test_phase_timing_rejects_unknown_persisted_phase() -> None:
                 "cached": False,
             }
         )
+
+
+def test_additive_total_excludes_overlapping_server_and_progress_windows() -> None:
+    assert (
+        additive_phase_total_seconds(
+            {
+                BenchmarkPhase.SUBMIT_OPENHCS.name: 1.0,
+                BenchmarkPhase.WAIT_OPENHCS.name: 25.0,
+                BenchmarkPhase.COMPILE_OPENHCS.name: 15.0,
+                BenchmarkPhase.EXECUTE_OPENHCS.name: 10.0,
+                BenchmarkPhase.SERVER_COMPILATION_JOB.name: 15.0,
+                BenchmarkPhase.SERVER_PIPELINE_JOB.name: 10.0,
+                BenchmarkPhase.COMPARE_EQUIVALENCE.name: 2.0,
+            }
+        )
+        == 28.0
+    )
+    assert (
+        additive_phase_total_seconds({BenchmarkPhase.SERVER_PIPELINE_JOB.name: 10.0})
+        is None
+    )
+
+
+@pytest.mark.parametrize("seconds", (float("nan"), float("inf"), -1.0))
+def test_phase_timing_rejects_invalid_duration(seconds: float) -> None:
+    trace = PhaseTimingTrace(run_id="run-1", pipeline_name="pipe", tool="OpenHCS")
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        trace.record(BenchmarkPhase.SERVER_PIPELINE_JOB, seconds=seconds)
+
+
+def test_completed_server_duration_uses_exact_ordinary_job() -> None:
+    record = ExecutionRecord(
+        execution_id="execution-1",
+        plate_id="plate",
+        client_address=None,
+        status="complete",
+        start_time=10.0,
+        end_time=12.5,
+    )
+    assert (
+        completed_server_execution_seconds(record, expected_execution_id="execution-1")
+        == 2.5
+    )
+    with pytest.raises(ValueError, match="no valid server time bounds"):
+        completed_server_execution_seconds(record, expected_execution_id="other")
+
+
+@pytest.mark.parametrize(
+    ("start_time", "end_time"),
+    ((None, 2.0), (2.0, None), (2.0, 1.0), (0.0, float("nan"))),
+)
+def test_completed_server_duration_rejects_invalid_bounds(
+    start_time: float | None, end_time: float | None
+) -> None:
+    record = ExecutionRecord(
+        execution_id="execution-1",
+        plate_id="plate",
+        client_address=None,
+        status="complete",
+        start_time=start_time,
+        end_time=end_time,
+    )
+    with pytest.raises(ValueError, match="no valid server time bounds"):
+        completed_server_execution_seconds(record)
 
 
 def test_phase_timing_writers_can_use_filemanager_vfs() -> None:

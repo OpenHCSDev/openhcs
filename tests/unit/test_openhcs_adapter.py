@@ -390,18 +390,18 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
         )
 
 
-def test_openhcs_progress_timing_uses_completion_bound_without_axis_events() -> None:
+def test_openhcs_progress_timing_does_not_infer_execution_without_axis_events() -> None:
     observer = _ZMQProgressTimingObserver()
     observer({"phase": "compile", "status": "started", "timestamp": 100.0})
     observer({"phase": "compile", "status": "success", "timestamp": 102.0})
     timing = PhaseTimingTrace(run_id="run", pipeline_name="pipe", tool="OpenHCS")
     timing.record(BenchmarkPhase.WAIT_OPENHCS, seconds=7.0)
 
-    observer.record_phase_timings(timing, completion_observed_at=106.5)
+    observer.record_phase_timings(timing)
 
     phase_seconds = {record["phase"]: record["seconds"] for record in timing.payloads()}
     assert phase_seconds[BenchmarkPhase.COMPILE_OPENHCS.name] == 2.0
-    assert phase_seconds[BenchmarkPhase.EXECUTE_OPENHCS.name] == 4.5
+    assert BenchmarkPhase.EXECUTE_OPENHCS.name not in phase_seconds
 
 
 def test_openhcs_progress_observer_tracks_every_server_event(

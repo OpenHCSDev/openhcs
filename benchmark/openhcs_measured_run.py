@@ -15,7 +15,7 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
-from zmqruntime.messages import ExecutionStatus, ExecutionStatusSnapshot, PongResponse
+from zmqruntime.messages import ExecutionStatusSnapshot, PongResponse
 
 from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
@@ -49,6 +49,7 @@ from openhcs.runtime.zmq_execution_signature import (
 from .timing import (
     BenchmarkPhase,
     PhaseTimingTrace,
+    completed_server_execution_seconds,
 )
 
 ZMQ_RESULTS_SUMMARY_FILENAME = MeasuredPipelineRunArtifact.RESULTS_SUMMARY.value
@@ -164,8 +165,6 @@ class _ZMQProgressTimingObserver:
     def record_phase_timings(
         self,
         phase_timing: PhaseTimingTrace,
-        *,
-        completion_observed_at: float | None = None,
     ) -> None:
         compile_seconds = self._duration(
             self.compile_started_at,
@@ -180,15 +179,6 @@ class _ZMQProgressTimingObserver:
             self.execution_started_at,
             self.execution_completed_at,
         )
-        if execute_seconds is None:
-            execute_seconds = self._completion_bounded_execution_seconds(
-                completion_observed_at,
-                compile_seconds=compile_seconds,
-                wait_seconds=_phase_seconds_total(
-                    phase_timing,
-                    BenchmarkPhase.WAIT_OPENHCS,
-                ),
-            )
         if execute_seconds is not None:
             phase_timing.record(
                 BenchmarkPhase.EXECUTE_OPENHCS,
@@ -200,20 +190,6 @@ class _ZMQProgressTimingObserver:
         if started_at is None or ended_at is None:
             return None
         return max(0.0, ended_at - started_at)
-
-    def _completion_bounded_execution_seconds(
-        self,
-        completion_observed_at: float | None,
-        *,
-        compile_seconds: float | None,
-        wait_seconds: float | None,
-    ) -> float | None:
-        start_at = self.execution_started_at or self.compile_completed_at
-        if start_at is not None and completion_observed_at is not None:
-            return max(0.0, completion_observed_at - start_at)
-        if wait_seconds is None:
-            return None
-        return max(0.0, wait_seconds - (compile_seconds or 0.0))
 
     def inactivity_seconds(self, *, observed_at: float | None = None) -> float:
         """Return elapsed monotonic time since the latest server progress event."""
@@ -229,18 +205,6 @@ class _ZMQProgressTimingObserver:
         return f"{self.last_progress_phase}/{self.last_progress_status}"
 
 
-def _phase_seconds_total(
-    phase_timing: PhaseTimingTrace,
-    phase: BenchmarkPhase,
-) -> float | None:
-    records = [
-        record.seconds for record in phase_timing.records if record.phase is phase
-    ]
-    if not records:
-        return None
-    return sum(records)
-
-
 def _completed_server_job_seconds(
     client: ZMQExecutionClient, execution_id: str
 ) -> float:
@@ -248,18 +212,16 @@ def _completed_server_job_seconds(
 
     snapshot = ExecutionStatusSnapshot.from_dict(client.poll_status(execution_id))
     record = snapshot.execution
-    if (
-        record is None
-        or record.execution_id != execution_id
-        or record.status != ExecutionStatus.COMPLETE.value
-        or record.start_time is None
-        or record.end_time is None
-        or record.end_time < record.start_time
-    ):
+    if record is None:
         raise ToolExecutionError(
             f"Completed OpenHCS job {execution_id!r} has no valid server time bounds."
         )
-    return record.end_time - record.start_time
+    try:
+        return completed_server_execution_seconds(
+            record, expected_execution_id=execution_id
+        )
+    except ValueError as exc:
+        raise ToolExecutionError(str(exc)) from exc
 
 
 def execute_measured_openhcs_pipeline(
@@ -326,10 +288,7 @@ def execute_measured_openhcs_pipeline(
             BenchmarkPhase.SERVER_PIPELINE_JOB,
             seconds=_completed_server_job_seconds(client, run.execution_id),
         )
-    timing_observer.record_phase_timings(
-        phase_timing,
-        completion_observed_at=run.completion_observed_at,
-    )
+    timing_observer.record_phase_timings(phase_timing)
     return (
         retain_measured_openhcs_completion(
             submission=submission,

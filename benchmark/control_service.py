@@ -50,7 +50,11 @@ class BenchmarkControlService:
             measured_endpoint_provenance,
             retain_measured_openhcs_completion,
         )
-        from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
+        from benchmark.timing import (
+            BenchmarkPhase,
+            PhaseTimingTrace,
+            completed_server_execution_seconds,
+        )
         from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
         completed = self._execution_service.require_completed_pipeline_execution(
@@ -64,10 +68,12 @@ class BenchmarkControlService:
         observation_path = self._path_policy.assert_readable(observation_path)
         observation_path = self._path_policy.assert_writable(observation_path)
         record = completed.record
-        if record.start_time is None or record.end_time is None:
-            raise ValueError("Completed job has no server execution time bounds.")
-        if record.end_time < record.start_time:
-            raise ValueError("Completed job has reversed server execution time bounds.")
+        try:
+            execution_seconds = completed_server_execution_seconds(record)
+        except ValueError as exc:
+            raise ValueError(
+                "Completed job has no server execution time bounds."
+            ) from exc
         if record.results_summary is None:
             raise ValueError("Completed job has no server results summary.")
         if completed.endpoint is None:
@@ -79,7 +85,7 @@ class BenchmarkControlService:
         )
         phase_timing.record(
             BenchmarkPhase.SERVER_PIPELINE_JOB,
-            seconds=record.end_time - record.start_time,
+            seconds=execution_seconds,
         )
         return retain_measured_openhcs_completion(
             submission=completed.submission,

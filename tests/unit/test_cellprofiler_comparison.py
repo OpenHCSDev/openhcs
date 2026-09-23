@@ -53,7 +53,7 @@ def test_comparison_observation_extracts_execution_only_speedup(
         openhcs_converted=_benchmark_result(
             "OpenHCS",
             tmp_path / "openhcs",
-            "EXECUTE_OPENHCS",
+            "SERVER_PIPELINE_JOB",
             6.0,
             provenance={"equivalence_difference_count": 0},
         ),
@@ -99,7 +99,7 @@ def test_cached_native_reference_without_measured_timing_has_no_speedup(
         openhcs_converted=_benchmark_result(
             "OpenHCS",
             tmp_path / "openhcs",
-            "EXECUTE_OPENHCS",
+            "SERVER_PIPELINE_JOB",
             2.0,
             provenance={"equivalence_difference_count": 0},
         ),
@@ -424,7 +424,7 @@ def test_comparison_writers_emit_raw_phase_and_summary_tables(
             openhcs_converted=_benchmark_result(
                 "OpenHCS",
                 tmp_path / "openhcs",
-                "EXECUTE_OPENHCS",
+                "SERVER_PIPELINE_JOB",
                 5.0,
                 success=False,
                 error_message="semantic mismatch",
@@ -454,7 +454,7 @@ def test_comparison_writers_emit_raw_phase_and_summary_tables(
     assert observation_rows[0]["total_phase_speedup"] == "6.0"
     assert {row["phase"] for row in phase_rows} == {
         "EXECUTE_NATIVE_CP",
-        "EXECUTE_OPENHCS",
+        "SERVER_PIPELINE_JOB",
     }
     assert summary_rows[0]["median_speedup"] == "6.0"
     assert summary_rows[0]["assay_category"] == "Tissue/object morphology"
@@ -491,7 +491,7 @@ def test_summary_speedup_target_uses_execution_time_only(
                 provenance={
                     "phase_timing_records": (
                         {"phase": "EXECUTE_NATIVE_CP", "seconds": 60.0},
-                        {"phase": "COMPARE_NATIVE", "seconds": 1.0},
+                        {"phase": "SNAPSHOT_OUTPUTS", "seconds": 1.0},
                     ),
                 },
             ),
@@ -507,7 +507,9 @@ def test_summary_speedup_target_uses_execution_time_only(
                     "phase_timing_records": (
                         {"phase": "COMPILE_OPENHCS", "seconds": 15.0},
                         {"phase": "EXECUTE_OPENHCS", "seconds": 10.0},
-                        {"phase": "COMPARE_OPENHCS", "seconds": 15.0},
+                        {"phase": "SERVER_PIPELINE_JOB", "seconds": 10.0},
+                        {"phase": "WAIT_OPENHCS", "seconds": 25.0},
+                        {"phase": "COMPARE_EQUIVALENCE", "seconds": 15.0},
                     ),
                 },
             ),
@@ -802,7 +804,7 @@ def test_discard_successful_openhcs_benchmark_tree_preserves_failed_outputs(
             openhcs_converted=_benchmark_result(
                 "OpenHCS",
                 output_tree,
-                "EXECUTE_OPENHCS",
+                "SERVER_PIPELINE_JOB",
                 1.0,
                 success=False,
                 error_message="semantic mismatch",
