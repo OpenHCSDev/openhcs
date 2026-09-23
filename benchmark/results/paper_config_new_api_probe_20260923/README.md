@@ -24,6 +24,16 @@ numbers: runs were not a controlled timing pair. The retained `*.csv` files,
 endpoint identity/environment, compiled-pipeline hashes, successful-axis
 outcomes and timing boundaries. The microscopy outputs are not tracked here.
 
+On commit `150699499`, the CLI's `--plan-only` route resolved this paper
+manifest to 30 cases and its four declared modes without warnings. A separate
+wheel built from that commit passed `scripts/smoke_installed_mcp.py
+--exercise-measured-execution` from a fresh installation: the MCP health and
+expert benchmark tools, installed CLI sweep planning, and one small ordinary
+source-backed job each completed. That wheel smoke uses synthetic data, not
+this 30-case paper manifest; the two live translocation rows above are the
+paper-manifest execution evidence. The temporary wheel installation was
+removed after the smoke test.
+
 The initial new-API eight-well attempt cloned *all* translocation source wells
 into each synthetic well because the throughput wrapper ignored the manifest's
 source-well filter. It hit the 6000 MB process-tree limit at 6035.6 MB after
