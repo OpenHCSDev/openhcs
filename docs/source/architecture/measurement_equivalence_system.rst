@@ -158,6 +158,10 @@ directory is promoted to a completed measurement. Retrying finalisation for
 the same completed job can reuse only byte-identical pre-receipt files. The
 finaliser writes missing files, rechecks the declared set, and then publishes
 the receipt. Conflicting files or an existing receipt fail closed.
+Inspection derives ``evidence_valid`` from the receipt, both source snapshots,
+and the retained observation and summary digests. An archived receipt without
+those digests, or a file changed after finalisation, remains inspectable but
+cannot yield verified retained evidence.
 
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:

@@ -368,8 +368,10 @@ async def _run_measured_execution_protocol_smoke(
     )
     if finalized.get("execution_id") != status.get("server_execution_id"):
         raise AssertionError(f"Installed MCP receipt changed job identity: {finalized}")
-    if not inspected.get("source_evidence") or any(
-        not item.get("valid") for item in inspected["source_evidence"]
+    if (
+        inspected.get("evidence_valid") is not True
+        or not inspected.get("source_evidence")
+        or any(not item.get("valid") for item in inspected["source_evidence"])
     ):
         raise AssertionError(f"Installed MCP retained invalid evidence: {inspected}")
     return _MeasuredSmokeEvidence(
@@ -471,7 +473,8 @@ def _run_installed_measured_cli_smoke(
         raise AssertionError("Installed MCP and CLI output roots are not independent.")
     inspection = inspect_measured_pipeline_run(cli_dir)
     if (
-        inspection.warnings
+        not inspection.evidence_valid
+        or inspection.warnings
         or not inspection.source_evidence
         or not all(source.valid for source in inspection.source_evidence)
     ):

@@ -239,6 +239,13 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
         results_summary_present=results_summary_present,
         observation_integrity_verified=observation_integrity_verified,
         results_summary_integrity_verified=results_summary_integrity_verified,
+        evidence_valid=(
+            receipt is not None
+            and all(item.valid for item in source_evidence)
+            and observation_integrity_verified
+            and results_summary_integrity_verified
+            and not warnings
+        ),
         warnings=tuple(warnings),
     )
 
@@ -255,6 +262,10 @@ def report_measured_pipeline_run(
     else:
         lines.extend(
             (
+                "- Retained evidence: "
+                + (
+                    "verified" if inspection.evidence_valid else "unverified or invalid"
+                ),
                 f"- Run: `{receipt.run_id}`",
                 f"- Pipeline: `{receipt.pipeline_name}`",
                 f"- Execution: `{receipt.execution_id}`",

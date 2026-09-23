@@ -186,12 +186,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "eb2b1648d4b8d2b85f819d5d81b12f690d18104bfe4f2f21a83d7abf390e7d33",
+        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bb0d9763cfdd3934f0aad2ec679ded1eed840ee4a996e2f706d06a5b151a0b1a",
+        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -777,7 +777,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "eb2b1648d4b8d2b85f819d5d81b12f690d18104bfe4f2f21a83d7abf390e7d33",
+        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -1402,12 +1402,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "eb2b1648d4b8d2b85f819d5d81b12f690d18104bfe4f2f21a83d7abf390e7d33",
+        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bb0d9763cfdd3934f0aad2ec679ded1eed840ee4a996e2f706d06a5b151a0b1a",
+        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3903,7 +3903,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "2d33db3e88dcfb0d104a0bbb0ed027f07869a47c3a6afa9d3531c52d1bd2eac5",
+    "source_sha256": "2457819fcabc316ee4e30bf22374376378a7737d327ecf25413ddead8d639d49",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3963,12 +3963,12 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "4c58572ef6a0c9dc4d6077fc450324a43ef3b04285b887bda7cf4030038c2656",
+        "sha256": "bb1227d25d6eea9d2a9d3185011c278ae9a5f6b3177a8b47e8a190950ccfeecf",
         "role": "Declares the expert MCP benchmark inspection request and result."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "eb2b1648d4b8d2b85f819d5d81b12f690d18104bfe4f2f21a83d7abf390e7d33",
+        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
@@ -3983,7 +3983,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bb0d9763cfdd3934f0aad2ec679ded1eed840ee4a996e2f706d06a5b151a0b1a",
+        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],

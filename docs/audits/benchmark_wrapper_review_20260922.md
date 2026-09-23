@@ -49,6 +49,9 @@ claim. Archived v1 receipts remain readable, but inspection explicitly marks
 those two artifacts unverified because v1 did not record their digests. The
 receipt still does not certify the image or table files under its output roots;
 their value and output-policy checks belong to the comparison evidence.
+The inspection's ``evidence_valid`` flag is a projection of those checks, not
+a second job-status authority. It is false for legacy receipts that cannot
+verify the two retained files and for post-finalisation tampering.
 I rechecked the affected benchmark claims in the MCP distribution,
 measurement-equivalence, MCP client, extension, module-structure, onboarding,
 research-impact and README pages before refreshing their authority hashes.

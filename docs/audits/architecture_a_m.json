@@ -2085,17 +2085,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "4c58572ef6a0c9dc4d6077fc450324a43ef3b04285b887bda7cf4030038c2656",
+        "sha256": "bb1227d25d6eea9d2a9d3185011c278ae9a5f6b3177a8b47e8a190950ccfeecf",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "eb2b1648d4b8d2b85f819d5d81b12f690d18104bfe4f2f21a83d7abf390e7d33",
+        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
         "role": "Implements contained read-only receipt, streamed observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bb0d9763cfdd3934f0aad2ec679ded1eed840ee4a996e2f706d06a5b151a0b1a",
+        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2172,7 +2172,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "aade04de16968db61fcc7d5c98de8c26b1f731cbc6bb922f569236d6f9d7a0e1",
+    "source_sha256": "3b786e610add4c3776c66506c3cdd3b55df1284c98b9734d1c9e4d65a25d8d3b",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
