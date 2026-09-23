@@ -356,6 +356,18 @@ def _sqlite_table_value_differences(
     subject: MeasurementSubject | None,
     policy: RuntimeEquivalencePolicy,
 ) -> tuple[RuntimeEquivalenceDifference, ...]:
+    # Unequal row cardinality is already a definitive export-value failure.
+    # Avoid projecting a large object table into semantic facts only to find
+    # this same mismatch after an expensive many-row comparison.
+    if len(reference_table.rows) != len(candidate_table.rows):
+        return (
+            RuntimeEquivalenceDifference(
+                RuntimeEquivalenceDifferenceKind.TABLE_CONTENT,
+                "row count differs: "
+                f"reference={len(reference_table.rows)}, "
+                f"candidate={len(candidate_table.rows)}",
+            ),
+        )
     # A byte-for-byte equal multiset of normalized rows is already a stronger
     # proof than tolerance-based semantic matching. Large object and relationship
     # exports otherwise pay the cost of projecting every unchanged row.

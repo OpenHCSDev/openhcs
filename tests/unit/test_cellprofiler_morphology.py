@@ -242,6 +242,39 @@ def test_smooth_image_for_declumping_handles_stacked_planes_planewise() -> None:
     )
 
 
+@pytest.mark.parametrize("partial_mask", [False, True])
+@pytest.mark.parametrize("filter_size", [2.35 * 2 / 3.5, 3.0, 10.0])
+def test_numba_declump_smoothing_preserves_scipy_float32_rounding(
+    partial_mask: bool,
+    filter_size: float,
+) -> None:
+    rng = np.random.default_rng(17)
+    image = rng.uniform(0.0, 0.1, size=(37, 41)).astype(np.float32)
+    mask = (
+        rng.uniform(size=image.shape) > 0.2
+        if partial_mask
+        else np.ones(image.shape, dtype=bool)
+    )
+    expected = NumpyMorphologyBackendStrategy().smooth_image_for_declumping(
+        image,
+        mask,
+        filter_size,
+        declump_method=CellProfilerDeclumpMethod.INTENSITY,
+        suppress_size=2 / 1.5,
+        min_diameter=2,
+    )
+    actual = NumbaNumpyMorphologyBackendStrategy().smooth_image_for_declumping(
+        image,
+        mask,
+        filter_size,
+        declump_method=CellProfilerDeclumpMethod.INTENSITY,
+        suppress_size=2 / 1.5,
+        min_diameter=2,
+    )
+
+    np.testing.assert_array_equal(actual, expected)
+
+
 def test_declumping_seed_points_handles_stacked_planes_planewise() -> None:
     image = np.zeros((2, 9, 9), dtype=np.float32)
     labels = np.zeros((2, 9, 9), dtype=np.int32)

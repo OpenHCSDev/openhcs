@@ -3887,9 +3887,12 @@ def _smooth_image_for_declumping_numba(
     height, width = image.shape
     radius = kernel.size // 2
     edge_vertical = np.empty((height, width), dtype=np.float64)
-    image_vertical = np.empty((height, width), dtype=np.float64)
+    # scipy.ndimage.convolve1d preserves the input dtype after each axis.
+    # Rounding only the final quotient can change one-pixel maxima and hence
+    # CellProfiler declumping topology even when the arrays are allclose.
+    image_vertical = np.empty_like(image)
     edge_array = np.empty((height, width), dtype=np.float64)
-    smoothed_image = np.empty((height, width), dtype=np.float64)
+    smoothed_image = np.empty_like(image)
     for y in range(height):
         for x in range(width):
             edge_sum = 0.0
@@ -3940,7 +3943,7 @@ def _smooth_image_for_declumping_full_mask_numba(
     kernel_size = kernel.size
     edge_y = np.empty(height, dtype=np.float64)
     edge_x = np.empty(width, dtype=np.float64)
-    image_vertical = np.empty((height, width), dtype=np.float64)
+    image_vertical = np.empty_like(image)
     for y in range(height):
         edge_sum = 0.0
         for kernel_index in range(kernel.size):
@@ -3978,9 +3981,8 @@ def _smooth_image_for_declumping_full_mask_numba(
                         continue
                     image_sum += float(image[iy, x]) * kernel[kernel_index]
                 image_vertical[y, x] = image_sum
-    output = np.empty_like(image)
+    smoothed_image = np.empty_like(image)
     for y in range(height):
-        edge_y_value = edge_y[y]
         for x in range(full_x_start):
             image_sum = 0.0
             for kernel_index in range(kernel_size):
@@ -3988,21 +3990,13 @@ def _smooth_image_for_declumping_full_mask_numba(
                 if ix < 0 or ix >= width:
                     continue
                 image_sum += image_vertical[y, ix] * kernel[kernel_index]
-            edge_value = edge_y_value * edge_x[x]
-            if edge_value != 0.0:
-                output[y, x] = image_sum / edge_value
-            else:
-                output[y, x] = image[y, x]
+            smoothed_image[y, x] = image_sum
         for x in range(full_x_start, full_x_stop):
             x0 = x - radius
             image_sum = 0.0
             for kernel_index in range(kernel_size):
                 image_sum += image_vertical[y, x0 + kernel_index] * kernel[kernel_index]
-            edge_value = edge_y_value * edge_x[x]
-            if edge_value != 0.0:
-                output[y, x] = image_sum / edge_value
-            else:
-                output[y, x] = image[y, x]
+            smoothed_image[y, x] = image_sum
         for x in range(full_x_stop, width):
             image_sum = 0.0
             for kernel_index in range(kernel_size):
@@ -4010,9 +4004,13 @@ def _smooth_image_for_declumping_full_mask_numba(
                 if ix < 0 or ix >= width:
                     continue
                 image_sum += image_vertical[y, ix] * kernel[kernel_index]
-            edge_value = edge_y_value * edge_x[x]
+            smoothed_image[y, x] = image_sum
+    output = np.empty_like(image)
+    for y in range(height):
+        for x in range(width):
+            edge_value = edge_y[y] * edge_x[x]
             if edge_value != 0.0:
-                output[y, x] = image_sum / edge_value
+                output[y, x] = smoothed_image[y, x] / edge_value
             else:
                 output[y, x] = image[y, x]
     return output

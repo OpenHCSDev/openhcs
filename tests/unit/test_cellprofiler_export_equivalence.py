@@ -354,6 +354,32 @@ def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     assert report.is_equivalent
 
 
+def test_database_export_equivalence_rejects_unequal_row_count_before_value_projection(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    candidate = tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    for root in (reference, candidate):
+        _write_database(root / "analysis.db")
+        _write_properties(root / "analysis.properties", root / "analysis.db")
+    with sqlite3.connect(reference / "analysis.db") as connection:
+        connection.execute("INSERT INTO Per_Image VALUES (?, ?)", (2, 3.0))
+
+    report = cellprofiler_database_export_equivalence(
+        reference,
+        RuntimeExportObservation.from_output_root(candidate),
+        policy=RuntimeEquivalencePolicy(),
+    )
+
+    assert not report.is_equivalent
+    assert any(
+        "row count differs: reference=2, candidate=1" in message
+        for message in report.failure_messages()
+    )
+
+
 def test_database_export_equivalence_resolves_prefixed_combined_cpa_schema(
     tmp_path: Path,
 ) -> None:
