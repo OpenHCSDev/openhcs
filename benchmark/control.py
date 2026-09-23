@@ -187,6 +187,13 @@ def report_measured_pipeline_run(
                 f"- Plate: `{receipt.plate_id}`",
                 f"- Compile artifact: `{receipt.compile_artifact_id or 'none; server job may include compilation'}`",
                 f"- Output roots: {len(receipt.output_roots)}",
+                f"- Runtime observation scope: `{receipt.observation_export_scope.value}`",
+                f"- Execution axes: {receipt.observed_axis_count if receipt.observed_axis_count is not None else 'not recorded'}"
+                + (
+                    f" / {receipt.expected_axis_count} expected"
+                    if receipt.expected_axis_count is not None
+                    else ""
+                ),
                 f"- Runtime observation retained: {inspection.observation_present}",
                 f"- Source snapshots verified: {sum(item.valid for item in inspection.source_evidence)}/{len(inspection.source_evidence)}",
                 "",

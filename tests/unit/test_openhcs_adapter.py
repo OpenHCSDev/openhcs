@@ -248,6 +248,20 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 "results": {"output_plate_root": str(tmp_path)},
             }
 
+        def poll_status(self, execution_id):
+            assert execution_id in {"compile-1", "exec-1"}
+            return {
+                "status": "ok",
+                "execution": {
+                    "execution_id": execution_id,
+                    "plate_id": "/tmp/execution_plate",
+                    "client_address": None,
+                    "status": "complete",
+                    "start_time": 10.0 if execution_id == "compile-1" else 13.0,
+                    "end_time": 12.0 if execution_id == "compile-1" else 17.0,
+                },
+            }
+
     monkeypatch.setattr(
         "benchmark.openhcs_measured_run.ZMQExecutionClient",
         FakeZMQExecutionClient,
@@ -309,6 +323,8 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         BenchmarkPhase.WAIT_OPENHCS.name,
         BenchmarkPhase.COMPILE_OPENHCS.name,
         BenchmarkPhase.EXECUTE_OPENHCS.name,
+        BenchmarkPhase.SERVER_COMPILATION_JOB.name,
+        BenchmarkPhase.SERVER_PIPELINE_JOB.name,
     }
 
 

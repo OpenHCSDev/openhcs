@@ -452,6 +452,10 @@ class OpenHCSAdapter(ToolAdapter):
             else request.output_dir
         )
         observation = server_execution.observation
+        if observation is None:
+            raise ToolExecutionError(
+                "CellProfiler equivalence requires a value observation export."
+            )
         axis_count = server_execution.axis_count
         executed_axes = tuple(observation.records_by_axis)
         csv_output_count = len(observation.exports.table_outputs)

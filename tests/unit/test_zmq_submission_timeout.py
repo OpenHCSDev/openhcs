@@ -13,6 +13,7 @@ from zmqruntime.messages import (
 )
 from zmqruntime.timeouts import OperationDeadline
 
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     ExecutionSubmissionPreparationTimeoutError,
@@ -25,17 +26,24 @@ class _Submission:
         return object()
 
 
-def test_submission_uses_declared_timeout_for_progress_registration():
-    client = ZMQExecutionClient()
-    client._connection = AttachedEndpointConnection(
+def _attached_openhcs_endpoint(
+    client: ZMQExecutionClient,
+) -> AttachedEndpointConnection:
+    return AttachedEndpointConnection(
         PongResponse(
             port=client.port,
             control_port=client.control_port,
             ready=True,
             server="ZMQExecutionServer",
             server_role=ServerRole.EXECUTION,
+            application=OPENHCS_ENDPOINT_APPLICATION,
         )
     )
+
+
+def test_submission_uses_declared_timeout_for_progress_registration():
+    client = ZMQExecutionClient()
+    client._connection = _attached_openhcs_endpoint(client)
     observed: list[tuple[str, int]] = []
 
     def ensure_progress_subscription(self, *, timeout_ms: int):
@@ -132,6 +140,7 @@ def test_submission_deadline_prevents_request_after_slow_connection() -> None:
         del timeout, operation_deadline
         observed.append("connect")
         time.sleep(0.03)
+        self._connection = _attached_openhcs_endpoint(self)
         return True
 
     def ensure_progress_subscription(self, *, timeout_ms: int) -> None:

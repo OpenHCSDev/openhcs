@@ -5,10 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import math
-import multiprocessing
-import queue
 import statistics
-import threading
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
@@ -21,41 +18,62 @@ import psutil
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
 
-from benchmark.cellprofiler_comparison import CASE_NAME_FIELD
-from benchmark.cellprofiler_comparison import load_comparison_cases
-from benchmark.cellprofiler_comparison import MEDIAN_NATIVE_EXECUTION_SECONDS_FIELD
+from benchmark.cellprofiler_comparison import (
+    CASE_NAME_FIELD,
+    MEDIAN_NATIVE_EXECUTION_SECONDS_FIELD,
+    load_comparison_cases,
+)
 from benchmark.contracts.comparison_manifest import ComparisonManifest
 from benchmark.metrics.memory import MemoryMetric
-from objectstate.lazy_factory import ensure_global_config_context
+from benchmark.openhcs_measured_run import (
+    _ZMQProgressTimingObserver,
+    execute_measured_openhcs_pipeline,
+)
+from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import AllComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
+    LazyPathPlanningConfig,
     LazyVFSConfig,
     LazyWellFilterConfig,
-    LazyPathPlanningConfig,
     MaterializationBackend,
     MultiprocessingStartMethod,
 )
+from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    RuntimeObservationMode,
-)
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_matching import with_source_component_metadata
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
 from openhcs.microscopes.openhcs import FIELDS
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
+)
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
 WELL_THROUGHPUT_LANES_CSV = "well_throughput_worker_lanes.csv"
 WELL_THROUGHPUT_STEPS_CSV = "well_throughput_step_timings.csv"
+
+
+class WellThroughputExecutionRoute(StrEnum):
+    """Execution boundary that produced a throughput observation."""
+
+    LEGACY_DIRECT = "legacy-direct-v1"
+    ORDINARY_ZMQ_OUTCOMES = "ordinary-zmq-outcomes-v1"
+
+
+LEGACY_DIRECT_EXECUTION_ROUTE = WellThroughputExecutionRoute.LEGACY_DIRECT
+ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE = (
+    WellThroughputExecutionRoute.ORDINARY_ZMQ_OUTCOMES
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -460,6 +478,7 @@ class WellThroughputPresentationReport:
         summary_rows = self.single_process_summary_rows()
         core_rows = self.core_scaling_rows()
         wells_per_core_rows = self.wells_per_core_rows()
+        _require_single_execution_route((*core_rows, *wells_per_core_rows))
 
         outputs.extend(self.write_source_index())
         outputs.extend(self.generate_parity_figures(summary_rows))
@@ -617,9 +636,9 @@ class WellThroughputPresentationReport:
         )
 
         from benchmark.reports.cppipe_figures import (
+            SPEEDUP_TARGET,
             BenchmarkMetricRow,
             FigureMetricSpec,
-            SPEEDUP_TARGET,
             generate_grouped_benchmark_metric_figures,
         )
 
@@ -698,18 +717,22 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Generate the per-pipeline core scaling figure with multi-band breaks."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import DEFAULT_WRAP_AFTER
-        from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-        from benchmark.reports.cppipe_figures import PIPELINE_LABEL_FONT_SIZE
-        from benchmark.reports.cppipe_figures import PIPELINE_LABEL_LAYOUT
-        from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+        from benchmark.reports.cppipe_figures import (
+            DEFAULT_WRAP_AFTER,
+            FIGURE_DPI,
+            FIGURE_STYLE,
+            LINEAR_AXIS_BREAK_POLICY,
+            PIPELINE_LABEL_FONT_SIZE,
+            PIPELINE_LABEL_LAYOUT,
+            SPEEDUP_TARGET,
+        )
 
         row_index = {(row.pipeline_name, row.method): row for row in rows}
         panels = PIPELINE_LABEL_LAYOUT.panels(pipeline_names, DEFAULT_WRAP_AFTER)
@@ -1021,8 +1044,7 @@ class WellThroughputPresentationReport:
         """Plot module coverage shares with a summary count table."""
         import matplotlib.pyplot as plt
 
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
+        from benchmark.reports.cppipe_figures import FIGURE_DPI, FIGURE_STYLE
 
         grouped_rows = table.grouped_rows()
         labels = tuple(coverage.label for coverage in ModuleAbstractionCoverageKind)
@@ -1155,14 +1177,18 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Plot mean bars with median/min overlays in one wells/core summary."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+        from benchmark.reports.cppipe_figures import (
+            FIGURE_DPI,
+            FIGURE_STYLE,
+            SPEEDUP_TARGET,
+        )
 
         row_index = {
             (row.worker_count, row.wells_per_core): row for row in summary_rows
@@ -1361,13 +1387,17 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Plot mean bars with all per-pipeline points for each method."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
+        from benchmark.reports.cppipe_figures import (
+            FIGURE_STYLE,
+            LINEAR_AXIS_BREAK_POLICY,
+        )
 
         methods = tuple(mode.label for mode in self.core_scaling_modes)
         method_values = tuple(
@@ -1930,6 +1960,7 @@ class WellThroughputResult:
     status: WellThroughputStatus = WellThroughputStatus.SUCCESS
     memory_limit_mb: float | None = None
     error_message: str | None = None
+    execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE
 
     @classmethod
     def memory_limited(
@@ -1945,6 +1976,7 @@ class WellThroughputResult:
         memory_limit_mb: float,
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str | None = None,
+        execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -1973,6 +2005,7 @@ class WellThroughputResult:
             status=WellThroughputStatus.MEMORY_LIMIT_EXCEEDED,
             memory_limit_mb=memory_limit_mb,
             error_message=error_message,
+            execution_route=execution_route,
         )
 
     @classmethod
@@ -1988,6 +2021,7 @@ class WellThroughputResult:
         peak_memory_mb: float | None,
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str,
+        execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -2015,6 +2049,7 @@ class WellThroughputResult:
             peak_memory_mb=peak_memory_mb,
             status=WellThroughputStatus.ERROR,
             error_message=error_message,
+            execution_route=execution_route,
         )
 
     def is_successful(self) -> bool:
@@ -2042,8 +2077,17 @@ def run_well_throughput_suite(
     skipped_observations: Sequence[WellThroughputObservationKey] = (),
     rerun_missing_memory: bool = False,
     max_memory_mb: float | None = None,
+    execution_port: int | None = None,
 ) -> tuple[WellThroughputResult, ...]:
     """Run converted cppipes as one OpenHCS plate with repeated virtual wells."""
+    if any(
+        result.execution_route is not ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
+        for result in existing_results
+    ):
+        raise ValueError(
+            "Cannot resume legacy well-throughput rows through the ordinary ZMQ "
+            "execution route; use a new output root."
+        )
     cases = load_comparison_cases(manifest_path)
     selected = set(case_names)
     benchmark_plan = plan or WellThroughputBenchmarkPlan.from_axes(
@@ -2073,7 +2117,6 @@ def run_well_throughput_suite(
                 case_name=case.name,
                 dataset_path=case.dataset_path,
                 cppipe_path=case.cppipe_path,
-                pipeline_params=case.pipeline_params,
                 output_root=(
                     output_root
                     / case.name
@@ -2084,6 +2127,7 @@ def run_well_throughput_suite(
                 start_method=start_method,
                 native_execution_baseline=native_baselines.get(case.name),
                 max_memory_mb=max_memory_mb,
+                execution_port=execution_port,
             )
             results.append(result)
             completed.add(observation_key)
@@ -2096,12 +2140,12 @@ def run_case_well_throughput(
     case_name: str,
     dataset_path: Path,
     cppipe_path: Path,
-    pipeline_params: Mapping[str, object],
     output_root: Path,
     mode: WellThroughputMode,
     start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
     native_execution_baseline: NativeCellProfilerExecutionBaseline | None = None,
     max_memory_mb: float | None = None,
+    execution_port: int | None = None,
 ) -> WellThroughputResult:
     """Run one converted cppipe over synthetic wells in a single OpenHCS execution."""
     output_root.mkdir(parents=True, exist_ok=True)
@@ -2141,7 +2185,6 @@ def run_case_well_throughput(
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
     pipeline_config = replace(
         prepared.pipeline_config,
         well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
@@ -2151,32 +2194,40 @@ def run_case_well_throughput(
         ),
         vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK),
     )
-    orchestrator = PipelineOrchestrator(
-        source_workspace_path,
-        pipeline_config=pipeline_config,
+    run_id = f"{case_name}-{mode.name}-{time.time_ns()}"
+    observation_path = (
+        output_root / "ordinary_run_evidence" / run_id / "runtime_outcomes.pkl.gz"
+    ).resolve()
+    submission = OpenHCSExecutionSubmission(
+        plate_id=dataset_path,
+        execution_plate_id=source_workspace_path,
+        selected_pipeline_path=cppipe_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=pipeline_config,
+            pipeline_steps=FunctionStepTransportAuthority.normalize_pipeline(
+                prepared.pipeline_steps
+            ),
+        ),
+        global_config=global_config,
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=observation_path,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        )
     )
-    orchestrator.initialize()
-
     progress_events: list[dict[str, Any]] = []
-    progress_queue = multiprocessing.get_context(
-        global_config.multiprocessing_start_method.value
-    ).Queue()
-    consumer = threading.Thread(
-        target=_drain_progress_queue,
-        args=(progress_queue, progress_events),
-        daemon=True,
+    timing_observer = _ZMQProgressTimingObserver(
+        on_event=lambda event: progress_events.append(dict(event))
     )
-    consumer.start()
-    progress_context = {
-        "execution_id": f"well-throughput::{case_name}::{time.time_ns()}",
-        "plate_id": str(source_workspace_path),
-        "axis_id": "",
-    }
-
+    phase_timing = PhaseTimingTrace(
+        run_id=run_id,
+        pipeline_name=case_name,
+        tool="OpenHCS",
+    )
     compile_seconds = 0.0
     prepare_seconds = 0.0
     execute_seconds = 0.0
-    execution_results: Mapping[object, ExecutionResult] = {}
+    successful_wells = 0
     started_at = time.perf_counter()
     with MemoryMetric(
         interval_seconds=0.05,
@@ -2188,33 +2239,26 @@ def run_case_well_throughput(
     ) as memory_metric:
         try:
             try:
-                compile_started_at = time.perf_counter()
-                set_progress_queue(progress_queue)
-                try:
-                    compilation = orchestrator.compile_pipelines(
-                        pipeline_definition=prepared.pipeline_steps,
+                completed, _ = execute_measured_openhcs_pipeline(
+                    submission=submission,
+                    phase_timing=phase_timing,
+                    timing_observer=timing_observer,
+                    expected_axis_count=len(well_ids),
+                    execution_port=execution_port,
+                    require_owned_server=True,
+                )
+                outcome = completed.observation_export
+                if not isinstance(outcome, ZMQRuntimeExecutionOutcomeExport):
+                    raise TypeError(
+                        "Well-throughput execution requires an outcome-only export."
                     )
-                finally:
-                    set_progress_queue(None)
-                compile_seconds = time.perf_counter() - compile_started_at
-
-                execution_bundle = compilation["execution_bundle"]
-                compiled_contexts = execution_bundle.runtime_contexts
-                pipeline_definition = compilation.get(
-                    "pipeline_definition",
-                    prepared.pipeline_steps,
+                successful_wells = outcome.successful_axis_count
+                compile_seconds = _required_phase_seconds(
+                    phase_timing, BenchmarkPhase.SERVER_COMPILATION_JOB
                 )
-
-                execute_started_at = time.perf_counter()
-                execution_results = orchestrator.execute_compiled_plate(
-                    pipeline_definition=pipeline_definition,
-                    compiled_contexts=compiled_contexts,
-                    execution_bundle=execution_bundle,
-                    progress_queue=progress_queue,
-                    progress_context=progress_context,
-                    runtime_observation_mode=RuntimeObservationMode.OMIT,
+                execute_seconds = _required_phase_seconds(
+                    phase_timing, BenchmarkPhase.SERVER_PIPELINE_JOB
                 )
-                execute_seconds = time.perf_counter() - execute_started_at
             except KeyboardInterrupt:
                 peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
@@ -2232,6 +2276,7 @@ def run_case_well_throughput(
                         error_message=(
                             f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."
                         ),
+                        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                     )
                 raise
             except Exception as exc:
@@ -2249,6 +2294,7 @@ def run_case_well_throughput(
                         memory_limit_mb=max_memory_mb,
                         native_execution_baseline=native_execution_baseline,
                         error_message=str(exc),
+                        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                     )
                 return WellThroughputResult.failed(
                     case_name=case_name,
@@ -2260,12 +2306,16 @@ def run_case_well_throughput(
                     peak_memory_mb=peak_memory_mb,
                     native_execution_baseline=native_execution_baseline,
                     error_message=str(exc),
+                    execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                 )
         finally:
-            progress_queue.put(None)
-            consumer.join(timeout=5.0)
-            progress_queue.close()
-            progress_queue.join_thread()
+            _write_progress_diagnostics(
+                output_root,
+                case_name=case_name,
+                worker_count=mode.worker_count,
+                well_count=mode.well_count,
+                events=progress_events,
+            )
     peak_memory_mb = memory_metric.get_result()
 
     total_seconds = time.perf_counter() - started_at
@@ -2281,17 +2331,8 @@ def run_case_well_throughput(
             memory_limit_mb=max_memory_mb,
             native_execution_baseline=native_execution_baseline,
             error_message=(f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."),
+            execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
         )
-    successful_wells = sum(
-        1 for result in execution_results.values() if result.is_success()
-    )
-    _write_progress_diagnostics(
-        output_root,
-        case_name=case_name,
-        worker_count=mode.worker_count,
-        well_count=mode.well_count,
-        events=progress_events,
-    )
     projected_native_execution_seconds = (
         native_execution_baseline.projected_execution_seconds(mode.well_count)
         if native_execution_baseline is not None
@@ -2322,6 +2363,7 @@ def run_case_well_throughput(
             else None
         ),
         peak_memory_mb=peak_memory_mb,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
 
 
@@ -2385,6 +2427,25 @@ def read_well_throughput_csv(path: Path) -> tuple[WellThroughputResult, ...]:
     return tuple(_well_throughput_result_from_row(row) for row in rows)
 
 
+def _required_phase_seconds(timing: PhaseTimingTrace, phase: BenchmarkPhase) -> float:
+    durations = tuple(
+        record.seconds for record in timing.records if record.phase is phase
+    )
+    if not durations:
+        raise RuntimeError(f"Ordinary pipeline run did not report {phase.name} timing.")
+    return sum(durations)
+
+
+def _require_single_execution_route(rows: Sequence[WellThroughputResult]) -> None:
+    routes = {row.execution_route for row in rows}
+    if len(routes) > 1:
+        raise ValueError(
+            "Well-throughput figures cannot pool different execution routes: "
+            f"{sorted(route.value for route in routes)!r}. "
+            "Select one route before plotting."
+        )
+
+
 def generate_well_throughput_figures(
     csv_path: Path,
     output_dir: Path,
@@ -2397,19 +2458,19 @@ def generate_well_throughput_figures(
     )
     if not rows:
         return ()
+    _require_single_execution_route(rows)
 
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
-    from benchmark.reports.cppipe_figures import FIGURE_STYLE
-    from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-    from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+    from benchmark.reports.cppipe_figures import (
+        FIGURE_STYLE,
+        LINEAR_AXIS_BREAK_POLICY,
+        SPEEDUP_TARGET,
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     case_names = tuple(dict.fromkeys(row.case_name for row in rows))
@@ -2559,8 +2620,10 @@ def generate_well_throughput_figures(
     average_csv = output_dir / "well_throughput_average_speedup_points.csv"
     _write_well_throughput_average_speedup_csv(average_csv, rows, mode_names)
     outputs.append(average_csv)
-    from benchmark.reports.cppipe_figures import SpeedupDistributionSeries
-    from benchmark.reports.cppipe_figures import generate_speedup_distribution_artifacts
+    from benchmark.reports.cppipe_figures import (
+        SpeedupDistributionSeries,
+        generate_speedup_distribution_artifacts,
+    )
 
     outputs.extend(
         generate_speedup_distribution_artifacts(
@@ -2630,6 +2693,9 @@ def _well_throughput_result_from_row(
         status=WellThroughputStatus(row.get("status") or WellThroughputStatus.SUCCESS),
         memory_limit_mb=_optional_float(row.get("memory_limit_mb")),
         error_message=row.get("error_message") or None,
+        execution_route=WellThroughputExecutionRoute(
+            row.get("execution_route") or LEGACY_DIRECT_EXECUTION_ROUTE.value
+        ),
     )
 
 
@@ -2718,14 +2784,13 @@ def _plot_well_throughput_average_speedup_points(
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
-    from benchmark.reports.cppipe_figures import FIGURE_STYLE
-    from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-    from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+    from benchmark.reports.cppipe_figures import (
+        FIGURE_STYLE,
+        LINEAR_AXIS_BREAK_POLICY,
+        SPEEDUP_TARGET,
+    )
 
     mode_rows = tuple(
         (
@@ -2938,10 +3003,7 @@ def _plot_well_throughput_ram(
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
     from benchmark.reports.cppipe_figures import FIGURE_STYLE
 
@@ -3158,21 +3220,6 @@ def _synthetic_well_virtual_path(
 
 def _synthetic_well_ids(count: int) -> tuple[str, ...]:
     return tuple(f"W{index:03d}" for index in range(1, count + 1))
-
-
-def _drain_progress_queue(
-    progress_queue,
-    progress_events: list[dict[str, Any]],
-) -> None:
-    while True:
-        try:
-            item = progress_queue.get(timeout=0.5)
-        except queue.Empty:
-            continue
-        if item is None:
-            return
-        if isinstance(item, dict):
-            progress_events.append(item)
 
 
 def _write_progress_diagnostics(

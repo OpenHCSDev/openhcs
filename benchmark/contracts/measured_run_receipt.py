@@ -13,6 +13,7 @@ from python_introspect import dataclass_from_mapping
 
 from benchmark.timing import PhaseTimingRecord
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
+from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 from openhcs.serialization.json import to_jsonable
 
 MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = "openhcs.benchmark.measured-pipeline.v1"
@@ -61,6 +62,11 @@ class MeasuredPipelineRunReceipt:
     completed_at_epoch_seconds: float
     compile_artifact_id: str | None = None
     server_environment: RuntimeEnvironmentSnapshot | None = None
+    observation_export_scope: ZMQRuntimeObservationExportScope = (
+        ZMQRuntimeObservationExportScope.VALUES
+    )
+    expected_axis_count: int | None = None
+    observed_axis_count: int | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version != MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION:
@@ -83,6 +89,15 @@ class MeasuredPipelineRunReceipt:
             raise ValueError("Completion time must be a positive epoch timestamp.")
         if self.compile_artifact_id == "":
             raise ValueError("Compile artifact id cannot be empty when declared.")
+        if self.expected_axis_count is not None and self.expected_axis_count < 1:
+            raise ValueError("Expected axis count must be positive when declared.")
+        if self.observed_axis_count is not None and self.observed_axis_count < 0:
+            raise ValueError("Observed axis count cannot be negative.")
+        if (
+            self.expected_axis_count is not None
+            and self.observed_axis_count != self.expected_axis_count
+        ):
+            raise ValueError("Measured run expected and observed axis counts differ.")
 
     @classmethod
     def read(cls, path: Path) -> Self:
@@ -100,6 +115,12 @@ class MeasuredPipelineRunReceipt:
             cls,
             {
                 **payload,
+                "observation_export_scope": ZMQRuntimeObservationExportScope(
+                    payload.get(
+                        "observation_export_scope",
+                        ZMQRuntimeObservationExportScope.VALUES.value,
+                    )
+                ),
                 "phase_timings": tuple(
                     PhaseTimingRecord.from_payload(record) for record in timing_payloads
                 ),

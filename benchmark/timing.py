@@ -29,6 +29,7 @@ class BenchmarkPhase(StrEnum):
     INITIALIZE_RUNTIME = auto()
     COMPILE_OPENHCS = auto()
     EXECUTE_OPENHCS = auto()
+    SERVER_COMPILATION_JOB = auto()
     SERVER_PIPELINE_JOB = auto()
     SUBMIT_OPENHCS = auto()
     WAIT_OPENHCS = auto()

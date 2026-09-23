@@ -749,6 +749,11 @@ class ZMQExecutionServer(ExecutionServer):
         from openhcs.core.runtime_execution_validation import runtime_output_roots
         from openhcs.runtime.zmq_execution_observation import (
             ZMQRuntimeExecutionObservationExport,
+            ZMQRuntimeExecutionOutcomeExport,
+        )
+        from openhcs.runtime.zmq_execution_signature import (
+            ZMQAuxiliaryParamField,
+            ZMQRuntimeObservationExportScope,
         )
 
         execution_bundle = compilation.execution_bundle
@@ -756,15 +761,30 @@ class ZMQExecutionServer(ExecutionServer):
             execution_bundle.runtime_contexts,
             compilation.output_plate.output_plate_root,
         )
-        ZMQRuntimeExecutionObservationExport.from_execution(
-            compiled_contexts=execution_bundle.runtime_contexts,
-            execution_results=execution_results,
-            output_roots=output_roots,
-            server_environment=self._server_environment,
-        ).write(export_path)
+        if (
+            request_context.auxiliary_params.runtime_observation_export_scope
+            is ZMQRuntimeObservationExportScope.OUTCOMES
+        ):
+            export = ZMQRuntimeExecutionOutcomeExport.from_execution(
+                execution_results=execution_results,
+                output_roots=output_roots,
+                server_environment=self._server_environment,
+            )
+        else:
+            export = ZMQRuntimeExecutionObservationExport.from_execution(
+                compiled_contexts=execution_bundle.runtime_contexts,
+                execution_results=execution_results,
+                output_roots=output_roots,
+                server_environment=self._server_environment,
+            )
+        export.write(export_path)
         self.active_executions[request_context.execution_id].set_extra(
-            "runtime_observation_export_path",
+            ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value,
             str(export_path),
+        )
+        self.active_executions[request_context.execution_id].set_extra(
+            ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value,
+            request_context.auxiliary_params.runtime_observation_export_scope.value,
         )
         logger.info(
             "[%s] Exported runtime observation to %s",

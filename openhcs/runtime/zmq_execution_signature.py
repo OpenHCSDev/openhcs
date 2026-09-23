@@ -38,6 +38,14 @@ class ZMQAuxiliaryParamField(Enum):
 
     WELL_FILTER = "well_filter"
     RUNTIME_OBSERVATION_EXPORT_PATH = "runtime_observation_export_path"
+    RUNTIME_OBSERVATION_EXPORT_SCOPE = "runtime_observation_export_scope"
+
+
+class ZMQRuntimeObservationExportScope(Enum):
+    """Amount of runtime evidence requested from an ordinary execution."""
+
+    VALUES = "values"
+    OUTCOMES = "outcomes"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +55,17 @@ class ZMQAuxiliaryExecutionParams:
     axis_filter: tuple[str, ...] | None = None
     debug_execution_config: DebugExecutionConfig | None = None
     runtime_observation_export_path: Path | None = None
+    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+        ZMQRuntimeObservationExportScope.VALUES
+    )
+
+    def __post_init__(self) -> None:
+        if (
+            self.runtime_observation_export_scope
+            is ZMQRuntimeObservationExportScope.OUTCOMES
+            and self.runtime_observation_export_path is None
+        ):
+            raise ValueError("Outcome observation requires an export path.")
 
     def runtime_observation_mode_for(
         self,
@@ -56,7 +75,11 @@ class ZMQAuxiliaryExecutionParams:
 
         return RuntimeObservationMode.from_parent_requirement(
             execution_bundle.requires_parent_runtime_observation
-        ).including_parent_requirement(self.runtime_observation_export_path is not None)
+        ).including_parent_requirement(
+            self.runtime_observation_export_path is not None
+            and self.runtime_observation_export_scope
+            is ZMQRuntimeObservationExportScope.VALUES
+        )
 
     def to_transport(self) -> dict[str, Any]:
         """Project explicitly requested options into zmqruntime config_params."""
@@ -70,6 +93,13 @@ class ZMQAuxiliaryExecutionParams:
             params[ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value] = str(
                 self.runtime_observation_export_path
             )
+            if (
+                self.runtime_observation_export_scope
+                is not ZMQRuntimeObservationExportScope.VALUES
+            ):
+                params[
+                    ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
+                ] = self.runtime_observation_export_scope.value
         return params
 
     @classmethod
@@ -89,7 +119,23 @@ class ZMQAuxiliaryExecutionParams:
                     ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value
                 )
             ),
+            runtime_observation_export_scope=cls._scope_from_transport(
+                config_params.get(
+                    ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
+                )
+            ),
         )
+
+    @staticmethod
+    def _scope_from_transport(value: str | None) -> ZMQRuntimeObservationExportScope:
+        if value is None:
+            return ZMQRuntimeObservationExportScope.VALUES
+        try:
+            return ZMQRuntimeObservationExportScope(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Unknown runtime observation export scope: {value!r}."
+            ) from exc
 
     @staticmethod
     def _axis_filter_from_transport(

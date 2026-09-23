@@ -6,6 +6,7 @@ import asyncio
 import os
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from zmqruntime.messages import ExecutionStatus
@@ -22,6 +23,11 @@ from benchmark.openhcs_measured_run import (
     execute_measured_openhcs_pipeline,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
+from benchmark.well_throughput_scaling import (
+    ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+    WellThroughputMode,
+    run_case_well_throughput,
+)
 from openhcs.agent.dto.execution import (
     ExecutionJobRef,
     PipelineSourceOrchestratorSessionRequest,
@@ -39,12 +45,16 @@ from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_client import (
+    OpenHCSExecutionSubmission,
+)
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
+    ZMQRuntimeExecutionOutcomeExport,
 )
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
 )
 
 
@@ -192,6 +202,109 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.warnings == ()
     assert "EXECUTE_OPENHCS" in report_measured_pipeline_run(inspection).markdown
+
+
+def test_ordinary_execution_can_export_outcomes_without_value_observation(
+    tmp_path: Path,
+) -> None:
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    export_path = tmp_path / "outcomes.pkl.gz"
+    submission = OpenHCSExecutionSubmission(
+        plate_id=plate,
+        pipeline_document=pipeline,
+        global_config=GlobalPipelineConfig(materialize_runtime_artifacts=False),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=export_path,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        )
+    )
+
+    completed, _ = execute_measured_openhcs_pipeline(
+        submission=submission,
+        phase_timing=PhaseTimingTrace(
+            run_id="outcomes-live", pipeline_name="Blur", tool="OpenHCS"
+        ),
+        timing_observer=_ZMQProgressTimingObserver(),
+        execution_port=23000 + os.getpid() % 20000,
+        require_owned_server=True,
+    )
+
+    exported = ZMQRuntimeExecutionOutcomeExport.read(export_path)
+    exported.require_successful_axes()
+    assert completed.results_summary["well_count"] == exported.axis_count == 1
+    assert completed.results_summary["runtime_observation_export_scope"] == "outcomes"
+    assert exported.successful_axis_count == 1
+    assert exported.output_roots
+    assert exported.server_environment is not None
+    assert exported.server_environment.python_executable
+    assert completed.observation is None
+    assert (
+        completed.receipt.observation_export_scope
+        is ZMQRuntimeObservationExportScope.OUTCOMES
+    )
+    assert {
+        BenchmarkPhase.COMPILE_OPENHCS,
+        BenchmarkPhase.EXECUTE_OPENHCS,
+        BenchmarkPhase.SERVER_COMPILATION_JOB,
+        BenchmarkPhase.SERVER_PIPELINE_JOB,
+    } <= {record.phase for record in completed.receipt.phase_timings}
+    assert (
+        MeasuredPipelineRunReceipt.read(
+            MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+        )
+        == completed.receipt
+    )
+
+
+def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import benchmark.well_throughput_scaling as throughput
+
+    plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
+    source_identity = tmp_path / "original_source"
+    source_identity.mkdir()
+    monkeypatch.setattr(
+        throughput,
+        "prepare_cellprofiler_input_workspace",
+        lambda _request: SimpleNamespace(
+            pipeline_import_error=None,
+            pipeline_steps=pipeline.pipeline_steps,
+            pipeline_config=pipeline.pipeline_config,
+            materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
+            execution_plate_path=plate,
+        ),
+    )
+    monkeypatch.setattr(
+        throughput,
+        "_replicate_source_binding_workspace_wells",
+        lambda _path, _well_ids: ("A01",),
+    )
+    output_root = tmp_path / "throughput"
+
+    result = run_case_well_throughput(
+        case_name="synthetic-blur",
+        dataset_path=source_identity,
+        cppipe_path=tmp_path / "synthetic.cppipe",
+        output_root=output_root,
+        mode=WellThroughputMode("1w_1t", 1, 1, use_threading=True),
+        execution_port=25000 + os.getpid() % 20000,
+    )
+
+    assert result.is_successful(), result.error_message
+    assert result.execution_route is ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
+    assert result.successful_wells == 1
+    assert result.compile_seconds > 0
+    assert result.execute_seconds > 0
+    (receipt_path,) = output_root.glob(
+        "ordinary_run_evidence/*/measured_pipeline_receipt.json"
+    )
+    receipt = MeasuredPipelineRunReceipt.read(receipt_path)
+    assert receipt.plate_id == str(source_identity)
+    assert receipt.execution_plate_id == str(plate)
+    assert receipt.expected_axis_count == receipt.observed_axis_count == 1
+    assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
 
 
 def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(

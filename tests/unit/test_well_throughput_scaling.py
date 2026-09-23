@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
+from benchmark.timing import BenchmarkPhase
 from benchmark.well_throughput_scaling import (
+    LEGACY_DIRECT_EXECUTION_ROUTE,
+    ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     ModuleAbstractionCoverageKind,
     ModuleAbstractionCoverageTable,
     NativeCellProfilerExecutionBaseline,
@@ -15,16 +21,21 @@ from benchmark.well_throughput_scaling import (
     WellThroughputObservationKey,
     WellThroughputPresentationReport,
     WellThroughputPresentationSources,
-    WellThroughputResult,
     WellThroughputPreset,
+    WellThroughputResult,
     WellThroughputStatus,
     generate_well_throughput_figures,
     native_execution_baselines_from_summary_csv,
     read_well_throughput_csv,
+    run_case_well_throughput,
     run_well_throughput_suite,
     well_throughput_plan_from_manifest,
     write_well_throughput_csv,
 )
+from openhcs.core.config import PipelineConfig
+from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 
 def test_well_throughput_presets_are_paired_modes() -> None:
@@ -233,6 +244,7 @@ def test_well_throughput_csv_reads_legacy_rows_without_status(
     assert row.status is WellThroughputStatus.SUCCESS
     assert row.memory_limit_mb is None
     assert row.error_message is None
+    assert row.execution_route == LEGACY_DIRECT_EXECUTION_ROUTE
 
 
 def test_memory_limited_result_records_guardrail() -> None:
@@ -292,7 +304,6 @@ def test_rerun_missing_memory_filters_completed_rows(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "pipeline_params": {"custom_param": 1},
         },
     )()
     completed = WellThroughputResult(
@@ -307,6 +318,7 @@ def test_rerun_missing_memory_filters_completed_rows(
         wells_per_second=4.0,
         successful_wells=8,
         peak_memory_mb=128.0,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
     missing_memory = WellThroughputResult(
         case_name="Example",
@@ -320,6 +332,7 @@ def test_rerun_missing_memory_filters_completed_rows(
         wells_per_second=6.0,
         successful_wells=12,
         peak_memory_mb=None,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
     rerun = WellThroughputResult(
         case_name="Example",
@@ -333,6 +346,7 @@ def test_rerun_missing_memory_filters_completed_rows(
         wells_per_second=8.0,
         successful_wells=12,
         peak_memory_mb=256.0,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
 
     monkeypatch.setattr(
@@ -340,16 +354,10 @@ def test_rerun_missing_memory_filters_completed_rows(
         "load_comparison_cases",
         lambda _manifest_path: (case,),
     )
-    calls: list[tuple[str, str, dict[str, object]]] = []
+    calls: list[tuple[str, str]] = []
 
     def fake_run_case_well_throughput(**kwargs):
-        calls.append(
-            (
-                kwargs["case_name"],
-                kwargs["mode"].name,
-                dict(kwargs["pipeline_params"]),
-            )
-        )
+        calls.append((kwargs["case_name"], kwargs["mode"].name))
         return rerun
 
     monkeypatch.setattr(
@@ -373,7 +381,7 @@ def test_rerun_missing_memory_filters_completed_rows(
         rerun_missing_memory=True,
     )
 
-    assert calls == [("Example", "12w_3c", {"custom_param": 1})]
+    assert calls == [("Example", "12w_3c")]
     assert rows == (completed, rerun)
 
 
@@ -387,7 +395,6 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "pipeline_params": {"custom_param": 1},
         },
     )()
     existing_error = WellThroughputResult(
@@ -403,6 +410,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
         successful_wells=0,
         status=WellThroughputStatus.ERROR,
         error_message="old failure",
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
     rerun = WellThroughputResult(
         case_name="Example",
@@ -416,6 +424,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
         wells_per_second=1.0,
         successful_wells=1,
         peak_memory_mb=128.0,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
     monkeypatch.setattr(
         well_throughput_scaling,
@@ -440,6 +449,132 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
     assert rows == (rerun,)
 
 
+def test_legacy_rows_cannot_be_resumed_or_plotted_with_ordinary_rows(
+    tmp_path: Path,
+) -> None:
+    legacy = WellThroughputResult(
+        case_name="Example",
+        mode_name="1w_1t",
+        worker_count=1,
+        well_count=1,
+        compile_seconds=1.0,
+        prepare_seconds=0.0,
+        execute_seconds=2.0,
+        total_seconds=3.0,
+        wells_per_second=0.5,
+        successful_wells=1,
+    )
+    ordinary = WellThroughputResult(
+        case_name="Example",
+        mode_name="1w_1t",
+        worker_count=1,
+        well_count=1,
+        compile_seconds=1.0,
+        prepare_seconds=0.0,
+        execute_seconds=1.0,
+        total_seconds=2.0,
+        wells_per_second=1.0,
+        successful_wells=1,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+    )
+    with pytest.raises(ValueError, match="Cannot resume legacy well-throughput rows"):
+        run_well_throughput_suite(
+            tmp_path / "manifest.json",
+            output_root=tmp_path / "out",
+            well_counts=(),
+            worker_counts=(),
+            plan=WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),)),
+            existing_results=(legacy,),
+        )
+    assert not (tmp_path / "out").exists()
+
+    csv_path = tmp_path / "mixed.csv"
+    write_well_throughput_csv(csv_path, (legacy, ordinary))
+    with pytest.raises(ValueError, match="cannot pool different execution routes"):
+        generate_well_throughput_figures(csv_path, tmp_path / "figures")
+
+
+def test_well_throughput_case_submits_one_ordinary_outcome_run(
+    monkeypatch, tmp_path: Path
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "prepare_cellprofiler_input_workspace",
+        lambda _request: SimpleNamespace(
+            pipeline_import_error=None,
+            pipeline_steps=[],
+            pipeline_config=PipelineConfig(),
+            materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
+            execution_plate_path=tmp_path / "plate",
+        ),
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "_replicate_source_binding_workspace_wells",
+        lambda _path, well_ids: well_ids,
+    )
+    submissions = []
+
+    def fake_execute(
+        *,
+        submission,
+        phase_timing,
+        timing_observer,
+        expected_axis_count,
+        execution_port,
+        require_owned_server,
+    ):
+        submissions.append(submission)
+        assert expected_axis_count == 1
+        assert execution_port == 18088
+        assert require_owned_server is True
+        assert timing_observer.on_event is not None
+        phase_timing.record(BenchmarkPhase.COMPILE_OPENHCS, seconds=1.25)
+        phase_timing.record(BenchmarkPhase.EXECUTE_OPENHCS, seconds=2.5)
+        phase_timing.record(BenchmarkPhase.SERVER_COMPILATION_JOB, seconds=1.5)
+        phase_timing.record(BenchmarkPhase.SERVER_PIPELINE_JOB, seconds=2.75)
+        return (
+            SimpleNamespace(
+                observation_export=ZMQRuntimeExecutionOutcomeExport.from_execution(
+                    execution_results={"W001": ExecutionResult.success("W001")},
+                    output_roots=(tmp_path / "output",),
+                )
+            ),
+            "source",
+        )
+
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "execute_measured_openhcs_pipeline",
+        fake_execute,
+    )
+
+    result = run_case_well_throughput(
+        case_name="Example",
+        dataset_path=tmp_path / "input",
+        cppipe_path=tmp_path / "pipeline.cppipe",
+        output_root=tmp_path / "case",
+        mode=WellThroughputMode("1w_1t", 1, 1),
+        execution_port=18088,
+    )
+
+    assert result.is_successful()
+    assert result.successful_wells == 1
+    assert result.compile_seconds == 1.5
+    assert result.execute_seconds == 2.75
+    assert result.execution_route == ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
+    assert len(submissions) == 1
+    assert submissions[0].plate_id == str(tmp_path / "input")
+    assert submissions[0].execution_plate_id == str(tmp_path / "plate")
+    assert submissions[0].pipeline_document.pipeline_steps == []
+    assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
+    assert submissions[0].config_params["runtime_observation_export_scope"] == (
+        ZMQRuntimeObservationExportScope.OUTCOMES.value
+    )
+
+
 def test_run_suite_passes_memory_limit_to_case_runner(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -452,7 +587,6 @@ def test_run_suite_passes_memory_limit_to_case_runner(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "pipeline_params": {"custom_param": 1},
         },
     )()
     monkeypatch.setattr(

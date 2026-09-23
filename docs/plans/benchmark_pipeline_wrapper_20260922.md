@@ -100,6 +100,40 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   submission/result, with a route/version marker so old CSV rows are not
   silently pooled with new measurements.
 
+## Infrastructure continuation (2026-09-22)
+
+- Ordinary ZMQ execution now accepts a typed `outcomes` observation scope.
+  It exports per-axis status and failure diagnostics, output roots, and the
+  server-owned environment snapshot, but does not require worker runtime values
+  to be returned to the parent when the compiled plan itself does not need them.
+  The prior `values` export remains the default and retains its schema.
+- The shared measured-run finalizer accepts either scope and records it in the
+  same receipt. A declared expected axis count is checked before any success
+  receipt or finalizer artifact is written. Outcome-only receipts do not claim
+  value or output-equivalence validation. The CLI wrapper also records the
+  compilation and execution server-job start/end intervals from ordinary
+  status; throughput uses those boundaries rather than progress-event windows.
+  The legacy throughput CLI requires a client-owned server for a measured run;
+  it refuses an already-running endpoint rather than silently changing its
+  memory/timing boundary. `--execution-port` selects an unused port explicitly.
+- `run_case_well_throughput` now prepares its CellProfiler-derived ordinary
+  `PipelineDocument` and submits it through the shared ZMQ measured-run wrapper.
+  The original dataset is the source identity; the replicated workspace is the
+  execution plate identity. The runner's unused open-ended `pipeline_params`
+  forwarding was removed; selection remains on the imported case declaration.
+  Its progress CSVs remain benchmark-specific projections of ordinary progress
+  events. It no longer owns an orchestrator, compile call, progress queue, or
+  worker execution call. New rows carry `ordinary-zmq-outcomes-v1`; older CSVs
+  decode as `legacy-direct-v1`. Resume refuses an old-route CSV before running
+  and requests a new output root; figure generation also refuses mixed routes.
+- Focused unit tests cover export-scope transport and retention policy, typed
+  outcome serialization, server dispatch, shared receipt finalization, and the
+  legacy runner's ordinary submission. Live synthetic ZMQ executions prove both
+  the outcome-only export/finalizer and the migrated throughput wrapper's real
+  compile/execute path, including source-versus-execution plate identity and
+  client-owned-server admission. This is infrastructure evidence, not a new
+  CellProfiler/OpenHCS performance comparison.
+
 ## Migration sequence
 
 1. Characterize ordinary pipeline execution and observation contracts across

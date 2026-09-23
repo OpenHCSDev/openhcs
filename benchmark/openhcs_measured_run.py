@@ -7,7 +7,7 @@ import importlib.util
 import json
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import (
     dataclass,
     field,
@@ -15,7 +15,7 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
-from zmqruntime.messages import PongResponse
+from zmqruntime.messages import ExecutionStatus, ExecutionStatusSnapshot, PongResponse
 
 from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
@@ -39,8 +39,12 @@ from openhcs.runtime.zmq_execution_client import (
 )
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
+    ZMQRuntimeExecutionOutcomeExport,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
+)
 
 from .timing import (
     BenchmarkPhase,
@@ -89,8 +93,10 @@ class _ZMQOpenHCSExecution:
     """Server-side execution observation returned to the benchmark adapter."""
 
     execution_id: str
-    observation_export: ZMQRuntimeExecutionObservationExport
-    observation: RuntimeArtifactExecutionObservation
+    observation_export: (
+        ZMQRuntimeExecutionObservationExport | ZMQRuntimeExecutionOutcomeExport
+    )
+    observation: RuntimeArtifactExecutionObservation | None
     output_roots: tuple[Path, ...]
     results_summary: Mapping[str, Any]
     endpoint_provenance: MeasuredEndpointProvenance
@@ -125,8 +131,11 @@ class _ZMQProgressTimingObserver:
     last_progress_monotonic: float = field(default_factory=time.monotonic)
     last_progress_phase: str = ""
     last_progress_status: str = ""
+    on_event: Callable[[Mapping[str, Any]], None] | None = None
 
     def __call__(self, event: Mapping[str, Any]) -> None:
+        if self.on_event is not None:
+            self.on_event(event)
         phase = str(event.get("phase", ""))
         status = str(event.get("status", ""))
         self.last_progress_monotonic = time.monotonic()
@@ -232,18 +241,44 @@ def _phase_seconds_total(
     return sum(records)
 
 
+def _completed_server_job_seconds(
+    client: ZMQExecutionClient, execution_id: str
+) -> float:
+    """Read an ordinary completed job's authoritative server time bounds."""
+
+    snapshot = ExecutionStatusSnapshot.from_dict(client.poll_status(execution_id))
+    record = snapshot.execution
+    if (
+        record is None
+        or record.execution_id != execution_id
+        or record.status != ExecutionStatus.COMPLETE.value
+        or record.start_time is None
+        or record.end_time is None
+        or record.end_time < record.start_time
+    ):
+        raise ToolExecutionError(
+            f"Completed OpenHCS job {execution_id!r} has no valid server time bounds."
+        )
+    return record.end_time - record.start_time
+
+
 def execute_measured_openhcs_pipeline(
     *,
     submission: OpenHCSExecutionSubmission,
     phase_timing: PhaseTimingTrace,
     timing_observer: _ZMQProgressTimingObserver,
     execution_port: int | None = None,
+    expected_axis_count: int | None = None,
+    require_owned_server: bool = False,
 ) -> tuple[_ZMQOpenHCSExecution, str]:
     """Measure an ordinary pipeline submission with its requested observation."""
 
-    observation_export_path = ZMQAuxiliaryExecutionParams.from_transport(
+    if expected_axis_count is not None and expected_axis_count < 1:
+        raise ValueError("Expected axis count must be positive when declared.")
+    auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(
         submission.config_params
-    ).runtime_observation_export_path
+    )
+    observation_export_path = auxiliary_params.runtime_observation_export_path
     if observation_export_path is None:
         raise ValueError("Measured OpenHCS runs require runtime observation export.")
     if not observation_export_path.is_absolute():
@@ -264,6 +299,11 @@ def execute_measured_openhcs_pipeline(
             endpoint_provenance = measured_endpoint_provenance(endpoint)
         except ValueError as exc:
             raise ToolExecutionError(str(exc)) from exc
+        if require_owned_server and client.owned_server_process_is_alive() is not True:
+            raise ToolExecutionError(
+                "Measured run requires a client-owned execution server. "
+                "The selected endpoint was already in use; choose an unused port."
+            )
         benchmark_phases = {
             ZMQPipelineRunPhase.SUBMIT_COMPILE: BenchmarkPhase.SUBMIT_OPENHCS,
             ZMQPipelineRunPhase.WAIT_COMPILE: BenchmarkPhase.WAIT_OPENHCS,
@@ -278,6 +318,14 @@ def execute_measured_openhcs_pipeline(
             )
         except RuntimeError as exc:
             raise ToolExecutionError(str(exc)) from exc
+        phase_timing.record(
+            BenchmarkPhase.SERVER_COMPILATION_JOB,
+            seconds=_completed_server_job_seconds(client, run.compile_artifact_id),
+        )
+        phase_timing.record(
+            BenchmarkPhase.SERVER_PIPELINE_JOB,
+            seconds=_completed_server_job_seconds(client, run.execution_id),
+        )
     timing_observer.record_phase_timings(
         phase_timing,
         completion_observed_at=run.completion_observed_at,
@@ -290,6 +338,7 @@ def execute_measured_openhcs_pipeline(
             endpoint_provenance=endpoint_provenance,
             phase_timing=phase_timing,
             compile_artifact_id=run.compile_artifact_id,
+            expected_axis_count=expected_axis_count,
         ),
         pipeline_source,
     )
@@ -303,12 +352,16 @@ def retain_measured_openhcs_completion(
     endpoint_provenance: MeasuredEndpointProvenance,
     phase_timing: PhaseTimingTrace,
     compile_artifact_id: str | None,
+    expected_axis_count: int | None = None,
 ) -> _ZMQOpenHCSExecution:
     """Validate and retain evidence after an ordinary execution completes."""
 
-    observation_export_path = ZMQAuxiliaryExecutionParams.from_transport(
+    if expected_axis_count is not None and expected_axis_count < 1:
+        raise ValueError("Expected axis count must be positive when declared.")
+    auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(
         submission.config_params
-    ).runtime_observation_export_path
+    )
+    observation_export_path = auxiliary_params.runtime_observation_export_path
     if observation_export_path is None:
         raise ValueError("Measured OpenHCS runs require runtime observation export.")
     if not observation_export_path.is_absolute():
@@ -318,14 +371,34 @@ def retain_measured_openhcs_completion(
             "OpenHCS ZMQ execution completed without writing runtime observation "
             f"export: {observation_export_path}"
         )
-    observation_export = ZMQRuntimeExecutionObservationExport.read(
-        observation_export_path
-    )
+    if (
+        auxiliary_params.runtime_observation_export_scope
+        is ZMQRuntimeObservationExportScope.OUTCOMES
+    ):
+        observation_export = ZMQRuntimeExecutionOutcomeExport.read(
+            observation_export_path
+        )
+    else:
+        observation_export = ZMQRuntimeExecutionObservationExport.read(
+            observation_export_path
+        )
     try:
         with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
-            observation = observation_export.require_valid_observation()
+            if isinstance(observation_export, ZMQRuntimeExecutionOutcomeExport):
+                observation_export.require_successful_axes()
+                observation = None
+            else:
+                observation = observation_export.require_valid_observation()
     except RuntimeError as exc:
         raise ToolExecutionError(str(exc)) from exc
+    if (
+        expected_axis_count is not None
+        and observation_export.axis_count != expected_axis_count
+    ):
+        raise ToolExecutionError(
+            f"Expected {expected_axis_count} execution axes, observed "
+            f"{observation_export.axis_count}; no success receipt was written."
+        )
     artifact_root = observation_export_path.parent
     for artifact in MeasuredPipelineRunArtifact:
         if artifact.finalizer_output and artifact.path_in(artifact_root).exists():
@@ -375,6 +448,9 @@ def retain_measured_openhcs_completion(
         completed_at_epoch_seconds=time.time(),
         compile_artifact_id=compile_artifact_id,
         server_environment=observation_export.server_environment,
+        observation_export_scope=auxiliary_params.runtime_observation_export_scope,
+        expected_axis_count=expected_axis_count,
+        observed_axis_count=observation_export.axis_count,
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
     return _ZMQOpenHCSExecution(

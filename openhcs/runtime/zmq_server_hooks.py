@@ -18,6 +18,7 @@ from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionExtras,
 )
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
 from openhcs.serialization.json import to_jsonable
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,12 @@ class ZMQResultsSummaryEnricher:
                 "Execution output-plate metadata must use "
                 f"{ExecutionOutputPlateSummary.__name__}."
             )
-        observation_export_path = record.get_extra("runtime_observation_export_path")
+        observation_export_path = record.get_extra(
+            ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value
+        )
+        observation_export_scope = record.get_extra(
+            ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
+        )
         compiled_execution_extras = record.get_extra(
             CompiledPlateExecutionExtras.EXECUTION_RECORD_KEY
         )
@@ -99,7 +105,13 @@ class ZMQResultsSummaryEnricher:
             )
         summary.update(output_plate_summary.results_summary_fields())
         if observation_export_path:
-            summary["runtime_observation_export_path"] = str(observation_export_path)
+            summary[ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value] = str(
+                observation_export_path
+            )
+            if observation_export_scope is not None:
+                summary[
+                    ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
+                ] = str(observation_export_scope)
         if (
             compiled_execution_extras is not None
             and compiled_execution_extras.viewer_states_by_port
@@ -115,7 +127,7 @@ class ZMQResultsSummaryEnricher:
             execution_id,
             output_plate_summary.output_plate_root,
             output_plate_summary.auto_add_output_plate_to_plate_manager,
-            summary.get("runtime_observation_export_path"),
+            summary.get(ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value),
         )
 
     def attach_to_status_response(
