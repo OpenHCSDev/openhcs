@@ -186,12 +186,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
+        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
+        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -776,7 +776,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
+        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -1400,12 +1400,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
+        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
+        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3964,12 +3964,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "028b90510ada821cb8ba30009b505103aed8b5ef1f1cf312215daa0f0ec28fcd",
+        "sha256": "a116b1f76979c92624440b196b487df7729f45d56ad20c06faf474ab534f3f43",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "73c0e30739765764473dffd02dea05947b118f07cde6e3edf4a9acbd7c2a3ba2",
+        "sha256": "302720827c9b7c67b0b7356cb11c85a5cdeb7583349e0f8bdb3cb4e0141031a3",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],

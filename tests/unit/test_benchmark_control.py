@@ -586,6 +586,47 @@ def test_benchmark_control_rejects_paths_outside_agent_policy(
         service.inspect_run(BenchmarkRunInspectionRequest(output_dir=str(outside)))
 
 
+def test_benchmark_inspection_does_not_follow_escaped_artifact_symlinks(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    metadata = outside / "suite_metadata.json"
+    _run_receipt(
+        suite_id="outside-suite",
+        status=ComparisonSuiteRunStatus.COMPLETED,
+        case_names=("one",),
+        repeats=1,
+        completed_observation_count=1,
+    ).write(metadata)
+    (outside / "observations.jsonl").write_text(
+        '{"case_name": "one"}\n', encoding="utf-8"
+    )
+    (outside / "plot_data.csv").write_text("x,y\n1,2\n", encoding="utf-8")
+    (output_dir / "suite_metadata.json").symlink_to(metadata)
+    (output_dir / "observations.jsonl").symlink_to(outside / "observations.jsonl")
+    (output_dir / "plot_data.csv").symlink_to(outside / "plot_data.csv")
+
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(output_dir,), writable_roots=())
+    )
+    inspection = service.inspect_run(
+        BenchmarkRunInspectionRequest(output_dir=str(output_dir))
+    )
+
+    assert inspection.suite_id is None
+    assert inspection.completed_observation_count == 0
+    assert inspection.structured_artifacts == ()
+    assert any(
+        "suite_metadata.json is absent or escapes" in item
+        for item in inspection.warnings
+    )
+    assert any("observations.jsonl escapes" in item for item in inspection.warnings)
+    assert any("Structured artifact escapes" in item for item in inspection.warnings)
+
+
 def test_benchmark_control_marks_historical_receipt_gaps_without_guessing(
     tmp_path: Path,
 ) -> None:

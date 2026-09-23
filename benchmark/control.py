@@ -227,9 +227,10 @@ def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
     warnings: list[str] = []
 
     receipt: ComparisonSuiteRunReceipt | None = None
-    if metadata_path.is_file():
+    retained_metadata = _contained_file(resolved_output_dir, metadata_path)
+    if retained_metadata is not None:
         try:
-            receipt = ComparisonSuiteRunReceipt.read(metadata_path)
+            receipt = ComparisonSuiteRunReceipt.read(retained_metadata)
         except (TypeError, ValueError) as error:
             warnings.append(
                 "suite_metadata.json is not a current typed run receipt; lifecycle "
@@ -237,10 +238,14 @@ def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
             )
     else:
         warnings.append(
-            "suite_metadata.json is absent; lifecycle and rerun data are unavailable."
+            "suite_metadata.json is absent or escapes the run; lifecycle and "
+            "rerun data are unavailable."
         )
 
-    completed_observation_count = _observation_count(observation_path)
+    retained_observations = _contained_file(resolved_output_dir, observation_path)
+    completed_observation_count = _observation_count(retained_observations)
+    if observation_path.exists() and retained_observations is None:
+        warnings.append("observations.jsonl escapes the run; progress is unavailable.")
     recorded_count = (
         receipt.completed_observation_count if receipt is not None else None
     )
@@ -276,21 +281,21 @@ def inspect_benchmark_run(output_dir: Path) -> BenchmarkRunInspection:
             if receipt is not None and receipt.rerun_working_directory is not None
             else None
         ),
-        structured_artifacts=_structured_artifacts(resolved_output_dir),
+        structured_artifacts=_structured_artifacts(resolved_output_dir, warnings),
         warnings=tuple(warnings),
     )
 
 
-def _observation_count(path: Path) -> int:
-    if not path.is_file():
+def _observation_count(path: Path | None) -> int:
+    if path is None:
         return 0
-    return sum(
-        1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-    )
+    with path.open("r", encoding="utf-8") as handle:
+        return sum(1 for line in handle if line.strip())
 
 
 def _structured_artifacts(
     output_dir: Path,
+    warnings: list[str],
 ) -> tuple[BenchmarkStructuredArtifact, ...]:
     artifacts = []
     for path in sorted(output_dir.rglob("*")):
@@ -298,6 +303,12 @@ def _structured_artifacts(
             continue
         format_ = StructuredArtifactFormat.from_path(path)
         if format_ is None:
+            continue
+        contained = _contained_file(output_dir, path)
+        if contained is None:
+            warnings.append(
+                f"Structured artifact escapes the run: {path.relative_to(output_dir)}"
+            )
             continue
         declared_identity = (
             ComparisonRunArtifact.from_path(path) if path.parent == output_dir else None
@@ -308,7 +319,7 @@ def _structured_artifacts(
                 relative_path=str(path.relative_to(output_dir)),
                 format=format_,
                 mime_type=format_.mime_type,
-                size_bytes=path.stat().st_size,
+                size_bytes=contained.stat().st_size,
                 declared_identity=declared_identity,
             )
         )
