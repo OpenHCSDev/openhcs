@@ -1,0 +1,42 @@
+[
+  {
+    "repetition": -1,
+    "invocation_start_skew_seconds": 0.03514839243143797,
+    "invocation_overlap_seconds": 6.156462614424527,
+    "invocation_through_completion_makespan_seconds": 6.39706199336797,
+    "first_module_start_skew_seconds": 0.0620167413726449,
+    "first_module_overlap_seconds": 5.787574280053377,
+    "first_module_through_completion_makespan_seconds": 6.055042007938027,
+    "differences": []
+  },
+  {
+    "repetition": 0,
+    "invocation_start_skew_seconds": 0.20545431319624186,
+    "invocation_overlap_seconds": 5.153539936989546,
+    "invocation_through_completion_makespan_seconds": 5.435697433538735,
+    "first_module_start_skew_seconds": 0.21144827734678984,
+    "first_module_overlap_seconds": 5.051776741631329,
+    "first_module_through_completion_makespan_seconds": 5.339928202331066,
+    "differences": []
+  },
+  {
+    "repetition": 1,
+    "invocation_start_skew_seconds": 0.0767088932916522,
+    "invocation_overlap_seconds": 4.832932205870748,
+    "invocation_through_completion_makespan_seconds": 5.272749895229936,
+    "first_module_start_skew_seconds": 0.07533257640898228,
+    "first_module_overlap_seconds": 4.729387565515935,
+    "first_module_through_completion_makespan_seconds": 5.167828937992454,
+    "differences": []
+  },
+  {
+    "repetition": 2,
+    "invocation_start_skew_seconds": 0.36310658045113087,
+    "invocation_overlap_seconds": 4.401808747090399,
+    "invocation_through_completion_makespan_seconds": 5.588178187608719,
+    "first_module_start_skew_seconds": 0.3591923275962472,
+    "first_module_overlap_seconds": 4.316581665538251,
+    "first_module_through_completion_makespan_seconds": 5.499036853201687,
+    "differences": []
+  }
+]

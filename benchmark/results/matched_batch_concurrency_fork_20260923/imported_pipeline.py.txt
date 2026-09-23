@@ -1,0 +1,212 @@
+# Edit this pipeline and save to apply changes
+
+from openhcs.constants.constants import (
+    GroupBy,
+    VariableComponents,
+)
+from openhcs.constants.input_source import InputSource
+from openhcs.core.config import LazyProcessingConfig
+from openhcs.core.source_bindings import (
+    LazyStepSourceBindingsConfig,
+    NamedSourceBinding,
+    SourceBindingOrigin,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceSelector,
+)
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.interop.cellprofiler.analyst_export import CellProfilerObjectTableMode
+from openhcs.processing.backends.cellprofiler.colocalization import measure_colocalization_objects
+from openhcs.processing.backends.cellprofiler.color import gray_to_color
+from openhcs.processing.backends.cellprofiler.export_to_database import export_to_database
+from openhcs.processing.backends.cellprofiler.image_math import ImageMathOperation
+from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
+from openhcs.processing.backends.cellprofiler.measurement_math import calculate_math
+from openhcs.processing.backends.cellprofiler.outlines import overlay_outlines
+from openhcs.processing.backends.cellprofiler.primary_objects import identify_primary_objects
+from openhcs.processing.backends.cellprofiler.save_images import (
+    SaveImagesBitDepth,
+    save_images,
+)
+from openhcs.processing.backends.cellprofiler.secondary import (
+    SecondaryMethod,
+    identify_secondary_objects,
+    identify_tertiary_objects,
+)
+from openhcs.processing.backends.cellprofiler.thresholding import (
+    CellProfilerOtsuMethod,
+    CellProfilerThresholdMethod,
+)
+
+pipeline_steps = [
+    FunctionStep(
+        func=(identify_primary_objects, {
+                'smoothing_filter_size': 6,
+                'maxima_suppression_size': 6.7,
+                'threshold_method': CellProfilerThresholdMethod.OTSU,
+                'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
+                'adaptive_window_size': 64,
+                'number_of_deviations': 1.0,
+                'select_the_input_image': 'rawDNA',
+                'name_the_primary_objects_to_be_identified': 'Nuclei'
+            }),
+        name='IdentifyPrimaryObjects',
+        processing_config=LazyProcessingConfig(
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=(identify_secondary_objects, {
+                'method': SecondaryMethod.DISTANCE_N,
+                'threshold_method': CellProfilerThresholdMethod.MINIMUM_CROSS_ENTROPY,
+                'threshold_correction_factor': 0.1,
+                'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
+                'select_the_input_image': 'rawGFP',
+                'select_the_input_objects': 'Nuclei',
+                'name_the_objects_to_be_identified': 'Cells'
+            }),
+        name='IdentifySecondaryObjects',
+        processing_config=LazyProcessingConfig(
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=(identify_tertiary_objects, {
+                'select_the_larger_identified_objects': 'Cells',
+                'select_the_smaller_identified_objects': 'Nuclei',
+                'name_the_tertiary_objects_to_be_identified': 'Cytoplasm'
+            }),
+        name='IdentifyTertiaryObjects'
+    ),
+    FunctionStep(
+        func=[
+            (measure_object_intensity, {
+                    'select_object_sets_to_measure': 'Cytoplasm',
+                    'select_images_to_measure': 'rawGFP'
+                }),
+            (measure_object_intensity, {
+                    'select_object_sets_to_measure': 'Nuclei',
+                    'select_images_to_measure': 'rawGFP'
+                })
+        ],
+        name='MeasureObjectIntensity',
+        processing_config=LazyProcessingConfig(
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=[
+            (measure_colocalization_objects, {
+                    'select_object_sets_to_measure': 'Nuclei'
+                }),
+            (measure_colocalization_objects, {
+                    'select_object_sets_to_measure': 'Cytoplasm'
+                })
+        ],
+        name='MeasureColocalization',
+        processing_config=LazyProcessingConfig(
+            variable_components=[
+                VariableComponents.CHANNEL
+            ],
+            group_by=GroupBy.SITE,
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=(calculate_math, {
+                'operand1_feature': 'Intensity_MeanIntensity_rawGFP',
+                'operand2_feature': 'Intensity_MeanIntensity_rawGFP',
+                'operation': ImageMathOperation.DIVIDE,
+                'output_name': 'IntensityRatio',
+                'select_the_numerator_objects': 'Nuclei',
+                'select_the_denominator_objects': 'Cytoplasm'
+            }),
+        name='CalculateMath'
+    ),
+    FunctionStep(
+        func=(gray_to_color, {
+                'rescale_intensity': False,
+                'green_channel': 0,
+                'blue_channel': 1,
+                'select_the_image_to_be_colored_green': 'rawGFP',
+                'select_the_image_to_be_colored_blue': 'rawDNA',
+                'name_the_output_image': 'GFPandDNA'
+            }),
+        name='GrayToColor',
+        processing_config=LazyProcessingConfig(
+            variable_components=[
+                VariableComponents.CHANNEL
+            ],
+            group_by=GroupBy.SITE,
+            input_source=InputSource.PIPELINE_START
+        )
+    ),
+    FunctionStep(
+        func=(overlay_outlines, {
+                'outline_colors': (
+                    '#21FFFF',
+                ),
+                'select_image_on_which_to_display_outlines': 'GFPandDNA',
+                'select_objects_to_display': 'Nuclei',
+                'name_the_output_image': 'CellAndNucleiOverlay'
+            }),
+        name='OverlayOutlines'
+    ),
+    FunctionStep(
+        func=(save_images, {
+                'single_file_name': 'OrigBlue',
+                'append_suffix': True,
+                'filename_suffix': '_Overlay',
+                'bit_depth': SaveImagesBitDepth.UINT8,
+                'overwrite': False,
+                'base_image_folder': 'Elsewhere...|',
+                'lossless_compression': False,
+                'record_file_and_path': False,
+                'select_image_name_for_file_prefix': 'rawGFP',
+                'select_the_image_to_save': 'CellAndNucleiOverlay'
+            }),
+        name='SaveImages',
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=True,
+            bindings=(
+                NamedSourceBinding(
+                    alias='rawGFP',
+                    selector=SourceSelector(
+                        filters=(
+                            SourceFilterClause(
+                                subject=SourceFilterSubject.FILE,
+                                match_type=SourceFilterMatchType.CONTAINS,
+                                value='w1'
+                            ),
+                        )
+                    ),
+                    origin=SourceBindingOrigin.PIPELINE_START,
+                    load_as_monochrome=True
+                ),
+            )
+        )
+    ),
+    FunctionStep(
+        func=(export_to_database, {
+                'table_prefix': 'Expt_',
+                'object_table_mode': CellProfilerObjectTableMode.COMBINED,
+                'location_object': 'Nuclei',
+                'calculate_per_image_mean': True,
+                'write_image_thumbnails': True,
+                'thumbnail_image_names': (
+                    'rawDNA',
+                    'rawGFP'
+                ),
+                'plate_type': '96'
+            }),
+        name='ExportToDatabase',
+        processing_config=LazyProcessingConfig(
+            variable_components=[],
+            group_by=GroupBy.NONE
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=True
+        )
+    )
+]

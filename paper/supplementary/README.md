@@ -376,6 +376,16 @@ outputs and verified one, two, three and four active worker PIDs from progress
 events. It is not pooled into Figure 5: it covers only one workflow, includes
 different output work, and uses the ordinary completed-server timing boundary.
 
+The separate [matched genuine-well Translocation pilot](../../benchmark/results/matched_batch_concurrency_fork_20260923/README.md)
+used two native CellProfiler jobs and two observed OpenHCS worker processes on
+the same eight source wells. Three timed observations each had no TIFF or SQLite
+value differences. Native invocation-to-completion makespans were 5.27--5.59 s;
+OpenHCS completed-server jobs were 16.08--16.75 s, including 11.33--11.65 s
+of plate-scoped SQLite export. The native processes persisted across observations,
+while OpenHCS created workers per job. This one-workflow, different-lifecycle
+pilot is not pooled into Figure 5 and does not establish general comparative
+throughput.
+
 Each row retains its workflow, worker count, assignment count, completed-assignment
 count, execution and total time, memory, status and serial CellProfiler projection.
 The source CSV uses well terminology for the virtual-well assignment fields.

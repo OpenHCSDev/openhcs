@@ -1,0 +1,68 @@
+{
+  "startup_seconds": 0.7042249580845237,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0"
+  },
+  "request": {
+    "pipeline_path": "/tmp/openhcs-matched-final-fJcgfF/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+    "output_root": "/tmp/openhcs-matched-final-fJcgfF/native",
+    "expected_image_sets": 8,
+    "repetitions": 3,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": null
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native/-1",
+      "image_set_count": 8,
+      "invocation_seconds": 10.475451023317873,
+      "pre_first_module_seconds": 0.3063766844570637,
+      "first_module_through_post_run_seconds": 10.16907433886081,
+      "invocation_started_monotonic_seconds": 4526244.571758238,
+      "first_module_started_monotonic_seconds": 4526244.878134922,
+      "completed_monotonic_seconds": 4526255.047209261
+    },
+    {
+      "repetition": 0,
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native/0",
+      "image_set_count": 8,
+      "invocation_seconds": 9.458408694714308,
+      "pre_first_module_seconds": 0.0992072531953454,
+      "first_module_through_post_run_seconds": 9.359201441518962,
+      "invocation_started_monotonic_seconds": 4526255.047232696,
+      "first_module_started_monotonic_seconds": 4526255.146439949,
+      "completed_monotonic_seconds": 4526264.505641391
+    },
+    {
+      "repetition": 1,
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native/1",
+      "image_set_count": 8,
+      "invocation_seconds": 9.440686297602952,
+      "pre_first_module_seconds": 0.0818855194374919,
+      "first_module_through_post_run_seconds": 9.35880077816546,
+      "invocation_started_monotonic_seconds": 4526264.505657191,
+      "first_module_started_monotonic_seconds": 4526264.587542711,
+      "completed_monotonic_seconds": 4526273.946343489
+    },
+    {
+      "repetition": 2,
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native/2",
+      "image_set_count": 8,
+      "invocation_seconds": 9.528353695757687,
+      "pre_first_module_seconds": 0.07803281117230654,
+      "first_module_through_post_run_seconds": 9.45032088458538,
+      "invocation_started_monotonic_seconds": 4526273.946358427,
+      "first_module_started_monotonic_seconds": 4526274.024391239,
+      "completed_monotonic_seconds": 4526283.474712123
+    }
+  ]
+}
