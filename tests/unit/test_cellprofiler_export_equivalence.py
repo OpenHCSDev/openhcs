@@ -3,8 +3,11 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import numpy as np
+
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
+    cellprofiler_native_shard_equivalence,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
@@ -172,6 +175,87 @@ def _write_cpa_metadata(
             "'db_sqlite_file', ?)",
             (sqlite_property,),
         )
+
+
+def _write_sharded_native_output(root: Path, image_numbers: tuple[int, ...]) -> None:
+    root.mkdir()
+    database = root / "analysis.db"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "CREATE TABLE Per_Image (ImageNumber INTEGER PRIMARY KEY, "
+            "Image_Count_Nuclei INTEGER)"
+        )
+        connection.execute(
+            "CREATE TABLE Per_Object (ImageNumber INTEGER, ObjectNumber INTEGER, "
+            "Nuclei_Number_Object_Number INTEGER, "
+            "PRIMARY KEY (ImageNumber, ObjectNumber))"
+        )
+        connection.execute("CREATE TABLE Experiment (ExperimentID INTEGER)")
+        connection.execute("INSERT INTO Experiment VALUES (1)")
+        for image_number in image_numbers:
+            connection.execute("INSERT INTO Per_Image VALUES (?, ?)", (image_number, 1))
+            connection.execute(
+                "INSERT INTO Per_Object VALUES (?, ?, ?)",
+                (image_number, 1, 1),
+            )
+            np.save(
+                root / f"well_{image_number}.npy",
+                np.full((2, 2), image_number, dtype=np.uint8),
+            )
+    _write_properties(
+        root / "analysis.properties",
+        database,
+        object_table="Per_Object",
+        object_id="ObjectNumber",
+    )
+
+
+def test_native_shards_merge_cpa_declared_image_and_object_rows(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (2,))
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert report.is_equivalent
+
+
+def test_native_shards_reject_overlapping_image_sets(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (1,))
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert not report.is_equivalent
+
+
+def test_native_shards_reject_undeclared_side_writes(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (2,))
+    (second / "unexpected.txt").write_text("side write")
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert any("unexpected files" in message for message in report.failure_messages())
 
 
 def test_database_export_equivalence_compares_sqlite_and_semantic_properties(

@@ -166,10 +166,18 @@ class _ZMQProgressTimingObserver:
             self.compile_completed_at = timestamp
             return
         if phase == "axis_started":
-            self.execution_started_at = self.execution_started_at or timestamp
+            self.execution_started_at = (
+                timestamp
+                if self.execution_started_at is None
+                else min(self.execution_started_at, timestamp)
+            )
             return
         if phase == "axis_completed":
-            self.execution_completed_at = timestamp
+            self.execution_completed_at = (
+                timestamp
+                if self.execution_completed_at is None
+                else max(self.execution_completed_at, timestamp)
+            )
 
     @staticmethod
     def _timestamp(event: Mapping[str, Any]) -> float:

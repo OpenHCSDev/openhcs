@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import sqlite3
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from openhcs.core.equivalence.comparison import runtime_table_differences
+from openhcs.core.equivalence.comparison import (
+    runtime_image_differences,
+    runtime_table_differences,
+)
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.policy import (
     RuntimeEquivalencePolicy,
@@ -71,6 +75,179 @@ def cellprofiler_database_export_equivalence(
         ),
     ]
     return RuntimeEquivalenceReport(tuple(differences))
+
+
+def cellprofiler_native_shard_equivalence(
+    reference_output_root: Path,
+    shard_output_roots: Sequence[Path],
+    *,
+    policy: RuntimeEquivalencePolicy,
+) -> RuntimeEquivalenceReport:
+    """Prove disjoint native jobs reproduce one whole-plate native export.
+
+    The CPA properties declare the image/object tables whose rows partition
+    across jobs. All other tables must agree independently in every shard.
+    """
+
+    reference_root = Path(reference_output_root)
+    shard_roots = tuple(Path(root) for root in shard_output_roots)
+    if len(shard_roots) < 2 or len(set(shard_roots)) != len(shard_roots):
+        raise ValueError("Native shard comparison requires distinct shard roots.")
+    reference_images = RuntimeOutputSnapshot.from_output_root(reference_root).images
+    shard_images = tuple(
+        image
+        for root in shard_roots
+        for image in RuntimeOutputSnapshot.from_output_root(root).images
+    )
+    differences: list[RuntimeEquivalenceDifference] = []
+    reference_image_names = Counter(image.path.name for image in reference_images)
+    shard_image_names = Counter(image.path.name for image in shard_images)
+    if reference_image_names != shard_image_names:
+        differences.append(
+            RuntimeEquivalenceDifference(
+                RuntimeEquivalenceDifferenceKind.IMAGE_COUNT,
+                "Native shard image names or multiplicities differ from the "
+                f"whole-plate run: reference={dict(reference_image_names)!r}, "
+                f"shards={dict(shard_image_names)!r}",
+            )
+        )
+    differences.extend(
+        runtime_image_differences(reference_images, shard_images, policy)
+    )
+
+    reference_file_names = Counter(
+        path.name for path in reference_root.rglob("*") if path.is_file()
+    )
+    reference_non_image_names = Counter(
+        {
+            name: count
+            for name, count in reference_file_names.items()
+            if name not in reference_image_names
+        }
+    )
+    for root in shard_roots:
+        shard_file_names = Counter(
+            path.name for path in root.rglob("*") if path.is_file()
+        )
+        unexpected = shard_file_names - reference_file_names
+        missing_non_images = reference_non_image_names - shard_file_names
+        if unexpected or missing_non_images:
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_COUNT,
+                    f"Native shard {root} has unexpected files or lacks declared "
+                    f"non-image exports: unexpected={dict(unexpected)!r}, "
+                    f"missing={dict(missing_non_images)!r}.",
+                )
+            )
+
+    reference_properties = tuple(sorted(reference_root.rglob("*.properties")))
+    reference_databases = _declared_sqlite_paths(
+        tuple(sorted(reference_root.rglob("*.db"))), reference_properties
+    )
+    _, reference_by_name, _ = _named_output_differences(
+        reference_databases, reference_databases, output_label="SQLite database"
+    )
+    reference_subjects = _declared_sqlite_table_subjects(reference_properties)
+    partitioned_tables = _declared_sqlite_partition_tables(reference_properties)
+    shard_databases: list[Mapping[str, Path]] = []
+    for root in shard_roots:
+        shard_properties = tuple(sorted(root.rglob("*.properties")))
+        differences.extend(
+            _properties_export_differences(reference_properties, shard_properties)
+        )
+        shard_subjects = _declared_sqlite_table_subjects(shard_properties)
+        if shard_subjects != reference_subjects:
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_SCHEMA,
+                    f"Native shard {root} declares different CPA table subjects.",
+                )
+            )
+        _, _, by_name = _named_output_differences(
+            reference_databases,
+            _declared_sqlite_paths(tuple(sorted(root.rglob("*.db"))), shard_properties),
+            output_label="SQLite database",
+        )
+        if set(by_name) != set(reference_by_name):
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_COUNT,
+                    f"Native shard {root} SQLite database names differ from "
+                    "the whole-plate run.",
+                )
+            )
+        shard_databases.append(by_name)
+
+    for name, reference_path in reference_by_name.items():
+        if not all(name in by_name for by_name in shard_databases):
+            continue
+        differences.extend(
+            _native_sqlite_shard_differences(
+                reference_path,
+                tuple(by_name[name] for by_name in shard_databases),
+                reference_subjects.get(name, {}),
+                partitioned_tables.get(name, frozenset()),
+                policy,
+            )
+        )
+    return RuntimeEquivalenceReport(tuple(differences))
+
+
+def _native_sqlite_shard_differences(
+    reference_path: Path,
+    shard_paths: tuple[Path, ...],
+    subjects: Mapping[str, MeasurementSubject],
+    partitioned_table_names: frozenset[str],
+    policy: RuntimeEquivalencePolicy,
+) -> tuple[RuntimeEquivalenceDifference, ...]:
+    reference_tables = _sqlite_tables(reference_path, subjects, policy)
+    shard_tables = tuple(_sqlite_tables(path, subjects, policy) for path in shard_paths)
+    differences: list[RuntimeEquivalenceDifference] = []
+    for shard_path, tables in zip(shard_paths, shard_tables, strict=True):
+        if set(tables) != set(reference_tables):
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_SCHEMA,
+                    f"Native shard {shard_path} table names differ from "
+                    f"{reference_path}.",
+                )
+            )
+    for name, (reference_schema, reference_table) in reference_tables.items():
+        if not all(name in tables for tables in shard_tables):
+            continue
+        tables = tuple(table[name] for table in shard_tables)
+        if any(schema != reference_schema for schema, _ in tables):
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_SCHEMA,
+                    f"Native shard table {name!r} schema differs from "
+                    f"{reference_path}.",
+                )
+            )
+            continue
+        subject = subjects.get(name)
+        if name in partitioned_table_names:
+            merged = RuntimeTableSnapshot(
+                path=reference_table.path,
+                header=reference_table.header,
+                rows=tuple(row for _, table in tables for row in table.rows),
+                column_context=reference_table.column_context,
+            )
+            candidates = (merged,)
+        else:
+            candidates = tuple(table for _, table in tables)
+        for candidate in candidates:
+            differences.extend(
+                RuntimeEquivalenceDifference(
+                    difference.kind,
+                    f"Native shard table {name!r}: {difference.message}",
+                )
+                for difference in _sqlite_table_value_differences(
+                    reference_table, candidate, subject, policy
+                )
+            )
+    return tuple(differences)
 
 
 def _outputs_with_suffix(
@@ -153,24 +330,14 @@ def _sqlite_database_differences(
                 )
             )
             continue
-        if table_name in reference_subjects and table_name in candidate_subjects:
-            table_report = runtime_measurement_equivalence(
-                RuntimeMeasurementSnapshot.from_output_snapshot(
-                    RuntimeOutputSnapshot(tables=(reference_table,)),
-                    policy=policy,
-                ),
-                RuntimeMeasurementSnapshot.from_output_snapshot(
-                    RuntimeOutputSnapshot(tables=(candidate_table,)),
-                    policy=policy,
-                ),
-                policy=policy,
-            ).differences
-        else:
-            table_report = runtime_table_differences(
-                (reference_table,),
-                (candidate_table,),
-                policy,
-            )
+        subject = (
+            reference_subjects[table_name]
+            if table_name in reference_subjects and table_name in candidate_subjects
+            else None
+        )
+        table_report = _sqlite_table_value_differences(
+            reference_table, candidate_table, subject, policy
+        )
         differences.extend(
             RuntimeEquivalenceDifference(
                 difference.kind,
@@ -180,6 +347,27 @@ def _sqlite_database_differences(
             for difference in table_report
         )
     return tuple(differences)
+
+
+def _sqlite_table_value_differences(
+    reference_table: RuntimeTableSnapshot,
+    candidate_table: RuntimeTableSnapshot,
+    subject: MeasurementSubject | None,
+    policy: RuntimeEquivalencePolicy,
+) -> tuple[RuntimeEquivalenceDifference, ...]:
+    if subject is None:
+        return runtime_table_differences((reference_table,), (candidate_table,), policy)
+    return runtime_measurement_equivalence(
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=(reference_table,)),
+            policy=policy,
+        ),
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=(candidate_table,)),
+            policy=policy,
+        ),
+        policy=policy,
+    ).differences
 
 
 def _sqlite_tables(
@@ -307,6 +495,27 @@ def _declared_sqlite_table_subjects(
                 )
             database_subjects[table_name] = subject
     return subjects
+
+
+def _declared_sqlite_partition_tables(
+    properties_paths: Sequence[Path],
+) -> Mapping[str, frozenset[str]]:
+    """Derive sharded row-table roles from CPA's own table declarations."""
+
+    names_by_database: dict[str, set[str]] = {}
+    for path in properties_paths:
+        properties = _read_cpa_properties(path)
+        database_name = Path(properties[CPAPropertyName.SQLITE_FILE.value]).name
+        names_by_database.setdefault(database_name, set()).update(
+            (
+                properties[CPAPropertyName.IMAGE_TABLE.value],
+                properties[CPAPropertyName.OBJECT_TABLE.value],
+            )
+        )
+    return {
+        database_name: frozenset(names)
+        for database_name, names in names_by_database.items()
+    }
 
 
 def _quote_sqlite_identifier(value: str) -> str:

@@ -40,6 +40,9 @@ class NativeBatchRequest:
     expected_image_sets: int
     repetitions: int
     file_list_path: Optional[str] = None
+    first_image_set: int = 1
+    last_image_set: Optional[int] = None
+    report_path: Optional[str] = None
 
 
 @dataclass
@@ -62,6 +65,8 @@ class NativeBatchObservation:
     invocation_seconds: float
     pre_first_module_seconds: float
     first_module_through_post_run_seconds: float
+    first_module_started_monotonic_seconds: float
+    completed_monotonic_seconds: float
 
 
 @dataclass(frozen=True)
@@ -86,6 +91,11 @@ def main() -> None:
     request = NativeBatchRequest(**json.loads(Path(sys.argv[1]).read_text()))
     if request.expected_image_sets < 1 or request.repetitions < 1:
         raise ValueError("Batch count and repetitions must be positive")
+    if request.first_image_set < 1 or (
+        request.last_image_set is not None
+        and request.last_image_set < request.first_image_set
+    ):
+        raise ValueError("Native image-set range must be positive and ordered")
     logging.basicConfig(level=logging.WARNING)
     set_headless()
     set_awt_headless(True)
@@ -111,12 +121,13 @@ def main() -> None:
             output_root = Path(request.output_root) / str(repetition)
             output_root.mkdir(parents=True, exist_ok=False)
             set_default_output_directory(str(output_root))
-            measurements = Measurements(image_set_start=1)
+            measurements = Measurements(image_set_start=request.first_image_set)
             measurements.is_first_image = True
             clock = NativeBatchClock(time.perf_counter())
             try:
                 for measurements in pipeline.run_with_yield(
-                    image_set_start=1,
+                    image_set_start=request.first_image_set,
+                    image_set_end=request.last_image_set,
                     run_in_background=False,
                     status_callback=clock.before_module,
                     initial_measurements=measurements,
@@ -144,29 +155,34 @@ def main() -> None:
                         - clock.invocation_started,
                         first_module_through_post_run_seconds=completed
                         - clock.first_module_started,
+                        first_module_started_monotonic_seconds=(
+                            clock.first_module_started
+                        ),
+                        completed_monotonic_seconds=completed,
                     )
                 )
             finally:
                 measurements.close()
-        print(
-            json.dumps(
-                asdict(
-                    NativeBatchReport(
-                        startup_seconds=startup_seconds,
-                        environment=NativeBatchEnvironment(
-                            python_executable=sys.executable,
-                            python_version=platform.python_version(),
-                            cellprofiler_version=cellprofiler.__version__,
-                            cellprofiler_core_version=cellprofiler_core.__version__,
-                            numpy_version=numpy.__version__,
-                            scipy_version=scipy.__version__,
-                        ),
-                        request=request,
-                        observations=tuple(observations),
-                    )
-                )
+        report = asdict(
+            NativeBatchReport(
+                startup_seconds=startup_seconds,
+                environment=NativeBatchEnvironment(
+                    python_executable=sys.executable,
+                    python_version=platform.python_version(),
+                    cellprofiler_version=cellprofiler.__version__,
+                    cellprofiler_core_version=cellprofiler_core.__version__,
+                    numpy_version=numpy.__version__,
+                    scipy_version=scipy.__version__,
+                ),
+                request=request,
+                observations=tuple(observations),
             )
         )
+        if request.report_path is not None:
+            report_path = Path(request.report_path)
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text(json.dumps(report, indent=2))
+        print(json.dumps(report))
     finally:
         stop_java()
 

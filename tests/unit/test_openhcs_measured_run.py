@@ -186,6 +186,18 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
     ]
 
 
+def test_progress_observer_uses_extrema_for_parallel_axis_events() -> None:
+    observer = measured_run._ZMQProgressTimingObserver()
+
+    observer({"phase": "axis_started", "timestamp": 12.0})
+    observer({"phase": "axis_started", "timestamp": 11.0})
+    observer({"phase": "axis_completed", "timestamp": 14.0})
+    observer({"phase": "axis_completed", "timestamp": 13.0})
+
+    assert observer.execution_started_at == 11.0
+    assert observer.execution_completed_at == 14.0
+
+
 def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
     monkeypatch, tmp_path: Path
 ) -> None:
