@@ -11,6 +11,7 @@ from benchmark.matched_cellprofiler_batch import (
     _global_config,
     _native_python_executable,
     _output_inventory,
+    _source_input_inventory,
     _worker_axis_evidence,
 )
 from openhcs.core.config import PipelineConfig
@@ -43,6 +44,25 @@ def test_output_inventory_retains_relative_paths_and_content_digests(
         {
             "path": "images/overlay.tiff",
             "sha256": hashlib.sha256(b"pixel evidence").hexdigest(),
+        },
+    )
+
+
+def test_source_input_inventory_hashes_symlink_target(tmp_path: Path) -> None:
+    source = tmp_path / "source.tif"
+    source.write_bytes(b"microscopy pixels")
+    staged = tmp_path / "staged"
+    staged.mkdir()
+    (staged / "source.tif").symlink_to(source)
+
+    inventory = _source_input_inventory(staged)
+
+    assert inventory == (
+        {
+            "path": "source.tif",
+            "source_path": str(source),
+            "size_bytes": len(b"microscopy pixels"),
+            "sha256": hashlib.sha256(b"microscopy pixels").hexdigest(),
         },
     )
 

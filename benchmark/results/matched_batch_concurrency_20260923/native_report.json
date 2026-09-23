@@ -1,0 +1,64 @@
+{
+  "startup_seconds": 0.6871524062007666,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0"
+  },
+  "request": {
+    "pipeline_path": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+    "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native",
+    "expected_image_sets": 8,
+    "repetitions": 3,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": null
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native/-1",
+      "image_set_count": 8,
+      "invocation_seconds": 10.499652695842087,
+      "pre_first_module_seconds": 0.3355819322168827,
+      "first_module_through_post_run_seconds": 10.164070763625205,
+      "first_module_started_monotonic_seconds": 4522022.323510135,
+      "completed_monotonic_seconds": 4522032.487580898
+    },
+    {
+      "repetition": 0,
+      "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native/0",
+      "image_set_count": 8,
+      "invocation_seconds": 9.636118046939373,
+      "pre_first_module_seconds": 0.09744972828775644,
+      "first_module_through_post_run_seconds": 9.538668318651617,
+      "first_module_started_monotonic_seconds": 4522032.588076016,
+      "completed_monotonic_seconds": 4522042.126744335
+    },
+    {
+      "repetition": 1,
+      "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native/1",
+      "image_set_count": 8,
+      "invocation_seconds": 10.130356681533158,
+      "pre_first_module_seconds": 0.08518947008997202,
+      "first_module_through_post_run_seconds": 10.045167211443186,
+      "first_module_started_monotonic_seconds": 4522042.216700946,
+      "completed_monotonic_seconds": 4522052.261868157
+    },
+    {
+      "repetition": 2,
+      "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native/2",
+      "image_set_count": 8,
+      "invocation_seconds": 9.553990880958736,
+      "pre_first_module_seconds": 0.08102587051689625,
+      "first_module_through_post_run_seconds": 9.47296501044184,
+      "first_module_started_monotonic_seconds": 4522052.347216327,
+      "completed_monotonic_seconds": 4522061.820181337
+    }
+  ]
+}

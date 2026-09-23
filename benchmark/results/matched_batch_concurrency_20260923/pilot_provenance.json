@@ -1,0 +1,30 @@
+{
+  "case": "cp_tutorial_translocation_final",
+  "wells": [
+    "A01",
+    "A12",
+    "B01",
+    "B12",
+    "C01",
+    "C12",
+    "D01",
+    "D12"
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "a1600b567d0212ab29d4e86cc4da52bf278500fc820775ccd0d4ed4761b4e2de",
+  "driver_sha256": "b63239aec5920924e8ab9be2532e68e2da9605b629f9d7027482bf08f6613a28",
+  "native_worker_sha256": "46249d25bcdc82e251fbfeb55b941261713ce7aed95126a08e0f7a17f17534fa",
+  "source_commit": "2ac28aedd6ff3503a0e150bf46521338d57969cd",
+  "source_dirty": true,
+  "native_job_count": 2,
+  "candidate_worker_count": 2,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  }
+}

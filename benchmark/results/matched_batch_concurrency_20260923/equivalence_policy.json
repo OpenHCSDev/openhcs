@@ -1,0 +1,284 @@
+{
+  "allow_extra_candidate_measurements": false,
+  "allow_sparse_object_boundary_jitter": false,
+  "allow_tie_sensitive_location_mismatches": false,
+  "allow_unstable_shape_descriptors": false,
+  "allow_unstable_zernike_descriptors": false,
+  "compare_image_pixels": true,
+  "compare_table_values": true,
+  "feature_numeric_tolerances": [],
+  "feature_numeric_tolerances_provider": null,
+  "image_abs_tolerance": 1e-06,
+  "image_max_different_fraction": 0.0,
+  "image_rel_tolerance": 1e-06,
+  "measurement_dialect": {
+    "calculated_feature_prefixes": [],
+    "calculated_feature_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.calculated_measurement_feature_prefix_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "calculated_measurement_feature_prefix_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.calculated_measurement_feature_prefix_declarations"
+    },
+    "category_prefixes": [],
+    "category_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.measurement_category_prefix_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "measurement_category_prefix_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.measurement_category_prefix_declarations"
+    },
+    "directional_pair_feature_aliases": {},
+    "directional_pair_feature_aliases_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.directional_pair_feature_alias_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "directional_pair_feature_alias_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.directional_pair_feature_alias_declarations"
+    },
+    "feature_part_aliases": {
+      "['center', 'x']": [
+        "center",
+        "x"
+      ],
+      "['center', 'y']": [
+        "center",
+        "y"
+      ],
+      "['center', 'z']": [
+        "center",
+        "z"
+      ],
+      "['number', 'object', 'number']": [
+        "object",
+        "number"
+      ]
+    },
+    "feature_part_aliases_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.measurement_feature_part_rewrite_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "measurement_feature_part_rewrite_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.measurement_feature_part_rewrite_declarations"
+    },
+    "indexed_descriptor_suffix_width_provider": {
+      "import_path": "openhcs.core.runtime_measurements.RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for",
+      "kind": "callable",
+      "module": "openhcs.core.runtime_measurements",
+      "name": "indexed_suffix_token_width_for",
+      "qualname": "RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for"
+    },
+    "measurement_feature_marker_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.measurement_feature_marker_types_for_key",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "measurement_feature_marker_types_for_key",
+      "qualname": "CellProfilerMeasurementFeatureOwner.measurement_feature_marker_types_for_key"
+    },
+    "measurement_feature_relation_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.measurement_feature_relation_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "measurement_feature_relation_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.measurement_feature_relation_declarations"
+    },
+    "non_measurement_field_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.database_column_dialect.CellProfilerDatabaseColumnDialect.structural_field_prefixes",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.database_column_dialect",
+      "name": "structural_field_prefixes",
+      "qualname": "CellProfilerDatabaseColumnDialect.structural_field_prefixes"
+    },
+    "numbered_feature_prefix_aliases": {},
+    "numbered_feature_prefix_aliases_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.numbered_measurement_feature_prefix_alias_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "numbered_measurement_feature_prefix_alias_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.numbered_measurement_feature_prefix_alias_declarations"
+    },
+    "pair_correlation_feature_name": null,
+    "pair_correlation_feature_name_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.pair_correlation_feature_name_declaration",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "pair_correlation_feature_name_declaration",
+      "qualname": "CellProfilerMeasurementFeatureOwner.pair_correlation_feature_name_declaration"
+    },
+    "pair_regression_slope_feature_name": null,
+    "pair_regression_slope_feature_name_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.pair_regression_slope_feature_name_declaration",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "pair_regression_slope_feature_name_declaration",
+      "qualname": "CellProfilerMeasurementFeatureOwner.pair_regression_slope_feature_name_declaration"
+    },
+    "primary_category_prefixes": [],
+    "primary_category_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.primary_measurement_category_prefix_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "primary_measurement_category_prefix_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.primary_measurement_category_prefix_declarations"
+    },
+    "row_identity_contract": {
+      "fallback_image_fields": [
+        "image_number",
+        "image_id"
+      ],
+      "object_identity_fields": [
+        "number_object_number",
+        "object_label",
+        "object_number",
+        "object_id",
+        "label"
+      ],
+      "primary_image_fields": [
+        "slice_index"
+      ]
+    },
+    "row_qualifiers": [
+      {
+        "feature_prefixes": [],
+        "field_names": [
+          "scale"
+        ],
+        "value_mode": "identifier"
+      },
+      {
+        "feature_prefixes": [],
+        "field_names": [
+          "direction"
+        ],
+        "value_mode": "two_digit_integer"
+      },
+      {
+        "feature_prefixes": [],
+        "field_names": [
+          "gray_levels"
+        ],
+        "value_mode": "identifier"
+      },
+      {
+        "feature_prefixes": [],
+        "field_names": [
+          "bin_index",
+          "bin_count"
+        ],
+        "value_mode": "fraction_of_count"
+      }
+    ],
+    "scale_qualified_feature_prefixes": [],
+    "scale_qualified_feature_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.scale_qualified_measurement_feature_prefix_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "scale_qualified_measurement_feature_prefix_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.scale_qualified_measurement_feature_prefix_declarations"
+    },
+    "source_feature_prefixes": [],
+    "source_feature_prefixes_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.measurement_source_feature_prefix_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "measurement_source_feature_prefix_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.measurement_source_feature_prefix_declarations"
+    },
+    "source_name_encoding_by_scope": {
+      "MeasurementScope.IMAGE": "feature_suffix",
+      "MeasurementScope.OBJECT": "feature_suffix"
+    },
+    "source_qualifier_prefix_tokens": [
+      "raw",
+      "orig",
+      "crop",
+      "image"
+    ],
+    "source_qualifier_suffix_tokens": [
+      "gfp",
+      "gray",
+      "green",
+      "red",
+      "dna",
+      "grey",
+      "rfp",
+      "blue"
+    ],
+    "source_suffix_qualifier_sequences": [
+      {
+        "field_names_by_qualifier": [
+          [
+            "scale"
+          ],
+          [
+            "direction"
+          ],
+          [
+            "gray_levels"
+          ]
+        ]
+      },
+      {
+        "field_names_by_qualifier": [
+          [
+            "bin_index",
+            "bin_count"
+          ]
+        ]
+      }
+    ],
+    "spatial_grid_measurement_feature_name_provider": {
+      "import_path": "openhcs.interop.cellprofiler.measurement_dialect.CellProfilerSpatialGridMeasurementFeature.render",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.measurement_dialect",
+      "name": "render",
+      "qualname": "CellProfilerSpatialGridMeasurementFeature.render"
+    },
+    "threshold_qualifier_tokens": [
+      "classes",
+      "class",
+      "background",
+      "foreground",
+      "entropy",
+      "w",
+      "weighted",
+      "variance"
+    ],
+    "threshold_sensitive_pair_feature_names": [],
+    "threshold_sensitive_pair_feature_names_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.threshold_sensitive_pair_feature_name_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "threshold_sensitive_pair_feature_name_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.threshold_sensitive_pair_feature_name_declarations"
+    },
+    "undirected_pair_feature_names": [],
+    "undirected_pair_feature_names_provider": {
+      "import_path": "openhcs.interop.cellprofiler.module_measurement_features.CellProfilerMeasurementFeatureOwner.undirected_pair_feature_name_declarations",
+      "kind": "callable",
+      "module": "openhcs.interop.cellprofiler.module_measurement_features",
+      "name": "undirected_pair_feature_name_declarations",
+      "qualname": "CellProfilerMeasurementFeatureOwner.undirected_pair_feature_name_declarations"
+    }
+  },
+  "measurement_feature_name_mode": "semantic_core",
+  "numeric_abs_tolerance": 1e-06,
+  "numeric_decimal_places": 10,
+  "numeric_rel_tolerance": 1e-06,
+  "object_boundary_jitter_abs_tolerance": 5.0,
+  "object_boundary_jitter_aggregate_abs_tolerance": 1.5,
+  "object_boundary_jitter_aggregate_rel_tolerance": 0.0,
+  "object_boundary_jitter_max_unstable_fraction": 0.02,
+  "object_boundary_jitter_max_unstable_values": 50,
+  "object_boundary_jitter_rel_tolerance": 0.0,
+  "shape_descriptor_abs_tolerance": 1e-06,
+  "shape_descriptor_max_unstable_fraction": 0.01,
+  "shape_descriptor_max_unstable_values": 2,
+  "shape_descriptor_rel_tolerance": 0.0,
+  "threshold_entropy_abs_tolerance": 1e-06,
+  "threshold_sensitive_pair_abs_tolerance": 1e-06,
+  "threshold_sensitive_pair_rel_tolerance": 1e-06,
+  "zernike_descriptor_magnitude_abs_tolerance": 1e-06,
+  "zernike_descriptor_phase_abs_tolerance": 0.35,
+  "zernike_descriptor_rel_tolerance": 0.0
+}

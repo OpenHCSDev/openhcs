@@ -103,6 +103,23 @@ def _output_inventory(root: Path, files: frozenset[Path]) -> tuple[dict[str, str
     )
 
 
+def _source_input_inventory(input_dir: Path) -> tuple[dict[str, object], ...]:
+    """Hash the staged native image and metadata inputs, following symlinks."""
+
+    files = tuple(sorted(path for path in input_dir.rglob("*") if path.is_file()))
+    if not files:
+        raise ValueError("Native selected-source workspace contains no input files.")
+    return tuple(
+        {
+            "path": str(path.relative_to(input_dir)),
+            "source_path": str(path.resolve()),
+            "size_bytes": path.stat().st_size,
+            "sha256": _sha256(path),
+        }
+        for path in files
+    )
+
+
 def _native_python_executable(path: Path, project_root: Path) -> Path:
     """Keep the virtual-environment entrypoint, not its base-interpreter target."""
 
@@ -351,6 +368,10 @@ def main(argv: list[str] | None = None) -> int:
     native_domain = NativeCellProfilerInputDomainStrategy.select_for(
         native_request, source
     ).prepare(native_request, source, execution_cppipe)
+    provenance["native_input_inventory"] = _source_input_inventory(
+        native_domain.input_dir
+    )
+    (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
     native_payload = {
         "pipeline_path": str(native_domain.cppipe_path),
         "input_dir": str(native_domain.input_dir),
