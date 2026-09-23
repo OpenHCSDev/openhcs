@@ -74,9 +74,6 @@ from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_observation import (
-    ZMQRuntimeExecutionObservationExport,
-)
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
@@ -594,11 +591,7 @@ def main(argv: list[str] | None = None) -> int:
             axis_events.clear()
             progress_events.clear()
             print(f"OpenHCS batch {repetition} starting.", flush=True)
-            export_scope = (
-                ZMQRuntimeObservationExportScope.VALUES
-                if repetition < 0
-                else ZMQRuntimeObservationExportScope.OUTCOMES
-            )
+            export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
             evidence_dir = root / "candidate_evidence" / str(repetition)
             output_dir = root / "candidate" / str(repetition)
             global_config = _global_config(
@@ -680,12 +673,12 @@ def main(argv: list[str] | None = None) -> int:
                     "OpenHCS first-axis event lies outside the completed server job."
                 )
             observation = completed.observation_export
-            if isinstance(observation, ZMQRuntimeExecutionObservationExport):
-                candidate_exports = observation.exports
-            else:
-                candidate_exports = RuntimeExportObservation.from_output_roots(
-                    completed.output_roots
-                )
+            owned_exports = observation.exports
+            candidate_exports = (
+                owned_exports
+                if owned_exports is not None
+                else RuntimeExportObservation.from_output_roots(completed.output_roots)
+            )
             native_root = root / "native" / str(repetition)
             database_report = cellprofiler_database_export_equivalence(
                 native_root, candidate_exports, policy=policy
@@ -698,8 +691,8 @@ def main(argv: list[str] | None = None) -> int:
                 native_images, candidate_images, policy
             )
             declared_output_files = (
-                frozenset(Path(path) for path in observation.exports.output_files)
-                if isinstance(observation, ZMQRuntimeExecutionObservationExport)
+                frozenset(Path(path) for path in owned_exports.output_files)
+                if owned_exports is not None
                 else None
             )
             actual_output_files = frozenset(

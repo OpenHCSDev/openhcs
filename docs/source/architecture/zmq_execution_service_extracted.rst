@@ -67,7 +67,9 @@ Optional runtime-observation export follows the same submission path: the
 agent path policy validates the destination, and the client/server shared
 auxiliary declaration carries it and its typed value-or-outcome scope to the
 existing execution server. Outcome-only export does not require runtime array
-values to return to the parent when the compiled plan does not need them. The
+values to return to the parent when the compiled plan does not need them. It
+retains file-export paths from the same compiled output contexts as a full
+observation, without collecting intermediate runtime records. The
 benchmark layer need not submit a second kind of job to collect that evidence.
 Both export scopes carry the producing server execution ID, and the ordinary
 export writer will not replace an existing file. The benchmark finaliser

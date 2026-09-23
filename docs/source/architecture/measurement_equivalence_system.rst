@@ -103,8 +103,10 @@ benchmark wrapper accepts the ordinary ``OpenHCSExecutionSubmission`` and uses
 the normal compile-then-execute path. It requests either full runtime values or
 outcome-only evidence through the ordinary auxiliary execution declaration,
 validates the selected export and any declared axis count, and records phase
-timing and provenance. Outcome-only evidence proves per-axis completion but
-cannot support value-equivalence claims.
+timing and provenance. Outcome-only evidence proves per-axis completion and
+retains contract-owned file-export paths without internal runtime values. A
+value-equivalence claim still requires a separate comparison of the retained
+exported files; the outcome receipt alone does not establish it.
 Current exports also retain the compiler's exact axis membership: a missing
 compiled axis or an outcome for an uncompiled axis invalidates the run even if
 every retained outcome reports success. The measured-run finaliser refuses an

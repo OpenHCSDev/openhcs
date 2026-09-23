@@ -747,6 +747,7 @@ class ZMQExecutionServer(ExecutionServer):
             return
 
         from openhcs.core.runtime_execution_validation import runtime_output_roots
+        from openhcs.core.runtime_exports import RuntimeExportObservation
         from openhcs.runtime.zmq_execution_observation import (
             ZMQRuntimeExecutionObservationExport,
             ZMQRuntimeExecutionOutcomeExport,
@@ -771,6 +772,9 @@ class ZMQExecutionServer(ExecutionServer):
                 output_roots=output_roots,
                 server_environment=self._server_environment,
                 execution_id=request_context.execution_id,
+                exports=RuntimeExportObservation.from_execution_contexts(
+                    execution_bundle.runtime_contexts
+                ),
             )
         else:
             export = ZMQRuntimeExecutionObservationExport.from_execution(

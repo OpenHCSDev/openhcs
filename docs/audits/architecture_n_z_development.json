@@ -1482,7 +1482,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "cbc57ac54aa29e660e0b83c2a967d08083821e3b1b8aa8850a393169c4a7dd8b",
+        "sha256": "812ac9fc2363afa892410dbfebb461d4bc6f44c663e3ac4490e8edf41cf0dee2",
         "role": "Releases execution-session process resources when the execution server stops."
       },
       {
@@ -1573,7 +1573,8 @@
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
       "2026-09-22: Re-read the complete viewer-streaming explanation against the execution-server delta that attaches execution identity to observation exports. The change does not alter compiled viewer routing, readiness, settlement, or process ownership, so no viewer prose change was needed; six live ZMQ integration tests passed locally.",
-      "2026-09-23: Re-read the complete viewer-streaming explanation after the execution server began passing compiled axis membership into outcome evidence. Viewer routing, settlement, and lifecycle remain unchanged; no viewer prose change was needed."
+      "2026-09-23: Re-read the complete viewer-streaming explanation after the execution server began passing compiled axis membership into outcome evidence. Viewer routing, settlement, and lifecycle remain unchanged; no viewer prose change was needed.",
+      "2026-09-23: Re-read the complete viewer-streaming explanation after the same execution server began deriving file-export paths for outcome evidence. This does not alter compiled viewer routing, readiness, settlement, or process ownership; no viewer prose change was needed."
     ]
   },
   {
@@ -1942,7 +1943,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "d117eb9bdf714c70115dd9aadf625f03b9931c93f8441259d8c7cf2f1adf2e26",
+    "source_sha256": "dcaf4e63eb604312edadcb3442479ac6e369842231bb5caeb3e5404ecf693155",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -1956,12 +1957,12 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "cbc57ac54aa29e660e0b83c2a967d08083821e3b1b8aa8850a393169c4a7dd8b",
+        "sha256": "812ac9fc2363afa892410dbfebb461d4bc6f44c663e3ac4490e8edf41cf0dee2",
         "role": "OpenHCS compiled-execution adapter over the generic execution server."
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "56ec4a0f103be7f9f20e6de5b44ed2ee99dd01f9ad8789a2bfc0bb3e51eda60e",
+        "sha256": "e52b2e9784daa396b493f1f569fbcbb0d394e7e3c03d1a0c67d6594778ce64d3",
         "role": "Owns the ordinary value/outcome export schemas, producing execution identity, and exclusive evidence-file creation."
       },
       {
@@ -2193,7 +2194,8 @@
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
       "2026-09-22: Re-read the complete reference against the ordinary export schema and server adapter. Added the source-owned execution-ID and exclusive-file facts; the benchmark finaliser checks job identity without duplicating lifecycle state. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains separate.",
-      "2026-09-23: Re-read the complete ZMQ transition reference after both export scopes gained exact compiled-axis coverage validation. Clarified why a successful subset cannot become completed measured evidence; 84 focused unit tests and two live ordinary ZMQ integration tests passed locally. Exact-head CI remains separate."
+      "2026-09-23: Re-read the complete ZMQ transition reference after both export scopes gained exact compiled-axis coverage validation. Clarified why a successful subset cannot become completed measured evidence; 84 focused unit tests and two live ordinary ZMQ integration tests passed locally. Exact-head CI remains separate.",
+      "2026-09-23: Re-read the complete reference after the outcome export gained compiler-owned file-export paths without runtime-value retention. Clarified that both observation scopes derive output paths from the same compiled contexts; the new schema preserves archived outcome reads. Focused ZMQ, runtime-validation, measured-run, and pilot tests passed 46 cases; installed-client proof remains separate."
     ]
   },
   {

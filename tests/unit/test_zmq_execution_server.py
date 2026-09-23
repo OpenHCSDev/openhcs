@@ -177,6 +177,8 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
     assert export.successful_axis_count == 1
     assert export.execution_id == record.execution_id
+    assert export.exports is not None
+    assert export.exports.output_files == ()
     assert record.get_extra("runtime_observation_export_path") == str(export_path)
     assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 

@@ -21,7 +21,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 
 ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 8
-ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 3
+ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 4
 
 
 def _axis_membership_failures(
@@ -85,6 +85,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     server_environment: RuntimeEnvironmentSnapshot | None = None
     execution_id: str | None = None
     compiled_axis_ids: tuple[str, ...] | None = None
+    exports: RuntimeExportObservation | None = None
 
     @classmethod
     def from_execution(
@@ -95,6 +96,7 @@ class ZMQRuntimeExecutionOutcomeExport:
         output_roots: tuple[Path, ...],
         server_environment: RuntimeEnvironmentSnapshot | None = None,
         execution_id: str | None = None,
+        exports: RuntimeExportObservation | None = None,
     ) -> ZMQRuntimeExecutionOutcomeExport:
         return cls(
             schema_version=ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION,
@@ -106,6 +108,7 @@ class ZMQRuntimeExecutionOutcomeExport:
             server_environment=server_environment,
             execution_id=execution_id,
             compiled_axis_ids=tuple(str(axis_id) for axis_id in compiled_axis_ids),
+            exports=exports,
         )
 
     @classmethod
@@ -126,6 +129,7 @@ class ZMQRuntimeExecutionOutcomeExport:
                 server_environment=payload.server_environment,
                 execution_id=None,
                 compiled_axis_ids=None,
+                exports=None,
             )
         if payload.schema_version == 2:
             return cls(
@@ -135,6 +139,17 @@ class ZMQRuntimeExecutionOutcomeExport:
                 server_environment=payload.server_environment,
                 execution_id=payload.execution_id,
                 compiled_axis_ids=None,
+                exports=None,
+            )
+        if payload.schema_version == 3:
+            return cls(
+                schema_version=payload.schema_version,
+                outcomes_by_axis=payload.outcomes_by_axis,
+                output_roots=payload.output_roots,
+                server_environment=payload.server_environment,
+                execution_id=payload.execution_id,
+                compiled_axis_ids=payload.compiled_axis_ids,
+                exports=None,
             )
         if payload.schema_version != ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION:
             raise ValueError(

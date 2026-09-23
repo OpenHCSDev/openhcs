@@ -257,6 +257,10 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
     assert export.expectation.artifact_viewer == ()
     assert export.exports.output_files == (contracted_output,)
     assert unrelated_output not in export.exports.output_files
+    assert (
+        RuntimeExportObservation.from_execution_contexts({"A01": context}).output_files
+        == export.exports.output_files
+    )
 
 
 def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None:

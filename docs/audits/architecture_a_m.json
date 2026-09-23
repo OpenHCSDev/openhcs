@@ -2172,7 +2172,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "3b786e610add4c3776c66506c3cdd3b55df1284c98b9734d1c9e4d65a25d8d3b",
+    "source_sha256": "181de0693edf0411e4f83791a3865fe6320bbe7b3504460f73d6fe572bfa6204",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2222,7 +2222,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "56ec4a0f103be7f9f20e6de5b44ed2ee99dd01f9ad8789a2bfc0bb3e51eda60e",
+        "sha256": "e52b2e9784daa396b493f1f569fbcbb0d394e7e3c03d1a0c67d6594778ce64d3",
         "role": "Declares ordinary value and outcome exports, compiled axis-owned value expectations, producing execution identity, and exclusive evidence-file creation."
       },
       {
@@ -2293,7 +2293,8 @@
       "2026-09-23: Re-read the complete explanation against the reusable connected-client measured-run path. Added one architecture sentence separating warm-server reuse from a second execution engine. Ten focused unit tests and a live two-repetition ordinary ZMQ test passed locally; this does not yet validate matched CellProfiler timing or equivalence.",
       "2026-09-23: Rechecked the measured-run wrapper and its focused tests after progress timing changed to use the earliest axis start and latest completion independent of event arrival order. The explanation already distinguishes this diagnostic interval from authoritative completed-server time; no prose change was needed. This is a targeted authority-delta review, not a new suite-level publication claim.",
       "2026-09-23: Re-read the complete explanation after comparison-run output admission gained an exclusive receipt. Retained the distinction between typed run metadata and durable publication evidence; see benchmark_report_and_run_claim_review_20260923.md.",
-      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added exact membership and nonempty-execution boundaries; archived exports remain readable but cannot justify a new success receipt without compiler membership. Affected unit and live ordinary ZMQ tests passed locally; exact-head CI remains separate."
+      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added exact membership and nonempty-execution boundaries; archived exports remain readable but cannot justify a new success receipt without compiler membership. Affected unit and live ordinary ZMQ tests passed locally; exact-head CI remains separate.",
+      "2026-09-23: Re-read the complete explanation after outcome-only observations gained contract-owned file-export paths without internal runtime records. Clarified that exported-file values can be compared separately while an outcome receipt alone cannot prove value equivalence. Focused ZMQ, runtime-validation, measured-run, and pilot tests passed 46 cases; final matched workload evidence remains pending."
     ]
   },
   {
