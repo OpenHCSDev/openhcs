@@ -249,14 +249,16 @@ def test_measured_evidence_publication_is_exclusive_under_concurrent_writers(
         barrier.wait()
         write_new_measured_artifact(target, contents)
 
-    candidates = ("first " * 10000, "second " * 10000)
+    candidates = ("first line\n" * 10000, "second line\n" * 10000)
     with ThreadPoolExecutor(max_workers=2) as executor:
         attempts = [executor.submit(publish, candidate) for candidate in candidates]
         failures = [attempt.exception() for attempt in attempts]
 
     assert sum(failure is None for failure in failures) == 1
     assert sum(isinstance(failure, FileExistsError) for failure in failures) == 1
-    assert target.read_text(encoding="utf-8") in candidates
+    assert target.read_bytes() in tuple(
+        candidate.encode("utf-8") for candidate in candidates
+    )
     assert not tuple(tmp_path.glob(".*.pending"))
 
 

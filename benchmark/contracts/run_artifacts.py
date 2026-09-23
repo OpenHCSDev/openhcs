@@ -58,19 +58,19 @@ def write_new_measured_artifact(path: Path, contents: str) -> None:
     """Publish complete measured-run evidence without replacing another writer."""
 
     target = Path(path)
+    payload = contents.encode("utf-8")
     target.parent.mkdir(parents=True, exist_ok=True)
     pending_path: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
+            mode="wb",
             dir=target.parent,
             prefix=f".{target.name}.",
             suffix=".pending",
             delete=False,
         ) as pending:
             pending_path = Path(pending.name)
-            pending.write(contents)
+            pending.write(payload)
             pending.flush()
             os.fsync(pending.fileno())
         os.link(pending_path, target)

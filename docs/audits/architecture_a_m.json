@@ -2206,7 +2206,7 @@
       },
       {
         "path": "benchmark/contracts/run_artifacts.py",
-        "sha256": "ef58712287c392e418708600f88544c4aaef72ab4300503cb70029176b6d1bbe",
+        "sha256": "e11f0d5cf699529bf2356d43628e06394cdf702119a4d303640aaae783c86f32",
         "role": "Owns measured-run artifact identities and complete, exclusive publication of finaliser-owned evidence files."
       },
       {
@@ -2256,7 +2256,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "b6a6027c0d50fe245babd8a2c6d36f4d5c9de65e098f5c2166366bbaceb9b6db",
+        "sha256": "c9402517a081ef36a1e2383dc54031812a16cb94bb4e4b31b4f11b35caa7c811",
         "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
       },
       {
@@ -2284,7 +2284,8 @@
       "2026-09-22: Re-read the explanation against the central benchmark timing owner and both ordinary completion paths. Clarified that the execution-only duration comes from the completed server job, a missing progress interval is not inferred, and additive totals exclude nested timing observations. Ninety affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
       "2026-09-22: Re-reviewed the evidence boundary after making benchmark finaliser writes complete and exclusive per file. This prevents concurrent finalisers from replacing retained artifacts but is not a multi-file transaction; 34 focused wrapper/control tests passed locally.",
       "2026-09-22: Re-reviewed the explanation against receipt-free partial evidence handling. The control layer derives the unreceipted artifact list from the measured-artifact declarations and never infers completion from orphaned files; 35 focused tests passed locally.",
-      "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed."
+      "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed.",
+      "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending."
     ]
   },
   {
