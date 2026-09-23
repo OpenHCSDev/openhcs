@@ -1,11 +1,12 @@
 # Paper throughput configuration: new-API probe (2026-09-23)
 
-Status: **the declared `8w_2c` paper mode completed through the new ordinary
-pipeline API with two observed worker processes**, after correcting a
-pipeline-level worker override. A separate genuine-well CellProfiler/OpenHCS
-output pilot also completed. The full 30-workflow, four-mode sweep has not
-been rerun. These are readiness probes, not replacement data for Figure 5 or
-Supplementary Figure 6.
+Status: **all four declared modes completed on one Official30 case through the
+ordinary pipeline API, with the requested number of worker PIDs observed**.
+The [four-mode `fork` receipts](translocation_four_modes_fork/README.md) are
+the current paper-manifest readiness evidence. A separate genuine-well
+CellProfiler/OpenHCS output pilot also completed. The full 30-workflow,
+four-mode sweep has not been rerun. These are readiness probes, not replacement
+data for Figure 5 or Supplementary Figure 6.
 
 The source is `benchmark/manifests/official30_portable_axis1.json`. Its
 `default_well_filter: 1` selects the first source well. The ordinary throughput
@@ -18,13 +19,16 @@ explicit image exports.
 
 | Translocation case | Completed wells | Server execution | Peak process-tree RSS | Output files | Observed worker PIDs |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `8w_2c` corrected worker inheritance and export policy | 8/8 | 35.714 s | 2716.6 MB | 10 (8 TIFF, SQLite, CPA properties) | 2 |
+| Earlier `8w_2c` spawn-mode diagnostic | 8/8 | 35.714 s | 2716.6 MB | 10 (8 TIFF, SQLite, CPA properties) | 2 |
 
 The [new retained receipt and progress records](8w_2c_verified_2pid/) show
 eight distinct started/completed axes, two PIDs with four axes each, and the
 submitted pipeline/global-config source digests. The two workers overlapped
 for less than one second; their starts were several seconds apart. This is
-one observation, not a scaling estimate. The earlier `8w_1c` and `8w_2c`
+one observation, not a scaling estimate. It inherited two workers but retained
+the imported pipeline's `spawn` setting, overriding the manifest's `fork`.
+The newer four-mode probe clears that override along with the imported
+threading setting. The earlier `8w_1c` and `8w_2c`
 files remain as diagnostic history but are **superseded**: they enabled extra
 automatic segmentation-artifact writes. The later
 `8w_2c_declared_outputs` row fixed that output policy, but its imported
@@ -47,7 +51,7 @@ wheel built from that commit passed `scripts/smoke_installed_mcp.py
 --exercise-measured-execution` from a fresh installation: the MCP health and
 expert benchmark tools, installed CLI sweep planning, and one small ordinary
 source-backed job each completed. That wheel smoke uses synthetic data, not
-this 30-case paper manifest; the two live translocation rows above are the
+this 30-case paper manifest; the linked live translocation probes are the
 paper-manifest execution evidence. The temporary wheel installation was
 removed after the smoke test.
 

@@ -828,7 +828,11 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         lambda _request: SimpleNamespace(
             pipeline_import_error=None,
             pipeline_steps=[],
-            pipeline_config=PipelineConfig(),
+            pipeline_config=PipelineConfig(
+                num_workers=1,
+                use_threading=False,
+                multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
+            ),
             materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
             execution_plate_path=tmp_path / "plate",
         ),
@@ -904,7 +908,10 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         cppipe_path=tmp_path / "pipeline.cppipe",
         output_root=tmp_path / "case",
         mode=WellThroughputMode(
-            f"{well_count}w_{worker_count}c", well_count, worker_count
+            f"{well_count}w_{worker_count}c",
+            well_count,
+            worker_count,
+            use_threading=worker_count == 1,
         ),
         execution_port=18088,
     )
@@ -920,8 +927,16 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert submissions[0].pipeline_document.pipeline_steps == []
     pipeline_config = submissions[0].pipeline_document.pipeline_config
     assert object.__getattribute__(pipeline_config, "num_workers") is None
+    assert object.__getattribute__(pipeline_config, "use_threading") is None
+    assert (
+        object.__getattribute__(pipeline_config, "multiprocessing_start_method") is None
+    )
     with config_context(submissions[0].global_pipeline_config):
         assert pipeline_config.num_workers == worker_count
+        assert pipeline_config.use_threading is (worker_count == 1)
+        assert pipeline_config.multiprocessing_start_method is (
+            MultiprocessingStartMethod.FORK
+        )
     assert submissions[0].global_pipeline_config.num_workers == worker_count
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is False

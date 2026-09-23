@@ -2255,6 +2255,8 @@ def run_case_well_throughput(
         replace(
             prepared.pipeline_config,
             num_workers=None,
+            use_threading=None,
+            multiprocessing_start_method=None,
             materialize_runtime_artifacts=False,
             well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
             path_planning_config=LazyPathPlanningConfig(

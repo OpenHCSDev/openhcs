@@ -1,0 +1,5 @@
+case_name,mode_name,worker_count,well_count,compile_seconds,prepare_seconds,execute_seconds,total_seconds,wells_per_second,successful_wells,native_single_sample_execution_seconds,projected_native_execution_seconds,projected_execution_speedup,peak_memory_mb,status,memory_limit_mb,error_message,execution_route
+cp_tutorial_translocation_final,1w_1t,1,1,5.565930366516113,0.0,3.3315563201904297,21.697321102023125,0.30016001648828217,1,,,,1083.50390625,success,,,ordinary-zmq-outcomes-v1
+cp_tutorial_translocation_final,8w_2c,2,8,16.613674879074097,0.0,23.53002381324768,53.36088974773884,0.33999115612861835,8,,,,2549.83984375,success,,,ordinary-zmq-outcomes-v1
+cp_tutorial_translocation_final,12w_3c,3,12,21.671576738357544,0.0,32.813857078552246,67.10118666198105,0.36569916091465593,12,,,,3349.75390625,success,,,ordinary-zmq-outcomes-v1
+cp_tutorial_translocation_final,16w_4c,4,16,28.657536029815674,0.0,42.82684540748596,84.85597863886505,0.3735974444945521,16,,,,4171.3203125,success,,,ordinary-zmq-outcomes-v1
