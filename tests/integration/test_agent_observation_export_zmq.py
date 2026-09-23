@@ -329,6 +329,8 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
             str(output_dir),
             "--run-id",
             "ordinary-cli",
+            "--observation-scope",
+            "outcomes",
             "--port",
             str(22000 + os.getpid() % 20000),
             "--no-persistent",
@@ -347,6 +349,7 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     assert receipt.execution_plate_id == str(plate)
     assert receipt.run_id == "ordinary-cli"
     assert receipt.pipeline_name == "pipeline"
+    assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
     assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
     assert all(
         evidence.valid

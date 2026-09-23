@@ -214,7 +214,14 @@ The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
 pipeline source file, plate and empty evidence directory, then uses the same
 ordinary source-session execution service and receipt finalizer. It requires an
 explicit ``--wait-timeout-ms``; ``--execution-plate`` can identify a prepared
-input while preserving the original plate identity.
+input while preserving the original plate identity. For large pipelines,
+``--observation-scope outcomes`` retains per-axis status, output roots, and
+server environment without transferring runtime array values to the parent.
+The default ``values`` scope retains the full runtime observation needed for
+value-equivalence checks. The normal
+``openhcs_submit_pipeline_execution`` tool exposes the same typed scope when
+an observation export path is requested; status and cancellation remain the
+ordinary job operations.
 
 Codex
 -----

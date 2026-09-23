@@ -119,12 +119,22 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         subparsers: argparse._SubParsersAction,
     ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
+        from openhcs.runtime.zmq_execution_signature import (
+            ZMQRuntimeObservationExportScope,
+        )
+
         parser.add_argument("--plate", type=Path, required=True)
         parser.add_argument("--execution-plate", type=Path)
         parser.add_argument("--pipeline-source-file", type=Path, required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
         parser.add_argument("--run-id", required=True)
         parser.add_argument("--pipeline-name")
+        parser.add_argument(
+            "--observation-scope",
+            choices=tuple(scope.value for scope in ZMQRuntimeObservationExportScope),
+            default=ZMQRuntimeObservationExportScope.VALUES.value,
+            help="Retain full runtime values or outcome-only execution evidence.",
+        )
         parser.add_argument("--host", default="localhost")
         parser.add_argument("--port", type=int)
         parser.add_argument(
@@ -160,6 +170,9 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from openhcs.agent.path_policy import AgentPathPolicy
         from openhcs.mcp.context import OpenHCSAgentContext
         from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.runtime.zmq_execution_signature import (
+            ZMQRuntimeObservationExportScope,
+        )
         from openhcs.serialization.json import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()
@@ -199,6 +212,9 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         status = context.execution_service.submit_execution(
             session.session_id,
             runtime_observation_export_path=str(observation_path),
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
+                args.observation_scope
+            ),
             wait=True,
             submit_timeout_ms=(
                 args.submit_timeout_ms

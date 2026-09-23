@@ -15494,6 +15494,13 @@ def test_mcp_headless_submission_projects_observation_export_request():
 
     assert "runtime_observation_export_path" in schema["properties"]
     assert "runtime_observation_export_path" not in schema["required"]
+    assert "runtime_observation_export_scope" in schema["properties"]
+    assert "runtime_observation_export_scope" not in schema["required"]
+    scope_ref = schema["properties"]["runtime_observation_export_scope"]["$ref"]
+    assert schema["$defs"][scope_ref.removeprefix("#/$defs/")]["enum"] == [
+        "values",
+        "outcomes",
+    ]
 
 
 def test_viewer_capabilities_advertise_payload_coordinate_validation():

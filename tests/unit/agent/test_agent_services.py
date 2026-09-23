@@ -129,7 +129,10 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     ExecutionSubmissionPreparationTimeoutError,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQExecutionIdentity,
+    ZMQRuntimeObservationExportScope,
+)
 from openhcs.serialization.json import to_jsonable
 
 
@@ -3124,6 +3127,23 @@ def test_execution_session_observation_export_uses_ordinary_submission(
         "runtime_observation_export_path": str(export_path)
     }
 
+    outcome_path = tmp_path / "evidence" / "outcomes.pkl"
+    outcome_job = service.submit_execution(
+        session.session_id,
+        runtime_observation_export_path=str(outcome_path),
+        runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+    )
+    assert outcome_job.server_execution_id == _ExecutionTestId.EXECUTE
+    assert fake_client.execution_submissions[1].config_params == {
+        "runtime_observation_export_path": str(outcome_path),
+        "runtime_observation_export_scope": "outcomes",
+    }
+    with pytest.raises(ValueError, match="requires an export path"):
+        service.submit_execution(
+            session.session_id,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        )
+
     with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
         service.submit_execution(
             session.session_id,
@@ -3136,7 +3156,7 @@ def test_execution_session_observation_export_uses_ordinary_submission(
             session.session_id,
             runtime_observation_export_path=str(export_path),
         )
-    assert len(fake_client.execution_submissions) == 1
+    assert len(fake_client.execution_submissions) == 2
 
 
 def test_execution_session_service_cancels_through_submitting_client(

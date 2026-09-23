@@ -41,6 +41,7 @@ from openhcs.agent.ui_bridge_identities import (
 from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 if TYPE_CHECKING:
     from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -362,6 +363,9 @@ class CompileSubmissionRequest(OrchestratorSessionIdentity):
 class PipelineExecutionSubmissionRequest(OrchestratorSessionIdentity):
     compile_artifact_id: str | None = None
     runtime_observation_export_path: str | None = None
+    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+        ZMQRuntimeObservationExportScope.VALUES
+    )
     wait: bool = False
     submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
     wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms

@@ -83,6 +83,7 @@ from openhcs.runtime.zmq_execution_client import (
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQExecutionIdentity,
+    ZMQRuntimeObservationExportScope,
 )
 from openhcs.serialization.json import to_jsonable
 
@@ -1026,11 +1027,20 @@ class ExecutionSessionService:
         *,
         compile_artifact_id: str | None = None,
         runtime_observation_export_path: str | None = None,
+        runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+            ZMQRuntimeObservationExportScope.VALUES
+        ),
         wait: bool = False,
         submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
         wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> ExecutionJobRef | ExecutionJobStatus:
         auxiliary_params = None
+        if (
+            runtime_observation_export_path is None
+            and runtime_observation_export_scope
+            is not ZMQRuntimeObservationExportScope.VALUES
+        ):
+            raise ValueError("Outcome observation requires an export path.")
         if runtime_observation_export_path is not None:
             export_path = self._path_policy.assert_writable(
                 runtime_observation_export_path
@@ -1040,7 +1050,8 @@ class ExecutionSessionService:
                     f"Runtime observation export path already exists: {export_path}"
                 )
             auxiliary_params = ZMQAuxiliaryExecutionParams(
-                runtime_observation_export_path=export_path
+                runtime_observation_export_path=export_path,
+                runtime_observation_export_scope=runtime_observation_export_scope,
             )
         return self._submit_job(
             session_id,

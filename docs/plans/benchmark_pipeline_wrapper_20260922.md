@@ -133,6 +133,12 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   compile/execute path, including source-versus-execution plate identity and
   client-owned-server admission. This is infrastructure evidence, not a new
   CellProfiler/OpenHCS performance comparison.
+- The ordinary headless execution submission now exposes the same typed
+  observation scope through its service and declaration-derived MCP request.
+  The generic `run-measured` CLI selects it from the runtime enum rather than
+  maintaining a benchmark-local choice list. Outcome-only CLI measurements
+  use the same ordinary source session and finalizer as full-value runs;
+  requesting outcome-only without an export path fails before submission.
 
 ## Migration sequence
 

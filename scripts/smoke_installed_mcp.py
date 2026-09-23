@@ -297,6 +297,7 @@ async def _run_measured_execution_protocol_smoke(
                             evidence_dir
                         )
                     ),
+                    "runtime_observation_export_scope": "outcomes",
                     "wait": True,
                     "submit_timeout_ms": 120_000,
                     "wait_timeout_ms": 120_000,
@@ -376,6 +377,8 @@ def _run_installed_measured_cli_smoke(
         "installed-cli-smoke",
         "--pipeline-name",
         "Blur",
+        "--observation-scope",
+        "outcomes",
         "--port",
         str(30000 + os.getpid() % 20000),
         "--no-persistent",
@@ -421,6 +424,11 @@ def _run_installed_measured_cli_smoke(
         raise AssertionError("Installed measured runs lost distinct job identities.")
     if cli_receipt.execution_plate_id != str(evidence.cli_execution_plate):
         raise AssertionError("Installed CLI ignored its prepared execution plate.")
+    if (
+        mcp_receipt.observation_export_scope.value != "outcomes"
+        or cli_receipt.observation_export_scope.value != "outcomes"
+    ):
+        raise AssertionError("Installed MCP and CLI ignored outcome-only export scope.")
     if mcp_receipt.server_environment is None or cli_receipt.server_environment is None:
         raise AssertionError("Installed measured receipt lacks server provenance.")
     if cli_receipt.server_environment != mcp_receipt.server_environment:
