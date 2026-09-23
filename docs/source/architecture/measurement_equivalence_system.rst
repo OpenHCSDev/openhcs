@@ -137,7 +137,10 @@ server or progress observations.
 If finalisation stops between evidence files, inspection derives the
 ``unreceipted_artifacts`` list from the measured-artifact declarations. Their
 presence is reported separately from a valid success receipt; no partial
-directory is promoted to a completed measurement.
+directory is promoted to a completed measurement. Retrying finalisation for
+the same completed job can reuse only byte-identical pre-receipt files. The
+finaliser writes missing files, rechecks the declared set, and then publishes
+the receipt. Conflicting files or an existing receipt fail closed.
 
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:

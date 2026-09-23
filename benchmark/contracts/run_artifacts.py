@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Mapping
 from enum import Enum
 from pathlib import Path
 from typing import Self
@@ -76,6 +77,57 @@ def write_new_measured_artifact(path: Path, contents: str) -> None:
     finally:
         if pending_path is not None:
             pending_path.unlink(missing_ok=True)
+
+
+def retain_matching_measured_artifacts(
+    output_dir: Path,
+    contents_by_artifact: Mapping[MeasuredPipelineRunArtifact, str],
+) -> None:
+    """Resume only matching pre-receipt evidence for the same completed run."""
+
+    root = Path(output_dir)
+    required = {
+        artifact
+        for artifact in MeasuredPipelineRunArtifact
+        if artifact.finalizer_output
+        and artifact is not MeasuredPipelineRunArtifact.RECEIPT
+    }
+    if set(contents_by_artifact) != required:
+        raise ValueError("Measured finalisation requires every pre-receipt artifact.")
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(root)
+    if receipt_path.exists() or receipt_path.is_symlink():
+        raise FileExistsError(f"Measured run evidence already exists: {receipt_path}")
+    for artifact, contents in contents_by_artifact.items():
+        path = artifact.path_in(root)
+        if path.exists() or path.is_symlink():
+            _require_matching_measured_artifact(path, contents)
+    for artifact, contents in contents_by_artifact.items():
+        path = artifact.path_in(root)
+        if path.exists() or path.is_symlink():
+            continue
+        try:
+            write_new_measured_artifact(path, contents)
+        except FileExistsError:
+            _require_matching_measured_artifact(path, contents)
+    for artifact, contents in contents_by_artifact.items():
+        _require_matching_measured_artifact(artifact.path_in(root), contents)
+
+
+def _require_matching_measured_artifact(path: Path, contents: str) -> None:
+    if not path.exists() and not path.is_symlink():
+        raise FileNotFoundError(
+            f"Measured run evidence disappeared before receipt: {path}"
+        )
+    expected = contents.encode("utf-8")
+    if (
+        path.is_symlink()
+        or not path.is_file()
+        or path.stat().st_size != len(expected)
+        or path.read_bytes() != expected
+    ):
+        raise FileExistsError(
+            f"Measured run evidence already exists with different content: {path}"
+        )
 
 
 class StructuredArtifactFormat(Enum):

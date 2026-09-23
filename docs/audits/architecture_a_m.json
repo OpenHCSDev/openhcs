@@ -2171,7 +2171,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "a93096283c28e3a34f688ba78d82066d400046cfd917ef0b83dd1ca8bcc3a2b4",
+    "source_sha256": "fa3b6e4ef6ae6183ef67f26c07c9f0eab5c94accbb901d0346febf814ef901ab",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2201,12 +2201,12 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "ac495c171ac2f8922d8f0cc1d9d9e42df896cbb4a7fe0a8d5d707450d56dc2c1",
+        "sha256": "2c93d5d8ee52d48bf92a0be7a0612937297df948e43a1d2f1fb5358aa2845071",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt."
       },
       {
         "path": "benchmark/contracts/run_artifacts.py",
-        "sha256": "0cca8c8cd27901330f8c4fdb41bae20e9744a7cfc5b9918241c2873737bac101",
+        "sha256": "ef58712287c392e418708600f88544c4aaef72ab4300503cb70029176b6d1bbe",
         "role": "Owns measured-run artifact identities and complete, exclusive publication of finaliser-owned evidence files."
       },
       {
@@ -2256,7 +2256,7 @@
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "6624404baf02c53f3304ed14b5f542aca2d9d8242e3c734aaa97c2c6b17e5358",
+        "sha256": "b6a6027c0d50fe245babd8a2c6d36f4d5c9de65e098f5c2166366bbaceb9b6db",
         "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
       },
       {
@@ -2283,7 +2283,8 @@
       "2026-09-22: Re-read the complete explanation against the ordinary value/outcome export declaration and shared finaliser. Added the execution-ID and exclusive-file evidence boundary without implying outcome-only value equivalence. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
       "2026-09-22: Re-read the explanation against the central benchmark timing owner and both ordinary completion paths. Clarified that the execution-only duration comes from the completed server job, a missing progress interval is not inferred, and additive totals exclude nested timing observations. Ninety affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
       "2026-09-22: Re-reviewed the evidence boundary after making benchmark finaliser writes complete and exclusive per file. This prevents concurrent finalisers from replacing retained artifacts but is not a multi-file transaction; 34 focused wrapper/control tests passed locally.",
-      "2026-09-22: Re-reviewed the explanation against receipt-free partial evidence handling. The control layer derives the unreceipted artifact list from the measured-artifact declarations and never infers completion from orphaned files; 35 focused tests passed locally."
+      "2026-09-22: Re-reviewed the explanation against receipt-free partial evidence handling. The control layer derives the unreceipted artifact list from the measured-artifact declarations and never infers completion from orphaned files; 35 focused tests passed locally.",
+      "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed."
     ]
   },
   {

@@ -24,7 +24,7 @@ from benchmark.contracts.measured_run_receipt import (
 )
 from benchmark.contracts.run_artifacts import (
     MeasuredPipelineRunArtifact,
-    write_new_measured_artifact,
+    retain_matching_measured_artifacts,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from openhcs.core.config import GlobalPipelineConfig
@@ -368,29 +368,25 @@ def retain_measured_openhcs_completion(
             f"{observation_export.axis_count}; no success receipt was written."
         )
     artifact_root = observation_export_path.parent
-    for artifact in MeasuredPipelineRunArtifact:
-        if artifact.finalizer_output and artifact.path_in(artifact_root).exists():
-            raise FileExistsError(
-                f"Measured run evidence already exists: {artifact.path_in(artifact_root)}"
-            )
     output_roots = tuple(Path(root) for root in observation_export.output_roots)
     pipeline_source = submission.pipeline_code()
-    results_summary_path = observation_export_path.with_name(
-        ZMQ_RESULTS_SUMMARY_FILENAME
-    )
-    write_new_measured_artifact(
-        results_summary_path,
-        json.dumps(results_summary, indent=2, sort_keys=True),
-    )
     global_config_source = ConfigDocumentAuthority.render(
         submission.global_pipeline_config,
         expected_config_type=GlobalPipelineConfig,
     )
-    for artifact, source in (
-        (MeasuredPipelineRunArtifact.PIPELINE_SOURCE, pipeline_source),
-        (MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE, global_config_source),
-    ):
-        write_new_measured_artifact(artifact.path_in(artifact_root), source)
+    results_summary_path = MeasuredPipelineRunArtifact.RESULTS_SUMMARY.path_in(
+        artifact_root
+    )
+    retain_matching_measured_artifacts(
+        artifact_root,
+        {
+            MeasuredPipelineRunArtifact.RESULTS_SUMMARY: json.dumps(
+                results_summary, indent=2, sort_keys=True
+            ),
+            MeasuredPipelineRunArtifact.PIPELINE_SOURCE: pipeline_source,
+            MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE: global_config_source,
+        },
+    )
     receipt = MeasuredPipelineRunReceipt(
         schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
         run_id=phase_timing.run_id,

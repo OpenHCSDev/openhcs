@@ -3899,7 +3899,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "da7323fc924a2b7145b9cacb5c062c489dc4687e981fb20e8cf1a873ddd7e871",
+    "source_sha256": "272a16ee98228dfde30045f9b11aed76a559426375de3a67f2ac40b0141f09dd",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -4013,7 +4013,8 @@
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
       "2026-09-22: Targeted review of the benchmark inspection how-to after CLI and MCP gained shared bounded artifact paging. The page now gives the next-offset procedure without implying inspection launches a job or proves parity; 28 focused control tests passed. Fresh installed-wheel CI remains separate.",
-      "2026-09-22: Re-reviewed the measured-run inspection instruction after adding declaration-derived unreceipted artifacts. The action is to preserve incomplete evidence for diagnosis and withhold a completion claim; the architecture page explains why. Thirty-five focused control and wrapper tests passed locally."
+      "2026-09-22: Re-reviewed the measured-run inspection instruction after adding declaration-derived unreceipted artifacts. The action is to preserve incomplete evidence for diagnosis and withhold a completion claim; the architecture page explains why. Thirty-five focused control and wrapper tests passed locally.",
+      "2026-09-22: Re-reviewed the measured-run recovery how-to. It now permits retrying finalisation only for the same completed ordinary job; byte-identical partial evidence is reused, conflicts require diagnosis, and inspection alone never proves completion. Thirty-seven focused tests passed locally."
     ]
   },
   {

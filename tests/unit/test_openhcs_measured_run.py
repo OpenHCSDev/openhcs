@@ -14,6 +14,7 @@ import benchmark.openhcs_measured_run as measured_run
 from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import (
     MeasuredPipelineRunArtifact,
+    retain_matching_measured_artifacts,
     write_new_measured_artifact,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
@@ -259,6 +260,39 @@ def test_measured_evidence_publication_is_exclusive_under_concurrent_writers(
     assert not tuple(tmp_path.glob(".*.pending"))
 
 
+def test_partial_measured_evidence_recovery_rejects_symlink(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "run"
+    output_dir.mkdir()
+    outside = tmp_path / "outside.py"
+    outside.write_text("matching\n", encoding="utf-8")
+    MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(output_dir).symlink_to(outside)
+
+    with pytest.raises(FileExistsError, match="different content"):
+        retain_matching_measured_artifacts(
+            output_dir,
+            {
+                MeasuredPipelineRunArtifact.RESULTS_SUMMARY: "{}\n",
+                MeasuredPipelineRunArtifact.PIPELINE_SOURCE: "matching\n",
+                MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE: "config\n",
+            },
+        )
+
+    assert outside.read_text(encoding="utf-8") == "matching\n"
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir).exists()
+
+
+def test_partial_measured_evidence_requires_the_declared_artifact_set(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="every pre-receipt artifact"):
+        retain_matching_measured_artifacts(
+            tmp_path,
+            {MeasuredPipelineRunArtifact.PIPELINE_SOURCE: "pipeline_steps = []\n"},
+        )
+
+
 def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> None:
     observation_path = tmp_path / "outcomes.pkl.gz"
     ZMQRuntimeExecutionOutcomeExport.from_execution(
@@ -340,6 +374,39 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
         )
         == completion.receipt
     )
+
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+    config_path = MeasuredPipelineRunArtifact.GLOBAL_CONFIG_SOURCE.path_in(tmp_path)
+    pipeline_path = MeasuredPipelineRunArtifact.PIPELINE_SOURCE.path_in(tmp_path)
+    pipeline_snapshot = pipeline_path.read_bytes()
+    receipt_path.unlink()
+    config_path.unlink()
+    recovered = measured_run.retain_measured_openhcs_completion(
+        submission=submission,
+        execution_id="execution-1",
+        results_summary={"well_count": 1},
+        endpoint_provenance=endpoint,
+        phase_timing=PhaseTimingTrace(
+            run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
+        ),
+        compile_artifact_id="compile-1",
+        expected_axis_count=1,
+    )
+    assert pipeline_path.read_bytes() == pipeline_snapshot
+    assert config_path.is_file()
+    assert MeasuredPipelineRunReceipt.read(receipt_path) == recovered.receipt
+    with pytest.raises(FileExistsError, match="Measured run evidence already exists"):
+        measured_run.retain_measured_openhcs_completion(
+            submission=submission,
+            execution_id="execution-1",
+            results_summary={"well_count": 1},
+            endpoint_provenance=endpoint,
+            phase_timing=PhaseTimingTrace(
+                run_id="outcome-run", pipeline_name="empty", tool="OpenHCS"
+            ),
+            compile_artifact_id="compile-1",
+            expected_axis_count=1,
+        )
 
 
 def test_measured_run_refuses_to_reuse_an_unowned_server(
