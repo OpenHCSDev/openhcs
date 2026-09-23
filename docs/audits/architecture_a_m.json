@@ -2169,7 +2169,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "9c5e6a2a74d5caefd195679936108317e591fd7ecf623e236115be5a59fa750e",
+    "source_sha256": "c3dd2d14cab67d71877fbeb0bf17c94b23f2db3c2717b9566f3d990332316bcb",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2199,8 +2199,13 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "a184bea76225924c08a18ab18310d72dafec2388a987341db94505fba2c8d608",
-        "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
+        "sha256": "5e4763151313885d5073fecec9baab8bc6387b3f7609816816d600096b3e7731",
+        "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt."
+      },
+      {
+        "path": "openhcs/runtime/zmq_execution_observation.py",
+        "sha256": "6606742566e153f97f306627b65d3f8afa4a097a2db532657253a338cdb2529a",
+        "role": "Declares ordinary value and outcome exports, their producing execution identity, and exclusive evidence-file creation."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
@@ -2229,13 +2234,13 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "1001e42e59b4d629069d293c90b83d4ff55033a76d8d2613d8fc00d8bf450a62",
+        "sha256": "ae14197a169c6b36b10aa591dd5c475d224f64a84bbe0be3f4e98804af334534",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "77a17cdf454822f0773787b0f78b07a495e5345dd6e8a5d55d635c79b9a2e1d6",
-        "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
+        "sha256": "a2397abb4f53561327f7f2919a2aa1da162c4367d7b35aff88b4787c9436bbf8",
+        "role": "Proves an ordinary non-CellProfiler run validates its observation and rejects mismatched execution identity before writing a round-trippable completed-run receipt."
       }
     ],
     "findings": [
@@ -2252,7 +2257,8 @@
       "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed.",
       "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof.",
       "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
-      "2026-09-22: Re-read this explanation against the OpenHCS adapter's strict Boolean and finite timeout decoding. These checks reject invalid benchmark requests before execution; they do not alter the equivalence policy or make outcome-only evidence comparable values. Forty-six affected adapter, comparison, and manifest tests passed."
+      "2026-09-22: Re-read this explanation against the OpenHCS adapter's strict Boolean and finite timeout decoding. These checks reject invalid benchmark requests before execution; they do not alter the equivalence policy or make outcome-only evidence comparable values. Forty-six affected adapter, comparison, and manifest tests passed.",
+      "2026-09-22: Re-read the complete explanation against the ordinary value/outcome export declaration and shared finaliser. Added the execution-ID and exclusive-file evidence boundary without implying outcome-only value equivalence. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate."
     ]
   },
   {

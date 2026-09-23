@@ -114,10 +114,13 @@ receipt; that is server provenance, not proof of a remote worker environment.
 The CellProfiler adapter prepares one such submission and then applies its
 optional native-reference equivalence policy. It does not own a second execution
 engine.
-An agent can finalize the same receipt after a normal headless job completes:
+An agent can finalise the same receipt after a normal headless job completes:
 the execution service supplies the exact submission, endpoint handshake and
 server completion record, while the benchmark extension validates and retains
-the observation. It records the server's start/end time as
+the observation. Both ordinary export scopes carry the producing server
+execution ID. The shared finaliser rejects an export from a different job
+before writing a success receipt; the runtime export writer also refuses to
+replace an existing file. It records the server's start/end time as
 ``SERVER_PIPELINE_JOB`` and retains the submitted compile-artifact identity,
 because an ordinary execution request without one may include inline
 compilation. The synchronous wrapper may additionally record client submit/wait

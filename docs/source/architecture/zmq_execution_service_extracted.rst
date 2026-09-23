@@ -69,6 +69,9 @@ auxiliary declaration carries it and its typed value-or-outcome scope to the
 existing execution server. Outcome-only export does not require runtime array
 values to return to the parent when the compiled plan does not need them. The
 benchmark layer need not submit a second kind of job to collect that evidence.
+Both export scopes carry the producing server execution ID, and the ordinary
+export writer will not replace an existing file. The benchmark finaliser
+checks that ID against the completed ordinary job before retaining its receipt.
 The server-owned observation also carries a startup snapshot of its Python
 interpreter and installed distribution versions. Benchmark receipts project
 that observation without treating the client environment as the server's.

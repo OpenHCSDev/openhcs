@@ -1481,7 +1481,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "d3ce13a7e2ac102348dd680440c95c1dcf5400206efffadfd10743f807490796",
+        "sha256": "a084cf367716462972958320a95617135094a400549df80d718e3372c71cb361",
         "role": "Releases execution-session process resources when the execution server stops."
       },
       {
@@ -1570,7 +1570,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/viewer_streaming_service.py`, `openhcs/runtime/viewer_protocol.py`, `openhcs/runtime/viewer_controls.py`, `openhcs/runtime/napari_viewer_server.py`, `openhcs/agent/services/viewer_window_service.py`, `openhcs/core/orchestrator/compiled_plate_execution.py`, `tests/unit/test_viewer_protocol.py`, `tests/unit/test_viewer_result_element_selection.py`, `tests/unit/test_napari_streaming_handlers.py`, `tests/unit/test_orchestrator_lane_planning.py`, `openhcs/runtime/napari_streaming_handlers.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
-      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Re-read the complete viewer-streaming explanation against the execution-server delta that attaches execution identity to observation exports. The change does not alter compiled viewer routing, readiness, settlement, or process ownership, so no viewer prose change was needed; six live ZMQ integration tests passed locally."
     ]
   },
   {
@@ -1939,7 +1940,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_execution_service_extracted.rst",
-    "source_sha256": "01faa495c619b762f576ecbc3ca07b88436465abf929bb8d45774ad0ec8e18ad",
+    "source_sha256": "2b4e4a04505fa38d57d6bd79792a0c7c0d45d555e9d740a607fb91465610ac0b",
     "audience": [
       "OpenHCS contributors following the former local ZMQ execution-service URL"
     ],
@@ -1953,8 +1954,13 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "d3ce13a7e2ac102348dd680440c95c1dcf5400206efffadfd10743f807490796",
+        "sha256": "a084cf367716462972958320a95617135094a400549df80d718e3372c71cb361",
         "role": "OpenHCS compiled-execution adapter over the generic execution server."
+      },
+      {
+        "path": "openhcs/runtime/zmq_execution_observation.py",
+        "sha256": "6606742566e153f97f306627b65d3f8afa4a097a2db532657253a338cdb2529a",
+        "role": "Owns the ordinary value/outcome export schemas, producing execution identity, and exclusive evidence-file creation."
       },
       {
         "path": "openhcs/core/compiled_execution.py",
@@ -2183,7 +2189,8 @@
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `tests/unit/agent/test_agent_services.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
       "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
-      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Re-read the complete reference against the ordinary export schema and server adapter. Added the source-owned execution-ID and exclusive-file facts; the benchmark finaliser checks job identity without duplicating lifecycle state. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains separate."
     ]
   },
   {
