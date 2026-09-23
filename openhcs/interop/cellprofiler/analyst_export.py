@@ -611,6 +611,9 @@ class CPATableRowProjection:
         tuple[Mapping[str, Any], ...],
     ]:
         projected_rows = table.rows
+        field_projection_cache: dict[
+            tuple[MeasurementSubject, str], FieldSpec | None
+        ] = {}
         if table.subject.scope is not MeasurementScope.EXPERIMENT:
             if scope is None:
                 raise ValueError(
@@ -629,7 +632,12 @@ class CPATableRowProjection:
         ):
             return {
                 table.subject: tuple(
-                    self._project_runtime_row(table, row, subject=table.subject)
+                    self._project_runtime_row(
+                        table,
+                        row,
+                        subject=table.subject,
+                        field_projection_cache=field_projection_cache,
+                    )
                     for row in projected_rows
                 )
             }
@@ -660,7 +668,12 @@ class CPATableRowProjection:
                 else MeasurementSubject(table.subject.scope, subject_name)
             )
             rows_by_subject[subject] = tuple(
-                self._project_runtime_row(table, row, subject=subject)
+                self._project_runtime_row(
+                    table,
+                    row,
+                    subject=subject,
+                    field_projection_cache=field_projection_cache,
+                )
                 for row in subject_rows
             )
         return rows_by_subject
@@ -794,14 +807,18 @@ class CPATableRowProjection:
         row: Mapping[str, Any],
         *,
         subject: MeasurementSubject,
+        field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
     ) -> Mapping[str, Any]:
         projected_row: dict[str, Any] = {}
         for field_name, value in row.items():
-            field_spec = self._project_measurement_field(
-                table,
-                field_name,
-                subject=subject,
-            )
+            cache_key = (subject, field_name)
+            if cache_key not in field_projection_cache:
+                field_projection_cache[cache_key] = self._project_measurement_field(
+                    table,
+                    field_name,
+                    subject=subject,
+                )
+            field_spec = field_projection_cache[cache_key]
             if field_spec is None:
                 continue
             if field_spec.name in projected_row:
