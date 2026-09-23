@@ -41,13 +41,11 @@ from benchmark.contracts.tool_adapter import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
     MaterializationBackend,
     PipelineConfig,
-    VFSConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
@@ -315,13 +313,17 @@ class OpenHCSAdapter(ToolAdapter):
 
         return replace(
             self.global_config,
-            analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
+            analysis_consolidation_config=replace(
+                self.global_config.analysis_consolidation_config,
+                enabled=False,
+            ),
             path_planning_config=replace(
                 self.global_config.path_planning_config,
                 global_output_folder=request.output_dir,
                 output_dir_suffix=output_suffix,
             ),
-            vfs_config=VFSConfig(
+            vfs_config=replace(
+                self.global_config.vfs_config,
                 materialization_backend=MaterializationBackend.DISK,
             ),
             compilation_debug_config=compilation_debug_config,

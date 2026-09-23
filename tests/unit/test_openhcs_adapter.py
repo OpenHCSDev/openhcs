@@ -31,11 +31,15 @@ from benchmark.cellprofiler_reference_exports import (
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
+from openhcs.constants.constants import Backend
 from openhcs.core.config import (
+    AnalysisConsolidationConfig,
     CompilationDebugConfig,
     GlobalPipelineConfig,
+    MaterializationBackend,
     PathPlanningConfig,
     PipelineConfig,
+    VFSConfig,
     WellFilterConfig,
 )
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -131,6 +135,11 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
             well_filter=0,
             sub_dir="reviewed-images",
         ),
+        vfs_config=VFSConfig(intermediate_backend=Backend.DISK),
+        analysis_consolidation_config=AnalysisConsolidationConfig(
+            metaxpress_style=False,
+            output_filename="custom-summary.csv",
+        ),
     )
     adapter = OpenHCSAdapter(global_config=base_config)
     request = OpenHCSRunRequest.from_pipeline_params(
@@ -152,7 +161,15 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     assert configured.path_planning_config.sub_dir == "reviewed-images"
     assert configured.path_planning_config.global_output_folder == request.output_dir
     assert configured.path_planning_config.output_dir_suffix == "_candidate"
+    assert configured.vfs_config.intermediate_backend is Backend.DISK
+    assert configured.vfs_config.materialization_backend is MaterializationBackend.DISK
+    assert configured.analysis_consolidation_config.enabled is False
+    assert configured.analysis_consolidation_config.metaxpress_style is False
+    assert (
+        configured.analysis_consolidation_config.output_filename == "custom-summary.csv"
+    )
     assert base_config.path_planning_config.global_output_folder is None
+    assert base_config.analysis_consolidation_config.enabled is True
 
 
 def _public_steps() -> list[FunctionStep]:
