@@ -26,6 +26,7 @@ from benchmark.adapters.cellprofiler import (
     NativeCellProfilerInputDomainStrategy,
 )
 from benchmark.adapters.cppipe_source import CPPipeSourceRequest, resolve_cppipe_source
+from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
 from benchmark.cellprofiler_comparison import load_comparison_cases
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
@@ -51,9 +52,6 @@ from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.interop.cellprofiler.measurement_dialect import (
-    cellprofiler_runtime_equivalence_policy,
-)
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -63,6 +61,7 @@ from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionClient,
 )
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.serialization.json import to_jsonable
 
 CASE_NAME = "cp_tutorial_translocation_final"
 WELL_COUNT = 8
@@ -244,7 +243,10 @@ def main(argv: list[str] | None = None) -> int:
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
     print("Native warm-up and observed batches complete.", flush=True)
 
-    policy = cellprofiler_runtime_equivalence_policy(compare_image_pixels=True)
+    policy = _strict_cellprofiler_runtime_equivalence_policy()
+    (root / "equivalence_policy.json").write_text(
+        json.dumps(to_jsonable(policy), indent=2, sort_keys=True)
+    )
     timing_observer = _ZMQProgressTimingObserver()
     port = DataControlPortPairAuthority.acquire(
         OPENHCS_ZMQ_CONFIG,
