@@ -30,7 +30,10 @@ retained here as a reproducible receipt of that condition.
 `report.json` and `strict_confirmation/report.json` contain per-batch file
 counts, full SHA-256 output inventories, differences, source hashes, and
 endpoint PID. The `candidate_evidence/` directories retain submitted Python
-sources and measured pipeline receipts. Full image/database outputs and
+sources and measured pipeline receipts. Captured source filenames end in
+`.py.txt`: their bytes are unchanged from the generated `.py` files, but they
+are immutable evidence rather than repository modules to format or import.
+Full image/database outputs and
 runtime observation pickles are intentionally not tracked. Both runs record
 `source_dirty=true`, so their source-tree provenance is useful but not a
 clean-checkout publication receipt. Absolute paths in the generated reports
