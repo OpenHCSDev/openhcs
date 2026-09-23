@@ -140,6 +140,10 @@ class CellProfilerMeasurementTableModule(ABC):
         source_metadata: ImagePayloadMetadata,
     ) -> MeasurementTable:
         """Build one canonical module-owned native measurement table."""
+        rows, source_provenance = cls.measurement_rows_and_source_provenance(
+            rows,
+            source_metadata,
+        )
         subject = (
             MeasurementSubject(MeasurementScope.OBJECT, object_name)
             if object_name is not None
@@ -154,10 +158,7 @@ class CellProfilerMeasurementTableModule(ABC):
             source_image_name=source_image_name,
             subject=subject,
             measurement_feature_owner=cls,
-            source_provenance=cls.measurement_source_provenance_for_rows(
-                rows,
-                source_metadata,
-            ),
+            source_provenance=source_provenance,
         )
 
     @classmethod
@@ -277,25 +278,35 @@ class CellProfilerMeasurementTableModule(ABC):
         )
 
     @staticmethod
-    def measurement_source_provenance_for_rows(
+    def measurement_rows_and_source_provenance(
         rows: ColumnarRows,
         source_metadata: ImagePayloadMetadata,
-    ) -> SourceImageProvenance:
+    ) -> tuple[ColumnarRows, SourceImageProvenance]:
+        """Keep row slice indexes local to the table's source-plane axis."""
         source_plane_count = source_metadata.source_provenance.source_plane_count
         if source_plane_count <= 1:
-            return source_metadata.source_provenance
-        slice_indices = MeasurementRowsAxisProjection.from_rows(
-            rows
-        ).present_axis_values(MeasurementRowAxisField.SLICE_INDEX.value)
+            return rows, source_metadata.source_provenance
+        row_projection = MeasurementRowsAxisProjection.from_rows(rows)
+        slice_indices = row_projection.present_axis_values(
+            MeasurementRowAxisField.SLICE_INDEX.value
+        )
         if len(slice_indices) != 1:
-            return source_metadata.source_provenance
+            return rows, source_metadata.source_provenance
         slice_index = slice_indices[0]
         if slice_index >= source_plane_count:
             raise ValueError(
                 f"Measurement slice_index {slice_index} exceeds source plane count "
                 f"{source_plane_count}."
             )
-        return source_metadata.for_source_plane(slice_index).source_provenance
+        projected_rows = row_projection.remap_runtime_slice_indices({slice_index: 0})
+        if not isinstance(projected_rows, ColumnarRows):
+            raise TypeError(
+                "Columnar measurement rows must remain columnar after projection."
+            )
+        return (
+            projected_rows,
+            source_metadata.for_source_plane(slice_index).source_provenance,
+        )
 
     @classmethod
     def clear_source_when_rows_declare_object_name(cls) -> bool:

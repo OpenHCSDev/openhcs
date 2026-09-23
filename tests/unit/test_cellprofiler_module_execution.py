@@ -5846,7 +5846,7 @@ def test_measurement_table_projects_source_metadata_from_runtime_slice_rows() ->
         source_metadata=source_metadata_value,
     )
 
-    assert table.rows.row_mappings()[0]["slice_index"] == 1
+    assert table.rows.row_mappings()[0]["slice_index"] == 0
     assert table.source_path == "/source/site2.tif"
     assert dict(table.source_component_metadata or {}) == {"well": "A01", "site": "2"}
     assert not table.source_image_provenance_planes.has_values
@@ -13537,13 +13537,13 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
     colocalization_feature = "Correlation_Correlation_First_Second"
     costes_feature = "Correlation_Costes_Hoechst_Mito"
     scoped_tables = tuple(
-        MeasurementTable(
+        CellProfilerModule.build_measurement_table(
             name="MeasureColocalization_measurements",
             rows=MeasurementSparseColumnarRows.from_rows(
                 (
                     *tuple(
                         {
-                            "slice_index": 0,
+                            "slice_index": site_index,
                             "object_name": "Children",
                             "object_label": object_label,
                             colocalization_feature: value,
@@ -13554,7 +13554,7 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
                         for object_label, value in enumerate(values, start=1)
                     ),
                     {
-                        "slice_index": 0,
+                        "slice_index": site_index,
                         "object_name": "OtherObjects",
                         "object_label": 1,
                         colocalization_feature: -100.0 - site_index,
@@ -13568,14 +13568,12 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
                     FieldSpec(costes_feature, float),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "image"),
-            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-                paths=(source_paths[site_index],),
-                component_metadata=(
-                    {
-                        "well": "A14",
-                        "site": str(site_index + 1),
-                    },
+            object_name=None,
+            source_image_name=None,
+            source_metadata=ImagePayloadMetadata(
+                source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                    paths=source_paths,
+                    component_metadata=source_metadata,
                 ),
             ),
         )

@@ -32,6 +32,7 @@ from benchmark.adapters.cellprofiler import (
 from benchmark.adapters.cppipe_source import CPPipeSourceRequest, resolve_cppipe_source
 from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
 from benchmark.cellprofiler_comparison import load_comparison_cases
+from benchmark.control import inspect_measured_pipeline_run
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
     cellprofiler_native_shard_equivalence,
@@ -321,11 +322,19 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
+    project_root = Path(__file__).resolve().parent.parent
+    source_commit = subprocess.check_output(
+        ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
+    ).strip()
+    source_dirty = bool(
+        subprocess.check_output(
+            ("git", "status", "--porcelain"), cwd=project_root, text=True
+        ).strip()
+    )
     root = args.output_dir.expanduser().resolve()
     if root.exists() and any(root.iterdir()):
         raise FileExistsError(f"Matched pilot output directory must be empty: {root}")
     root.mkdir(parents=True, exist_ok=True)
-    project_root = Path(__file__).resolve().parent.parent
     manifest = args.manifest.expanduser().resolve()
     start_method = well_throughput_start_method_from_manifest(manifest)
     (case,) = (
@@ -371,14 +380,8 @@ def main(argv: list[str] | None = None) -> int:
         "native_worker_sha256": _sha256(
             project_root / "benchmark/native_cellprofiler_batch_worker.py"
         ),
-        "source_commit": subprocess.check_output(
-            ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
-        ).strip(),
-        "source_dirty": bool(
-            subprocess.check_output(
-                ("git", "status", "--porcelain"), cwd=project_root, text=True
-            ).strip()
-        ),
+        "source_commit": source_commit,
+        "source_dirty": source_dirty,
         "native_job_count": args.native_jobs,
         "candidate_worker_count": args.openhcs_workers,
         "candidate_worker_start_method": start_method.value,
@@ -635,6 +638,12 @@ def main(argv: list[str] | None = None) -> int:
                 expected_axis_count=well_count,
                 require_owned_server=True,
             )
+            retained_evidence = inspect_measured_pipeline_run(evidence_dir)
+            if not retained_evidence.evidence_valid:
+                raise RuntimeError(
+                    "Measured OpenHCS evidence failed retained-file inspection: "
+                    f"{retained_evidence.warnings!r}"
+                )
             status = ExecutionStatusSnapshot.from_dict(
                 client.poll_status(completed.execution_id)
             )
