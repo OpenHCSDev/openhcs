@@ -2196,8 +2196,8 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "2a9460a6632e75116612845e7826cf56f9a7e40a9bc9c4223f3a39769a15f424",
-        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
+        "sha256": "0decc81edff276a5e6bfde481af49fb258348d804a35f6f81de28a8f809e486d",
+        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy, preserves caller-declared path-planning policy while selecting benchmark output location, and applies digest-bound reference-export comparisons."
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
@@ -2251,8 +2251,8 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "63a0a25f6aa685364528f895cb91597cf614146a457aee530f5a3101460908f3",
-        "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
+        "sha256": "861cd3abb2f58b59ee3230d1df0d2ae02a99303c5dfbc4dc0db43c27542bc639",
+        "role": "Proves validated reference-export comparisons and retention of the caller's main-flow output policy when the benchmark output location is selected."
       },
       {
         "path": "tests/unit/test_openhcs_measured_run.py",
@@ -2285,7 +2285,8 @@
       "2026-09-22: Re-reviewed the evidence boundary after making benchmark finaliser writes complete and exclusive per file. This prevents concurrent finalisers from replacing retained artifacts but is not a multi-file transaction; 34 focused wrapper/control tests passed locally.",
       "2026-09-22: Re-reviewed the explanation against receipt-free partial evidence handling. The control layer derives the unreceipted artifact list from the measured-artifact declarations and never infers completion from orphaned files; 35 focused tests passed locally.",
       "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed.",
-      "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending."
+      "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending.",
+      "2026-09-23: Re-read the complete Diátaxis explanation after the adapter began preserving caller-declared path-planning policy while choosing its output location. This changes output retention selection, not runtime equivalence or job ownership; no prose change was needed. Nineteen affected adapter and converted-CellProfiler tests passed locally. The pilot's proposed no-extra-main-flow policy still needs live validation."
     ]
   },
   {

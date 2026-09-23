@@ -41,10 +41,13 @@ from benchmark.contracts.tool_adapter import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import (
+    AnalysisConsolidationConfig,
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
+    MaterializationBackend,
     PipelineConfig,
+    VFSConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
@@ -300,6 +303,32 @@ class OpenHCSAdapter(ToolAdapter):
             raise ToolNotInstalledError("OpenHCS not installed")
         import openhcs  # noqa: F401
 
+    def _execution_global_config(
+        self,
+        request: OpenHCSRunRequest,
+        *,
+        output_suffix: str,
+        output_plate_root: Path,
+        compilation_debug_config: CompilationDebugConfig,
+    ) -> GlobalPipelineConfig:
+        """Select benchmark output paths without replacing declared path policy."""
+
+        return replace(
+            self.global_config,
+            analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
+            path_planning_config=replace(
+                self.global_config.path_planning_config,
+                global_output_folder=request.output_dir,
+                output_dir_suffix=output_suffix,
+            ),
+            vfs_config=VFSConfig(
+                materialization_backend=MaterializationBackend.DISK,
+            ),
+            compilation_debug_config=compilation_debug_config,
+            materialize_runtime_artifacts=request.materialize_runtime_artifacts,
+            materialization_results_path=output_plate_root / "results",
+        )
+
     def _run_converted_cppipe_pipeline(
         self,
         request: OpenHCSRunRequest,
@@ -308,13 +337,6 @@ class OpenHCSAdapter(ToolAdapter):
         from objectstate.lazy_factory import (
             ensure_global_config_context,
             rebuild_lazy_config_with_new_global_reference,
-        )
-
-        from openhcs.core.config import (
-            AnalysisConsolidationConfig,
-            MaterializationBackend,
-            PathPlanningConfig,
-            VFSConfig,
         )
 
         phase_timing = PhaseTimingTrace(
@@ -401,21 +423,11 @@ class OpenHCSAdapter(ToolAdapter):
                 ),
             )
 
-        global_config = replace(
-            self.global_config,
-            analysis_consolidation_config=AnalysisConsolidationConfig(
-                enabled=False,
-            ),
-            path_planning_config=PathPlanningConfig(
-                global_output_folder=request.output_dir,
-                output_dir_suffix=output_suffix,
-            ),
-            vfs_config=VFSConfig(
-                materialization_backend=MaterializationBackend.DISK,
-            ),
+        global_config = self._execution_global_config(
+            request,
+            output_suffix=output_suffix,
+            output_plate_root=output_plate_root,
             compilation_debug_config=compilation_debug_config,
-            materialize_runtime_artifacts=request.materialize_runtime_artifacts,
-            materialization_results_path=output_plate_root / "results",
         )
         ensure_global_config_context(GlobalPipelineConfig, global_config)
         pipeline_config = rebuild_lazy_config_with_new_global_reference(

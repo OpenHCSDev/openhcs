@@ -16,6 +16,7 @@ from zmqruntime import (
 
 from benchmark.adapters.openhcs import (
     ZMQ_RESULTS_SUMMARY_FILENAME,
+    OpenHCSAdapter,
     OpenHCSRunRequest,
     _execute_pipeline_via_zmq_server,
     _openhcs_execution_watchdog,
@@ -30,7 +31,13 @@ from benchmark.cellprofiler_reference_exports import (
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig, WellFilterConfig
+from openhcs.core.config import (
+    CompilationDebugConfig,
+    GlobalPipelineConfig,
+    PathPlanningConfig,
+    PipelineConfig,
+    WellFilterConfig,
+)
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.runtime_execution_validation import (
@@ -114,6 +121,38 @@ def test_openhcs_benchmark_request_decodes_legacy_options_once(tmp_path: Path) -
             metrics=(),
             output_dir=tmp_path / "outputs",
         )
+
+
+def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
+    tmp_path: Path,
+) -> None:
+    base_config = GlobalPipelineConfig(
+        path_planning_config=PathPlanningConfig(
+            well_filter=0,
+            sub_dir="reviewed-images",
+        ),
+    )
+    adapter = OpenHCSAdapter(global_config=base_config)
+    request = OpenHCSRunRequest.from_pipeline_params(
+        dataset_path=tmp_path,
+        pipeline_name="pipeline",
+        pipeline_params={"cppipe_path": str(tmp_path / "pipeline.cppipe")},
+        metrics=(),
+        output_dir=tmp_path / "evidence",
+    )
+
+    configured = adapter._execution_global_config(
+        request,
+        output_suffix="_candidate",
+        output_plate_root=tmp_path / "candidate-plate",
+        compilation_debug_config=CompilationDebugConfig(),
+    )
+
+    assert configured.path_planning_config.well_filter == 0
+    assert configured.path_planning_config.sub_dir == "reviewed-images"
+    assert configured.path_planning_config.global_output_folder == request.output_dir
+    assert configured.path_planning_config.output_dir_suffix == "_candidate"
+    assert base_config.path_planning_config.global_output_folder is None
 
 
 def _public_steps() -> list[FunctionStep]:
