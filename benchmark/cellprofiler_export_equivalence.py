@@ -22,19 +22,20 @@ from openhcs.core.equivalence.report import (
     RuntimeEquivalenceReport,
 )
 from openhcs.core.equivalence.tables import RuntimeTableSnapshot
-from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementSnapshot,
     runtime_measurement_equivalence,
 )
-from openhcs.core.runtime_tabular_values import (
-    FieldSpec,
-)
+from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
+from openhcs.core.runtime_tabular_values import (
+    FieldSpec,
+)
 from openhcs.interop.cellprofiler.analyst_export import (
+    CellProfilerRelationshipProjectionName,
     CPAExperimentPropertyColumn,
     CPAPropertyName,
 )
@@ -355,6 +356,15 @@ def _sqlite_table_value_differences(
     subject: MeasurementSubject | None,
     policy: RuntimeEquivalencePolicy,
 ) -> tuple[RuntimeEquivalenceDifference, ...]:
+    # A byte-for-byte equal multiset of normalized rows is already a stronger
+    # proof than tolerance-based semantic matching. Large object and relationship
+    # exports otherwise pay the cost of projecting every unchanged row.
+    if (
+        reference_table.header == candidate_table.header
+        and reference_table.column_context == candidate_table.column_context
+        and Counter(reference_table.rows) == Counter(candidate_table.rows)
+    ):
+        return ()
     if subject is None:
         return runtime_table_differences((reference_table,), (candidate_table,), policy)
     return runtime_measurement_equivalence(
@@ -506,10 +516,18 @@ def _declared_sqlite_partition_tables(
     for path in properties_paths:
         properties = _read_cpa_properties(path)
         database_name = Path(properties[CPAPropertyName.SQLITE_FILE.value]).name
+        image_table = properties[CPAPropertyName.IMAGE_TABLE.value]
+        dialect = CellProfilerDatabaseColumnDialect.from_image_table(image_table)
         names_by_database.setdefault(database_name, set()).update(
             (
-                properties[CPAPropertyName.IMAGE_TABLE.value],
+                image_table,
                 properties[CPAPropertyName.OBJECT_TABLE.value],
+                dialect.relationship_table_name(
+                    CellProfilerRelationshipProjectionName.ROWS.value
+                ),
+                dialect.relationship_table_name(
+                    CellProfilerRelationshipProjectionName.VIEW.value
+                ),
             )
         )
     return {

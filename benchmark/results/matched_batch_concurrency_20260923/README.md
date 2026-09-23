@@ -68,6 +68,7 @@ env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
   NPY_DISABLE_CPU_FEATURES=AVX512_SKX,X86_V4 PYTHONHASHSEED=0 \
   .venv/bin/python -m benchmark.matched_cellprofiler_batch \
   --manifest benchmark/manifests/official30_portable_axis1.json \
+  --case cp_tutorial_translocation_final --well-count 8 \
   --output-dir /tmp/openhcs-matched-reproduction \
   --native-python .venv-cellprofiler39/bin/python \
   --native-jobs 2 --openhcs-workers 2 --repetitions 3

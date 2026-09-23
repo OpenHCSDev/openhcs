@@ -82,13 +82,12 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 from openhcs.serialization.json import to_jsonable
 
-CASE_NAME = "cp_tutorial_translocation_final"
-WELL_COUNT = 8
-
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--case", required=True)
+    parser.add_argument("--well-count", type=int, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--openhcs-workers", type=int, default=1)
@@ -277,13 +276,18 @@ def _candidate_pipeline_config(
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    if args.repetitions < 1 or args.openhcs_workers < 1 or args.native_jobs < 1:
-        raise ValueError("Repetitions and worker counts must be positive.")
-    if WELL_COUNT % args.native_jobs or (
+    if (
+        args.repetitions < 1
+        or args.well_count < 1
+        or args.openhcs_workers < 1
+        or args.native_jobs < 1
+    ):
+        raise ValueError("Repetitions, well count and worker counts must be positive.")
+    if args.well_count % args.native_jobs or (
         args.native_jobs > 1 and args.native_jobs != args.openhcs_workers
     ):
         raise ValueError(
-            "Native jobs must partition eight wells evenly and match the "
+            "Native jobs must partition the selected wells evenly and match the "
             "OpenHCS worker count in a concurrency pilot."
         )
     root = args.output_dir.expanduser().resolve()
@@ -294,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = args.manifest.expanduser().resolve()
     start_method = well_throughput_start_method_from_manifest(manifest)
     (case,) = (
-        case for case in load_comparison_cases(manifest) if case.name == CASE_NAME
+        case for case in load_comparison_cases(manifest) if case.name == args.case
     )
     prepared = prepare_cellprofiler_input_workspace(
         InputWorkspacePreparationRequest(
@@ -318,11 +322,13 @@ def main(argv: list[str] | None = None) -> int:
     }
     if None in source_wells:
         raise ValueError("Imported source metadata lacks a declared well identity.")
-    wells = tuple(sorted(source_wells)[:WELL_COUNT])
-    if len(wells) != WELL_COUNT:
-        raise ValueError(f"Expected eight genuine source wells, found {wells!r}.")
+    wells = tuple(sorted(source_wells)[: args.well_count])
+    if len(wells) != args.well_count:
+        raise ValueError(
+            f"Expected {args.well_count} genuine source wells, found {wells!r}."
+        )
     provenance = {
-        "case": CASE_NAME,
+        "case": case.name,
         "wells": wells,
         "manifest_sha256": _sha256(manifest),
         "cppipe_sha256": _sha256(case.cppipe_path),
@@ -394,7 +400,7 @@ def main(argv: list[str] | None = None) -> int:
             else None
         ),
         "output_root": str(root / "native"),
-        "expected_image_sets": WELL_COUNT,
+        "expected_image_sets": None,
         "repetitions": args.repetitions,
     }
     native_request_path = root / "native_request.json"
@@ -410,6 +416,20 @@ def main(argv: list[str] | None = None) -> int:
         repetitions=args.repetitions,
     )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
+    native_image_set_counts = {
+        observation["image_set_count"] for observation in native_report["observations"]
+    }
+    if len(native_image_set_counts) != 1:
+        raise RuntimeError("Native whole-batch image-set count changed between runs.")
+    (native_image_set_count,) = native_image_set_counts
+    if native_image_set_count < args.native_jobs or (
+        native_image_set_count % args.native_jobs
+    ):
+        raise RuntimeError(
+            "Native image sets cannot be partitioned evenly across requested jobs."
+        )
+    provenance["native_image_set_count"] = native_image_set_count
+    (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
     print("Native warm-up and observed batches complete.", flush=True)
 
     policy = _strict_cellprofiler_runtime_equivalence_policy()
@@ -419,7 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     shard_reports: tuple[dict[str, object], ...] = ()
     shard_equivalence: list[dict[str, object]] = []
     if args.native_jobs > 1:
-        partition_size = WELL_COUNT // args.native_jobs
+        partition_size = native_image_set_count // args.native_jobs
         request_paths = []
         for index in range(args.native_jobs):
             shard_request = {
@@ -572,12 +592,12 @@ def main(argv: list[str] | None = None) -> int:
                 client=client,
                 submission=submission,
                 phase_timing=PhaseTimingTrace(
-                    run_id=f"{CASE_NAME}-{repetition}",
-                    pipeline_name=CASE_NAME,
+                    run_id=f"{case.name}-{repetition}",
+                    pipeline_name=case.name,
                     tool="OpenHCS",
                 ),
                 timing_observer=timing_observer,
-                expected_axis_count=WELL_COUNT,
+                expected_axis_count=args.well_count,
                 require_owned_server=True,
             )
             status = ExecutionStatusSnapshot.from_dict(
@@ -596,14 +616,14 @@ def main(argv: list[str] | None = None) -> int:
             worker_evidence = _worker_axis_evidence(
                 tuple(axis_events),
                 execution_id=completed.execution_id,
-                expected_axes=WELL_COUNT,
+                expected_axes=args.well_count,
                 expected_workers=args.openhcs_workers,
             )
             _write_progress_diagnostics(
                 evidence_dir,
-                case_name=CASE_NAME,
+                case_name=case.name,
                 worker_count=args.openhcs_workers,
-                well_count=WELL_COUNT,
+                well_count=args.well_count,
                 events=progress_events,
             )
             if (
@@ -647,6 +667,30 @@ def main(argv: list[str] | None = None) -> int:
             native_output_files = frozenset(
                 path for path in native_root.rglob("*") if path.is_file()
             )
+            supported_native_outputs = frozenset(
+                image.path for image in native_images
+            ) | frozenset(
+                path
+                for path in native_output_files
+                if path.suffix.lower() in {".db", ".properties"}
+            )
+            supported_candidate_outputs = frozenset(
+                image.path for image in candidate_images
+            ) | frozenset(
+                path
+                for path in actual_output_files
+                if path.suffix.lower() in {".db", ".properties"}
+            )
+            if (
+                not any(path.suffix.lower() == ".db" for path in native_output_files)
+                or native_output_files != supported_native_outputs
+                or actual_output_files != supported_candidate_outputs
+            ):
+                raise RuntimeError(
+                    "This matched pilot can prove only SQLite, CPA properties "
+                    "and image outputs; another export type requires its own "
+                    "value comparison before timing can be reported."
+                )
             result = {
                 "repetition": repetition,
                 "execution_id": completed.execution_id,
@@ -712,8 +756,9 @@ def main(argv: list[str] | None = None) -> int:
                 flush=True,
             )
             if (
-                len(native_images) != WELL_COUNT
-                or len(candidate_images) != WELL_COUNT
+                not native_output_files
+                or not actual_output_files
+                or len(native_images) != len(candidate_images)
                 or len(native_output_files) != len(actual_output_files)
                 or (
                     declared_output_files is not None

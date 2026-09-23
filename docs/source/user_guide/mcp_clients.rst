@@ -186,7 +186,11 @@ an exact case. On the expert ``full`` MCP surface, grant the manifest path under
 ``OPENHCS_AGENT_READ_ROOTS`` and call ``openhcs_list_benchmark_cases`` with
 ``manifest_path`` and optional ``case_names``. Both routes use the same case
 selection and report missing dataset or ``.cppipe`` sources. They do not acquire
-data or submit work.
+data or submit work. Grant the manifest **and its resolved dataset and CPPipe
+roots**; the tool rejects a case whose declared source falls outside the MCP
+read policy, even when the manifest itself is readable. For the official
+corpus, this may mean granting the OpenHCS benchmark dataset cache separately
+from the checkout.
 
 ``openhcs_inspect_benchmark_run`` is an expert-only local capability, so select
 the ``full`` surface and restart the client before using it. Grant the result

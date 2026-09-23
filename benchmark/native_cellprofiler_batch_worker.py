@@ -37,7 +37,7 @@ class NativeBatchRequest:
     pipeline_path: str
     input_dir: str
     output_root: str
-    expected_image_sets: int
+    expected_image_sets: Optional[int]
     repetitions: int
     file_list_path: Optional[str] = None
     first_image_set: int = 1
@@ -90,7 +90,9 @@ class NativeBatchReport:
 
 def main() -> None:
     request = NativeBatchRequest(**json.loads(Path(sys.argv[1]).read_text()))
-    if request.expected_image_sets < 1 or request.repetitions < 1:
+    if (
+        request.expected_image_sets is not None and request.expected_image_sets < 1
+    ) or request.repetitions < 1:
         raise ValueError("Batch count and repetitions must be positive")
     if request.first_image_set < 1 or (
         request.last_image_set is not None
@@ -140,7 +142,10 @@ def main() -> None:
                     raise RuntimeError(
                         "Native CellProfiler batch did not complete: " + str(status)
                     )
-                if clock.image_set_count != request.expected_image_sets:
+                if clock.image_set_count < 1 or (
+                    request.expected_image_sets is not None
+                    and clock.image_set_count != request.expected_image_sets
+                ):
                     raise RuntimeError(
                         "Native image-set count differs from requested workload"
                     )
