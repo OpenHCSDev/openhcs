@@ -40,6 +40,7 @@ from openhcs.core.config import (
     LazyWellFilterConfig,
     MaterializationBackend,
     MultiprocessingStartMethod,
+    WellFilterConfig,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
@@ -56,6 +57,7 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,
 )
+from openhcs.core.utils import WellFilterProcessor
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -2144,6 +2146,7 @@ def run_well_throughput_suite(
                 ),
                 mode=mode,
                 start_method=effective_start_method,
+                source_well_filter=case.well_filter_config,
                 native_execution_baseline=native_baselines.get(case.name),
                 max_memory_mb=max_memory_mb,
                 execution_port=execution_port,
@@ -2162,6 +2165,7 @@ def run_case_well_throughput(
     output_root: Path,
     mode: WellThroughputMode,
     start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
+    source_well_filter: WellFilterConfig | None = None,
     native_execution_baseline: NativeCellProfilerExecutionBaseline | None = None,
     max_memory_mb: float | None = None,
     execution_port: int | None = None,
@@ -2195,6 +2199,7 @@ def run_case_well_throughput(
     well_ids = _replicate_source_binding_workspace_wells(
         prepared.materialization.metadata_path,
         _synthetic_well_ids(mode.well_count),
+        source_well_filter=source_well_filter,
     )
 
     global_config = GlobalPipelineConfig(
@@ -2208,6 +2213,7 @@ def run_case_well_throughput(
         prepared.pipeline_config,
         well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
         path_planning_config=LazyPathPlanningConfig(
+            well_filter=0,
             global_output_folder=output_root,
             output_dir_suffix="_well_throughput",
         ),
@@ -3159,8 +3165,10 @@ def _deterministic_jitter(index: int, count: int) -> float:
 def _replicate_source_binding_workspace_wells(
     metadata_path: Path,
     well_ids: Iterable[str],
+    *,
+    source_well_filter: WellFilterConfig | None = None,
 ) -> tuple[str, ...]:
-    """Replicate typed source projections without copying source pixels."""
+    """Replicate the declared source-well scope without copying source pixels."""
 
     target_wells = tuple(dict.fromkeys(str(well_id) for well_id in well_ids))
     if not target_wells:
@@ -3194,6 +3202,27 @@ def _replicate_source_binding_workspace_wells(
     ):
         raise ValueError("OpenHCS image files must reference declared projections.")
 
+    available_source_wells = tuple(
+        dict.fromkeys(
+            projection.address.value_for(AllComponents.WELL)
+            for projection in source_projections.entries.values()
+            if projection.address is not None
+        )
+    )
+    if source_well_filter is None or source_well_filter.well_filter is None:
+        selected_source_wells = available_source_wells
+    else:
+        selected_source_wells = tuple(
+            WellFilterProcessor.resolve_filter_with_mode(
+                source_well_filter.well_filter,
+                source_well_filter.well_filter_mode,
+                list(available_source_wells),
+            )
+        )
+    if not selected_source_wells:
+        raise ValueError("Well-throughput source filter selected no source wells.")
+    selected_source_well_keys = set(selected_source_wells)
+
     parser = SourceSchemaFilenameParser()
     expanded_projection_paths = []
     expanded_image_files: list[str] = []
@@ -3208,6 +3237,11 @@ def _replicate_source_binding_workspace_wells(
             raise ValueError(
                 f"Source projection ref disagrees with workspace mapping: {virtual_path!r}"
             )
+        if (
+            projection.address.value_for(AllComponents.WELL)
+            not in selected_source_well_keys
+        ):
+            continue
         parsed = parser.parse_filename(Path(virtual_path).name)
         if parsed is None:
             raise ValueError(f"Cannot parse source-binding path {virtual_path!r}.")

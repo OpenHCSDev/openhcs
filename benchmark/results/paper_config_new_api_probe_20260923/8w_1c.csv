@@ -1,0 +1,2 @@
+case_name,mode_name,worker_count,well_count,compile_seconds,prepare_seconds,execute_seconds,total_seconds,wells_per_second,successful_wells,native_single_sample_execution_seconds,projected_native_execution_seconds,projected_execution_speedup,peak_memory_mb,status,memory_limit_mb,error_message,execution_route
+cp_tutorial_translocation_final,8w_1c,1,8,16.699655532836914,0.0,40.095343828201294,70.4549921862781,0.19952441446263777,8,,,,1379.90234375,success,,,ordinary-zmq-outcomes-v1

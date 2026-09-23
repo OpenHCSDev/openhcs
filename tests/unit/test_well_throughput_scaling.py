@@ -38,7 +38,11 @@ from benchmark.well_throughput_scaling import (
     write_well_throughput_csv,
 )
 from openhcs.constants.constants import AllComponents
-from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
+from openhcs.core.config import (
+    MultiprocessingStartMethod,
+    PipelineConfig,
+    WellFilterConfig,
+)
 from openhcs.core.orchestrator.execution_result import ExecutionResult
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -172,17 +176,20 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
         name="Example",
         dataset_path=tmp_path / "dataset",
         cppipe_path=tmp_path / "pipeline.cppipe",
+        well_filter_config=WellFilterConfig(well_filter=1),
     )
     monkeypatch.setattr(
         well_throughput_scaling,
         "load_comparison_cases",
         lambda _manifest_path: (case,),
     )
-    submitted: list[tuple[str, MultiprocessingStartMethod]] = []
+    submitted: list[tuple[str, MultiprocessingStartMethod, WellFilterConfig]] = []
 
     def fake_run_case_well_throughput(**kwargs):
         mode = kwargs["mode"]
-        submitted.append((mode.name, kwargs["start_method"]))
+        submitted.append(
+            (mode.name, kwargs["start_method"], kwargs["source_well_filter"])
+        )
         return WellThroughputResult(
             case_name="Example",
             mode_name=mode.name,
@@ -211,8 +218,8 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
     )
 
     assert submitted == [
-        ("8w_2c", MultiprocessingStartMethod.SPAWN),
-        ("12w_3c", MultiprocessingStartMethod.SPAWN),
+        ("8w_2c", MultiprocessingStartMethod.SPAWN, case.well_filter_config),
+        ("12w_3c", MultiprocessingStartMethod.SPAWN, case.well_filter_config),
     ]
     assert tuple(row.mode_name for row in rows) == ("8w_2c", "12w_3c")
 
@@ -377,6 +384,59 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
     }
     assert all(projection.ref == original.ref for projection in projections.values())
     assert set(updated[FIELDS.SOURCE_METADATA]) == set(projections)
+
+
+@pytest.mark.parametrize(
+    ("source_filter", "expected_source_well"),
+    ((1, "A01"), ("B01", "B01")),
+)
+def test_repeated_wells_use_manifest_source_well_scope(
+    tmp_path: Path,
+    source_filter: int | str,
+    expected_source_well: str,
+) -> None:
+    parser = SourceSchemaFilenameParser()
+    serializer = SourceProjectionMetadataSerializer(parser=parser)
+    sources = tuple(
+        SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values(well, 1, 1, 1, 1),
+            ref=SourcePixelRef("disk", f"/source/{well}.tif"),
+            source_metadata={"Well": well},
+        )
+        for well in ("A01", "B01")
+    )
+    entries = tuple(
+        (source, serializer.virtual_path(source, execution_anchor=True))
+        for source in sources
+    )
+    main = {
+        **serializer.projection_fields(entries),
+        FIELDS.IMAGE_FILES: [path for _source, path in entries],
+        FIELDS.WELLS: {"A01": None, "B01": None},
+    }
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    metadata_path.write_text(
+        json.dumps({FIELDS.SUBDIRECTORIES: {FIELDS.DEFAULT_SUBDIRECTORY: main}}),
+        encoding="utf-8",
+    )
+
+    target_wells = _replicate_source_binding_workspace_wells(
+        metadata_path,
+        ("W001", "W002"),
+        source_well_filter=WellFilterConfig(well_filter=source_filter),
+    )
+
+    assert target_wells == ("W001", "W002")
+    updated = json.loads(metadata_path.read_text(encoding="utf-8"))[
+        FIELDS.SUBDIRECTORIES
+    ][FIELDS.DEFAULT_SUBDIRECTORY]
+    projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        updated
+    ).entries
+    assert len(projections) == 2
+    assert {projection.ref for projection in projections.values()} == {
+        SourcePixelRef("disk", f"/source/{expected_source_well}.tif")
+    }
 
 
 def test_requested_well_throughput_axes_override_manifest_modes(
@@ -560,6 +620,7 @@ def test_rerun_missing_memory_filters_completed_rows(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
+            "well_filter_config": None,
         },
     )()
     completed = WellThroughputResult(
@@ -652,6 +713,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
+            "well_filter_config": None,
         },
     )()
     existing_error = WellThroughputResult(
@@ -771,7 +833,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     monkeypatch.setattr(
         well_throughput_scaling,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, well_ids: well_ids,
+        lambda _path, well_ids, *, source_well_filter: well_ids,
     )
     submissions = []
 
@@ -827,6 +889,8 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert submissions[0].plate_id == str(tmp_path / "input")
     assert submissions[0].execution_plate_id == str(tmp_path / "plate")
     assert submissions[0].pipeline_document.pipeline_steps == []
+    pipeline_config = submissions[0].pipeline_document.pipeline_config
+    assert pipeline_config.path_planning_config.well_filter == 0
     assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].config_params["runtime_observation_export_scope"] == (
         ZMQRuntimeObservationExportScope.OUTCOMES.value
@@ -845,6 +909,7 @@ def test_run_suite_passes_memory_limit_to_case_runner(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
+            "well_filter_config": None,
         },
     )()
     monkeypatch.setattr(

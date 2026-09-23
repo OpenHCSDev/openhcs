@@ -414,8 +414,11 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
 def test_measured_run_refuses_to_reuse_an_unowned_server(
     monkeypatch, tmp_path: Path
 ) -> None:
+    selected_ports = []
+
     class AttachedClient:
-        def __init__(self, **_kwargs):
+        def __init__(self, **kwargs):
+            selected_ports.append(kwargs["port"])
             self.connected_endpoint = SimpleNamespace(
                 application=OPENHCS_ENDPOINT_APPLICATION,
                 process_identity=None,
@@ -433,6 +436,11 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
             return None
 
     monkeypatch.setattr(measured_run, "ZMQExecutionClient", AttachedClient)
+    monkeypatch.setattr(
+        measured_run.DataControlPortPairAuthority,
+        "acquire",
+        lambda *_args, **_kwargs: SimpleNamespace(data_port=5555),
+    )
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
         pipeline_document=PipelineDocumentAuthority.from_values(
@@ -454,3 +462,4 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
             timing_observer=measured_run._ZMQProgressTimingObserver(),
             require_owned_server=True,
         )
+    assert selected_ports == [5555]

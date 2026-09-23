@@ -15,6 +15,7 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
+from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import ExecutionStatusSnapshot, PongResponse
 
 from benchmark.contracts.measured_run_receipt import (
@@ -48,6 +49,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 from .timing import (
     BenchmarkPhase,
@@ -249,8 +251,14 @@ def execute_measured_openhcs_pipeline(
     if not observation_export_path.is_absolute():
         raise ValueError("Measured OpenHCS observation export path must be absolute.")
     pipeline_source = submission.pipeline_code()
+    client_port = execution_port
+    if client_port is None and require_owned_server:
+        client_port = DataControlPortPairAuthority.acquire(
+            OPENHCS_ZMQ_CONFIG,
+            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+        ).data_port
     client = ZMQExecutionClient(
-        port=execution_port,
+        port=client_port,
         persistent=False,
         progress_callback=timing_observer,
     )
