@@ -49,3 +49,9 @@ claim. Archived v1 receipts remain readable, but inspection explicitly marks
 those two artifacts unverified because v1 did not record their digests. The
 receipt still does not certify the image or table files under its output roots;
 their value and output-policy checks belong to the comparison evidence.
+I rechecked the affected benchmark claims in the MCP distribution,
+measurement-equivalence, MCP client, extension, module-structure, onboarding,
+research-impact and README pages before refreshing their authority hashes.
+Only the pages that described measured evidence needed prose changes. The
+documentation validator passed 156 files and 155 audited sources after that
+review; this does not replace the installed-client or CI checks.

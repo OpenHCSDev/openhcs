@@ -110,7 +110,9 @@ claiming value equivalence. The expert-only
 completed ordinary job, validates the selected export, and retains the submitted
 source, server result and timing receipt. It does not create another execution
 or status authority. ``openhcs_inspect_measured_pipeline_run`` checks that
-receipt and bounded source/output evidence; ``openhcs_report_measured_pipeline_run``
+receipt, submitted-source digests, and retained observation/summary digests;
+archived receipts without the latter digests remain readable but unverified on
+those artifacts. ``openhcs_report_measured_pipeline_run``
 renders the same inspection rather than loading a second model. Neither tool
 reconstructs live job status or reads the pickled runtime observation.
 

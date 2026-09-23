@@ -2707,7 +2707,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "ba3d2ded5b74b0cefbcd36bd934bb3b7fd9a072d3db6b82712c8460301a9a44e",
+        "sha256": "bb0d9763cfdd3934f0aad2ec679ded1eed840ee4a996e2f706d06a5b151a0b1a",
         "role": "Proves registered CLI derivation and declaration-derived receipt construction."
       }
     ],

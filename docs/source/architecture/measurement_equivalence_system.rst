@@ -122,7 +122,9 @@ than required independently on every image axis. Archived observation exports
 keep their earlier all-axis expectation when read.
 
 A typed completed-run receipt derives execution identity, source/configuration
-digests, and output references from those same authorities;
+digests, runtime-observation and execution-summary digests, and output references
+from those same authorities. Archived receipts without the latter two digests
+remain readable, but inspection cannot verify those retained files;
 it does not become a second job-status store. The ordinary server's runtime
 observation supplies its Python and installed-distribution snapshot to the
 receipt; that is server provenance, not proof of a remote worker environment.
@@ -212,7 +214,8 @@ recorded invocation, or a compatibility-matrix report is not a durable parity
 receipt. If Napari cases are closed by targeted reruns, report that topology
 explicitly rather than describing it as one uninterrupted all-case run.
 The separate single-pipeline measured-run receipt retains the submitted pipeline
-and global-configuration source documents alongside their digests. It is still
+and global-configuration source documents alongside their digests, and checks
+the retained runtime observation and execution summary by digest. It is still
 not a native-reference comparison or a suite-level publication receipt by itself.
 
 Extension rule

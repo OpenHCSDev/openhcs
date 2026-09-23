@@ -355,7 +355,9 @@ benchmark, and a recorded receipt is provenance rather than a scientific parity
 claim.
 For a single ordinary measured pipeline, `openhcs-benchmark inspect-measured --output-dir PATH`
 and the expert MCP inspection/report tools read the same
-validated-run receipt and check retained source evidence. They do not create a
+validated-run receipt and check retained source, observation, and summary
+digests. Archived receipts without the latter two digests remain readable but
+cannot verify those files. These routes do not create a
 second pipeline runner or job-status system.
 `openhcs-benchmark run-measured --plate PLATE --pipeline-source-file PIPELINE.py
 --output-dir EVIDENCE --run-id ID --wait-timeout-ms 120000` submits that

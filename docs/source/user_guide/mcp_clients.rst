@@ -223,8 +223,10 @@ rerun a benchmark. Review the recorded command and scientific inputs, then run
 For one ordinary measured OpenHCS pipeline, use
 ``openhcs_inspect_measured_pipeline_run`` on its output directory. It checks the
 completed-run receipt, retained pipeline/configuration source digests, and the
-presence of declared observation and summary files without loading the runtime
-pickle. ``openhcs_report_measured_pipeline_run`` turns that same inspection into
+digests of declared observation and summary files without loading the runtime
+pickle into memory. Archived receipts without those two file digests remain
+readable, but inspection marks their integrity unverified.
+``openhcs_report_measured_pipeline_run`` turns that same inspection into
 a short report with evidence warnings. The local CLI equivalent is
 ``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
 Markdown. If ``unreceipted_artifacts`` is nonempty, preserve that directory
