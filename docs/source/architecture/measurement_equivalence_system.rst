@@ -124,7 +124,12 @@ replace an existing file. It records the server's start/end time as
 ``SERVER_PIPELINE_JOB`` and retains the submitted compile-artifact identity,
 because an ordinary execution request without one may include inline
 compilation. The synchronous wrapper may additionally record client submit/wait
-phases and an execution-specific interval from progress events.
+phases and an execution-specific interval from progress events. The completed
+server job, not progress events, supplies the execution-only duration. A missing
+progress event leaves that diagnostic interval absent; client wait time is not
+used to guess it. Server, progress, and client wait intervals overlap, so
+additive phase totals count the client submit/wait phases but not their nested
+server or progress observations.
 
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:
