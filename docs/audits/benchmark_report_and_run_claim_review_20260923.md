@@ -31,6 +31,13 @@ current-checkout MCP client discovered `openhcs_report_benchmark_run` on the
 expert `full` surface and invoked it against a historical Official30 directory.
 That directory has no current typed suite receipt, and the tool correctly
 reported the missing receipt instead of promoting its 30 JSONL lines to
-validated case outcomes. A fresh installed-wheel client, suite submission,
-cancellation, and matched-concurrency publication evidence remain separate
-gates for the active benchmark goal.
+validated case outcomes. A fresh Python 3.12 environment installed the
+`bc25b8896` OpenHCS wheel, the eight local foundation distributions, and its
+MCP dependencies from the offline cache. With no source checkout on its Python
+path, a new stdio client reported healthy packaged resources, discovered the
+six expert benchmark capabilities, and rendered the typed one-case corrected
+Official30 run as one successful equivalent observation with no evidence
+warnings. Its native timing cell was blank because that run used a cached
+reference, so this is a distribution/inspection proof, not performance
+evidence. Suite submission, cancellation, and matched-concurrency publication
+remain separate gates for the active benchmark goal.
