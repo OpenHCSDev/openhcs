@@ -120,6 +120,13 @@ Storage, paths, and persistence
   Read, intermediate, and persistent storage choices plus Zarr compression and
   chunking.
 
+``TiffConfig``
+  Optional lossless compression for disk-backed TIFF output, including saved
+  main-flow images and named image artifacts. The default is uncompressed;
+  enabling ``DEFLATE`` does not affect Zarr, other file formats, or viewer
+  streaming. The codec and level are resolved with the pipeline configuration
+  before execution.
+
 ``PathPlanningConfig``
   Output workspace/root placement, directory naming, and which processed wells
   seed the automatic main-flow output plate. ``well_filter=0`` keeps that

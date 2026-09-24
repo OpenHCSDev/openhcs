@@ -11,7 +11,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -21,7 +21,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
+        "sha256": "843e994d7b16592f43a15ce36c33a51ead534cf22df792838ce2b800621114b7",
         "role": "Owns execution orchestration, worker submission, progress handling, and cleanup of compiled bundles."
       },
       {
@@ -495,7 +495,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -674,7 +674,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -727,7 +727,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -843,7 +843,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -871,7 +871,7 @@
   },
   {
     "path": "docs/source/concepts/storage_system.rst",
-    "source_sha256": "fa377aa5280583609ca43d6190cc03aaabb1a7abed40dd4344d8e686866ce1f7",
+    "source_sha256": "e7e77ea48bfda5701e5c309561400ebc3d10a95aad8824c05c7561e7474882b4",
     "audience": [
       "pipeline authors",
       "storage integrators"
@@ -881,7 +881,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -891,7 +891,7 @@
       },
       {
         "path": "openhcs/core/steps/function_artifact_materialization.py",
-        "sha256": "5a219f74d1abfd59f915aae06cb3dc2befa1d1a83b82b59d6a8f98f3ac5865ba",
+        "sha256": "d25982897fb41b7bf392c3e85f4b5ac4f711c7219ead60833edd762e559cc8fb",
         "role": "Owns the rules that materialise function outputs through the configured storage backend."
       },
       {
@@ -900,13 +900,30 @@
         "role": "Declares the storage backend interface and lifecycle shared by local and remote materialisation backends."
       },
       {
+        "path": "external/PolyStore/src/polystore/config.py",
+        "sha256": "62c8acad3da3abed8ccf7f1166fc6a0d094be1c3e842cec6446780541df292a0",
+        "role": "Declares lossless disk-TIFF codec settings, defaults, and path-specific batching."
+      },
+      {
+        "path": "external/PolyStore/src/polystore/disk.py",
+        "sha256": "cf089b8c79f86099a7cea1b6cbe43ceaec6331196a44b43183f2e64b7746c219",
+        "role": "Applies TIFF codec settings in the disk writer without changing other formats."
+      },
+      {
         "path": "tests/unit/test_runtime_value_store.py",
         "sha256": "8900a7b83b59d0a40f9698dbafaaba778df982f9d7a0b628f80eab97335aeab0",
         "role": "Proves scoped typed runtime-value insertion, lookup, isolation, and cleanup."
+      },
+      {
+        "path": "tests/unit/test_tiff_output_compression.py",
+        "sha256": "458f576e545a033ed9e23b9dc349ab92c19d296ec7f0e269ea89884cd9b82942",
+        "role": "Proves configured main-flow and named-artifact disk-TIFF writes round-trip exactly."
       }
     ],
-    "findings": [],
-    "disposition": "keep",
+    "findings": [
+      "The storage explanation did not distinguish optional disk-TIFF compression from Zarr compression or semantic materialization."
+    ],
+    "disposition": "revise",
     "validation": [
       "Re-read docs/source/concepts/storage_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/config.py; openhcs/core/runtime_stores.py; openhcs/core/steps/function_artifact_materialization.py; external/PolyStore/src/polystore/base.py; tests/unit/test_runtime_value_store.py.",
@@ -917,7 +934,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-16: Re-read the complete explanation against runtime artifact materialization changes. Added the semantic-versus-filename identity boundary and confirmed that path completion does not mutate artifact metadata; 249 focused materialization and adjacent runtime tests passed.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 integrated-repair follow-up: re-read the complete page and the final owner/test changes in `openhcs/core/steps/function_artifact_materialization.py`. Scalar image materialization now selects the execution scope matching the complete source address, deduplicates equivalent repeated group records, and rejects conflicts; the documented separation of semantic source identity, filename completion, runtime records, and persistence remains accurate. Refreshed only these compared evidence hashes; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 integrated-repair follow-up: re-read the complete page and the final owner/test changes in `openhcs/core/steps/function_artifact_materialization.py`. Scalar image materialization now selects the execution scope matching the complete source address, deduplicates equivalent repeated group records, and rejects conflicts; the documented separation of semantic source identity, filename completion, runtime records, and persistence remains accurate. Refreshed only these compared evidence hashes; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-24 PR #129: re-read the complete explanation against the changed config, materialization, PolyStore writer, and exact-roundtrip test authorities; added the disk-TIFF compression boundary without copying exact generated fields. Review scope is recorded in `docs/audits/pr129_tiff_compression_review_20260924.md`."
     ]
   },
   {
@@ -1264,7 +1282,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/configuration_reference.rst",
-    "source_sha256": "3a70946f59a595f5ebbdf4a176280d7ba497f630cec92c45cd2710d40a10f6f2",
+    "source_sha256": "ba3c4ef923c4f643c06accc8641c462b2f63a8e46694ef984dde96ef49a0d9c7",
     "audience": [
       "imaging scientists",
       "pipeline authors"
@@ -1274,7 +1292,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -1330,7 +1348,8 @@
     ],
     "findings": [
       "The configuration explanation now distinguishes source-document omission, which selects PipelineConfig(), from normal lazy-field inheritance.",
-      "The explanation did not tell agents that live field help projects accepted enum input strings, including member names for non-string values."
+      "The explanation did not tell agents that live field help projects accepted enum input strings, including member names for non-string values.",
+      "The practitioner configuration map did not name the new optional TIFF compression family or distinguish its output scope from Zarr and viewer streams."
     ],
     "disposition": "revise",
     "validation": [
@@ -1347,7 +1366,8 @@
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-24 PR #129: re-read the complete inheritance explanation against the new registered TIFF config and added its disk-output scope to the existing mental model; exact fields remain generated. Review scope is recorded in `docs/audits/pr129_tiff_compression_review_20260924.md`."
     ]
   },
   {
@@ -1461,7 +1481,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       }
     ],
@@ -1550,7 +1570,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/config.py",
-        "sha256": "241f728c991b9a4ac4d4440bba9bc08b5d89d23e7f8b3b9fcbdc18eb562a9bbc",
+        "sha256": "62c8acad3da3abed8ccf7f1166fc6a0d094be1c3e842cec6446780541df292a0",
         "role": "Owns the nominal Zarr compressor factories, Numcodecs creation, chunk strategy, and backend configuration."
       },
       {
@@ -2903,7 +2923,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -3085,7 +3105,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -3130,7 +3150,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -3240,7 +3260,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -3695,7 +3715,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {
@@ -3755,7 +3775,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the default directory filenames and replicate-local normalization method."
       },
       {
@@ -4048,7 +4068,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the supported OpenHCS configuration dataclasses, nested scopes, defaults, and field help metadata."
       },
       {

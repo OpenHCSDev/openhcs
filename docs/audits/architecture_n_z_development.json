@@ -220,7 +220,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
+        "sha256": "843e994d7b16592f43a15ce36c33a51ead534cf22df792838ce2b800621114b7",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
@@ -250,7 +250,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
         "role": "Owns explicit release of the context-local image-stack cache without discarding observations."
       },
       {
@@ -290,7 +290,7 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
+        "sha256": "843e994d7b16592f43a15ce36c33a51ead534cf22df792838ce2b800621114b7",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
@@ -512,7 +512,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -572,7 +572,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
         "role": "Owns the compiled multiprocessing-axis identity carried by each runtime context."
       },
       {
@@ -822,7 +822,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -1020,7 +1020,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "1372625f3d7dc04cf6822a1887871dfa9a149b2313df7d7acefd452a6ad0f932",
+        "sha256": "e79e734ce159f54eee10e7238b0b00a6a03e065af3c3c171e6934a3480a162fd",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {

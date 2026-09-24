@@ -26,6 +26,18 @@ enum. OpenHCS contributes a fieldless registered subtype so those exact storage
 identities participate in global, pipeline, and step configuration without a
 second enum or field declaration.
 
+Disk TIFF compression
+---------------------
+
+``TiffConfig`` controls lossless compression for disk-backed TIFF outputs,
+including ordinary main-flow images and explicitly materialized named images.
+It is separate from Zarr compression and does not change non-TIFF artifacts or
+viewer streams. The default ``NONE`` retains uncompressed output; ``DEFLATE``
+uses the declared ``compression_level`` from 1 to 9. PolyStore owns the codec
+and writer behavior, while OpenHCS resolves the configuration for a pipeline
+and passes it to disk materialization. See :doc:`../reference/configuration`
+for exact fields and defaults.
+
 Artifacts first, paths second
 -----------------------------
 
