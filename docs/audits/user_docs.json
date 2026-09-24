@@ -871,7 +871,7 @@
   },
   {
     "path": "docs/source/concepts/storage_system.rst",
-    "source_sha256": "e7e77ea48bfda5701e5c309561400ebc3d10a95aad8824c05c7561e7474882b4",
+    "source_sha256": "6457c0c132bd45f195274e51b255f45713b5efda9ee7ada352de556ac4aa1dde",
     "audience": [
       "pipeline authors",
       "storage integrators"
@@ -910,6 +910,11 @@
         "role": "Applies TIFF codec settings in the disk writer without changing other formats."
       },
       {
+        "path": "external/arraybridge/src/arraybridge/decorators.py",
+        "sha256": "99823105b0ae59054df1d84013633b8b6628d0a6dc3326383199ac7c65c69bed",
+        "role": "Applies declared dtype conversion to a callable result before materialisation can persist it."
+      },
+      {
         "path": "tests/unit/test_runtime_value_store.py",
         "sha256": "8900a7b83b59d0a40f9698dbafaaba778df982f9d7a0b628f80eab97335aeab0",
         "role": "Proves scoped typed runtime-value insertion, lookup, isolation, and cleanup."
@@ -921,7 +926,8 @@
       }
     ],
     "findings": [
-      "The storage explanation did not distinguish optional disk-TIFF compression from Zarr compression or semantic materialization."
+      "The storage explanation did not distinguish optional disk-TIFF compression from Zarr compression or semantic materialization.",
+      "The compression explanation did not contrast lossless codec selection with the existing value-changing callable dtype policy."
     ],
     "disposition": "revise",
     "validation": [
@@ -935,7 +941,8 @@
       "2026-09-16: Re-read the complete explanation against runtime artifact materialization changes. Added the semantic-versus-filename identity boundary and confirmed that path completion does not mutate artifact metadata; 249 focused materialization and adjacent runtime tests passed.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 integrated-repair follow-up: re-read the complete page and the final owner/test changes in `openhcs/core/steps/function_artifact_materialization.py`. Scalar image materialization now selects the execution scope matching the complete source address, deduplicates equivalent repeated group records, and rejects conflicts; the documented separation of semantic source identity, filename completion, runtime records, and persistence remains accurate. Refreshed only these compared evidence hashes; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-24 PR #129: re-read the complete explanation against the changed config, materialization, PolyStore writer, and exact-roundtrip test authorities; added the disk-TIFF compression boundary without copying exact generated fields. Review scope is recorded in `docs/audits/pr129_tiff_compression_review_20260924.md`."
+      "2026-09-24 PR #129: re-read the complete explanation against the changed config, materialization, PolyStore writer, and exact-roundtrip test authorities; added the disk-TIFF compression boundary without copying exact generated fields. Review scope is recorded in `docs/audits/pr129_tiff_compression_review_20260924.md`.",
+      "2026-09-24: re-read the complete explanation and checked the ArrayBridge dtype wrapper against the PolyStore TIFF writer; documented that the codec preserves the callable-produced dtype, while a callable-level conversion changes it before persistence."
     ]
   },
   {
@@ -3706,7 +3713,7 @@
   },
   {
     "path": "docs/source/user_guide/dtype_conversion.rst",
-    "source_sha256": "15887645e3b1f7ffc098364060108c42fcd72f2be9de9968ece8f3610ed74bd1",
+    "source_sha256": "c95144eee07fe4134768fd2e839cb25dfaa9d61e9794332c8481ccfc39a95d4c",
     "audience": [
       "pipeline authors"
     ],
@@ -3729,6 +3736,21 @@
         "role": "Declares decorators that write independent input, output, and execution memory roles plus dtype policy."
       },
       {
+        "path": "external/arraybridge/src/arraybridge/array_operations.py",
+        "sha256": "7e9ebda3d058702cdf8662dc5ab1faf1254649f3cbde76fa0adcbe02677fa103",
+        "role": "Defines NumPy float-to-integer scaling and integer-to-integer casting at the callable dtype boundary."
+      },
+      {
+        "path": "openhcs/processing/backends/processors/numpy_processor.py",
+        "sha256": "311634ec55ec8ddefe05118329d208e4b33df86f81d54ca4e258e7f4d2dbc980",
+        "role": "Declares the decorated projection function used in the 8-bit materialisation example."
+      },
+      {
+        "path": "external/PolyStore/src/polystore/disk.py",
+        "sha256": "cf089b8c79f86099a7cea1b6cbe43ceaec6331196a44b43183f2e64b7746c219",
+        "role": "Writes materialised TIFF pixels at the dtype supplied by the processing result."
+      },
+      {
         "path": "tests/unit/test_callable_contract.py",
         "sha256": "493f76a54f5fe024ca8f10c53b1f810b8c369626ad7141205b42ef3a78282137",
         "role": "Proves callable contract derivation for dimensions, memory types, dtype policy, and outputs."
@@ -3740,7 +3762,8 @@
       }
     ],
     "findings": [
-      "The task guide told users to change a desktop or step setting without naming the control or showing an executable override."
+      "The task guide told users to change a desktop or step setting without naming the control or showing an executable override.",
+      "The callable override lacked a concrete 8-bit materialisation example and warnings about NumPy scaling, integer wrapping, downstream values, and auxiliary outputs."
     ],
     "disposition": "revise",
     "validation": [
@@ -3751,7 +3774,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-24: re-read the full how-to and verified the new callable-level UINT8 materialisation example instantiates in the source checkout; direct NumPy-backed projection checks confirmed float scaling and integer wrapping. Reviewed ArrayBridge wrapper, NumPy scaling, the example callable, and the disk TIFF writer."
     ]
   },
   {

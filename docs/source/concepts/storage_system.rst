@@ -38,6 +38,11 @@ and writer behavior, while OpenHCS resolves the configuration for a pipeline
 and passes it to disk materialization. See :doc:`../reference/configuration`
 for exact fields and defaults.
 
+Compression preserves the dtype and pixel values produced by the callable.
+For a smaller 8-bit display image, set the existing callable-level dtype policy
+on the image-producing function instead; this changes values before storage.
+See :doc:`../user_guide/dtype_conversion` for the conversion boundaries.
+
 Artifacts first, paths second
 -----------------------------
 
