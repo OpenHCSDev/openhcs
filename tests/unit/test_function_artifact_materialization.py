@@ -43,7 +43,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import AnalysisConsolidationConfig, WellFilterMode
+from openhcs.core.config import AnalysisConsolidationConfig, TiffConfig, WellFilterMode
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
@@ -468,6 +468,7 @@ def _context(filemanager):
     context.axis_id = "A01"
     context.step_axis_filters = {}
     context.analysis_consolidation_config = AnalysisConsolidationConfig()
+    context.tiff_config = TiffConfig()
     return context
 
 

@@ -7,7 +7,12 @@ from datetime import timedelta
 
 import pytest
 
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    TiffCompression,
+    TiffConfig,
+)
 from openhcs.core.config_document import (
     ConfigDocumentAuthority,
     ConfigDocumentField,
@@ -27,6 +32,12 @@ def test_config_document_field_owns_exact_public_name() -> None:
     "config",
     (
         GlobalPipelineConfig(num_workers=3),
+        GlobalPipelineConfig(
+            tiff_config=TiffConfig(
+                compression=TiffCompression.DEFLATE,
+                compression_level=3,
+            )
+        ),
         PipelineConfig(),
     ),
 )
