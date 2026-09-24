@@ -400,9 +400,14 @@ def test_measured_inspection_cli_and_report_share_one_receipt(
     assert inspection.results_summary_present is True
     assert inspection.observation_integrity_verified is True
     assert inspection.results_summary_integrity_verified is True
-    assert inspection.evidence_valid is True
+    assert inspection.retained_evidence_valid is True
     assert inspection.warnings == ()
-    assert "Retained evidence: verified" in report.markdown
+    assert not (output_dir / "outputs").exists()
+    assert (
+        "Retained source, observation, and summary evidence: verified"
+        in report.markdown
+    )
+    assert "Output files: not inspected" in report.markdown
     assert "EXECUTE_OPENHCS: 0.250000 s" in report.markdown
 
     parser = create_benchmark_argument_parser()
@@ -410,7 +415,7 @@ def test_measured_inspection_cli_and_report_share_one_receipt(
     assert args.cli_command.run(args) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["receipt"]["execution_id"] == receipt.execution_id
-    assert payload["evidence_valid"] is True
+    assert payload["retained_evidence_valid"] is True
     assert payload["receipt"]["phase_timings"][0]["phase"] == (
         BenchmarkPhase.EXECUTE_OPENHCS.value
     )
@@ -444,7 +449,7 @@ def test_measured_inspection_exposes_artifacts_without_a_valid_receipt(
 
     inspection = service.inspect_measured_run(request)
     assert inspection.receipt is None
-    assert inspection.evidence_valid is False
+    assert inspection.retained_evidence_valid is False
     assert inspection.unreceipted_artifacts == (
         MeasuredPipelineRunArtifact.RESULTS_SUMMARY,
         MeasuredPipelineRunArtifact.PIPELINE_SOURCE,
@@ -491,7 +496,7 @@ def test_measured_inspection_rejects_tampered_and_escaped_evidence(
 
     assert inspection.observation_present is False
     assert inspection.source_evidence[0].valid is False
-    assert inspection.evidence_valid is False
+    assert inspection.retained_evidence_valid is False
     assert any("digest differs" in warning for warning in inspection.warnings)
     assert any("escapes the run" in warning for warning in inspection.warnings)
 
@@ -516,7 +521,7 @@ def test_measured_inspection_detects_tampered_runtime_and_summary(
     assert inspection.results_summary_present is True
     assert inspection.observation_integrity_verified is False
     assert inspection.results_summary_integrity_verified is False
-    assert inspection.evidence_valid is False
+    assert inspection.retained_evidence_valid is False
     assert "Declared runtime observation digest differs." in inspection.warnings
     assert "Declared execution summary digest differs." in inspection.warnings
 
@@ -542,7 +547,7 @@ def test_measured_inspection_reads_archived_receipt_without_claiming_integrity(
     assert inspection.receipt is not None
     assert inspection.observation_integrity_verified is False
     assert inspection.results_summary_integrity_verified is False
-    assert inspection.evidence_valid is False
+    assert inspection.retained_evidence_valid is False
     assert any("integrity is unverified" in item for item in inspection.warnings)
 
 
@@ -1209,7 +1214,7 @@ def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> 
     assert inspected[1]["receipt"]["execution_id"] == "execution-1"
     assert inspected[1]["unreceipted_artifacts"] == []
     assert inspected[1]["source_evidence"][0]["valid"] is True
-    assert inspected[1]["evidence_valid"] is True
+    assert inspected[1]["retained_evidence_valid"] is True
     assert "EXECUTE_OPENHCS" in reported[1]["markdown"]
 
     MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir).unlink()
@@ -1220,7 +1225,7 @@ def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> 
         )
     )
     assert interrupted[1]["receipt"] is None
-    assert interrupted[1]["evidence_valid"] is False
+    assert interrupted[1]["retained_evidence_valid"] is False
     assert set(interrupted[1]["unreceipted_artifacts"]) == {
         artifact.value
         for artifact in MeasuredPipelineRunArtifact

@@ -22,19 +22,17 @@ from benchmark.contracts.control import (
     MeasuredPipelineRunReport,
     MeasuredSourceEvidence,
 )
-from benchmark.contracts.measured_run_receipt import (
-    MeasuredPipelineRunReceipt,
-    retained_artifact_sha256,
-)
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
 from benchmark.contracts.run_artifacts import (
     ComparisonRunArtifact,
     MeasuredPipelineRunArtifact,
     StructuredArtifactFormat,
 )
 from benchmark.contracts.run_receipt import ComparisonSuiteRunReceipt
+from benchmark.file_digest import sha256_file
 
 BENCHMARK_CONTROL_SCHEMA_VERSION = "openhcs.benchmark.control.v1"
-MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v2"
+MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v3"
 MAX_MEASURED_RECEIPT_BYTES = 1_000_000
 MAX_COMPARISON_RECEIPT_BYTES = 1_000_000
 MAX_SOURCE_SNAPSHOT_BYTES = 2_000_000
@@ -118,7 +116,7 @@ def _verify_retained_digest(
         )
         return False
     try:
-        verified = retained_artifact_sha256(file) == expected
+        verified = sha256_file(file) == expected
     except OSError as exc:
         warnings.append(f"Declared {label} could not be hashed: {exc}")
         return False
@@ -128,7 +126,7 @@ def _verify_retained_digest(
 
 
 def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspection:
-    """Inspect one completed pipeline run without loading its pickle observation."""
+    """Verify retained receipt/source/job evidence, not the pipeline's output files."""
 
     root = Path(output_dir).resolve()
     if not root.is_dir():
@@ -239,7 +237,7 @@ def inspect_measured_pipeline_run(output_dir: Path) -> MeasuredPipelineRunInspec
         results_summary_present=results_summary_present,
         observation_integrity_verified=observation_integrity_verified,
         results_summary_integrity_verified=results_summary_integrity_verified,
-        evidence_valid=(
+        retained_evidence_valid=(
             receipt is not None
             and all(item.valid for item in source_evidence)
             and observation_integrity_verified
@@ -262,9 +260,11 @@ def report_measured_pipeline_run(
     else:
         lines.extend(
             (
-                "- Retained evidence: "
+                "- Retained source, observation, and summary evidence: "
                 + (
-                    "verified" if inspection.evidence_valid else "unverified or invalid"
+                    "verified"
+                    if inspection.retained_evidence_valid
+                    else "unverified or invalid"
                 ),
                 f"- Run: `{receipt.run_id}`",
                 f"- Pipeline: `{receipt.pipeline_name}`",
@@ -272,6 +272,7 @@ def report_measured_pipeline_run(
                 f"- Plate: `{receipt.plate_id}`",
                 f"- Compile artifact: `{receipt.compile_artifact_id or 'none; server job may include compilation'}`",
                 f"- Output roots: {len(receipt.output_roots)}",
+                "- Output files: not inspected; use output/equivalence evidence for output claims",
                 f"- Runtime observation scope: `{receipt.observation_export_scope.value}`",
                 f"- Execution axes: {receipt.observed_axis_count if receipt.observed_axis_count is not None else 'not recorded'}"
                 + (

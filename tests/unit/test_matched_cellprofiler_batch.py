@@ -11,8 +11,8 @@ import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.matched_cellprofiler_batch import (
     _candidate_pipeline_config,
     _global_config,
-    _native_python_executable,
     _invoke_native_worker,
+    _native_python_executable,
     _output_inventory,
     _parser,
     _select_genuine_wells,
@@ -145,6 +145,25 @@ def test_source_input_inventory_hashes_symlink_target(tmp_path: Path) -> None:
             "sha256": hashlib.sha256(b"microscopy pixels").hexdigest(),
         },
     )
+
+
+def test_pilot_inventories_stream_files_without_read_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "image.tif"
+    source.write_bytes(b"microscopy pixels")
+    staged = tmp_path / "staged"
+    staged.mkdir()
+    (staged / "image.tif").symlink_to(source)
+
+    def reject_read_bytes(_path: Path) -> bytes:
+        raise AssertionError("Pilot inventory must stream source and output files")
+
+    monkeypatch.setattr(Path, "read_bytes", reject_read_bytes)
+    expected = hashlib.sha256(b"microscopy pixels").hexdigest()
+
+    assert _source_input_inventory(staged)[0]["sha256"] == expected
+    assert _output_inventory(tmp_path, frozenset({source}))[0]["sha256"] == expected
 
 
 def test_candidate_worker_count_uses_ordinary_global_config(tmp_path: Path) -> None:

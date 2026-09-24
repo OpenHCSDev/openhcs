@@ -141,7 +141,7 @@ class MeasuredSourceEvidence:
 
 @dataclass(frozen=True, slots=True)
 class MeasuredPipelineRunInspection:
-    """Receipt-derived inspection; it does not reconstruct runtime job state."""
+    """Receipt/source/job-evidence inspection; output files are not verified."""
 
     schema_version: str
     output_dir: str
@@ -152,7 +152,7 @@ class MeasuredPipelineRunInspection:
     results_summary_present: bool
     observation_integrity_verified: bool
     results_summary_integrity_verified: bool
-    evidence_valid: bool
+    retained_evidence_valid: bool
     warnings: tuple[str, ...]
 
 

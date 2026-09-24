@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from collections.abc import Mapping
@@ -23,16 +22,6 @@ _ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = (
     "openhcs.benchmark.measured-pipeline.v1"
 )
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}\Z")
-
-
-def retained_artifact_sha256(path: Path) -> str:
-    """Hash retained evidence without loading a possibly large export into memory."""
-
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 @dataclass(frozen=True, slots=True)

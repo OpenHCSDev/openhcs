@@ -7,7 +7,6 @@ boundary, not an alternative pipeline engine or a paper speedup generator.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import subprocess
@@ -32,11 +31,12 @@ from benchmark.adapters.cellprofiler import (
 from benchmark.adapters.cppipe_source import CPPipeSourceRequest, resolve_cppipe_source
 from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
 from benchmark.cellprofiler_comparison import load_comparison_cases
-from benchmark.control import inspect_measured_pipeline_run
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
     cellprofiler_native_shard_equivalence,
 )
+from benchmark.control import inspect_measured_pipeline_run
+from benchmark.file_digest import sha256_file
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
@@ -133,13 +133,12 @@ def _select_genuine_wells(
     return wells
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _output_inventory(root: Path, files: frozenset[Path]) -> tuple[dict[str, str], ...]:
     return tuple(
-        {"path": str(path.relative_to(root)), "sha256": _sha256(path)}
+        {
+            "path": str(path.relative_to(root)),
+            "sha256": sha256_file(path),
+        }
         for path in sorted(files)
     )
 
@@ -155,7 +154,7 @@ def _source_input_inventory(input_dir: Path) -> tuple[dict[str, object], ...]:
             "path": str(path.relative_to(input_dir)),
             "source_path": str(path.resolve()),
             "size_bytes": path.stat().st_size,
-            "sha256": _sha256(path),
+            "sha256": sha256_file(path),
         }
         for path in files
     )
@@ -377,10 +376,10 @@ def main(argv: list[str] | None = None) -> int:
     provenance = {
         "case": case.name,
         "wells": wells,
-        "manifest_sha256": _sha256(manifest),
-        "cppipe_sha256": _sha256(case.cppipe_path),
-        "driver_sha256": _sha256(Path(__file__)),
-        "native_worker_sha256": _sha256(
+        "manifest_sha256": sha256_file(manifest),
+        "cppipe_sha256": sha256_file(case.cppipe_path),
+        "driver_sha256": sha256_file(Path(__file__)),
+        "native_worker_sha256": sha256_file(
             project_root / "benchmark/native_cellprofiler_batch_worker.py"
         ),
         "source_commit": source_commit,
@@ -641,7 +640,7 @@ def main(argv: list[str] | None = None) -> int:
                 require_owned_server=True,
             )
             retained_evidence = inspect_measured_pipeline_run(evidence_dir)
-            if not retained_evidence.evidence_valid:
+            if not retained_evidence.retained_evidence_valid:
                 raise RuntimeError(
                     "Measured OpenHCS evidence failed retained-file inspection: "
                     f"{retained_evidence.warnings!r}"

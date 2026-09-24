@@ -111,8 +111,10 @@ class InspectMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     title = "Inspect measured pipeline run"
     description = (
         "Inspect a completed ordinary OpenHCS pipeline measurement from its typed "
-        "receipt and bounded source/output evidence. This does not submit or poll "
-        "an execution job; use the normal headless execution tools for that."
+        "receipt and bounded source, observation, and job-summary evidence. Output "
+        "files are not inspected or integrity-verified by this tool. This does not "
+        "submit or poll an execution job; use the normal headless execution tools "
+        "for that."
     )
     output_contract = MeasuredPipelineRunInspection
     request_invocation = AgentDataclassRequestServiceInvocation(
@@ -153,7 +155,8 @@ class ReportMeasuredPipelineRunCapability(MeasuredPipelineCapability):
     title = "Report measured pipeline run"
     description = (
         "Render a concise report from the same bounded completed-run receipt "
-        "inspection; evidence warnings are retained in the result."
+        "inspection; evidence warnings are retained in the result. The report "
+        "does not certify pipeline output files."
     )
     output_contract = MeasuredPipelineRunReport
     request_invocation = AgentDataclassRequestServiceInvocation(

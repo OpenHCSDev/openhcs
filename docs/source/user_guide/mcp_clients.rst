@@ -229,9 +229,12 @@ readable, but inspection marks their integrity unverified.
 ``openhcs_report_measured_pipeline_run`` turns that same inspection into
 a short report with evidence warnings. The local CLI equivalent is
 ``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
-Markdown. Check ``evidence_valid`` before using retained measurements: it is
+Markdown. Check ``retained_evidence_valid`` before using retained measurements: it is
 false for missing, changed, or unverifiable evidence even when a receipt is
-present. If ``unreceipted_artifacts`` is nonempty, preserve that directory
+present. This verifies only the retained receipt, source, observation, and
+summary files; it does not inspect the image or table files under the declared
+output roots. Validate those outputs separately before making a result claim.
+If ``unreceipted_artifacts`` is nonempty, preserve that directory
 for diagnosis and do not report the run as a completed measurement. If the
 same completed ordinary job is still available, retry
 ``openhcs_finalize_measured_pipeline_run`` with its original job and run

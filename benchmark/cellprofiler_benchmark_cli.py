@@ -375,7 +375,14 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         )
         parser.add_argument("--max-memory-mb", type=float)
         parser.add_argument("--execution-port", type=int)
-        parser.add_argument("--resume", action="store_true")
+        parser.add_argument(
+            "--resume",
+            action="store_true",
+            help=(
+                "Reuse only rows whose recorded SHA-256 matches the current "
+                "manifest, sources, pipeline, modes, and worker settings."
+            ),
+        )
         parser.add_argument(
             "--plan-only",
             action="store_true",

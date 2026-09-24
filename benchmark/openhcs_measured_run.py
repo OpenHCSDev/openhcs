@@ -22,13 +22,13 @@ from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
     MeasuredEndpointProvenance,
     MeasuredPipelineRunReceipt,
-    retained_artifact_sha256,
 )
 from benchmark.contracts.run_artifacts import (
     MeasuredPipelineRunArtifact,
     retain_matching_measured_artifacts,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
+from benchmark.file_digest import sha256_file
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
@@ -36,6 +36,7 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -50,7 +51,6 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 from .timing import (
     BenchmarkPhase,
@@ -486,8 +486,8 @@ def retain_measured_openhcs_completion(
         observation_export_scope=auxiliary_params.runtime_observation_export_scope,
         expected_axis_count=expected_axis_count,
         observed_axis_count=observation_export.axis_count,
-        observation_export_sha256=retained_artifact_sha256(observation_export_path),
-        results_summary_sha256=retained_artifact_sha256(results_summary_path),
+        observation_export_sha256=sha256_file(observation_export_path),
+        results_summary_sha256=sha256_file(results_summary_path),
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(artifact_root))
     return _ZMQOpenHCSExecution(

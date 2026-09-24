@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
 import statistics
@@ -25,6 +26,7 @@ from benchmark.cellprofiler_comparison import (
     load_comparison_cases,
 )
 from benchmark.contracts.comparison_manifest import ComparisonManifest
+from benchmark.file_digest import sha256_file
 from benchmark.metrics.memory import MemoryMetric
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
@@ -70,6 +72,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
+from openhcs.serialization.json import to_jsonable
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
@@ -201,6 +204,9 @@ class WellThroughputBenchmarkPlan:
             raise ValueError(
                 "Well throughput benchmark plan requires at least one mode."
             )
+        names = tuple(mode.name for mode in modes)
+        if len(names) != len(set(names)):
+            raise ValueError("Well throughput benchmark mode names must be unique.")
         object.__setattr__(self, "modes", modes)
 
     @classmethod
@@ -2015,6 +2021,7 @@ class WellThroughputResult:
     memory_limit_mb: float | None = None
     error_message: str | None = None
     execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE
+    run_input_sha256: str | None = None
 
     @classmethod
     def memory_limited(
@@ -2111,6 +2118,78 @@ class WellThroughputResult:
         return self.status is WellThroughputStatus.SUCCESS
 
 
+def _source_tree_sha256(path: Path) -> str:
+    """Hash a source file/tree by relative name and content, following symlinks."""
+
+    digest = hashlib.sha256()
+
+    def visit(candidate: Path, relative: Path, ancestors: frozenset[Path]) -> None:
+        resolved = candidate.resolve(strict=True)
+        name = relative.as_posix().encode("utf-8")
+        if candidate.is_dir():
+            if resolved in ancestors:
+                raise ValueError(
+                    f"Source directory contains a symlink cycle: {candidate}"
+                )
+            digest.update(b"directory\0" + name + b"\0")
+            for child in sorted(candidate.iterdir(), key=lambda entry: entry.name):
+                visit(child, relative / child.name, ancestors | {resolved})
+        elif candidate.is_file():
+            digest.update(b"file\0" + name + b"\0")
+            digest.update(bytes.fromhex(sha256_file(candidate)))
+        else:
+            raise ValueError(
+                f"Source path is not a regular file or directory: {candidate}"
+            )
+
+    source = Path(path)
+    visit(source, Path("."), frozenset())
+    return digest.hexdigest()
+
+
+def well_throughput_run_input_sha256(
+    manifest_path: Path,
+    *,
+    cases: Sequence[Any],
+    modes: Sequence[WellThroughputMode],
+    start_method: MultiprocessingStartMethod,
+    native_baselines: Mapping[str, NativeCellProfilerExecutionBaseline],
+    max_memory_mb: float | None,
+) -> str:
+    """Bind resumable rows to their resolved declarations and source bytes."""
+
+    source_hashes: dict[Path, str] = {}
+
+    def source_record(path: Path) -> dict[str, str]:
+        resolved = Path(path).resolve(strict=True)
+        if resolved not in source_hashes:
+            source_hashes[resolved] = _source_tree_sha256(resolved)
+        return {"path": str(resolved), "sha256": source_hashes[resolved]}
+
+    declaration = {
+        "schema": "openhcs.benchmark.well-throughput-inputs.v1",
+        "manifest": source_record(manifest_path),
+        "cases": [
+            {
+                "name": case.name,
+                "dataset": source_record(case.dataset_path),
+                "cppipe": source_record(case.cppipe_path),
+                "well_filter": to_jsonable(case.well_filter_config),
+            }
+            for case in cases
+        ],
+        "modes": [asdict(mode) for mode in modes],
+        "start_method": start_method.value,
+        "native_baselines": {
+            name: baseline.execution_seconds
+            for name, baseline in sorted(native_baselines.items())
+        },
+        "max_memory_mb": max_memory_mb,
+    }
+    encoded = json.dumps(declaration, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def run_well_throughput_suite(
     manifest_path: Path,
     *,
@@ -2133,7 +2212,7 @@ def run_well_throughput_suite(
     max_memory_mb: float | None = None,
     execution_port: int | None = None,
 ) -> tuple[WellThroughputResult, ...]:
-    """Run converted cppipes as one OpenHCS plate with repeated virtual wells."""
+    """Run converted cppipes, refusing resumed rows from different inputs."""
     if any(
         result.execution_route is not ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
         for result in existing_results
@@ -2158,6 +2237,22 @@ def run_well_throughput_suite(
         manifest_path
     )
     native_baselines = dict(native_execution_baselines or {})
+    selected_cases = tuple(
+        case for case in cases if not selected or case.name in selected
+    )
+    run_input_sha256 = well_throughput_run_input_sha256(
+        manifest_path,
+        cases=selected_cases,
+        modes=benchmark_plan.modes,
+        start_method=effective_start_method,
+        native_baselines=native_baselines,
+        max_memory_mb=max_memory_mb,
+    )
+    if any(result.run_input_sha256 != run_input_sha256 for result in existing_results):
+        raise ValueError(
+            "Cannot resume throughput rows without a matching run-input SHA-256; "
+            "use a new output root for changed or legacy inputs."
+        )
     results: list[WellThroughputResult] = [
         result
         for result in existing_results
@@ -2169,9 +2264,7 @@ def run_well_throughput_suite(
         for result in results
     }
     skipped = set(skipped_observations)
-    for case in cases:
-        if selected and case.name not in selected:
-            continue
+    for case in selected_cases:
         for mode in benchmark_plan.modes:
             observation_key = WellThroughputObservationKey(case.name, mode.name)
             if observation_key in completed or observation_key in skipped:
@@ -2193,6 +2286,7 @@ def run_well_throughput_suite(
                 max_memory_mb=max_memory_mb,
                 execution_port=execution_port,
             )
+            result = replace(result, run_input_sha256=run_input_sha256)
             results.append(result)
             completed.add(observation_key)
             write_well_throughput_csv(output_root / WELL_THROUGHPUT_ROWS_CSV, results)
@@ -2788,6 +2882,7 @@ def _well_throughput_result_from_row(
         execution_route=WellThroughputExecutionRoute(
             row.get("execution_route") or LEGACY_DIRECT_EXECUTION_ROUTE.value
         ),
+        run_input_sha256=row.get("run_input_sha256") or None,
     )
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -36,6 +37,7 @@ from benchmark.well_throughput_scaling import (
     run_case_well_throughput,
     run_well_throughput_suite,
     well_throughput_plan_from_manifest,
+    well_throughput_run_input_sha256,
     well_throughput_start_method_from_manifest,
     write_well_throughput_csv,
 )
@@ -180,6 +182,9 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
         cppipe_path=tmp_path / "pipeline.cppipe",
         well_filter_config=WellFilterConfig(well_filter=1),
     )
+    case.dataset_path.mkdir()
+    (case.dataset_path / "image.tif").write_bytes(b"image")
+    case.cppipe_path.write_text("pipeline", encoding="utf-8")
     monkeypatch.setattr(
         well_throughput_scaling,
         "load_comparison_cases",
@@ -464,9 +469,7 @@ def test_requested_well_throughput_axes_override_manifest_modes(
 
     assert tuple(
         (mode.name, mode.well_count, mode.worker_count) for mode in plan.modes
-    ) == (
-        ("2w_1c", 2, 1),
-    )
+    ) == (("2w_1c", 2, 1),)
 
 
 def test_requested_well_throughput_presets_override_axis_modes(
@@ -625,6 +628,25 @@ def test_rerun_missing_memory_filters_completed_rows(
             "well_filter_config": None,
         },
     )()
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    case.dataset_path.mkdir()
+    (case.dataset_path / "image.tif").write_bytes(b"image")
+    case.cppipe_path.write_text("pipeline", encoding="utf-8")
+    plan = WellThroughputBenchmarkPlan(
+        (
+            WellThroughputMode("8w_2c", 8, 2),
+            WellThroughputMode("12w_3c", 12, 3),
+        )
+    )
+    run_input_sha256 = well_throughput_run_input_sha256(
+        manifest_path,
+        cases=(case,),
+        modes=plan.modes,
+        start_method=MultiprocessingStartMethod.FORK,
+        native_baselines={},
+        max_memory_mb=None,
+    )
     completed = WellThroughputResult(
         case_name="Example",
         mode_name="8w_2c",
@@ -685,24 +707,21 @@ def test_rerun_missing_memory_filters_completed_rows(
         fake_run_case_well_throughput,
     )
 
+    completed = replace(completed, run_input_sha256=run_input_sha256)
+    missing_memory = replace(missing_memory, run_input_sha256=run_input_sha256)
     rows = run_well_throughput_suite(
-        tmp_path / "manifest.json",
+        manifest_path,
         output_root=tmp_path / "out",
         well_counts=(),
         worker_counts=(),
-        plan=WellThroughputBenchmarkPlan(
-            (
-                WellThroughputMode("8w_2c", 8, 2),
-                WellThroughputMode("12w_3c", 12, 3),
-            )
-        ),
+        plan=plan,
         existing_results=(completed, missing_memory),
         rerun_missing_memory=True,
         start_method=MultiprocessingStartMethod.FORK,
     )
 
     assert calls == [("Example", "12w_3c")]
-    assert rows == (completed, rerun)
+    assert rows == (completed, replace(rerun, run_input_sha256=run_input_sha256))
 
 
 def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> None:
@@ -718,6 +737,20 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
             "well_filter_config": None,
         },
     )()
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    case.dataset_path.mkdir()
+    (case.dataset_path / "image.tif").write_bytes(b"image")
+    case.cppipe_path.write_text("pipeline", encoding="utf-8")
+    plan = WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),))
+    run_input_sha256 = well_throughput_run_input_sha256(
+        manifest_path,
+        cases=(case,),
+        modes=plan.modes,
+        start_method=MultiprocessingStartMethod.FORK,
+        native_baselines={},
+        max_memory_mb=None,
+    )
     existing_error = WellThroughputResult(
         case_name="Example",
         mode_name="1w_1t",
@@ -759,16 +792,157 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
     )
 
     rows = run_well_throughput_suite(
-        tmp_path / "manifest.json",
+        manifest_path,
         output_root=tmp_path / "out",
         well_counts=(),
         worker_counts=(),
-        plan=WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),)),
-        existing_results=(existing_error,),
+        plan=plan,
+        existing_results=(replace(existing_error, run_input_sha256=run_input_sha256),),
         start_method=MultiprocessingStartMethod.FORK,
     )
 
-    assert rows == (rerun,)
+    assert rows == (replace(rerun, run_input_sha256=run_input_sha256),)
+
+
+@pytest.mark.parametrize(
+    "changed_input",
+    ("manifest", "cppipe", "source", "well_filter", "mode", "start_method"),
+)
+def test_resume_rejects_changed_run_inputs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, changed_input: str
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    image_path = dataset_path / "image.tif"
+    image_path.write_bytes(b"image")
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    case = SimpleNamespace(
+        name="Example",
+        dataset_path=dataset_path,
+        cppipe_path=cppipe_path,
+        well_filter_config=None,
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "load_comparison_cases",
+        lambda _manifest_path: (case,),
+    )
+    plan = WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),))
+    calls = 0
+
+    def fake_run_case(**_kwargs):
+        nonlocal calls
+        calls += 1
+        return WellThroughputResult(
+            case_name="Example",
+            mode_name="1w_1t",
+            worker_count=1,
+            well_count=1,
+            compile_seconds=1.0,
+            prepare_seconds=0.0,
+            execute_seconds=2.0,
+            total_seconds=3.0,
+            wells_per_second=0.5,
+            successful_wells=1,
+            execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+        )
+
+    monkeypatch.setattr(
+        well_throughput_scaling, "run_case_well_throughput", fake_run_case
+    )
+    output_root = tmp_path / "results"
+    first = run_well_throughput_suite(
+        manifest_path,
+        output_root=output_root,
+        well_counts=(),
+        worker_counts=(),
+        plan=plan,
+        start_method=MultiprocessingStartMethod.FORK,
+    )
+    assert calls == 1
+    assert read_well_throughput_csv(output_root / "well_throughput.csv") == first
+
+    if changed_input == "manifest":
+        manifest_path.write_text("{ }", encoding="utf-8")
+    elif changed_input == "cppipe":
+        cppipe_path.write_text("pipelinE", encoding="utf-8")
+    elif changed_input == "source":
+        image_path.write_bytes(b"other")
+    elif changed_input == "well_filter":
+        case.well_filter_config = WellFilterConfig(well_filter=2)
+    elif changed_input == "mode":
+        plan = WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 2),))
+    start_method = (
+        MultiprocessingStartMethod.SPAWN
+        if changed_input == "start_method"
+        else MultiprocessingStartMethod.FORK
+    )
+
+    with pytest.raises(ValueError, match="matching run-input SHA-256"):
+        run_well_throughput_suite(
+            manifest_path,
+            output_root=output_root,
+            well_counts=(),
+            worker_counts=(),
+            plan=plan,
+            existing_results=first,
+            start_method=start_method,
+        )
+    assert calls == 1
+
+
+def test_resume_rejects_legacy_rows_without_run_input_fingerprint(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    (dataset_path / "image.tif").write_bytes(b"image")
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    case = SimpleNamespace(
+        name="Example",
+        dataset_path=dataset_path,
+        cppipe_path=cppipe_path,
+        well_filter_config=None,
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "load_comparison_cases",
+        lambda _manifest_path: (case,),
+    )
+    legacy_row = WellThroughputResult(
+        case_name="Example",
+        mode_name="1w_1t",
+        worker_count=1,
+        well_count=1,
+        compile_seconds=1.0,
+        prepare_seconds=0.0,
+        execute_seconds=2.0,
+        total_seconds=3.0,
+        wells_per_second=0.5,
+        successful_wells=1,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+    )
+
+    with pytest.raises(ValueError, match="matching run-input SHA-256"):
+        run_well_throughput_suite(
+            manifest_path,
+            output_root=tmp_path / "results",
+            well_counts=(),
+            worker_counts=(),
+            plan=WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),)),
+            existing_results=(legacy_row,),
+            start_method=MultiprocessingStartMethod.FORK,
+        )
 
 
 def test_legacy_rows_cannot_be_resumed_or_plotted_with_ordinary_rows(
@@ -998,6 +1172,10 @@ def test_run_suite_passes_memory_limit_to_case_runner(
             "well_filter_config": None,
         },
     )()
+    (tmp_path / "manifest.json").write_text("{}", encoding="utf-8")
+    case.dataset_path.mkdir()
+    (case.dataset_path / "image.tif").write_bytes(b"image")
+    case.cppipe_path.write_text("pipeline", encoding="utf-8")
     monkeypatch.setattr(
         well_throughput_scaling,
         "load_comparison_cases",

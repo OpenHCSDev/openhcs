@@ -47,6 +47,7 @@ from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -59,7 +60,6 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("A01",)):
@@ -162,7 +162,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
     assert all(evidence.valid for evidence in inspection.source_evidence)
     assert inspection.observation_integrity_verified
     assert inspection.results_summary_integrity_verified
-    assert inspection.evidence_valid
+    assert inspection.retained_evidence_valid
 
 
 def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
@@ -213,7 +213,7 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     assert all(item.valid for item in inspection.source_evidence)
     assert inspection.observation_integrity_verified
     assert inspection.results_summary_integrity_verified
-    assert inspection.evidence_valid
+    assert inspection.retained_evidence_valid
     assert inspection.warnings == ()
     assert "EXECUTE_OPENHCS" in report_measured_pipeline_run(inspection).markdown
 
@@ -316,7 +316,7 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     inspection = inspect_measured_pipeline_run(tmp_path)
     assert inspection.observation_integrity_verified
     assert inspection.results_summary_integrity_verified
-    assert inspection.evidence_valid
+    assert inspection.retained_evidence_valid
 
 
 def test_measured_repetitions_share_one_owned_ordinary_server(tmp_path: Path) -> None:
