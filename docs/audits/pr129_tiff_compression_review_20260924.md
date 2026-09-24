@@ -25,12 +25,22 @@ are the declarations, implementations, and tests recorded in the JSON audit
 entries. The changed page and authority digests were refreshed only after this
 comparison. Documentation validation passed for 155 audited sources, the full
 Sphinx HTML build succeeded with warnings treated as errors, and 15 focused
-documentation, MCP, and TIFF-output tests passed. These checks do not waive
-the separate published-dependency readiness gate; PolyStore's new source has
-not been published as a new release.
+documentation, MCP, and TIFF-output tests passed. At this initial review,
+the separate published-dependency readiness gate remained open because the
+PolyStore change had not yet been released.
 
 The first CI pass found three Black-only formatting differences. After running
 the pinned formatter, the changed materialization owner files differ only in
 line wrapping. I rechecked the complete analysis-consolidation, ROI, and storage
 pages against those unchanged semantics before refreshing their three affected
 authority digests. The reformatted test file is not a recorded audit authority.
+
+## Published-dependency follow-up
+
+PolyStore PR #11 was merged and released as v0.2.19. Its publish workflow
+passed, and both the wheel and source distribution are present on PyPI.
+OpenHCS now requires `polystore>=0.2.19,<0.3` and pins the PolyStore
+submodule to release commit `0efe67fdd14985bf90cee6e0f0c4735d41d265d1`.
+The 17 documentation audit entries that depend on `pyproject.toml` were
+rechecked against the new dependency floor and their authority digests
+refreshed. No affected explanatory page asserted the prior floor.
