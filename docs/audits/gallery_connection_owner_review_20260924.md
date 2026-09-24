@@ -19,6 +19,7 @@ Validation: the focused gallery request round-trip test passed; a fresh import
 of the catalog left `pandas` unloaded and `get_type_hints` resolved the
 connection type. The gallery and website unit group passed (63 tests), and
 documentation validation passed (155 audited sources). The agent-service group
-passed 106 tests; its one function-catalog preparation test failed with an
-`EDQUOT` disk-quota error in a subprocess, not a connection-declaration
-assertion. Full CI remains the publication gate.
+passed 106 tests; its one function-catalog preparation test initially hit an
+`EDQUOT` disk-quota error in a subprocess, then passed when `TMPDIR` was placed
+on the analysis drive (107 tests passing across the two runs). Full CI remains
+the publication gate.
