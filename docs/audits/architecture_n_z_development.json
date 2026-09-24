@@ -1020,7 +1020,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "e79e734ce159f54eee10e7238b0b00a6a03e065af3c3c171e6934a3480a162fd",
+        "sha256": "1f5a89a1eb50766ef093df3fece16d6bb03422b92d062fe8ae6471656b1ebd45",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {

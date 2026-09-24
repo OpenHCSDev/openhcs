@@ -28,3 +28,9 @@ Sphinx HTML build succeeded with warnings treated as errors, and 15 focused
 documentation, MCP, and TIFF-output tests passed. These checks do not waive
 the separate published-dependency readiness gate; PolyStore's new source has
 not been published as a new release.
+
+The first CI pass found three Black-only formatting differences. After running
+the pinned formatter, the changed materialization owner files differ only in
+line wrapping. I rechecked the complete analysis-consolidation, ROI, and storage
+pages against those unchanged semantics before refreshing their three affected
+authority digests. The reformatted test file is not a recorded audit authority.

@@ -175,7 +175,9 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
         output: Output,
     ) -> dict:
         values = dict(self.values)
-        if self.tiff_config is not None and self.tiff_config.applies_to_path(output.path):
+        if self.tiff_config is not None and self.tiff_config.applies_to_path(
+            output.path
+        ):
             values["tiff_config"] = self.tiff_config
         return values
 

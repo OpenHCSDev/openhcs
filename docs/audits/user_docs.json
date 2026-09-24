@@ -891,7 +891,7 @@
       },
       {
         "path": "openhcs/core/steps/function_artifact_materialization.py",
-        "sha256": "d25982897fb41b7bf392c3e85f4b5ac4f711c7219ead60833edd762e559cc8fb",
+        "sha256": "18c809a2d511501c4e308f6e92c18d5bb59744d4d3f59bb2bfc2507f2a2bdd03",
         "role": "Owns the rules that materialise function outputs through the configured storage backend."
       },
       {

@@ -54,7 +54,8 @@ def test_persistent_tiff_kwargs_apply_only_to_tiff_outputs() -> None:
     assert tuple(output.path for output in batches[0][0]) == ("/results/summary.csv",)
     assert batches[0][1] == {}
     assert tuple(output.path for output in batches[1][0]) == (
-        "/results/labels.tif", "/results/labels2.tiff"
+        "/results/labels.tif",
+        "/results/labels2.tiff",
     )
     assert batches[1][1] == {"tiff_config": config}
 

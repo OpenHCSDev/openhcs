@@ -408,9 +408,7 @@ class ArtifactMaterializationBackendPlan:
             result[backend] = RawBackendKwargs(
                 values,
                 tiff_config=(
-                    kwargs.tiff_config
-                    if isinstance(kwargs, RawBackendKwargs)
-                    else None
+                    kwargs.tiff_config if isinstance(kwargs, RawBackendKwargs) else None
                 ),
             )
 
