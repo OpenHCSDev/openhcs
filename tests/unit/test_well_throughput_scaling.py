@@ -469,7 +469,9 @@ def test_requested_well_throughput_axes_override_manifest_modes(
 
     assert tuple(
         (mode.name, mode.well_count, mode.worker_count) for mode in plan.modes
-    ) == (("2w_1c", 2, 1),)
+    ) == (
+        ("2w_1c", 2, 1),
+    )
 
 
 def test_requested_well_throughput_presets_override_axis_modes(

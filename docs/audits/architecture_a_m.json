@@ -2075,7 +2075,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
@@ -2085,17 +2085,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "bb1227d25d6eea9d2a9d3185011c278ae9a5f6b3177a8b47e8a190950ccfeecf",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Implements contained read-only receipt, streamed observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2172,7 +2172,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "181de0693edf0411e4f83791a3865fe6320bbe7b3504460f73d6fe572bfa6204",
+    "source_sha256": "f071f7effe7d94ef86cfcfaa24f479249fce185cba690c670ff247597aafa948",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2202,7 +2202,7 @@
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "27882b85adee9586cad66a45f5b7507eb32d3f19a0a7e27125efed3c84f0a5fd",
+        "sha256": "1e0cccc518fb6bec9c92ea8057dd7adfc7305b2d90a6da8f152c1b97601878ab",
         "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
       },
       {
@@ -2227,7 +2227,7 @@
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "32bcc7cd3a1af01b0c3463f45867548ccb20c6930187dd589206cddd80877512",
+        "sha256": "67c71873d050e05c0e4a1e231c46b700a765c12cade51269553cc7a5cb96989e",
         "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
@@ -2267,7 +2267,8 @@
       }
     ],
     "findings": [
-      "The canonical Linux acceptance command hardcoded one developer's /home cache path; it now uses the XDG cache root with a portable home fallback."
+      "The canonical Linux acceptance command hardcoded one developer's /home cache path; it now uses the XDG cache root with a portable home fallback.",
+      "Measured-run inspection now names retained_evidence_valid and states that it verifies retained receipt and observation evidence, not pipeline image or table outputs."
     ],
     "disposition": "revise",
     "validation": [

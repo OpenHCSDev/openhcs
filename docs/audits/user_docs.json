@@ -176,7 +176,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
@@ -186,12 +186,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -767,7 +767,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
@@ -777,7 +777,7 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -1392,7 +1392,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
@@ -1402,12 +1402,12 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -3905,7 +3905,7 @@
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "2457819fcabc316ee4e30bf22374376378a7737d327ecf25413ddead8d639d49",
+    "source_sha256": "f47e4de0a9e8653155f47898627953ad7635c2b72e05805483a72bb6c85f0e26",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3955,7 +3955,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
@@ -3965,12 +3965,12 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "bb1227d25d6eea9d2a9d3185011c278ae9a5f6b3177a8b47e8a190950ccfeecf",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the expert MCP benchmark inspection request and result."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
@@ -3985,13 +3985,14 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],
     "findings": [
       "The desktop MCP profile description excluded headless execution; it now documents the declaration-owned headless group and distinguishes independent sessions from UI-owned state.",
-      "The client how-to did not explain that benchmark inspection is expert-only and read-only, or direct users to the separately installed benchmark execution command."
+      "The client how-to did not explain that benchmark inspection is expert-only and read-only, or direct users to the separately installed benchmark execution command.",
+      "The measured-run inspection instructions now distinguish retained_evidence_valid from separate image and table output validation."
     ],
     "disposition": "revise",
     "validation": [

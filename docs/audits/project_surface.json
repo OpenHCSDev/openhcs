@@ -77,7 +77,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "1979d04e2fc9f6151f36b985c34223807c8cfa3e2def6d6fd7751d9b19a72952",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the installed registry-derived benchmark execution and report command surface."
       },
       {
@@ -87,17 +87,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "bb1227d25d6eea9d2a9d3185011c278ae9a5f6b3177a8b47e8a190950ccfeecf",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the typed benchmark inspection request and result exposed through MCP."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "abf143d5529613f31833a05ac3ffee2e359972030917e9c3f76fa442687e4ddd",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "8d0976e918c9bea4128771c34dd6ac56c23c1d350431f229677d2c92aa9484e1",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
