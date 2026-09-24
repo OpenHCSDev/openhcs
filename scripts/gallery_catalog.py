@@ -25,7 +25,6 @@ from pyqt_reactive.services.function_navigation import FUNCTION_FIELD_ROOT
 from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import dataclass_from_mapping
 
-from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     GlobalConfigWindowIdentity,
@@ -41,6 +40,7 @@ from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 from openhcs.serialization.json import JsonValue, to_jsonable
 
 if TYPE_CHECKING:
+    from openhcs.agent.dto.execution import ExecutionConnectionSpec
     from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
 
 RELEASE_MEDIA_SCHEMA_VERSION = "openhcs.release-media.v7"

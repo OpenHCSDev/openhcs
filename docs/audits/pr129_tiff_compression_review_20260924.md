@@ -44,3 +44,12 @@ submodule to release commit `0efe67fdd14985bf90cee6e0f0c4735d41d265d1`.
 The 17 documentation audit entries that depend on `pyproject.toml` were
 rechecked against the new dependency floor and their authority digests
 refreshed. No affected explanatory page asserted the prior floor.
+
+The subsequent website CI run exposed an eager import in the gallery catalog:
+its source-capture request used `ExecutionConnectionSpec` only as a postponed
+type annotation, but importing that DTO loaded the scientific runtime into
+the deliberately minimal website environment. The import is now restricted to
+type checking. The gallery's runtime declarations, capture behavior, and
+published projections are unchanged. The 13 audited pages referencing the
+gallery catalog were checked for claims about those surfaces, and their
+authority digests were refreshed.

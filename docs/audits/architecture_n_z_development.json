@@ -2612,7 +2612,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "e6516488d7024771c35faf1a25d3ec3abc3b2f21830a8b318c9665d9469c5c0a",
+        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
         "role": "Owns nominal gallery scenario identity, publication targets, representative images, copy, accessibility text, dimensions, contextual and stable-window capture targets, and derivative contracts."
       },
       {
@@ -2869,7 +2869,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "e6516488d7024771c35faf1a25d3ec3abc3b2f21830a8b318c9665d9469c5c0a",
+        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
         "role": "Owns the nominal gallery scenario lattice, stable-window and contextual capture targets, publication targets, derivative inventory, source evidence, card rendering, and generated release record."
       },
       {
