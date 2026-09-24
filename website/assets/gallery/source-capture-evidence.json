@@ -274,9 +274,9 @@
       "scenario_id": "stitched-neurite-overview",
       "source": {
         "duration_seconds": null,
-        "format": "PNG",
+        "format": "png",
         "height": 1842,
-        "sha256": "c40867fd6b129cf19fc419e0edfef91ad6f89dbdc67bb039d979b467750f5025",
+        "sha256": "0eede1372cef4849261dea08368354dbb70b6100254c14de447685c7aa6f5632",
         "width": 2304
       }
     }

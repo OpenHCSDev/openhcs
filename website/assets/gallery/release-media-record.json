@@ -435,11 +435,11 @@
         "parameters": {}
       },
       "source": {
-        "sha256": "c40867fd6b129cf19fc419e0edfef91ad6f89dbdc67bb039d979b467750f5025",
+        "sha256": "0eede1372cef4849261dea08368354dbb70b6100254c14de447685c7aa6f5632",
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "PNG"
+        "format": "png"
       },
       "scientific_evidence": null,
       "published": [
@@ -447,7 +447,7 @@
           "role": "image",
           "media_type": "image/webp",
           "path": "stitched-neurite-overview.webp",
-          "sha256": "3ca4c739791821ed4636d453b7c472ce06698df528f9fa57cb02ff0e3d698755"
+          "sha256": "537df1dbc4e2ccc3ae6b96245daf79a504dee29e8b8b498a7a2f12c2dd43bd0b"
         }
       ]
     },
