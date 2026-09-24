@@ -76,26 +76,51 @@ Installing the GUI with the MCP server is a packaging convenience, not a reason
 to merge their process lifetimes. MCP startup must remain usable in a headless
 environment, and GUI launch must be an explicit human-approved action.
 
-Benchmark inspection boundary
------------------------------
+Benchmark evidence boundary
+---------------------------
 
 The installed ``openhcs-benchmark`` entry point owns benchmark execution and
 report-generation commands. Comparison runs persist a typed lifecycle receipt,
 append-only observations, and structured result artifacts through the benchmark
-contract package.
+contract package. A new run rejects an occupied output directory and claims its
+first receipt exclusively before publishing observations.
+The read-only ``openhcs_list_benchmark_cases`` capability and CLI
+``list-cases`` command share exact manifest-case selection. Discovery disables
+manifest acquisition, so inspecting proposed work cannot download data.
 
 The expert-only ``openhcs_inspect_benchmark_run`` capability is a read-only
-projection of one existing run directory. ``AgentPathPolicy`` first requires
+projection of one comparison-suite directory. ``AgentPathPolicy`` first requires
 that directory to be readable; the benchmark control service then reports the
 recorded status and rerun invocation, observation progress, and discovered
-JSON/JSONL/CSV artifacts. Historical or invalid metadata produces a warning
-rather than a guessed completion claim.
+JSON/JSONL/CSV artifacts. It resolves declared files and discovered artifacts
+within the selected directory before reading them, so an escaping symlink
+cannot turn run inspection into access to another path. The typed inspection
+request also bounds and pages its artifact projection; both the packaged CLI
+and expert MCP capability consume that request rather than owning separate
+artifact inventories. Historical or invalid metadata produces a warning rather
+than a guessed completion claim. ``openhcs_report_benchmark_run`` uses that
+same typed receipt and declared observation artifact to render bounded case
+outcomes. It rejects observations outside the declared suite and does not
+turn recorded intervals into a matched-concurrency speedup claim. A separate
+measured-pipeline receipt is
+produced only after an ordinary pipeline's selected value or outcome export
+passes its validation. Outcome-only export retains per-axis status without
+claiming value equivalence. The expert-only
+``openhcs_finalize_measured_pipeline_run`` capability consumes the exact
+completed ordinary job, validates the selected export, and retains the submitted
+source, server result and timing receipt. It does not create another execution
+or status authority. ``openhcs_inspect_measured_pipeline_run`` checks that
+receipt, submitted-source digests, and retained observation/summary digests;
+archived receipts without the latter digests remain readable but unverified on
+those artifacts. ``openhcs_report_measured_pipeline_run``
+renders the same inspection rather than loading a second model. Neither tool
+reconstructs live job status or reads the pickled runtime observation.
 
-This capability does not launch, resume, cancel, or rerun a benchmark. An agent
-must treat the recorded invocation as reviewable provenance and use the CLI
-separately if execution is authorized. Lightweight request/result contracts are
-imported during capability discovery; benchmark execution modules remain
-outside the MCP startup path.
+These benchmark capabilities do not launch, resume, cancel, or rerun a job. An agent
+must treat recorded evidence as reviewable provenance and use ordinary execution
+tools for job submission, progress, and cancellation. Lightweight request/result
+contracts are imported during capability discovery; benchmark execution modules
+remain outside the MCP startup path.
 
 Window-capture boundary
 -----------------------

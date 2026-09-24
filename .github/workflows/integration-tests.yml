@@ -440,6 +440,7 @@ jobs:
           tests/integration/
           tests/unit/agent/test_mcp_stdio_transport.py
           --ignore=tests/integration/test_cellprofiler_generated_pipeline.py
+          --ignore=tests/integration/test_agent_observation_export_zmq.py
           --cov-append --cov-report=term --it-backends disk
           --it-microscopes ImageXpress --it-dims 3d
           --it-exec-mode multiprocessing --it-zmq-mode zmq
@@ -567,6 +568,7 @@ jobs:
           python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
           tests/integration/
           --ignore=tests/integration/test_cellprofiler_generated_pipeline.py
+          --ignore=tests/integration/test_agent_observation_export_zmq.py
           --cov-report=term
           --it-backends ${{ matrix.backend }}
           --it-microscopes ${{ matrix.microscope }} --it-dims 3d
@@ -693,6 +695,7 @@ jobs:
           python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
           tests/integration/
           --ignore=tests/integration/test_cellprofiler_generated_pipeline.py
+          --ignore=tests/integration/test_agent_observation_export_zmq.py
           --cov-report=term --it-backends disk
           --it-microscopes OMERO --it-dims 3d
           --it-exec-mode multiprocessing --it-visualizers none
@@ -2354,7 +2357,7 @@ jobs:
           sudo apt-get install -y libegl1 || sudo apt-get install -y libegl1-mesa
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 xvfb
 
-      - name: Install candidate wheel and run integration tests
+      - name: Install candidate wheel
         run: |
           python -m venv test_wheel
           source test_wheel/bin/activate
@@ -2365,6 +2368,17 @@ jobs:
             --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
             --extras "dev,dev-gui,cellprofiler-compat,$desktop_extras" \
             --requirement pytest-split==0.11.0
+
+      - name: Smoke installed measured MCP protocol
+        run: |
+          source test_wheel/bin/activate
+          python -I "$GITHUB_WORKSPACE/scripts/smoke_installed_mcp.py" \
+            --forbid-import-root "$GITHUB_WORKSPACE" \
+            --exercise-measured-execution
+
+      - name: Run installed GUI and integration tests
+        run: |
+          source test_wheel/bin/activate
           XDG_CACHE_HOME="$RUNNER_TEMP/openhcs-live-mcp-cache" \
           XDG_CONFIG_HOME="$RUNNER_TEMP/openhcs-live-mcp-config" \
           XDG_DATA_HOME="$RUNNER_TEMP/openhcs-live-mcp-data" \
@@ -2386,6 +2400,13 @@ jobs:
           python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" -- \
             tests/integration/ \
             --ignore=tests/integration/test_cellprofiler_generated_pipeline.py \
+            --ignore=tests/integration/test_agent_observation_export_zmq.py \
+            --cov-append --cov-report=term --it-backends disk \
+            --it-microscopes ImageXpress --it-dims 3d \
+            --it-exec-mode multiprocessing --it-zmq-mode zmq \
+            --it-visualizers none -v --tb=short
+          python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" -- \
+            tests/integration/test_agent_observation_export_zmq.py \
             --cov-append --cov-report=term --it-backends disk \
             --it-microscopes ImageXpress --it-dims 3d \
             --it-exec-mode multiprocessing --it-zmq-mode zmq \

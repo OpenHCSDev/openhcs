@@ -102,6 +102,22 @@ class RuntimeArtifactViewerExpectation:
         object.__setattr__(self, "payloads", payloads)
 
 
+@dataclass(frozen=True, slots=True)
+class RuntimeArtifactAxisExpectation:
+    """Artifact kinds owned by one compiled execution axis."""
+
+    axis_id: str
+    artifact_kinds: frozenset[type[ArtifactType]]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "axis_id", str(self.axis_id))
+        object.__setattr__(
+            self,
+            "artifact_kinds",
+            frozenset(ArtifactType.coerce(kind) for kind in self.artifact_kinds),
+        )
+
+
 @dataclass(slots=True)
 class RuntimeArtifactExecutionExpectation:
     """Runtime artifacts and file exports expected from one execution."""
@@ -109,6 +125,7 @@ class RuntimeArtifactExecutionExpectation:
     artifact_kinds: frozenset[type[ArtifactType]]
     exports: RuntimeExportExpectation
     artifact_viewer: tuple[RuntimeArtifactViewerExpectation, ...] = ()
+    axis_expectations: tuple[RuntimeArtifactAxisExpectation, ...] | None = None
 
     @classmethod
     def from_output_specs(
@@ -146,12 +163,43 @@ class RuntimeArtifactExecutionExpectation:
             artifact_kinds=frozenset(spec.artifact_type for spec in output_specs),
             exports=RuntimeExportExpectation.from_output_specs(output_specs),
             artifact_viewer=runtime_artifact_viewer_expectations(compiled_contexts),
+            axis_expectations=tuple(
+                RuntimeArtifactAxisExpectation(
+                    axis_id=str(axis_id),
+                    artifact_kinds=frozenset(
+                        output.artifact_type
+                        for plan in context.step_plans.values()
+                        if plan.owns_runtime_outputs
+                        for output in plan.artifact_outputs.values()
+                    ),
+                )
+                for axis_id, context in compiled_contexts.items()
+            ),
         )
 
     def __post_init__(self) -> None:
         self.artifact_kinds = frozenset(
             ArtifactType.coerce(kind) for kind in self.artifact_kinds
         )
+        if self.axis_expectations is not None:
+            self.axis_expectations = tuple(self.axis_expectations)
+            if any(
+                not isinstance(item, RuntimeArtifactAxisExpectation)
+                for item in self.axis_expectations
+            ):
+                raise TypeError(
+                    "axis_expectations must contain RuntimeArtifactAxisExpectation values."
+                )
+            axis_ids = tuple(item.axis_id for item in self.axis_expectations)
+            if len(axis_ids) != len(set(axis_ids)):
+                raise ValueError("axis_expectations contain duplicate axis IDs.")
+            owned_kinds = frozenset(
+                kind for item in self.axis_expectations for kind in item.artifact_kinds
+            )
+            if owned_kinds != self.artifact_kinds:
+                raise ValueError(
+                    "Compiled artifact kinds have no exact owning axis expectation."
+                )
         if not isinstance(self.exports, RuntimeExportExpectation):
             raise TypeError(
                 "RuntimeArtifactExecutionExpectation.exports must be "
@@ -272,10 +320,6 @@ class RuntimeArtifactExecutionObservation:
         cls,
         execution_contexts: Mapping[str, ProcessingContext],
     ) -> "RuntimeArtifactExecutionObservation":
-        from openhcs.core.steps.function_artifact_materialization import (
-            runtime_export_artifact_output_paths,
-        )
-
         identity_policies = frozenset(
             context.source_image_set_identity_policy
             for context in execution_contexts.values()
@@ -287,14 +331,8 @@ class RuntimeArtifactExecutionObservation:
             )
         return cls(
             records_by_axis=runtime_records_by_axis(execution_contexts),
-            exports=RuntimeExportObservation.from_output_paths(
-                tuple(
-                    path
-                    for context in execution_contexts.values()
-                    for plan in context.step_plans.values()
-                    if plan.owns_runtime_outputs
-                    for path in runtime_export_artifact_output_paths(plan, context)
-                )
+            exports=RuntimeExportObservation.from_execution_contexts(
+                execution_contexts
             ),
             source_image_set_identity_policy=next(
                 iter(identity_policies),
@@ -395,9 +433,16 @@ def _runtime_artifact_failures(
     observation: RuntimeArtifactExecutionObservation,
 ) -> tuple[str, ...]:
     failures: list[str] = []
-    for axis_id, counts in observation.record_counts_by_axis.items():
+    record_counts = observation.record_counts_by_axis
+    expected_axes = (
+        ((item.axis_id, item.artifact_kinds) for item in expectation.axis_expectations)
+        if expectation.axis_expectations is not None
+        else ((axis_id, expectation.artifact_kinds) for axis_id in record_counts)
+    )
+    for axis_id, kinds in expected_axes:
+        counts = record_counts.get(axis_id, {})
         for kind in sorted(
-            expectation.artifact_kinds,
+            kinds,
             key=lambda artifact_kind: artifact_kind.value,
         ):
             if counts.get(kind, 0) == 0:

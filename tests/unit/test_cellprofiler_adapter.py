@@ -24,6 +24,7 @@ from benchmark.adapters.cellprofiler import (
     NUMPY_DISABLED_CPU_FEATURES_ENV,
     PYTHONHASHSEED_ENV,
     CellProfilerAdapter,
+    CellProfilerRunRequest,
 )
 from benchmark.adapters.cellprofiler_installation import (
     CELLPROFILER_EXECUTABLE_ENV,
@@ -42,6 +43,54 @@ from openhcs.core.source_bindings import (
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
+
+
+def test_native_run_request_decodes_legacy_params_once(tmp_path: Path) -> None:
+    params = {
+        "dataset_id": "example",
+        "cppipe_path": str(tmp_path / "pipeline.cppipe"),
+        "cellprofiler_timeout_seconds": 45,
+        CELLPROFILER_FIRST_IMAGE_SET_PARAM: 2,
+        CELLPROFILER_LAST_IMAGE_SET_PARAM: 4,
+    }
+    request = CellProfilerRunRequest.from_pipeline_params(
+        dataset_path=tmp_path,
+        pipeline_name="pipeline",
+        pipeline_params=params,
+        metrics=(),
+        output_dir=tmp_path / "output",
+        global_config=GlobalPipelineConfig(),
+    )
+    params["dataset_id"] = "changed"
+    params[CELLPROFILER_FIRST_IMAGE_SET_PARAM] = 99
+
+    assert request.dataset_id == "example"
+    assert request.cppipe_source.cppipe_path == tmp_path / "pipeline.cppipe"
+    assert request.output_dir == tmp_path / "output"
+    assert request.timeout_seconds == 45
+    assert request.first_image_set == 2
+    assert request.last_image_set == 4
+    assert request.image_set_reference_slug() == "image_sets_first2_last4"
+    assert not hasattr(request, "pipeline_params")
+
+    with pytest.raises(ValueError, match="finite and positive"):
+        CellProfilerRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"cellprofiler_timeout_seconds": 0},
+            metrics=(),
+            output_dir=tmp_path / "output",
+            global_config=GlobalPipelineConfig(),
+        )
+    with pytest.raises(ValueError, match="finite and positive"):
+        CellProfilerRunRequest.from_pipeline_params(
+            dataset_path=tmp_path,
+            pipeline_name="pipeline",
+            pipeline_params={"cellprofiler_timeout_seconds": float("nan")},
+            metrics=(),
+            output_dir=tmp_path / "output",
+            global_config=GlobalPipelineConfig(),
+        )
 
 
 def test_deterministic_numpy_profile_disables_available_avx512_dispatch_aliases() -> (

@@ -1,0 +1,239 @@
+{
+  "case": "cp_tutorial_translocation_final",
+  "wells": [
+    "A01",
+    "A12",
+    "B01",
+    "B12",
+    "C01",
+    "C12",
+    "D01",
+    "D12"
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "a1600b567d0212ab29d4e86cc4da52bf278500fc820775ccd0d4ed4761b4e2de",
+  "driver_sha256": "799b1527329459bd01510600f59feb2688ffcb7bbd903682b3fe31c2580e256b",
+  "native_worker_sha256": "b08170d6dc869d7e2c354b2ac6d400bfc709592bf4b4a199aa60cced36a21bdb",
+  "source_commit": "f4f489fe4f6e6ae7360b2514289d922076f7cc13",
+  "source_dirty": true,
+  "native_job_count": 2,
+  "candidate_worker_count": 2,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "BBBC013_A01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d1a476e362e356653cbf5779663b7fd8376f88b462f1d68b89ad4bfab94558c7"
+    },
+    {
+      "path": "BBBC013_A01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "282da6c3c82c8df9bd04ae44a1c96c051054f9fcf8a54df49d350e8d0d24ca45"
+    },
+    {
+      "path": "BBBC013_A12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "7571320f8d3b37d068b7a8f0f0f687a47c65b968ba17ce94a5d02084fbe17926"
+    },
+    {
+      "path": "BBBC013_A12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "c9f980f5621ece3ed6ae1194f6f474477bf7ceb8bdc72495af33a46bb9b7212e"
+    },
+    {
+      "path": "BBBC013_B01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "54d82b29f1d75773319de76f10df582772568823bd46c3d93c809fcbd3978488"
+    },
+    {
+      "path": "BBBC013_B01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "7a3dde90ad4098ffff843292818609b4c83a829cd775521b5179cbed8968d4b5"
+    },
+    {
+      "path": "BBBC013_B12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "f1554562b715859bd84698a9535cc8f06d002a813b14a25dc191fc2a9d398f20"
+    },
+    {
+      "path": "BBBC013_B12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "f3e4bbe0ddd278d9808aeed11f62c2154f5dbf6ed3347a145f7e07a200f37200"
+    },
+    {
+      "path": "BBBC013_C01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "a7ecf293f0d9ee0bc2b94de0556e0f215858c2e6f66c02b938d932ff38b8e0bb"
+    },
+    {
+      "path": "BBBC013_C01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "7dec66e6281bd8cbf650056fcc58d4e14fea712f6cbb7a4fcbdbcb1386b52b14"
+    },
+    {
+      "path": "BBBC013_C12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "73a6a156ddb54cdc1a75befe98ec088eb4be3c0a94ee7d8a40f2680b5fe9a074"
+    },
+    {
+      "path": "BBBC013_C12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "612d6baec5d8c40ee70967f8f658a73e489a1c1e2b178864f20119d8a07b4ba6"
+    },
+    {
+      "path": "BBBC013_D01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d9d8d99b5f594ca8fcb8912c17a48b6f6371832660512ac6c82ec1f6d80ab65b"
+    },
+    {
+      "path": "BBBC013_D01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "6a2179d13e53c261caa34d94f687a41b630fc8a362ce6a3e8a54a68fc6110439"
+    },
+    {
+      "path": "BBBC013_D12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "e7745cd78c851b6e3bc774fff8ce9a39a8e693425703127a777b63d2b2dde753"
+    },
+    {
+      "path": "BBBC013_D12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "67a587e89839a7d664dd77899b4979f53fb5ebad9ee58198bd5b6990881f0651"
+    },
+    {
+      "path": "Translocation_doses_and_controls.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input/Translocation_doses_and_controls.csv",
+      "size_bytes": 522,
+      "sha256": "f9f40e0fe664a60b2dfeaf4d5706cf723f244517f047d3c7951e695cc22278d2"
+    }
+  ],
+  "native_input_inventory_after": [
+    {
+      "path": "BBBC013_A01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d1a476e362e356653cbf5779663b7fd8376f88b462f1d68b89ad4bfab94558c7"
+    },
+    {
+      "path": "BBBC013_A01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "282da6c3c82c8df9bd04ae44a1c96c051054f9fcf8a54df49d350e8d0d24ca45"
+    },
+    {
+      "path": "BBBC013_A12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "7571320f8d3b37d068b7a8f0f0f687a47c65b968ba17ce94a5d02084fbe17926"
+    },
+    {
+      "path": "BBBC013_A12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "c9f980f5621ece3ed6ae1194f6f474477bf7ceb8bdc72495af33a46bb9b7212e"
+    },
+    {
+      "path": "BBBC013_B01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "54d82b29f1d75773319de76f10df582772568823bd46c3d93c809fcbd3978488"
+    },
+    {
+      "path": "BBBC013_B01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "7a3dde90ad4098ffff843292818609b4c83a829cd775521b5179cbed8968d4b5"
+    },
+    {
+      "path": "BBBC013_B12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "f1554562b715859bd84698a9535cc8f06d002a813b14a25dc191fc2a9d398f20"
+    },
+    {
+      "path": "BBBC013_B12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "f3e4bbe0ddd278d9808aeed11f62c2154f5dbf6ed3347a145f7e07a200f37200"
+    },
+    {
+      "path": "BBBC013_C01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "a7ecf293f0d9ee0bc2b94de0556e0f215858c2e6f66c02b938d932ff38b8e0bb"
+    },
+    {
+      "path": "BBBC013_C01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "7dec66e6281bd8cbf650056fcc58d4e14fea712f6cbb7a4fcbdbcb1386b52b14"
+    },
+    {
+      "path": "BBBC013_C12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "73a6a156ddb54cdc1a75befe98ec088eb4be3c0a94ee7d8a40f2680b5fe9a074"
+    },
+    {
+      "path": "BBBC013_C12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "612d6baec5d8c40ee70967f8f658a73e489a1c1e2b178864f20119d8a07b4ba6"
+    },
+    {
+      "path": "BBBC013_D01_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "d9d8d99b5f594ca8fcb8912c17a48b6f6371832660512ac6c82ec1f6d80ab65b"
+    },
+    {
+      "path": "BBBC013_D01_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "6a2179d13e53c261caa34d94f687a41b630fc8a362ce6a3e8a54a68fc6110439"
+    },
+    {
+      "path": "BBBC013_D12_s1_w1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif",
+      "size_bytes": 824558,
+      "sha256": "e7745cd78c851b6e3bc774fff8ce9a39a8e693425703127a777b63d2b2dde753"
+    },
+    {
+      "path": "BBBC013_D12_s1_w2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif",
+      "size_bytes": 824558,
+      "sha256": "67a587e89839a7d664dd77899b4979f53fb5ebad9ee58198bd5b6990881f0651"
+    },
+    {
+      "path": "Translocation_doses_and_controls.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input/Translocation_doses_and_controls.csv",
+      "size_bytes": 522,
+      "sha256": "f9f40e0fe664a60b2dfeaf4d5706cf723f244517f047d3c7951e695cc22278d2"
+    }
+  ]
+}

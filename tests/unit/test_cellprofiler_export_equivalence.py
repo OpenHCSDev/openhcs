@@ -3,14 +3,17 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import numpy as np
+
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
+    cellprofiler_native_shard_equivalence,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.interop.cellprofiler.database_column_dialect import (
     CellProfilerDatabaseColumnDialect,
     CellProfilerImageAggregateStatistic,
@@ -174,6 +177,156 @@ def _write_cpa_metadata(
         )
 
 
+def _write_sharded_native_output(root: Path, image_numbers: tuple[int, ...]) -> None:
+    root.mkdir()
+    database = root / "analysis.db"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "CREATE TABLE Per_Image (ImageNumber INTEGER PRIMARY KEY, "
+            "Image_Count_Nuclei INTEGER)"
+        )
+        connection.execute(
+            "CREATE TABLE Per_Object (ImageNumber INTEGER, ObjectNumber INTEGER, "
+            "Nuclei_Number_Object_Number INTEGER, "
+            "PRIMARY KEY (ImageNumber, ObjectNumber))"
+        )
+        connection.execute("CREATE TABLE Experiment (ExperimentID INTEGER)")
+        connection.execute("INSERT INTO Experiment VALUES (1)")
+        for image_number in image_numbers:
+            connection.execute("INSERT INTO Per_Image VALUES (?, ?)", (image_number, 1))
+            connection.execute(
+                "INSERT INTO Per_Object VALUES (?, ?, ?)",
+                (image_number, 1, 1),
+            )
+            np.save(
+                root / f"well_{image_number}.npy",
+                np.full((2, 2), image_number, dtype=np.uint8),
+            )
+    _write_properties(
+        root / "analysis.properties",
+        database,
+        object_table="Per_Object",
+        object_id="ObjectNumber",
+    )
+
+
+def test_native_shards_merge_cpa_declared_image_and_object_rows(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (2,))
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert report.is_equivalent
+
+
+def test_native_shards_merge_declared_relationship_rows_and_view(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    for root, image_numbers in (
+        (reference, (1, 2)),
+        (first, (1,)),
+        (second, (2,)),
+    ):
+        _write_sharded_native_output(root, image_numbers)
+        with sqlite3.connect(root / "analysis.db") as connection:
+            connection.execute(
+                "CREATE TABLE Per_RelationshipTypes "
+                "(relationship_type_id INTEGER, relationship TEXT)"
+            )
+            connection.execute("INSERT INTO Per_RelationshipTypes VALUES (1, 'Parent')")
+            connection.execute(
+                "CREATE TABLE Per_Relationships "
+                "(relationship_type_id INTEGER, image_number1 INTEGER, "
+                "image_number2 INTEGER)"
+            )
+            connection.executemany(
+                "INSERT INTO Per_Relationships VALUES (1, ?, ?)",
+                ((image_number, image_number) for image_number in image_numbers),
+            )
+            connection.execute(
+                "CREATE VIEW Per_RelationshipsView AS "
+                "SELECT T.relationship, R.image_number1, R.image_number2 "
+                "FROM Per_Relationships R JOIN Per_RelationshipTypes T "
+                "USING (relationship_type_id)"
+            )
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert report.is_equivalent
+
+
+def test_native_shards_reject_overlapping_image_sets(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (1,))
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert not report.is_equivalent
+
+
+def test_native_shards_reject_nonpartitionable_experiment_aggregate(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (2,))
+    for root, aggregate in ((reference, 1.5), (first, 1.0), (second, 2.0)):
+        with sqlite3.connect(root / "analysis.db") as connection:
+            connection.execute(
+                "ALTER TABLE Experiment ADD COLUMN ImageQuality_Mean REAL"
+            )
+            connection.execute(
+                "UPDATE Experiment SET ImageQuality_Mean = ?", (aggregate,)
+            )
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert any(
+        "Native shard table 'Experiment'" in message
+        for message in report.failure_messages()
+    )
+
+
+def test_native_shards_reject_undeclared_side_writes(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _write_sharded_native_output(reference, (1, 2))
+    _write_sharded_native_output(first, (1,))
+    _write_sharded_native_output(second, (2,))
+    (second / "unexpected.txt").write_text("side write")
+
+    report = cellprofiler_native_shard_equivalence(
+        reference, (first, second), policy=RuntimeEquivalencePolicy()
+    )
+
+    assert any("unexpected files" in message for message in report.failure_messages())
+
+
 def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     tmp_path: Path,
 ) -> None:
@@ -199,6 +352,32 @@ def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     )
 
     assert report.is_equivalent
+
+
+def test_database_export_equivalence_rejects_unequal_row_count_before_value_projection(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference"
+    candidate = tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    for root in (reference, candidate):
+        _write_database(root / "analysis.db")
+        _write_properties(root / "analysis.properties", root / "analysis.db")
+    with sqlite3.connect(reference / "analysis.db") as connection:
+        connection.execute("INSERT INTO Per_Image VALUES (?, ?)", (2, 3.0))
+
+    report = cellprofiler_database_export_equivalence(
+        reference,
+        RuntimeExportObservation.from_output_root(candidate),
+        policy=RuntimeEquivalencePolicy(),
+    )
+
+    assert not report.is_equivalent
+    assert any(
+        "row count differs: reference=2, candidate=1" in message
+        for message in report.failure_messages()
+    )
 
 
 def test_database_export_equivalence_resolves_prefixed_combined_cpa_schema(

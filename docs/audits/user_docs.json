@@ -93,7 +93,7 @@
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Declares source bindings that map logical pipeline inputs to microscope-backed workspaces."
       },
       {
@@ -156,7 +156,7 @@
   },
   {
     "path": "docs/source/appendices/research_impact.rst",
-    "source_sha256": "f1972fe0fe8ecc9adb42f2ca3ab457af115595e5231ee72edd575cb060a7bff9",
+    "source_sha256": "177e054c72fcf87d97b79d4055a33d4125522b1fcbaeaf14e2876808511429c7",
     "audience": [
       "prospective adopters",
       "research evaluators"
@@ -176,22 +176,22 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns installed benchmark execution and report commands."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed comparison-run provenance and lifecycle receipts."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only progress and structured-artifact inspection."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves receipt validation and the inspect-only MCP projection."
       }
     ],
@@ -221,7 +221,9 @@
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete retired-impact notice against the benchmark CLI, receipt, inspection service, and focused tests. Clarified that typed provenance and artifact inspection support reproducibility but do not establish equivalence or authorize execution.",
       "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-23: Re-read the complete page for its Diátaxis need against the read-only comparison report and exclusive run receipt. It does not claim MCP suite submission or scientific speedup; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   },
   {
@@ -236,12 +238,12 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Declares source bindings that map logical pipeline inputs to microscope-backed workspaces."
       },
       {
@@ -332,7 +334,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -461,7 +463,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -632,7 +634,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -677,7 +679,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],
@@ -695,7 +697,7 @@
   },
   {
     "path": "docs/source/concepts/module_structure.rst",
-    "source_sha256": "aa225b19668b2883e6230bc05235fe5d0aa74b72ab258c2f149e58b334cb9d4b",
+    "source_sha256": "6537ec140390a40a617770c4c4c7691a568133bf9d72b0be41ee3acc7e61c404",
     "audience": [
       "contributors",
       "integrators"
@@ -765,17 +767,17 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns registered benchmark command declarations and installed CLI construction."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed run declaration and receipt semantics inside the benchmark package."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection derived from benchmark contracts and artifacts."
       }
     ],
@@ -815,7 +817,9 @@
       "2026-09-16: Re-read the complete module-ownership reference against package discovery, benchmark declarations, control service, and MCP capability. Added the packaged benchmark area and explicitly separated command-owned execution from expert MCP inspection; all existing OpenHCS and extracted-foundation boundaries remain accurate.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `openhcs/runtime/viewer_protocol.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-23: Re-read the complete page for its Diátaxis need against the read-only comparison report and exclusive run receipt. It does not claim MCP suite submission or scientific speedup; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   },
   {
@@ -844,7 +848,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1013,7 +1017,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "c1ec94eab493bc46986c55b8b1428d9a0a5c0eaf5789f2dddbc06df2c0843ff7",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -1348,7 +1352,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/domain_expert_onboarding.rst",
-    "source_sha256": "a711b51c543d885d3a733a575001239d5a0e0cc7d2113cb2e22429c79868097e",
+    "source_sha256": "99af4a6bf51653532d929d7008e20f515bf4ff1303a1eccfec7e7dd79be5ca4d",
     "audience": [
       "imaging scientists",
       "scientists working with an MCP agent"
@@ -1358,7 +1362,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -1388,22 +1392,22 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns packaged comparison execution and reporting commands."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed comparison-run provenance, lifecycle status, and rerun arguments."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection of existing benchmark directories."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves exact receipt, progress, artifact, path-policy, and MCP projection behavior."
       }
     ],
@@ -1429,7 +1433,11 @@
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-14: Re-read the complete onboarding how-to against the changed importer. Scientist-facing fit, import, headless-interaction, and Official30 recipe guidance remains accurate; benchmark-only terminal output selection does not change the user workflow.",
       "2026-09-16: Re-read the complete scientist onboarding page against the benchmark command, typed receipt, expert capability, and focused tests. Added a narrow Official30 follow-on that identifies reviewed CLI execution and read-only existing-run inspection without presenting a receipt as scientific validity.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-23: Re-read the complete page for its Diátaxis need against the read-only comparison report and exclusive run receipt. It does not claim MCP suite submission or scientific speedup; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   },
   {
@@ -1492,7 +1500,7 @@
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Declares source bindings that map logical pipeline inputs to microscope-backed workspaces."
       },
       {
@@ -1502,12 +1510,12 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
         "path": "tests/unit/test_source_bindings.py",
-        "sha256": "ebd11451211475f1f8c04994ce9f8a734f7a6341cc19fa843f070d7f9481992d",
+        "sha256": "c7cfdd8015abc6948f0db3b3277a75d015f19a4cad68032badda99756f257942",
         "role": "Proves source-binding validation and projection into concrete workspace identities."
       },
       {
@@ -1706,7 +1714,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1795,7 +1803,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/troubleshooting_FAQ.rst",
-    "source_sha256": "0f7869c544946353a5dab1bfc1ae1fd686c1bb9dc005edeb41e7f0dcfab7fcf1",
+    "source_sha256": "0c2fb0dbb43ec18efb8d4aeff2a728a35630516a6e506de677de5d070089f428",
     "audience": [
       "desktop operators diagnosing a failed workflow"
     ],
@@ -1809,7 +1817,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1824,7 +1832,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "9e84b4ba85a64c6b03a909da90e5d3655e407e278bf469f711a537b65975e09e",
+        "sha256": "31081f2a323a81c060aede1201a4bf1a1b39a51f37928c281a419ffaceadfe60",
         "role": "Implements execution-server connection, request submission, progress consumption, and connection-state reporting."
       },
       {
@@ -1943,7 +1951,8 @@
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/runtime/viewer_protocol.py`, `openhcs/pyqt_gui/services/ui_bridge_server.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/runtime/viewer_protocol.py`, `openhcs/pyqt_gui/services/ui_bridge_server.py`, `tests/unit/pyqt_gui/test_ui_agent_bridge.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
     ]
   },
   {
@@ -2092,7 +2101,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -2404,7 +2413,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -2447,7 +2456,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "a97cdebde99a0f82333f0711447f405e33bb6f99cbc89f7b9f24687e43437c9d",
+    "source_sha256": "82d14d7b3163bd6c7313922d7509cd80325e1021d83e80e50aa8775ac902e59b",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2467,7 +2476,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
+        "sha256": "c1ec94eab493bc46986c55b8b1428d9a0a5c0eaf5789f2dddbc06df2c0843ff7",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -3017,12 +3026,12 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_library_loading.py",
-        "sha256": "49f503984be6f7d6c64f84f174d07d1045a70d6fb2f2f6f11b8c3cb1b72656f2",
+        "sha256": "c756d24a1cd9469505d94de5cabe4cdb3129e67c4e1bd6c66ad02588274a8e5c",
         "role": "Proves object intensity measures a 3D object as one volume and emits Z features."
       },
       {
         "path": "tests/unit/test_cellprofiler_module_execution.py",
-        "sha256": "2cad59086aab25334460e5df75fe3956c1ab5095d2de87cf519485d2d88173d7",
+        "sha256": "f5be1bcae3be455df60ae80623e6cc170830b1754b9b435294f5fc5e1b75fc43",
         "role": "Proves payload-scoped size-and-shape rows use the 3D volume schema."
       },
       {
@@ -3043,7 +3052,10 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "2026-09-14: Re-read the complete dimensionality reference against the changed library-loading test. The changed assertion corrects ConvertObjectsToImage uint16 output in an unrelated 2-D conversion test; the authority test for one-row 3-D object intensity and Z features is unchanged, so every published volumetric claim remains accurate."
+      "2026-09-14: Re-read the complete dimensionality reference against the changed library-loading test. The changed assertion corrects ConvertObjectsToImage uint16 output in an unrelated 2-D conversion test; the authority test for one-row 3-D object intensity and Z features is unchanged, so every published volumetric claim remains accurate.",
+      "2026-09-23: Re-read the complete dimensionality and measurement reference after adding the native float32 Costes threshold regression to the shared library-loading test file. The new assertion concerns 2-D colocalisation threshold membership; the existing test_measure_object_intensity_measures_3d_objects_as_single_volume_domain still proves one row per 3-D object, integrated intensity and Z features, and the callable-backed dimensionality claims are unchanged. The affected CellProfiler suite passed 680 tests.",
+      "2026-09-23: Re-read this reference against the scoped measurement-table row-axis regression. The changed tests rebase a single-site table's runtime slice index to its one-plane source provenance and check RelateObjects alignment; they do not change the declared 3-D segmentation or measurement schemas cited by this reference. The relevant CellProfiler and runtime-artifact suites passed 438 tests.",
+      "2026-09-23: Re-read this reference after the shared library-loading test gained 2-D Costes empty-threshold and per-object undefined-value regressions. The cited 3-D object-intensity and Z-feature assertions remain unchanged. The affected CellProfiler library-loading and module-execution suites passed 595 tests."
     ]
   },
   {
@@ -3806,7 +3818,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],
@@ -3861,7 +3873,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "9e84b4ba85a64c6b03a909da90e5d3655e407e278bf469f711a537b65975e09e",
+        "sha256": "31081f2a323a81c060aede1201a4bf1a1b39a51f37928c281a419ffaceadfe60",
         "role": "Implements execution-server connection, request submission, progress consumption, and connection-state reporting."
       },
       {
@@ -3887,12 +3899,13 @@
       "On 2026-08-28, re-read the complete how-to and used the current-source UI bridge to select and capture the active port 7777 execution-server log after compilation; the full-resolution capture contains no private local path.",
       "On 2026-08-28, re-read the complete how-to after gallery dimensions and source evidence became generated projections; live discovery, log selection, process identity, and diagnostic guidance remain unchanged.",
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof."
     ]
   },
   {
     "path": "docs/source/user_guide/mcp_clients.rst",
-    "source_sha256": "2015b6e73ab930b28e3151c4ddf8784294a1effdf2fa98b504a02622fc8bad7d",
+    "source_sha256": "f47e4de0a9e8653155f47898627953ad7635c2b72e05805483a72bb6c85f0e26",
     "audience": [
       "desktop users connecting local agent clients",
       "MCP administrators"
@@ -3917,7 +3930,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -3932,7 +3945,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "cd47571edf7944fed90fb2e8ff2196acbbe7a8882572eb806645de2f52785b23",
+        "sha256": "b99b6ca27be471f95ddf0852f8f94ce02797a459bf98bf6e0fa4851c0bb8c698",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {
@@ -3942,33 +3955,44 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the installed benchmark execution and report command surface."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed lifecycle status, rerun provenance, and receipt validation."
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "898d5639e8b53b5c04cd28f93c5cddd8b9388a5f79177f85ec80f9bbc7c74131",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the expert MCP benchmark inspection request and result."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Reads authorized existing run directories without invoking benchmark execution."
       },
       {
+        "path": "benchmark/control_service.py",
+        "sha256": "bf2b39696a49d8c87cf74d39770d63013972b9c8cf884863c467ccdf46eb12d3",
+        "role": "Requires manifest and every declared benchmark source location to satisfy the agent read policy."
+      },
+      {
+        "path": "openhcs/agent/path_policy.py",
+        "sha256": "6ee0dc362b52d147586e9e61ea89499f5b35355ff697a2bfe5bbcc33febc45ba",
+        "role": "Owns explicit MCP readable roots and rejection of paths outside them."
+      },
+      {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves full-surface capability binding, enum projection, path policy, progress, artifacts, and lightweight imports."
       }
     ],
     "findings": [
       "The desktop MCP profile description excluded headless execution; it now documents the declaration-owned headless group and distinguishes independent sessions from UI-owned state.",
-      "The client how-to did not explain that benchmark inspection is expert-only and read-only, or direct users to the separately installed benchmark execution command."
+      "The client how-to did not explain that benchmark inspection is expert-only and read-only, or direct users to the separately installed benchmark execution command.",
+      "The measured-run inspection instructions now distinguish retained_evidence_valid from separate image and table output validation."
     ],
     "disposition": "revise",
     "validation": [
@@ -4001,7 +4025,16 @@
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "2026-09-16: Re-read the complete MCP client how-to against capability profiles, path policy, benchmark contracts/control, CLI registration, context composition, and focused tests. Added the full-surface, readable-root procedure and explicitly separated inspection from launch, resume, cancellation, rerun, and scientific review.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `tests/unit/agent/test_mcp_server.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `tests/unit/agent/test_mcp_server.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Targeted review of the benchmark inspection how-to after CLI and MCP gained shared bounded artifact paging. The page now gives the next-offset procedure without implying inspection launches a job or proves parity; 28 focused control tests passed. Fresh installed-wheel CI remains separate.",
+      "2026-09-22: Re-reviewed the measured-run inspection instruction after adding declaration-derived unreceipted artifacts. The action is to preserve incomplete evidence for diagnosis and withhold a completion claim; the architecture page explains why. Thirty-five focused control and wrapper tests passed locally.",
+      "2026-09-22: Re-reviewed the measured-run recovery how-to. It now permits retrying finalisation only for the same completed ordinary job; byte-identical partial evidence is reused, conflicts require diagnosis, and inspection alone never proves completion. Thirty-seven focused tests passed locally.",
+      "2026-09-23: Re-read the complete MCP client how-to after the measured CLI gained ordinary-job interrupt and timeout cancellation. The action and its limits are now explicit; the other ownership and safety claims remain supported. See docs/audits/benchmark_cli_interrupt_review_20260923.md; 143 affected tests passed locally.",
+      "2026-09-23: Re-read the complete page after a fresh current-checkout MCP client rejected an official benchmark manifest whose resolved dataset lay outside the configured read roots. Compared the benchmark service with AgentPathPolicy, granted the dataset cache explicitly, and verified the same expert discovery call returned the declared source. Clarified the existing filesystem setup step without changing benchmark execution authority; 63 focused benchmark control and equivalence tests passed. Fresh wheel CI remains separate.",
+      "2026-09-23: Re-read the complete client how-to after the expert comparison report and occupied-destination guard were added. Documented the same typed receipt route and bounded warning behaviour, without implying MCP suite execution; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   },
   {

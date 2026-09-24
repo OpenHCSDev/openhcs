@@ -64,3 +64,42 @@ directory is suitable for diagnosis, but a published parity claim must retain
 those files in durable storage together with the Git/manifest/native-reference
 identities and exact command described in
 `docs/source/architecture/measurement_equivalence_system.rst`.
+
+## Run a measured well-throughput sweep
+
+First check the modes, cases and missing sources without acquiring data or
+starting an execution server:
+
+```bash
+openhcs-benchmark run-well-throughput \
+  --manifest benchmark/manifests/official30_portable_axis1.json \
+  --output-dir /tmp/openhcs_well_throughput \
+  --plan-only
+```
+
+For a bounded validation, run one declared case and mode in a new output
+directory. Omit `OPENHCS_BENCHMARK_AUTO_ACQUIRE=0` if the manifest should fetch
+missing sources:
+
+```bash
+OPENHCS_BENCHMARK_AUTO_ACQUIRE=0 openhcs-benchmark run-well-throughput \
+  --manifest benchmark/manifests/official30_portable_axis1.json \
+  --case ExamplePercentPositive --preset 8w_2c \
+  --output-dir /tmp/openhcs_well_throughput
+```
+
+Without `--case` or `--preset`, the command runs every case and the manifest's
+paired modes. It uses the manifest's worker start method unless `--start-method`
+overrides it. `--well-count` and `--worker-count` select an explicit cross-product
+instead of presets. A non-empty output directory is refused; use `--resume` to
+continue its ordinary-route `well_throughput.csv`. Failed observations remain in
+that CSV and make the command exit non-zero.
+
+Each successful observation retains a measured-run receipt and submitted
+pipeline/configuration sources under
+`<output-dir>/<case>/wells_<n>/workers_<n>/ordinary_run_evidence/<run-id>/`.
+Inspect that directory with `openhcs-benchmark inspect-measured --output-dir
+<evidence-dir> --report`. These measurements use the ordinary ZMQ pipeline route;
+they are not interchangeable with the archived direct-execution data behind the
+manuscript's Figure 5. Replacing that figure requires a separately validated
+workload and new retained observations.

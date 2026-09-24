@@ -71,12 +71,17 @@ from openhcs.interop.cellprofiler.analyst_export import (
     CPAImageChannelSpec,
     CPAPropertiesRenderer,
     CPASQLiteRenderer,
+    CPATableRowProjection,
     CellProfilerAnalystProjectionBuilder,
     CellProfilerDatabaseExportSettings,
     CellProfilerObjectTableMode,
 )
 from openhcs.interop.cellprofiler.database_column_dialect import (
+    CellProfilerDatabaseColumnDialect,
     CellProfilerProjectedTable,
+)
+from openhcs.interop.cellprofiler.image_set_numbering import (
+    CellProfilerImageSetNumbering,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
@@ -105,6 +110,89 @@ def _projection_builder_for_fields(
             metadata_fields=metadata_fields,
         )
     )
+
+
+def test_cpa_row_projection_derives_fields_once_per_table_subject(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    projection = CPATableRowProjection(
+        CellProfilerDatabaseColumnDialect(),
+        CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
+    )
+    subject = MeasurementSubject(MeasurementScope.EXPERIMENT)
+    calls: list[tuple[str, MeasurementSubject, str]] = []
+    original = CPATableRowProjection._project_measurement_field
+
+    def count_projection(
+        self: CPATableRowProjection,
+        table: MeasurementTable,
+        field_name: str,
+        *,
+        subject: MeasurementSubject,
+    ) -> FieldSpec | None:
+        calls.append((table.name, subject, field_name))
+        return original(self, table, field_name, subject=subject)
+
+    monkeypatch.setattr(
+        CPATableRowProjection,
+        "_project_measurement_field",
+        count_projection,
+    )
+    first = MeasurementTable(
+        name="FirstExperiment",
+        rows=MeasurementProjectedColumnarRows(
+            {"Count_Nuclei": (1, 2, 3)},
+            fields=(FieldSpec("Count_Nuclei", int),),
+        ),
+        subject=subject,
+    )
+    second = MeasurementTable(
+        name="SecondExperiment",
+        rows=MeasurementProjectedColumnarRows(
+            {"Count_Nuclei": (4.5, 5.5)},
+            fields=(FieldSpec("Count_Nuclei", float),),
+        ),
+        subject=subject,
+    )
+
+    assert projection.measurement_rows_by_subject(first, scope=None)[subject] == (
+        {"Count_Nuclei": 1},
+        {"Count_Nuclei": 2},
+        {"Count_Nuclei": 3},
+    )
+    assert projection.measurement_rows_by_subject(second, scope=None)[subject] == (
+        {"Count_Nuclei": 4.5},
+        {"Count_Nuclei": 5.5},
+    )
+    object_table = MeasurementTable(
+        name="ObjectMeasurements",
+        rows=MeasurementProjectedColumnarRows(
+            {"AreaShape_Area": (1.0,)},
+            fields=(FieldSpec("AreaShape_Area", float),),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells"),
+    )
+    cells = MeasurementSubject(MeasurementScope.OBJECT, "Cells")
+    nuclei = MeasurementSubject(MeasurementScope.OBJECT, "Nuclei")
+    object_field_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None] = {}
+    assert projection._project_runtime_row(
+        object_table,
+        {"AreaShape_Area": 1.0},
+        subject=cells,
+        field_projection_cache=object_field_cache,
+    ) == {"Cells_AreaShape_Area": 1.0}
+    assert projection._project_runtime_row(
+        object_table,
+        {"AreaShape_Area": 2.0},
+        subject=nuclei,
+        field_projection_cache=object_field_cache,
+    ) == {"Nuclei_AreaShape_Area": 2.0}
+    assert calls == [
+        ("FirstExperiment", subject, "Count_Nuclei"),
+        ("SecondExperiment", subject, "Count_Nuclei"),
+        ("ObjectMeasurements", cells, "AreaShape_Area"),
+        ("ObjectMeasurements", nuclei, "AreaShape_Area"),
+    ]
 
 
 def test_default_cpa_channels_follow_compiled_source_binding_order() -> None:

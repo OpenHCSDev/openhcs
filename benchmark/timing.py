@@ -6,17 +6,22 @@ import csv
 import io
 import json
 import time
+from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from enum import Enum, auto
+from enum import StrEnum, auto
+from math import isfinite
 from pathlib import Path
 from typing import Iterator
+
+from python_introspect import dataclass_from_mapping
+from zmqruntime.messages import ExecutionRecord, ExecutionStatus
 
 from openhcs.core.config import Backend
 from openhcs.core.vfs_protocol import FileManagerLike
 
 
-class BenchmarkPhase(Enum):
+class BenchmarkPhase(StrEnum):
     """Semantic benchmark phases reported independently."""
 
     RESOLVE_SOURCE = auto()
@@ -26,6 +31,8 @@ class BenchmarkPhase(Enum):
     INITIALIZE_RUNTIME = auto()
     COMPILE_OPENHCS = auto()
     EXECUTE_OPENHCS = auto()
+    SERVER_COMPILATION_JOB = auto()
+    SERVER_PIPELINE_JOB = auto()
     SUBMIT_OPENHCS = auto()
     WAIT_OPENHCS = auto()
     EXECUTE_NATIVE_CP = auto()
@@ -34,6 +41,55 @@ class BenchmarkPhase(Enum):
     COMPARE_EQUIVALENCE = auto()
     READ_CACHE = auto()
     WRITE_CACHE = auto()
+
+    @property
+    def is_nested_runtime_observation(self) -> bool:
+        """Whether this interval overlaps the client submit/wait wall phases."""
+        return self in {
+            BenchmarkPhase.COMPILE_OPENHCS,
+            BenchmarkPhase.EXECUTE_OPENHCS,
+            BenchmarkPhase.SERVER_COMPILATION_JOB,
+            BenchmarkPhase.SERVER_PIPELINE_JOB,
+        }
+
+
+def additive_phase_total_seconds(phase_seconds: Mapping[str, float]) -> float | None:
+    """Sum only disjoint benchmark phases, never nested runtime observations."""
+    additive: list[float] = []
+    for phase_name, seconds in phase_seconds.items():
+        try:
+            phase = BenchmarkPhase[phase_name]
+        except KeyError as exc:
+            raise ValueError(f"Unknown benchmark phase: {phase_name!r}.") from exc
+        if not isfinite(seconds) or seconds < 0:
+            raise ValueError(f"Invalid benchmark phase duration: {phase_name!r}.")
+        if not phase.is_nested_runtime_observation:
+            additive.append(seconds)
+    return sum(additive) if additive else None
+
+
+def completed_server_execution_seconds(
+    record: ExecutionRecord, *, expected_execution_id: str | None = None
+) -> float:
+    """Measure a completed ordinary job using its server-owned time bounds."""
+    start_time = record.start_time
+    end_time = record.end_time
+    if (
+        record.status != ExecutionStatus.COMPLETE.value
+        or (
+            expected_execution_id is not None
+            and record.execution_id != expected_execution_id
+        )
+        or not isinstance(start_time, (int, float))
+        or not isinstance(end_time, (int, float))
+        or not isfinite(start_time)
+        or not isfinite(end_time)
+        or end_time < start_time
+    ):
+        raise ValueError(
+            f"Completed OpenHCS job {record.execution_id!r} has no valid server time bounds."
+        )
+    return float(end_time - start_time)
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +108,19 @@ class PhaseTimingRecord:
         payload = asdict(self)
         payload["phase"] = self.phase.name
         return payload
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> "PhaseTimingRecord":
+        """Decode the stable phase name rather than the enum's ordinal value."""
+
+        phase_name = payload.get("phase")
+        if not isinstance(phase_name, str):
+            raise TypeError("Phase timing phase must be a declared name.")
+        try:
+            phase = BenchmarkPhase[phase_name]
+        except KeyError as exc:
+            raise ValueError(f"Unknown benchmark phase: {phase_name!r}.") from exc
+        return dataclass_from_mapping(cls, {**payload, "phase": phase})
 
 
 class PhaseTimingTrace:
@@ -101,8 +170,10 @@ class PhaseTimingTrace:
         cached: bool = False,
     ) -> None:
         """Append an externally measured phase duration."""
-        if seconds < 0:
-            raise ValueError("PhaseTimingRecord.seconds cannot be negative.")
+        if not isfinite(seconds) or seconds < 0:
+            raise ValueError(
+                "PhaseTimingRecord.seconds must be finite and non-negative."
+            )
         self._records.append(
             PhaseTimingRecord(
                 run_id=self.run_id,

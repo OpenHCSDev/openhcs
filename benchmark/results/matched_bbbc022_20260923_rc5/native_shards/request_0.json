@@ -1,0 +1,13 @@
+{
+  "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+  "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+  "file_list_path": null,
+  "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0",
+  "expected_image_sets": 8,
+  "repetitions": 1,
+  "first_image_set": 1,
+  "last_image_set": 8,
+  "start_barrier_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/start_barrier",
+  "start_barrier_job_count": 2,
+  "start_barrier_job_index": 0
+}

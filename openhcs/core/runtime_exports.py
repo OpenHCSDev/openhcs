@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from openhcs.core.artifacts import (
     ArtifactPayloadShape,
@@ -26,6 +26,9 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
 )
 from openhcs.processing.materialization.core import materialization_is_empty
+
+if TYPE_CHECKING:
+    from openhcs.core.context.processing_context import ProcessingContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,6 +111,26 @@ class RuntimeExportObservation:
     table_headers_by_path: Mapping[Path, tuple[str, ...]]
     table_row_counts_by_path: Mapping[Path, int]
     output_files: tuple[Path, ...] = ()
+
+    @classmethod
+    def from_execution_contexts(
+        cls,
+        execution_contexts: Mapping[str, ProcessingContext],
+    ) -> RuntimeExportObservation:
+        """Read contract-owned export paths without retaining runtime values."""
+        from openhcs.core.steps.function_artifact_materialization import (
+            runtime_export_artifact_output_paths,
+        )
+
+        return cls.from_output_paths(
+            tuple(
+                path
+                for context in execution_contexts.values()
+                for plan in context.step_plans.values()
+                if plan.owns_runtime_outputs
+                for path in runtime_export_artifact_output_paths(plan, context)
+            )
+        )
 
     @classmethod
     def from_output_root(

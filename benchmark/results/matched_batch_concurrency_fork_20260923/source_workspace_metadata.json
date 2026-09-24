@@ -1,0 +1,3860 @@
+{
+  "subdirectories": {
+    ".": {
+      "microscope_handler_name": "source_bindings",
+      "source_filename_parser_name": "SourceSchemaFilenameParser",
+      "grid_dimensions": [],
+      "pixel_size": 1.0,
+      "image_files": [
+        "A01_s001_w2_z001_t001.tif",
+        "A01_s001_w1_z001_t001.tif",
+        "A12_s001_w2_z001_t001.tif",
+        "A12_s001_w1_z001_t001.tif",
+        "B01_s001_w2_z001_t001.tif",
+        "B01_s001_w1_z001_t001.tif",
+        "B12_s001_w2_z001_t001.tif",
+        "B12_s001_w1_z001_t001.tif",
+        "C01_s001_w2_z001_t001.tif",
+        "C01_s001_w1_z001_t001.tif",
+        "C12_s001_w2_z001_t001.tif",
+        "C12_s001_w1_z001_t001.tif",
+        "D01_s001_w2_z001_t001.tif",
+        "D01_s001_w1_z001_t001.tif",
+        "D12_s001_w2_z001_t001.tif",
+        "D12_s001_w1_z001_t001.tif",
+        "E01_s001_w2_z001_t001.tif",
+        "E01_s001_w1_z001_t001.tif",
+        "E02_s001_w2_z001_t001.tif",
+        "E02_s001_w1_z001_t001.tif",
+        "E03_s001_w2_z001_t001.tif",
+        "E03_s001_w1_z001_t001.tif",
+        "E04_s001_w2_z001_t001.tif",
+        "E04_s001_w1_z001_t001.tif",
+        "E05_s001_w2_z001_t001.tif",
+        "E05_s001_w1_z001_t001.tif",
+        "E06_s001_w2_z001_t001.tif",
+        "E06_s001_w1_z001_t001.tif",
+        "E07_s001_w2_z001_t001.tif",
+        "E07_s001_w1_z001_t001.tif",
+        "E08_s001_w2_z001_t001.tif",
+        "E08_s001_w1_z001_t001.tif",
+        "E09_s001_w2_z001_t001.tif",
+        "E09_s001_w1_z001_t001.tif",
+        "E10_s001_w2_z001_t001.tif",
+        "E10_s001_w1_z001_t001.tif",
+        "E11_s001_w2_z001_t001.tif",
+        "E11_s001_w1_z001_t001.tif",
+        "E12_s001_w2_z001_t001.tif",
+        "E12_s001_w1_z001_t001.tif",
+        "F01_s001_w2_z001_t001.tif",
+        "F01_s001_w1_z001_t001.tif",
+        "F12_s001_w2_z001_t001.tif",
+        "F12_s001_w1_z001_t001.tif",
+        "G01_s001_w2_z001_t001.tif",
+        "G01_s001_w1_z001_t001.tif",
+        "G12_s001_w2_z001_t001.tif",
+        "G12_s001_w1_z001_t001.tif",
+        "H01_s001_w2_z001_t001.tif",
+        "H01_s001_w1_z001_t001.tif",
+        "H12_s001_w2_z001_t001.tif",
+        "H12_s001_w1_z001_t001.tif"
+      ],
+      "sites": {
+        "1": null
+      },
+      "channels": {
+        "2": null,
+        "1": null
+      },
+      "z_indexes": {
+        "1": null
+      },
+      "timepoints": {
+        "1": null
+      },
+      "wells": {
+        "A01": null,
+        "A12": null,
+        "B01": null,
+        "B12": null,
+        "C01": null,
+        "C12": null,
+        "D01": null,
+        "D12": null,
+        "E01": null,
+        "E02": null,
+        "E03": null,
+        "E04": null,
+        "E05": null,
+        "E06": null,
+        "E07": null,
+        "E08": null,
+        "E09": null,
+        "E10": null,
+        "E11": null,
+        "E12": null,
+        "F01": null,
+        "F12": null,
+        "G01": null,
+        "G12": null,
+        "H01": null,
+        "H12": null
+      },
+      "available_backends": {
+        "disk": true
+      },
+      "workspace_mapping": {
+        "A01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "A01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "A12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "A12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "B01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "B01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "B12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "B12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "C01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "C01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "C12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "C12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "D01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "D01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "D12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "D12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E02_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E02_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E03_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E03_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E04_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E04_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E05_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E05_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E06_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E06_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E07_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E07_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E08_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E08_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E09_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E09_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E10_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E10_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E11_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E11_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "E12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "E12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "F01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "F01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "F12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "F12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "G01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "G01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "G12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "G12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "H01_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "H01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w1.tif",
+          "source_axis_indices": []
+        },
+        "H12_s001_w2_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w2.tif",
+          "source_axis_indices": []
+        },
+        "H12_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w1.tif",
+          "source_axis_indices": []
+        }
+      },
+      "source_metadata": {
+        "A01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "A01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_A01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "A01",
+          "source_alias": "rawDNA"
+        },
+        "A01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "A01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_A01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "A01",
+          "source_alias": "rawGFP"
+        },
+        "A12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "A12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_A12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "A12",
+          "source_alias": "rawDNA"
+        },
+        "A12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "A12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_A12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "A12",
+          "source_alias": "rawGFP"
+        },
+        "B01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "B01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_B01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "B01",
+          "source_alias": "rawDNA"
+        },
+        "B01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "B01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_B01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "B01",
+          "source_alias": "rawGFP"
+        },
+        "B12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "B12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_B12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "B12",
+          "source_alias": "rawDNA"
+        },
+        "B12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "B12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_B12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "B12",
+          "source_alias": "rawGFP"
+        },
+        "C01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "C01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_C01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "C01",
+          "source_alias": "rawDNA"
+        },
+        "C01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "C01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_C01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "C01",
+          "source_alias": "rawGFP"
+        },
+        "C12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "C12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_C12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "C12",
+          "source_alias": "rawDNA"
+        },
+        "C12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "C12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_C12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "C12",
+          "source_alias": "rawGFP"
+        },
+        "D01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "D01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_D01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "D01",
+          "source_alias": "rawDNA"
+        },
+        "D01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "D01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_D01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "D01",
+          "source_alias": "rawGFP"
+        },
+        "D12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "D12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_D12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "D12",
+          "source_alias": "rawDNA"
+        },
+        "D12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "D12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_D12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "D12",
+          "source_alias": "rawGFP"
+        },
+        "E01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E01",
+          "source_alias": "rawDNA"
+        },
+        "E01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E01",
+          "source_alias": "rawGFP"
+        },
+        "E02_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E02",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E02_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E02",
+          "source_alias": "rawDNA"
+        },
+        "E02_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E02",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E02_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E02",
+          "source_alias": "rawGFP"
+        },
+        "E03_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E03",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.31,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.31,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E03_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E03",
+          "source_alias": "rawDNA"
+        },
+        "E03_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E03",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.31,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.31,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E03_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E03",
+          "source_alias": "rawGFP"
+        },
+        "E04_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E04",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.63,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.63,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E04_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E04",
+          "source_alias": "rawDNA"
+        },
+        "E04_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E04",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.63,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.63,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E04_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E04",
+          "source_alias": "rawGFP"
+        },
+        "E05_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E05",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 1.25,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 1.25,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E05_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E05",
+          "source_alias": "rawDNA"
+        },
+        "E05_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E05",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 1.25,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 1.25,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E05_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E05",
+          "source_alias": "rawGFP"
+        },
+        "E06_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E06",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 2.5,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 2.5,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E06_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E06",
+          "source_alias": "rawDNA"
+        },
+        "E06_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E06",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 2.5,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 2.5,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E06_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E06",
+          "source_alias": "rawGFP"
+        },
+        "E07_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E07",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 5.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 5.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E07_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E07",
+          "source_alias": "rawDNA"
+        },
+        "E07_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E07",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 5.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 5.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E07_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E07",
+          "source_alias": "rawGFP"
+        },
+        "E08_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E08",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 10.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 10.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E08_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E08",
+          "source_alias": "rawDNA"
+        },
+        "E08_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E08",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 10.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 10.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E08_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E08",
+          "source_alias": "rawGFP"
+        },
+        "E09_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E09",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 20.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 20.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E09_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E09",
+          "source_alias": "rawDNA"
+        },
+        "E09_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E09",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 20.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 20.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E09_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E09",
+          "source_alias": "rawGFP"
+        },
+        "E10_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E10",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 40.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 40.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E10_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E10",
+          "source_alias": "rawDNA"
+        },
+        "E10_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E10",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 40.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 40.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E10_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E10",
+          "source_alias": "rawGFP"
+        },
+        "E11_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E11",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 80.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 80.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E11_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E11",
+          "source_alias": "rawDNA"
+        },
+        "E11_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E11",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 80.0,
+            "PosNegCtrls": "0.5"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 80.0,
+          "PosNegCtrls": "0.5",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E11_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E11",
+          "source_alias": "rawGFP"
+        },
+        "E12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E12",
+          "source_alias": "rawDNA"
+        },
+        "E12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "E12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_E12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "E12",
+          "source_alias": "rawGFP"
+        },
+        "F01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "F01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_F01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "F01",
+          "source_alias": "rawDNA"
+        },
+        "F01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "F01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_F01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "F01",
+          "source_alias": "rawGFP"
+        },
+        "F12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "F12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_F12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "F12",
+          "source_alias": "rawDNA"
+        },
+        "F12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "F12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_F12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "F12",
+          "source_alias": "rawGFP"
+        },
+        "G01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "G01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_G01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "G01",
+          "source_alias": "rawDNA"
+        },
+        "G01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "G01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_G01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "G01",
+          "source_alias": "rawGFP"
+        },
+        "G12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "G12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_G12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "G12",
+          "source_alias": "rawDNA"
+        },
+        "G12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "G12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_G12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "G12",
+          "source_alias": "rawGFP"
+        },
+        "H01_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "H01",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_H01_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "H01",
+          "source_alias": "rawDNA"
+        },
+        "H01_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "H01",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 150.0,
+            "PosNegCtrls": "1"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 150.0,
+          "PosNegCtrls": "1",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_H01_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "H01",
+          "source_alias": "rawGFP"
+        },
+        "H12_s001_w2_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "H12",
+            "Site": "1",
+            "ChannelNumber": "2",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_H12_s1_w2.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w2.tif"
+          },
+          "site": "1",
+          "channel": "2",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "H12",
+          "source_alias": "rawDNA"
+        },
+        "H12_s001_w1_z001_t001.tif": {
+          "Plate": "plate_1",
+          "OpenHCSOriginalSourceMetadata": {
+            "Plate": "plate_1",
+            "Well": "H12",
+            "Site": "1",
+            "ChannelNumber": "1",
+            "Dose": 0.0,
+            "PosNegCtrls": "0"
+          },
+          "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+          "OpenHCSSourceVoxelSpacingUnit": "relative",
+          "Dose": 0.0,
+          "PosNegCtrls": "0",
+          "OpenHCSSourceFilterPaths": {
+            "0": "BBBC013_H12_s1_w1.tif",
+            "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w1.tif"
+          },
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "H12",
+          "source_alias": "rawGFP"
+        }
+      },
+      "source_projection": [
+        {
+          "virtual_path": "A01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "A01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "A01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "A01",
+            "Well": "A01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_A01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "A01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "A01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "A01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "A01",
+            "Well": "A01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_A01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "A12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "A12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "A12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "A12",
+            "Well": "A12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_A12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "A12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "A12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "A12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "A12",
+            "Well": "A12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_A12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_A12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "B01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "B01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "B01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "B01",
+            "Well": "B01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_B01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "B01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "B01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "B01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "B01",
+            "Well": "B01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_B01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "B12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "B12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "B12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "B12",
+            "Well": "B12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_B12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "B12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "B12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "B12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "B12",
+            "Well": "B12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_B12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_B12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "C01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "C01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "C01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "C01",
+            "Well": "C01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_C01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "C01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "C01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "C01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "C01",
+            "Well": "C01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_C01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "C12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "C12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "C12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "C12",
+            "Well": "C12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_C12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "C12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "C12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "C12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "C12",
+            "Well": "C12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_C12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_C12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "D01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "D01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "D01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "D01",
+            "Well": "D01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_D01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "D01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "D01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "D01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "D01",
+            "Well": "D01",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_D01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "D12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "D12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "D12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "D12",
+            "Well": "D12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_D12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "D12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "D12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "D12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "D12",
+            "Well": "D12",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_D12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_D12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E01",
+            "Well": "E01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E01",
+            "Well": "E01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E02_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E02"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E02",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E02",
+            "Well": "E02",
+            "Dose": 0.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E02_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E02_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E02"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E02",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E02",
+            "Well": "E02",
+            "Dose": 0.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E02_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E02_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E03_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E03"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E03",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.31,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E03",
+            "Well": "E03",
+            "Dose": 0.31,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E03_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E03_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E03"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E03",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.31,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E03",
+            "Well": "E03",
+            "Dose": 0.31,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E03_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E03_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E04_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E04"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E04",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.63,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E04",
+            "Well": "E04",
+            "Dose": 0.63,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E04_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E04_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E04"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E04",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.63,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E04",
+            "Well": "E04",
+            "Dose": 0.63,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E04_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E04_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E05_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E05"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E05",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 1.25,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E05",
+            "Well": "E05",
+            "Dose": 1.25,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E05_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E05_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E05"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E05",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 1.25,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E05",
+            "Well": "E05",
+            "Dose": 1.25,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E05_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E05_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E06_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E06"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E06",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 2.5,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E06",
+            "Well": "E06",
+            "Dose": 2.5,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E06_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E06_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E06"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E06",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 2.5,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E06",
+            "Well": "E06",
+            "Dose": 2.5,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E06_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E06_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E07_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E07"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E07",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 5.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E07",
+            "Well": "E07",
+            "Dose": 5.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E07_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E07_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E07"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E07",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 5.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E07",
+            "Well": "E07",
+            "Dose": 5.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E07_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E07_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E08_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E08"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E08",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 10.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E08",
+            "Well": "E08",
+            "Dose": 10.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E08_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E08_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E08"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E08",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 10.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E08",
+            "Well": "E08",
+            "Dose": 10.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E08_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E08_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E09_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E09"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E09",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 20.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E09",
+            "Well": "E09",
+            "Dose": 20.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E09_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E09_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E09"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E09",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 20.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E09",
+            "Well": "E09",
+            "Dose": 20.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E09_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E09_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E10_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E10"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E10",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 40.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E10",
+            "Well": "E10",
+            "Dose": 40.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E10_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E10_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E10"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E10",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 40.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E10",
+            "Well": "E10",
+            "Dose": 40.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E10_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E10_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E11_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E11"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E11",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 80.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E11",
+            "Well": "E11",
+            "Dose": 80.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E11_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E11_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E11"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E11",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 80.0,
+              "PosNegCtrls": "0.5"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E11",
+            "Well": "E11",
+            "Dose": 80.0,
+            "PosNegCtrls": "0.5",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E11_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E11_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "E12",
+            "Well": "E12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "E12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "E12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "E12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "E12",
+            "Well": "E12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_E12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_E12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "F01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "F01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "F01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "F01",
+            "Well": "F01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_F01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "F01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "F01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "F01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "F01",
+            "Well": "F01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_F01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "F12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "F12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "F12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "F12",
+            "Well": "F12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_F12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "F12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "F12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "F12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "F12",
+            "Well": "F12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_F12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_F12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "G01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "G01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "G01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "G01",
+            "Well": "G01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_G01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "G01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "G01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "G01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "G01",
+            "Well": "G01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_G01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "G12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "G12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "G12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "G12",
+            "Well": "G12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_G12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "G12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "G12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "G12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "G12",
+            "Well": "G12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_G12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_G12_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "H01_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "H01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "H01",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "H01",
+            "Well": "H01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_H01_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "H01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "H01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "H01",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 150.0,
+              "PosNegCtrls": "1"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "H01",
+            "Well": "H01",
+            "Dose": 150.0,
+            "PosNegCtrls": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_H01_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H01_s1_w1.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "H12_s001_w2_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "H12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawDNA",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "H12",
+              "Site": "1",
+              "ChannelNumber": "2",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "2",
+            "well": "H12",
+            "Well": "H12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_H12_s1_w2.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w2.tif"
+            }
+          }
+        },
+        {
+          "virtual_path": "H12_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "H12"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "source_alias": "rawGFP",
+          "source_metadata": {
+            "Plate": "plate_1",
+            "OpenHCSOriginalSourceMetadata": {
+              "Plate": "plate_1",
+              "Well": "H12",
+              "Site": "1",
+              "ChannelNumber": "1",
+              "Dose": 0.0,
+              "PosNegCtrls": "0"
+            },
+            "OpenHCSSourceVoxelSpacingZYX": "1,1,1",
+            "OpenHCSSourceVoxelSpacingUnit": "relative",
+            "site": "1",
+            "channel": "1",
+            "well": "H12",
+            "Well": "H12",
+            "Dose": 0.0,
+            "PosNegCtrls": "0",
+            "z_index": "1",
+            "timepoint": "1",
+            "OpenHCSSourceFilterPaths": {
+              "0": "BBBC013_H12_s1_w1.tif",
+              "1": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData/BBBC013_H12_s1_w1.tif"
+            }
+          }
+        }
+      ],
+      "main": true,
+      "source_bindings_declaration_identity": "1beb06d05feaf72014157375a727631212cde5f6e0eb5f329af2d35b20e07df0"
+    }
+  }
+}

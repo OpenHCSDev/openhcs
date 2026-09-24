@@ -45,10 +45,7 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
         )
 
     def prepared_plate_path(self, storage_registry) -> str:
-        if (
-            self.selected_pipeline_path is not None
-            and self.execution_plate_id is not None
-        ):
+        if self.execution_plate_id is not None:
             plate_path_str = str(self.execution_plate_id)
         else:
             plate_path_str = str(self.plate_id)

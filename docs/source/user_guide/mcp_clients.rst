@@ -54,6 +54,28 @@ declared surface when configuring the client:
 
 Changing the surface requires restarting the MCP client so it requests the new
 tool schemas.
+For a submitted headless compile or run, ``openhcs_cancel_execution`` accepts
+the job identifier and reports both whether cancellation was applied and the
+job status observed afterwards. A timed-out request is not proof that the job
+stopped.
+When you need a runtime observation file for later analysis, pass a new
+``runtime_observation_export_path`` under an allowed writable root to
+``openhcs_submit_pipeline_execution``. The ordinary job still uses the same
+status and cancellation tools; requesting an export does not itself compare
+outputs or establish scientific validity.
+If an import or preprocessing step created a separate plate workspace, pass
+the original ``plate_path`` and the prepared ``execution_plate_path`` to
+``openhcs_create_orchestrator_session_from_pipeline_source`` together with the
+generated Python ``pipeline_source``. Submit and monitor that session through
+the same ordinary execution tools. Do not pass the original external pipeline
+file as a second pipeline authority for a source-backed session.
+On the expert ``full`` surface, once the ordinary job reports ``complete``, call
+``openhcs_finalize_measured_pipeline_run`` with its ``job_id`` and benchmark
+``run_id`` and ``pipeline_name``. The tool validates the selected value or
+outcome export and retains the exact submitted source, server
+result and measured-run receipt beside it. Use the measured-run inspection and
+report tools on that directory afterward. This records one run; it does not
+compare against a native reference or establish a performance advantage.
 
 .. openhcs-gallery:: zmq-startup-compile
 
@@ -151,25 +173,93 @@ Rejected paths report the effective readable or writable roots used by the
 running server, so an agent can choose a permitted destination without
 inspecting OpenHCS source or guessing an unavailable environment variable.
 
-Inspect an existing benchmark run
----------------------------------
+Inspect benchmark cases and runs
+--------------------------------
 
 The OpenHCS package installs ``openhcs-benchmark`` for benchmark execution and
 report generation. Its comparison runs write a typed lifecycle receipt,
 append-only observations, and structured JSON, JSONL, and CSV artifacts.
+Use a new or empty output directory for each run; the CLI rejects an occupied
+destination before loading the manifest and exclusively claims its first
+receipt, so an earlier run is not overwritten.
+
+Before starting a comparison, list the manifest's declared work with
+``openhcs-benchmark list-cases --manifest PATH``. Add ``--case NAME`` to select
+an exact case. On the expert ``full`` MCP surface, grant the manifest path under
+``OPENHCS_AGENT_READ_ROOTS`` and call ``openhcs_list_benchmark_cases`` with
+``manifest_path`` and optional ``case_names``. Both routes use the same case
+selection and report missing dataset or ``.cppipe`` sources. They do not acquire
+data or submit work. Grant the manifest **and its resolved dataset and CPPipe
+roots**; the tool rejects a case whose declared source falls outside the MCP
+read policy, even when the manifest itself is readable. For the official
+corpus, this may mean granting the OpenHCS benchmark dataset cache separately
+from the checkout.
 
 ``openhcs_inspect_benchmark_run`` is an expert-only local capability, so select
 the ``full`` surface and restart the client before using it. Grant the result
 directory through ``OPENHCS_AGENT_READ_ROOTS``, then ask the agent to inspect
-that directory. The result reports recorded lifecycle status, live observation
+that directory. The result reports recorded lifecycle status, retained observation
 count relative to declared work, the exact recorded rerun invocation, and
-discoverable structured artifacts. A historical directory without a current
-typed receipt is reported with warnings instead of an inferred completion
-claim.
+discoverable structured artifacts. Use ``artifact_limit`` to bound the returned
+artifact page and pass ``next_artifact_offset`` back as ``artifact_offset`` until
+it is null. The CLI reads the same contract with
+``openhcs-benchmark inspect-run --output-dir PATH``; add
+``--artifact-limit N --artifact-offset N`` to page its artifacts. A historical
+directory without a current typed receipt is reported with warnings instead
+of an inferred completion claim.
 
-Inspection is read-only. The MCP capability cannot launch, resume, cancel, or
+``openhcs_report_benchmark_run`` uses the same output directory and typed
+receipt to render a bounded case-outcome report from validated observation
+records. The CLI equivalent is ``openhcs-benchmark inspect-run --output-dir
+PATH --report``. Recorded execution intervals in this report are not, by
+themselves, a matched-concurrency speedup claim. Missing, invalid, or
+out-of-declaration observations appear as evidence warnings rather than being
+counted as validated case outcomes.
+
+Inspection and reporting are read-only. These MCP capabilities cannot launch, resume, cancel, or
 rerun a benchmark. Review the recorded command and scientific inputs, then run
 ``openhcs-benchmark`` separately only when execution is explicitly authorized.
+
+For one ordinary measured OpenHCS pipeline, use
+``openhcs_inspect_measured_pipeline_run`` on its output directory. It checks the
+completed-run receipt, retained pipeline/configuration source digests, and the
+digests of declared observation and summary files without loading the runtime
+pickle into memory. Archived receipts without those two file digests remain
+readable, but inspection marks their integrity unverified.
+``openhcs_report_measured_pipeline_run`` turns that same inspection into
+a short report with evidence warnings. The local CLI equivalent is
+``openhcs-benchmark inspect-measured --output-dir PATH``; add ``--report`` for
+Markdown. Check ``retained_evidence_valid`` before using retained measurements: it is
+false for missing, changed, or unverifiable evidence even when a receipt is
+present. This verifies only the retained receipt, source, observation, and
+summary files; it does not inspect the image or table files under the declared
+output roots. Validate those outputs separately before making a result claim.
+If ``unreceipted_artifacts`` is nonempty, preserve that directory
+for diagnosis and do not report the run as a completed measurement. If the
+same completed ordinary job is still available, retry
+``openhcs_finalize_measured_pipeline_run`` with its original job and run
+identities; only byte-identical partial evidence is reused. If it reports a
+conflict, retain the directory for diagnosis and use an empty evidence
+directory for a new run. These inspection routes do not submit a pipeline. Use
+the normal
+headless execution tools for submission, job status, and cancellation.
+The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
+pipeline source file, plate and empty evidence directory, then uses the same
+ordinary source-session execution service and receipt finalizer. It requires an
+explicit ``--wait-timeout-ms``; ``--execution-plate`` can identify a prepared
+input while preserving the original plate identity. For large pipelines,
+``--observation-scope outcomes`` retains per-axis status, output roots, and
+server environment without transferring runtime array values to the parent.
+The default ``values`` scope retains the full runtime observation needed for
+value-equivalence checks. The CLI prints the accepted ordinary job ID to
+standard error before waiting. Ctrl-C requests cancellation through the
+ordinary job service and exits with status 130; a nonterminal wait timeout
+also requests cancellation. Neither path writes a success receipt. Inspect
+the reported cancellation result: a request that was not applied does not
+prove the server stopped. The normal
+``openhcs_submit_pipeline_execution`` tool exposes the same typed scope when
+an observation export path is requested; status and cancellation remain the
+ordinary job operations.
 
 Codex
 -----

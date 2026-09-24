@@ -1,0 +1,5 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+cp_tutorial_translocation_final,4,16,worker_0,4,1790160467.1502047,1790160471.5405252,4.390320539474487
+cp_tutorial_translocation_final,4,16,worker_1,4,1790160467.1711195,1790160471.651839,4.480719566345215
+cp_tutorial_translocation_final,4,16,worker_2,4,1790160467.1945598,1790160471.6405902,4.446030378341675
+cp_tutorial_translocation_final,4,16,worker_3,4,1790160467.217406,1790160471.5972497,4.379843711853027

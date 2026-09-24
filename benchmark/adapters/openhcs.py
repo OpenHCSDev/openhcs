@@ -4,20 +4,19 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
-import json
 import logging
 import os
 import signal
-import sys
 import threading
-import time
+from math import isfinite
 from collections.abc import Mapping, Sequence
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass, field, replace
+from dataclasses import (
+    dataclass,
+    replace,
+)
 from pathlib import Path
 from typing import Any
-
-from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
 
 from benchmark.adapters.cppipe_source import (
     CPPipeSourceRequest,
@@ -33,6 +32,7 @@ from benchmark.cellprofiler_reference_exports import (
     CellProfilerReferenceExportPlan,
 )
 from benchmark.contracts.metric import MetricCollector
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.contracts.tool_adapter import (
     BenchmarkResult,
     ToolAdapter,
@@ -44,6 +44,8 @@ from openhcs.core.config import (
     CompilationDebugConfig,
     GlobalPipelineConfig,
     LazyCompilationDebugConfig,
+    MaterializationBackend,
+    PipelineConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
@@ -64,161 +66,24 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.runtime.zmq_execution_client import (
-    OpenHCSExecutionSubmission,
-    ZMQExecutionClient,
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+
+from ..openhcs_measured_run import (
+    ZMQ_RESULTS_SUMMARY_FILENAME as ZMQ_RESULTS_SUMMARY_FILENAME,
 )
-from openhcs.runtime.zmq_execution_observation import (
-    ZMQRuntimeExecutionObservationExport,
+from ..openhcs_measured_run import (
+    _ZMQOpenHCSExecution,
+    _ZMQProgressTimingObserver,
+)
+from ..openhcs_measured_run import (
+    execute_measured_openhcs_pipeline as execute_measured_openhcs_pipeline,
 )
 
 logger = logging.getLogger(__name__)
 
 
 _DUMP_COMPILED_PLANS_ENV = "OPENHCS_BENCHMARK_DUMP_COMPILED_PLANS"
-ZMQ_RESULTS_SUMMARY_FILENAME = "zmq_results_summary.json"
-
-
-@dataclass(frozen=True, slots=True)
-class _ZMQOpenHCSExecution:
-    """Server-side execution observation returned to the benchmark adapter."""
-
-    execution_id: str
-    observation_export: ZMQRuntimeExecutionObservationExport
-    output_roots: tuple[Path, ...]
-    results_summary: Mapping[str, Any]
-    endpoint_provenance: Mapping[str, Any]
-
-    @property
-    def execution_output_root(self) -> Path:
-        if len(self.output_roots) == 1:
-            return self.output_roots[0]
-        summary_root = self.results_summary.get("output_plate_root")
-        if summary_root is not None:
-            return Path(str(summary_root))
-        return self.output_roots[0] if self.output_roots else Path(".")
-
-    @property
-    def axis_count(self) -> int:
-        return self.observation_export.axis_count
-
-
-@dataclass(slots=True)
-class _ZMQProgressTimingObserver:
-    """Capture server progress timestamps for benchmark phase accounting."""
-
-    compile_started_at: float | None = None
-    compile_completed_at: float | None = None
-    execution_started_at: float | None = None
-    execution_completed_at: float | None = None
-    last_progress_monotonic: float = field(default_factory=time.monotonic)
-    last_progress_phase: str = ""
-    last_progress_status: str = ""
-
-    def __call__(self, event: Mapping[str, Any]) -> None:
-        phase = str(event.get("phase", ""))
-        status = str(event.get("status", ""))
-        self.last_progress_monotonic = time.monotonic()
-        self.last_progress_phase = phase
-        self.last_progress_status = status
-        timestamp = self._timestamp(event)
-        if phase == "compile" and status == "started":
-            self.compile_started_at = self.compile_started_at or timestamp
-            return
-        if phase == "compile" and status == "success":
-            self.compile_completed_at = timestamp
-            return
-        if phase == "axis_started":
-            self.execution_started_at = self.execution_started_at or timestamp
-            return
-        if phase == "axis_completed":
-            self.execution_completed_at = timestamp
-
-    @staticmethod
-    def _timestamp(event: Mapping[str, Any]) -> float:
-        value = event.get("timestamp")
-        if isinstance(value, (int, float)):
-            return float(value)
-        return time.time()
-
-    def record_phase_timings(
-        self,
-        phase_timing: PhaseTimingTrace,
-        *,
-        completion_observed_at: float | None = None,
-    ) -> None:
-        compile_seconds = self._duration(
-            self.compile_started_at,
-            self.compile_completed_at,
-        )
-        if compile_seconds is not None:
-            phase_timing.record(
-                BenchmarkPhase.COMPILE_OPENHCS,
-                seconds=compile_seconds,
-            )
-        execute_seconds = self._duration(
-            self.execution_started_at,
-            self.execution_completed_at,
-        )
-        if execute_seconds is None:
-            execute_seconds = self._completion_bounded_execution_seconds(
-                completion_observed_at,
-                compile_seconds=compile_seconds,
-                wait_seconds=_phase_seconds_total(
-                    phase_timing,
-                    BenchmarkPhase.WAIT_OPENHCS,
-                ),
-            )
-        if execute_seconds is not None:
-            phase_timing.record(
-                BenchmarkPhase.EXECUTE_OPENHCS,
-                seconds=execute_seconds,
-            )
-
-    @staticmethod
-    def _duration(started_at: float | None, ended_at: float | None) -> float | None:
-        if started_at is None or ended_at is None:
-            return None
-        return max(0.0, ended_at - started_at)
-
-    def _completion_bounded_execution_seconds(
-        self,
-        completion_observed_at: float | None,
-        *,
-        compile_seconds: float | None,
-        wait_seconds: float | None,
-    ) -> float | None:
-        start_at = self.execution_started_at or self.compile_completed_at
-        if start_at is not None and completion_observed_at is not None:
-            return max(0.0, completion_observed_at - start_at)
-        if wait_seconds is None:
-            return None
-        return max(0.0, wait_seconds - (compile_seconds or 0.0))
-
-    def inactivity_seconds(self, *, observed_at: float | None = None) -> float:
-        """Return elapsed monotonic time since the latest server progress event."""
-        current = time.monotonic() if observed_at is None else observed_at
-        return max(0.0, current - self.last_progress_monotonic)
-
-    def progress_description(self) -> str:
-        """Describe the most recently observed server progress event."""
-        if not self.last_progress_phase:
-            return "none observed"
-        if not self.last_progress_status:
-            return self.last_progress_phase
-        return f"{self.last_progress_phase}/{self.last_progress_status}"
-
-
-def _phase_seconds_total(
-    phase_timing: PhaseTimingTrace,
-    phase: BenchmarkPhase,
-) -> float | None:
-    records = [
-        record.seconds for record in phase_timing.records if record.phase is phase
-    ]
-    if not records:
-        return None
-    return sum(records)
 
 
 def _strict_cellprofiler_runtime_equivalence_policy() -> RuntimeEquivalencePolicy:
@@ -298,7 +163,7 @@ def _execute_pipeline_via_zmq_server(
     selected_pipeline_path: str | Path,
     pipeline_steps: Sequence[AbstractStep],
     global_config: GlobalPipelineConfig,
-    pipeline_config: Any,
+    pipeline_config: PipelineConfig,
     observation_export_path: Path,
     phase_timing: PhaseTimingTrace,
     timing_observer: _ZMQProgressTimingObserver,
@@ -317,211 +182,100 @@ def _execute_pipeline_via_zmq_server(
             pipeline_config=pipeline_config, pipeline_steps=transport_pipeline
         ),
         global_config=global_config,
-        config_params={
-            "runtime_observation_export_path": str(observation_export_path),
-        },
-    )
-    pipeline_source = submission.pipeline_code()
-    client = ZMQExecutionClient(
-        port=execution_port,
-        persistent=False,
-        progress_callback=timing_observer,
-    )
-    try:
-        with client:
-            endpoint = client.connected_endpoint
-            if endpoint is None:
-                raise ToolExecutionError(
-                    "OpenHCS ZMQ client entered without a connected endpoint."
-                )
-            compatibility = client.endpoint_compatibility()
-            try:
-                compatibility.require_match()
-            except ValueError as exc:
-                raise ToolExecutionError(str(exc)) from exc
-            endpoint_provenance = {
-                "client_python_executable": sys.executable,
-                "client_openhcs_file": str(
-                    Path(importlib.util.find_spec("openhcs").origin).resolve()
-                ),
-                "client_openhcs_version": compatibility.expected.version,
-                "endpoint_application_identifier": (
-                    endpoint.application.identifier
-                    if endpoint.application is not None
-                    else None
-                ),
-                "endpoint_openhcs_version": compatibility.observed_version_label,
-                "endpoint_pid": (
-                    endpoint.process_identity.pid
-                    if endpoint.process_identity is not None
-                    else None
-                ),
-                "endpoint_create_time_epoch_seconds": (
-                    endpoint.process_identity.create_time
-                    if endpoint.process_identity is not None
-                    else None
-                ),
-                "endpoint_log_file_path": endpoint.log_file_path,
-                "endpoint_port": endpoint.port,
-            }
-            with phase_timing.phase(BenchmarkPhase.SUBMIT_OPENHCS):
-                compile_submission_response = ExecutionSubmissionResponse.from_wire(
-                    client.submit_compile(submission)
-                )
-            if not compile_submission_response.accepted:
-                raise ToolExecutionError(
-                    compile_submission_response.require_failure_text(
-                        "OpenHCS ZMQ compile submission"
-                    )
-                )
-            compile_artifact_id = compile_submission_response.require_execution_id(
-                "OpenHCS ZMQ compile submission"
-            )
-            with phase_timing.phase(BenchmarkPhase.WAIT_OPENHCS):
-                compile_wait_response = client.wait_for_completion(compile_artifact_id)
-            compile_wait_result = ExecutionWaitResult.from_wire(compile_wait_response)
-            compile_wait_result.require_complete("OpenHCS ZMQ compilation failed")
-
-            execution_submission = OpenHCSExecutionSubmission(
-                plate_id=plate_id,
-                execution_plate_id=execution_plate_id,
-                selected_pipeline_path=selected_pipeline_path,
-                pipeline_document=PipelineDocumentAuthority.from_values(
-                    pipeline_config=pipeline_config, pipeline_steps=transport_pipeline
-                ),
-                global_config=global_config,
-                config_params={
-                    "runtime_observation_export_path": str(observation_export_path),
-                },
-                compile_artifact_id=compile_artifact_id,
-            )
-            with phase_timing.phase(BenchmarkPhase.SUBMIT_OPENHCS):
-                execution_submission_response = ExecutionSubmissionResponse.from_wire(
-                    client.submit_pipeline(execution_submission)
-                )
-            if not execution_submission_response.accepted:
-                raise ToolExecutionError(
-                    execution_submission_response.require_failure_text(
-                        "OpenHCS ZMQ execution submission"
-                    )
-                )
-            execution_id = execution_submission_response.require_execution_id(
-                "OpenHCS ZMQ execution submission"
-            )
-            with phase_timing.phase(BenchmarkPhase.WAIT_OPENHCS):
-                wait_response = client.wait_for_completion(execution_id)
-            completion_observed_at = time.time()
-            wait_result = ExecutionWaitResult.from_wire(wait_response)
-            wait_result.require_complete("OpenHCS ZMQ execution failed")
-    finally:
-        client.disconnect()
-
-    timing_observer.record_phase_timings(
-        phase_timing,
-        completion_observed_at=completion_observed_at,
-    )
-    if not observation_export_path.exists():
-        raise ToolExecutionError(
-            "OpenHCS ZMQ execution completed without writing runtime observation "
-            f"export: {observation_export_path}"
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=observation_export_path
         )
-    observation_export = ZMQRuntimeExecutionObservationExport.read(
-        observation_export_path
     )
-    output_roots = tuple(Path(root) for root in observation_export.output_roots)
-    results_summary_payload = wait_response.get("results", {}) or wait_response.get(
-        "results_summary",
-        {},
-    )
-    if not isinstance(results_summary_payload, Mapping):
-        results_summary_payload = {}
-    results_summary = dict(results_summary_payload)
-    results_summary_path = observation_export_path.with_name(
-        ZMQ_RESULTS_SUMMARY_FILENAME
-    )
-    results_summary_path.write_text(
-        json.dumps(results_summary, indent=2, sort_keys=True),
-        encoding="utf-8",
-    )
-    return (
-        _ZMQOpenHCSExecution(
-            execution_id=execution_id,
-            observation_export=observation_export,
-            output_roots=output_roots,
-            results_summary=results_summary,
-            endpoint_provenance=endpoint_provenance,
-        ),
-        pipeline_source,
+    return execute_measured_openhcs_pipeline(
+        submission=submission,
+        phase_timing=phase_timing,
+        timing_observer=timing_observer,
+        execution_port=execution_port,
     )
 
 
 @dataclass(frozen=True, slots=True)
 class OpenHCSRunRequest:
-    """Authoritative benchmark run request for one OpenHCS execution."""
+    """Decoded benchmark policy for one OpenHCS execution."""
 
     dataset_path: Path
     pipeline_name: str
-    pipeline_params: dict[str, Any]
+    microscope_type: str | None
+    cppipe_source: CPPipeSourceRequest
+    equivalence_reference_output_dir: Path | None
+    compare_image_outputs: bool
+    materialize_runtime_artifacts: bool
+    raise_on_equivalence_failure: bool
+    openhcs_timeout_seconds: float
+    dump_compiled_plans: bool
     metrics: tuple[MetricCollector, ...]
-    output_dir: Path
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "output_dir", Path(self.output_dir).resolve())
+        if (
+            not isfinite(self.openhcs_timeout_seconds)
+            or self.openhcs_timeout_seconds <= 0
+        ):
+            raise ValueError("openhcs_timeout_seconds must be finite and positive.")
 
     @property
     def dataset_id(self) -> str:
-        return str(self.pipeline_params.get("dataset_id", self.dataset_path.name))
+        return self.cppipe_source.dataset_id
 
     @property
-    def microscope_type(self) -> str | None:
-        value = self.pipeline_params.get("microscope_type")
-        if value is None:
-            return None
-        return str(value)
+    def output_dir(self) -> Path:
+        return self.cppipe_source.output_dir
 
-    @property
-    def cppipe_source(self) -> CPPipeSourceRequest:
-        return CPPipeSourceRequest.from_pipeline_params(
-            dataset_id=self.dataset_id,
-            output_dir=self.output_dir,
-            pipeline_params=self.pipeline_params,
+    @classmethod
+    def from_pipeline_params(
+        cls,
+        *,
+        dataset_path: Path,
+        pipeline_name: str,
+        pipeline_params: Mapping[str, Any],
+        metrics: tuple[MetricCollector, ...],
+        output_dir: Path,
+    ) -> "OpenHCSRunRequest":
+        """Decode the legacy parameter map once at the adapter boundary."""
+
+        resolved_dataset_path = Path(dataset_path)
+        resolved_output_dir = Path(output_dir).resolve()
+        dataset_id = str(pipeline_params.get("dataset_id", resolved_dataset_path.name))
+        microscope_type = pipeline_params.get("microscope_type")
+        reference_dir = pipeline_params.get("equivalence_reference_output_dir")
+        timeout = pipeline_params.get("openhcs_timeout_seconds")
+        if timeout is None:
+            timeout = os.environ.get("OPENHCS_BENCHMARK_OPENHCS_TIMEOUT_SECONDS", "120")
+        dump_compiled_plans = pipeline_params.get("dump_compiled_plans")
+        if dump_compiled_plans is None:
+            dump_compiled_plans = os.environ.get(_DUMP_COMPILED_PLANS_ENV)
+        return cls(
+            dataset_path=resolved_dataset_path,
+            pipeline_name=pipeline_name,
+            microscope_type=(
+                str(microscope_type) if microscope_type is not None else None
+            ),
+            cppipe_source=CPPipeSourceRequest.from_pipeline_params(
+                dataset_id=dataset_id,
+                output_dir=resolved_output_dir,
+                pipeline_params=pipeline_params,
+            ),
+            equivalence_reference_output_dir=(
+                Path(reference_dir) if reference_dir is not None else None
+            ),
+            compare_image_outputs=_boolean_pipeline_option(
+                pipeline_params, "compare_image_outputs", default=True
+            ),
+            materialize_runtime_artifacts=_boolean_pipeline_option(
+                pipeline_params, "materialize_runtime_artifacts", default=True
+            ),
+            raise_on_equivalence_failure=_boolean_pipeline_option(
+                pipeline_params, "raise_on_equivalence_failure", default=True
+            ),
+            openhcs_timeout_seconds=float(timeout),
+            dump_compiled_plans=_truthy_debug_flag(dump_compiled_plans),
+            metrics=metrics,
         )
-
-    @property
-    def equivalence_reference_output_dir(self) -> Path | None:
-        value = self.pipeline_params.get("equivalence_reference_output_dir")
-        if value is None:
-            return None
-        return Path(value)
-
-    @property
-    def compare_image_outputs(self) -> bool:
-        return bool(self.pipeline_params.get("compare_image_outputs", True))
-
-    @property
-    def materialize_runtime_artifacts(self) -> bool:
-        return bool(self.pipeline_params.get("materialize_runtime_artifacts", True))
-
-    @property
-    def raise_on_equivalence_failure(self) -> bool:
-        return bool(self.pipeline_params.get("raise_on_equivalence_failure", True))
-
-    @property
-    def openhcs_timeout_seconds(self) -> float:
-        value = self.pipeline_params.get("openhcs_timeout_seconds")
-        if value is None:
-            value = os.environ.get("OPENHCS_BENCHMARK_OPENHCS_TIMEOUT_SECONDS", "120")
-        seconds = float(value)
-        if seconds <= 0:
-            raise ValueError("openhcs_timeout_seconds must be positive.")
-        return seconds
-
-    @property
-    def dump_compiled_plans(self) -> bool:
-        value = self.pipeline_params.get("dump_compiled_plans")
-        if value is None:
-            value = os.environ.get(_DUMP_COMPILED_PLANS_ENV)
-        return _truthy_debug_flag(value)
 
 
 class OpenHCSAdapter(ToolAdapter):
@@ -547,6 +301,36 @@ class OpenHCSAdapter(ToolAdapter):
             raise ToolNotInstalledError("OpenHCS not installed")
         import openhcs  # noqa: F401
 
+    def _execution_global_config(
+        self,
+        request: OpenHCSRunRequest,
+        *,
+        output_suffix: str,
+        output_plate_root: Path,
+        compilation_debug_config: CompilationDebugConfig,
+    ) -> GlobalPipelineConfig:
+        """Select benchmark output paths without replacing declared path policy."""
+
+        return replace(
+            self.global_config,
+            analysis_consolidation_config=replace(
+                self.global_config.analysis_consolidation_config,
+                enabled=False,
+            ),
+            path_planning_config=replace(
+                self.global_config.path_planning_config,
+                global_output_folder=request.output_dir,
+                output_dir_suffix=output_suffix,
+            ),
+            vfs_config=replace(
+                self.global_config.vfs_config,
+                materialization_backend=MaterializationBackend.DISK,
+            ),
+            compilation_debug_config=compilation_debug_config,
+            materialize_runtime_artifacts=request.materialize_runtime_artifacts,
+            materialization_results_path=output_plate_root / "results",
+        )
+
     def _run_converted_cppipe_pipeline(
         self,
         request: OpenHCSRunRequest,
@@ -555,13 +339,6 @@ class OpenHCSAdapter(ToolAdapter):
         from objectstate.lazy_factory import (
             ensure_global_config_context,
             rebuild_lazy_config_with_new_global_reference,
-        )
-
-        from openhcs.core.config import (
-            AnalysisConsolidationConfig,
-            MaterializationBackend,
-            PathPlanningConfig,
-            VFSConfig,
         )
 
         phase_timing = PhaseTimingTrace(
@@ -648,21 +425,11 @@ class OpenHCSAdapter(ToolAdapter):
                 ),
             )
 
-        global_config = replace(
-            self.global_config,
-            analysis_consolidation_config=AnalysisConsolidationConfig(
-                enabled=False,
-            ),
-            path_planning_config=PathPlanningConfig(
-                global_output_folder=request.output_dir,
-                output_dir_suffix=output_suffix,
-            ),
-            vfs_config=VFSConfig(
-                materialization_backend=MaterializationBackend.DISK,
-            ),
+        global_config = self._execution_global_config(
+            request,
+            output_suffix=output_suffix,
+            output_plate_root=output_plate_root,
             compilation_debug_config=compilation_debug_config,
-            materialize_runtime_artifacts=request.materialize_runtime_artifacts,
-            materialization_results_path=output_plate_root / "results",
         )
         ensure_global_config_context(GlobalPipelineConfig, global_config)
         pipeline_config = rebuild_lazy_config_with_new_global_reference(
@@ -671,7 +438,7 @@ class OpenHCSAdapter(ToolAdapter):
             GlobalPipelineConfig,
         )
         observation_export_path = (
-            request.output_dir / "runtime_execution_server_observation.pkl"
+            MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(request.output_dir)
         )
         with ExitStack() as stack:
             for metric in request.metrics:
@@ -702,13 +469,11 @@ class OpenHCSAdapter(ToolAdapter):
             if server_execution.output_roots
             else request.output_dir
         )
-        try:
-            with phase_timing.phase(BenchmarkPhase.VALIDATE_RUNTIME):
-                observation = (
-                    server_execution.observation_export.require_valid_observation()
-                )
-        except RuntimeError as exc:
-            raise ToolExecutionError(str(exc)) from exc
+        observation = server_execution.observation
+        if observation is None:
+            raise ToolExecutionError(
+                "CellProfiler equivalence requires a value observation export."
+            )
         axis_count = server_execution.axis_count
         executed_axes = tuple(observation.records_by_axis)
         csv_output_count = len(observation.exports.table_outputs)
@@ -776,7 +541,7 @@ class OpenHCSAdapter(ToolAdapter):
 
         provenance = {
             "openhcs_version": self.version,
-            **server_execution.endpoint_provenance,
+            **server_execution.endpoint_provenance.as_payload(),
             "microscope_type": request.microscope_type,
             "pipeline_source": "converted_cppipe",
             "cppipe_path": str(cppipe_path),
@@ -875,7 +640,7 @@ class OpenHCSAdapter(ToolAdapter):
         """Execute OpenHCS pipeline with metrics."""
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        request = OpenHCSRunRequest(
+        request = OpenHCSRunRequest.from_pipeline_params(
             dataset_path=dataset_path,
             pipeline_name=pipeline_name,
             pipeline_params=pipeline_params,
@@ -941,6 +706,16 @@ def _openhcs_execution_watchdog(
     finally:
         set_interval_timer(interval_timer, 0.0)
         signal.signal(alarm_signal, previous_handler)
+
+
+def _boolean_pipeline_option(
+    pipeline_params: Mapping[str, Any], name: str, *, default: bool
+) -> bool:
+    """Decode a legacy map flag without silently treating text as true."""
+    value = pipeline_params.get(name, default)
+    if type(value) is not bool:
+        raise TypeError(f"{name} must be a boolean, got {type(value).__name__}.")
+    return value
 
 
 def _truthy_debug_flag(value: object) -> bool:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections.abc import Iterator, Mapping
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -14,7 +15,7 @@ from benchmark.contracts.values import BenchmarkParameterMap
 class BenchmarkPipelineDeclaration(ABC, metaclass=AutoRegisterMeta):
     """Registered declaration for one benchmark pipeline."""
 
-    __registry__: ClassVar[dict[str, type["BenchmarkPipelineDeclaration"]]] = {}
+    __registry__: ClassVar[dict[str, type[BenchmarkPipelineDeclaration]]] = {}
     __registry_key__ = "name"
     __skip_if_no_key__ = True
 
@@ -39,7 +40,7 @@ class NucleiSegmentationPipeline(BenchmarkPipelineDeclaration):
 
     name = "nuclei_segmentation"
     description = "BBBC021 nuclei segmentation (CellProfiler-equivalent)"
-    parameters = {"cppipe_reference_index": 0}
+    parameters: ClassVar[BenchmarkParameterMap] = {"cppipe_reference_index": 0}
 
 
 def pipeline_specs() -> tuple[PipelineSpec, ...]:
@@ -50,8 +51,21 @@ def pipeline_specs() -> tuple[PipelineSpec, ...]:
     )
 
 
-PIPELINE_REGISTRY = {spec.name: spec for spec in pipeline_specs()}
-NUCLEI_SEGMENTATION = PIPELINE_REGISTRY["nuclei_segmentation"]
+class _PipelineSpecView(Mapping[str, PipelineSpec]):
+    """Compatibility mapping projected from registered declarations on access."""
+
+    def __getitem__(self, name: str) -> PipelineSpec:
+        return BenchmarkPipelineDeclaration.__registry__[name].to_spec()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(BenchmarkPipelineDeclaration.__registry__)
+
+    def __len__(self) -> int:
+        return len(BenchmarkPipelineDeclaration.__registry__)
+
+
+PIPELINE_REGISTRY: Mapping[str, PipelineSpec] = _PipelineSpecView()
+NUCLEI_SEGMENTATION = NucleiSegmentationPipeline.to_spec()
 
 
 def get_pipeline_spec(name: str) -> PipelineSpec:
@@ -65,5 +79,5 @@ def get_pipeline_spec(name: str) -> PipelineSpec:
         return PIPELINE_REGISTRY[name]
     except KeyError as exc:
         raise KeyError(
-            f"Unknown pipeline '{name}'. Available: {list(PIPELINE_REGISTRY.keys())}"
+            f"Unknown pipeline '{name}'. Available: {list(PIPELINE_REGISTRY)}"
         ) from exc

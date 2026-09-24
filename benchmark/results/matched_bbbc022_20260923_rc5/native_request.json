@@ -1,0 +1,8 @@
+{
+  "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+  "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+  "file_list_path": null,
+  "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native",
+  "expected_image_sets": null,
+  "repetitions": 1
+}

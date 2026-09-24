@@ -11,7 +11,6 @@ from benchmark.adapters.cellprofiler import (
     NativeCellProfilerInputDomainStrategyKey,
     NativeCellProfilerProvenanceField,
 )
-from benchmark.cellprofiler_benchmark_cli import _filter_cases_by_name
 from benchmark.cellprofiler_comparison import (
     CellProfilerComparisonCase,
     NativeCellProfilerReferenceScope,
@@ -24,6 +23,7 @@ from benchmark.cellprofiler_comparison import (
     load_comparison_cases,
     load_observations_jsonl,
     run_comparison_suite,
+    select_comparison_cases,
     write_module_coverage_artifacts,
     write_observations_csv,
     write_phase_timing_csv,
@@ -53,7 +53,7 @@ def test_comparison_observation_extracts_execution_only_speedup(
         openhcs_converted=_benchmark_result(
             "OpenHCS",
             tmp_path / "openhcs",
-            "EXECUTE_OPENHCS",
+            "SERVER_PIPELINE_JOB",
             6.0,
             provenance={"equivalence_difference_count": 0},
         ),
@@ -99,7 +99,7 @@ def test_cached_native_reference_without_measured_timing_has_no_speedup(
         openhcs_converted=_benchmark_result(
             "OpenHCS",
             tmp_path / "openhcs",
-            "EXECUTE_OPENHCS",
+            "SERVER_PIPELINE_JOB",
             2.0,
             provenance={"equivalence_difference_count": 0},
         ),
@@ -424,7 +424,7 @@ def test_comparison_writers_emit_raw_phase_and_summary_tables(
             openhcs_converted=_benchmark_result(
                 "OpenHCS",
                 tmp_path / "openhcs",
-                "EXECUTE_OPENHCS",
+                "SERVER_PIPELINE_JOB",
                 5.0,
                 success=False,
                 error_message="semantic mismatch",
@@ -454,7 +454,7 @@ def test_comparison_writers_emit_raw_phase_and_summary_tables(
     assert observation_rows[0]["total_phase_speedup"] == "6.0"
     assert {row["phase"] for row in phase_rows} == {
         "EXECUTE_NATIVE_CP",
-        "EXECUTE_OPENHCS",
+        "SERVER_PIPELINE_JOB",
     }
     assert summary_rows[0]["median_speedup"] == "6.0"
     assert summary_rows[0]["assay_category"] == "Tissue/object morphology"
@@ -491,7 +491,7 @@ def test_summary_speedup_target_uses_execution_time_only(
                 provenance={
                     "phase_timing_records": (
                         {"phase": "EXECUTE_NATIVE_CP", "seconds": 60.0},
-                        {"phase": "COMPARE_NATIVE", "seconds": 1.0},
+                        {"phase": "SNAPSHOT_OUTPUTS", "seconds": 1.0},
                     ),
                 },
             ),
@@ -507,7 +507,9 @@ def test_summary_speedup_target_uses_execution_time_only(
                     "phase_timing_records": (
                         {"phase": "COMPILE_OPENHCS", "seconds": 15.0},
                         {"phase": "EXECUTE_OPENHCS", "seconds": 10.0},
-                        {"phase": "COMPARE_OPENHCS", "seconds": 15.0},
+                        {"phase": "SERVER_PIPELINE_JOB", "seconds": 10.0},
+                        {"phase": "WAIT_OPENHCS", "seconds": 25.0},
+                        {"phase": "COMPARE_EQUIVALENCE", "seconds": 15.0},
                     ),
                 },
             ),
@@ -602,7 +604,7 @@ def test_filter_comparison_cases_by_exact_name_preserves_merged_params(
         encoding="utf-8",
     )
 
-    selected = _filter_cases_by_name(load_comparison_cases(manifest), ("second",))
+    selected = select_comparison_cases(load_comparison_cases(manifest), ("second",))
 
     assert tuple(case.name for case in selected) == ("second",)
     assert selected[0].pipeline_params == {
@@ -628,7 +630,7 @@ def test_filter_comparison_cases_by_exact_name_reports_unknown_and_available(
     )
 
     with pytest.raises(ValueError) as exc_info:
-        _filter_cases_by_name(cases, ("missing", "other"))
+        select_comparison_cases(cases, ("missing", "other"))
 
     message = str(exc_info.value)
     assert "Unknown benchmark case name(s): missing, other" in message
@@ -802,7 +804,7 @@ def test_discard_successful_openhcs_benchmark_tree_preserves_failed_outputs(
             openhcs_converted=_benchmark_result(
                 "OpenHCS",
                 output_tree,
-                "EXECUTE_OPENHCS",
+                "SERVER_PIPELINE_JOB",
                 1.0,
                 success=False,
                 error_message="semantic mismatch",

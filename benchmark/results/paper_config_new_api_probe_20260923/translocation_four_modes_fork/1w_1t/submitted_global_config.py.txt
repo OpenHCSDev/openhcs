@@ -1,0 +1,16 @@
+# OpenHCS configuration
+
+from openhcs.core.config import (
+    AnalysisConsolidationConfig,
+    GlobalPipelineConfig,
+    MultiprocessingStartMethod,
+)
+
+config = GlobalPipelineConfig(
+    materialize_runtime_artifacts=False,
+    use_threading=True,
+    multiprocessing_start_method=MultiprocessingStartMethod.FORK,
+    analysis_consolidation_config=AnalysisConsolidationConfig(
+        enabled=False
+    )
+)

@@ -14,7 +14,7 @@ from dataclasses import InitVar, dataclass, field, replace
 from dataclasses import fields as dataclass_fields
 from enum import Enum
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar
 from urllib.parse import unquote, urlsplit
@@ -319,16 +319,8 @@ def _resolved_imported_metadata_location(
 ) -> Path:
     """Resolve imported metadata against explicit portable root anchors."""
 
-    parsed = urlsplit(location)
-    if parsed.scheme in ("", "file"):
-        if parsed.scheme == "file":
-            if parsed.netloc not in ("", "localhost"):
-                raise ValueError(
-                    f"Unsupported non-local file URI authority in {location!r}."
-                )
-            path = Path(unquote(parsed.path))
-        else:
-            path = Path(location)
+    path = _declared_local_source_path(location)
+    if path is not None:
         if not path.is_absolute():
             primary = (Path(source_root) / path).resolve()
             if primary.is_file():
@@ -360,26 +352,34 @@ def _resolved_imported_metadata_location(
 def resolve_source_file(location: str, source_root: Path) -> Path:
     """Resolve a declared local or HTTP source into one verified local path."""
 
-    parsed = urlsplit(location)
-    if parsed.scheme in ("", "file"):
-        if parsed.scheme == "file":
-            if parsed.netloc not in ("", "localhost"):
-                raise ValueError(
-                    f"Unsupported non-local file URI authority in {location!r}."
-                )
-            path = Path(unquote(parsed.path))
-        else:
-            path = Path(location)
+    path = _declared_local_source_path(location)
+    if path is not None:
         resolved = path if path.is_absolute() else Path(source_root) / path
         resolved = resolved.resolve()
         if not resolved.is_file():
             raise FileNotFoundError(f"Declared source file does not exist: {resolved}")
         return resolved
+    parsed = urlsplit(location)
     if parsed.scheme in ("http", "https"):
         return _materialized_http_source(location, parsed.path)
     raise ValueError(
         f"Unsupported source URI scheme {parsed.scheme!r} in {location!r}."
     )
+
+
+def _declared_local_source_path(location: str) -> Path | None:
+    """Distinguish filesystem paths, including Windows drives, from URI schemes."""
+
+    parsed = urlsplit(location)
+    if parsed.scheme == "file":
+        if parsed.netloc not in ("", "localhost"):
+            raise ValueError(
+                f"Unsupported non-local file URI authority in {location!r}."
+            )
+        return Path(unquote(parsed.path))
+    if parsed.scheme == "" or PureWindowsPath(location).is_absolute():
+        return Path(location)
+    return None
 
 
 def _portable_root_anchored_source_path(

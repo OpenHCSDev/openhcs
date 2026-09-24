@@ -7,6 +7,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+from math import isfinite
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from dataclasses import dataclass
@@ -246,47 +247,77 @@ def _cppipe_setting_line(line: str) -> tuple[str, str, str] | None:
 
 @dataclass(frozen=True, slots=True)
 class CellProfilerRunRequest:
-    """Authoritative native CellProfiler run request."""
+    """Decoded native CellProfiler request; no parameter map survives parsing."""
 
     dataset_path: Path
     pipeline_name: str
-    pipeline_params: dict[str, Any]
+    cppipe_source: CPPipeSourceRequest
+    first_image_set: int | None
+    last_image_set: int | None
+    timeout_seconds: float | None
     metrics: tuple[MetricCollector, ...]
-    output_dir: Path
     global_config: GlobalPipelineConfig
+
+    @classmethod
+    def from_pipeline_params(
+        cls,
+        *,
+        dataset_path: Path,
+        pipeline_name: str,
+        pipeline_params: Mapping[str, Any],
+        metrics: tuple[MetricCollector, ...],
+        output_dir: Path,
+        global_config: GlobalPipelineConfig,
+    ) -> "CellProfilerRunRequest":
+        resolved_dataset_path = Path(dataset_path)
+        timeout = pipeline_params.get("cellprofiler_timeout_seconds")
+        timeout_seconds = float(timeout) if timeout is not None else None
+        if timeout_seconds is not None and (
+            not isfinite(timeout_seconds) or timeout_seconds <= 0
+        ):
+            raise ValueError(
+                "cellprofiler_timeout_seconds must be finite and positive."
+            )
+        dataset_id = str(pipeline_params.get("dataset_id", resolved_dataset_path.name))
+        return cls(
+            dataset_path=resolved_dataset_path,
+            pipeline_name=pipeline_name,
+            cppipe_source=CPPipeSourceRequest.from_pipeline_params(
+                dataset_id=dataset_id,
+                output_dir=output_dir,
+                pipeline_params=pipeline_params,
+            ),
+            first_image_set=_optional_positive_int(
+                pipeline_params.get(CELLPROFILER_FIRST_IMAGE_SET_PARAM),
+                CELLPROFILER_FIRST_IMAGE_SET_PARAM,
+            ),
+            last_image_set=_optional_positive_int(
+                pipeline_params.get(CELLPROFILER_LAST_IMAGE_SET_PARAM),
+                CELLPROFILER_LAST_IMAGE_SET_PARAM,
+            ),
+            timeout_seconds=timeout_seconds,
+            metrics=metrics,
+            global_config=global_config,
+        )
 
     @property
     def dataset_id(self) -> str:
-        return str(self.pipeline_params.get("dataset_id", self.dataset_path.name))
+        return self.cppipe_source.dataset_id
 
     @property
-    def timeout_seconds(self) -> float | None:
-        value = self.pipeline_params.get("cellprofiler_timeout_seconds")
-        if value is None:
+    def output_dir(self) -> Path:
+        return self.cppipe_source.output_dir
+
+    def image_set_reference_slug(self) -> str | None:
+        """Derive the native-reference suffix from the parsed execution scope."""
+        if self.first_image_set is None and self.last_image_set is None:
             return None
-        return float(value)
-
-    @property
-    def first_image_set(self) -> int | None:
-        return _optional_positive_int(
-            self.pipeline_params.get(CELLPROFILER_FIRST_IMAGE_SET_PARAM),
-            CELLPROFILER_FIRST_IMAGE_SET_PARAM,
-        )
-
-    @property
-    def last_image_set(self) -> int | None:
-        return _optional_positive_int(
-            self.pipeline_params.get(CELLPROFILER_LAST_IMAGE_SET_PARAM),
-            CELLPROFILER_LAST_IMAGE_SET_PARAM,
-        )
-
-    @property
-    def cppipe_source(self) -> CPPipeSourceRequest:
-        return CPPipeSourceRequest.from_pipeline_params(
-            dataset_id=self.dataset_id,
-            output_dir=self.output_dir,
-            pipeline_params=self.pipeline_params,
-        )
+        parts = []
+        if self.first_image_set is not None:
+            parts.append(f"first{self.first_image_set}")
+        if self.last_image_set is not None:
+            parts.append(f"last{self.last_image_set}")
+        return "image_sets_" + "_".join(parts)
 
 
 @dataclass(frozen=True, slots=True)
@@ -659,7 +690,7 @@ class NativeCellProfilerInputDomainStrategy(ABC, metaclass=AutoRegisterMeta):
         request: CellProfilerRunRequest,
     ) -> tuple[str, ...]:
         """Return native-reference scope suffixes owned by this input domain."""
-        slug = native_cellprofiler_image_set_scope_slug(request.pipeline_params)
+        slug = request.image_set_reference_slug()
         return (slug,) if slug is not None else ()
 
     def accepts_reference_provenance(
@@ -1054,10 +1085,10 @@ class CellProfilerAdapter(ToolAdapter):
         output_dir: Path,
     ) -> BenchmarkResult:
         """Execute a native CellProfiler pipeline headlessly."""
-        request = CellProfilerRunRequest(
+        request = CellProfilerRunRequest.from_pipeline_params(
             dataset_path=Path(dataset_path).resolve(),
             pipeline_name=pipeline_name,
-            pipeline_params=dict(pipeline_params),
+            pipeline_params=pipeline_params,
             metrics=self._validated_metric_collectors(metrics),
             output_dir=Path(output_dir).resolve(),
             global_config=self.global_config,
@@ -1205,28 +1236,6 @@ def _subprocess_output(result: subprocess.CompletedProcess[str]) -> str:
     return "\n".join(part for part in (stdout, stderr) if part)
 
 
-def native_cellprofiler_image_set_scope_slug(
-    pipeline_params: Mapping[str, Any],
-) -> str | None:
-    """Return a stable native-reference scope suffix for bounded image-set runs."""
-    first_image_set = _optional_positive_int(
-        pipeline_params.get(CELLPROFILER_FIRST_IMAGE_SET_PARAM),
-        CELLPROFILER_FIRST_IMAGE_SET_PARAM,
-    )
-    last_image_set = _optional_positive_int(
-        pipeline_params.get(CELLPROFILER_LAST_IMAGE_SET_PARAM),
-        CELLPROFILER_LAST_IMAGE_SET_PARAM,
-    )
-    if first_image_set is None and last_image_set is None:
-        return None
-    parts = []
-    if first_image_set is not None:
-        parts.append(f"first{first_image_set}")
-    if last_image_set is not None:
-        parts.append(f"last{last_image_set}")
-    return "image_sets_" + "_".join(parts)
-
-
 def native_cellprofiler_well_filter_scope_slug(
     well_filter_config: WellFilterConfig,
 ) -> str | None:
@@ -1254,10 +1263,10 @@ def native_cellprofiler_reference_scope_slugs(
     global_config: GlobalPipelineConfig,
 ) -> tuple[str, ...]:
     """Return native-reference scope suffixes from the selected input domain."""
-    request = CellProfilerRunRequest(
+    request = CellProfilerRunRequest.from_pipeline_params(
         dataset_path=Path(dataset_path),
         pipeline_name=pipeline_name,
-        pipeline_params=dict(pipeline_params),
+        pipeline_params=pipeline_params,
         metrics=(),
         output_dir=Path(output_dir),
         global_config=global_config,
@@ -1277,10 +1286,10 @@ def native_cellprofiler_reference_matches_scope(
 ) -> bool:
     """Return whether a completed reference proves the selected input domain."""
 
-    request = CellProfilerRunRequest(
+    request = CellProfilerRunRequest.from_pipeline_params(
         dataset_path=Path(dataset_path),
         pipeline_name=pipeline_name,
-        pipeline_params=dict(pipeline_params),
+        pipeline_params=pipeline_params,
         metrics=(),
         output_dir=Path(output_dir),
         global_config=global_config,

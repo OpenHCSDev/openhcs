@@ -37,6 +37,7 @@ from benchmark.runner import (
     CellProfilerCompatibilityResult,
     run_cellprofiler_cppipe_parity,
 )
+from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
 from openhcs.core.equivalence.outputs import image_paths, table_paths
 
@@ -673,9 +674,13 @@ class CellProfilerComparisonObservation:
         return payload
 
 
-def load_comparison_cases(path: Path) -> tuple[CellProfilerComparisonCase, ...]:
+def load_comparison_cases(
+    path: Path,
+    *,
+    materialize_roots: bool | None = None,
+) -> tuple[CellProfilerComparisonCase, ...]:
     """Load benchmark cases from a JSON manifest."""
-    manifest = ComparisonManifest.load(path)
+    manifest = ComparisonManifest.load(path, materialize_roots=materialize_roots)
     payload = manifest.payload
     raw_cases = payload.get("cases")
     if not isinstance(raw_cases, Sequence):
@@ -748,6 +753,30 @@ def load_comparison_cases(path: Path) -> tuple[CellProfilerComparisonCase, ...]:
     return tuple(cases)
 
 
+def select_comparison_cases(
+    cases: Iterable[CellProfilerComparisonCase],
+    requested_names: tuple[str, ...],
+) -> tuple[CellProfilerComparisonCase, ...]:
+    """Select exact declared cases for both inspection and execution."""
+
+    available = tuple(cases)
+    names = tuple(case.name for case in available)
+    if len(names) != len(set(names)):
+        raise ValueError("Benchmark manifest case names must be unique.")
+    if not requested_names:
+        return available
+    unknown = tuple(
+        name for name in dict.fromkeys(requested_names) if name not in names
+    )
+    if unknown:
+        raise ValueError(
+            "Unknown benchmark case name(s): "
+            f"{', '.join(unknown)}. Available case name(s): {', '.join(names)}"
+        )
+    selected = set(requested_names)
+    return tuple(case for case in available if case.name in selected)
+
+
 def _manifest_well_filter_config(
     payload: Mapping[str, object],
     key: str,
@@ -796,6 +825,7 @@ def run_comparison_suite(
     """Run all cases and write raw benchmark observations."""
     if repeats < 1:
         raise ValueError("repeats must be at least 1.")
+    require_new_comparison_output_root(output_root)
     selected_cases = tuple(cases)
     context = ComparisonSuiteRunContext(
         suite_id=suite_id,
@@ -821,6 +851,7 @@ def run_comparison_suite(
         context=context,
         status=ComparisonSuiteRunStatus.RUNNING,
         completed_observation_count=0,
+        new=True,
     )
     try:
         for repetition in range(1, repeats + 1):
@@ -885,6 +916,18 @@ def run_comparison_suite(
         completed_observation_count=len(observations),
     )
     return tuple(observations)
+
+
+def require_new_comparison_output_root(output_root: Path) -> None:
+    """Reject an occupied destination before a run can replace its evidence."""
+
+    path = Path(output_root)
+    if not path.exists():
+        return
+    if not path.is_dir():
+        raise FileExistsError(f"Benchmark output path is not a directory: {path}")
+    if any(path.iterdir()):
+        raise FileExistsError(f"Benchmark output directory must be empty: {path}")
 
 
 def load_observations_jsonl(
@@ -1126,14 +1169,19 @@ def write_suite_metadata(
     context: ComparisonSuiteRunContext,
     status: ComparisonSuiteRunStatus,
     completed_observation_count: int,
+    new: bool = False,
 ) -> None:
     """Write the typed reproducibility receipt for the benchmark suite."""
     updated_at_epoch_seconds = time.time()
-    context.run_receipt(
+    receipt = context.run_receipt(
         status=status,
         completed_observation_count=completed_observation_count,
         updated_at_epoch_seconds=updated_at_epoch_seconds,
-    ).write(path)
+    )
+    if new:
+        receipt.write_new(path)
+    else:
+        receipt.write(path)
 
 
 def _run_comparison_case(
@@ -1325,7 +1373,7 @@ def comparison_observation_from_result(
     """Convert adapter results into a stable observation payload."""
     native_summary = _tool_execution_summary(
         result.native_cellprofiler,
-        execution_phase="EXECUTE_NATIVE_CP",
+        execution_phase=BenchmarkPhase.EXECUTE_NATIVE_CP,
     )
     return CellProfilerComparisonObservation(
         suite_id=suite_id,
@@ -1342,7 +1390,7 @@ def comparison_observation_from_result(
         native_cellprofiler=native_summary,
         openhcs=_tool_execution_summary(
             result.openhcs_converted,
-            execution_phase="EXECUTE_OPENHCS",
+            execution_phase=BenchmarkPhase.SERVER_PIPELINE_JOB,
         ),
     )
 
@@ -1350,18 +1398,18 @@ def comparison_observation_from_result(
 def _tool_execution_summary(
     result: BenchmarkResult,
     *,
-    execution_phase: str,
+    execution_phase: BenchmarkPhase,
     cached: bool | None = None,
 ) -> ToolExecutionSummary:
     phase_seconds = _phase_seconds(result)
     metric_seconds = result.metrics.get("execution_time_seconds")
     peak_memory_mb = result.metrics.get("peak_memory_mb")
-    total_phase_seconds = sum(phase_seconds.values()) if phase_seconds else None
+    total_phase_seconds = additive_phase_total_seconds(phase_seconds)
     return ToolExecutionSummary(
         tool=result.tool_name,
         success=result.success,
         output_path=str(result.output_path),
-        execution_seconds=phase_seconds.get(execution_phase),
+        execution_seconds=phase_seconds.get(execution_phase.name),
         total_metric_seconds=(
             total_phase_seconds
             if total_phase_seconds is not None

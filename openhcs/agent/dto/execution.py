@@ -9,7 +9,12 @@ from functools import wraps
 from typing import TYPE_CHECKING, Self
 
 from python_introspect import project_dataclass, validate_annotated_dataclass
-from zmqruntime.config import NonBlankString, SocketPort, TransportMode
+from zmqruntime.config import (
+    NonBlankString,
+    PositiveInteger,
+    SocketPort,
+    TransportMode,
+)
 from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.messages import (
     ExecutionStatus,
@@ -36,6 +41,7 @@ from openhcs.agent.ui_bridge_identities import (
 from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 if TYPE_CHECKING:
     from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -260,6 +266,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
 
     plate_path: str
     pipeline_source: str
+    execution_plate_path: str | None = None
     global_config_id: str | None = None
 
     @classmethod
@@ -268,6 +275,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
         *,
         plate_path: str,
         pipeline_source: str,
+        execution_plate_path: str | None = None,
         global_config_id: str | None = None,
         host: str = "localhost",
         port: int | None = None,
@@ -277,6 +285,7 @@ class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
         return cls(
             plate_path=plate_path,
             pipeline_source=pipeline_source,
+            execution_plate_path=execution_plate_path,
             global_config_id=global_config_id,
             connection=ExecutionConnectionSpec(
                 host=host,
@@ -353,6 +362,10 @@ class CompileSubmissionRequest(OrchestratorSessionIdentity):
 @dataclass(frozen=True, slots=True)
 class PipelineExecutionSubmissionRequest(OrchestratorSessionIdentity):
     compile_artifact_id: str | None = None
+    runtime_observation_export_path: str | None = None
+    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+        ZMQRuntimeObservationExportScope.VALUES
+    )
     wait: bool = False
     submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
     wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
@@ -362,6 +375,15 @@ class PipelineExecutionSubmissionRequest(OrchestratorSessionIdentity):
 class ExecutionStatusRequest:
     job_id: str
     timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCancellationRequest:
+    job_id: NonBlankString
+    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -382,6 +404,14 @@ class ExecutionJobStatus(ExecutionJobIdentity, AgentResultEnvelope):
 
         lifecycle_status = ExecutionStatus.from_wire(self.status)
         return lifecycle_status is not None and lifecycle_status.is_terminal
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionJobCancellationResult(AgentResultEnvelope):
+    """One cancellation attempt and the ordinary job status observed afterward."""
+
+    applied: bool
+    job_status: ExecutionJobStatus
 
 
 @dataclass(frozen=True, slots=True)

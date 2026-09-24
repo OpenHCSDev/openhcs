@@ -1,0 +1,17 @@
+{
+  "auto_add_output_plate_to_plate_manager": false,
+  "output_plate_root": "/tmp/openhcs-paper-four-modes-fork-2scydK/cp_tutorial_translocation_final/wells_8/workers_2/TranslocationData_Translocation_final_source_workspace_well_throughput",
+  "runtime_observation_export_path": "/tmp/openhcs-paper-four-modes-fork-2scydK/cp_tutorial_translocation_final/wells_8/workers_2/ordinary_run_evidence/cp_tutorial_translocation_final-8w_2c-1790160304899451039/runtime_outcomes.pkl.gz",
+  "runtime_observation_export_scope": "outcomes",
+  "well_count": 8,
+  "wells": [
+    "W001",
+    "W003",
+    "W005",
+    "W007",
+    "W002",
+    "W004",
+    "W006",
+    "W008"
+  ]
+}

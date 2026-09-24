@@ -41,6 +41,19 @@ def test_path_policy_rejects_paths_outside_roots(tmp_path: Path):
         policy.assert_writable(outside)
 
 
+def test_readable_location_checks_root_without_requiring_file(tmp_path: Path):
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    policy = AgentPathPolicy.with_roots(readable_roots=(allowed,), writable_roots=())
+    absent = allowed / "pending.cppipe"
+
+    assert policy.assert_readable_location(absent) == absent.resolve()
+    with pytest.raises(AgentPathPolicyError, match="does not exist"):
+        policy.assert_readable(absent)
+    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+        policy.assert_readable_location(tmp_path / "outside.cppipe")
+
+
 def test_environment_roots_use_platform_path_separator(monkeypatch, tmp_path: Path):
     first = tmp_path / "first"
     second = tmp_path / "second"

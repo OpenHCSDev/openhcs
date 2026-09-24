@@ -1,0 +1,17 @@
+<frozen importlib._bootstrap>:228: RuntimeWarning: During parsing environment variable 'NPY_DISABLE_CPU_FEATURES':
+You cannot disable CPU features (X86_V4), since they are not part of the dispatched optimizations
+(SSSE3 SSE41 POPCNT SSE42 AVX F16C FMA3 AVX2 AVX512F AVX512CD AVX512_KNL AVX512_KNM AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL).
+<frozen importlib._bootstrap>:228: RuntimeWarning: During parsing environment variable 'NPY_DISABLE_CPU_FEATURES':
+You cannot disable CPU features (AVX512_SKX), since they are not supported by your machine.
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measureobjectintensitydistribution.py:1133: RuntimeWarning: invalid value encountered in divide
+  radial_means = numpy.ma.masked_array(radial_values / pixel_count, mask)
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/scipy/ndimage/_measurements.py:1407: RuntimeWarning: invalid value encountered in divide
+  results = [sum(input * grids[dir].astype(float), labels, index) / normalizer
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measureobjectneighbors.py:611: RuntimeWarning: invalid value encountered in divide
+  percent_touching = pixel_count * 100 / perimeters
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/scipy/ndimage/_measurements.py:684: RuntimeWarning: invalid value encountered in divide
+  return sum / numpy.asanyarray(count).astype(numpy.float64)
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:1079: RuntimeWarning: invalid value encountered in divide
+  C1 = numpy.array(
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:1084: RuntimeWarning: invalid value encountered in divide
+  C2 = numpy.array(

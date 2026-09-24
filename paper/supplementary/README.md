@@ -362,8 +362,42 @@ one well and is not included in this fixed-queue-depth panel.
 The co-committed sweep source sets `materialize_runtime_artifacts=False` and
 `runtime_observation_mode=OMIT`, and requests pruning of unused unsaved-output
 steps. These conditions measure the configured execution workload; they do not
-establish throughput for every output-saving policy. Exact per-workflow retained
-work still depends on the compiled plans and historical run records.
+establish throughput for every output-saving policy. The historical rows do not
+retain the exact executed source revision, compiled plans, output inventories or
+worker-process event traces. At the May presentation-source commit
+`f58bca4e9`, `ExportToDatabase` was explicitly a pass-through stub rather than
+the later SQLite exporter. It is therefore not defensible to read Figure 5 as
+current output-complete throughput or to infer actual worker-process counts
+solely from the configured worker labels.
+
+The separate [current-API four-mode readiness probe](../../benchmark/results/paper_config_new_api_probe_20260923/translocation_four_modes_fork/README.md)
+ran one Translocation workflow with its explicit TIFF, SQLite and CPA properties
+outputs and verified one, two, three and four active worker PIDs from progress
+events. It is not pooled into Figure 5: it covers only one workflow, includes
+different output work, and uses the ordinary completed-server timing boundary.
+
+The separate [matched genuine-well Translocation pilot](../../benchmark/results/matched_batch_concurrency_fork_20260923/README.md)
+used two native CellProfiler jobs and two observed OpenHCS worker processes on
+the same eight source wells. Three timed observations each had no TIFF or SQLite
+value differences. Native invocation-to-completion makespans were 5.27--5.59 s;
+OpenHCS completed-server jobs were 16.08--16.75 s, including 11.33--11.65 s
+of plate-scoped SQLite export. The native processes persisted across observations,
+while OpenHCS created workers per job. This one-workflow, different-lifecycle
+pilot is not pooled into Figure 5 and does not establish general comparative
+throughput.
+
+A second [matched BBBC022 advanced-segmentation pilot](../../benchmark/results/matched_bbbc022_20260923_rc5/README.md)
+used eight distinct wells (16 image sets), two native CellProfiler jobs and
+two observed OpenHCS worker processes. One warm-up and one timed repetition
+each emitted one SQLite database and seven CellProfiler Analyst properties
+files on both sides. Native shards reconstructed their whole-batch outputs;
+the OpenHCS value comparisons reported no SQLite or normalized-properties
+differences, and no images were saved. The timed native two-job invocation
+makespan was 206.459 s, versus a 189.933 s OpenHCS completed-server job. The
+native process startup and OpenHCS compilation were excluded, but the job
+boundaries and process lifecycles still differ. This single timed repetition
+is retained as a matched-concurrency diagnostic, not a cross-system speedup
+claim or a Figure 5 input.
 
 Each row retains its workflow, worker count, assignment count, completed-assignment
 count, execution and total time, memory, status and serial CellProfiler projection.

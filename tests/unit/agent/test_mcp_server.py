@@ -35,7 +35,11 @@ from openhcs.agent.capabilities import (
 )
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.config import ConfigPatch
-from openhcs.agent.dto.execution import OrchestratorSessionRef
+from openhcs.agent.dto.execution import (
+    ExecutionJobCancellationResult,
+    ExecutionJobStatus,
+    OrchestratorSessionRef,
+)
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionCatalogEntry,
@@ -15220,10 +15224,17 @@ def test_mcp_server_exposes_execution_session_tools():
 
     assert "openhcs_create_orchestrator_session" in tool_names
     assert "openhcs_create_orchestrator_session_from_pipeline_source" in tool_names
+    source_session_tool = next(
+        tool
+        for tool in tools
+        if tool.name == "openhcs_create_orchestrator_session_from_pipeline_source"
+    )
+    assert "execution_plate_path" in source_session_tool.inputSchema["properties"]
     assert "openhcs_inspect_pipeline_source_artifact_plan" in tool_names
     assert "openhcs_submit_compile" in tool_names
     assert "openhcs_submit_pipeline_execution" in tool_names
     assert "openhcs_get_execution_status" in tool_names
+    assert "openhcs_cancel_execution" in tool_names
     assert "openhcs_viewer_snapshot_window" in tool_names
     assert "openhcs_close_viewer_window" in tool_names
     assert "openhcs_get_viewer_window_state" in tool_names
@@ -15235,6 +15246,42 @@ def test_mcp_server_exposes_execution_session_tools():
     assert "openhcs_probe_viewer_window" in tool_names
     assert "openhcs_validate_viewer_window_state" in tool_names
     assert "openhcs_ui_get_object_state_fields" in tool_names
+
+
+def test_mcp_execution_cancellation_projects_ordinary_job_status():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    class ExecutionService:
+        def cancel_job(self, job_id, *, timeout_ms):
+            assert job_id == "job-1"
+            assert timeout_ms == 1234
+            return ExecutionJobCancellationResult(
+                schema_version=SCHEMA_VERSION,
+                applied=True,
+                job_status=ExecutionJobStatus(
+                    schema_version=SCHEMA_VERSION,
+                    job_id=job_id,
+                    session_id="session-1",
+                    kind="execute",
+                    status="cancelled",
+                    uri="openhcs://execution/jobs/job-1",
+                    server_execution_id="execute-1",
+                ),
+            )
+
+    built = server.build_server(SimpleNamespace(execution_service=ExecutionService()))
+    result = asyncio.run(
+        built.call_tool(
+            "openhcs_cancel_execution",
+            {"job_id": "job-1", "timeout_ms": 1234},
+        )
+    )
+    payload = json.loads(_direct_tool_text(result))
+
+    assert payload["applied"] is True
+    assert payload["job_status"]["status"] == "cancelled"
+    assert payload["errors"] == []
 
 
 @pytest.mark.parametrize("worker_thread_safe", [False, True])
@@ -15423,9 +15470,37 @@ def test_execution_capabilities_distinguish_headless_and_ui_owned_runs():
         in capabilities["openhcs_submit_pipeline_execution"].description
     )
     assert (
+        "runtime observation export path"
+        in capabilities["openhcs_submit_pipeline_execution"].description
+    )
+    assert (
         "ObjectState snapshots"
         in capabilities["openhcs_ui_selected_plate_workflow"].description
     )
+
+
+def test_mcp_headless_submission_projects_observation_export_request():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    built = server.build_server()
+    listed_tools = built.list_tools()
+    tools = (
+        asyncio.run(listed_tools) if inspect.isawaitable(listed_tools) else listed_tools
+    )
+    schema = {tool.name: tool.inputSchema for tool in tools}[
+        "openhcs_submit_pipeline_execution"
+    ]
+
+    assert "runtime_observation_export_path" in schema["properties"]
+    assert "runtime_observation_export_path" not in schema["required"]
+    assert "runtime_observation_export_scope" in schema["properties"]
+    assert "runtime_observation_export_scope" not in schema["required"]
+    scope_ref = schema["properties"]["runtime_observation_export_scope"]["$ref"]
+    assert schema["$defs"][scope_ref.removeprefix("#/$defs/")]["enum"] == [
+        "values",
+        "outcomes",
+    ]
 
 
 def test_viewer_capabilities_advertise_payload_coordinate_validation():

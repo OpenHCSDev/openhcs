@@ -1,0 +1,8 @@
+{
+  "pipeline_path": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+  "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+  "file_list_path": null,
+  "output_root": "/tmp/openhcs-matched-true-n2-S3CsLF4J/native",
+  "expected_image_sets": 8,
+  "repetitions": 3
+}

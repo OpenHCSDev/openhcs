@@ -11,8 +11,9 @@ methodology recorded.
 
 The packaged ``openhcs-benchmark`` command records typed run provenance and
 structured artifacts, and the expert local MCP surface can inspect an existing
-authorized result directory. Those receipts improve reproducibility and status
-reporting, but neither a completed receipt nor MCP inspection establishes
+authorised result directory and render a bounded report from its typed
+observations. Those receipts improve reproducibility and status reporting, but
+neither a completed receipt nor MCP inspection or reporting establishes
 scientific equivalence or authorizes a new benchmark run.
 
 The historical text is retained under

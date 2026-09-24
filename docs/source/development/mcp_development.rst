@@ -177,6 +177,17 @@ control-plane lifecycle status together with the submitting client's latest
 progress event and monotonic progress sequence. A changing sequence is exact
 activity evidence even when the coarse execution status remains ``running``.
 Terminal status is cached and releases that client's progress subscription.
+``openhcs_cancel_execution`` uses the same retained job/client relationship;
+its result distinguishes an applied server cancellation from the status
+observed afterwards. A timeout does not prove that the job stopped.
+The optional ``runtime_observation_export_path`` on the normal execution
+submission is checked against agent writable roots and must not already exist.
+It is carried by the shared typed auxiliary execution declaration; the MCP
+server does not maintain a second observation transport key or job lifecycle.
+The optional ``runtime_observation_export_scope`` uses that declaration's
+``values`` default or ``outcomes`` for per-axis status without parent-side
+array retention. An ``outcomes`` request without an export path is rejected
+before submission.
 
 The knowledge commands call the same MCP tools exposed to agents:
 

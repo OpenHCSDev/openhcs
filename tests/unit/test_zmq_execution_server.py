@@ -1,3 +1,4 @@
+from pathlib import Path
 from queue import SimpleQueue
 from types import SimpleNamespace
 
@@ -14,7 +15,10 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionResult,
+    RuntimeObservationMode,
+)
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressEventPayload,
@@ -22,6 +26,9 @@ from openhcs.core.progress import (
     ProgressPhase,
     ProgressStatus,
     create_event,
+)
+from openhcs.runtime.zmq_execution_observation import (
+    ZMQRuntimeExecutionOutcomeExport,
 )
 from openhcs.runtime.zmq_execution_server import (
     ZMQAuxiliaryExecutionParams,
@@ -34,6 +41,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
     ZMQExecutionRequestPayload,
+    ZMQRuntimeObservationExportScope,
 )
 
 
@@ -108,6 +116,71 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
+
+
+def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> None:
+    params = ZMQAuxiliaryExecutionParams(
+        runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
+        runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+    )
+    execution_bundle = SimpleNamespace(requires_parent_runtime_observation=False)
+
+    assert (
+        params.runtime_observation_mode_for(execution_bundle)
+        is RuntimeObservationMode.OMIT
+    )
+    assert ZMQAuxiliaryExecutionParams.from_transport(params.to_transport()) == params
+
+
+def test_outcome_export_requires_a_path() -> None:
+    with pytest.raises(ValueError, match="requires an export path"):
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES
+        )
+
+
+def test_server_exports_outcomes_without_projecting_compiled_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    server = object.__new__(ZMQExecutionServer)
+    server._server_environment = None
+    record = ExecutionRecord(
+        execution_id="execution-1",
+        plate_id="plate-1",
+        client_address=None,
+        status=ExecutionStatus.RUNNING.value,
+    )
+    server.active_executions = {record.execution_id: record}
+    export_path = tmp_path / "outcomes.pkl.gz"
+    request_context = SimpleNamespace(
+        execution_id=record.execution_id,
+        auxiliary_params=ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=export_path,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        ),
+    )
+    compilation = SimpleNamespace(
+        execution_bundle=SimpleNamespace(runtime_contexts={}),
+        output_plate=SimpleNamespace(output_plate_root=tmp_path),
+    )
+    monkeypatch.setattr(
+        "openhcs.core.runtime_execution_validation.runtime_output_roots",
+        lambda contexts, root: (root,),
+    )
+
+    server._export_runtime_observation(
+        request_context=request_context,
+        compilation=compilation,
+        execution_results={"A01": ExecutionResult.success("A01")},
+    )
+
+    export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
+    assert export.successful_axis_count == 1
+    assert export.execution_id == record.execution_id
+    assert export.exports is not None
+    assert export.exports.output_files == ()
+    assert record.get_extra("runtime_observation_export_path") == str(export_path)
+    assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 
 
 def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(

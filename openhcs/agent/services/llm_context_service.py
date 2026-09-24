@@ -509,6 +509,7 @@ class HeadlessExecutionStepsSection(
 - Use {agent_capabilities.create_orchestrator_session.name} for a draft pipeline or {agent_capabilities.create_orchestrator_session_from_pipeline_source.name} for reviewed Python source. The source route requires pipeline_steps and accepts an omitted pipeline_config as PipelineConfig(); never send config through a parallel side channel.
 - Inspect first with {agent_capabilities.inspect_pipeline_source_artifact_plan.name}: it returns compiled source-workspace, step, group, artifact-output, and persistent-materialization plans, but not values that only exist during execution. Compile with {agent_capabilities.submit_compile.name} after those plans are sound.
 - Run with {agent_capabilities.submit_pipeline_execution.name}, poll with {agent_capabilities.get_execution_status.name}, then inspect/query/sample output plates before claiming success.
+- To stop a submitted compile or run, use {agent_capabilities.cancel_execution.name} with its job_id; the response reports whether the server applied cancellation and the ordinary job status observed afterward. Do not infer cancellation from a client timeout.
 - A normal completed-job status is lifecycle evidence, not a dump of RuntimeValueStore. Request kind="debugging" when an intermediate invocation value or artifact must be inspected, and kind="viewer_review" when image/label presentation is the evidence.
 - Headless sessions do not update PlateManager selection, snapshots, or output auto-add. Use the UI-visible workflow when those are required."""
 

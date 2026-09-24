@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -140,7 +140,10 @@
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-16: Re-read the complete explanation against the new packaged benchmark command and expert inspection capability. Its declaration-registry, projection, and no-parallel-catalogue guidance remains accurate; no prose change was required.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change and its affected owner; reviewed its Diátaxis need and claim boundary. The comparison is recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {
@@ -591,7 +594,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Lowers declarations into typed step plans, including declaration-derived framework-device assignments."
       },
       {
@@ -629,7 +632,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Implements the current compiler stages, including declaration-derived framework-device assignment."
       },
       {
@@ -768,7 +771,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Consumes component declarations to construct execution axes, stacks, grouping, and typed plans."
       }
     ],
@@ -1375,7 +1378,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_server_hooks.py",
-        "sha256": "03b95e1761f06d70b3dcf2fb4a27090e7281fdfba66c5c2e24599fb487d463e7",
+        "sha256": "b10f2a9a409ea1b97ad04ab4fa1fcea2fb41b9fbeaa43f7f31f0371be6ef484c",
         "role": "Maps generic targeted interruption onto the exact OpenHCS orchestrator and its owned workers."
       },
       {
@@ -1397,7 +1400,8 @@
       "On 2026-08-27, re-read the complete explanation against the current CellProfiler importer, nominal module declarations, and direct import test; added the explicit interactive-only rejection boundary.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "2026-09-14: Re-read the complete integration explanation against the changed importer. Public PipelineConfig/FunctionStep lowering, declaration-owned headless rejection, and the no-parallel-runtime boundary remain accurate; the new read-only terminal-artifact projection serves benchmark evidence planning and does not change this overview."
+      "2026-09-14: Re-read the complete integration explanation against the changed importer. Public PipelineConfig/FunctionStep lowering, declaration-owned headless rejection, and the no-parallel-runtime boundary remain accurate; the new read-only terminal-artifact projection serves benchmark evidence planning and does not change this overview.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate."
     ]
   },
   {
@@ -1651,7 +1655,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Invokes callable validation and framework-device assignment before assembling the execution bundle."
       },
       {
@@ -1881,7 +1885,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "01b82b24a6da4c11cfedb36ebb3ff27f9cd4ae23581adcbe3c02e694e8c3a2cb",
+    "source_sha256": "11d1d54561689e08a1b6c8ceaedfa1f4de7fd82dfa25e20e1b2ae813528ee0ce",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1891,7 +1895,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2016,7 +2020,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "cd47571edf7944fed90fb2e8ff2196acbbe7a8882572eb806645de2f52785b23",
+        "sha256": "b99b6ca27be471f95ddf0852f8f94ce02797a459bf98bf6e0fa4851c0bb8c698",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2041,7 +2045,7 @@
       },
       {
         "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "353b21289cc1404b19924f46b70907622cfa9a8a457ba40a19b89a223ede383a",
+        "sha256": "f26b697684b185bd5ebe122de14f6211cf5377cc21f31c917cca53cea6b4e592",
         "role": "Composes operating-guide sections from nominal context facets and bounds returned guidance."
       },
       {
@@ -2071,27 +2075,27 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns the shared comparison-run declaration, lifecycle enum, and validated receipt serialization and parsing."
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "898d5639e8b53b5c04cd28f93c5cddd8b9388a5f79177f85ec80f9bbc7c74131",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
-        "role": "Implements read-only receipt, observation-progress, and structured-artifact inspection without importing benchmark execution modules."
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
+        "role": "Implements contained read-only receipt, streamed observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2157,12 +2161,18 @@
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
       "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules.",
       "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/agent/capabilities.py`, `openhcs/mcp/dev_client_commanding.py`, `openhcs/mcp/server.py`, `openhcs/agent/dto/viewer.py`, `tests/unit/agent/test_mcp_server.py`, `openhcs/agent/services/llm_context_service.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Rechecked the benchmark evidence boundary as an explanation after suite inspection began containing every declared and discovered file. Clarified that escaping symlinks are not followed; 22 focused control tests passed. This is a targeted authority review, not a fresh installed-client proof.",
+      "2026-09-22: Targeted review of the benchmark evidence paragraph after the typed inspection request gained bounded artifact paging and an installed CLI projection. The explanation names one request owner rather than duplicating a procedure; 28 control tests passed. Fresh installed-wheel CI remains the separate protocol gate.",
+      "2026-09-23: Re-read the complete explanation against the typed comparison report and exclusive first-run receipt. The report is read-only and does not infer matched speedup; the runner refuses occupied destinations. See benchmark_report_and_run_claim_review_20260923.md; 54 focused tests and fresh current-checkout MCP discovery passed."
     ]
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "9ecfea48eaa9e2600157e2be7a04b96084d68d8c17547a9ae1e793c843bd120e",
+    "source_sha256": "f071f7effe7d94ef86cfcfaa24f479249fce185cba690c670ff247597aafa948",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2187,8 +2197,38 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "c744cbb54aa17a8fece9e193910ed0adf3e15750b24496acaac2840bd6883cc7",
-        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
+        "sha256": "177d91604f9be782b3fb9ed8641e0fb80d1c5182ad48d2e37e88c8bf3dc75596",
+        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy, preserves unmodified fields of caller-declared path-planning, VFS, and consolidation policies while selecting benchmark overrides, and applies digest-bound reference-export comparisons."
+      },
+      {
+        "path": "benchmark/openhcs_measured_run.py",
+        "sha256": "1e0cccc518fb6bec9c92ea8057dd7adfc7305b2d90a6da8f152c1b97601878ab",
+        "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
+      },
+      {
+        "path": "benchmark/contracts/run_artifacts.py",
+        "sha256": "e11f0d5cf699529bf2356d43628e06394cdf702119a4d303640aaae783c86f32",
+        "role": "Owns measured-run artifact identities and complete, exclusive publication of finaliser-owned evidence files."
+      },
+      {
+        "path": "benchmark/timing.py",
+        "sha256": "00b16a0e95fbc6164e6ab761f1a397441cc71b2699eaf046f46745658a448a8e",
+        "role": "Owns benchmark phase declarations, disjoint additive totals, and validated durations from completed ordinary server jobs."
+      },
+      {
+        "path": "benchmark/control_service.py",
+        "sha256": "bf2b39696a49d8c87cf74d39770d63013972b9c8cf884863c467ccdf46eb12d3",
+        "role": "Finalises benchmark evidence from the ordinary execution service's exact completed submission and job record."
+      },
+      {
+        "path": "openhcs/runtime/zmq_execution_observation.py",
+        "sha256": "e52b2e9784daa396b493f1f569fbcbb0d394e7e3c03d1a0c67d6594778ce64d3",
+        "role": "Declares ordinary value and outcome exports, compiled axis-owned value expectations, producing execution identity, and exclusive evidence-file creation."
+      },
+      {
+        "path": "benchmark/contracts/measured_run_receipt.py",
+        "sha256": "67c71873d050e05c0e4a1e231c46b700a765c12cade51269553cc7a5cb96989e",
+        "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
         "path": "benchmark/manifests/official30_portable_axis1.json",
@@ -2212,12 +2252,23 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "626d5e7242e1265e590ecf3a2b8c3a2ebc25d264c0e283ce908be2556f690df2",
-        "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
+        "sha256": "2f117fab8c889fb50a2ee734fe802b0ac6cbcbe9945a33d24c1482fbcd7eb955",
+        "role": "Proves validated reference-export comparisons and retention of caller-declared path-planning, VFS, and consolidation settings not overridden by benchmark policy."
+      },
+      {
+        "path": "tests/unit/test_openhcs_measured_run.py",
+        "sha256": "ebb8b7741eec1130969325ed30f425752f6b47aaa59a5c03655002bc3bb53690",
+        "role": "Proves ordinary non-CellProfiler observation validation, execution-ID admission, pre-connect rejection, and distinct receipts for repeated measurements on one client."
+      },
+      {
+        "path": "tests/unit/test_benchmark_timing.py",
+        "sha256": "0b25284f3404072758fed50c9818e41f8d25e9c9b7fdacb193afd198cf741e1d",
+        "role": "Proves completed-job duration validation and that overlapping progress and server intervals are excluded from additive phase totals."
       }
     ],
     "findings": [
-      "The canonical Linux acceptance command hardcoded one developer's /home cache path; it now uses the XDG cache root with a portable home fallback."
+      "The canonical Linux acceptance command hardcoded one developer's /home cache path; it now uses the XDG cache root with a portable home fallback.",
+      "Measured-run inspection now names retained_evidence_valid and states that it verifies retained receipt and observation evidence, not pipeline image or table outputs."
     ],
     "disposition": "revise",
     "validation": [
@@ -2225,7 +2276,26 @@
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
       "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate.",
-      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests."
+      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed.",
+      "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Re-read this explanation against the OpenHCS adapter's strict Boolean and finite timeout decoding. These checks reject invalid benchmark requests before execution; they do not alter the equivalence policy or make outcome-only evidence comparable values. Forty-six affected adapter, comparison, and manifest tests passed.",
+      "2026-09-22: Re-read the complete explanation against the ordinary value/outcome export declaration and shared finaliser. Added the execution-ID and exclusive-file evidence boundary without implying outcome-only value equivalence. Sixty affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
+      "2026-09-22: Re-read the explanation against the central benchmark timing owner and both ordinary completion paths. Clarified that the execution-only duration comes from the completed server job, a missing progress interval is not inferred, and additive totals exclude nested timing observations. Ninety affected unit tests and six live ZMQ integration tests passed locally; exact-head CI remains a separate gate.",
+      "2026-09-22: Re-reviewed the evidence boundary after making benchmark finaliser writes complete and exclusive per file. This prevents concurrent finalisers from replacing retained artifacts but is not a multi-file transaction; 34 focused wrapper/control tests passed locally.",
+      "2026-09-22: Re-reviewed the explanation against receipt-free partial evidence handling. The control layer derives the unreceipted artifact list from the measured-artifact declarations and never infers completion from orphaned files; 35 focused tests passed locally.",
+      "2026-09-22: Re-reviewed the partial-finalisation explanation after adding exact-content recovery for the same completed job. Required files derive from the artifact enum; mismatches, symlinks, and existing receipts fail closed. Thirty-seven focused wrapper/control tests passed locally; no multi-file transaction is claimed.",
+      "2026-09-23: Reviewed the same evidence explanation after Windows CI exposed text-mode newline translation in the shared publisher. Binary UTF-8 output now makes retained bytes and source digests platform-independent; the existing prose remains accurate. Thirty-seven focused tests passed locally, with exact-head Windows CI pending.",
+      "2026-09-23: Re-read the complete Diátaxis explanation after the adapter began preserving caller-declared path-planning policy while choosing its output location. This changes output retention selection, not runtime equivalence or job ownership; no prose change was needed. Nineteen affected adapter and converted-CellProfiler tests passed locally. The pilot's proposed no-extra-main-flow policy still needs live validation.",
+      "2026-09-23: Reviewed the nested-config authority delta: the adapter now preserves caller VFS and consolidation fields outside its declared benchmark overrides, as it already does for path planning. The explanation's ownership boundary remains accurate without a prose change. Unit coverage and three live ordinary/converted-pipeline checks passed; these fixtures do not validate the historical matched pilot.",
+      "2026-09-23: Re-read the complete explanation after value-export expectations began retaining compiled axis ownership. Added the plate-scoped owner distinction and archived-export interpretation; see docs/audits/runtime_axis_ownership_review_20260923.md. Thirty affected validation and adapter tests and a live two-well translocation run passed locally; the historical matched pilot remains unrerun.",
+      "2026-09-23: Re-read the complete explanation against the reusable connected-client measured-run path. Added one architecture sentence separating warm-server reuse from a second execution engine. Ten focused unit tests and a live two-repetition ordinary ZMQ test passed locally; this does not yet validate matched CellProfiler timing or equivalence.",
+      "2026-09-23: Rechecked the measured-run wrapper and its focused tests after progress timing changed to use the earliest axis start and latest completion independent of event arrival order. The explanation already distinguishes this diagnostic interval from authoritative completed-server time; no prose change was needed. This is a targeted authority-delta review, not a new suite-level publication claim.",
+      "2026-09-23: Re-read the complete explanation after comparison-run output admission gained an exclusive receipt. Retained the distinction between typed run metadata and durable publication evidence; see benchmark_report_and_run_claim_review_20260923.md.",
+      "2026-09-23: Re-read the complete Diataxis explanation against the current compiled-axis export and shared measured finaliser. Added exact membership and nonempty-execution boundaries; archived exports remain readable but cannot justify a new success receipt without compiler membership. Affected unit and live ordinary ZMQ tests passed locally; exact-head CI remains separate.",
+      "2026-09-23: Re-read the complete explanation after outcome-only observations gained contract-owned file-export paths without internal runtime records. Clarified that exported-file values can be compared separately while an outcome receipt alone cannot prove value equivalence. Focused ZMQ, runtime-validation, measured-run, and pilot tests passed 46 cases; final matched workload evidence remains pending."
     ]
   },
   {
@@ -2314,7 +2384,7 @@
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
+        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
         "role": "Declares named source bindings independently of concrete microscope handlers."
       },
       {
@@ -2363,7 +2433,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Compiles source execution-axis and framework-device facts into frozen contexts and typed plans."
       },
       {

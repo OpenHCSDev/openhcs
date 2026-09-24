@@ -41,6 +41,8 @@ from openhcs.agent.dto.config import (
 from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     CompileSubmissionRequest,
+    ExecutionCancellationRequest,
+    ExecutionJobCancellationResult,
     ExecutionJobRef,
     ExecutionJobStatus,
     ExecutionStatusRequest,
@@ -186,8 +188,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowViewportRequest,
     ViewerWindowViewportResult,
 )
-from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+from openhcs.serialization.json import to_jsonable
 
 
 class CapabilityKind(Enum):
@@ -2543,7 +2545,9 @@ class CreateOrchestratorSessionFromPipelineSourceCapability(
         "Creates an opaque headless execution session from an exact pycodified "
         "PipelineDocument containing pipeline_steps and an optional "
         "pipeline_config, whose omission selects PipelineConfig(), such as "
-        "Pipeline Editor code-mode content. A PlateManager document is a "
+        "Pipeline Editor code-mode content. An optional execution_plate_path "
+        "selects a prepared input workspace while plate_path retains the "
+        "original source identity. A PlateManager document is a "
         "multi-plate aggregate, not pipeline source; use the UI selected-plate "
         "workflow when an open UI should show rows, snapshots, and output auto-add."
     )
@@ -2635,7 +2639,11 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
         "Submits a headless ZMQ pipeline execution job for an execution session. "
         "Use wait=False for normal agent workflows, then poll status by job_id; "
         "submit is bounded by submit_timeout_ms and wait=True is bounded by "
-        "wait_timeout_ms. This path does not update the running UI PlateManager; "
+        "wait_timeout_ms. An optional runtime observation export path must be "
+        "writable under the agent path policy. The optional observation scope "
+        "selects full runtime values or outcome-only evidence without retaining "
+        "array values. This path does not update the "
+        "running UI PlateManager; "
         "use openhcs_ui_selected_plate_workflow for user-visible UI runs."
     )
     service = "execution_session"
@@ -2648,6 +2656,8 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
         method=lambda service, request: service.submit_execution(
             request.session_id,
             compile_artifact_id=request.compile_artifact_id,
+            runtime_observation_export_path=request.runtime_observation_export_path,
+            runtime_observation_export_scope=request.runtime_observation_export_scope,
             wait=request.wait,
             submit_timeout_ms=request.submit_timeout_ms,
             wait_timeout_ms=request.wait_timeout_ms,
@@ -2669,6 +2679,33 @@ class GetExecutionStatusCapability(SubmittedJobCapability):
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.get_job_status(
+            request.job_id,
+            timeout_ms=request.timeout_ms,
+        ),
+    )
+
+
+class CancelExecutionCapability(HeadlessExecutionCapability):
+    name = "openhcs_cancel_execution"
+    kind = CapabilityKind.TOOL
+    title = "Cancel execution job"
+    description = (
+        "Requests cancellation of one submitted compile or pipeline job through "
+        "its ordinary execution server. Returns whether cancellation was applied "
+        "and the job status observed afterward."
+    )
+    service = "execution_session"
+    mutating = True
+    side_effects = ("requests_zmq_execution_cancellation",)
+    exposition = HeadlessExecutionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+        target_context=CapabilityTargetContext.SUBMITTED_JOB,
+    )
+    input_contract = ExecutionCancellationRequest
+    output_contract = ExecutionJobCancellationResult
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.execution_service,
+        method=lambda service, request: service.cancel_job(
             request.job_id,
             timeout_ms=request.timeout_ms,
         ),

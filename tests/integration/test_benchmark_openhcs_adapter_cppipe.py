@@ -18,6 +18,8 @@ from benchmark.datasets.registry import BBBC021_SINGLE_PLATE
 from benchmark.metrics.time import TimeMetric
 from benchmark.pipelines.registry import NUCLEI_SEGMENTATION
 from benchmark.runner import run_benchmark
+from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
+from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
@@ -33,7 +35,7 @@ def test_openhcs_adapter_runs_converted_cppipe_pipeline(tmp_path: Path) -> None:
             "converted_cppipe_smoke",
             "synthetic_cppipe_smoke",
             cppipe_path,
-            tmp_path / "benchmark_outputs",
+            tmp_path / "benchmark_outputs_first",
         )
     )
 
@@ -43,13 +45,14 @@ def test_openhcs_adapter_runs_converted_cppipe_pipeline(tmp_path: Path) -> None:
     assert result.provenance["axis_count"] == 1
     assert result.provenance["image_output_count"] == 0
 
+    # Keep the first run immutable while using its outputs as the parity reference.
     parity_result = _run_openhcs_adapter(
         OpenHCSAdapterRunCase.local_cppipe(
             plate_path,
             "converted_cppipe_parity",
             "synthetic_cppipe_smoke",
             cppipe_path,
-            tmp_path / "benchmark_outputs",
+            tmp_path / "benchmark_outputs_parity",
             equivalence_reference_output_dir=result.output_path,
             compare_image_outputs=False,
         )
@@ -61,6 +64,49 @@ def test_openhcs_adapter_runs_converted_cppipe_pipeline(tmp_path: Path) -> None:
         result.output_path
     )
     assert parity_result.provenance["equivalence_difference_count"] == 0
+
+
+def test_openhcs_adapter_retains_declared_path_policy_and_explicit_exports(
+    tmp_path: Path,
+) -> None:
+    plate_path = _generate_plate(tmp_path / "plate")
+    cppipe_path = _write_cppipe(tmp_path / "identify_primary_objects.cppipe")
+    output_dir = tmp_path / "benchmark_outputs"
+    adapter = OpenHCSAdapter(
+        execution_port=18000 + os.getpid() % 20000,
+        global_config=GlobalPipelineConfig(
+            path_planning_config=PathPlanningConfig(well_filter=0),
+        ),
+    )
+
+    result = adapter.run(
+        dataset_path=plate_path,
+        pipeline_name="runtime_only_final_output",
+        pipeline_params={
+            "dataset_id": "runtime_only_final_output",
+            "microscope_type": "imagexpress",
+            "cppipe_path": str(cppipe_path),
+            "materialize_runtime_artifacts": False,
+        },
+        metrics=[TimeMetric()],
+        output_dir=output_dir,
+    )
+
+    assert result.success is True
+    assert result.provenance["csv_output_count"] > 0
+    assert result.provenance["image_output_count"] == 0
+    submitted_config = ConfigDocumentAuthority.from_source(
+        (output_dir / "submitted_global_config.py").read_text(encoding="utf-8"),
+        expected_config_type=GlobalPipelineConfig,
+    )
+    assert submitted_config.path_planning_config.well_filter == 0
+    tiff_outputs = tuple(
+        path
+        for path in result.output_path.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".tif", ".tiff"}
+    )
+    assert tiff_outputs
+    assert all(path.name.endswith(".labels.tif") for path in tiff_outputs)
 
 
 def test_openhcs_adapter_resolves_dataset_reference_cppipe(

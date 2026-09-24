@@ -14,7 +14,14 @@ from pathlib import Path
 from typing import Self
 
 from zmqruntime.execution import ExecutionProgressObservation
-from zmqruntime.messages import ExecutionStatus
+from zmqruntime.messages import (
+    ExecutionRecord,
+    ExecutionStatus,
+    ExecutionStatusSnapshot,
+    MessageFields,
+    PongResponse,
+    ResponseType,
+)
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -30,6 +37,7 @@ from openhcs.agent.dto.execution import (
     ArtifactPlanSummary,
     CompiledStepPlanSummary,
     ExecutionConnectionSpec,
+    ExecutionJobCancellationResult,
     ExecutionJobRef,
     ExecutionJobStatus,
     MainFlowMaterializationPlanSummary,
@@ -72,7 +80,11 @@ from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
 )
-from openhcs.runtime.zmq_execution_signature import ZMQExecutionIdentity
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQExecutionIdentity,
+    ZMQRuntimeObservationExportScope,
+)
 from openhcs.serialization.json import to_jsonable
 
 MAX_INSPECTION_AXES = 8
@@ -202,6 +214,11 @@ class GlobalConfigSelection:
 
 
 class ExecutionClientABC(ABC):
+    def endpoint_handshake(self) -> PongResponse | None:
+        """Return the endpoint that accepted this client's submission, if known."""
+
+        return None
+
     @abstractmethod
     def submit_compile(
         self,
@@ -224,6 +241,15 @@ class ExecutionClientABC(ABC):
     def get_status(
         self,
         execution_id=None,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        raise NotImplementedError
+
+    @abstractmethod
+    def cancel_execution(
+        self,
+        execution_id: str,
         *,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> JsonObject:
@@ -302,6 +328,9 @@ class ExecutionClientFactoryABC(ABC):
 class ZMQExecutionClientAdapter(ExecutionClientABC):
     client: ZMQExecutionClient
 
+    def endpoint_handshake(self) -> PongResponse | None:
+        return self.client.connected_endpoint
+
     def submit_compile(
         self,
         submission: OpenHCSExecutionSubmission,
@@ -325,6 +354,14 @@ class ZMQExecutionClientAdapter(ExecutionClientABC):
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> JsonObject:
         return dict(self.client.get_status(execution_id, timeout_ms=timeout_ms))
+
+    def cancel_execution(
+        self,
+        execution_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        return dict(self.client.cancel_execution(execution_id, timeout_ms=timeout_ms))
 
     def wait_for_completion(self, execution_id: str) -> JsonObject:
         return dict(self.client.wait_for_completion(execution_id))
@@ -446,11 +483,6 @@ class PipelineSourceSessionRequest(ExecutionPipelineSessionRequest):
     pipeline_source: str
 
     def __post_init__(self) -> None:
-        if self.identity.execution_plate_id is not None:
-            raise ValueError(
-                "Pipeline source sessions execute plate_id directly; "
-                "execution_plate_id must be None."
-            )
         if self.identity.selected_pipeline_path is not None:
             raise ValueError(
                 "Pipeline source sessions use pipeline_source as the selected "
@@ -481,15 +513,22 @@ class ExecutionSessionRecord:
     global_pipeline_config: GlobalPipelineConfig
 
     def submission(
-        self, compile_artifact_id: str | None = None
+        self,
+        compile_artifact_id: str | None = None,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
     ) -> OpenHCSExecutionSubmission:
-        return OpenHCSExecutionSubmission(
+        submission = OpenHCSExecutionSubmission(
             plate_id=self.session.plate_path,
             execution_plate_id=self.session.execution_plate_path,
             selected_pipeline_path=self.session.selected_pipeline_path,
             pipeline_document=self.pipeline_document,
             global_config=self.global_pipeline_config,
             compile_artifact_id=compile_artifact_id,
+        )
+        return (
+            submission.with_auxiliary_params(auxiliary_params)
+            if auxiliary_params is not None
+            else submission
         )
 
 
@@ -498,6 +537,8 @@ class ExecutionJobRecord:
     ref: ExecutionJobRef
     response: JsonObject
     client: ExecutionClientABC | None
+    submission: OpenHCSExecutionSubmission | None = None
+    endpoint: PongResponse | None = None
 
     def status(self, response: JsonObject | None = None) -> ExecutionJobStatus:
         payload = self.response if response is None else response
@@ -590,6 +631,9 @@ class ExecutionJobStore:
         kind: ExecutionJobKind,
         response: JsonObject,
         client: ExecutionClientABC | None,
+        *,
+        submission: OpenHCSExecutionSubmission | None = None,
+        endpoint: PongResponse | None = None,
     ) -> ExecutionJobRef:
         job_id = f"job-{next(self._counter)}"
         ref = ExecutionJobRef(
@@ -605,6 +649,8 @@ class ExecutionJobStore:
             ref=ref,
             response=response,
             client=client,
+            submission=submission,
+            endpoint=endpoint,
         )
         return ref
 
@@ -634,6 +680,17 @@ class ExecutionJobSubmission:
 
     client: ExecutionClientABC
     response: JsonObject
+    submission: OpenHCSExecutionSubmission
+    endpoint: PongResponse | None
+
+
+@dataclass(frozen=True, slots=True)
+class CompletedPipelineExecution:
+    """The exact ordinary submission and server-owned successful result."""
+
+    submission: OpenHCSExecutionSubmission
+    record: ExecutionRecord
+    endpoint: PongResponse | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -646,10 +703,11 @@ class ExecutionClientGateway:
         kind: ExecutionJobKind,
         compile_artifact_id: str | None = None,
         *,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
     ) -> ExecutionJobSubmission:
         client = self.factory.create_client(record.session.connection)
-        execution_request = record.submission(compile_artifact_id)
+        execution_request = record.submission(compile_artifact_id, auxiliary_params)
         try:
             response = kind.submit(
                 client,
@@ -662,7 +720,20 @@ class ExecutionClientGateway:
             except Exception:
                 logger.exception("Failed to close rejected execution client")
             raise
-        return ExecutionJobSubmission(client=client, response=dict(response))
+        try:
+            endpoint = client.endpoint_handshake()
+        except Exception:
+            logger.exception(
+                "Accepted %s job has no readable endpoint handshake",
+                kind.value,
+            )
+            endpoint = None
+        return ExecutionJobSubmission(
+            client=client,
+            response=dict(response),
+            submission=execution_request,
+            endpoint=endpoint,
+        )
 
     def status(
         self,
@@ -672,6 +743,15 @@ class ExecutionClientGateway:
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> JsonObject:
         return dict(client.get_status(server_execution_id, timeout_ms=timeout_ms))
+
+    def cancel(
+        self,
+        client: ExecutionClientABC,
+        server_execution_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> JsonObject:
+        return dict(client.cancel_execution(server_execution_id, timeout_ms=timeout_ms))
 
     def wait(
         self,
@@ -797,7 +877,10 @@ class ExecutionSessionService:
     ) -> OrchestratorSessionRef:
         return self.create_session_from_pipeline_source(
             PipelineSourceSessionRequest(
-                identity=ZMQExecutionIdentity(plate_id=request.plate_path),
+                identity=ZMQExecutionIdentity(
+                    plate_id=request.plate_path,
+                    execution_plate_id=request.execution_plate_path,
+                ),
                 pipeline_source=request.pipeline_source,
                 global_config_id=request.global_config_id,
                 connection=request.connection,
@@ -943,14 +1026,38 @@ class ExecutionSessionService:
         session_id: str,
         *,
         compile_artifact_id: str | None = None,
+        runtime_observation_export_path: str | None = None,
+        runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
+            ZMQRuntimeObservationExportScope.VALUES
+        ),
         wait: bool = False,
         submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
         wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
     ) -> ExecutionJobRef | ExecutionJobStatus:
+        auxiliary_params = None
+        if (
+            runtime_observation_export_path is None
+            and runtime_observation_export_scope
+            is not ZMQRuntimeObservationExportScope.VALUES
+        ):
+            raise ValueError("Outcome observation requires an export path.")
+        if runtime_observation_export_path is not None:
+            export_path = self._path_policy.assert_writable(
+                runtime_observation_export_path
+            )
+            if export_path.exists():
+                raise FileExistsError(
+                    f"Runtime observation export path already exists: {export_path}"
+                )
+            auxiliary_params = ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=export_path,
+                runtime_observation_export_scope=runtime_observation_export_scope,
+            )
         return self._submit_job(
             session_id,
             ExecutionJobKind.EXECUTE,
             compile_artifact_id=compile_artifact_id,
+            auxiliary_params=auxiliary_params,
             wait=wait,
             submit_timeout_ms=submit_timeout_ms,
             wait_timeout_ms=wait_timeout_ms,
@@ -984,12 +1091,125 @@ class ExecutionSessionService:
             updated.release_client()
         return updated.status()
 
+    def wait_job(
+        self,
+        job_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> ExecutionJobStatus:
+        """Wait on an accepted ordinary job while retaining its cancellation handle."""
+
+        job = self._job_store.job_record(job_id)
+        if job.ref.server_execution_id is None or job.is_terminal:
+            return job.status()
+        response = self._client_gateway.wait(
+            job.require_client(),
+            job.ref.server_execution_id,
+            timeout_ms=timeout_ms,
+        )
+        updated = self._job_store.update_response(job_id, dict(response))
+        if updated.is_terminal:
+            updated.release_client()
+        return updated.status()
+
+    def require_completed_pipeline_execution(
+        self, job_id: str
+    ) -> CompletedPipelineExecution:
+        """Expose a successful execution's submitted input and server result.
+
+        The operational job remains the status authority; callers such as a
+        benchmark evidence writer need not reconstruct its source or result.
+        """
+
+        job = self._job_store.job_record(job_id)
+        if job.ref.kind != ExecutionJobKind.EXECUTE.value:
+            raise ValueError(f"Job {job_id} is not a pipeline execution.")
+        status = self.get_job_status(job_id)
+        if status.status != ExecutionStatus.COMPLETE.value:
+            raise RuntimeError(
+                f"Pipeline execution {job_id} is not complete: {status.status}."
+            )
+        job = self._job_store.job_record(job_id)
+        snapshot = ExecutionStatusSnapshot.from_dict(job.response)
+        if (
+            snapshot.status is not ResponseType.OK
+            or snapshot.execution is None
+            or snapshot.execution.status != ExecutionStatus.COMPLETE.value
+        ):
+            raise RuntimeError(
+                f"Pipeline execution {job_id} has no successful server result."
+            )
+        if job.submission is None:
+            raise RuntimeError(
+                f"Pipeline execution {job_id} has no retained submission."
+            )
+        return CompletedPipelineExecution(
+            submission=job.submission,
+            record=snapshot.execution,
+            endpoint=job.endpoint,
+        )
+
+    def cancel_job(
+        self,
+        job_id: str,
+        *,
+        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> ExecutionJobCancellationResult:
+        """Cancel a submitted job using the client that owns its progress stream."""
+
+        job = self._job_store.job_record(job_id)
+        if job.is_terminal or job.ref.server_execution_id is None:
+            return ExecutionJobCancellationResult(
+                schema_version=SCHEMA_VERSION,
+                applied=False,
+                job_status=job.status(),
+                warnings=(
+                    AgentWarning(
+                        code="execution_not_cancellable",
+                        message="Job is already terminal or was not accepted by the server.",
+                    ),
+                ),
+            )
+
+        try:
+            response = self._client_gateway.cancel(
+                job.require_client(),
+                job.ref.server_execution_id,
+                timeout_ms=timeout_ms,
+            )
+        except Exception as exc:
+            return ExecutionJobCancellationResult(
+                schema_version=SCHEMA_VERSION,
+                applied=False,
+                job_status=self.get_job_status(job_id, timeout_ms=timeout_ms),
+                errors=(AgentError.from_exception("execution_cancel_error", exc),),
+            )
+
+        applied = response.get(MessageFields.STATUS) == ResponseType.OK.value
+        error = response.get(MessageFields.ERROR)
+        return ExecutionJobCancellationResult(
+            schema_version=SCHEMA_VERSION,
+            applied=applied,
+            job_status=self.get_job_status(job_id, timeout_ms=timeout_ms),
+            errors=(
+                (
+                    AgentError(
+                        code="execution_cancel_rejected",
+                        message=str(error or "Execution server rejected cancellation."),
+                    ),
+                )
+                if not applied
+                else ()
+            ),
+        )
+
     def _submit_job(
         self,
         session_id: str,
         kind: ExecutionJobKind,
         *,
         compile_artifact_id: str | None = None,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None = None,
         wait: bool,
         submit_timeout_ms: int,
         wait_timeout_ms: int,
@@ -1000,6 +1220,7 @@ class ExecutionSessionService:
                 record,
                 kind,
                 compile_artifact_id,
+                auxiliary_params=auxiliary_params,
                 timeout_ms=submit_timeout_ms,
             )
         except Exception as exc:
@@ -1024,17 +1245,11 @@ class ExecutionSessionService:
             kind,
             submission.response,
             client=submission.client,
+            submission=submission.submission,
+            endpoint=submission.endpoint,
         )
         if wait and ref.server_execution_id is not None:
-            wait_response = self._client_gateway.wait(
-                submission.client,
-                ref.server_execution_id,
-                timeout_ms=wait_timeout_ms,
-            )
-            updated = self._job_store.update_response(ref.job_id, dict(wait_response))
-            if updated.is_terminal:
-                updated.release_client()
-            return updated.status()
+            return self.wait_job(ref.job_id, timeout_ms=wait_timeout_ms)
         return ref
 
 

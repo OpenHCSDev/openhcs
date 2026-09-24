@@ -5,14 +5,25 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.util
-from importlib.metadata import distribution
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections.abc import Sequence
+from dataclasses import dataclass
+from importlib.metadata import distribution
 from pathlib import Path
+
+
+@dataclass(frozen=True, slots=True)
+class _MeasuredSmokeEvidence:
+    source_plate: Path
+    cli_execution_plate: Path
+    source_file: Path
+    mcp_receipt_path: Path
+    mcp_execution_id: str
 
 
 def _load_installed_console_scripts() -> tuple[str, ...]:
@@ -41,6 +52,39 @@ def _load_installed_console_scripts() -> tuple[str, ...]:
     return tuple(sorted(entry_point.name for entry_point in entry_points))
 
 
+def _installed_console_script(name: str) -> str:
+    """Resolve one console script from the candidate wheel's environment."""
+
+    executable_search_path = os.pathsep.join(
+        (str(Path(sys.executable).parent), os.environ.get("PATH", ""))
+    )
+    executable = shutil.which(name, path=executable_search_path)
+    if executable is None:
+        raise AssertionError(f"Installed console script is missing: {name}")
+    return executable
+
+
+def _installed_mcp_environment(**extra: str) -> dict[str, str]:
+    """Pass the explicit wheel-import path through MCP's filtered stdio env."""
+
+    python_path = os.environ.get("PYTHONPATH")
+    return {**({"PYTHONPATH": python_path} if python_path else {}), **extra}
+
+
+def _assert_installed_mcp_source(health: dict) -> None:
+    """Reject a fresh child that silently imported another OpenHCS checkout."""
+
+    import openhcs
+
+    package_root = Path(openhcs.__file__).resolve().parent
+    server_source = Path(str(health.get("server_source_path", ""))).resolve()
+    if not server_source.is_relative_to(package_root):
+        raise AssertionError(
+            "Installed MCP child imported a different OpenHCS package: "
+            f"parent={package_root} child={server_source}"
+        )
+
+
 def _tool_payload(result) -> dict:
     if not result.content or not hasattr(result.content[0], "text"):
         raise AssertionError("MCP tool result did not contain text content.")
@@ -61,6 +105,7 @@ async def _run_protocol_smoke() -> dict:
     parameters = StdioServerParameters(
         command=sys.executable,
         args=("-m", "openhcs.mcp"),
+        env=_installed_mcp_environment(),
     )
     async with stdio_client(parameters) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -148,6 +193,7 @@ async def _run_protocol_smoke() -> dict:
                     )
 
     health = _tool_payload(health_result)
+    _assert_installed_mcp_source(health)
     capabilities = _tool_payload(capabilities_result)
     document = _tool_payload(document_result)
     if health.get("status") != "ok":
@@ -208,6 +254,432 @@ async def _run_protocol_smoke() -> dict:
     }
 
 
+async def _run_measured_execution_protocol_smoke(
+    session, output_dir: Path
+) -> _MeasuredSmokeEvidence:
+    """Complete one ordinary source-backed job through the installed MCP process."""
+
+    from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+    from openhcs.core.config import PipelineConfig
+    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.steps import FunctionStep
+    from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+
+    plate = output_dir / "protocol_plate"
+    generated = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_generate_synthetic_plate",
+                {
+                    "output_dir": str(plate),
+                    "grid_rows": 1,
+                    "grid_cols": 1,
+                    "tile_width": 32,
+                    "tile_height": 32,
+                    "wavelengths": 1,
+                    "z_stack_levels": 1,
+                    "num_cells": 2,
+                    "wells": ["A01"],
+                    "format": "ImageXpress",
+                    "random_seed": 7,
+                },
+            ),
+            timeout=90,
+        )
+    )
+    if not plate.is_dir() or generated.get("errors"):
+        raise AssertionError(f"Installed MCP did not generate a plate: {generated}")
+    cli_plate = output_dir / "cli_execution_plate"
+    shutil.copytree(plate, cli_plate)
+
+    document = PipelineDocumentAuthority.from_values(
+        pipeline_config=PipelineConfig(),
+        pipeline_steps=[
+            FunctionStep(name="Blur", func=(gaussian_blur, {"sigma": 1.0}))
+        ],
+    )
+    pipeline_source = PipelineDocumentAuthority.render(document)
+    source_file = output_dir / "pipeline.py"
+    source_file.write_text(pipeline_source, encoding="utf-8")
+    created = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_create_orchestrator_session_from_pipeline_source",
+                {
+                    "plate_path": str(plate),
+                    "pipeline_source": pipeline_source,
+                    "port": 26000 + os.getpid() % 20000,
+                    "persistent": False,
+                },
+            ),
+            timeout=90,
+        )
+    )
+    session_id = created.get("session_id")
+    if not isinstance(session_id, str):
+        raise AssertionError(f"Installed MCP did not create a session: {created}")
+
+    evidence_dir = output_dir / "measured"
+    evidence_dir.mkdir()
+    status = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_submit_pipeline_execution",
+                {
+                    "session_id": session_id,
+                    "runtime_observation_export_path": str(
+                        MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
+                            evidence_dir
+                        )
+                    ),
+                    "runtime_observation_export_scope": "outcomes",
+                    "wait": True,
+                    "submit_timeout_ms": 120_000,
+                    "wait_timeout_ms": 120_000,
+                },
+            ),
+            timeout=180,
+        )
+    )
+    if status.get("status") != "complete" or not isinstance(status.get("job_id"), str):
+        raise AssertionError(f"Installed MCP execution did not complete: {status}")
+
+    finalized = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_finalize_measured_pipeline_run",
+                {
+                    "job_id": status["job_id"],
+                    "run_id": "installed-protocol-smoke",
+                    "pipeline_name": "Blur",
+                },
+            ),
+            timeout=90,
+        )
+    )
+    inspected = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_inspect_measured_pipeline_run",
+                {"output_dir": str(evidence_dir)},
+            ),
+            timeout=90,
+        )
+    )
+    if finalized.get("execution_id") != status.get("server_execution_id"):
+        raise AssertionError(f"Installed MCP receipt changed job identity: {finalized}")
+    if (
+        inspected.get("retained_evidence_valid") is not True
+        or not inspected.get("source_evidence")
+        or any(not item.get("valid") for item in inspected["source_evidence"])
+    ):
+        raise AssertionError(f"Installed MCP retained invalid evidence: {inspected}")
+    return _MeasuredSmokeEvidence(
+        source_plate=plate,
+        cli_execution_plate=cli_plate,
+        source_file=source_file,
+        mcp_receipt_path=MeasuredPipelineRunArtifact.RECEIPT.path_in(evidence_dir),
+        mcp_execution_id=finalized["execution_id"],
+    )
+
+
+def _run_installed_measured_cli_smoke(
+    evidence: _MeasuredSmokeEvidence, output_dir: Path
+) -> dict:
+    """Require installed CLI and MCP to retain the same declared run semantics."""
+
+    from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+    from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+    from benchmark.control import inspect_measured_pipeline_run
+
+    executable = _installed_console_script("openhcs-benchmark")
+    cli_dir = output_dir / "measured_cli"
+    command = (
+        executable,
+        "run-measured",
+        "--plate",
+        str(evidence.source_plate),
+        "--execution-plate",
+        str(evidence.cli_execution_plate),
+        "--pipeline-source-file",
+        str(evidence.source_file),
+        "--output-dir",
+        str(cli_dir),
+        "--run-id",
+        "installed-cli-smoke",
+        "--pipeline-name",
+        "Blur",
+        "--observation-scope",
+        "outcomes",
+        "--port",
+        str(30000 + os.getpid() % 20000),
+        "--no-persistent",
+        "--submit-timeout-ms",
+        "120000",
+        "--wait-timeout-ms",
+        "120000",
+    )
+    completed = subprocess.run(
+        command,
+        cwd=output_dir,
+        capture_output=True,
+        text=True,
+        timeout=240,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise AssertionError(
+            "Installed measured CLI failed: "
+            f"exit={completed.returncode} stderr={completed.stderr[-4000:]} "
+            f"stdout={completed.stdout[-2000:]}"
+        )
+    mcp_receipt = MeasuredPipelineRunReceipt.read(evidence.mcp_receipt_path)
+    cli_receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(cli_dir)
+    )
+    comparable_fields = (
+        "schema_version",
+        "pipeline_name",
+        "plate_id",
+        "pipeline_source_sha256",
+        "global_config_source_sha256",
+    )
+    for field_name in comparable_fields:
+        if getattr(cli_receipt, field_name) != getattr(mcp_receipt, field_name):
+            raise AssertionError(
+                f"Installed CLI and MCP receipts disagree on {field_name}."
+            )
+    if (
+        mcp_receipt.execution_id != evidence.mcp_execution_id
+        or cli_receipt.execution_id == mcp_receipt.execution_id
+    ):
+        raise AssertionError("Installed measured runs lost distinct job identities.")
+    if cli_receipt.execution_plate_id != str(evidence.cli_execution_plate):
+        raise AssertionError("Installed CLI ignored its prepared execution plate.")
+    if (
+        mcp_receipt.observation_export_scope.value != "outcomes"
+        or cli_receipt.observation_export_scope.value != "outcomes"
+    ):
+        raise AssertionError("Installed MCP and CLI ignored outcome-only export scope.")
+    if mcp_receipt.server_environment is None or cli_receipt.server_environment is None:
+        raise AssertionError("Installed measured receipt lacks server provenance.")
+    if cli_receipt.server_environment != mcp_receipt.server_environment:
+        raise AssertionError(
+            "Installed CLI and MCP used different server environments."
+        )
+    mcp_roots = {path.resolve() for path in mcp_receipt.output_roots}
+    cli_roots = {path.resolve() for path in cli_receipt.output_roots}
+    if not mcp_roots or not cli_roots or mcp_roots & cli_roots:
+        raise AssertionError("Installed MCP and CLI output roots are not independent.")
+    inspection = inspect_measured_pipeline_run(cli_dir)
+    if (
+        not inspection.retained_evidence_valid
+        or inspection.warnings
+        or not inspection.source_evidence
+        or not all(source.valid for source in inspection.source_evidence)
+    ):
+        raise AssertionError("Installed CLI source evidence failed inspection.")
+    return {
+        "measured_execution_id": mcp_receipt.execution_id,
+        "measured_cli_execution_id": cli_receipt.execution_id,
+    }
+
+
+def _run_installed_throughput_plan_smoke(manifest_path: Path, output_dir: Path) -> dict:
+    """Require the installed CLI to resolve manifest-owned sweep policy."""
+
+    sweep_dir = output_dir / "unused_throughput_sweep"
+    result = subprocess.run(
+        (
+            _installed_console_script("openhcs-benchmark"),
+            "run-well-throughput",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(sweep_dir),
+            "--plan-only",
+        ),
+        cwd=output_dir,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"Installed throughput plan failed: {result.stderr or result.stdout}"
+        )
+    plan = json.loads(result.stdout)
+    if (
+        tuple(mode["name"] for mode in plan["modes"]) != ("1w_1t", "8w_2c")
+        or plan["start_method"] != "fork"
+        or plan["case_names"] != []
+        or sweep_dir.exists()
+    ):
+        raise AssertionError(f"Installed throughput plan diverged: {plan}")
+    return {"throughput_plan_modes": tuple(mode["name"] for mode in plan["modes"])}
+
+
+async def _run_benchmark_protocol_smoke(
+    output_dir: Path, *, exercise_measured_execution: bool = False
+) -> dict:
+    """Prove the installed expert extension through a fresh MCP client."""
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    from openhcs.agent.path_policy import AgentPathPolicy
+
+    manifest_path = output_dir / "empty_benchmark_manifest.json"
+    manifest_path.write_text(
+        '{"cases": [], "well_throughput_modes": ["1w_1t", "8w_2c"], '
+        '"well_throughput_start_method": "fork"}\n',
+        encoding="utf-8",
+    )
+
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=("-m", "openhcs.mcp", "--surface", "full"),
+        env=_installed_mcp_environment(
+            **{
+                AgentPathPolicy.readable_roots_environment_key: str(output_dir),
+                AgentPathPolicy.writable_roots_environment_key: str(output_dir),
+            }
+        ),
+    )
+    async with stdio_client(parameters) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await asyncio.wait_for(session.initialize(), timeout=60)
+            child_health = _tool_payload(
+                await asyncio.wait_for(
+                    session.call_tool("openhcs_health_check", {}), timeout=60
+                )
+            )
+            _assert_installed_mcp_source(child_health)
+            listed = await asyncio.wait_for(session.list_tools(), timeout=60)
+            capabilities = _tool_payload(
+                await asyncio.wait_for(
+                    session.call_tool("openhcs_list_capabilities", {}), timeout=60
+                )
+            )
+            callable_read_only = {
+                "openhcs_list_benchmark_cases",
+                "openhcs_inspect_benchmark_run",
+                "openhcs_inspect_measured_pipeline_run",
+                "openhcs_report_measured_pipeline_run",
+            }
+            expected = callable_read_only | {"openhcs_finalize_measured_pipeline_run"}
+            listed_names = {tool.name for tool in listed.tools}
+            declared_names = {
+                item.get("name")
+                for item in capabilities.get("capabilities", ())
+                if isinstance(item, dict) and item.get("kind") == "tool"
+            }
+            if capabilities.get("surface_profile") != "full":
+                raise AssertionError(
+                    f"Installed benchmark MCP surface was not full: {capabilities}"
+                )
+            if not expected <= listed_names & declared_names:
+                raise AssertionError(
+                    "Installed benchmark tools are not both declared and listed: "
+                    f"expected={expected} listed={listed_names} declared={declared_names}"
+                )
+            benchmark_search = _tool_payload(
+                await asyncio.wait_for(
+                    session.call_tool(
+                        "openhcs_search_capabilities",
+                        {"workflow_group": "benchmarking", "limit": 50},
+                    ),
+                    timeout=60,
+                )
+            )
+            benchmark_matches = {
+                item["name"] for item in benchmark_search["capabilities"]
+            }
+            if not expected <= benchmark_matches:
+                raise AssertionError(
+                    "Installed benchmark tools are not discoverable by task: "
+                    f"expected={expected} found={benchmark_matches}"
+                )
+            execution_search = _tool_payload(
+                await asyncio.wait_for(
+                    session.call_tool(
+                        "openhcs_search_capabilities",
+                        {"workflow_group": "headless_execution", "limit": 50},
+                    ),
+                    timeout=60,
+                )
+            )
+            ordinary_controls = {
+                "openhcs_create_orchestrator_session_from_pipeline_source",
+                "openhcs_submit_pipeline_execution",
+                "openhcs_get_execution_status",
+                "openhcs_cancel_execution",
+            }
+            execution_matches = {
+                item["name"] for item in execution_search["capabilities"]
+            }
+            if not ordinary_controls <= execution_matches:
+                raise AssertionError(
+                    "Installed ordinary execution controls are not discoverable: "
+                    f"expected={ordinary_controls} found={execution_matches}"
+                )
+            for name in callable_read_only:
+                if name == "openhcs_list_benchmark_cases":
+                    request = {"manifest_path": str(manifest_path)}
+                elif name == "openhcs_inspect_benchmark_run":
+                    request = {"output_dir": str(output_dir), "artifact_limit": 1}
+                else:
+                    request = {"output_dir": str(output_dir)}
+                result = await asyncio.wait_for(
+                    session.call_tool(name, request),
+                    timeout=60,
+                )
+                if result.isError:
+                    raise AssertionError(f"Installed benchmark tool failed: {name}")
+                payload = _tool_payload(result)
+                if name == "openhcs_list_benchmark_cases":
+                    if payload.get("manifest_path") != str(manifest_path):
+                        raise AssertionError(
+                            f"Installed benchmark discovery used the wrong manifest: {payload}"
+                        )
+                    if payload.get("cases") != [] or payload.get("warnings") != []:
+                        raise AssertionError(
+                            f"Installed empty benchmark discovery is invalid: {payload}"
+                        )
+                    continue
+                if payload.get("output_dir") != str(output_dir):
+                    raise AssertionError(
+                        f"Installed benchmark tool inspected the wrong run: {payload}"
+                    )
+                if (
+                    name == "openhcs_inspect_benchmark_run"
+                    and len(payload.get("structured_artifacts", ())) > 1
+                ):
+                    raise AssertionError(
+                        f"Installed benchmark artifact page exceeded its bound: {payload}"
+                    )
+                if not payload.get("warnings"):
+                    raise AssertionError(
+                        f"Absent receipt was not reported by {name}: {payload}"
+                    )
+            measured_evidence = (
+                await _run_measured_execution_protocol_smoke(session, output_dir)
+                if exercise_measured_execution
+                else None
+            )
+    measured_execution = (
+        _run_installed_measured_cli_smoke(measured_evidence, output_dir)
+        if measured_evidence is not None
+        else {}
+    )
+    return {
+        "benchmark_expert_tools": sorted(expected),
+        **_run_installed_throughput_plan_smoke(manifest_path, output_dir),
+        **measured_execution,
+    }
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -215,6 +687,11 @@ def _build_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="Source checkout that must not own the imported openhcs package.",
+    )
+    parser.add_argument(
+        "--exercise-measured-execution",
+        action="store_true",
+        help="Run one ordinary source-backed job through installed MCP and CLI.",
     )
     return parser
 
@@ -243,7 +720,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     forbidden_root = args.forbid_import_root.resolve()
     original_working_directory = Path.cwd()
-    with tempfile.TemporaryDirectory(prefix="openhcs-installed-mcp-") as directory:
+    from openhcs.agent.path_policy import AgentPathLocationAuthority
+
+    with tempfile.TemporaryDirectory(
+        prefix="openhcs-installed-mcp-",
+        dir=AgentPathLocationAuthority.temporary_root(),
+    ) as directory:
         working_directory = Path(directory).resolve()
         os.chdir(working_directory)
         try:
@@ -272,6 +754,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
 
             result = asyncio.run(_run_protocol_smoke())
+            result.update(
+                asyncio.run(
+                    _run_benchmark_protocol_smoke(
+                        working_directory,
+                        exercise_measured_execution=args.exercise_measured_execution,
+                    )
+                )
+            )
             result.update(
                 {
                     "package_path": str(package_path),

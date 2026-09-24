@@ -1,0 +1,1857 @@
+{
+  "case": "cp_tutorial_advanced_segmentation_final",
+  "wells": [
+    "A01",
+    "A12",
+    "B01",
+    "B12",
+    "C01",
+    "C12",
+    "D01",
+    "D12"
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "9a428ed4606db6247b7b7d57fc3fdf3d9d85c75b8ede0afc5a6333b956a649fe",
+  "driver_sha256": "9d75d57e8b985201adad7b27882770ea46527f160f8c0fcd4b973377c43575d8",
+  "native_worker_sha256": "c309f4369f2df81cacab7f1098cb12b4d159122d136e3b489013d943d0811b7f",
+  "source_commit": "f0dc3193983d16de27b1e9c0164880dc99aa8b81",
+  "source_dirty": true,
+  "native_job_count": 2,
+  "candidate_worker_count": 2,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "20585/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "size_bytes": 726371,
+      "sha256": "be75b70f9d35622e1eebf317e76b02ed1385a8478cecd598ba07908a832e9602"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "size_bytes": 726369,
+      "sha256": "40f90411806af81dc2045a6cb619e3e209c09e035d5e2b1b67c81381c6924932"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "size_bytes": 726369,
+      "sha256": "b5fcd9e3c4d2d20afea0ae1bc6f20ad3d4b7adad516b93a069307b413d8e9df2"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "size_bytes": 726375,
+      "sha256": "a9405ee89ab70b5aa76ecf839080e08ab0d3237ca802523d219f647d0d8b5aa1"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "size_bytes": 726369,
+      "sha256": "24783f8f392c3cea53c192f1b4ad6a183d94de016841bfa6f53c8301a91c34a8"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "size_bytes": 726355,
+      "sha256": "c39d85fae59389f755ef01b1b9bc088a18b76fc93a51abc747d7ff756191c684"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "size_bytes": 726353,
+      "sha256": "b8e787c71de2148dce9711945b221ef0d2b4adc7f855960cdae8d4a5daf56b10"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "size_bytes": 726353,
+      "sha256": "34c43330524ebfda8f950f8c21868c6c046d33812f312b795e4071641821b669"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "size_bytes": 726359,
+      "sha256": "dee297e8aeb5ed24ca125317fdc1e4596faaa00c13919124f91badba9231f2d6"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "size_bytes": 726353,
+      "sha256": "a34c3e7701f38f812909d57d1876d187ee416952805360c3a6f022a945e5314c"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w1372F05C0-79EE-409F-BE07-20AB2CD28DF8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w1372F05C0-79EE-409F-BE07-20AB2CD28DF8.tif",
+      "size_bytes": 726354,
+      "sha256": "c8cc87cde29c8fc7e5ba9395638df0649fb46a2f7fe60d0f7b45001fd2a36b60"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w2AF0434CD-87AD-4AA1-8B12-4AD9653E8BFD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w2AF0434CD-87AD-4AA1-8B12-4AD9653E8BFD.tif",
+      "size_bytes": 726352,
+      "sha256": "6adad8bc09a3ba99e36ba7728683d8e37ce46f396b214b0bebc72dc3e9fdb49b"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w3ED6D4DB2-26AE-4C0A-924A-99B627DB34E9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w3ED6D4DB2-26AE-4C0A-924A-99B627DB34E9.tif",
+      "size_bytes": 726352,
+      "sha256": "8f71ae90dcf1ddfbfc43af2db5871373912c189644fa9f70de2ddc12e6d9a4f4"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w449C8B197-6E5F-4DDE-ABFD-9A82DA94098F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w449C8B197-6E5F-4DDE-ABFD-9A82DA94098F.tif",
+      "size_bytes": 726358,
+      "sha256": "a51e847fa829fcd5666b271c11dbb9da1e530ee290fa9aa49fd4c76c6c7d4efd"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w592A87287-891D-4151-A0D1-FC74C69C578D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w592A87287-891D-4151-A0D1-FC74C69C578D.tif",
+      "size_bytes": 726352,
+      "sha256": "8f546fffa69b1299edab20d2ce385329efc35ee1e0e426c24209a0044f0caa42"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w15036592E-C279-4C59-838F-3F24DFBDAB39.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w15036592E-C279-4C59-838F-3F24DFBDAB39.tif",
+      "size_bytes": 726354,
+      "sha256": "648471d1cb785c34c6895a356811d215e17f170afdc27bdf9f11375460d50c58"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w234CD0CFF-B4C2-4E4C-89FE-8AA915947847.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w234CD0CFF-B4C2-4E4C-89FE-8AA915947847.tif",
+      "size_bytes": 726352,
+      "sha256": "83b9f83795bc47a6e95386f1fb4baa1f4fe03ccab5ad99a3433f4b69e36dfdea"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w3B11833E6-B3C9-4294-9898-A56C474C2D0B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w3B11833E6-B3C9-4294-9898-A56C474C2D0B.tif",
+      "size_bytes": 726352,
+      "sha256": "80607879bd5be7a28cee99da5811add537b545e90a6f9ccbadfc2d33615f0671"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w4D46DDF6B-E7DE-4B18-8594-A6E52802425A.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w4D46DDF6B-E7DE-4B18-8594-A6E52802425A.tif",
+      "size_bytes": 726358,
+      "sha256": "c872e875b9da0fa70fde0fa66300d6ec04f90e6d83db61979a1c4fec6590f212"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w5D1AD7308-2595-43A7-AC06-3A25D0B97F5F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w5D1AD7308-2595-43A7-AC06-3A25D0B97F5F.tif",
+      "size_bytes": 726352,
+      "sha256": "7766096ae19bb2a15eda0c892acf15118c724eb77ddff8a6cb222ea44f9e95c3"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w14E59A4AE-4AC3-430F-AD75-FC75A61FC3B2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w14E59A4AE-4AC3-430F-AD75-FC75A61FC3B2.tif",
+      "size_bytes": 726355,
+      "sha256": "1b7b10652537886ef1fc59a0c3e19daf69d93f9fa865c9db8739134b4ce59095"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w295FCDE09-AEAB-4462-A52B-A84C225965C0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w295FCDE09-AEAB-4462-A52B-A84C225965C0.tif",
+      "size_bytes": 726353,
+      "sha256": "b0bf572f6aa29755fc5ecb55debf1baa04d8f737a6f4bcb7376d6b8ae929535c"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w3737A5173-CFDD-42EC-827A-F9FE1574A19E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w3737A5173-CFDD-42EC-827A-F9FE1574A19E.tif",
+      "size_bytes": 726353,
+      "sha256": "a83a8e130c48b95b79be879f49e92165143c3ad1f75b43550b43473b621641c7"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w471017BAC-A25F-49A1-AA9C-F90B70E18C90.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w471017BAC-A25F-49A1-AA9C-F90B70E18C90.tif",
+      "size_bytes": 726359,
+      "sha256": "c7ffa480ba69f8473f8e1cef87c2c82023485f9771fb76b8d60eab85e112f7d3"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w5295BC157-8972-4F73-BE9F-5F3A2E4F2D83.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w5295BC157-8972-4F73-BE9F-5F3A2E4F2D83.tif",
+      "size_bytes": 726353,
+      "sha256": "b5f4cc0e61af2c72cce1b7f16c2f89534f2a8ddb0d657e317b9c0e8d7c243e32"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w1FFCB1B81-BDEE-41C1-BC00-6104C150726C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w1FFCB1B81-BDEE-41C1-BC00-6104C150726C.tif",
+      "size_bytes": 726355,
+      "sha256": "651e6a96dedd42f0eebb1e2fc817b0b9c2992d70b384451f810a16c4ccd41704"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w2E8DAA9D4-0974-4B29-8D7D-352D2D048B6B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w2E8DAA9D4-0974-4B29-8D7D-352D2D048B6B.tif",
+      "size_bytes": 726353,
+      "sha256": "42eeb211013764c1144910a3a549fb153f719e5c9e20ba4b9731f5f3f5aea7b6"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w39303AAF2-B2B4-46B4-8A2B-03DFA43A62D9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w39303AAF2-B2B4-46B4-8A2B-03DFA43A62D9.tif",
+      "size_bytes": 726353,
+      "sha256": "374e47e549dc13de5ecc0dca8e88ea4f9efd20942b3e9ad8cbffaf56b3c6a584"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w491F1386F-B964-48E4-A7EF-7CAAD83502F0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w491F1386F-B964-48E4-A7EF-7CAAD83502F0.tif",
+      "size_bytes": 726359,
+      "sha256": "9751ed15062589f668fc0617684c7c2e9b5d416c7efabe6e029bd270f38bc809"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w5E87D6AFF-D1CA-4165-BE8B-E04F0DCEE567.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w5E87D6AFF-D1CA-4165-BE8B-E04F0DCEE567.tif",
+      "size_bytes": 726353,
+      "sha256": "18f176eee5314ae406d030e10992a664e11a78153ec86e5f3423c99d227dc00e"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w1465E1FFC-E45E-498D-9BD7-21D0275A2A50.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w1465E1FFC-E45E-498D-9BD7-21D0275A2A50.tif",
+      "size_bytes": 726354,
+      "sha256": "865bde727f6bf2b1516ba3a9ae541f8d261a2dbc1f88534dec6eb9fdb32574a3"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w28648C732-7EC7-4A16-9ED2-1AF8330FB682.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w28648C732-7EC7-4A16-9ED2-1AF8330FB682.tif",
+      "size_bytes": 726352,
+      "sha256": "ea211a31be4baab0dfcf1b9e84809b0c7ce4f53b0b0a1004e69f12e90e0ade84"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w347819554-794D-4046-AEA9-CF29E3C9C6B4.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w347819554-794D-4046-AEA9-CF29E3C9C6B4.tif",
+      "size_bytes": 726352,
+      "sha256": "3ebc0763b3e47327535432c96e76b2b3ff4c9372b6589e9a341c3c016e95bbeb"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w4CE1F11C2-3A5B-4432-B84B-B55DCC9341FD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w4CE1F11C2-3A5B-4432-B84B-B55DCC9341FD.tif",
+      "size_bytes": 726358,
+      "sha256": "16708e26e456753a5c8d6254e29fb1d08e4a955bff408f68fcbdc1513d97493d"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w5F6321381-5407-4495-850D-53D3EE2ADF6E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w5F6321381-5407-4495-850D-53D3EE2ADF6E.tif",
+      "size_bytes": 726352,
+      "sha256": "fe5a75db9f3830514d61c1af578f7eb301d1cac769241f38441bdf689a62efbd"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w162DF496F-9D68-4A2F-94CC-9BE3846AAC5F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w162DF496F-9D68-4A2F-94CC-9BE3846AAC5F.tif",
+      "size_bytes": 726354,
+      "sha256": "066326d99790d606625616c25fe6f884ee15c48e55cca06d223208c4c5ba0051"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w2D8E7CC41-9E1A-4A4C-ADA3-5A3B559935D6.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w2D8E7CC41-9E1A-4A4C-ADA3-5A3B559935D6.tif",
+      "size_bytes": 726352,
+      "sha256": "83367374ec55d8d720a5bcf6173c8dc53f9adc3c38e80420b02a50b4800f900e"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w35A8888EB-808E-4DC2-BC52-B5A9165AD8BB.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w35A8888EB-808E-4DC2-BC52-B5A9165AD8BB.tif",
+      "size_bytes": 726352,
+      "sha256": "7bb2edd88f636f63e5c23989530569315cdf4cc93b44f0be21ad8df67e8f40b2"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w4148BFF5B-74EA-44BE-AAEA-0CFAA8001558.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w4148BFF5B-74EA-44BE-AAEA-0CFAA8001558.tif",
+      "size_bytes": 726358,
+      "sha256": "630f9300fe0e000d3029fcc828a90bb3cd514df5abc26e4e8320aee7f9cf4daa"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w5FF93C044-D7E2-4287-A53C-3EDE9D379684.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w5FF93C044-D7E2-4287-A53C-3EDE9D379684.tif",
+      "size_bytes": 726352,
+      "sha256": "2aed28c61831adc1a2ffa13fc8938942f3cdb8c3e19633390ba13ed98600c7dc"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w1BE877EB8-EF83-42D0-A1ED-1265BC3BC48E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w1BE877EB8-EF83-42D0-A1ED-1265BC3BC48E.tif",
+      "size_bytes": 726355,
+      "sha256": "a8047984a157e93e663b3017eeabcf081c20e2f0e611a6f1fb73bb63ceb575e0"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w2F99428DB-6617-41CA-BD78-8EF51B205390.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w2F99428DB-6617-41CA-BD78-8EF51B205390.tif",
+      "size_bytes": 726353,
+      "sha256": "0497eaa82a74c629883ef19e45a7cd15944af6284855730933e386f8438e36b0"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w314488A1E-AD9F-49C4-853A-A86A8C1A1B03.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w314488A1E-AD9F-49C4-853A-A86A8C1A1B03.tif",
+      "size_bytes": 726353,
+      "sha256": "8793034ba90c914e7481d55a410aee4a89b991d59f6f5219e1b9ec017b7ad50a"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w45605033E-FD2E-4F51-91E2-9A5F9ED7EB1F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w45605033E-FD2E-4F51-91E2-9A5F9ED7EB1F.tif",
+      "size_bytes": 726359,
+      "sha256": "f146feae44bc0008f160820287288c0591e2fd7412109b3871851e6ea5dc727c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w5154DB4A6-92D5-4672-AA98-B762DAFE4D2E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w5154DB4A6-92D5-4672-AA98-B762DAFE4D2E.tif",
+      "size_bytes": 726353,
+      "sha256": "25586b2249dab7ada792477033ad5666191339e756bccd423eda8593cb0d8004"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w16BE041E1-E664-4E71-A86A-71F00E841D9F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w16BE041E1-E664-4E71-A86A-71F00E841D9F.tif",
+      "size_bytes": 726355,
+      "sha256": "17f0a511d78b8a9242e97f33c7758be57e62e7aecf8c735b836dded187003c5a"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w23BB46D07-8085-46CC-AF4C-07152CE56659.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w23BB46D07-8085-46CC-AF4C-07152CE56659.tif",
+      "size_bytes": 726353,
+      "sha256": "7c618bd2fcbe01a359ed7db82d23a44718bd31fd57cee27323b69d8db442082c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w37285F8CF-B416-4B0E-BC01-0D2A355BE87C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w37285F8CF-B416-4B0E-BC01-0D2A355BE87C.tif",
+      "size_bytes": 726353,
+      "sha256": "17452bc10fec51c408f43c2b552ecd069e1e910144e3e3b78f37274bd9a0081c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w4F3FCB9AD-D87B-45D2-853D-ADD3ABF1B780.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w4F3FCB9AD-D87B-45D2-853D-ADD3ABF1B780.tif",
+      "size_bytes": 726359,
+      "sha256": "b344aaaedec25bd17ad6fc173a40cb0554e5fba7c4c8d9a77e8f07cfa19d2b18"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w50E9E172D-9786-4F54-9783-0D7DCD663137.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w50E9E172D-9786-4F54-9783-0D7DCD663137.tif",
+      "size_bytes": 726353,
+      "sha256": "66aecaf0dcaa1bb9e4755d15fb96d6745ab78b8075da156b3672f0fb727a67f3"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w1666AC8C1-FFBC-439C-A2CB-A54890F1F7D5.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w1666AC8C1-FFBC-439C-A2CB-A54890F1F7D5.tif",
+      "size_bytes": 726354,
+      "sha256": "160ebf4fe4dc1a41d168a9b43e6c80491d2446ec8321de384177b67daff40c26"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w2058B57D1-0BA6-48C9-B7A2-6B2210C9E734.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w2058B57D1-0BA6-48C9-B7A2-6B2210C9E734.tif",
+      "size_bytes": 726352,
+      "sha256": "b8a70d336fcc2a7a53958bee8a5df93b37bd3c65c9a5f1761457d2ac6b74f359"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w332F28067-5FC6-474C-AD81-73CB18F2ED0D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w332F28067-5FC6-474C-AD81-73CB18F2ED0D.tif",
+      "size_bytes": 726352,
+      "sha256": "9d9fe1eddb38aa0151b15f6cf476e7fb07b87eaea6814a8db720d8de14e0750c"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w46D20A6BA-544F-444C-A810-EE95FD9F0FDD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w46D20A6BA-544F-444C-A810-EE95FD9F0FDD.tif",
+      "size_bytes": 726358,
+      "sha256": "722991e8514562d02eed4a48831ce6067cb06b90a7bd1d81d24a4d4f200d2d51"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w5D9C58A15-A24B-492D-84C0-AF21B7A6D6C6.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w5D9C58A15-A24B-492D-84C0-AF21B7A6D6C6.tif",
+      "size_bytes": 726352,
+      "sha256": "e6353fe2967ba20a01eeebe2e46751d809390d96575144a9a9cc7b5bb08826a8"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w16B65E2EB-B41B-460E-93E3-E6EE360571D9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w16B65E2EB-B41B-460E-93E3-E6EE360571D9.tif",
+      "size_bytes": 726354,
+      "sha256": "a7ebcf969cc0206cb188541b9e92a7cdcfd9a6232df23485234d68c12df2d82a"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w2635E73C5-BE5E-44E5-BDD7-AE86D66B4336.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w2635E73C5-BE5E-44E5-BDD7-AE86D66B4336.tif",
+      "size_bytes": 726352,
+      "sha256": "b5b12f31ad948547b670c476d4cb5bce58278766cc9989f46fa5e5b506b44ff3"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w3A4E0C5E6-8190-4711-B29D-519F29666722.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w3A4E0C5E6-8190-4711-B29D-519F29666722.tif",
+      "size_bytes": 726352,
+      "sha256": "6440c78d82f088e90d36ca1d3c85423ac30e145adfb8b63eb9ca0fd06b3ad7c5"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w462BBE257-0C4F-4969-BC0A-49E633B68938.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w462BBE257-0C4F-4969-BC0A-49E633B68938.tif",
+      "size_bytes": 726358,
+      "sha256": "8a956930bd26bcc96af577ab9b5b214b99735bfa8ef3cd01fcade3aa0f63ac47"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w5CEF579DA-BABB-490D-B95C-7CEA1FCEB185.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w5CEF579DA-BABB-490D-B95C-7CEA1FCEB185.tif",
+      "size_bytes": 726352,
+      "sha256": "f3639719982013caff904ca9f5606af2ab81881c8742262b3c70166e4f1c6f1a"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w1ADE4CBFB-6BA8-4671-9EF5-37C2C39F4801.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w1ADE4CBFB-6BA8-4671-9EF5-37C2C39F4801.tif",
+      "size_bytes": 726355,
+      "sha256": "211008e1d0abec6cb779e7af23a1027174de96fe625e6843620597df2924b67d"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w223FEC153-7E28-4E31-9762-E0F157B9E47C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w223FEC153-7E28-4E31-9762-E0F157B9E47C.tif",
+      "size_bytes": 726353,
+      "sha256": "0fde19fedb30115353f9798d806b453f2f87a295f976fc0ac4994f304c08ff7d"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w3862686E5-80A4-45CC-9361-8929A27E9F60.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w3862686E5-80A4-45CC-9361-8929A27E9F60.tif",
+      "size_bytes": 726353,
+      "sha256": "bdb07b2350a3f2d694132a409b2151481f50232bbf1cde409dcfaa731684c511"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w40421351A-C8E8-4CC1-8765-CAFB5C6DFBA1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w40421351A-C8E8-4CC1-8765-CAFB5C6DFBA1.tif",
+      "size_bytes": 726359,
+      "sha256": "38813dc192f3fa6a95c01d2418758de9585d89c5f7d97ba3b9d6258f44876b14"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w58B6E74C2-AE67-4272-B00E-5F094C59675E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w58B6E74C2-AE67-4272-B00E-5F094C59675E.tif",
+      "size_bytes": 726353,
+      "sha256": "d5e2f208290f46596b86d74e3933c97d8a5d31393dc2dfe87a4f32a2828e87a9"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w1DB509E0C-66BC-42DA-9BF9-E39C7DA90164.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w1DB509E0C-66BC-42DA-9BF9-E39C7DA90164.tif",
+      "size_bytes": 726355,
+      "sha256": "12c2ece4d53fa1c9f5522089b4bc2ea02d484e6f604cd8846ccf584e7b8114ce"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w2AF5B58A9-923A-467B-A7A7-04B69847D68D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w2AF5B58A9-923A-467B-A7A7-04B69847D68D.tif",
+      "size_bytes": 726353,
+      "sha256": "3a3fc8ac72e1b8ffdd3ae3c6ff72ce98438a5a2cd7f7748de63816870f25550e"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w3C30DED9C-8DD1-431D-99D4-5841029060BE.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w3C30DED9C-8DD1-431D-99D4-5841029060BE.tif",
+      "size_bytes": 726353,
+      "sha256": "09d41038717ec8c3980ee539ccf49c14db61119fb472b04ff128b47deb162efc"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w4544A134A-F434-4822-88E7-9E740EFAA678.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w4544A134A-F434-4822-88E7-9E740EFAA678.tif",
+      "size_bytes": 726359,
+      "sha256": "8edcb13de6a79258f6c92b699fa9f3c284f69bf71984fcf08ce874bb509ec997"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w5C1BF0E03-01BF-4055-A6DC-8B5650BAC557.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w5C1BF0E03-01BF-4055-A6DC-8B5650BAC557.tif",
+      "size_bytes": 726353,
+      "sha256": "c3fd66c86fe12d8d0a21fca7f9db87a55c1e589fbe117b1673d8908770475fe5"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w10EDFC40F-1521-4E0A-90EC-CB32B96CE8F9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w10EDFC40F-1521-4E0A-90EC-CB32B96CE8F9.tif",
+      "size_bytes": 726354,
+      "sha256": "30888a47c7f44d2a11dd14e84ce1bf385685cc92a931664b914d37ac920c3d83"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w25B4BD2F4-0705-4F26-B3D6-3E4992E7F307.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w25B4BD2F4-0705-4F26-B3D6-3E4992E7F307.tif",
+      "size_bytes": 726352,
+      "sha256": "459ef81491753ef4b457c9a1863294072ab50952ac1f15fe70c8c8226647cfc3"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w3A2FC068D-6AB1-4F5E-AA30-9C5836D9B1F7.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w3A2FC068D-6AB1-4F5E-AA30-9C5836D9B1F7.tif",
+      "size_bytes": 726352,
+      "sha256": "68a7678da0fa5593cf9efe78ae06721bf28e2195bc46b6dc4f335e7a38514742"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w4F6F41364-DF9A-4B41-AF1D-B0F2DCB921FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w4F6F41364-DF9A-4B41-AF1D-B0F2DCB921FF.tif",
+      "size_bytes": 726358,
+      "sha256": "f7f6b09c5f576f63d99afd1b7f39ae152af40d7c8c4acdea61d4ea9b8687a4b7"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w53AE122D0-8E5A-4BF5-82BA-54A49BAAD3CD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w53AE122D0-8E5A-4BF5-82BA-54A49BAAD3CD.tif",
+      "size_bytes": 726352,
+      "sha256": "0a6fa42d6643f41be1c46b01e22847a021a3765aee3327bb093aee0925faac53"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w1723C752A-86A6-497C-B6C8-407B11E410CD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w1723C752A-86A6-497C-B6C8-407B11E410CD.tif",
+      "size_bytes": 726354,
+      "sha256": "f19c7aea2b2694927afc376e00641458e5a976bfb87484d110a5d82114a98e26"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w2463DA62B-F7F4-4C79-AE1C-262D84F3B48D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w2463DA62B-F7F4-4C79-AE1C-262D84F3B48D.tif",
+      "size_bytes": 726352,
+      "sha256": "1eb173de0a0e3c67a458e3050568b09aa4b841b31ff6eeaf6bf6d4cebaeb2546"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w3118B4FF5-2BD1-486D-A06B-72A94965E830.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w3118B4FF5-2BD1-486D-A06B-72A94965E830.tif",
+      "size_bytes": 726352,
+      "sha256": "693593b7c099e98afab540e3e0cee6a17eb6d184bbc3a01bee0780d1672ac46c"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w40D5D21C7-197C-4B3D-8FF7-C0E80CDA240B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w40D5D21C7-197C-4B3D-8FF7-C0E80CDA240B.tif",
+      "size_bytes": 726358,
+      "sha256": "72bda0bf9aaf194ad4bdf42053de16f52f6cafbd7be8063369b36f9345f4d4bc"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w5FBCD850C-9F0A-4F2E-B5AE-6826B22CC61C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w5FBCD850C-9F0A-4F2E-B5AE-6826B22CC61C.tif",
+      "size_bytes": 726352,
+      "sha256": "cde30678a2458a2c834ae51419273180472decacc4b62053c0ac07baa378c52e"
+    },
+    {
+      "path": "20585_AE.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input/20585_AE.csv",
+      "size_bytes": 7932,
+      "sha256": "0b58705e06b8abf0c1b403e61ee7afb311c7d2e001e6b6b45fb146812cbc2278"
+    },
+    {
+      "path": "20585_IllumER.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumER.npy",
+      "size_bytes": 1447760,
+      "sha256": "248c3a0d62fa1be2958525e982707a93c98543eeba27f956d2ffd2eed92347e5"
+    },
+    {
+      "path": "20585_IllumHoechst.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumHoechst.npy",
+      "size_bytes": 1447760,
+      "sha256": "8c58aecfdc3709043f0def041e60b7f0b20bd6d0c999679b09f23ce8f3878b7a"
+    },
+    {
+      "path": "20585_IllumMito.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumMito.npy",
+      "size_bytes": 1447760,
+      "sha256": "6824ac71182fb1a49ca6bd936a105c28aa071a17e7a7f1dd27ff9daa776b4aee"
+    },
+    {
+      "path": "20585_IllumPh_golgi.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumPh_golgi.npy",
+      "size_bytes": 1447760,
+      "sha256": "77edb3a27b7cb1d2c829b96e231f278d227b4b326efab9178335bf1b70e63c76"
+    },
+    {
+      "path": "20585_IllumSyto.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumSyto.npy",
+      "size_bytes": 1447760,
+      "sha256": "195317f99bde79a1ca4e024becc7a445337540f3c3830ac37287a3827b50e02a"
+    }
+  ],
+  "native_image_set_count": 16,
+  "native_input_inventory_after": [
+    {
+      "path": "20585/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w164FBEEF7-F77C-4892-86F5-72D0160D4FB2.tif",
+      "size_bytes": 726371,
+      "sha256": "be75b70f9d35622e1eebf317e76b02ed1385a8478cecd598ba07908a832e9602"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w22CA7BDF3-1425-4AE6-8E57-9C004D6F7FF2.tif",
+      "size_bytes": 726369,
+      "sha256": "40f90411806af81dc2045a6cb619e3e209c09e035d5e2b1b67c81381c6924932"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w3FD54227A-6BE4-460B-8E2C-54B8709F6E33.tif",
+      "size_bytes": 726369,
+      "sha256": "b5fcd9e3c4d2d20afea0ae1bc6f20ad3d4b7adad516b93a069307b413d8e9df2"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w47457436C-5BE7-4DA2-B966-CCF64B9F0088.tif",
+      "size_bytes": 726375,
+      "sha256": "a9405ee89ab70b5aa76ecf839080e08ab0d3237ca802523d219f647d0d8b5aa1"
+    },
+    {
+      "path": "20585/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s1_w58DA6AF62-1799-4B85-BE17-744E12ADC245.tif",
+      "size_bytes": 726369,
+      "sha256": "24783f8f392c3cea53c192f1b4ad6a183d94de016841bfa6f53c8301a91c34a8"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w1AA6B1894-F561-42EE-9D1D-E21E5C741B75.tif",
+      "size_bytes": 726355,
+      "sha256": "c39d85fae59389f755ef01b1b9bc088a18b76fc93a51abc747d7ff756191c684"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w246FFAEE1-BEB6-4C81-913B-B979EC0C4BC3.tif",
+      "size_bytes": 726353,
+      "sha256": "b8e787c71de2148dce9711945b221ef0d2b4adc7f855960cdae8d4a5daf56b10"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w3A597237B-C3D7-43AE-8399-83E76DA1532D.tif",
+      "size_bytes": 726353,
+      "sha256": "34c43330524ebfda8f950f8c21868c6c046d33812f312b795e4071641821b669"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w46657239A-5AFE-4C29-BB9B-49978EFE4791.tif",
+      "size_bytes": 726359,
+      "sha256": "dee297e8aeb5ed24ca125317fdc1e4596faaa00c13919124f91badba9231f2d6"
+    },
+    {
+      "path": "20585/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A01_s2_w50F1562CD-EBCF-408E-9D8D-F6F0FDD746C8.tif",
+      "size_bytes": 726353,
+      "sha256": "a34c3e7701f38f812909d57d1876d187ee416952805360c3a6f022a945e5314c"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w1372F05C0-79EE-409F-BE07-20AB2CD28DF8.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w1372F05C0-79EE-409F-BE07-20AB2CD28DF8.tif",
+      "size_bytes": 726354,
+      "sha256": "c8cc87cde29c8fc7e5ba9395638df0649fb46a2f7fe60d0f7b45001fd2a36b60"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w2AF0434CD-87AD-4AA1-8B12-4AD9653E8BFD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w2AF0434CD-87AD-4AA1-8B12-4AD9653E8BFD.tif",
+      "size_bytes": 726352,
+      "sha256": "6adad8bc09a3ba99e36ba7728683d8e37ce46f396b214b0bebc72dc3e9fdb49b"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w3ED6D4DB2-26AE-4C0A-924A-99B627DB34E9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w3ED6D4DB2-26AE-4C0A-924A-99B627DB34E9.tif",
+      "size_bytes": 726352,
+      "sha256": "8f71ae90dcf1ddfbfc43af2db5871373912c189644fa9f70de2ddc12e6d9a4f4"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w449C8B197-6E5F-4DDE-ABFD-9A82DA94098F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w449C8B197-6E5F-4DDE-ABFD-9A82DA94098F.tif",
+      "size_bytes": 726358,
+      "sha256": "a51e847fa829fcd5666b271c11dbb9da1e530ee290fa9aa49fd4c76c6c7d4efd"
+    },
+    {
+      "path": "20585/IXMtest_A12_s1_w592A87287-891D-4151-A0D1-FC74C69C578D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s1_w592A87287-891D-4151-A0D1-FC74C69C578D.tif",
+      "size_bytes": 726352,
+      "sha256": "8f546fffa69b1299edab20d2ce385329efc35ee1e0e426c24209a0044f0caa42"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w15036592E-C279-4C59-838F-3F24DFBDAB39.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w15036592E-C279-4C59-838F-3F24DFBDAB39.tif",
+      "size_bytes": 726354,
+      "sha256": "648471d1cb785c34c6895a356811d215e17f170afdc27bdf9f11375460d50c58"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w234CD0CFF-B4C2-4E4C-89FE-8AA915947847.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w234CD0CFF-B4C2-4E4C-89FE-8AA915947847.tif",
+      "size_bytes": 726352,
+      "sha256": "83b9f83795bc47a6e95386f1fb4baa1f4fe03ccab5ad99a3433f4b69e36dfdea"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w3B11833E6-B3C9-4294-9898-A56C474C2D0B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w3B11833E6-B3C9-4294-9898-A56C474C2D0B.tif",
+      "size_bytes": 726352,
+      "sha256": "80607879bd5be7a28cee99da5811add537b545e90a6f9ccbadfc2d33615f0671"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w4D46DDF6B-E7DE-4B18-8594-A6E52802425A.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w4D46DDF6B-E7DE-4B18-8594-A6E52802425A.tif",
+      "size_bytes": 726358,
+      "sha256": "c872e875b9da0fa70fde0fa66300d6ec04f90e6d83db61979a1c4fec6590f212"
+    },
+    {
+      "path": "20585/IXMtest_A12_s2_w5D1AD7308-2595-43A7-AC06-3A25D0B97F5F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_A12_s2_w5D1AD7308-2595-43A7-AC06-3A25D0B97F5F.tif",
+      "size_bytes": 726352,
+      "sha256": "7766096ae19bb2a15eda0c892acf15118c724eb77ddff8a6cb222ea44f9e95c3"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w14E59A4AE-4AC3-430F-AD75-FC75A61FC3B2.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w14E59A4AE-4AC3-430F-AD75-FC75A61FC3B2.tif",
+      "size_bytes": 726355,
+      "sha256": "1b7b10652537886ef1fc59a0c3e19daf69d93f9fa865c9db8739134b4ce59095"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w295FCDE09-AEAB-4462-A52B-A84C225965C0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w295FCDE09-AEAB-4462-A52B-A84C225965C0.tif",
+      "size_bytes": 726353,
+      "sha256": "b0bf572f6aa29755fc5ecb55debf1baa04d8f737a6f4bcb7376d6b8ae929535c"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w3737A5173-CFDD-42EC-827A-F9FE1574A19E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w3737A5173-CFDD-42EC-827A-F9FE1574A19E.tif",
+      "size_bytes": 726353,
+      "sha256": "a83a8e130c48b95b79be879f49e92165143c3ad1f75b43550b43473b621641c7"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w471017BAC-A25F-49A1-AA9C-F90B70E18C90.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w471017BAC-A25F-49A1-AA9C-F90B70E18C90.tif",
+      "size_bytes": 726359,
+      "sha256": "c7ffa480ba69f8473f8e1cef87c2c82023485f9771fb76b8d60eab85e112f7d3"
+    },
+    {
+      "path": "20585/IXMtest_B01_s1_w5295BC157-8972-4F73-BE9F-5F3A2E4F2D83.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s1_w5295BC157-8972-4F73-BE9F-5F3A2E4F2D83.tif",
+      "size_bytes": 726353,
+      "sha256": "b5f4cc0e61af2c72cce1b7f16c2f89534f2a8ddb0d657e317b9c0e8d7c243e32"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w1FFCB1B81-BDEE-41C1-BC00-6104C150726C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w1FFCB1B81-BDEE-41C1-BC00-6104C150726C.tif",
+      "size_bytes": 726355,
+      "sha256": "651e6a96dedd42f0eebb1e2fc817b0b9c2992d70b384451f810a16c4ccd41704"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w2E8DAA9D4-0974-4B29-8D7D-352D2D048B6B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w2E8DAA9D4-0974-4B29-8D7D-352D2D048B6B.tif",
+      "size_bytes": 726353,
+      "sha256": "42eeb211013764c1144910a3a549fb153f719e5c9e20ba4b9731f5f3f5aea7b6"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w39303AAF2-B2B4-46B4-8A2B-03DFA43A62D9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w39303AAF2-B2B4-46B4-8A2B-03DFA43A62D9.tif",
+      "size_bytes": 726353,
+      "sha256": "374e47e549dc13de5ecc0dca8e88ea4f9efd20942b3e9ad8cbffaf56b3c6a584"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w491F1386F-B964-48E4-A7EF-7CAAD83502F0.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w491F1386F-B964-48E4-A7EF-7CAAD83502F0.tif",
+      "size_bytes": 726359,
+      "sha256": "9751ed15062589f668fc0617684c7c2e9b5d416c7efabe6e029bd270f38bc809"
+    },
+    {
+      "path": "20585/IXMtest_B01_s2_w5E87D6AFF-D1CA-4165-BE8B-E04F0DCEE567.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B01_s2_w5E87D6AFF-D1CA-4165-BE8B-E04F0DCEE567.tif",
+      "size_bytes": 726353,
+      "sha256": "18f176eee5314ae406d030e10992a664e11a78153ec86e5f3423c99d227dc00e"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w1465E1FFC-E45E-498D-9BD7-21D0275A2A50.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w1465E1FFC-E45E-498D-9BD7-21D0275A2A50.tif",
+      "size_bytes": 726354,
+      "sha256": "865bde727f6bf2b1516ba3a9ae541f8d261a2dbc1f88534dec6eb9fdb32574a3"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w28648C732-7EC7-4A16-9ED2-1AF8330FB682.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w28648C732-7EC7-4A16-9ED2-1AF8330FB682.tif",
+      "size_bytes": 726352,
+      "sha256": "ea211a31be4baab0dfcf1b9e84809b0c7ce4f53b0b0a1004e69f12e90e0ade84"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w347819554-794D-4046-AEA9-CF29E3C9C6B4.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w347819554-794D-4046-AEA9-CF29E3C9C6B4.tif",
+      "size_bytes": 726352,
+      "sha256": "3ebc0763b3e47327535432c96e76b2b3ff4c9372b6589e9a341c3c016e95bbeb"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w4CE1F11C2-3A5B-4432-B84B-B55DCC9341FD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w4CE1F11C2-3A5B-4432-B84B-B55DCC9341FD.tif",
+      "size_bytes": 726358,
+      "sha256": "16708e26e456753a5c8d6254e29fb1d08e4a955bff408f68fcbdc1513d97493d"
+    },
+    {
+      "path": "20585/IXMtest_B12_s1_w5F6321381-5407-4495-850D-53D3EE2ADF6E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s1_w5F6321381-5407-4495-850D-53D3EE2ADF6E.tif",
+      "size_bytes": 726352,
+      "sha256": "fe5a75db9f3830514d61c1af578f7eb301d1cac769241f38441bdf689a62efbd"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w162DF496F-9D68-4A2F-94CC-9BE3846AAC5F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w162DF496F-9D68-4A2F-94CC-9BE3846AAC5F.tif",
+      "size_bytes": 726354,
+      "sha256": "066326d99790d606625616c25fe6f884ee15c48e55cca06d223208c4c5ba0051"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w2D8E7CC41-9E1A-4A4C-ADA3-5A3B559935D6.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w2D8E7CC41-9E1A-4A4C-ADA3-5A3B559935D6.tif",
+      "size_bytes": 726352,
+      "sha256": "83367374ec55d8d720a5bcf6173c8dc53f9adc3c38e80420b02a50b4800f900e"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w35A8888EB-808E-4DC2-BC52-B5A9165AD8BB.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w35A8888EB-808E-4DC2-BC52-B5A9165AD8BB.tif",
+      "size_bytes": 726352,
+      "sha256": "7bb2edd88f636f63e5c23989530569315cdf4cc93b44f0be21ad8df67e8f40b2"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w4148BFF5B-74EA-44BE-AAEA-0CFAA8001558.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w4148BFF5B-74EA-44BE-AAEA-0CFAA8001558.tif",
+      "size_bytes": 726358,
+      "sha256": "630f9300fe0e000d3029fcc828a90bb3cd514df5abc26e4e8320aee7f9cf4daa"
+    },
+    {
+      "path": "20585/IXMtest_B12_s2_w5FF93C044-D7E2-4287-A53C-3EDE9D379684.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_B12_s2_w5FF93C044-D7E2-4287-A53C-3EDE9D379684.tif",
+      "size_bytes": 726352,
+      "sha256": "2aed28c61831adc1a2ffa13fc8938942f3cdb8c3e19633390ba13ed98600c7dc"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w1BE877EB8-EF83-42D0-A1ED-1265BC3BC48E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w1BE877EB8-EF83-42D0-A1ED-1265BC3BC48E.tif",
+      "size_bytes": 726355,
+      "sha256": "a8047984a157e93e663b3017eeabcf081c20e2f0e611a6f1fb73bb63ceb575e0"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w2F99428DB-6617-41CA-BD78-8EF51B205390.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w2F99428DB-6617-41CA-BD78-8EF51B205390.tif",
+      "size_bytes": 726353,
+      "sha256": "0497eaa82a74c629883ef19e45a7cd15944af6284855730933e386f8438e36b0"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w314488A1E-AD9F-49C4-853A-A86A8C1A1B03.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w314488A1E-AD9F-49C4-853A-A86A8C1A1B03.tif",
+      "size_bytes": 726353,
+      "sha256": "8793034ba90c914e7481d55a410aee4a89b991d59f6f5219e1b9ec017b7ad50a"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w45605033E-FD2E-4F51-91E2-9A5F9ED7EB1F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w45605033E-FD2E-4F51-91E2-9A5F9ED7EB1F.tif",
+      "size_bytes": 726359,
+      "sha256": "f146feae44bc0008f160820287288c0591e2fd7412109b3871851e6ea5dc727c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s1_w5154DB4A6-92D5-4672-AA98-B762DAFE4D2E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s1_w5154DB4A6-92D5-4672-AA98-B762DAFE4D2E.tif",
+      "size_bytes": 726353,
+      "sha256": "25586b2249dab7ada792477033ad5666191339e756bccd423eda8593cb0d8004"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w16BE041E1-E664-4E71-A86A-71F00E841D9F.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w16BE041E1-E664-4E71-A86A-71F00E841D9F.tif",
+      "size_bytes": 726355,
+      "sha256": "17f0a511d78b8a9242e97f33c7758be57e62e7aecf8c735b836dded187003c5a"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w23BB46D07-8085-46CC-AF4C-07152CE56659.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w23BB46D07-8085-46CC-AF4C-07152CE56659.tif",
+      "size_bytes": 726353,
+      "sha256": "7c618bd2fcbe01a359ed7db82d23a44718bd31fd57cee27323b69d8db442082c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w37285F8CF-B416-4B0E-BC01-0D2A355BE87C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w37285F8CF-B416-4B0E-BC01-0D2A355BE87C.tif",
+      "size_bytes": 726353,
+      "sha256": "17452bc10fec51c408f43c2b552ecd069e1e910144e3e3b78f37274bd9a0081c"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w4F3FCB9AD-D87B-45D2-853D-ADD3ABF1B780.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w4F3FCB9AD-D87B-45D2-853D-ADD3ABF1B780.tif",
+      "size_bytes": 726359,
+      "sha256": "b344aaaedec25bd17ad6fc173a40cb0554e5fba7c4c8d9a77e8f07cfa19d2b18"
+    },
+    {
+      "path": "20585/IXMtest_C01_s2_w50E9E172D-9786-4F54-9783-0D7DCD663137.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C01_s2_w50E9E172D-9786-4F54-9783-0D7DCD663137.tif",
+      "size_bytes": 726353,
+      "sha256": "66aecaf0dcaa1bb9e4755d15fb96d6745ab78b8075da156b3672f0fb727a67f3"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w1666AC8C1-FFBC-439C-A2CB-A54890F1F7D5.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w1666AC8C1-FFBC-439C-A2CB-A54890F1F7D5.tif",
+      "size_bytes": 726354,
+      "sha256": "160ebf4fe4dc1a41d168a9b43e6c80491d2446ec8321de384177b67daff40c26"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w2058B57D1-0BA6-48C9-B7A2-6B2210C9E734.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w2058B57D1-0BA6-48C9-B7A2-6B2210C9E734.tif",
+      "size_bytes": 726352,
+      "sha256": "b8a70d336fcc2a7a53958bee8a5df93b37bd3c65c9a5f1761457d2ac6b74f359"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w332F28067-5FC6-474C-AD81-73CB18F2ED0D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w332F28067-5FC6-474C-AD81-73CB18F2ED0D.tif",
+      "size_bytes": 726352,
+      "sha256": "9d9fe1eddb38aa0151b15f6cf476e7fb07b87eaea6814a8db720d8de14e0750c"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w46D20A6BA-544F-444C-A810-EE95FD9F0FDD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w46D20A6BA-544F-444C-A810-EE95FD9F0FDD.tif",
+      "size_bytes": 726358,
+      "sha256": "722991e8514562d02eed4a48831ce6067cb06b90a7bd1d81d24a4d4f200d2d51"
+    },
+    {
+      "path": "20585/IXMtest_C12_s1_w5D9C58A15-A24B-492D-84C0-AF21B7A6D6C6.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s1_w5D9C58A15-A24B-492D-84C0-AF21B7A6D6C6.tif",
+      "size_bytes": 726352,
+      "sha256": "e6353fe2967ba20a01eeebe2e46751d809390d96575144a9a9cc7b5bb08826a8"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w16B65E2EB-B41B-460E-93E3-E6EE360571D9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w16B65E2EB-B41B-460E-93E3-E6EE360571D9.tif",
+      "size_bytes": 726354,
+      "sha256": "a7ebcf969cc0206cb188541b9e92a7cdcfd9a6232df23485234d68c12df2d82a"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w2635E73C5-BE5E-44E5-BDD7-AE86D66B4336.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w2635E73C5-BE5E-44E5-BDD7-AE86D66B4336.tif",
+      "size_bytes": 726352,
+      "sha256": "b5b12f31ad948547b670c476d4cb5bce58278766cc9989f46fa5e5b506b44ff3"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w3A4E0C5E6-8190-4711-B29D-519F29666722.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w3A4E0C5E6-8190-4711-B29D-519F29666722.tif",
+      "size_bytes": 726352,
+      "sha256": "6440c78d82f088e90d36ca1d3c85423ac30e145adfb8b63eb9ca0fd06b3ad7c5"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w462BBE257-0C4F-4969-BC0A-49E633B68938.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w462BBE257-0C4F-4969-BC0A-49E633B68938.tif",
+      "size_bytes": 726358,
+      "sha256": "8a956930bd26bcc96af577ab9b5b214b99735bfa8ef3cd01fcade3aa0f63ac47"
+    },
+    {
+      "path": "20585/IXMtest_C12_s2_w5CEF579DA-BABB-490D-B95C-7CEA1FCEB185.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_C12_s2_w5CEF579DA-BABB-490D-B95C-7CEA1FCEB185.tif",
+      "size_bytes": 726352,
+      "sha256": "f3639719982013caff904ca9f5606af2ab81881c8742262b3c70166e4f1c6f1a"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w1ADE4CBFB-6BA8-4671-9EF5-37C2C39F4801.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w1ADE4CBFB-6BA8-4671-9EF5-37C2C39F4801.tif",
+      "size_bytes": 726355,
+      "sha256": "211008e1d0abec6cb779e7af23a1027174de96fe625e6843620597df2924b67d"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w223FEC153-7E28-4E31-9762-E0F157B9E47C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w223FEC153-7E28-4E31-9762-E0F157B9E47C.tif",
+      "size_bytes": 726353,
+      "sha256": "0fde19fedb30115353f9798d806b453f2f87a295f976fc0ac4994f304c08ff7d"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w3862686E5-80A4-45CC-9361-8929A27E9F60.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w3862686E5-80A4-45CC-9361-8929A27E9F60.tif",
+      "size_bytes": 726353,
+      "sha256": "bdb07b2350a3f2d694132a409b2151481f50232bbf1cde409dcfaa731684c511"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w40421351A-C8E8-4CC1-8765-CAFB5C6DFBA1.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w40421351A-C8E8-4CC1-8765-CAFB5C6DFBA1.tif",
+      "size_bytes": 726359,
+      "sha256": "38813dc192f3fa6a95c01d2418758de9585d89c5f7d97ba3b9d6258f44876b14"
+    },
+    {
+      "path": "20585/IXMtest_D01_s1_w58B6E74C2-AE67-4272-B00E-5F094C59675E.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s1_w58B6E74C2-AE67-4272-B00E-5F094C59675E.tif",
+      "size_bytes": 726353,
+      "sha256": "d5e2f208290f46596b86d74e3933c97d8a5d31393dc2dfe87a4f32a2828e87a9"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w1DB509E0C-66BC-42DA-9BF9-E39C7DA90164.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w1DB509E0C-66BC-42DA-9BF9-E39C7DA90164.tif",
+      "size_bytes": 726355,
+      "sha256": "12c2ece4d53fa1c9f5522089b4bc2ea02d484e6f604cd8846ccf584e7b8114ce"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w2AF5B58A9-923A-467B-A7A7-04B69847D68D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w2AF5B58A9-923A-467B-A7A7-04B69847D68D.tif",
+      "size_bytes": 726353,
+      "sha256": "3a3fc8ac72e1b8ffdd3ae3c6ff72ce98438a5a2cd7f7748de63816870f25550e"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w3C30DED9C-8DD1-431D-99D4-5841029060BE.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w3C30DED9C-8DD1-431D-99D4-5841029060BE.tif",
+      "size_bytes": 726353,
+      "sha256": "09d41038717ec8c3980ee539ccf49c14db61119fb472b04ff128b47deb162efc"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w4544A134A-F434-4822-88E7-9E740EFAA678.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w4544A134A-F434-4822-88E7-9E740EFAA678.tif",
+      "size_bytes": 726359,
+      "sha256": "8edcb13de6a79258f6c92b699fa9f3c284f69bf71984fcf08ce874bb509ec997"
+    },
+    {
+      "path": "20585/IXMtest_D01_s2_w5C1BF0E03-01BF-4055-A6DC-8B5650BAC557.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D01_s2_w5C1BF0E03-01BF-4055-A6DC-8B5650BAC557.tif",
+      "size_bytes": 726353,
+      "sha256": "c3fd66c86fe12d8d0a21fca7f9db87a55c1e589fbe117b1673d8908770475fe5"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w10EDFC40F-1521-4E0A-90EC-CB32B96CE8F9.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w10EDFC40F-1521-4E0A-90EC-CB32B96CE8F9.tif",
+      "size_bytes": 726354,
+      "sha256": "30888a47c7f44d2a11dd14e84ce1bf385685cc92a931664b914d37ac920c3d83"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w25B4BD2F4-0705-4F26-B3D6-3E4992E7F307.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w25B4BD2F4-0705-4F26-B3D6-3E4992E7F307.tif",
+      "size_bytes": 726352,
+      "sha256": "459ef81491753ef4b457c9a1863294072ab50952ac1f15fe70c8c8226647cfc3"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w3A2FC068D-6AB1-4F5E-AA30-9C5836D9B1F7.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w3A2FC068D-6AB1-4F5E-AA30-9C5836D9B1F7.tif",
+      "size_bytes": 726352,
+      "sha256": "68a7678da0fa5593cf9efe78ae06721bf28e2195bc46b6dc4f335e7a38514742"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w4F6F41364-DF9A-4B41-AF1D-B0F2DCB921FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w4F6F41364-DF9A-4B41-AF1D-B0F2DCB921FF.tif",
+      "size_bytes": 726358,
+      "sha256": "f7f6b09c5f576f63d99afd1b7f39ae152af40d7c8c4acdea61d4ea9b8687a4b7"
+    },
+    {
+      "path": "20585/IXMtest_D12_s1_w53AE122D0-8E5A-4BF5-82BA-54A49BAAD3CD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s1_w53AE122D0-8E5A-4BF5-82BA-54A49BAAD3CD.tif",
+      "size_bytes": 726352,
+      "sha256": "0a6fa42d6643f41be1c46b01e22847a021a3765aee3327bb093aee0925faac53"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w1723C752A-86A6-497C-B6C8-407B11E410CD.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w1723C752A-86A6-497C-B6C8-407B11E410CD.tif",
+      "size_bytes": 726354,
+      "sha256": "f19c7aea2b2694927afc376e00641458e5a976bfb87484d110a5d82114a98e26"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w2463DA62B-F7F4-4C79-AE1C-262D84F3B48D.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w2463DA62B-F7F4-4C79-AE1C-262D84F3B48D.tif",
+      "size_bytes": 726352,
+      "sha256": "1eb173de0a0e3c67a458e3050568b09aa4b841b31ff6eeaf6bf6d4cebaeb2546"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w3118B4FF5-2BD1-486D-A06B-72A94965E830.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w3118B4FF5-2BD1-486D-A06B-72A94965E830.tif",
+      "size_bytes": 726352,
+      "sha256": "693593b7c099e98afab540e3e0cee6a17eb6d184bbc3a01bee0780d1672ac46c"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w40D5D21C7-197C-4B3D-8FF7-C0E80CDA240B.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w40D5D21C7-197C-4B3D-8FF7-C0E80CDA240B.tif",
+      "size_bytes": 726358,
+      "sha256": "72bda0bf9aaf194ad4bdf42053de16f52f6cafbd7be8063369b36f9345f4d4bc"
+    },
+    {
+      "path": "20585/IXMtest_D12_s2_w5FBCD850C-9F0A-4F2E-B5AE-6826B22CC61C.tif",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/IXMtest_D12_s2_w5FBCD850C-9F0A-4F2E-B5AE-6826B22CC61C.tif",
+      "size_bytes": 726352,
+      "sha256": "cde30678a2458a2c834ae51419273180472decacc4b62053c0ac07baa378c52e"
+    },
+    {
+      "path": "20585_AE.csv",
+      "source_path": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input/20585_AE.csv",
+      "size_bytes": 7932,
+      "sha256": "0b58705e06b8abf0c1b403e61ee7afb311c7d2e001e6b6b45fb146812cbc2278"
+    },
+    {
+      "path": "20585_IllumER.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumER.npy",
+      "size_bytes": 1447760,
+      "sha256": "248c3a0d62fa1be2958525e982707a93c98543eeba27f956d2ffd2eed92347e5"
+    },
+    {
+      "path": "20585_IllumHoechst.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumHoechst.npy",
+      "size_bytes": 1447760,
+      "sha256": "8c58aecfdc3709043f0def041e60b7f0b20bd6d0c999679b09f23ce8f3878b7a"
+    },
+    {
+      "path": "20585_IllumMito.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumMito.npy",
+      "size_bytes": 1447760,
+      "sha256": "6824ac71182fb1a49ca6bd936a105c28aa071a17e7a7f1dd27ff9daa776b4aee"
+    },
+    {
+      "path": "20585_IllumPh_golgi.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumPh_golgi.npy",
+      "size_bytes": 1447760,
+      "sha256": "77edb3a27b7cb1d2c829b96e231f278d227b4b326efab9178335bf1b70e63c76"
+    },
+    {
+      "path": "20585_IllumSyto.npy",
+      "source_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE/20585_IllumSyto.npy",
+      "size_bytes": 1447760,
+      "sha256": "195317f99bde79a1ca4e024becc7a445337540f3c3830ac37287a3827b50e02a"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.906588620506227,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_tmp"
+    },
+    "request": {
+      "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+      "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+      "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native",
+      "expected_image_sets": null,
+      "repetitions": 1,
+      "file_list_path": null,
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": null,
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native/-1",
+        "image_set_count": 16,
+        "invocation_seconds": 379.7145328531042,
+        "pre_first_module_seconds": 1.3423859234899282,
+        "first_module_through_post_run_seconds": 378.37214692961425,
+        "invocation_started_monotonic_seconds": 4568409.213008837,
+        "first_module_started_monotonic_seconds": 4568410.55539476,
+        "completed_monotonic_seconds": 4568788.92754169
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native/0",
+        "image_set_count": 16,
+        "invocation_seconds": 356.6440155422315,
+        "pre_first_module_seconds": 0.5369470557197928,
+        "first_module_through_post_run_seconds": 356.1070684865117,
+        "invocation_started_monotonic_seconds": 4568788.927574682,
+        "first_module_started_monotonic_seconds": 4568789.464521738,
+        "completed_monotonic_seconds": 4569145.571590224
+      }
+    ]
+  },
+  "native_shards": [
+    {
+      "startup_seconds": 0.9081910373643041,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+        "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+        "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": null,
+        "first_image_set": 1,
+        "last_image_set": 8,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/start_barrier",
+        "start_barrier_job_count": 2,
+        "start_barrier_job_index": 0
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 159.56195499934256,
+          "pre_first_module_seconds": 1.2061365470290184,
+          "first_module_through_post_run_seconds": 158.35581845231354,
+          "invocation_started_monotonic_seconds": 4569148.182648244,
+          "first_module_started_monotonic_seconds": 4569149.388784791,
+          "completed_monotonic_seconds": 4569307.744603244
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0",
+          "image_set_count": 8,
+          "invocation_seconds": 158.97703184280545,
+          "pre_first_module_seconds": 0.5795898446813226,
+          "first_module_through_post_run_seconds": 158.39744199812412,
+          "invocation_started_monotonic_seconds": 4569359.216758385,
+          "first_module_started_monotonic_seconds": 4569359.79634823,
+          "completed_monotonic_seconds": 4569518.193790228
+        }
+      ]
+    },
+    {
+      "startup_seconds": 0.9064894607290626,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+        "input_dir": "/tmp/openhcsnativecellprofiler/hpondchelfdcfkjl/input",
+        "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": null,
+        "first_image_set": 9,
+        "last_image_set": 16,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/start_barrier",
+        "start_barrier_job_count": 2,
+        "start_barrier_job_index": 1
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 211.02551015093923,
+          "pre_first_module_seconds": 1.2086727172136307,
+          "first_module_through_post_run_seconds": 209.8168374337256,
+          "invocation_started_monotonic_seconds": 4569148.181369098,
+          "first_module_started_monotonic_seconds": 4569149.390041815,
+          "completed_monotonic_seconds": 4569359.206879249
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0",
+          "image_set_count": 8,
+          "invocation_seconds": 206.45865529589355,
+          "pre_first_module_seconds": 0.5869355574250221,
+          "first_module_through_post_run_seconds": 205.87171973846853,
+          "invocation_started_monotonic_seconds": 4569359.207061915,
+          "first_module_started_monotonic_seconds": 4569359.793997472,
+          "completed_monotonic_seconds": 4569565.665717211
+        }
+      ]
+    }
+  ],
+  "native_shard_equivalence": [
+    {
+      "repetition": -1,
+      "invocation_start_skew_seconds": 0.0012791464105248451,
+      "invocation_overlap_seconds": 159.56195499934256,
+      "invocation_through_completion_makespan_seconds": 211.02551015093923,
+      "first_module_start_skew_seconds": 0.001257023774087429,
+      "first_module_overlap_seconds": 158.35456142853945,
+      "first_module_through_completion_makespan_seconds": 209.81809445749968,
+      "differences": []
+    },
+    {
+      "repetition": 0,
+      "invocation_start_skew_seconds": 0.009696470573544502,
+      "invocation_overlap_seconds": 158.97703184280545,
+      "invocation_through_completion_makespan_seconds": 206.45865529589355,
+      "first_module_start_skew_seconds": 0.0023507578298449516,
+      "first_module_overlap_seconds": 158.39744199812412,
+      "first_module_through_completion_makespan_seconds": 205.87171973846853,
+      "differences": []
+    }
+  ],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "3373f567-cbd4-4789-ae00-3e40d753b0d6",
+      "compile_artifact_id": "08e919d1-a0f1-4e3d-a894-de78426a9eeb",
+      "endpoint_pid": 3628094,
+      "axis_count": 8,
+      "observation_scope": "outcomes",
+      "worker_process_ids": [
+        3635432,
+        3635434
+      ],
+      "worker_interval_overlap_seconds": 115.7583019733429,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1790205619.7975004,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "A12",
+          "phase": "axis_started",
+          "timestamp": 1790205619.835676,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1790205648.912328,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "B01",
+          "phase": "axis_started",
+          "timestamp": 1790205648.9124358,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "A12",
+          "phase": "axis_completed",
+          "timestamp": 1790205649.2642214,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B12",
+          "phase": "axis_started",
+          "timestamp": 1790205649.2643356,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B12",
+          "phase": "axis_completed",
+          "timestamp": 1790205667.713084,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "C12",
+          "phase": "axis_started",
+          "timestamp": 1790205667.7131903,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B01",
+          "phase": "axis_completed",
+          "timestamp": 1790205679.9101975,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "C01",
+          "phase": "axis_started",
+          "timestamp": 1790205679.9103076,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "C12",
+          "phase": "axis_completed",
+          "timestamp": 1790205700.4467154,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "D12",
+          "phase": "axis_started",
+          "timestamp": 1790205700.4468224,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "C01",
+          "phase": "axis_completed",
+          "timestamp": 1790205707.0483258,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "D01",
+          "phase": "axis_started",
+          "timestamp": 1790205707.048494,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "D12",
+          "phase": "axis_completed",
+          "timestamp": 1790205735.593978,
+          "pid": 3635434,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "D01",
+          "phase": "axis_completed",
+          "timestamp": 1790205739.0776484,
+          "pid": 3635432,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1790205618.5269394,
+      "first_axis_started_at_epoch_seconds": 1790205619.7975004,
+      "server_job_completed_at_epoch_seconds": 1790205799.233677,
+      "server_job_seconds": 180.70673751831055,
+      "first_axis_through_server_completion_seconds": 179.4361765384674,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_output_file_count": 8,
+      "candidate_output_file_count": 8,
+      "declared_output_file_count": 8,
+      "native_output_inventory": [
+        {
+          "path": "BBBC022.db",
+          "sha256": "930b1a591132e419391fdfa8cc060802b5fd30e3dc440e8e9e73f2f18077432d"
+        },
+        {
+          "path": "BBBC022_Cells.properties",
+          "sha256": "5112de82da3d23bd1b4a39d402e60606ee707211b852b74b4e5e9adf479dd199"
+        },
+        {
+          "path": "BBBC022_Cytoplasm.properties",
+          "sha256": "dbd68133a406b54534ffc1f3578caf0feec4e218e3da13c63d30d9c52669a125"
+        },
+        {
+          "path": "BBBC022_Mitochondria.properties",
+          "sha256": "f0b281589864dfff0aace1e904b66ad5284375ac1922ec285f0479a42f15a31f"
+        },
+        {
+          "path": "BBBC022_MitochondriaChildObjects.properties",
+          "sha256": "4e393ae96218c1ae2e07ace3d3d468c36d4f9cd793ef176d3f4566decefe623e"
+        },
+        {
+          "path": "BBBC022_Nuclei.properties",
+          "sha256": "82e1f3a09de4a10fe568369e9a0789ebd16800e98a70241f1c92f060896e39a2"
+        },
+        {
+          "path": "BBBC022_Nucleoli.properties",
+          "sha256": "503b34780a8c79eb150a5773c637cc690c419f42519000fc1dd3c924fb889085"
+        },
+        {
+          "path": "BBBC022_NucleoliChildObjects.properties",
+          "sha256": "dd81adcee51682913bd865ccd0da35e471d72231021b4e0d7cfdcaeab30e760b"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022.db",
+          "sha256": "0326de76ac2e7c09ec867e68abb9ce5a300103ac9de5173bca6385e02f3943ab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+          "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+          "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+          "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+          "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+          "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+          "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+          "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "88594c9a-2eeb-4388-a30c-7458557e6153",
+      "compile_artifact_id": "285504a9-1c98-4df9-ac31-783d3de049fb",
+      "endpoint_pid": 3628094,
+      "axis_count": 8,
+      "observation_scope": "outcomes",
+      "worker_process_ids": [
+        3667865,
+        3667867
+      ],
+      "worker_interval_overlap_seconds": 121.99364900588989,
+      "axis_events": [
+        {
+          "axis_id": "A01",
+          "phase": "axis_started",
+          "timestamp": 1790206195.0935252,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "A12",
+          "phase": "axis_started",
+          "timestamp": 1790206195.1781204,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "A01",
+          "phase": "axis_completed",
+          "timestamp": 1790206225.6106179,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "B01",
+          "phase": "axis_started",
+          "timestamp": 1790206225.6107223,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "A12",
+          "phase": "axis_completed",
+          "timestamp": 1790206225.6606107,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B12",
+          "phase": "axis_started",
+          "timestamp": 1790206225.6607196,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B12",
+          "phase": "axis_completed",
+          "timestamp": 1790206245.0468063,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "C12",
+          "phase": "axis_started",
+          "timestamp": 1790206245.046939,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "B01",
+          "phase": "axis_completed",
+          "timestamp": 1790206258.9401093,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "C01",
+          "phase": "axis_started",
+          "timestamp": 1790206258.9402096,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "C12",
+          "phase": "axis_completed",
+          "timestamp": 1790206281.2543647,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "D12",
+          "phase": "axis_started",
+          "timestamp": 1790206281.2544758,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "C01",
+          "phase": "axis_completed",
+          "timestamp": 1790206288.1369145,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "D01",
+          "phase": "axis_started",
+          "timestamp": 1790206288.1370807,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        },
+        {
+          "axis_id": "D12",
+          "phase": "axis_completed",
+          "timestamp": 1790206317.1717694,
+          "pid": 3667867,
+          "worker_slot": "worker_1",
+          "owned_wells": [
+            "A12",
+            "B12",
+            "C12",
+            "D12"
+          ]
+        },
+        {
+          "axis_id": "D01",
+          "phase": "axis_completed",
+          "timestamp": 1790206321.5506065,
+          "pid": 3667865,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "A01",
+            "B01",
+            "C01",
+            "D01"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1790206193.8889804,
+      "first_axis_started_at_epoch_seconds": 1790206195.0935252,
+      "server_job_completed_at_epoch_seconds": 1790206383.821643,
+      "server_job_seconds": 189.9326627254486,
+      "first_axis_through_server_completion_seconds": 188.72811794281006,
+      "native_image_count": 0,
+      "candidate_image_count": 0,
+      "native_output_file_count": 8,
+      "candidate_output_file_count": 8,
+      "declared_output_file_count": 8,
+      "native_output_inventory": [
+        {
+          "path": "BBBC022.db",
+          "sha256": "7d2ff4726f1b9163928a56fabf97e73339921d8af55243326ade01fb9cfef2e5"
+        },
+        {
+          "path": "BBBC022_Cells.properties",
+          "sha256": "60c391a105c31337ef0c43aab758a926fefd6241f89ef38f4c507e6f193a1ab9"
+        },
+        {
+          "path": "BBBC022_Cytoplasm.properties",
+          "sha256": "4a0267abef8b2f259a90d380a8231cab46c11ea729a812f191a8ad33f0cc159e"
+        },
+        {
+          "path": "BBBC022_Mitochondria.properties",
+          "sha256": "f44a422dadc671f27eb988d2141aa0da00b3057c171415f3d863b1ad19e540a1"
+        },
+        {
+          "path": "BBBC022_MitochondriaChildObjects.properties",
+          "sha256": "a1c44a66e6c4b2d6ac01dc3cfd30457b90f1b647d0c3cf7ad26b2f6d22e973a3"
+        },
+        {
+          "path": "BBBC022_Nuclei.properties",
+          "sha256": "1123b1837115acefbdd02e5a5e22635ae60fc2ab23ab1cc1d01dc57dd3853b01"
+        },
+        {
+          "path": "BBBC022_Nucleoli.properties",
+          "sha256": "da141cbd3118c603b2c29877c9be599ee448d0b297589a2a986ae61e23839031"
+        },
+        {
+          "path": "BBBC022_NucleoliChildObjects.properties",
+          "sha256": "b2bcd092acbc155e022851af68f2c2969730d70a2fe5c9cc2ecf0503be15e56a"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022.db",
+          "sha256": "0326de76ac2e7c09ec867e68abb9ce5a300103ac9de5173bca6385e02f3943ab"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+          "sha256": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+          "sha256": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+          "sha256": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+          "sha256": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+          "sha256": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+          "sha256": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+          "sha256": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/code/projects/openhcs/benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/0/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "none: process counts, overlap, and source-owned intervals are retained, but first-module/first-axis boundary equivalence and repeated throughput remain under review"
+}

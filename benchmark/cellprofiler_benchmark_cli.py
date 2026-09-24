@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -70,6 +71,421 @@ class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
         )
         parser.set_defaults(cli_command=self)
         return parser
+
+
+class InspectBenchmarkRunCommand(BenchmarkCliCommand):
+    """Inspect one existing comparison run through the shared typed contract."""
+
+    command_name = "inspect-run"
+    help_text = "Inspect an existing comparison run without executing it."
+    sort_order = 3
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        from benchmark.contracts.control import BenchmarkRunInspectionRequest
+
+        parser = self._parser(subparsers)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument(
+            "--artifact-offset",
+            type=int,
+            default=BenchmarkRunInspectionRequest.DEFAULT_ARTIFACT_OFFSET,
+        )
+        parser.add_argument(
+            "--artifact-limit",
+            type=int,
+            default=BenchmarkRunInspectionRequest.DEFAULT_ARTIFACT_LIMIT,
+        )
+        parser.add_argument(
+            "--report",
+            action="store_true",
+            help="Render the same typed comparison inspection as Markdown.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.contracts.control import BenchmarkRunInspectionRequest
+        from benchmark.control import inspect_benchmark_run, report_benchmark_run
+        from openhcs.serialization.json import to_jsonable
+
+        inspection = inspect_benchmark_run(
+            BenchmarkRunInspectionRequest(
+                output_dir=str(args.output_dir),
+                artifact_offset=args.artifact_offset,
+                artifact_limit=args.artifact_limit,
+            )
+        )
+        if args.report:
+            print(report_benchmark_run(inspection).markdown, end="")
+        else:
+            print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
+        return 0
+
+
+class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
+    """Inspect or report one ordinary measured pipeline's retained evidence."""
+
+    command_name = "inspect-measured"
+    help_text = "Inspect a completed ordinary-pipeline measurement."
+    sort_order = 5
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument(
+            "--report",
+            action="store_true",
+            help="Render the same typed inspection as a concise Markdown report.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import (
+            inspect_measured_pipeline_run,
+            report_measured_pipeline_run,
+        )
+        from openhcs.serialization.json import to_jsonable
+
+        inspection = inspect_measured_pipeline_run(args.output_dir)
+        if args.report:
+            print(report_measured_pipeline_run(inspection).markdown, end="")
+        else:
+            print(json.dumps(to_jsonable(inspection), indent=2, sort_keys=True))
+        return 0
+
+
+class RunMeasuredPipelineCommand(BenchmarkCliCommand):
+    """Measure one source-backed pipeline through ordinary job control."""
+
+    command_name = "run-measured"
+    help_text = "Run an ordinary Python pipeline and retain measured evidence."
+    sort_order = 6
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        from openhcs.runtime.zmq_execution_signature import (
+            ZMQRuntimeObservationExportScope,
+        )
+
+        parser.add_argument("--plate", type=Path, required=True)
+        parser.add_argument("--execution-plate", type=Path)
+        parser.add_argument("--pipeline-source-file", type=Path, required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument("--run-id", required=True)
+        parser.add_argument("--pipeline-name")
+        parser.add_argument(
+            "--observation-scope",
+            choices=tuple(scope.value for scope in ZMQRuntimeObservationExportScope),
+            default=ZMQRuntimeObservationExportScope.VALUES.value,
+            help="Retain full runtime values or outcome-only execution evidence.",
+        )
+        parser.add_argument("--host", default="localhost")
+        parser.add_argument("--port", type=int)
+        parser.add_argument(
+            "--persistent",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help="Reuse an existing execution endpoint or close an ephemeral one.",
+        )
+        parser.add_argument("--submit-timeout-ms", type=int)
+        parser.add_argument(
+            "--wait-timeout-ms",
+            type=int,
+            required=True,
+            help="Explicit bound for the ordinary pipeline job's completion wait.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        if args.wait_timeout_ms <= 0:
+            raise ValueError("--wait-timeout-ms must be positive.")
+        if args.submit_timeout_ms is not None and args.submit_timeout_ms <= 0:
+            raise ValueError("--submit-timeout-ms must be positive.")
+
+        from zmqruntime.messages import ExecutionStatus
+
+        from benchmark.contracts.control import MeasuredPipelineRunFinalizationRequest
+        from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
+        from benchmark.control_service import BenchmarkControlService
+        from openhcs.agent.dto.execution import (
+            ExecutionJobRef,
+            ExecutionJobStatus,
+            PipelineSourceOrchestratorSessionRequest,
+        )
+        from openhcs.agent.path_policy import AgentPathPolicy
+        from openhcs.mcp.context import OpenHCSAgentContext
+        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.runtime.zmq_execution_signature import (
+            ZMQRuntimeObservationExportScope,
+        )
+        from openhcs.serialization.json import to_jsonable
+
+        output_dir = args.output_dir.expanduser().resolve()
+        policy = AgentPathPolicy.with_roots(
+            readable_roots=(
+                args.plate,
+                args.execution_plate or args.plate,
+                args.pipeline_source_file,
+                output_dir,
+            ),
+            writable_roots=(output_dir,),
+        )
+        plate = policy.assert_readable(args.plate)
+        execution_plate = policy.assert_readable(args.execution_plate or args.plate)
+        source_file = policy.assert_readable(args.pipeline_source_file)
+        if output_dir.exists() and any(output_dir.iterdir()):
+            raise FileExistsError(
+                f"Measured evidence directory must be empty: {output_dir}"
+            )
+        policy.assert_writable(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        context = OpenHCSAgentContext(path_policy=policy)
+        session = context.execution_service.create_session_from_pipeline_source_request(
+            PipelineSourceOrchestratorSessionRequest.from_fields(
+                plate_path=str(plate),
+                execution_plate_path=str(execution_plate),
+                pipeline_source=source_file.read_text(encoding="utf-8"),
+                host=args.host,
+                port=args.port,
+                persistent=args.persistent,
+            )
+        )
+        observation_path = MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
+            output_dir
+        )
+        submitted = context.execution_service.submit_execution(
+            session.session_id,
+            runtime_observation_export_path=str(observation_path),
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
+                args.observation_scope
+            ),
+            wait=False,
+            submit_timeout_ms=(
+                args.submit_timeout_ms
+                or OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
+            ),
+        )
+        if isinstance(submitted, ExecutionJobStatus):
+            raise RuntimeError(f"Ordinary pipeline job was not accepted: {submitted}")
+        if not isinstance(submitted, ExecutionJobRef):
+            raise TypeError(
+                f"Ordinary pipeline submission returned {type(submitted).__name__}."
+            )
+        print(f"Ordinary pipeline job submitted: {submitted.job_id}", file=sys.stderr)
+        try:
+            status = context.execution_service.wait_job(
+                submitted.job_id,
+                timeout_ms=args.wait_timeout_ms,
+            )
+        except KeyboardInterrupt:
+            cancellation = context.execution_service.cancel_job(submitted.job_id)
+            print(
+                json.dumps(to_jsonable(cancellation), sort_keys=True), file=sys.stderr
+            )
+            return 130
+        if not isinstance(status, ExecutionJobStatus):
+            raise TypeError(f"Ordinary pipeline wait returned {type(status).__name__}.")
+        if status.status != ExecutionStatus.COMPLETE.value:
+            if not status.is_terminal:
+                cancellation = context.execution_service.cancel_job(submitted.job_id)
+                print(
+                    json.dumps(to_jsonable(cancellation), sort_keys=True),
+                    file=sys.stderr,
+                )
+            raise RuntimeError(f"Ordinary pipeline job did not complete: {status}")
+        receipt = BenchmarkControlService(
+            policy, context.execution_service
+        ).finalize_measured_run(
+            MeasuredPipelineRunFinalizationRequest(
+                job_id=status.job_id,
+                run_id=args.run_id,
+                pipeline_name=args.pipeline_name or source_file.stem,
+            )
+        )
+        print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))
+        return 0
+
+
+class ListBenchmarkCasesCommand(BenchmarkCliCommand):
+    """Inspect a manifest's declared work without acquiring or executing it."""
+
+    command_name = "list-cases"
+    help_text = "List and check the selected cases in a comparison manifest."
+    sort_order = 4
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument("--manifest", type=Path, required=True)
+        parser.add_argument("--case", action="append", dest="case_names")
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import discover_benchmark_cases
+        from openhcs.serialization.json import to_jsonable
+
+        result = discover_benchmark_cases(
+            args.manifest,
+            requested_names=tuple(args.case_names or ()),
+        )
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+
+
+class RunWellThroughputCommand(BenchmarkCliCommand):
+    """Run a declared sweep through the ordinary measured-pipeline wrapper."""
+
+    command_name = "run-well-throughput"
+    help_text = "Run a CellProfiler-imported well-throughput sweep with receipts."
+    sort_order = 7
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        from benchmark.well_throughput_scaling import WellThroughputPreset
+        from openhcs.core.config import MultiprocessingStartMethod
+
+        parser = self._parser(subparsers)
+        parser.add_argument("--manifest", type=Path, required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        parser.add_argument("--case", action="append", dest="case_names")
+        parser.add_argument(
+            "--preset",
+            action="append",
+            choices=tuple(preset.value for preset in WellThroughputPreset),
+        )
+        parser.add_argument("--well-count", type=int, action="append")
+        parser.add_argument("--worker-count", type=int, action="append")
+        parser.add_argument(
+            "--start-method",
+            choices=tuple(method.value for method in MultiprocessingStartMethod),
+            help="Override the manifest's declared worker start method.",
+        )
+        parser.add_argument("--max-memory-mb", type=float)
+        parser.add_argument("--execution-port", type=int)
+        parser.add_argument(
+            "--resume",
+            action="store_true",
+            help=(
+                "Reuse only rows whose recorded SHA-256 matches the current "
+                "manifest, sources, pipeline, modes, and worker settings."
+            ),
+        )
+        parser.add_argument(
+            "--plan-only",
+            action="store_true",
+            help="Show the resolved sweep without acquiring data or executing it.",
+        )
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import discover_benchmark_cases
+        from benchmark.well_throughput_scaling import (
+            WELL_THROUGHPUT_ROWS_CSV,
+            WellThroughputBenchmarkPlan,
+            WellThroughputPreset,
+            read_well_throughput_csv,
+            run_well_throughput_suite,
+            well_throughput_start_method_from_manifest,
+        )
+        from openhcs.core.config import MultiprocessingStartMethod
+        from openhcs.serialization.json import to_jsonable
+
+        if args.max_memory_mb is not None and (
+            not math.isfinite(args.max_memory_mb) or args.max_memory_mb <= 0
+        ):
+            raise ValueError("--max-memory-mb must be finite and positive.")
+        if args.preset and (args.well_count or args.worker_count):
+            raise ValueError("Choose presets or explicit well/worker counts, not both.")
+        if args.execution_port is not None and not 1 <= args.execution_port <= 65535:
+            raise ValueError("--execution-port must be between 1 and 65535.")
+        case_catalog = discover_benchmark_cases(
+            args.manifest,
+            requested_names=tuple(args.case_names or ()),
+        )
+        plan = WellThroughputBenchmarkPlan.from_requested_modes(
+            presets=tuple(WellThroughputPreset(value) for value in args.preset or ()),
+            well_counts=tuple(args.well_count or ()),
+            worker_counts=tuple(args.worker_count or ()),
+            manifest_path=args.manifest,
+        )
+        start_method = (
+            MultiprocessingStartMethod(args.start_method)
+            if args.start_method is not None
+            else well_throughput_start_method_from_manifest(args.manifest)
+        )
+        if args.plan_only:
+            print(
+                json.dumps(
+                    to_jsonable(
+                        {
+                            "manifest": str(args.manifest),
+                            "case_names": tuple(
+                                case.name for case in case_catalog.cases
+                            ),
+                            "modes": plan.modes,
+                            "start_method": start_method.value,
+                            "warnings": case_catalog.warnings,
+                        }
+                    ),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return 0
+
+        output_dir = args.output_dir.expanduser().resolve()
+        rows_path = output_dir / WELL_THROUGHPUT_ROWS_CSV
+        if args.resume:
+            if not rows_path.is_file():
+                raise FileNotFoundError(
+                    f"Cannot resume without a throughput CSV: {rows_path}"
+                )
+            existing_results = read_well_throughput_csv(rows_path)
+        else:
+            if output_dir.exists() and any(output_dir.iterdir()):
+                raise FileExistsError(
+                    f"Well-throughput output directory must be empty: {output_dir}"
+                )
+            existing_results = ()
+        if not case_catalog.cases:
+            raise ValueError("Well-throughput manifest contains no selected cases.")
+        configure_headless_cpu_benchmark_runtime(args.log_level)
+        rows = run_well_throughput_suite(
+            args.manifest,
+            output_root=output_dir,
+            case_names=tuple(args.case_names or ()),
+            well_counts=(),
+            worker_counts=(),
+            start_method=start_method,
+            plan=plan,
+            existing_results=existing_results,
+            max_memory_mb=args.max_memory_mb,
+            execution_port=args.execution_port,
+        )
+        print(f"rows={len(rows)}")
+        print(f"results={rows_path}")
+        failures = tuple(row for row in rows if not row.is_successful())
+        if failures:
+            print(
+                f"well-throughput observations failed: "
+                f"{tuple((row.case_name, row.mode_name) for row in failures)!r}",
+                file=sys.stderr,
+            )
+            return 1
+        return 0
 
 
 class RunBenchmarkCommand(BenchmarkCliCommand):
@@ -149,13 +565,16 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
         from benchmark.cellprofiler_comparison import (
             ComparisonMetricPolicy,
             load_comparison_cases,
+            require_new_comparison_output_root,
             run_comparison_suite,
+            select_comparison_cases,
         )
 
+        require_new_comparison_output_root(args.output_dir)
         suite_id = args.suite_id or datetime.now().strftime(
             "cp_vs_openhcs_%Y%m%d_%H%M%S"
         )
-        cases = _filter_cases_by_name(
+        cases = select_comparison_cases(
             load_comparison_cases(args.manifest),
             tuple(args.case_names or ()),
         )
@@ -190,29 +609,6 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
             plot_summary(summary_path, figures_output_dir)
             print(f"figures={figures_output_dir}")
         return 0
-
-
-def _filter_cases_by_name(cases, requested_names: tuple[str, ...]):
-    """Return manifest cases selected by exact name, failing on absent names."""
-    if not requested_names:
-        return cases
-
-    available_names = tuple(case.name for case in cases)
-    available_name_set = set(available_names)
-    unknown_names = tuple(
-        name
-        for name in dict.fromkeys(requested_names)
-        if name not in available_name_set
-    )
-    if unknown_names:
-        raise ValueError(
-            "Unknown benchmark case name(s): "
-            f"{', '.join(unknown_names)}. Available case name(s): "
-            f"{', '.join(available_names)}"
-        )
-
-    requested_name_set = set(requested_names)
-    return tuple(case for case in cases if case.name in requested_name_set)
 
 
 class OfficialCp3ManifestCommand(BenchmarkCliCommand):
@@ -564,7 +960,7 @@ def create_benchmark_argument_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="openhcs-benchmark",
-        description="Generate CP-vs-OpenHCS runtime and parity benchmark artifacts.",
+        description="Inspect OpenHCS measurements or generate CP comparison artifacts.",
     )
     parser.set_defaults(cli_invocation=())
     parser.add_argument(

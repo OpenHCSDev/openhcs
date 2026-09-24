@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
-import multiprocessing
-import queue
 import statistics
-import threading
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
@@ -17,45 +15,82 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import psutil
+from objectstate.lazy_factory import rebuild_lazy_config_with_new_global_reference
 
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
 
-from benchmark.cellprofiler_comparison import CASE_NAME_FIELD
-from benchmark.cellprofiler_comparison import load_comparison_cases
-from benchmark.cellprofiler_comparison import MEDIAN_NATIVE_EXECUTION_SECONDS_FIELD
+from benchmark.cellprofiler_comparison import (
+    CASE_NAME_FIELD,
+    MEDIAN_NATIVE_EXECUTION_SECONDS_FIELD,
+    load_comparison_cases,
+)
 from benchmark.contracts.comparison_manifest import ComparisonManifest
+from benchmark.file_digest import sha256_file
 from benchmark.metrics.memory import MemoryMetric
-from objectstate.lazy_factory import ensure_global_config_context
+from benchmark.openhcs_measured_run import (
+    _ZMQProgressTimingObserver,
+    execute_measured_openhcs_pipeline,
+)
+from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import AllComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
     AnalysisConsolidationConfig,
     GlobalPipelineConfig,
+    LazyPathPlanningConfig,
     LazyVFSConfig,
     LazyWellFilterConfig,
-    LazyPathPlanningConfig,
     MaterializationBackend,
     MultiprocessingStartMethod,
+    WellFilterConfig,
 )
+from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    RuntimeObservationMode,
-)
-from openhcs.core.progress import set_progress_queue
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.source_matching import with_source_component_metadata
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourceProjectionMetadataSerializer,
+    SourceProjectionSet,
+)
+from openhcs.core.utils import WellFilterProcessor
+from openhcs.core.virtual_workspace_metadata import (
+    FIELDS,
+    AtomicMetadataWriter,
+    VirtualWorkspaceMapping,
+    VirtualWorkspaceSourceProjectionEntries,
+)
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
-from openhcs.microscopes.openhcs import FIELDS
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
+)
+from openhcs.serialization.json import to_jsonable
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
 WELL_THROUGHPUT_LANES_CSV = "well_throughput_worker_lanes.csv"
 WELL_THROUGHPUT_STEPS_CSV = "well_throughput_step_timings.csv"
+
+
+class WellThroughputExecutionRoute(StrEnum):
+    """Execution boundary that produced a throughput observation."""
+
+    LEGACY_DIRECT = "legacy-direct-v1"
+    ORDINARY_ZMQ_OUTCOMES = "ordinary-zmq-outcomes-v1"
+
+
+LEGACY_DIRECT_EXECUTION_ROUTE = WellThroughputExecutionRoute.LEGACY_DIRECT
+ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE = (
+    WellThroughputExecutionRoute.ORDINARY_ZMQ_OUTCOMES
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,6 +204,9 @@ class WellThroughputBenchmarkPlan:
             raise ValueError(
                 "Well throughput benchmark plan requires at least one mode."
             )
+        names = tuple(mode.name for mode in modes)
+        if len(names) != len(set(names)):
+            raise ValueError("Well throughput benchmark mode names must be unique.")
         object.__setattr__(self, "modes", modes)
 
     @classmethod
@@ -460,6 +498,7 @@ class WellThroughputPresentationReport:
         summary_rows = self.single_process_summary_rows()
         core_rows = self.core_scaling_rows()
         wells_per_core_rows = self.wells_per_core_rows()
+        _require_single_execution_route((*core_rows, *wells_per_core_rows))
 
         outputs.extend(self.write_source_index())
         outputs.extend(self.generate_parity_figures(summary_rows))
@@ -617,9 +656,9 @@ class WellThroughputPresentationReport:
         )
 
         from benchmark.reports.cppipe_figures import (
+            SPEEDUP_TARGET,
             BenchmarkMetricRow,
             FigureMetricSpec,
-            SPEEDUP_TARGET,
             generate_grouped_benchmark_metric_figures,
         )
 
@@ -698,18 +737,22 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Generate the per-pipeline core scaling figure with multi-band breaks."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import DEFAULT_WRAP_AFTER
-        from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-        from benchmark.reports.cppipe_figures import PIPELINE_LABEL_FONT_SIZE
-        from benchmark.reports.cppipe_figures import PIPELINE_LABEL_LAYOUT
-        from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+        from benchmark.reports.cppipe_figures import (
+            DEFAULT_WRAP_AFTER,
+            FIGURE_DPI,
+            FIGURE_STYLE,
+            LINEAR_AXIS_BREAK_POLICY,
+            PIPELINE_LABEL_FONT_SIZE,
+            PIPELINE_LABEL_LAYOUT,
+            SPEEDUP_TARGET,
+        )
 
         row_index = {(row.pipeline_name, row.method): row for row in rows}
         panels = PIPELINE_LABEL_LAYOUT.panels(pipeline_names, DEFAULT_WRAP_AFTER)
@@ -1021,8 +1064,7 @@ class WellThroughputPresentationReport:
         """Plot module coverage shares with a summary count table."""
         import matplotlib.pyplot as plt
 
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
+        from benchmark.reports.cppipe_figures import FIGURE_DPI, FIGURE_STYLE
 
         grouped_rows = table.grouped_rows()
         labels = tuple(coverage.label for coverage in ModuleAbstractionCoverageKind)
@@ -1155,14 +1197,18 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Plot mean bars with median/min overlays in one wells/core summary."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_DPI
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+        from benchmark.reports.cppipe_figures import (
+            FIGURE_DPI,
+            FIGURE_STYLE,
+            SPEEDUP_TARGET,
+        )
 
         row_index = {
             (row.worker_count, row.wells_per_core): row for row in summary_rows
@@ -1361,13 +1407,17 @@ class WellThroughputPresentationReport:
     ) -> tuple[Path, ...]:
         """Plot mean bars with all per-pipeline points for each method."""
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import FuncFormatter
-        from matplotlib.ticker import LogLocator
-        from matplotlib.ticker import NullFormatter
-        from matplotlib.ticker import NullLocator
+        from matplotlib.ticker import (
+            FuncFormatter,
+            LogLocator,
+            NullFormatter,
+            NullLocator,
+        )
 
-        from benchmark.reports.cppipe_figures import FIGURE_STYLE
-        from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
+        from benchmark.reports.cppipe_figures import (
+            FIGURE_STYLE,
+            LINEAR_AXIS_BREAK_POLICY,
+        )
 
         methods = tuple(mode.label for mode in self.core_scaling_modes)
         method_values = tuple(
@@ -1909,6 +1959,46 @@ class WorkerLaneEventPhase(str, Enum):
             return
 
 
+def _require_declared_worker_observation(
+    events: Sequence[dict[str, Any]],
+    *,
+    execution_id: str,
+    mode: WellThroughputMode,
+) -> None:
+    """Reject a throughput row unless its progress proves the declared workers."""
+
+    axis_phases = {ProgressPhase.AXIS_STARTED.value, ProgressPhase.AXIS_COMPLETED.value}
+    axis_events = tuple(
+        ProgressEvent.from_dict(event)
+        for event in events
+        if event.get("execution_id") == execution_id
+        and event.get("phase") in axis_phases
+    )
+    starts = tuple(
+        event for event in axis_events if event.phase is ProgressPhase.AXIS_STARTED
+    )
+    completions = tuple(
+        event for event in axis_events if event.phase is ProgressPhase.AXIS_COMPLETED
+    )
+    started_axes = tuple(event.axis_id for event in starts)
+    completed_axes = tuple(event.axis_id for event in completions)
+    if (
+        len(starts) != mode.well_count
+        or len(completions) != mode.well_count
+        or len(set(started_axes)) != mode.well_count
+        or set(started_axes) != set(completed_axes)
+    ):
+        raise RuntimeError(
+            "OpenHCS throughput progress does not cover each declared well exactly once."
+        )
+    worker_pids = {event.pid for event in starts}
+    if len(worker_pids) != mode.worker_count:
+        raise RuntimeError(
+            f"OpenHCS used {len(worker_pids)} worker processes, "
+            f"expected {mode.worker_count}."
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class WellThroughputResult:
     """One compile-once, execute-many-wells throughput observation."""
@@ -1930,6 +2020,8 @@ class WellThroughputResult:
     status: WellThroughputStatus = WellThroughputStatus.SUCCESS
     memory_limit_mb: float | None = None
     error_message: str | None = None
+    execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE
+    run_input_sha256: str | None = None
 
     @classmethod
     def memory_limited(
@@ -1945,6 +2037,7 @@ class WellThroughputResult:
         memory_limit_mb: float,
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str | None = None,
+        execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -1973,6 +2066,7 @@ class WellThroughputResult:
             status=WellThroughputStatus.MEMORY_LIMIT_EXCEEDED,
             memory_limit_mb=memory_limit_mb,
             error_message=error_message,
+            execution_route=execution_route,
         )
 
     @classmethod
@@ -1988,6 +2082,7 @@ class WellThroughputResult:
         peak_memory_mb: float | None,
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str,
+        execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -2015,11 +2110,84 @@ class WellThroughputResult:
             peak_memory_mb=peak_memory_mb,
             status=WellThroughputStatus.ERROR,
             error_message=error_message,
+            execution_route=execution_route,
         )
 
     def is_successful(self) -> bool:
         """Return whether this observation completed normally."""
         return self.status is WellThroughputStatus.SUCCESS
+
+
+def _source_tree_sha256(path: Path) -> str:
+    """Hash a source file/tree by relative name and content, following symlinks."""
+
+    digest = hashlib.sha256()
+
+    def visit(candidate: Path, relative: Path, ancestors: frozenset[Path]) -> None:
+        resolved = candidate.resolve(strict=True)
+        name = relative.as_posix().encode("utf-8")
+        if candidate.is_dir():
+            if resolved in ancestors:
+                raise ValueError(
+                    f"Source directory contains a symlink cycle: {candidate}"
+                )
+            digest.update(b"directory\0" + name + b"\0")
+            for child in sorted(candidate.iterdir(), key=lambda entry: entry.name):
+                visit(child, relative / child.name, ancestors | {resolved})
+        elif candidate.is_file():
+            digest.update(b"file\0" + name + b"\0")
+            digest.update(bytes.fromhex(sha256_file(candidate)))
+        else:
+            raise ValueError(
+                f"Source path is not a regular file or directory: {candidate}"
+            )
+
+    source = Path(path)
+    visit(source, Path("."), frozenset())
+    return digest.hexdigest()
+
+
+def well_throughput_run_input_sha256(
+    manifest_path: Path,
+    *,
+    cases: Sequence[Any],
+    modes: Sequence[WellThroughputMode],
+    start_method: MultiprocessingStartMethod,
+    native_baselines: Mapping[str, NativeCellProfilerExecutionBaseline],
+    max_memory_mb: float | None,
+) -> str:
+    """Bind resumable rows to their resolved declarations and source bytes."""
+
+    source_hashes: dict[Path, str] = {}
+
+    def source_record(path: Path) -> dict[str, str]:
+        resolved = Path(path).resolve(strict=True)
+        if resolved not in source_hashes:
+            source_hashes[resolved] = _source_tree_sha256(resolved)
+        return {"path": str(resolved), "sha256": source_hashes[resolved]}
+
+    declaration = {
+        "schema": "openhcs.benchmark.well-throughput-inputs.v1",
+        "manifest": source_record(manifest_path),
+        "cases": [
+            {
+                "name": case.name,
+                "dataset": source_record(case.dataset_path),
+                "cppipe": source_record(case.cppipe_path),
+                "well_filter": to_jsonable(case.well_filter_config),
+            }
+            for case in cases
+        ],
+        "modes": [asdict(mode) for mode in modes],
+        "start_method": start_method.value,
+        "native_baselines": {
+            name: baseline.execution_seconds
+            for name, baseline in sorted(native_baselines.items())
+        },
+        "max_memory_mb": max_memory_mb,
+    }
+    encoded = json.dumps(declaration, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def run_well_throughput_suite(
@@ -2029,7 +2197,7 @@ def run_well_throughput_suite(
     case_names: Sequence[str] = (),
     well_counts: Sequence[int],
     worker_counts: Sequence[int],
-    start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
+    start_method: MultiprocessingStartMethod | None = None,
     plan: WellThroughputBenchmarkPlan | None = None,
     native_execution_baselines: (
         Mapping[
@@ -2042,15 +2210,49 @@ def run_well_throughput_suite(
     skipped_observations: Sequence[WellThroughputObservationKey] = (),
     rerun_missing_memory: bool = False,
     max_memory_mb: float | None = None,
+    execution_port: int | None = None,
 ) -> tuple[WellThroughputResult, ...]:
-    """Run converted cppipes as one OpenHCS plate with repeated virtual wells."""
+    """Run converted cppipes, refusing resumed rows from different inputs."""
+    if any(
+        result.execution_route is not ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
+        for result in existing_results
+    ):
+        raise ValueError(
+            "Cannot resume legacy well-throughput rows through the ordinary ZMQ "
+            "execution route; use a new output root."
+        )
     cases = load_comparison_cases(manifest_path)
+    if not cases:
+        raise ValueError("Well-throughput manifest contains no executable cases.")
     selected = set(case_names)
-    benchmark_plan = plan or WellThroughputBenchmarkPlan.from_axes(
+    unknown_cases = selected.difference(case.name for case in cases)
+    if unknown_cases:
+        raise ValueError(f"Unknown well-throughput cases: {sorted(unknown_cases)!r}.")
+    benchmark_plan = plan or WellThroughputBenchmarkPlan.from_requested_modes(
         well_counts=well_counts,
         worker_counts=worker_counts,
+        manifest_path=manifest_path,
+    )
+    effective_start_method = start_method or well_throughput_start_method_from_manifest(
+        manifest_path
     )
     native_baselines = dict(native_execution_baselines or {})
+    selected_cases = tuple(
+        case for case in cases if not selected or case.name in selected
+    )
+    run_input_sha256 = well_throughput_run_input_sha256(
+        manifest_path,
+        cases=selected_cases,
+        modes=benchmark_plan.modes,
+        start_method=effective_start_method,
+        native_baselines=native_baselines,
+        max_memory_mb=max_memory_mb,
+    )
+    if any(result.run_input_sha256 != run_input_sha256 for result in existing_results):
+        raise ValueError(
+            "Cannot resume throughput rows without a matching run-input SHA-256; "
+            "use a new output root for changed or legacy inputs."
+        )
     results: list[WellThroughputResult] = [
         result
         for result in existing_results
@@ -2062,9 +2264,7 @@ def run_well_throughput_suite(
         for result in results
     }
     skipped = set(skipped_observations)
-    for case in cases:
-        if selected and case.name not in selected:
-            continue
+    for case in selected_cases:
         for mode in benchmark_plan.modes:
             observation_key = WellThroughputObservationKey(case.name, mode.name)
             if observation_key in completed or observation_key in skipped:
@@ -2073,7 +2273,6 @@ def run_well_throughput_suite(
                 case_name=case.name,
                 dataset_path=case.dataset_path,
                 cppipe_path=case.cppipe_path,
-                pipeline_params=case.pipeline_params,
                 output_root=(
                     output_root
                     / case.name
@@ -2081,10 +2280,13 @@ def run_well_throughput_suite(
                     / f"workers_{mode.worker_count}"
                 ),
                 mode=mode,
-                start_method=start_method,
+                start_method=effective_start_method,
+                source_well_filter=case.well_filter_config,
                 native_execution_baseline=native_baselines.get(case.name),
                 max_memory_mb=max_memory_mb,
+                execution_port=execution_port,
             )
+            result = replace(result, run_input_sha256=run_input_sha256)
             results.append(result)
             completed.add(observation_key)
             write_well_throughput_csv(output_root / WELL_THROUGHPUT_ROWS_CSV, results)
@@ -2096,12 +2298,13 @@ def run_case_well_throughput(
     case_name: str,
     dataset_path: Path,
     cppipe_path: Path,
-    pipeline_params: Mapping[str, object],
     output_root: Path,
     mode: WellThroughputMode,
     start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
+    source_well_filter: WellFilterConfig | None = None,
     native_execution_baseline: NativeCellProfilerExecutionBaseline | None = None,
     max_memory_mb: float | None = None,
+    execution_port: int | None = None,
 ) -> WellThroughputResult:
     """Run one converted cppipe over synthetic wells in a single OpenHCS execution."""
     output_root.mkdir(parents=True, exist_ok=True)
@@ -2132,6 +2335,7 @@ def run_case_well_throughput(
     well_ids = _replicate_source_binding_workspace_wells(
         prepared.materialization.metadata_path,
         _synthetic_well_ids(mode.well_count),
+        source_well_filter=source_well_filter,
     )
 
     global_config = GlobalPipelineConfig(
@@ -2141,42 +2345,60 @@ def run_case_well_throughput(
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )
-    ensure_global_config_context(GlobalPipelineConfig, global_config)
-    pipeline_config = replace(
-        prepared.pipeline_config,
-        well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
-        path_planning_config=LazyPathPlanningConfig(
-            global_output_folder=output_root,
-            output_dir_suffix="_well_throughput",
+    pipeline_config = rebuild_lazy_config_with_new_global_reference(
+        replace(
+            prepared.pipeline_config,
+            num_workers=None,
+            use_threading=None,
+            multiprocessing_start_method=None,
+            materialize_runtime_artifacts=False,
+            well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
+            path_planning_config=LazyPathPlanningConfig(
+                well_filter=0,
+                global_output_folder=output_root,
+                output_dir_suffix="_well_throughput",
+            ),
+            vfs_config=LazyVFSConfig(
+                materialization_backend=MaterializationBackend.DISK
+            ),
         ),
-        vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK),
+        global_config,
+        GlobalPipelineConfig,
     )
-    orchestrator = PipelineOrchestrator(
-        source_workspace_path,
-        pipeline_config=pipeline_config,
+    run_id = f"{case_name}-{mode.name}-{time.time_ns()}"
+    observation_path = (
+        output_root / "ordinary_run_evidence" / run_id / "runtime_outcomes.pkl.gz"
+    ).resolve()
+    submission = OpenHCSExecutionSubmission(
+        plate_id=dataset_path,
+        execution_plate_id=source_workspace_path,
+        selected_pipeline_path=cppipe_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=pipeline_config,
+            pipeline_steps=FunctionStepTransportAuthority.normalize_pipeline(
+                prepared.pipeline_steps
+            ),
+        ),
+        global_config=global_config,
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=observation_path,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        )
     )
-    orchestrator.initialize()
-
     progress_events: list[dict[str, Any]] = []
-    progress_queue = multiprocessing.get_context(
-        global_config.multiprocessing_start_method.value
-    ).Queue()
-    consumer = threading.Thread(
-        target=_drain_progress_queue,
-        args=(progress_queue, progress_events),
-        daemon=True,
+    timing_observer = _ZMQProgressTimingObserver(
+        on_event=lambda event: progress_events.append(dict(event))
     )
-    consumer.start()
-    progress_context = {
-        "execution_id": f"well-throughput::{case_name}::{time.time_ns()}",
-        "plate_id": str(source_workspace_path),
-        "axis_id": "",
-    }
-
+    phase_timing = PhaseTimingTrace(
+        run_id=run_id,
+        pipeline_name=case_name,
+        tool="OpenHCS",
+    )
     compile_seconds = 0.0
     prepare_seconds = 0.0
     execute_seconds = 0.0
-    execution_results: Mapping[object, ExecutionResult] = {}
+    successful_wells = 0
     started_at = time.perf_counter()
     with MemoryMetric(
         interval_seconds=0.05,
@@ -2188,33 +2410,29 @@ def run_case_well_throughput(
     ) as memory_metric:
         try:
             try:
-                compile_started_at = time.perf_counter()
-                set_progress_queue(progress_queue)
-                try:
-                    compilation = orchestrator.compile_pipelines(
-                        pipeline_definition=prepared.pipeline_steps,
+                completed, _ = execute_measured_openhcs_pipeline(
+                    submission=submission,
+                    phase_timing=phase_timing,
+                    timing_observer=timing_observer,
+                    expected_axis_count=len(well_ids),
+                    execution_port=execution_port,
+                    require_owned_server=True,
+                )
+                outcome = completed.observation_export
+                if not isinstance(outcome, ZMQRuntimeExecutionOutcomeExport):
+                    raise TypeError(
+                        "Well-throughput execution requires an outcome-only export."
                     )
-                finally:
-                    set_progress_queue(None)
-                compile_seconds = time.perf_counter() - compile_started_at
-
-                execution_bundle = compilation["execution_bundle"]
-                compiled_contexts = execution_bundle.runtime_contexts
-                pipeline_definition = compilation.get(
-                    "pipeline_definition",
-                    prepared.pipeline_steps,
+                _require_declared_worker_observation(
+                    progress_events, execution_id=completed.execution_id, mode=mode
                 )
-
-                execute_started_at = time.perf_counter()
-                execution_results = orchestrator.execute_compiled_plate(
-                    pipeline_definition=pipeline_definition,
-                    compiled_contexts=compiled_contexts,
-                    execution_bundle=execution_bundle,
-                    progress_queue=progress_queue,
-                    progress_context=progress_context,
-                    runtime_observation_mode=RuntimeObservationMode.OMIT,
+                successful_wells = outcome.successful_axis_count
+                compile_seconds = _required_phase_seconds(
+                    phase_timing, BenchmarkPhase.SERVER_COMPILATION_JOB
                 )
-                execute_seconds = time.perf_counter() - execute_started_at
+                execute_seconds = _required_phase_seconds(
+                    phase_timing, BenchmarkPhase.SERVER_PIPELINE_JOB
+                )
             except KeyboardInterrupt:
                 peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
@@ -2232,6 +2450,7 @@ def run_case_well_throughput(
                         error_message=(
                             f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."
                         ),
+                        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                     )
                 raise
             except Exception as exc:
@@ -2249,6 +2468,7 @@ def run_case_well_throughput(
                         memory_limit_mb=max_memory_mb,
                         native_execution_baseline=native_execution_baseline,
                         error_message=str(exc),
+                        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                     )
                 return WellThroughputResult.failed(
                     case_name=case_name,
@@ -2260,12 +2480,16 @@ def run_case_well_throughput(
                     peak_memory_mb=peak_memory_mb,
                     native_execution_baseline=native_execution_baseline,
                     error_message=str(exc),
+                    execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
                 )
         finally:
-            progress_queue.put(None)
-            consumer.join(timeout=5.0)
-            progress_queue.close()
-            progress_queue.join_thread()
+            _write_progress_diagnostics(
+                output_root,
+                case_name=case_name,
+                worker_count=mode.worker_count,
+                well_count=mode.well_count,
+                events=progress_events,
+            )
     peak_memory_mb = memory_metric.get_result()
 
     total_seconds = time.perf_counter() - started_at
@@ -2281,17 +2505,8 @@ def run_case_well_throughput(
             memory_limit_mb=max_memory_mb,
             native_execution_baseline=native_execution_baseline,
             error_message=(f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."),
+            execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
         )
-    successful_wells = sum(
-        1 for result in execution_results.values() if result.is_success()
-    )
-    _write_progress_diagnostics(
-        output_root,
-        case_name=case_name,
-        worker_count=mode.worker_count,
-        well_count=mode.well_count,
-        events=progress_events,
-    )
     projected_native_execution_seconds = (
         native_execution_baseline.projected_execution_seconds(mode.well_count)
         if native_execution_baseline is not None
@@ -2322,6 +2537,7 @@ def run_case_well_throughput(
             else None
         ),
         peak_memory_mb=peak_memory_mb,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
     )
 
 
@@ -2348,7 +2564,7 @@ def well_throughput_plan_from_manifest(
     manifest_path: Path,
 ) -> WellThroughputBenchmarkPlan | None:
     """Load optional well-throughput modes declared by a comparison manifest."""
-    manifest = ComparisonManifest.load(manifest_path)
+    manifest = ComparisonManifest.load(manifest_path, materialize_roots=False)
     raw_modes = manifest.payload.get("well_throughput_modes")
     if raw_modes is None:
         return None
@@ -2357,6 +2573,18 @@ def well_throughput_plan_from_manifest(
     return WellThroughputBenchmarkPlan.from_presets(
         tuple(WellThroughputPreset(str(raw_mode)) for raw_mode in raw_modes)
     )
+
+
+def well_throughput_start_method_from_manifest(
+    manifest_path: Path,
+) -> MultiprocessingStartMethod:
+    """Resolve the sweep's declared worker start method without acquiring data."""
+
+    manifest = ComparisonManifest.load(manifest_path, materialize_roots=False)
+    raw_method = manifest.payload.get("well_throughput_start_method")
+    if raw_method is None:
+        return MultiprocessingStartMethod.FORK
+    return MultiprocessingStartMethod(str(raw_method))
 
 
 def write_well_throughput_csv(
@@ -2385,6 +2613,25 @@ def read_well_throughput_csv(path: Path) -> tuple[WellThroughputResult, ...]:
     return tuple(_well_throughput_result_from_row(row) for row in rows)
 
 
+def _required_phase_seconds(timing: PhaseTimingTrace, phase: BenchmarkPhase) -> float:
+    durations = tuple(
+        record.seconds for record in timing.records if record.phase is phase
+    )
+    if not durations:
+        raise RuntimeError(f"Ordinary pipeline run did not report {phase.name} timing.")
+    return sum(durations)
+
+
+def _require_single_execution_route(rows: Sequence[WellThroughputResult]) -> None:
+    routes = {row.execution_route for row in rows}
+    if len(routes) > 1:
+        raise ValueError(
+            "Well-throughput figures cannot pool different execution routes: "
+            f"{sorted(route.value for route in routes)!r}. "
+            "Select one route before plotting."
+        )
+
+
 def generate_well_throughput_figures(
     csv_path: Path,
     output_dir: Path,
@@ -2397,19 +2644,19 @@ def generate_well_throughput_figures(
     )
     if not rows:
         return ()
+    _require_single_execution_route(rows)
 
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
-    from benchmark.reports.cppipe_figures import FIGURE_STYLE
-    from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-    from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+    from benchmark.reports.cppipe_figures import (
+        FIGURE_STYLE,
+        LINEAR_AXIS_BREAK_POLICY,
+        SPEEDUP_TARGET,
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     case_names = tuple(dict.fromkeys(row.case_name for row in rows))
@@ -2559,8 +2806,10 @@ def generate_well_throughput_figures(
     average_csv = output_dir / "well_throughput_average_speedup_points.csv"
     _write_well_throughput_average_speedup_csv(average_csv, rows, mode_names)
     outputs.append(average_csv)
-    from benchmark.reports.cppipe_figures import SpeedupDistributionSeries
-    from benchmark.reports.cppipe_figures import generate_speedup_distribution_artifacts
+    from benchmark.reports.cppipe_figures import (
+        SpeedupDistributionSeries,
+        generate_speedup_distribution_artifacts,
+    )
 
     outputs.extend(
         generate_speedup_distribution_artifacts(
@@ -2630,6 +2879,10 @@ def _well_throughput_result_from_row(
         status=WellThroughputStatus(row.get("status") or WellThroughputStatus.SUCCESS),
         memory_limit_mb=_optional_float(row.get("memory_limit_mb")),
         error_message=row.get("error_message") or None,
+        execution_route=WellThroughputExecutionRoute(
+            row.get("execution_route") or LEGACY_DIRECT_EXECUTION_ROUTE.value
+        ),
+        run_input_sha256=row.get("run_input_sha256") or None,
     )
 
 
@@ -2718,14 +2971,13 @@ def _plot_well_throughput_average_speedup_points(
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
-    from benchmark.reports.cppipe_figures import FIGURE_STYLE
-    from benchmark.reports.cppipe_figures import LINEAR_AXIS_BREAK_POLICY
-    from benchmark.reports.cppipe_figures import SPEEDUP_TARGET
+    from benchmark.reports.cppipe_figures import (
+        FIGURE_STYLE,
+        LINEAR_AXIS_BREAK_POLICY,
+        SPEEDUP_TARGET,
+    )
 
     mode_rows = tuple(
         (
@@ -2938,10 +3190,7 @@ def _plot_well_throughput_ram(
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.ticker import LogLocator
-    from matplotlib.ticker import NullFormatter
-    from matplotlib.ticker import NullLocator
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, NullLocator
 
     from benchmark.reports.cppipe_figures import FIGURE_STYLE
 
@@ -3066,8 +3315,10 @@ def _deterministic_jitter(index: int, count: int) -> float:
 def _replicate_source_binding_workspace_wells(
     metadata_path: Path,
     well_ids: Iterable[str],
+    *,
+    source_well_filter: WellFilterConfig | None = None,
 ) -> tuple[str, ...]:
-    """Replicate one benchmark source workspace without copying source pixels."""
+    """Replicate the declared source-well scope without copying source pixels."""
 
     target_wells = tuple(dict.fromkeys(str(well_id) for well_id in well_ids))
     if not target_wells:
@@ -3083,24 +3334,74 @@ def _replicate_source_binding_workspace_wells(
         raise ValueError(
             f"OpenHCS metadata lacks its main source workspace: {metadata_path}"
         )
-    workspace_mapping = main_metadata.get(FIELDS.WORKSPACE_MAPPING)
-    if not isinstance(workspace_mapping, dict) or not workspace_mapping:
-        raise ValueError(f"OpenHCS metadata lacks source mappings: {metadata_path}")
-    source_metadata = main_metadata.get(FIELDS.SOURCE_METADATA) or {}
-    if not isinstance(source_metadata, dict):
-        raise ValueError(f"OpenHCS source metadata is not a mapping: {metadata_path}")
+    workspace_mapping = VirtualWorkspaceMapping.from_subdirectory(main_metadata)
+    source_projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        main_metadata
+    )
+    if not workspace_mapping.entries or not source_projections.entries:
+        raise ValueError(
+            f"OpenHCS metadata lacks declared source projections: {metadata_path}"
+        )
+    if set(workspace_mapping.entries) != set(source_projections.entries):
+        raise ValueError(
+            "OpenHCS source projections and workspace mappings have different paths."
+        )
+    image_files = main_metadata.get(FIELDS.IMAGE_FILES)
+    if not isinstance(image_files, list) or not set(image_files).issubset(
+        source_projections.entries
+    ):
+        raise ValueError("OpenHCS image files must reference declared projections.")
+
+    available_source_wells = tuple(
+        dict.fromkeys(
+            projection.address.value_for(AllComponents.WELL)
+            for projection in source_projections.entries.values()
+            if projection.address is not None
+        )
+    )
+    if source_well_filter is None or source_well_filter.well_filter is None:
+        selected_source_wells = available_source_wells
+    else:
+        selected_source_wells = tuple(
+            WellFilterProcessor.resolve_filter_with_mode(
+                source_well_filter.well_filter,
+                source_well_filter.well_filter_mode,
+                list(available_source_wells),
+            )
+        )
+    if not selected_source_wells:
+        raise ValueError("Well-throughput source filter selected no source wells.")
+    selected_source_well_keys = set(selected_source_wells)
 
     parser = SourceSchemaFilenameParser()
-    expanded_mapping: dict[str, object] = {}
-    expanded_metadata: dict[str, dict[str, object]] = {}
+    expanded_projection_paths = []
+    expanded_image_files: list[str] = []
     used_paths: set[str] = set()
-    for virtual_path, source_ref in workspace_mapping.items():
-        parsed = parser.parse_filename(str(virtual_path))
+    for virtual_path, projection in source_projections.entries.items():
+        if projection.address is None:
+            raise ValueError(
+                "Well-throughput repetition requires scalar source projections; "
+                f"{virtual_path!r} declares an aggregate source."
+            )
+        if projection.ref != workspace_mapping.require_source_ref(virtual_path):
+            raise ValueError(
+                f"Source projection ref disagrees with workspace mapping: {virtual_path!r}"
+            )
+        if (
+            projection.address.value_for(AllComponents.WELL)
+            not in selected_source_well_keys
+        ):
+            continue
+        parsed = parser.parse_filename(Path(virtual_path).name)
         if parsed is None:
             raise ValueError(f"Cannot parse source-binding path {virtual_path!r}.")
-        path_metadata = source_metadata.get(str(virtual_path), {})
-        if not isinstance(path_metadata, dict):
-            raise ValueError(f"Source metadata for {virtual_path!r} is not a mapping.")
+        if (
+            OpenHCSPlaneAddress.from_component_values(parsed.declared_values())
+            != projection.address
+        ):
+            raise ValueError(
+                f"Source projection address disagrees with virtual path: {virtual_path!r}"
+            )
         for well_id in target_wells:
             site = parsed.required_value(AllComponents.SITE)
             expanded_path = _synthetic_well_virtual_path(
@@ -3121,20 +3422,45 @@ def _replicate_source_binding_workspace_wells(
                 )
                 ordinal_site += 1
             used_paths.add(expanded_path)
-            expanded_mapping[expanded_path] = source_ref
-            expanded_metadata[expanded_path] = dict(
-                with_source_component_metadata(
-                    path_metadata,
-                    AllComponents.WELL,
-                    well_id,
+            expanded_parsed = parser.parse_filename(Path(expanded_path).name)
+            if expanded_parsed is None:
+                raise ValueError(
+                    f"Cannot parse repeated source path {expanded_path!r}."
+                )
+            expanded_address = OpenHCSPlaneAddress.from_component_values(
+                expanded_parsed.declared_values()
+            )
+            expanded_metadata = dict(projection.source_metadata)
+            for component, value in expanded_address.component_values().items():
+                expanded_metadata = with_source_component_metadata(
+                    expanded_metadata, component, value
+                )
+            expanded_projection_paths.append(
+                (
+                    replace(
+                        projection,
+                        address=expanded_address,
+                        source_metadata=expanded_metadata,
+                    ),
+                    expanded_path,
                 )
             )
+            if virtual_path in image_files:
+                expanded_image_files.append(expanded_path)
 
-    main_metadata[FIELDS.IMAGE_FILES] = list(expanded_mapping)
-    main_metadata[FIELDS.WORKSPACE_MAPPING] = expanded_mapping
-    main_metadata[FIELDS.SOURCE_METADATA] = expanded_metadata
+    SourceProjectionSet(
+        tuple(projection for projection, _ in expanded_projection_paths)
+    )
+    main_metadata.update(
+        SourceProjectionMetadataSerializer(parser=parser).projection_fields(
+            tuple(expanded_projection_paths)
+        )
+    )
+    main_metadata[FIELDS.IMAGE_FILES] = expanded_image_files
     main_metadata[FIELDS.WELLS] = {well_id: None for well_id in target_wells}
-    metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    AtomicMetadataWriter().replace_subdirectory_metadata(
+        metadata_path, FIELDS.DEFAULT_SUBDIRECTORY, main_metadata
+    )
     return target_wells
 
 
@@ -3158,21 +3484,6 @@ def _synthetic_well_virtual_path(
 
 def _synthetic_well_ids(count: int) -> tuple[str, ...]:
     return tuple(f"W{index:03d}" for index in range(1, count + 1))
-
-
-def _drain_progress_queue(
-    progress_queue,
-    progress_events: list[dict[str, Any]],
-) -> None:
-    while True:
-        try:
-            item = progress_queue.get(timeout=0.5)
-        except queue.Empty:
-            continue
-        if item is None:
-            return
-        if isinstance(item, dict):
-            progress_events.append(item)
 
 
 def _write_progress_diagnostics(

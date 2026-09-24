@@ -280,6 +280,33 @@ def test_source_location_rejects_unsupported_uri_scheme(tmp_path: Path):
         config.resolved_source_locations(tmp_path)
 
 
+@pytest.mark.parametrize(
+    "location",
+    (
+        r"C:\openhcs-missing-ci-probe\metadata.csv",
+        "C:/openhcs-missing-ci-probe/metadata.csv",
+    ),
+)
+def test_windows_drive_source_paths_are_local_not_uri_schemes(
+    tmp_path: Path, location: str
+) -> None:
+    with pytest.raises(FileNotFoundError, match="Declared source file does not exist"):
+        source_bindings_module.resolve_source_file(location, tmp_path)
+    with pytest.raises(FileNotFoundError, match="Declared source file does not exist"):
+        ImportedMetadataTable(location=location).resolved(tmp_path)
+
+
+def test_imported_metadata_accepts_an_existing_absolute_local_path(
+    tmp_path: Path,
+) -> None:
+    metadata_table = tmp_path / "plate.csv"
+    metadata_table.write_text("Well\nA01\n", encoding="utf-8")
+
+    resolved = ImportedMetadataTable(location=str(metadata_table)).resolved(tmp_path)
+
+    assert resolved.location == str(metadata_table.resolve())
+
+
 def test_imported_metadata_resolves_bare_name_from_explicit_portable_root(
     tmp_path: Path,
 ):

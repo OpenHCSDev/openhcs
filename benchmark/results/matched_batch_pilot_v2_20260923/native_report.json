@@ -1,0 +1,53 @@
+{
+  "startup_seconds": 0.7798496130853891,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0"
+  },
+  "request": {
+    "pipeline_path": "/tmp/openhcs-matched-committed-DucmhE88/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+    "output_root": "/tmp/openhcs-matched-committed-DucmhE88/native",
+    "expected_image_sets": 8,
+    "repetitions": 3,
+    "file_list_path": null
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/tmp/openhcs-matched-committed-DucmhE88/native/-1",
+      "image_set_count": 8,
+      "invocation_seconds": 11.687251181341708,
+      "pre_first_module_seconds": 0.3546244064345956,
+      "first_module_through_post_run_seconds": 11.332626774907112
+    },
+    {
+      "repetition": 0,
+      "output_root": "/tmp/openhcs-matched-committed-DucmhE88/native/0",
+      "image_set_count": 8,
+      "invocation_seconds": 10.384517521597445,
+      "pre_first_module_seconds": 0.0965111842378974,
+      "first_module_through_post_run_seconds": 10.288006337359548
+    },
+    {
+      "repetition": 1,
+      "output_root": "/tmp/openhcs-matched-committed-DucmhE88/native/1",
+      "image_set_count": 8,
+      "invocation_seconds": 10.513902165926993,
+      "pre_first_module_seconds": 0.08760887943208218,
+      "first_module_through_post_run_seconds": 10.42629328649491
+    },
+    {
+      "repetition": 2,
+      "output_root": "/tmp/openhcs-matched-committed-DucmhE88/native/2",
+      "image_set_count": 8,
+      "invocation_seconds": 10.18744618166238,
+      "pre_first_module_seconds": 0.08765149116516113,
+      "first_module_through_post_run_seconds": 10.09979469049722
+    }
+  ]
+}

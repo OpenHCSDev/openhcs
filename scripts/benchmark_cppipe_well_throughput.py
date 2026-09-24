@@ -14,6 +14,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--execution-port",
+        type=int,
+        help=(
+            "Port for a fresh client-owned OpenHCS execution server. "
+            "The run refuses to attach to an existing server."
+        ),
+    )
     parser.add_argument("--case", action="append", dest="case_names")
     parser.add_argument("--wells", type=int, action="append")
     parser.add_argument("--workers", type=int, action="append")
@@ -90,16 +98,16 @@ def main() -> int:
 
     configure_headless_cpu_benchmark_runtime(args.log_level)
 
-    from benchmark.well_throughput_scaling import WELL_THROUGHPUT_ROWS_CSV
-    from benchmark.well_throughput_scaling import WellThroughputBenchmarkPlan
-    from benchmark.well_throughput_scaling import WellThroughputObservationKey
-    from benchmark.well_throughput_scaling import WellThroughputPreset
     from benchmark.well_throughput_scaling import (
+        WELL_THROUGHPUT_ROWS_CSV,
+        WellThroughputBenchmarkPlan,
+        WellThroughputObservationKey,
+        WellThroughputPreset,
+        generate_well_throughput_figures,
         native_execution_baselines_from_summary_csv,
+        read_well_throughput_csv,
+        run_well_throughput_suite,
     )
-    from benchmark.well_throughput_scaling import read_well_throughput_csv
-    from benchmark.well_throughput_scaling import generate_well_throughput_figures
-    from benchmark.well_throughput_scaling import run_well_throughput_suite
     from openhcs.core.config import MultiprocessingStartMethod
 
     try:
@@ -143,14 +151,15 @@ def main() -> int:
         skipped_observations=skipped_observations,
         rerun_missing_memory=args.rerun_missing_memory,
         max_memory_mb=args.max_memory_mb,
+        execution_port=args.execution_port,
     )
     print(f"observations={len(results)}")
     print(f"csv={csv_path}")
     if args.figures:
         figures_output_dir = args.figures_output_dir or args.output_dir / "figures"
         if args.native_summary_csv is not None:
-            from benchmark.reports.cppipe_figures import SummarySource
             from benchmark.reports.cppipe_figures import (
+                SummarySource,
                 generate_cppipe_benchmark_figures,
             )
 

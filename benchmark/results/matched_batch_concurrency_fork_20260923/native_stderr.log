@@ -1,0 +1,17 @@
+<frozen importlib._bootstrap>:228: RuntimeWarning: During parsing environment variable 'NPY_DISABLE_CPU_FEATURES':
+You cannot disable CPU features (X86_V4), since they are not part of the dispatched optimizations
+(SSSE3 SSE41 POPCNT SSE42 AVX F16C FMA3 AVX2 AVX512F AVX512CD AVX512_KNL AVX512_KNM AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL).
+<frozen importlib._bootstrap>:228: RuntimeWarning: During parsing environment variable 'NPY_DISABLE_CPU_FEATURES':
+You cannot disable CPU features (AVX512_SKX), since they are not supported by your machine.
+ERROR:root:Unable to decode object measurement. You may find bytes in your output sheet.
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:1084: RuntimeWarning: invalid value encountered in divide
+  C2 = numpy.array(
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:982: RuntimeWarning: invalid value encountered in divide
+  scipy.ndimage.sum(
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:991: RuntimeWarning: invalid value encountered in divide
+  (
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/cellprofiler/modules/measurecolocalization.py:1002: RuntimeWarning: invalid value encountered in divide
+  scipy.ndimage.sum(
+ERROR:root:Unable to decode object measurement. You may find bytes in your output sheet.
+ERROR:root:Unable to decode object measurement. You may find bytes in your output sheet.
+ERROR:root:Unable to decode object measurement. You may find bytes in your output sheet.

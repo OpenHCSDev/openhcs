@@ -70,7 +70,7 @@ import openhcs.processing.backends.cellprofiler.thresholding as thresholding_bac
 from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization,
     measure_colocalization_objects,
-    _divide_costes_measurements,
+    _divide_measurements,
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationCostesThresholdBatch,
@@ -83,6 +83,9 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization_objects_batch,
     object_colocalization_threshold_reductions,
     thresholded_colocalization_metrics,
+)
+from openhcs.processing.backends.cellprofiler.colocalization_costes import (
+    _cellprofiler_mean_variance_float32,
 )
 from openhcs.processing.backends.cellprofiler.morphology import opening
 from openhcs.processing.backends.cellprofiler.outlines import (
@@ -969,12 +972,47 @@ def test_dilate_objects_rejects_volumetric_structuring_element_for_2d_labels():
 
 
 def test_measure_colocalization_object_costes_preserves_undefined_ratios():
-    ratios = _divide_costes_measurements([0.0, 2.0], [0.0, 4.0])
+    ratios = _divide_measurements([0.0, 2.0], [0.0, 4.0])
     metrics = ObjectColocalizationMetricArrays.empty(1)
     metrics.costes_m1[0], metrics.costes_m2[0] = ratios
     row = next(iter(metrics.rows_for(np.asarray((1,), dtype=np.int32))))
     assert np.isnan(row.costes_m1)
     assert row.costes_m2 == 0.5
+
+
+def test_measure_colocalization_objects_preserves_undefined_threshold_ratios():
+    # Native MeasureColocalization divides each object's threshold reductions
+    # once any object has qualifying pixels. A zero-denominator object is NaN,
+    # not a measured zero, so exported image means omit it.
+    image = np.stack(
+        (
+            np.array([[1.0, 2.0], [0.0, 0.0]], dtype=np.float32),
+            np.array([[2.0, 1.0], [0.0, 0.0]], dtype=np.float32),
+        )
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(
+            labels=np.array([[1, 1], [2, 2]], dtype=np.int32)
+        )
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_costes=False,
+    )
+    first, second = tuple(rows)
+    assert np.isfinite(first.overlap)
+    assert np.isfinite(first.k1)
+    assert np.isfinite(first.k2)
+    assert np.isnan(second.overlap)
+    assert np.isnan(second.k1)
+    assert np.isnan(second.k2)
+    assert np.isnan(second.manders_m1)
+    assert np.isnan(second.manders_m2)
+    assert np.isnan(second.rwc1)
+    assert np.isnan(second.rwc2)
 
 
 def test_object_costes_threshold_boundary_uses_native_operators():
@@ -994,6 +1032,58 @@ def test_object_costes_threshold_boundary_uses_native_operators():
     assert total_second_costes[0] == 5.0
     assert costes_sum1[0] == 3.0
     assert costes_sum2[0] == 3.0
+
+
+def test_object_costes_without_jointly_qualifying_pixels_keeps_native_zero():
+    image = np.zeros((2, 1, 2), dtype=np.float32)
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones((1, 2), dtype=np.int32))
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_manders=False,
+        do_rwc=False,
+        do_overlap=False,
+        costes_thresholds=ColocalizationCostesThresholds.from_thresholds(0.0, 0.0),
+    )
+
+    (row,) = tuple(rows)
+    assert row.costes_m1 == 0.0
+    assert row.costes_m2 == 0.0
+
+
+def test_object_costes_preserves_undefined_object_when_another_qualifies():
+    image = np.asarray(
+        (
+            ((1.0, 1.0, 0.0, 0.0),),
+            ((1.0, 1.0, 0.0, 0.0),),
+        ),
+        dtype=np.float32,
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(
+            labels=np.asarray(((1, 1, 2, 2),), dtype=np.int32)
+        )
+    )
+
+    _output, rows = measure_colocalization_objects.__wrapped__(
+        image,
+        labels,
+        do_correlation=False,
+        do_manders=False,
+        do_rwc=False,
+        do_overlap=False,
+        costes_thresholds=ColocalizationCostesThresholds.from_thresholds(0.0, 0.0),
+    )
+
+    first, second = tuple(rows)
+    assert first.costes_m1 == 1.0
+    assert first.costes_m2 == 1.0
+    assert np.isnan(second.costes_m1)
+    assert np.isnan(second.costes_m2)
 
 
 def test_object_costes_thresholds_are_compared_in_pixel_dtype():
@@ -1466,6 +1556,44 @@ def test_measure_colocalization_faster_costes_matches_native_extracted_vectors(
         255,
     )
     assert observed_thresholds == expected_thresholds
+
+
+def test_faster_costes_preserves_native_float32_threshold_comparison() -> None:
+    """Native CellProfiler compares its float32 pixels at float32 thresholds."""
+    rng = np.random.default_rng(2)
+    first_codes = rng.integers(0, 650, size=4096, dtype=np.uint16)
+    noise = rng.integers(-200, 201, size=4096, dtype=np.int32)
+    second_codes = np.clip(first_codes.astype(np.int32) * 2 + noise, 0, 2000)
+    first = first_codes.astype(np.float32) / np.float32(65535.0)
+    second = second_codes.astype(np.float32) / np.float32(65535.0)
+
+    observed = costes_backend().scaled_second_channel_costes(first, second, 65535)
+
+    # Captured from CellProfiler 4.2.8.1 on NumPy 1.24.4 for these same arrays.
+    assert observed[0] == 0.001083390554665446
+    assert observed[1] == pytest.approx(0.001717834549060869, abs=1e-8)
+
+
+def test_faster_costes_preserves_native_float32_reduction_order() -> None:
+    """The native NumPy 1.24 reduction must survive later NumPy releases."""
+
+    indices = np.arange(361_920, dtype=np.int64)
+    first_codes = ((indices * 151 + 7) % 8192).astype(np.float32)
+    second_codes = np.clip(
+        2 * first_codes + ((indices * 37 + 3) % 401) - 200,
+        0,
+        16383,
+    ).astype(np.float32)
+    first = first_codes / np.float32(65535)
+    second = second_codes / np.float32(65535)
+
+    mean, variance = _cellprofiler_mean_variance_float32(first)
+    observed = costes_backend().scaled_second_channel_costes(first, second, 65535)
+
+    # Captured from CellProfiler 4.2.8.1 with NumPy 1.24.4 on these arrays.
+    assert np.float32(mean).view(np.uint32) == 0x3D7FF705
+    assert np.float32(variance).view(np.uint32) == 0x3AAAAD4D
+    assert observed == (0.0008850232700083925, 0.0017297637983499296)
 
 
 def test_measure_colocalization_respects_masked_payload_pixels():

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import sys
+import tempfile
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
@@ -143,13 +145,37 @@ class ComparisonSuiteRunReceipt(ComparisonSuiteRunDeclaration):
     def write(self, path: Path) -> None:
         """Atomically serialize this receipt through OpenHCS JSON projection."""
 
+        contents = self._json_contents()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pending_path = path.with_name(f".{path.name}.pending")
+        pending_path.write_text(contents, encoding="utf-8")
+        pending_path.replace(path)
+
+    def write_new(self, path: Path) -> None:
+        """Exclusively claim one run directory with its first typed receipt."""
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pending_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=path.parent,
+                prefix=f".{path.name}.",
+                suffix=".pending",
+                delete=False,
+            ) as pending:
+                pending_path = Path(pending.name)
+                pending.write(self._json_contents())
+                pending.flush()
+                os.fsync(pending.fileno())
+            os.link(pending_path, path)
+        finally:
+            if pending_path is not None:
+                pending_path.unlink(missing_ok=True)
+
+    def _json_contents(self) -> str:
         payload = to_jsonable(self)
         if not isinstance(payload, Mapping):
             raise TypeError("Comparison-suite receipt projection must be an object.")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        pending_path = path.with_name(f".{path.name}.pending")
-        pending_path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
-        pending_path.replace(path)
+        return json.dumps(payload, indent=2, sort_keys=True)

@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "1f118a786ec1604f982e3eda83738e1553b44127d490e681302c856b32647735",
+    "source_sha256": "1a600010deb7ddc3fe141b5efe3528bbe4a4e119846157e935e56784628445ed",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -32,7 +32,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
+        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
         "role": "Owns compile-time resolution across selected axes and construction of the execution bundle."
       },
       {
@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "f1be700e228f38929f5a35168d53c60c6f217415bbd76031f328d71d18aa25d0",
+        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -77,27 +77,27 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
         "role": "Owns the installed registry-derived benchmark execution and report command surface."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
         "role": "Owns typed run provenance, lifecycle status, exact rerun arguments, and receipt validation."
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "898d5639e8b53b5c04cd28f93c5cddd8b9388a5f79177f85ec80f9bbc7c74131",
+        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
         "role": "Declares the typed benchmark inspection request and result exposed through MCP."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
+        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
@@ -137,7 +137,12 @@
       "2026-09-16: Re-read the complete project README against package metadata, benchmark contracts/control, capability declarations, context composition, and focused tests. Added a bounded operator note identifying the installed CLI and expert read-only inspection tool, explicitly excluding launch, resume, cancellation, rerun, and scientific parity claims. Focused benchmark/control tests and README documentation validation passed.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/artifacts.py`, `openhcs/core/viewer_streaming_service.py`, `openhcs/agent/capabilities.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
       "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
+      "2026-09-22: Targeted headless observation-export authority review; see docs/audits/headless_observation_export_review_20260922.md. Live-server and fresh installed-client evidence remain separate.",
+      "2026-09-22: Re-read the complete page against the ordinary value-or-outcome export change, benchmark wrapper and affected tests; reviewed the page's Diátaxis need, ownership, accuracy, and claim boundary. Findings and local proof are recorded in docs/audits/benchmark_outcome_scope_review_20260922.md. Fresh installed-wheel CI is a separate gate.",
+      "2026-09-22: Targeted review of the public benchmark paragraph after inspect-run joined the registered CLI and artifact paging became a shared request contract. The README retains the inspect-only and scientific-evidence boundaries; 28 focused control tests passed, while fresh installed-wheel CI remains separate.",
+      "2026-09-23: Re-read the public overview after adding the read-only expert comparison report and occupied-destination guard. No MCP suite submission or scientific speedup is claimed; see benchmark_report_and_run_claim_review_20260923.md."
     ]
   }
 ]

@@ -1,0 +1,138 @@
+[
+  {
+    "startup_seconds": 0.7217500479891896,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0"
+    },
+    "request": {
+      "pipeline_path": "/tmp/openhcs-matched-final-fJcgfF/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+      "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/0",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": null,
+      "first_image_set": 1,
+      "last_image_set": 4,
+      "report_path": null
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/0/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 6.191611006855965,
+        "pre_first_module_seconds": 0.3420199854299426,
+        "first_module_through_post_run_seconds": 5.849591021426022,
+        "invocation_started_monotonic_seconds": 4526285.288230835,
+        "first_module_started_monotonic_seconds": 4526285.630250821,
+        "completed_monotonic_seconds": 4526291.479841842
+      },
+      {
+        "repetition": 0,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/0/0",
+        "image_set_count": 4,
+        "invocation_seconds": 5.435697433538735,
+        "pre_first_module_seconds": 0.09576923120766878,
+        "first_module_through_post_run_seconds": 5.339928202331066,
+        "invocation_started_monotonic_seconds": 4526291.47986162,
+        "first_module_started_monotonic_seconds": 4526291.575630851,
+        "completed_monotonic_seconds": 4526296.915559053
+      },
+      {
+        "repetition": 1,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/0/1",
+        "image_set_count": 4,
+        "invocation_seconds": 5.196041001938283,
+        "pre_first_module_seconds": 0.10354464035481215,
+        "first_module_through_post_run_seconds": 5.092496361583471,
+        "invocation_started_monotonic_seconds": 4526296.915576065,
+        "first_module_started_monotonic_seconds": 4526297.019120705,
+        "completed_monotonic_seconds": 4526302.111617067
+      },
+      {
+        "repetition": 2,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/0/2",
+        "image_set_count": 4,
+        "invocation_seconds": 5.225071607157588,
+        "pre_first_module_seconds": 0.08522708155214787,
+        "first_module_through_post_run_seconds": 5.13984452560544,
+        "invocation_started_monotonic_seconds": 4526302.111629109,
+        "first_module_started_monotonic_seconds": 4526302.19685619,
+        "completed_monotonic_seconds": 4526307.336700716
+      }
+    ]
+  },
+  {
+    "startup_seconds": 0.7337556406855583,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0"
+    },
+    "request": {
+      "pipeline_path": "/tmp/openhcs-matched-final-fJcgfF/native_preparation/native_cellprofiler_headless/Translocation_final.cppipe",
+      "input_dir": "/tmp/openhcsnativecellprofiler/jmgckfedifcnhidd/input",
+      "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/1",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": null,
+      "first_image_set": 5,
+      "last_image_set": 8,
+      "report_path": null
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/1/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 6.361913600936532,
+        "pre_first_module_seconds": 0.36888833437114954,
+        "first_module_through_post_run_seconds": 5.9930252665653825,
+        "invocation_started_monotonic_seconds": 4526285.323379228,
+        "first_module_started_monotonic_seconds": 4526285.692267562,
+        "completed_monotonic_seconds": 4526291.685292829
+      },
+      {
+        "repetition": 0,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/1/0",
+        "image_set_count": 4,
+        "invocation_seconds": 5.153539936989546,
+        "pre_first_module_seconds": 0.10176319535821676,
+        "first_module_through_post_run_seconds": 5.051776741631329,
+        "invocation_started_monotonic_seconds": 4526291.685315933,
+        "first_module_started_monotonic_seconds": 4526291.787079128,
+        "completed_monotonic_seconds": 4526296.83885587
+      },
+      {
+        "repetition": 1,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/1/1",
+        "image_set_count": 4,
+        "invocation_seconds": 4.9096410991624,
+        "pre_first_module_seconds": 0.10492095723748207,
+        "first_module_through_post_run_seconds": 4.804720141924918,
+        "invocation_started_monotonic_seconds": 4526296.838867172,
+        "first_module_started_monotonic_seconds": 4526296.943788129,
+        "completed_monotonic_seconds": 4526301.748508271
+      },
+      {
+        "repetition": 2,
+        "output_root": "/tmp/openhcs-matched-final-fJcgfF/native_shards/1/2",
+        "image_set_count": 4,
+        "invocation_seconds": 4.76491532754153,
+        "pre_first_module_seconds": 0.08914133440703154,
+        "first_module_through_post_run_seconds": 4.675773993134499,
+        "invocation_started_monotonic_seconds": 4526301.748522528,
+        "first_module_started_monotonic_seconds": 4526301.837663863,
+        "completed_monotonic_seconds": 4526306.513437856
+      }
+    ]
+  }
+]

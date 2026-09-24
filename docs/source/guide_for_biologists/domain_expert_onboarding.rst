@@ -147,8 +147,9 @@ to distinguish current examples from older migration/reference scripts.
 For a reviewed comparison run, maintainers can use the packaged
 ``openhcs-benchmark`` command. An agent using the expert ``full`` MCP surface
 can inspect the receipt, progress, rerun invocation, and structured artifacts
-of an existing readable run directory. That inspection is read-only and does
-not start, resume, cancel, or establish the scientific validity of a run.
+of an existing readable run directory or request a bounded report of its
+typed observations. Those routes are read-only and do not start, resume,
+cancel, or establish the scientific validity of a run.
 
 Practical Search Terms
 ----------------------

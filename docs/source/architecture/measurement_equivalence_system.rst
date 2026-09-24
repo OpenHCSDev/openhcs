@@ -98,6 +98,75 @@ remain diagnostic only and must not be reported as canonical acceptance timing.
 Compared modalities and policy
 ------------------------------
 
+Measurement of an OpenHCS run is separate from CellProfiler comparison. The
+benchmark wrapper accepts the ordinary ``OpenHCSExecutionSubmission`` and uses
+the normal compile-then-execute path. It requests either full runtime values or
+outcome-only evidence through the ordinary auxiliary execution declaration,
+validates the selected export and any declared axis count, and records phase
+timing and provenance. Outcome-only evidence proves per-axis completion and
+retains contract-owned file-export paths without internal runtime values. A
+value-equivalence claim still requires a separate comparison of the retained
+exported files; the outcome receipt alone does not establish it.
+Current exports also retain the compiler's exact axis membership: a missing
+compiled axis or an outcome for an uncompiled axis invalidates the run even if
+every retained outcome reports success. The measured-run finaliser refuses an
+empty execution. Archived outcome-only exports that predate this membership
+field remain readable, but their observed axes alone cannot prove complete
+compiled coverage and cannot be finalised as a new success receipt.
+Repeated measurements can share one connected ordinary execution server while
+each run compiles its own artifact and retains a distinct observation and
+receipt. The benchmark does not create a second execution path to keep that
+server warm.
+
+Full-value observation expectations retain the compiled axis that owns each
+artifact kind. A plate-scoped export is checked on its one owning axis rather
+than required independently on every image axis. Archived observation exports
+keep their earlier all-axis expectation when read.
+
+A typed completed-run receipt derives execution identity, source/configuration
+digests, runtime-observation and execution-summary digests, and output references
+from those same authorities. Archived receipts without the latter two digests
+remain readable, but inspection cannot verify those retained files;
+it does not become a second job-status store. The ordinary server's runtime
+observation supplies its Python and installed-distribution snapshot to the
+receipt; that is server provenance, not proof of a remote worker environment.
+The CellProfiler adapter prepares one such submission and then applies its
+optional native-reference equivalence policy. It does not own a second execution
+engine.
+An agent can finalise the same receipt after a normal headless job completes:
+the execution service supplies the exact submission, endpoint handshake and
+server completion record, while the benchmark extension validates and retains
+the observation. Both ordinary export scopes carry the producing server
+execution ID. The shared finaliser rejects an export from a different job
+before writing a success receipt; the runtime export writer also refuses to
+replace an existing file. The benchmark finaliser publishes each evidence file
+completely and exclusively, so competing finalisers cannot replace one
+another's retained evidence. This protects individual files, not the entire
+group of files as one transaction. It records the server's start/end time as
+``SERVER_PIPELINE_JOB`` and retains the submitted compile-artifact identity,
+because an ordinary execution request without one may include inline
+compilation. The synchronous wrapper may additionally record client submit/wait
+phases and an execution-specific interval from progress events. The completed
+server job, not progress events, supplies the execution-only duration. A missing
+progress event leaves that diagnostic interval absent; client wait time is not
+used to guess it. Server, progress, and client wait intervals overlap, so
+additive phase totals count the client submit/wait phases but not their nested
+server or progress observations.
+
+If finalisation stops between evidence files, inspection derives the
+``unreceipted_artifacts`` list from the measured-artifact declarations. Their
+presence is reported separately from a valid success receipt; no partial
+directory is promoted to a completed measurement. Retrying finalisation for
+the same completed job can reuse only byte-identical pre-receipt files. The
+finaliser writes missing files, rechecks the declared set, and then publishes
+the receipt. Conflicting files or an existing receipt fail closed.
+Inspection derives ``retained_evidence_valid`` from the receipt, both source snapshots,
+and the retained observation and summary digests. An archived receipt without
+those digests, or a file changed after finalisation, remains inspectable but
+cannot yield verified retained evidence.
+This flag does not certify the pipeline's image or table outputs; the
+comparison/output evidence owns those checks.
+
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:
 
@@ -133,7 +202,8 @@ The runner emits ``observations.jsonl``, ``observations.csv``,
 record case/suite identity, success, equivalence, difference count, numeric
 tolerances, output paths, timing, platform, and native-reference root. They do
 not currently record every source identity required for a durable publication
-claim.
+claim. A comparison run requires a new or empty destination and exclusively
+claims its first typed receipt rather than replacing another run's evidence.
 
 Retain the generated files together with a receipt containing at least:
 
@@ -151,6 +221,10 @@ Retain the generated files together with a receipt containing at least:
 recorded invocation, or a compatibility-matrix report is not a durable parity
 receipt. If Napari cases are closed by targeted reruns, report that topology
 explicitly rather than describing it as one uninterrupted all-case run.
+The separate single-pipeline measured-run receipt retains the submitted pipeline
+and global-configuration source documents alongside their digests, and checks
+the retained runtime observation and execution summary by digest. It is still
+not a native-reference comparison or a suite-level publication receipt by itself.
 
 Extension rule
 --------------

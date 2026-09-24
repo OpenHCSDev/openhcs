@@ -23,6 +23,7 @@ from benchmark.cellprofiler_comparison import (
 from benchmark.datasets.visible_source import resolve_visible_source_path
 from benchmark.metrics.memory import MemoryMetric
 from benchmark.metrics.time import TimeMetric
+from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
 
 JOB_ROWS_CSV = "throughput_jobs.csv"
 BATCH_ROWS_CSV = "throughput_batches.csv"
@@ -382,8 +383,10 @@ def _run_openhcs_throughput_job(spec: ThroughputJobSpec) -> ThroughputJobResult:
             replica=spec.replica,
             success=result.success,
             equivalent=equivalent,
-            execution_seconds=phase_seconds.get("EXECUTE_OPENHCS"),
-            total_phase_seconds=sum(phase_seconds.values()) if phase_seconds else None,
+            execution_seconds=phase_seconds.get(
+                BenchmarkPhase.SERVER_PIPELINE_JOB.name
+            ),
+            total_phase_seconds=additive_phase_total_seconds(phase_seconds),
             peak_memory_mb=_optional_float(result.metrics.get("peak_memory_mb")),
             difference_count=(
                 int(difference_count) if difference_count is not None else None

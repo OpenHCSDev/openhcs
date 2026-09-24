@@ -142,6 +142,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.processing.backends.cellprofiler.colocalization_costes import (
     UnitIntervalDenseRankSemantics,
+    _cellprofiler_mean_variance_float32,
     _correlation_slopes_numba,
     _costes_manders_numba,
     _linear_costes_numba,
@@ -1303,28 +1304,57 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
     def scaled_second_channel_costes(
         self, first_pixels: np.ndarray, second_pixels: np.ndarray, scale_max: int
     ) -> tuple[float, float]:
-        first = np.ascontiguousarray(first_pixels, dtype=np.float64)
-        second = np.ascontiguousarray(second_pixels, dtype=np.float64)
+        # CellProfiler retains the pixel dtype through its threshold search.
+        # Promoting float32 pixels to float64 changes membership at quantized
+        # boundaries and can select a different Costes threshold entirely.
+        first = np.ascontiguousarray(first_pixels)
+        second = np.ascontiguousarray(second_pixels)
         non_zero = (first > 0.0) | (second > 0.0)
         first_non_zero = first[non_zero]
         second_non_zero = second[non_zero]
-        first_variance = np.var(first_non_zero, axis=0, ddof=1)
-        second_variance = np.var(second_non_zero, axis=0, ddof=1)
-        first_mean = np.mean(first_non_zero, axis=0)
-        second_mean = np.mean(second_non_zero, axis=0)
-        summed_variance = np.var(
-            first_non_zero + second_non_zero,
-            axis=0,
-            ddof=1,
-        )
-        covariance = 0.5 * (summed_variance - (first_variance + second_variance))
-        variance_delta = second_variance - first_variance
+        if (
+            first.dtype == np.float32
+            and second.dtype == np.float32
+            and first_non_zero.size > 1
+        ):
+            first_mean, first_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(first_non_zero)
+            )
+            second_mean, second_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(second_non_zero)
+            )
+            _, summed_variance = _cellprofiler_mean_variance_float32(
+                np.ascontiguousarray(first_non_zero + second_non_zero)
+            )
+            # CellProfiler's NumPy 1.24 promoted Python scalars only after
+            # float32 array reductions. NumPy 2.x changed that scalar rule.
+            covariance = 0.5 * float(
+                np.float32(
+                    summed_variance - np.float32(first_variance + second_variance)
+                )
+            )
+            variance_delta = np.float32(second_variance - first_variance)
+            variance_delta_squared = float(np.float32(variance_delta * variance_delta))
+            first_mean = float(first_mean)
+            second_mean = float(second_mean)
+            variance_delta = float(variance_delta)
+        else:
+            first_variance = np.var(first_non_zero, axis=0, ddof=1)
+            second_variance = np.var(second_non_zero, axis=0, ddof=1)
+            first_mean = np.mean(first_non_zero, axis=0)
+            second_mean = np.mean(second_non_zero, axis=0)
+            summed_variance = np.var(
+                first_non_zero + second_non_zero,
+                axis=0,
+                ddof=1,
+            )
+            covariance = 0.5 * (summed_variance - (first_variance + second_variance))
+            variance_delta = second_variance - first_variance
+            variance_delta_squared = variance_delta * variance_delta
         with np.errstate(divide="ignore", invalid="ignore"):
             slope = (
                 variance_delta
-                + np.sqrt(
-                    variance_delta * variance_delta + 4.0 * covariance * covariance
-                )
+                + np.sqrt(variance_delta_squared + 4.0 * covariance * covariance)
             ) / (2.0 * covariance)
         intercept = second_mean - slope * first_mean
 
@@ -1340,8 +1370,8 @@ class NumbaNumpyColocalizationCostesBackendStrategy(
             count, correlation = _pearson_below_threshold_numba(
                 first,
                 second,
-                first_threshold,
-                second_threshold,
+                first.dtype.type(first_threshold),
+                second.dtype.type(second_threshold),
             )
             if count <= 2:
                 left = mid - 1
@@ -2007,6 +2037,7 @@ class ObjectColocalizationThresholdStage:
     threshold_2: np.ndarray
     threshold_counts: np.ndarray
     combined_threshold_has_values: bool
+    combined_costes_has_values: bool
     total_first_threshold: np.ndarray
     total_second_threshold: np.ndarray
     threshold_sum1: np.ndarray
@@ -2074,6 +2105,7 @@ class ObjectColocalizationThresholdStage:
                 threshold_sum2_sq,
                 threshold_product_sum,
                 threshold_counts,
+                combined_costes_has_values,
                 total_first_costes,
                 total_second_costes,
                 costes_sum1,
@@ -2098,6 +2130,7 @@ class ObjectColocalizationThresholdStage:
             threshold_sum2_sq = empty.copy()
             threshold_product_sum = empty.copy()
             threshold_counts = empty.copy()
+            combined_costes_has_values = False
             total_first_costes = empty.copy()
             total_second_costes = empty.copy()
             costes_sum1 = empty.copy()
@@ -2107,6 +2140,7 @@ class ObjectColocalizationThresholdStage:
             threshold_2=threshold_2,
             threshold_counts=threshold_counts,
             combined_threshold_has_values=bool(np.any(threshold_counts > 0.0)),
+            combined_costes_has_values=combined_costes_has_values,
             total_first_threshold=total_first_threshold,
             total_second_threshold=total_second_threshold,
             threshold_sum1=threshold_sum1,
@@ -2298,12 +2332,16 @@ def _populate_object_costes_metrics(
     threshold: ObjectColocalizationThresholdStage,
     metrics: ObjectColocalizationMetricArrays,
 ) -> None:
-    if not (options.do_costes and base.full_first_pixels.size):
+    if not (
+        options.do_costes
+        and base.full_first_pixels.size
+        and threshold.combined_costes_has_values
+    ):
         return
-    metrics.costes_m1 = _divide_costes_measurements(
+    metrics.costes_m1 = _divide_measurements(
         threshold.costes_sum1, threshold.total_first_costes
     )
-    metrics.costes_m2 = _divide_costes_measurements(
+    metrics.costes_m2 = _divide_measurements(
         threshold.costes_sum2, threshold.total_second_costes
     )
 
@@ -3230,15 +3268,6 @@ measure_colocalization_objects.__openhcs_prepare__ = (
 
 
 def _divide_measurements(numerator: object, denominator: object) -> np.ndarray:
-    numerator_array = np.asarray(numerator, dtype=float)
-    denominator_array = np.asarray(denominator, dtype=float)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        result = numerator_array / denominator_array
-    result[~np.isfinite(result)] = 0
-    return result
-
-
-def _divide_costes_measurements(numerator: object, denominator: object) -> np.ndarray:
     numerator_array = np.asarray(numerator, dtype=float)
     denominator_array = np.asarray(denominator, dtype=float)
     with np.errstate(divide="ignore", invalid="ignore"):

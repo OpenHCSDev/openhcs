@@ -3,11 +3,23 @@ from openhcs.runtime.zmq_orchestrator_environment import (
 )
 
 
-def test_pycodified_execution_initializes_from_source_plate_path():
+def test_pycodified_execution_initializes_from_explicit_prepared_plate_path():
     request = ZMQOrchestratorEnvironmentRequest(
         execution_id="exec-1",
         plate_id="/tmp/source-plate",
         execution_plate_id="/tmp/new-output-plate",
+        selected_pipeline_path=None,
+        debug_execution_config=None,
+    )
+
+    assert request.prepared_plate_path({}) == "/tmp/new-output-plate"
+
+
+def test_pycodified_execution_defaults_to_source_plate_without_preparation():
+    request = ZMQOrchestratorEnvironmentRequest(
+        execution_id="exec-1",
+        plate_id="/tmp/source-plate",
+        execution_plate_id=None,
         selected_pipeline_path=None,
         debug_execution_config=None,
     )

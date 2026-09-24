@@ -688,6 +688,7 @@ class PipelineCompiler:
             has_explicit_output = any(
                 output.materialization is not None
                 and output.materialization.participates_in_persistent_materialization()
+                and output.materialization.participates_in_runtime_export_observation()
                 for output in step_plan.artifact_outputs.values()
             )
             if globally_enabled or has_explicit_output:
