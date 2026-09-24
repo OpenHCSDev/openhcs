@@ -910,7 +910,7 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "9cabb87dec2c865d2fddd3babe298b200e2830ae6dd0bfe5a26afa8b8ad9bf1c",
+        "sha256": "1fbdc008937e3a043cf077e2243b40f6a0efba34d9166716c423af9b85445684",
         "role": "Declares the typed public job status and delegates terminal semantics to the generic lifecycle declaration."
       },
       {
@@ -2612,7 +2612,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
+        "sha256": "7f493e0cb305e14ee4cf7d3e995c67df4200186a8a8aaf00eef0bc66d8d191cf",
         "role": "Owns nominal gallery scenario identity, publication targets, representative images, copy, accessibility text, dimensions, contextual and stable-window capture targets, and derivative contracts."
       },
       {
@@ -2869,7 +2869,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
+        "sha256": "7f493e0cb305e14ee4cf7d3e995c67df4200186a8a8aaf00eef0bc66d8d191cf",
         "role": "Owns the nominal gallery scenario lattice, stable-window and contextual capture targets, publication targets, derivative inventory, source evidence, card rendering, and generated release record."
       },
       {
@@ -3027,7 +3027,7 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "9cabb87dec2c865d2fddd3babe298b200e2830ae6dd0bfe5a26afa8b8ad9bf1c",
+        "sha256": "1fbdc008937e3a043cf077e2243b40f6a0efba34d9166716c423af9b85445684",
         "role": "Declares the public typed execution status and progress observation result."
       },
       {
