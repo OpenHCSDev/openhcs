@@ -405,7 +405,12 @@ class ArtifactMaterializationBackendPlan:
                     f"context values: {sorted(conflicts)!r}."
                 )
             values.update(contextual_values)
-            result[backend] = RawBackendKwargs(values)
+            result[backend] = RawBackendKwargs(
+                values,
+                tiff_config=(
+                    kwargs.tiff_config if isinstance(kwargs, RawBackendKwargs) else None
+                ),
+            )
 
         streamable_viewer_surfaces = self.streamable_viewer_surfaces(
             filemanager=filemanager,
@@ -496,7 +501,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
             )
         )
         return ArtifactMaterializationBackendPlan(
-            persistent_backend_kwargs=self.persistent_backend_kwargs(),
+            persistent_backend_kwargs=self.persistent_backend_kwargs(context),
             streaming_viewer_surfaces=(
                 {
                     config.backend.value: config.streaming_viewer_surface(context)
@@ -514,7 +519,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         )
 
     @abstractmethod
-    def persistent_backend_kwargs(self) -> BackendKwargs:
+    def persistent_backend_kwargs(self, context: "ProcessingContext") -> BackendKwargs:
         """Return persistent materialization backends owned by this policy."""
 
 
@@ -525,8 +530,14 @@ class PersistentArtifactMaterializationTargetPlan(ArtifactMaterializationTargetP
     target_key = "persistent"
     backend: str
 
-    def persistent_backend_kwargs(self) -> BackendKwargs:
-        return {self.backend: RawBackendKwargs()}
+    def persistent_backend_kwargs(self, context: "ProcessingContext") -> BackendKwargs:
+        return {
+            self.backend: RawBackendKwargs(
+                tiff_config=(
+                    context.tiff_config if self.backend == Backend.DISK.value else None
+                ),
+            )
+        }
 
 
 class StreamingOnlyArtifactMaterializationTargetPlan(ArtifactMaterializationTargetPlan):
@@ -534,7 +545,7 @@ class StreamingOnlyArtifactMaterializationTargetPlan(ArtifactMaterializationTarg
 
     target_key = "streaming_only"
 
-    def persistent_backend_kwargs(self) -> BackendKwargs:
+    def persistent_backend_kwargs(self, context: "ProcessingContext") -> BackendKwargs:
         return {}
 
 

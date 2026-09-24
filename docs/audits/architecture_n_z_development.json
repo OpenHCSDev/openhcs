@@ -220,7 +220,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
+        "sha256": "843e994d7b16592f43a15ce36c33a51ead534cf22df792838ce2b800621114b7",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
@@ -250,7 +250,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
         "role": "Owns explicit release of the context-local image-stack cache without discarding observations."
       },
       {
@@ -290,7 +290,7 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
+        "sha256": "843e994d7b16592f43a15ce36c33a51ead534cf22df792838ce2b800621114b7",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
@@ -512,7 +512,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -572,7 +572,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
         "role": "Owns the compiled multiprocessing-axis identity carried by each runtime context."
       },
       {
@@ -822,7 +822,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Pipeline, global, step, processing, and source configuration declarations."
       },
       {
@@ -1020,7 +1020,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "1372625f3d7dc04cf6822a1887871dfa9a149b2313df7d7acefd452a6ad0f932",
+        "sha256": "1f5a89a1eb50766ef093df3fece16d6bb03422b92d062fe8ae6471656b1ebd45",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {
@@ -1408,7 +1408,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1646,7 +1646,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1719,7 +1719,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -2612,7 +2612,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "e6516488d7024771c35faf1a25d3ec3abc3b2f21830a8b318c9665d9469c5c0a",
+        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
         "role": "Owns nominal gallery scenario identity, publication targets, representative images, copy, accessibility text, dimensions, contextual and stable-window capture targets, and derivative contracts."
       },
       {
@@ -2659,7 +2659,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2763,7 +2763,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2811,7 +2811,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2869,7 +2869,7 @@
       },
       {
         "path": "scripts/gallery_catalog.py",
-        "sha256": "e6516488d7024771c35faf1a25d3ec3abc3b2f21830a8b318c9665d9469c5c0a",
+        "sha256": "bda42a36c1c510af7ac587dc2642548758d28c4a0061d581ebe38a5be4fb3743",
         "role": "Owns the nominal gallery scenario lattice, stable-window and contextual capture targets, publication targets, derivative inventory, source evidence, card rendering, and generated release record."
       },
       {
@@ -3521,7 +3521,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3712,7 +3712,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

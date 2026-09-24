@@ -574,6 +574,7 @@ class PipelineOrchestrator:
                 effective_config.analysis_consolidation_config
             ),
             plate_metadata_config=effective_config.plate_metadata_config,
+            tiff_config=effective_config.tiff_config,
             auto_add_output_plate_to_plate_manager=(
                 effective_config.auto_add_output_plate_to_plate_manager
             ),

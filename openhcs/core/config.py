@@ -69,6 +69,7 @@ ZlibZarrCompressorFactory = _polystore_config.ZlibZarrCompressorFactory
 Lz4ZarrCompressorFactory = _polystore_config.Lz4ZarrCompressorFactory
 ZstdZarrCompressorFactory = _polystore_config.ZstdZarrCompressorFactory
 ZarrChunkStrategy = _polystore_config.ZarrChunkStrategy
+TiffCompression = _polystore_config.TiffCompression
 
 
 class MaterializationBackend(Enum):
@@ -614,6 +615,16 @@ class ZarrConfig(AnnotatedDataclassValidationMixin, _polystore_config.ZarrConfig
     OME-ZARR metadata and plate metadata are always enabled for HCS compliance.
     Shuffle filter is always enabled for Blosc compressor (ignored for others).
     """
+
+
+@abbreviation("tiff")
+@global_pipeline_config(
+    inherit_as_none=False,
+    field_abbreviations={"compression": "codec", "compression_level": "level"},
+)
+@dataclass(frozen=True)
+class TiffConfig(AnnotatedDataclassValidationMixin, _polystore_config.TiffConfig):
+    """Lossless TIFF output settings shared by image and artifact materialization."""
 
 
 @abbreviation("vfs")

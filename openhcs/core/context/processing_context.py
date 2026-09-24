@@ -19,6 +19,7 @@ from openhcs.core.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
     StreamingConfig,
+    TiffConfig,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import (
@@ -97,6 +98,7 @@ class ProcessingContext:
         filemanager: FileManager | None = None,
         analysis_consolidation_config: AnalysisConsolidationConfig | None = None,
         plate_metadata_config: PlateMetadataConfig | None = None,
+        tiff_config: TiffConfig | None = None,
         auto_add_output_plate_to_plate_manager: bool = False,
         output_plate_root: str | None = None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
@@ -147,6 +149,7 @@ class ProcessingContext:
             if plate_metadata_config is not None
             else PlateMetadataConfig()
         )
+        self.tiff_config = tiff_config if tiff_config is not None else TiffConfig()
         self.auto_add_output_plate_to_plate_manager = (
             auto_add_output_plate_to_plate_manager
         )

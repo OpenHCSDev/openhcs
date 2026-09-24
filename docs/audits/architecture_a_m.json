@@ -168,7 +168,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares AnalysisConsolidationConfig and its standalone consolidation policy."
       },
       {
@@ -178,7 +178,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "4ae063cac0f93a03b5b4aab7304c8d7e6bcfc04ec74d107ea14c94f76be755ca",
+        "sha256": "ba4f8f5f165ab87c3000d6d371a6f25cf4ec6a5d39b5047abaa392c827fe9ae8",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
@@ -188,7 +188,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "1372625f3d7dc04cf6822a1887871dfa9a149b2313df7d7acefd452a6ad0f932",
+        "sha256": "1f5a89a1eb50766ef093df3fece16d6bb03422b92d062fe8ae6471656b1ebd45",
         "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
       }
     ],
@@ -675,7 +675,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares OpenHCS domain configuration that consumes ObjectState mechanics."
       }
     ],
@@ -841,7 +841,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
         "role": "Owns the compiled multiprocessing-axis identity for one processing context."
       },
       {
@@ -912,7 +912,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the OpenHCS global, pipeline, step, and standalone configuration hierarchy."
       }
     ],
@@ -1142,7 +1142,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares standalone ExperimentalAnalysisConfig options and all directory-workflow filenames."
       },
       {
@@ -1198,7 +1198,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
+        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1805,7 +1805,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "628b338097814f3d0297c28da8d016252214ff2253aee2e4946bad09f5890ea9",
+        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
         "role": "Declares the WellFilterConfig family preview policy and WellFilterMode member operators."
       },
       {
@@ -1955,7 +1955,7 @@
       },
       {
         "path": "tests/unit/test_config_document.py",
-        "sha256": "c6b291080398669b8449cb6ddaa78350f6c5b09f4f0cc57ebe92ac5f32460915",
+        "sha256": "0ee12db4633ab39b34f630e4ee1b0c48b40d8226f91fddc504bb3311b9612cda",
         "role": "Proves explicit, defaulted, and invalid typed field projections from canonical configuration source."
       },
       {

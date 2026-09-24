@@ -7,6 +7,7 @@ import inspect
 import numpy as np
 import pytest
 from polystore.base import DataSink
+from polystore.config import TiffCompression, TiffConfig
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.steps.function_artifact_materialization import (
@@ -15,6 +16,7 @@ from openhcs.core.steps.function_artifact_materialization import (
 )
 from openhcs.processing.materialization.core import (
     MaterializationSpec,
+    Output,
     RawBackendKwargs,
 )
 from openhcs.processing.materialization.options import ImageFileOptions
@@ -36,6 +38,26 @@ class _PersistentBackend(DataSink):
 
     def save_batch(self, data_list, identifiers, **kwargs):
         raise AssertionError("This projection test must not save")
+
+
+def test_persistent_tiff_kwargs_apply_only_to_tiff_outputs() -> None:
+    config = TiffConfig(compression=TiffCompression.DEFLATE)
+    kwargs = RawBackendKwargs(tiff_config=config)
+    outputs = (
+        Output(path="/results/summary.csv", content="well,count\nA01,1\n"),
+        Output(path="/results/labels.tif", content=np.zeros((8, 8), dtype=np.int32)),
+        Output(path="/results/labels2.tiff", content=np.zeros((8, 8), dtype=np.int32)),
+    )
+
+    batches = kwargs.filemanager_batches(outputs)
+
+    assert tuple(output.path for output in batches[0][0]) == ("/results/summary.csv",)
+    assert batches[0][1] == {}
+    assert tuple(output.path for output in batches[1][0]) == (
+        "/results/labels.tif",
+        "/results/labels2.tiff",
+    )
+    assert batches[1][1] == {"tiff_config": config}
 
 
 class _FileManager:

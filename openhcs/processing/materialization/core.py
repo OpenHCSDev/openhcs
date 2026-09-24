@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 import numpy as np
 import pandas as pd
 from metaclass_registry import AutoRegisterMeta
+from polystore.config import TiffConfig, tiff_write_batches
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
@@ -158,6 +159,7 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
 
     backend_kwargs_kind = "raw"
     values: Mapping[str, MaterializationValue] = field(default_factory=dict)
+    tiff_config: TiffConfig | None = None
 
     def __getitem__(self, key: str) -> MaterializationValue:
         return self.values[key]
@@ -172,13 +174,29 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
         self,
         output: Output,
     ) -> dict:
-        return dict(self.values)
+        values = dict(self.values)
+        if self.tiff_config is not None and self.tiff_config.applies_to_path(
+            output.path
+        ):
+            values["tiff_config"] = self.tiff_config
+        return values
 
     def filemanager_batches(
         self,
         outputs: Sequence[Output],
     ) -> tuple[tuple[tuple[Output, ...], dict], ...]:
-        return ((tuple(outputs), dict(self.values)),)
+        return tuple(
+            (
+                tuple(outputs[index] for index in indices),
+                {
+                    **self.values,
+                    **({"tiff_config": config} if config is not None else {}),
+                },
+            )
+            for indices, config in tiff_write_batches(
+                tuple(output.path for output in outputs), self.tiff_config
+            )
+        )
 
 
 class TabularRow(dict[str, MaterializationValue]):
