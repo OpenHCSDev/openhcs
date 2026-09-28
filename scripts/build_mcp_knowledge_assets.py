@@ -20,6 +20,7 @@ _SKILL_BUNDLE = runpy.run_path(
 )
 AgentSkillBundle = _SKILL_BUNDLE["AgentSkillBundle"]
 AGENT_PLUGIN_MANIFEST_PATH = _SKILL_BUNDLE["AGENT_PLUGIN_MANIFEST_PATH"]
+unredirected_absolute_path = _SKILL_BUNDLE["unredirected_absolute_path"]
 KnowledgeBaseManifestField = _MANIFEST_SCHEMA["KnowledgeBaseManifestField"]
 KNOWLEDGE_MANIFEST_RELATIVE_PATH = _MANIFEST_SCHEMA[
     "DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH"
@@ -73,7 +74,7 @@ def project_knowledge_assets(
 ) -> tuple[Path, ...]:
     """Copy the manifest-declared canonical sources into ``destination_root``."""
     root = project_root.resolve()
-    destination = destination_root.resolve()
+    destination = unredirected_absolute_path(destination_root)
     checked_in_projection = (root / PACKAGED_KNOWLEDGE_ROOT_RELATIVE_PATH).resolve()
     if destination == checked_in_projection:
         raise ValueError(
@@ -88,6 +89,8 @@ def project_knowledge_assets(
     if plugin_manifest.is_file():
         skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
         source_paths = tuple(dict.fromkeys((*source_paths, *skill_sources)))
+    if any(source.resolve().is_relative_to(destination) for source in source_paths):
+        raise ValueError("MCP knowledge destination must not contain canonical sources.")
     if destination.exists():
         shutil.rmtree(destination)
     projected_paths: list[Path] = []

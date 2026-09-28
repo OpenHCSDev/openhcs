@@ -9,6 +9,17 @@ from pathlib import Path
 AGENT_PLUGIN_MANIFEST_PATH = Path("packaging/codex/openhcs/.codex-plugin/plugin.json")
 
 
+def unredirected_absolute_path(path: Path) -> Path:
+    """Validate a mutation destination without following a redirected ancestor."""
+    absolute = path.expanduser().absolute()
+    if ".." in absolute.parts:
+        raise ValueError("Destination must not contain parent traversal.")
+    for current in (absolute, *absolute.parents):
+        if current.is_symlink():
+            raise ValueError(f"Refusing redirected destination: {current}")
+    return absolute
+
+
 @dataclass(frozen=True)
 class AgentSkillBundle:
     """Skill resources discovered from their canonical plugin manifest."""

@@ -70,6 +70,26 @@ def test_projection_rejects_project_ancestor(tmp_path):
         project_knowledge_assets(project_root, tmp_path)
 
 
+def test_projection_cannot_delete_a_declared_source_directory(tmp_path):
+    project_root, _, document = _project_with_document(tmp_path)
+    with pytest.raises(ValueError, match="canonical sources"):
+        project_knowledge_assets(project_root, project_root / "docs")
+    assert document.read_text() == "Guide\n=====\n"
+
+
+def test_projection_cannot_delete_a_symlink_referent(tmp_path):
+    project_root, _, _ = _project_with_document(tmp_path)
+    real = tmp_path / "unmanaged"
+    real.mkdir()
+    sentinel = real / "sentinel"
+    sentinel.write_text("preserve")
+    link = tmp_path / "redirected"
+    link.symlink_to(real, target_is_directory=True)
+    with pytest.raises(ValueError, match="redirected"):
+        project_knowledge_assets(project_root, link)
+    assert sentinel.read_text() == "preserve"
+
+
 def test_projection_includes_complete_declared_plugin_skill(tmp_path):
     project_root, _, _ = _project_with_document(tmp_path)
     plugin = project_root / "packaging/codex/openhcs"

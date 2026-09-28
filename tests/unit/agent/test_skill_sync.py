@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 from pathlib import Path
 
 import pytest
@@ -146,3 +147,50 @@ def test_redirected_source_is_rejected_before_install(bundle, tmp_path):
     with pytest.raises(ValueError, match="symlink"):
         sync_skills(destination, bundle=bundle)
     assert not destination.exists()
+
+
+def test_source_change_during_copy_cannot_publish_false_receipt(
+    bundle, tmp_path, monkeypatch
+):
+    original = shutil.copytree
+
+    def mutate_source(source, destination, *args, **kwargs):
+        if Path(source) == bundle.skill_roots()[0]:
+            (Path(source) / "SKILL.md").write_text("changed during staging")
+        return original(source, destination, *args, **kwargs)
+
+    monkeypatch.setattr(shutil, "copytree", mutate_source)
+    destination = tmp_path / "skills"
+    with pytest.raises(ValueError, match="source changed"):
+        sync_skills(destination, bundle=bundle)
+    assert not list(destination.iterdir())
+
+
+def test_parent_redirect_during_staging_cannot_publish_or_clean_foreign_tree(
+    bundle, tmp_path, monkeypatch
+):
+    destination = tmp_path / "skills"
+    sync_skills(destination, bundle=bundle)
+    (bundle.skill_roots()[0] / "SKILL.md").write_text("new skill")
+    foreign = tmp_path / "foreign"
+    shutil.copytree(destination, foreign)
+    original = shutil.copytree
+
+    def redirect_parent(source, stage, *args, **kwargs):
+        result = original(source, stage, *args, **kwargs)
+        if Path(source) != bundle.skill_roots()[0]:
+            return result
+        destination.rename(tmp_path / "original-skills")
+        destination.symlink_to(foreign, target_is_directory=True)
+        (foreign / Path(stage).name).mkdir()
+        (foreign / Path(stage).name / "sentinel").write_text("preserve")
+        return result
+
+    monkeypatch.setattr(shutil, "copytree", redirect_parent)
+    with pytest.raises(ValueError, match="redirected"):
+        sync_skills(destination, bundle=bundle)
+    assert (foreign / "use-openhcs" / "SKILL.md").read_text() == "source skill\n"
+    assert next(foreign.glob(".use-openhcs-*/sentinel")).read_text() == "preserve"
+    assert (
+        tmp_path / "original-skills/use-openhcs/SKILL.md"
+    ).read_text() == "source skill\n"

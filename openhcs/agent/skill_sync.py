@@ -14,7 +14,11 @@ from uuid import uuid4
 
 from openhcs import __version__
 from openhcs.agent.knowledge_manifest import default_repo_root
-from openhcs.agent.skill_bundle import AGENT_PLUGIN_MANIFEST_PATH, AgentSkillBundle
+from openhcs.agent.skill_bundle import (
+    AGENT_PLUGIN_MANIFEST_PATH,
+    AgentSkillBundle,
+    unredirected_absolute_path,
+)
 
 
 @dataclass(frozen=True)
@@ -47,12 +51,6 @@ class SkillSyncResult:
     backup_path: str | None = None
 
 
-def _assert_unredirected(path: Path) -> None:
-    for current in (path, *path.parents):
-        if current.is_symlink():
-            raise ValueError(f"Refusing redirected skill destination: {current}")
-
-
 def _fingerprint(root: Path) -> dict[str, str]:
     files: dict[str, str] = {}
     for path in sorted(root.rglob("*")):
@@ -79,13 +77,12 @@ def sync_skills(
         default_repo_root() / AGENT_PLUGIN_MANIFEST_PATH
     )
     owner.source_paths()  # Validate the complete source tree before any mutation.
-    destination = skills_directory.expanduser().absolute()
-    _assert_unredirected(destination)
+    destination = unredirected_absolute_path(skills_directory)
     roots = owner.skill_roots()
     planned: list[tuple[Path, Path, SkillSyncReceipt, SkillSyncReceipt | None]] = []
     for source in roots:
         target = destination / source.name
-        _assert_unredirected(target)
+        unredirected_absolute_path(target)
         if source.resolve().is_relative_to(
             target.resolve()
         ) or target.resolve().is_relative_to(source.resolve()):
@@ -112,11 +109,26 @@ def sync_skills(
             results.append(SkillSyncResult(str(target), planned_status))
             continue
         destination.mkdir(parents=True, exist_ok=True)
-        _assert_unredirected(target)
+        unredirected_absolute_path(target)
+        destination_identity = destination.stat()
         stage = Path(tempfile.mkdtemp(prefix=f".{source.name}-", dir=destination))
+        stage_identity = stage.stat()
         backup = None
         try:
             shutil.copytree(source, stage, dirs_exist_ok=True)
+            unredirected_absolute_path(target)
+            current_identity = destination.stat()
+            if (current_identity.st_dev, current_identity.st_ino) != (
+                destination_identity.st_dev,
+                destination_identity.st_ino,
+            ):
+                raise ValueError(
+                    "Skill directory changed during staging; refusing publication."
+                )
+            if _fingerprint(stage) != desired.files:
+                raise ValueError(
+                    "Skill source changed during staging; refusing publication."
+                )
             (stage / SkillSyncReceipt.filename).write_text(
                 json.dumps(asdict(desired), indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
@@ -139,14 +151,24 @@ def sync_skills(
                 os.replace(stage, target)
             except OSError:
                 if backup is not None:
+                    unredirected_absolute_path(target)
                     os.replace(backup, target)
                 raise
             results.append(
                 SkillSyncResult(str(target), status, str(backup) if backup else None)
             )
         finally:
-            if stage.exists():
-                shutil.rmtree(stage)
+            try:
+                unredirected_absolute_path(stage)
+                if stage.exists() and (stage.stat().st_dev, stage.stat().st_ino) == (
+                    stage_identity.st_dev,
+                    stage_identity.st_ino,
+                ):
+                    shutil.rmtree(stage)
+            except ValueError:
+                # Keep the original stage rather than cleaning through a
+                # redirected parent into somebody else's directory.
+                pass
     return tuple(results)
 
 
