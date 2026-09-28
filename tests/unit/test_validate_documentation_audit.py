@@ -6,10 +6,24 @@ from pathlib import Path
 
 from scripts.validate_docs import (
     REPOSITORY_ROOT,
+    REPOSITORY_SOURCE_PATH,
     validate,
     validate_documentation_audit,
     validate_repository_source_paths,
 )
+
+
+def test_repository_paths_retain_the_full_jsonl_suffix():
+    target = "benchmark/results/example/observations.jsonl"
+    match = REPOSITORY_SOURCE_PATH.search(f"Evidence: `{target}`.")
+    assert match is not None
+    assert match.group("target") == target
+    assert (
+        REPOSITORY_SOURCE_PATH.search(
+            "benchmark/results/example/observations.jsonlines"
+        )
+        is None
+    )
 
 
 def _entry(

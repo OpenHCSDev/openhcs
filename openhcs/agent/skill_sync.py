@@ -52,6 +52,7 @@ class SkillSyncResult:
 
 
 def _fingerprint(root: Path) -> dict[str, str]:
+    unredirected_absolute_path(root)
     files: dict[str, str] = {}
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
@@ -64,6 +65,13 @@ def _fingerprint(root: Path) -> dict[str, str]:
                 path.read_bytes()
             ).hexdigest()
     return files
+
+
+def _verify_directory_identity(path: Path, expected: os.stat_result) -> None:
+    unredirected_absolute_path(path)
+    actual = path.stat()
+    if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+        raise ValueError(f"Directory changed during sync; refusing publication: {path}")
 
 
 def sync_skills(
@@ -117,18 +125,13 @@ def sync_skills(
         try:
             shutil.copytree(source, stage, dirs_exist_ok=True)
             unredirected_absolute_path(target)
-            current_identity = destination.stat()
-            if (current_identity.st_dev, current_identity.st_ino) != (
-                destination_identity.st_dev,
-                destination_identity.st_ino,
-            ):
-                raise ValueError(
-                    "Skill directory changed during staging; refusing publication."
-                )
+            _verify_directory_identity(destination, destination_identity)
+            _verify_directory_identity(stage, stage_identity)
             if _fingerprint(stage) != desired.files:
                 raise ValueError(
                     "Skill source changed during staging; refusing publication."
                 )
+            _verify_directory_identity(stage, stage_identity)
             (stage / SkillSyncReceipt.filename).write_text(
                 json.dumps(asdict(desired), indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
@@ -142,15 +145,20 @@ def sync_skills(
                         f"Skill changed during sync; left unchanged: {target}"
                     )
                 backup = destination / f".{source.name}.openhcs-backup-{uuid4().hex}"
+                _verify_directory_identity(destination, destination_identity)
+                unredirected_absolute_path(target)
                 os.replace(target, backup)
             elif os.path.lexists(target):
                 raise ValueError(
                     f"Skill appeared during sync; left unchanged: {target}"
                 )
             try:
+                _verify_directory_identity(destination, destination_identity)
+                _verify_directory_identity(stage, stage_identity)
                 os.replace(stage, target)
-            except OSError:
+            except (OSError, ValueError):
                 if backup is not None:
+                    _verify_directory_identity(destination, destination_identity)
                     unredirected_absolute_path(target)
                     os.replace(backup, target)
                 raise

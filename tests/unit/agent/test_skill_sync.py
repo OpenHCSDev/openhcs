@@ -194,3 +194,29 @@ def test_parent_redirect_during_staging_cannot_publish_or_clean_foreign_tree(
     assert (
         tmp_path / "original-skills/use-openhcs/SKILL.md"
     ).read_text() == "source skill\n"
+
+
+def test_redirected_stage_cannot_overwrite_foreign_receipt(
+    bundle, tmp_path, monkeypatch
+):
+    foreign = tmp_path / "foreign"
+    shutil.copytree(bundle.skill_roots()[0], foreign)
+    (foreign / SkillSyncReceipt.filename).write_text("foreign receipt sentinel")
+    original = shutil.copytree
+
+    def redirect_stage(source, stage, *args, **kwargs):
+        result = original(source, stage, *args, **kwargs)
+        if Path(source) != bundle.skill_roots()[0]:
+            return result
+        Path(stage).rename(Path(stage).with_name(Path(stage).name + "-original"))
+        Path(stage).symlink_to(foreign, target_is_directory=True)
+        return result
+
+    monkeypatch.setattr(shutil, "copytree", redirect_stage)
+    destination = tmp_path / "skills"
+    with pytest.raises(ValueError, match="redirected"):
+        sync_skills(destination, bundle=bundle)
+    assert not (destination / "use-openhcs").exists()
+    assert (
+        foreign / SkillSyncReceipt.filename
+    ).read_text() == "foreign receipt sentinel"
