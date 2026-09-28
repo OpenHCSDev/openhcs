@@ -29,6 +29,7 @@ It distinguishes missing information from an unhelpful display.
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
 | Intensity, volume, colocalisation, comparisons or final figures | [openhcs_measurement_interpretation](measurement-interpretation.md) | Which pixels, geometry, units and experimental units support the claim? |
 | Repeated errors or transferring a successful recipe | [openhcs_analysis_learning](analysis-learning.md) | Is this a source-backed recipe, an observed repair or an untested hypothesis? |
+| No registered operation has the required input/output contract | [openhcs_custom_function_workflow](custom-function-authoring.md) | Can the missing operation become a typed, reproducible registry function? |
 | Raw/overlay review or a changed viewer canvas | [openhcs_viewer_qa](viewer-qa.md) | Are the three views matched, interpretable and personally inspected? |
 
 Search the first-class Official30 examples for the closest task, retrieve the

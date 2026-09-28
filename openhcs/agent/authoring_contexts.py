@@ -289,6 +289,7 @@ class CustomFunctionAuthoringContext(
             KnowledgeBaseDocumentTarget("openhcs_custom_functions"),
             KnowledgeBaseDocumentTarget("openhcs_custom_function_management"),
             KnowledgeBaseDocumentTarget("openhcs_artifact_contract_system"),
+            KnowledgeBaseDocumentTarget("openhcs_custom_function_workflow"),
         ),
     )
 

@@ -819,6 +819,14 @@
       "title": "Promote a blinded analysis recipe"
     },
     {
+      "document_id": "openhcs_custom_function_workflow",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md",
+      "summary": "Add a missing analysis operation through existing typed custom-function owners: discover contracts, scope catalog and persistence, verify fresh-process imports, compile artifacts, inspect bounded outputs and separate technical reuse from biological recipe acceptance.",
+      "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
+      "title": "Add a missing analysis operation as a typed custom function"
+    },
+    {
       "document_id": "openhcs_analysis_learning",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-learning.md",

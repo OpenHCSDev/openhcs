@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.agent.authoring_contexts import ImageAnalysisWorkflowAuthoringContext
+from openhcs.agent.authoring_contexts import (
+    CustomFunctionAuthoringContext,
+    ImageAnalysisWorkflowAuthoringContext,
+)
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
@@ -26,6 +29,7 @@ TASKS = (
     ("recipe error memory", "openhcs_analysis_learning"),
     ("canvas resize recapture", "openhcs_viewer_qa"),
     ("blind recipe promotion", "openhcs_blind_recipe_promotion"),
+    ("missing analysis operation", "openhcs_custom_function_workflow"),
 )
 
 
@@ -99,8 +103,8 @@ def test_domain_knowledge_remains_progressively_retrieved():
         for document in catalogue.documents
         if document.document_id in {document_id for _, document_id in TASKS}
     }
-    assert len(transferred) == 8
-    assert len({document.source_path for document in transferred.values()}) == 8
+    assert len(transferred) == 9
+    assert len({document.source_path for document in transferred.values()}) == 9
     # Catalogue summaries do not eagerly expand teaching chapters or answers.
     assert all(len(document.summary) < 600 for document in transferred.values())
     assert all(document.section_count > 2 for document in transferred.values())
@@ -120,19 +124,27 @@ def test_domain_knowledge_remains_progressively_retrieved():
             assert Path(document.source_path).name in links
 
 
-def test_mcp_analysis_context_routes_from_its_existing_declaration_owner():
-    declaration = ImageAnalysisWorkflowAuthoringContext
+@pytest.mark.parametrize(
+    ("declaration", "document_id"),
+    (
+        (ImageAnalysisWorkflowAuthoringContext, "openhcs_autonomous_analysis_strategy"),
+        (CustomFunctionAuthoringContext, "openhcs_custom_function_workflow"),
+    ),
+)
+def test_mcp_analysis_context_routes_from_its_existing_declaration_owner(
+    declaration, document_id
+):
     targets = declaration.require_route().knowledge_targets
-    assert "openhcs_autonomous_analysis_strategy" in {
+    assert document_id in {
         target.document_id for target in targets
     }
     context = AgentAuthoringContextService().get_authoring_context(
         declaration.require_kind()
     )
-    assert "openhcs_autonomous_analysis_strategy" in context.content
+    assert document_id in context.content
     guide = KnowledgeBaseService(repo_root=ROOT).get_document(
         KnowledgeBaseDocumentRequest.from_fields(
-            document_id="openhcs_autonomous_analysis_strategy"
+            document_id=document_id
         )
     )
     assert guide.content not in context.content
