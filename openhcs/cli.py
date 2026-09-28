@@ -7,9 +7,9 @@ importing GUI or agent runtimes until they are selected.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable, Sequence
 from importlib import import_module
-import sys
 
 
 def _load_main(module_name: str) -> Callable[[], int | None]:
@@ -31,6 +31,11 @@ def _run_with_arguments(
 def main(argv: Sequence[str] | None = None) -> int | None:
     """Run the GUI by default, or the explicitly selected package command."""
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments[:1] == ["skills"]:
+        return _run_with_arguments(
+            _load_main("openhcs.agent.skill_sync"),
+            arguments[1:],
+        )
     if arguments[:1] == ["mcp"]:
         return _run_with_arguments(
             _load_main("openhcs.mcp.bootstrap"),
