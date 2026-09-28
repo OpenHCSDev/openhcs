@@ -22,6 +22,10 @@ authoring contexts remain the operating authority for image inspection.
    version or commit, and evidence tier used. Benchmark parity is validated
    evidence for its tested reference scope, not biological acceptance for a
    different assay. Import or execution success alone is a narrower tier.
+   The `openhcs_official30_examplehuman_nuclei_recipe_card` knowledge document
+   shows how to retain a specific parity receipt and settings while separating
+   inferred transfer risks from observed failures and marking new-assay QA
+   unassessed. It does not replace the development, freeze, or held-out gates.
 3. In the development set, keep one trial record per semantic change: complete
    pipeline source and SHA-256, parameter snapshot and SHA-256, source-manifest
    SHA-256, compile and execution receipt IDs, and typed result-artifact ID.

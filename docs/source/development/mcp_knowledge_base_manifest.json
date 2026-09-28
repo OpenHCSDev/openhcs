@@ -725,6 +725,25 @@
       "title": "Callable and artifact authoring"
     },
     {
+      "document_id": "openhcs_official30_examplehuman_nuclei_recipe_card",
+      "section_count": 0,
+      "source_path": "docs/source/development/recipe_knowledge/official30_examplehuman_nuclei.md",
+      "summary": "Source-grounded Official30 ExampleHuman DNA nuclei recipe note: benchmark source and settings, selected-reference-value parity provenance, new-assay QA boundary, and explicitly inferred transfer risks.",
+      "tags": [
+        "recipe knowledge",
+        "benchmark parity",
+        "Official30",
+        "ExampleHuman",
+        "DNA nuclei",
+        "IdentifyPrimaryObjects",
+        "input channel assumptions",
+        "selected reference values",
+        "transfer risks",
+        "biological raw overlay QA"
+      ],
+      "title": "Official30 ExampleHuman nuclei benchmark recipe card"
+    },
+    {
       "document_id": "openhcs_biological_image_analysis_evidence",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/biological-image-analysis-evidence.md",
