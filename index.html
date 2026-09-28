@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="OpenHCS helps imaging scientists turn plate-based microscopy data into reproducible measurements with one reviewable workflow across the GUI, Python, CellProfiler, and local agents."
+    >
+    <meta name="theme-color" content="#0a0d16">
+    <meta property="og:title" content="OpenHCS | Open High-Content Screening">
+    <meta
+      property="og:description"
+      content="Reproducible image analysis for high-content microscopy, with one reviewable workflow across the desktop GUI, Python, CellProfiler, and local agents."
+    >
+    <meta property="og:type" content="website">
+    <meta
+      property="og:image"
+      content="https://raw.githubusercontent.com/OpenHCSDev/OpenHCS/refs/heads/main/docs/source/_static/ui.png"
+    >
+    <meta name="twitter:card" content="summary_large_image">
+    <title>OpenHCS | Open High-Content Screening</title>
+    <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="OpenHCS home">
+        <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#gallery">Gallery</a>
+        <a href="#install">Install</a>
+        <a href="#mcp">Agents</a>
+        <a href="https://openhcs.readthedocs.io/en/latest/">Docs</a>
+        <a href="support.html">Support</a>
+        <a class="nav-github" href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="content">
+      <section class="hero" id="top">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-grid">
+          <div class="hero-intro">
+            <div class="eyebrow"><span></span> For imaging scientists and research software teams</div>
+            <h1>Turn high-content microscopy images into reproducible measurements.</h1>
+            <p class="hero-copy">
+              OpenHCS is designed for high-content studies spanning many wells, sites,
+              channels, Z planes, or time points. It keeps source selection, processing
+              steps, and result definitions in one validated pipeline across the desktop
+              GUI, Python, supported CellProfiler <code>.cppipe</code> imports, and local
+              agents.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#install">Install OpenHCS 0.8.6</a>
+              <a
+                class="button button-secondary"
+                href="https://openhcs.readthedocs.io/en/latest/guide_for_biologists/domain_expert_onboarding.html"
+                aria-label="Check whether OpenHCS fits your microscopy workflow"
+              >Is OpenHCS for my data? <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery section" id="gallery" aria-labelledby="gallery-title">
+        <div class="section-heading gallery-heading">
+          <div>
+            <span class="kicker">Application gallery</span>
+            <h2 id="gallery-title">OpenHCS in use</h2>
+          </div>
+          <div class="gallery-intro">
+            <p>
+              Real OpenHCS sessions showing pipeline editing, execution, images,
+              and results. Pointer-free clips are driven through the local MCP;
+              open any still or poster at full resolution.
+            </p>
+            <a class="text-link" href="#agent-workflow-evidence">Review the uncut agent evidence <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+
+        <div class="gallery-grid">
+          <figure class="gallery-card gallery-card-wide">
+            <a
+              class="gallery-media-link"
+              href="assets/gallery/multi-plate-overview.webp"
+              aria-label="Open the multi-plate workspace screenshot at full resolution"
+            >
+              <img
+                src="assets/gallery/multi-plate-overview.webp"
+                width="1600"
+                height="958"
+                loading="lazy"
+                decoding="async"
+                alt="OpenHCS Plate Manager with seven assay plates loaded, including CellProfiler Comet Assay and Wound Healing examples"
+              >
+            </a>
+            <figcaption>
+              <span class="gallery-label">Workspace</span>
+              <h3>Seven assay plates, one workspace</h3>
+              <p>Five deterministic examples and two imported CellProfiler workflows retain independent state in one session.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-compact">
+            <a
+              class="gallery-media-link"
+              href="assets/gallery/pipeline-editor.webp"
+              aria-label="Open the pipeline editor screenshot at full resolution"
+            >
+              <img
+                src="assets/gallery/pipeline-editor.webp"
+                width="942"
+                height="900"
+                loading="lazy"
+                decoding="async"
+                alt="OpenHCS Pipeline Editor showing the 12 imported steps of the CellProfiler Comet Assay"
+              >
+            </a>
+            <figcaption>
+              <span class="gallery-label">Authoring</span>
+              <h3>CellProfiler steps in the same pipeline model</h3>
+              <p>The 12-step Comet Assay uses OpenHCS compilation, configuration, viewers, and results.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-motion gallery-card-wide">
+            <div class="gallery-motion">
+              <video
+                controls
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="assets/gallery/lazy-inheritance-poster.webp"
+                aria-describedby="lazy-inheritance-caption"
+              >
+                <source src="assets/gallery/lazy-inheritance.webm" type="video/webm">
+                <source src="assets/gallery/lazy-inheritance.mp4" type="video/mp4">
+                <a href="assets/gallery/lazy-inheritance.mp4">Download the lazy-inheritance demonstration.</a>
+              </video>
+              <a
+                class="gallery-motion-fallback gallery-media-link"
+                href="assets/gallery/lazy-inheritance-poster.webp"
+                aria-label="Open the lazy-inheritance demonstration poster at full resolution"
+              >
+                <img
+                  src="assets/gallery/lazy-inheritance-poster.webp"
+                  width="1600"
+                  height="1000"
+                  loading="lazy"
+                  decoding="async"
+                  alt="OpenHCS workspace beside pipeline and step settings showing Well Filter Image30 at pipeline scope and inherited by the step"
+                >
+                <span>Static view shown because reduced motion is enabled</span>
+              </a>
+            </div>
+            <figcaption id="lazy-inheritance-caption">
+              <span class="gallery-label">Configuration</span>
+              <h3>See configuration provenance in both directions</h3>
+              <p>Well Filter changes to Image30 in PipelineConfig, then the inherited step field flashes as the update arrives. Clicking that step label flashes the owning PipelineConfig field, making the provenance link explicit in both directions.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-compact">
+            <a
+              class="gallery-media-link"
+              href="assets/gallery/fiji-review.webp"
+              aria-label="Open the Fiji integration screenshot at full resolution"
+            >
+              <img
+                src="assets/gallery/fiji-review.webp"
+                width="1310"
+                height="930"
+                loading="lazy"
+                decoding="async"
+                alt="Fiji ImageJ showing one NeuronCyto II Field 1 nuclear plane with its nine native segmentation ROI entries"
+              >
+            </a>
+            <figcaption>
+              <span class="gallery-label">Fiji</span>
+              <h3>Review matching ROIs in Fiji</h3>
+              <p>OpenHCS streams one bound Field 1 nuclear plane and its nine segmentation ROIs together. The native outlines follow the displayed nuclei.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-motion gallery-card-feature">
+            <div class="gallery-motion">
+              <video
+                controls
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="assets/gallery/zmq-startup-compile-poster.webp"
+                aria-describedby="zmq-startup-compile-caption"
+              >
+                <source src="assets/gallery/zmq-startup-compile.webm" type="video/webm">
+                <source src="assets/gallery/zmq-startup-compile.mp4" type="video/mp4">
+                <a href="assets/gallery/zmq-startup-compile.mp4">Download the endpoint-startup recording.</a>
+              </video>
+              <a
+                class="gallery-motion-fallback gallery-media-link"
+                href="assets/gallery/zmq-startup-compile-poster.webp"
+                aria-label="Open the execution-endpoint startup poster at full resolution"
+              >
+                <img
+                  src="assets/gallery/zmq-startup-compile-poster.webp"
+                  width="1600"
+                  height="1000"
+                  loading="lazy"
+                  decoding="async"
+                  alt="OpenHCS showing an execution endpoint preparing its function catalog while a pipeline compiles"
+                >
+                <span>Static view shown because reduced motion is enabled</span>
+              </a>
+            </div>
+            <figcaption id="zmq-startup-compile-caption">
+              <span class="gallery-label">Local MCP</span>
+              <h3>See endpoint startup while the request is running</h3>
+              <p>A pointer-free MCP compile request immediately adds the execution endpoint, streams catalog-preparation phases into the browser and status bar, and settles connected.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-motion gallery-card-feature">
+            <div class="gallery-motion">
+              <video
+                controls
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="assets/gallery/napari-roi-navigation-poster.webp"
+                aria-describedby="napari-roi-navigation-caption"
+              >
+                <source src="assets/gallery/napari-roi-navigation.webm" type="video/webm">
+                <source src="assets/gallery/napari-roi-navigation.mp4" type="video/mp4">
+                <a href="assets/gallery/napari-roi-navigation.mp4">Download the Napari ROI-navigation recording.</a>
+              </video>
+              <a
+                class="gallery-motion-fallback gallery-media-link"
+                href="assets/gallery/napari-roi-navigation-poster.webp"
+                aria-label="Open the Napari ROI-navigation poster at full resolution"
+              >
+                <img
+                  src="assets/gallery/napari-roi-navigation-poster.webp"
+                  width="1600"
+                  height="896"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Napari showing segmented nuclei, a selected native ROI, its measurement row, and the current Z plane"
+                >
+                <span>Static view shown because reduced motion is enabled</span>
+              </a>
+            </div>
+            <figcaption id="napari-roi-navigation-caption">
+              <span class="gallery-label">Napari</span>
+              <h3>ROI selection navigates the Z stack</h3>
+              <p>A pointer-free MCP sequence selects measurement rows across a three-plane result. Napari scrolls the table, highlights the native ROI, and moves from Z 3/3 to Z 1/3 and back.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-feature">
+            <a
+              class="gallery-media-link"
+              href="assets/gallery/current-neurite-result.webp"
+              aria-label="Open the current neuronal result at full resolution"
+            >
+              <img
+                src="assets/gallery/current-neurite-result.webp"
+                width="1500"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+                alt="Current neuronal labels and an inspectable selected path in a native Napari result window"
+              >
+            </a>
+            <figcaption>
+              <span class="gallery-label">Current neuronal result</span>
+              <h3>Neuronal labels and inspectable paths</h3>
+              <p>A native Napari window shows enhanced neuronal signal with unified labels and the retained path ROI list. Selecting a row highlights its path in the image.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="gallery-card gallery-card-feature">
+            <a
+              class="gallery-media-link"
+              href="assets/gallery/stitched-neurite-overview.webp"
+              aria-label="Open the stitched neuronal analysis at full resolution"
+            >
+              <img
+                src="assets/gallery/stitched-neurite-overview.webp"
+                width="1500"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+                alt="Napari displaying a full stitched neuronal mosaic with hundreds of colored neuron and neurite ROI traces"
+              >
+            </a>
+            <figcaption>
+              <span class="gallery-label">Napari</span>
+              <h3>Inspect a stitched mosaic as one result</h3>
+              <p>OpenHCS stitches the source fields before analysis and returns one inspectable neuron-ROI layer spanning the mosaic, so residual faint-process misses remain visible in the same viewer.</p>
+            </figcaption>
+          </figure>
+        </div>
+        <aside class="gallery-provenance" aria-label="Gallery dataset provenance">
+          <span>Dataset note</span>
+          <p>
+            CellProfiler ExampleCometAssay and ExampleWoundHealing are shown under BSD-3-Clause. Comet fluorescence images were contributed by Scott Floyd and Michael Pacold. The neuronal views use a blinded neurite-outgrowth acquisition supplied by the authors.
+            <a href="https://github.com/CellProfiler/examples/tree/4972b59e670a4ae96c3d453803c92eeff378d054">Source and attribution</a>.
+            The gallery media have a
+            <a href="assets/gallery/release-media-record.json">capture and checksum record</a>.
+          </p>
+        </aside>
+      </section>
+
+      <section class="platform section" id="platform">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Pipeline representation</span>
+            <h2>The same pipeline in the UI, Python, headless runs, and MCP</h2>
+          </div>
+          <p>
+            UI edits and generated Python use the same typed pipeline, function,
+            and artifact model.
+          </p>
+        </div>
+
+        <div class="capability-list">
+          <article class="capability-row">
+            <span class="capability-index">01</span>
+            <h3>UI and Python round trip</h3>
+            <p>
+              Build visually, edit generated Python, and inspect typed artifacts without
+              translating between pipeline formats.
+            </p>
+          </article>
+          <article class="capability-row">
+            <span class="capability-index">02</span>
+            <h3>CellProfiler <code>.cppipe</code> import</h3>
+            <p>
+              Import supported CellProfiler modules as regular OpenHCS steps;
+              unsupported modules fail clearly.
+            </p>
+            <div class="capability-actions">
+              <a class="integration-mark" href="https://cellprofiler.org/" aria-label="CellProfiler website">
+                <img src="assets/logos/cellprofiler.png" width="120" height="120" alt="">
+                <span>CellProfiler</span>
+              </a>
+              <a class="capability-link" href="https://openhcs.readthedocs.io/en/latest/api/">API <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+          <article class="capability-row">
+            <span class="capability-index">03</span>
+            <h3>Plane-local and volumetric analysis</h3>
+            <p>
+              Dimensionality is function-defined, not a global 2D/3D switch. Current
+              volumetric routes include Watershed segmentation, 3D intensity,
+              size and shape, and occupied-volume measurements; plane-local labels
+              are not silently stitched across Z.
+            </p>
+            <a class="capability-link" href="https://openhcs.readthedocs.io/en/latest/reference/dimensionality_and_measurements.html">Capability reference <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="capability-row">
+            <span class="capability-index">04</span>
+            <h3>View images, ROIs, and measurements</h3>
+            <p>
+              Send compiled pipeline results to Napari or Fiji.
+            </p>
+            <div class="capability-actions">
+              <a class="integration-mark" href="https://napari.org/" aria-label="napari website">
+                <img src="assets/logos/napari.svg" width="824" height="824" alt="">
+                <span>napari</span>
+              </a>
+              <a class="integration-mark" href="https://imagej.net/software/fiji/" aria-label="Fiji website">
+                <img src="assets/logos/fiji.svg" width="90" height="90" alt="">
+                <span>Fiji</span>
+              </a>
+              <code class="capability-command">openhcs[gui,viz]</code>
+            </div>
+          </article>
+          <article class="capability-row">
+            <span class="capability-index">05</span>
+            <h3>GPU libraries + custom functions</h3>
+            <p>
+              Decorate ordinary Python functions for CuPy, PyTorch, JAX, TensorFlow,
+              or pyclesperanto. They gain contract validation, UI integration, and
+              automatic memory conversion.
+            </p>
+            <code class="capability-command">openhcs[gpu]</code>
+            <div class="compute-with" aria-label="Compute libraries supported by OpenHCS">
+              <span class="compute-with-label">Compute with</span>
+              <a class="compute-mark" href="https://cupy.dev/" aria-label="CuPy website">
+                <img src="assets/logos/cupy.svg" width="75" height="76" alt="">
+                <span>CuPy</span>
+              </a>
+              <a class="compute-mark" href="https://pytorch.org/" aria-label="PyTorch website">
+                <img src="assets/logos/pytorch.svg" width="90" height="109" alt="">
+                <span>PyTorch</span>
+              </a>
+              <a class="compute-mark" href="https://docs.jax.dev/" aria-label="JAX documentation">
+                <img src="assets/logos/jax.png" width="64" height="64" alt="">
+                <span>JAX</span>
+              </a>
+              <a class="compute-mark" href="https://www.tensorflow.org/" aria-label="TensorFlow website">
+                <img src="assets/logos/tensorflow.svg" width="267" height="244" alt="">
+                <span>TensorFlow</span>
+              </a>
+              <a class="compute-mark" href="https://clesperanto.github.io/pyclesperanto/" aria-label="pyclesperanto documentation">
+                <img src="assets/logos/pyclesperanto.png" width="200" height="200" alt="">
+                <span>pyclesperanto</span>
+              </a>
+              <span class="compute-mark custom-function-mark">
+                <span class="custom-function-icon" aria-hidden="true">{ }</span>
+                <span>Your functions</span>
+              </span>
+            </div>
+          </article>
+          <article class="capability-row">
+            <span class="capability-index">06</span>
+            <h3>Bio-Formats image I/O</h3>
+            <p>
+              Read microscopy images and dimensional metadata through the Bio-Formats backend.
+            </p>
+            <div class="capability-actions">
+              <a class="integration-mark" href="https://www.openmicroscopy.org/bio-formats/" aria-label="Bio-Formats website">
+                <img src="assets/logos/bioformats.svg" width="705" height="886" alt="">
+                <span>Bio-Formats</span>
+              </a>
+              <code class="capability-command">openhcs[bioformats]</code>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="mcp-section section" id="mcp">
+        <div class="mcp-copy">
+          <span class="kicker">Agent workflow</span>
+          <h2>Use OpenHCS through a local agent</h2>
+          <p>
+            Give the agent a microscopy folder or plate and the analysis you want.
+            Through MCP it can construct and validate the same typed pipeline used by
+            the desktop application, run it locally, and inspect the results without
+            manually constructing the pipeline. Every pipeline remains editable in
+            the GUI and as generated Python.
+          </p>
+          <div class="mcp-actions">
+            <a class="button button-primary" href="#install">Install local MCP</a>
+            <a class="text-link" href="https://github.com/OpenHCSDev/OpenHCS/releases">View current releases <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+
+        <aside class="client-support" aria-labelledby="supported-clients-title">
+          <div class="client-support-header">
+            <span class="kicker">Local registration</span>
+            <h3 id="supported-clients-title">Auto-configured clients</h3>
+            <p>
+              The installer registers OpenHCS with detected clients below. These marks
+              describe local setup compatibility; workflow recordings identify the
+              exact client, model, and version tested.
+            </p>
+          </div>
+          <ul class="client-marks" aria-label="Agent clients with native OpenHCS registration">
+            <li class="client-mark"><img src="assets/logos/client-codex.svg" width="24" height="24" alt=""><span>ChatGPT desktop and OpenAI Codex</span></li>
+<li class="client-mark"><img src="assets/logos/client-claude-desktop.svg" width="24" height="24" alt=""><span>Claude Desktop</span></li>
+<li class="client-mark"><img src="assets/logos/client-cursor.svg" width="24" height="24" alt=""><span>Cursor</span></li>
+<li class="client-mark"><img src="assets/logos/client-gemini-cli.svg" width="24" height="24" alt=""><span>Gemini CLI</span></li>
+<li class="client-mark"><img src="assets/logos/client-windsurf.svg" width="24" height="24" alt=""><span>Windsurf</span></li>
+<li class="client-mark"><img src="assets/logos/client-vscode.svg" width="24" height="24" alt=""><span>Visual Studio Code</span></li>
+          </ul>
+        </aside>
+
+        <div class="agent-evidence" aria-labelledby="agent-evidence-title">
+          <div class="agent-evidence-copy">
+            <span class="kicker">Archived model run</span>
+            <h3 id="agent-evidence-title">One prompt, two steps, complete result</h3>
+            <p>
+              Starting from one prompt and a public
+              <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5089663/">NeuronCyto II</a>
+              crossover field, Codex projected two loose TIFF planes into biological
+              channels, built and compiled a pipeline in the live desktop, and ran a
+              per-neuron morphology analysis. The unattended run produced persistent
+              images, ROIs, SWC morphology, measurements, and a settled Napari result
+              table. Later human visual QA exposed a clustered crossover-tracing defect;
+              after the generic tracing fix, a separate recapture showed 9 neurons and
+              24 spatial-graph paths. The generated Python remained editable in OpenHCS.
+            </p>
+            <dl class="agent-evidence-facts">
+              <div><dt>Client</dt><dd>Codex 0.146.0</dd></div>
+              <div><dt>Model</dt><dd>gpt-5.6-sol</dd></div>
+              <div><dt>OpenHCS</dt><dd>0.7.13 at <code>f1c1d9b67</code></dd></div>
+              <div><dt>Intervention</dt><dd>One prompt; no later human steering</dd></div>
+            </dl>
+          </div>
+          <div class="agent-evidence-media">
+            <figure class="agent-recording" id="agent-workflow-showcase">
+              <video
+                controls
+                muted
+                playsinline
+                preload="metadata"
+                poster="assets/agent/neurite-outgrowth-workflow-poster.webp"
+                aria-describedby="agent-workflow-caption"
+              >
+                <source src="assets/agent/neurite-outgrowth-workflow.webm" type="video/webm">
+                <source src="assets/agent/neurite-outgrowth-workflow.mp4" type="video/mp4">
+                <a href="assets/agent/neurite-outgrowth-workflow.mp4">Download the neurite-outgrowth workflow showcase.</a>
+              </video>
+              <figcaption id="agent-workflow-caption">
+                <strong>From source binding to per-neuron morphology</strong>
+                <span>
+                  A 2:38 showcase: the first 2:20 is an edit of the original
+                  unattended 10:47 run, from function discovery through the
+                  editable two-step pipeline, compilation, neurite graph, ROI
+                  manager, and measurements. A clearly labelled post-run replay
+                  then cycles five neuron selections while the linked neurite
+                  overlay and ROI rows change together. The original run produced
+                  9 neurons and 25 spatial-graph paths.
+                </span>
+              </figcaption>
+            </figure>
+            <article class="agent-evidence-archive" id="agent-workflow-archive">
+              <strong>Uncut run and machine-verifiable records</strong>
+              <p>
+                The complete 10:47 recording remains the visual authority for the
+                unattended run. The first 2:20 above contains only excerpts from
+                that recording; the clearly labelled final segment is a separate
+                post-run MCP interaction replay, not evidence of actions taken by
+                the unattended agent.
+              </p>
+            </article>
+            <nav class="agent-evidence-links" id="agent-workflow-evidence" aria-label="Agent workflow evidence files">
+              <a href="assets/agent/cold-start-workflow-uncut.mp4">Uncut 10:47 run</a>
+              <a href="assets/agent/cold-start-workflow-transcript.txt">Transcript</a>
+              <a href="assets/agent/cold-start-workflow-final.md">Final report</a>
+              <a href="assets/agent/cold-start-workflow-events.jsonl">MCP event record</a>
+              <a href="assets/agent/cold-start-workflow-record.json">Validation record</a>
+              <a href="assets/agent/neurite-outgrowth-workflow-record.json">Edit record</a>
+              <a href="assets/agent/cold-start-workflow-pipeline.py">Generated Python</a>
+            </nav>
+            <p class="agent-evidence-note">
+              The client had no shell or repository access. Mutating operations were
+              pre-authorized inside the isolated recording session; this is not a
+              claim about every registered client or model. The run exposed an SWC
+              inventory omission, corrected at the generic format owner in
+              <code>973c51fd0</code>. Subsequent visual QA exposed the crossover defect,
+              corrected at the registered tracing strategy in <code>0eb5f77c0</code>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="install section" id="install">
+        <div class="section-heading install-heading">
+          <div>
+            <h2>Installation</h2>
+          </div>
+          <p class="install-copy">
+            Desktop installers include the GUI and local MCP setup. Use PyPI for
+            headless systems, GPU libraries, or an existing Python environment.
+          </p>
+        </div>
+
+        <div class="install-routes">
+          <div class="desktop-installers" aria-labelledby="desktop-installers-title">
+            <div class="install-card-header">
+              <div>
+                <strong id="desktop-installers-title">Desktop installers</strong>
+                <small>No Python setup required</small>
+              </div>
+              <span>GitHub release</span>
+            </div>
+            <div class="installer-downloads">
+              <a
+                class="installer-download"
+                href="https://github.com/OpenHCSDev/OpenHCS/releases/latest/download/OpenHCS-Windows-Installer.exe"
+              >
+                <img class="installer-platform" src="assets/logos/platform-windows.svg" width="24" height="24" alt="">
+                <span><strong>Download for Windows</strong><small>Download and run — no ZIP to extract</small></span>
+                <span class="download-arrow" aria-hidden="true">↓</span>
+              </a>
+              <a
+                class="installer-download"
+                href="https://github.com/OpenHCSDev/OpenHCS/releases/latest/download/OpenHCS-macOS-Installer.dmg"
+              >
+                <img class="installer-platform" src="assets/logos/platform-macos.svg" width="24" height="24" alt="">
+                <span><strong>Download for macOS</strong><small>Open the DMG, then open OpenHCS Installer</small></span>
+                <span class="download-arrow" aria-hidden="true">↓</span>
+              </a>
+            </div>
+            <p class="installer-boundary">
+              User-scoped, CPU-only installers include CellProfiler compatibility,
+              local MCP, Napari, Fiji, and Bio-Formats. GPU libraries are optional and
+              not included; Fiji downloads Java on first use. The latest complete GitHub
+              release may trail PyPI. The Windows installer is unsigned, and the macOS
+              installer is not notarized, so the OS may ask you to confirm trust.
+            </p>
+          </div>
+
+          <div class="install-card">
+            <div class="install-card-header">
+              <div>
+                <strong>Python and headless installs</strong>
+                <small>For existing Python environments</small>
+              </div>
+              <span class="package-source"><img src="assets/logos/python.svg" width="24" height="24" alt="">PyPI</span>
+            </div>
+            <pre><code><span class="prompt">$</span> python -m pip install "openhcs[gui,viz,bioformats,mcp,cellprofiler-compat]"
+<span class="prompt">$</span> openhcs</code></pre>
+            <ul class="install-options" aria-label="Other OpenHCS installation options">
+              <li><b>Desktop only</b><code>openhcs[gui]</code></li>
+              <li><b>Headless</b><code>openhcs</code></li>
+              <li><b>CUDA opt-in</b><code>openhcs[gui,gpu]</code></li>
+            </ul>
+            <a class="install-pypi-link" href="https://pypi.org/project/openhcs/">View OpenHCS on PyPI <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <div class="requirements"><span>PyPI 0.8.6</span><span>Python 3.11+</span><span>Windows · macOS · Linux</span><span>MIT licensed</span></div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-brand">
+        <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
+        <small>Open High-Content Screening.</small>
+      </div>
+      <div class="footer-links">
+        <a href="https://pypi.org/project/openhcs/">PyPI</a>
+        <a href="https://openhcs.readthedocs.io/en/latest/">Documentation</a>
+        <a href="https://openhcs.readthedocs.io/en/latest/api/">API reference</a>
+        <a href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
+      <small class="project-credit">
+        CellProfiler interoperability and validation build on its open-source
+        software, documentation, and public example corpus. We thank the
+        CellProfiler authors and contributors.
+        <a href="https://cellprofiler.org/citations">CellProfiler citation guidance</a>
+        includes
+        <a href="https://doi.org/10.1186/s12859-021-04344-9">Stirling et al. (2021)</a>.
+      </small>
+      <span class="copyright">MIT License · OpenHCS contributors</span>
+      <small class="trademark-note">
+        Third-party names and logos identify supported integrations, compatible
+        clients, platforms, or software used by OpenHCS. They remain the property
+        of their respective projects or owners; their appearance does not imply
+        affiliation or endorsement.
+      </small>
+    </footer>
+  </body>
+</html>

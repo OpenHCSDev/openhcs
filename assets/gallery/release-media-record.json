@@ -1,0 +1,1012 @@
+{
+  "captured_at": "2026-09-17",
+  "capture_contract": {
+    "surface": "real OpenHCS, Napari, and Fiji/ImageJ X11 windows",
+    "visible_interaction_driver": "local MCP calls, native viewer controls, and reviewed UI actions",
+    "pointer_visibility": "mixed",
+    "source_formats": [
+      "FFV1",
+      "PNG"
+    ]
+  },
+  "schema_version": "openhcs.release-media.v7",
+  "source_capture_evidence_path": "source-capture-evidence.json",
+  "dataset_attribution": {
+    "dataset_note": "CellProfiler ExampleCometAssay and ExampleWoundHealing are shown under BSD-3-Clause. Comet fluorescence images were contributed by Scott Floyd and Michael Pacold. The neuronal views use a blinded neurite-outgrowth acquisition supplied by the authors.",
+    "attribution_url": "https://github.com/CellProfiler/examples/tree/4972b59e670a4ae96c3d453803c92eeff378d054",
+    "attribution_label": "Source and attribution"
+  },
+  "website_provenance_html": "        <aside class=\"gallery-provenance\" aria-label=\"Gallery dataset provenance\">\n          <span>Dataset note</span>\n          <p>\n            CellProfiler ExampleCometAssay and ExampleWoundHealing are shown under BSD-3-Clause. Comet fluorescence images were contributed by Scott Floyd and Michael Pacold. The neuronal views use a blinded neurite-outgrowth acquisition supplied by the authors.\n            <a href=\"https://github.com/CellProfiler/examples/tree/4972b59e670a4ae96c3d453803c92eeff378d054\">Source and attribution</a>.\n            The gallery media have a\n            <a href=\"assets/gallery/release-media-record.json\">capture and checksum record</a>.\n          </p>\n        </aside>",
+  "website_cards": [
+    {
+      "id": "multi-plate-overview",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-wide\">\n            <a\n              class=\"gallery-media-link\"\n              href=\"assets/gallery/multi-plate-overview.webp\"\n              aria-label=\"Open the multi-plate workspace screenshot at full resolution\"\n            >\n              <img\n                src=\"assets/gallery/multi-plate-overview.webp\"\n                width=\"1600\"\n                height=\"958\"\n                loading=\"lazy\"\n                decoding=\"async\"\n                alt=\"OpenHCS Plate Manager with seven assay plates loaded, including CellProfiler Comet Assay and Wound Healing examples\"\n              >\n            </a>\n            <figcaption>\n              <span class=\"gallery-label\">Workspace</span>\n              <h3>Seven assay plates, one workspace</h3>\n              <p>Five deterministic examples and two imported CellProfiler workflows retain independent state in one session.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "pipeline-editor",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-compact\">\n            <a\n              class=\"gallery-media-link\"\n              href=\"assets/gallery/pipeline-editor.webp\"\n              aria-label=\"Open the pipeline editor screenshot at full resolution\"\n            >\n              <img\n                src=\"assets/gallery/pipeline-editor.webp\"\n                width=\"942\"\n                height=\"900\"\n                loading=\"lazy\"\n                decoding=\"async\"\n                alt=\"OpenHCS Pipeline Editor showing the 12 imported steps of the CellProfiler Comet Assay\"\n              >\n            </a>\n            <figcaption>\n              <span class=\"gallery-label\">Authoring</span>\n              <h3>CellProfiler steps in the same pipeline model</h3>\n              <p>The 12-step Comet Assay uses OpenHCS compilation, configuration, viewers, and results.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "lazy-inheritance",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-motion gallery-card-wide\">\n            <div class=\"gallery-motion\">\n              <video\n                controls\n                muted\n                loop\n                playsinline\n                preload=\"metadata\"\n                poster=\"assets/gallery/lazy-inheritance-poster.webp\"\n                aria-describedby=\"lazy-inheritance-caption\"\n              >\n                <source src=\"assets/gallery/lazy-inheritance.webm\" type=\"video/webm\">\n                <source src=\"assets/gallery/lazy-inheritance.mp4\" type=\"video/mp4\">\n                <a href=\"assets/gallery/lazy-inheritance.mp4\">Download the lazy-inheritance demonstration.</a>\n              </video>\n              <a\n                class=\"gallery-motion-fallback gallery-media-link\"\n                href=\"assets/gallery/lazy-inheritance-poster.webp\"\n                aria-label=\"Open the lazy-inheritance demonstration poster at full resolution\"\n              >\n                <img\n                  src=\"assets/gallery/lazy-inheritance-poster.webp\"\n                  width=\"1600\"\n                  height=\"1000\"\n                  loading=\"lazy\"\n                  decoding=\"async\"\n                  alt=\"OpenHCS workspace beside pipeline and step settings showing Well Filter Image30 at pipeline scope and inherited by the step\"\n                >\n                <span>Static view shown because reduced motion is enabled</span>\n              </a>\n            </div>\n            <figcaption id=\"lazy-inheritance-caption\">\n              <span class=\"gallery-label\">Configuration</span>\n              <h3>See configuration provenance in both directions</h3>\n              <p>Well Filter changes to Image30 in PipelineConfig, then the inherited step field flashes as the update arrives. Clicking that step label flashes the owning PipelineConfig field, making the provenance link explicit in both directions.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "fiji-review",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-compact\">\n            <a\n              class=\"gallery-media-link\"\n              href=\"assets/gallery/fiji-review.webp\"\n              aria-label=\"Open the Fiji integration screenshot at full resolution\"\n            >\n              <img\n                src=\"assets/gallery/fiji-review.webp\"\n                width=\"1310\"\n                height=\"930\"\n                loading=\"lazy\"\n                decoding=\"async\"\n                alt=\"Fiji ImageJ showing one NeuronCyto II Field 1 nuclear plane with its nine native segmentation ROI entries\"\n              >\n            </a>\n            <figcaption>\n              <span class=\"gallery-label\">Fiji</span>\n              <h3>Review matching ROIs in Fiji</h3>\n              <p>OpenHCS streams one bound Field 1 nuclear plane and its nine segmentation ROIs together. The native outlines follow the displayed nuclei.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "zmq-startup-compile",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-motion gallery-card-feature\">\n            <div class=\"gallery-motion\">\n              <video\n                controls\n                muted\n                loop\n                playsinline\n                preload=\"metadata\"\n                poster=\"assets/gallery/zmq-startup-compile-poster.webp\"\n                aria-describedby=\"zmq-startup-compile-caption\"\n              >\n                <source src=\"assets/gallery/zmq-startup-compile.webm\" type=\"video/webm\">\n                <source src=\"assets/gallery/zmq-startup-compile.mp4\" type=\"video/mp4\">\n                <a href=\"assets/gallery/zmq-startup-compile.mp4\">Download the endpoint-startup recording.</a>\n              </video>\n              <a\n                class=\"gallery-motion-fallback gallery-media-link\"\n                href=\"assets/gallery/zmq-startup-compile-poster.webp\"\n                aria-label=\"Open the execution-endpoint startup poster at full resolution\"\n              >\n                <img\n                  src=\"assets/gallery/zmq-startup-compile-poster.webp\"\n                  width=\"1600\"\n                  height=\"1000\"\n                  loading=\"lazy\"\n                  decoding=\"async\"\n                  alt=\"OpenHCS showing an execution endpoint preparing its function catalog while a pipeline compiles\"\n                >\n                <span>Static view shown because reduced motion is enabled</span>\n              </a>\n            </div>\n            <figcaption id=\"zmq-startup-compile-caption\">\n              <span class=\"gallery-label\">Local MCP</span>\n              <h3>See endpoint startup while the request is running</h3>\n              <p>A pointer-free MCP compile request immediately adds the execution endpoint, streams catalog-preparation phases into the browser and status bar, and settles connected.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "napari-roi-navigation",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-motion gallery-card-feature\">\n            <div class=\"gallery-motion\">\n              <video\n                controls\n                muted\n                loop\n                playsinline\n                preload=\"metadata\"\n                poster=\"assets/gallery/napari-roi-navigation-poster.webp\"\n                aria-describedby=\"napari-roi-navigation-caption\"\n              >\n                <source src=\"assets/gallery/napari-roi-navigation.webm\" type=\"video/webm\">\n                <source src=\"assets/gallery/napari-roi-navigation.mp4\" type=\"video/mp4\">\n                <a href=\"assets/gallery/napari-roi-navigation.mp4\">Download the Napari ROI-navigation recording.</a>\n              </video>\n              <a\n                class=\"gallery-motion-fallback gallery-media-link\"\n                href=\"assets/gallery/napari-roi-navigation-poster.webp\"\n                aria-label=\"Open the Napari ROI-navigation poster at full resolution\"\n              >\n                <img\n                  src=\"assets/gallery/napari-roi-navigation-poster.webp\"\n                  width=\"1600\"\n                  height=\"896\"\n                  loading=\"lazy\"\n                  decoding=\"async\"\n                  alt=\"Napari showing segmented nuclei, a selected native ROI, its measurement row, and the current Z plane\"\n                >\n                <span>Static view shown because reduced motion is enabled</span>\n              </a>\n            </div>\n            <figcaption id=\"napari-roi-navigation-caption\">\n              <span class=\"gallery-label\">Napari</span>\n              <h3>ROI selection navigates the Z stack</h3>\n              <p>A pointer-free MCP sequence selects measurement rows across a three-plane result. Napari scrolls the table, highlights the native ROI, and moves from Z 3/3 to Z 1/3 and back.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "current-neurite-result",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-feature\">\n            <a\n              class=\"gallery-media-link\"\n              href=\"assets/gallery/current-neurite-result.webp\"\n              aria-label=\"Open the current neuronal result at full resolution\"\n            >\n              <img\n                src=\"assets/gallery/current-neurite-result.webp\"\n                width=\"1500\"\n                height=\"1200\"\n                loading=\"lazy\"\n                decoding=\"async\"\n                alt=\"Current neuronal labels and an inspectable selected path in a native Napari result window\"\n              >\n            </a>\n            <figcaption>\n              <span class=\"gallery-label\">Current neuronal result</span>\n              <h3>Neuronal labels and inspectable paths</h3>\n              <p>A native Napari window shows enhanced neuronal signal with unified labels and the retained path ROI list. Selecting a row highlights its path in the image.</p>\n            </figcaption>\n          </figure>"
+    },
+    {
+      "id": "stitched-neurite-overview",
+      "rendered_html": "          <figure class=\"gallery-card gallery-card-feature\">\n            <a\n              class=\"gallery-media-link\"\n              href=\"assets/gallery/stitched-neurite-overview.webp\"\n              aria-label=\"Open the stitched neuronal analysis at full resolution\"\n            >\n              <img\n                src=\"assets/gallery/stitched-neurite-overview.webp\"\n                width=\"1500\"\n                height=\"1200\"\n                loading=\"lazy\"\n                decoding=\"async\"\n                alt=\"Napari displaying a full stitched neuronal mosaic with hundreds of colored neuron and neurite ROI traces\"\n              >\n            </a>\n            <figcaption>\n              <span class=\"gallery-label\">Napari</span>\n              <h3>Inspect a stitched mosaic as one result</h3>\n              <p>OpenHCS stitches the source fields before analysis and returns one inspectable neuron-ROI layer spanning the mosaic, so residual faint-process misses remain visible in the same viewer.</p>\n            </figcaption>\n          </figure>"
+    }
+  ],
+  "captures": [
+    {
+      "id": "multi-plate-overview",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "Seven independently configured assay plates are visible in one workspace.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "main_window",
+          "create_if_missing": false
+        }
+      },
+      "source": null,
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "multi-plate-overview.webp",
+          "sha256": "dbbafaea1a1eced14c1c521b0d4efb2d0306bda6c2353a9011106bebdc07b324"
+        }
+      ]
+    },
+    {
+      "id": "pipeline-editor",
+      "publication_targets": [
+        "website"
+      ],
+      "proof": "The imported CellProfiler Comet Assay is visible as twelve pipeline steps.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "pipeline_editor",
+          "create_if_missing": false
+        }
+      },
+      "source": null,
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "pipeline-editor.webp",
+          "sha256": "b0931e1c10d905123a1b5ad32ed7362b07c401fefcba2211ae5688a5003e6d8e"
+        }
+      ]
+    },
+    {
+      "id": "first-plate-workflow",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "One compiled synthetic plate and its complete eight-step pipeline are visible in the live workspace.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "main_window",
+          "create_if_missing": false
+        }
+      },
+      "source": {
+        "sha256": "18a8d6588b371b1ef81e95dd0dd5d2b0e31847d9aaa4ee2dddd6cbeba75979e3",
+        "width": 1024,
+        "height": 768,
+        "duration_seconds": null,
+        "format": "PNG"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "first-plate-workflow.webp",
+          "sha256": "991de0cb39524792a41c1d47bf1078d31fcdbd5b2dc55c81daf064a74a3a18a5"
+        }
+      ]
+    },
+    {
+      "id": "source-image-browser",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Image Browser reports 216 loaded source files for the generated plate and exposes the configured Fiji viewer.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "image_browser",
+          "create_if_missing": false
+        }
+      },
+      "source": {
+        "sha256": "45d8f8ffea4da99453604ad8ab06de3e16c533451bf223275847a0f108110651",
+        "width": 900,
+        "height": 600,
+        "duration_seconds": null,
+        "format": "PNG"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "source-image-browser.webp",
+          "sha256": "cf9631e3b61b22772eec772c3b7acc9f761c1bc46a0528de19107a86d7419d1c"
+        }
+      ]
+    },
+    {
+      "id": "global-configuration-editor",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live global configuration editor exposes both configuration roots with typed values, field-level help, and reset controls.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "global_config",
+          "create_if_missing": false
+        }
+      },
+      "source": {
+        "sha256": "41a350116331ad9cff2409efc54d0cf8f77eb674ee42b4841607748064783016",
+        "width": 650,
+        "height": 650,
+        "duration_seconds": null,
+        "format": "PNG"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "global-configuration-editor.webp",
+          "sha256": "b4b69cd74899639c12c9f7014449501f9fafe91a2cd65533631583e2f5ec48e9"
+        }
+      ]
+    },
+    {
+      "id": "execution-log-viewer",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Log Viewer is bound to the active ZMQ execution server and shows its compilation records.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "log_viewer",
+          "create_if_missing": false
+        }
+      },
+      "source": {
+        "sha256": "57f265b07312c0c7d8530d0938f5bc3fefb1a91f7815fa36d013718b83693afb",
+        "width": 900,
+        "height": 700,
+        "duration_seconds": null,
+        "format": "PNG"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "execution-log-viewer.webp",
+          "sha256": "ac0476352392fe6135fca60bdcf37c40c91a21f00384eb4fef3be023b9165eab"
+        }
+      ]
+    },
+    {
+      "id": "lazy-inheritance",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "Editing the pipeline-owned Well Filter flashes its inherited step field; clicking the inherited step label then flashes the owning pipeline field.",
+      "capture_target": {
+        "kind": "application_scene",
+        "human_review_required": true,
+        "parameters": {
+          "window_roles": [
+            "main_window",
+            "pipeline_config",
+            "step_editor"
+          ]
+        }
+      },
+      "source": {
+        "sha256": "4057415aed2d48a6a923a063a5fcc5114f89b1fa9886ff491f5e32bd3503d0c5",
+        "width": 1600,
+        "height": 1000,
+        "duration_seconds": 18.0,
+        "format": null
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "poster",
+          "media_type": "image/webp",
+          "path": "lazy-inheritance-poster.webp",
+          "sha256": "84c9dd0c6c9b3af0facc08adc4f8cebf2169c610e34271991c06a54c7291341a"
+        },
+        {
+          "role": "web_video",
+          "media_type": "video/webm",
+          "path": "lazy-inheritance.webm",
+          "sha256": "4f6184f6c5e75febdfcd7d5c36c7d9499aafbd37c17e9bd6d58b76145ca9ec82"
+        },
+        {
+          "role": "fallback_video",
+          "media_type": "video/mp4",
+          "path": "lazy-inheritance.mp4",
+          "sha256": "af7d69d8a12bc80648af2236d564bda31d111c6c67d32d396112c57b964380df"
+        }
+      ]
+    },
+    {
+      "id": "fiji-review",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "One bound Field 1 nuclear plane is shown with the corresponding nine native ROI Manager entries; the visible outlines follow the displayed nuclei without cross-plane ROI mixing.",
+      "capture_target": {
+        "kind": "fiji_viewer_window",
+        "human_review_required": true,
+        "parameters": {}
+      },
+      "source": {
+        "sha256": "1fc686a80f78189d0abc6efbc1b9d10865a17812f94b0a63274af1551a6a44bd",
+        "width": 1310,
+        "height": 930,
+        "duration_seconds": null,
+        "format": "PNG"
+      },
+      "scientific_evidence": {
+        "source_plane_sha256": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
+        "roi_archive_sha256": "179772aaed8d21bdc260202ab48925538f125a2ee17b6e2ca4eecaa42fbeff62",
+        "source_plane_count": 1,
+        "roi_count": 9
+      },
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "fiji-review.webp",
+          "sha256": "c02d9e4e02c3e8f504fcedc4440dafa154072a876f8669c3b7d9df89254ed893"
+        }
+      ]
+    },
+    {
+      "id": "zmq-startup-compile",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "An execution endpoint appears during the compile request and reports startup phases before settling connected.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "main_window",
+          "create_if_missing": false
+        }
+      },
+      "source": {
+        "sha256": "721ecde56c99716656e188c00b3b57fe5c48a7708700de5572b4098fbabb9147",
+        "width": 1600,
+        "height": 1000,
+        "duration_seconds": 50.0,
+        "format": null
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "poster",
+          "media_type": "image/webp",
+          "path": "zmq-startup-compile-poster.webp",
+          "sha256": "cd86354953790f70041504f2be4cf225f678294f51624ce477d9414cede7028d"
+        },
+        {
+          "role": "web_video",
+          "media_type": "video/webm",
+          "path": "zmq-startup-compile.webm",
+          "sha256": "64109edac63e3bb22d8a155cc757114e11af6028d7a08d33d81a61aae11f93cf"
+        },
+        {
+          "role": "fallback_video",
+          "media_type": "video/mp4",
+          "path": "zmq-startup-compile.mp4",
+          "sha256": "1aa4588d577f575beac0249423d63fdec7a81149990d1916b2866dca6d6ba28f"
+        }
+      ]
+    },
+    {
+      "id": "napari-roi-navigation",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "MCP row selection scrolls the ROI table, updates native Shapes selection, and moves between Z 3/3 and Z 1/3.",
+      "capture_target": {
+        "kind": "napari_viewer_window",
+        "human_review_required": false,
+        "parameters": {}
+      },
+      "source": {
+        "sha256": "b8d8154e89474de1b8ff51d1ec099e83fba725068f2a1d0612b9882596954249",
+        "width": 2304,
+        "height": 1290,
+        "duration_seconds": 30.0,
+        "format": null
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "poster",
+          "media_type": "image/webp",
+          "path": "napari-roi-navigation-poster.webp",
+          "sha256": "f1e9c29db9436df7e6e2dcdb134b6d8529538143f05b732cbe38ec100cd5e1b5"
+        },
+        {
+          "role": "web_video",
+          "media_type": "video/webm",
+          "path": "napari-roi-navigation.webm",
+          "sha256": "345676c83e17d7ff634daf880587b44f16c6364ae67475f06cc6a5aad2618d26"
+        },
+        {
+          "role": "fallback_video",
+          "media_type": "video/mp4",
+          "path": "napari-roi-navigation.mp4",
+          "sha256": "30b8a83a2304b4dc053563d84d5e8b2ee34192bf95a3c161320ee4fd41f05686"
+        }
+      ]
+    },
+    {
+      "id": "current-neurite-result",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "The still is captured through the explicitly connected viewer's native Qt snapshot endpoint; its lossless source checksum and derivative evidence are retained separately from archived recordings.",
+      "capture_target": {
+        "kind": "napari_viewer_window",
+        "human_review_required": false,
+        "parameters": {}
+      },
+      "source": {
+        "sha256": "0181f583a0342d501cfc416d8c761e42416013ac94e6964ed38365b7905a06a6",
+        "width": 2304,
+        "height": 1842,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "current-neurite-result.webp",
+          "sha256": "e55ea2fda442740f58e93f4773419c53026faa4b3336d0148039ea996f65f551"
+        }
+      ]
+    },
+    {
+      "id": "stitched-neurite-overview",
+      "publication_targets": [
+        "website",
+        "documentation"
+      ],
+      "proof": "The still is captured through the explicitly connected viewer's native Qt snapshot endpoint from the retained blind neurite-analysis session; source and derivative checksums are recorded.",
+      "capture_target": {
+        "kind": "napari_viewer_window",
+        "human_review_required": false,
+        "parameters": {}
+      },
+      "source": {
+        "sha256": "0eede1372cef4849261dea08368354dbb70b6100254c14de447685c7aa6f5632",
+        "width": 2304,
+        "height": 1842,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "stitched-neurite-overview.webp",
+          "sha256": "537df1dbc4e2ccc3ae6b96245daf79a504dee29e8b8b498a7a2f12c2dd43bd0b"
+        }
+      ]
+    },
+    {
+      "id": "ui-plate-manager",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Plate Manager surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "plate_manager",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "34f1a478826ac2a597e64b3f3746a727900dbf5fbb7538f76f1542b6a8d2d21f",
+        "width": 541,
+        "height": 281,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-plate-manager.webp",
+          "sha256": "09a340b7b6320827429ca67e22b35aa39ed9543424be07bae399de881201d5b3"
+        }
+      ]
+    },
+    {
+      "id": "ui-pipeline-editor",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Pipeline Editor surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "pipeline_editor",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "5c60ac735eeab2336e310cc04d85c3710b851436ac7d7db2c003d80d0f4e47ef",
+        "width": 477,
+        "height": 498,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-pipeline-editor.webp",
+          "sha256": "88b9ecfce130e15d6bc98765414f36a02fc2a0eef37953a1cdea7bcadf07b82f"
+        }
+      ]
+    },
+    {
+      "id": "ui-main-window",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live OpenHCS surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "main_window",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "65f1a62771c879efad0ac0df4795a263537a66fc52d1e5112f271f2d20a10f2a",
+        "width": 1024,
+        "height": 768,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-main-window.webp",
+          "sha256": "b42b3b03c23e6e168fdb1c515739831cd98fe022a9e41de3949e2f0cebd787bc"
+        }
+      ]
+    },
+    {
+      "id": "ui-system-monitor",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live System Monitor surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "system_monitor",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "53f7929157ec89206b8837dd4e52ab0288652306ba9ed67590f6d782ec094ffa",
+        "width": 1024,
+        "height": 143,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-system-monitor.webp",
+          "sha256": "7a910e3b565712d75050ec5846282e733ab218132d5eb09a41853f48777782f0"
+        }
+      ]
+    },
+    {
+      "id": "ui-zmq-server-manager",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live ZMQ Server Manager surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "zmq_server_manager",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "beee7363525ea2f60c31268e535d5831ffc2c88a35ec85827962d90cbac6e853",
+        "width": 541,
+        "height": 183,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-zmq-server-manager.webp",
+          "sha256": "7a8e86bd8c11c914103cd685f87177b367cf8219ef0ee2ac375a66557c97b3ff"
+        }
+      ]
+    },
+    {
+      "id": "ui-image-browser",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Image Browser surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "image_browser",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "5edf9b0baed163421be003053cb669731a79a45fa09abfd542621cbc816bd0aa",
+        "width": 900,
+        "height": 600,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-image-browser.webp",
+          "sha256": "adecdbec3e1381eb71f8fff813f1a56824e4c57a9d5f2d3c6659606682d7bfd8"
+        }
+      ]
+    },
+    {
+      "id": "ui-log-viewer",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Log Viewer surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "log_viewer",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "2e35a9ddfdfaf7abfe15e5d91f9eb881aeed40dd874c23f5091d4bb74a4f5334",
+        "width": 900,
+        "height": 700,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-log-viewer.webp",
+          "sha256": "0ac13269eed5832e5aa4c9a9ca27da59044da18709da4a17f40687c14fccb9ba"
+        }
+      ]
+    },
+    {
+      "id": "ui-global-config",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live Configure OpenHCS surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "global_config",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "41a350116331ad9cff2409efc54d0cf8f77eb674ee42b4841607748064783016",
+        "width": 650,
+        "height": 650,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-global-config.webp",
+          "sha256": "b4b69cd74899639c12c9f7014449501f9fafe91a2cd65533631583e2f5ec48e9"
+        }
+      ]
+    },
+    {
+      "id": "ui-knowledge-base",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live OpenHCS Knowledge Base surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "knowledge_base",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "a6ffbe93690a3f795aa4aa6ffec516fb5aaabbfd442b846e16d92c71402ad964",
+        "width": 980,
+        "height": 680,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-knowledge-base.webp",
+          "sha256": "f436036fc3b3cf85481051ebd690a2167468d09d186efce811936949b734613c"
+        }
+      ]
+    },
+    {
+      "id": "ui-about-openhcs",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live About OpenHCS surface is captured through its registered stable UI-bridge identity.",
+      "capture_target": {
+        "kind": "ui_bridge_window",
+        "human_review_required": false,
+        "parameters": {
+          "window_id": "about_openhcs",
+          "create_if_missing": true
+        }
+      },
+      "source": {
+        "sha256": "da3c36c12ed3e6ebd3ddeda252260236bb71b99f490d29ce277888c829f5ff51",
+        "width": 440,
+        "height": 441,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-about-openhcs.webp",
+          "sha256": "00a701ee47c35da96788e1dfcf63ef161fa8d92ead27f47b5302e8997fe251f8"
+        }
+      ]
+    },
+    {
+      "id": "ui-pipeline-configuration",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live plate ObjectState scope is derived from the selected step scope and opened through the UI bridge.",
+      "capture_target": {
+        "kind": "object_state_editor",
+        "human_review_required": false,
+        "parameters": {
+          "scope_role": "pipeline",
+          "tab": null
+        }
+      },
+      "source": {
+        "sha256": "3b990613591b77753165e6cad98563945330747497aae11941e775b887c91c14",
+        "width": 650,
+        "height": 650,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-pipeline-configuration.webp",
+          "sha256": "1ca2eb172ca33a2cd9ba3f74d1aaae81f448f5c48c85bd9b6f51642e9b1fa570"
+        }
+      ]
+    },
+    {
+      "id": "ui-step-settings-editor",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live step scope and Step Settings tab are resolved from ObjectState and tab declarations.",
+      "capture_target": {
+        "kind": "object_state_editor",
+        "human_review_required": false,
+        "parameters": {
+          "scope_role": "step",
+          "tab": "step_settings"
+        }
+      },
+      "source": {
+        "sha256": "38c3a5fd79dda1766f2c21051bb1bea6461cd698771a62babc6a1a7558868aef",
+        "width": 550,
+        "height": 600,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-step-settings-editor.webp",
+          "sha256": "df440ca834f62e34f8da792320c4159424b05848bada8fc2cb8ea502da741c4a"
+        }
+      ]
+    },
+    {
+      "id": "ui-function-configuration",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The callable child scope is discovered from ObjectState and navigated through the shared editor window.",
+      "capture_target": {
+        "kind": "object_state_editor",
+        "human_review_required": false,
+        "parameters": {
+          "scope_role": "function",
+          "tab": "function_pattern"
+        }
+      },
+      "source": {
+        "sha256": "00bf3a3e9cd21222d0607a137aa24d45e005e3aec6cf1b25eabdb3f4c4d4ab4f",
+        "width": 550,
+        "height": 600,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-function-configuration.webp",
+          "sha256": "003c0278077d2d239b90308958715808e3a1a99d767a7abfca3dd65ba6be1bd9"
+        }
+      ]
+    },
+    {
+      "id": "ui-plate-metadata",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The selected plate's Viewer action opens the plate viewer and the declared Metadata tab is selected through the widget bridge.",
+      "capture_target": {
+        "kind": "plate_manager_action_window",
+        "human_review_required": false,
+        "parameters": {
+          "action": "view_metadata",
+          "tab": "metadata"
+        }
+      },
+      "source": {
+        "sha256": "653b2fc7ac41d16bec4060138fa228cd04a11e1ae173fb8b1172a567be435cc1",
+        "width": 1200,
+        "height": 800,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-plate-metadata.webp",
+          "sha256": "061b1f5d32b64427c0ef06ef1c82664eac09a7e06aac797b1a25bb73c3cd15e1"
+        }
+      ]
+    },
+    {
+      "id": "ui-live-measurement-results",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The selected plate's Results action opens the UI view of the same retained measurement state surface.",
+      "capture_target": {
+        "kind": "plate_manager_action_window",
+        "human_review_required": false,
+        "parameters": {
+          "action": "view_results",
+          "tab": null
+        }
+      },
+      "source": {
+        "sha256": "d5e737d46dcb5bf6e0e81c32017a8ee374ca0956bbf76c4feea06886da2fc1ff",
+        "width": 1200,
+        "height": 700,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-live-measurement-results.webp",
+          "sha256": "b39a8ed25ca440cfb799a73f5b54c23d030dd7eed92c57c1fa8ac0f5c8a8565b"
+        }
+      ]
+    },
+    {
+      "id": "ui-function-selector",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The live step editor selects its declared Function Pattern tab and invokes the declared generic Add action.",
+      "capture_target": {
+        "kind": "function_selector",
+        "human_review_required": false,
+        "parameters": {
+          "action": "add",
+          "editor_scope_role": "step",
+          "editor_tab": "function_pattern"
+        }
+      },
+      "source": {
+        "sha256": "8739f208dfafbc5bfa433db1eec4fffaf9147e81c7b02b94007dfaa14469a12c",
+        "width": 1200,
+        "height": 700,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-function-selector.webp",
+          "sha256": "4bff760ae10c02e41e8a6f5754438021cb92ae7985ad4ec6e8183e43a92fd8bd"
+        }
+      ]
+    },
+    {
+      "id": "ui-custom-function-manager",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The manager is opened through the generic System Monitor action declaration rather than a window-title selector.",
+      "capture_target": {
+        "kind": "system_monitor_action_window",
+        "human_review_required": false,
+        "parameters": {
+          "action": "custom_functions"
+        }
+      },
+      "source": {
+        "sha256": "b62b497b8aab73002d0b51e30a44429b03dd92b46497f1fdf97167faeb4358f2",
+        "width": 700,
+        "height": 500,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-custom-function-manager.webp",
+          "sha256": "10e8e32bdb175ea13e0861479f843ae1ef9f18746a7548ec75d2148a060ef144"
+        }
+      ]
+    },
+    {
+      "id": "ui-synthetic-plate-generator",
+      "publication_targets": [
+        "documentation"
+      ],
+      "proof": "The generator is opened through the generic System Monitor Test Plate action declaration.",
+      "capture_target": {
+        "kind": "system_monitor_action_window",
+        "human_review_required": false,
+        "parameters": {
+          "action": "test_plate"
+        }
+      },
+      "source": {
+        "sha256": "6f264751a8e3508c09b49a43acc9f5b41ad4435bd09c428b7dc83443843f68ff",
+        "width": 800,
+        "height": 700,
+        "duration_seconds": null,
+        "format": "png"
+      },
+      "scientific_evidence": null,
+      "published": [
+        {
+          "role": "image",
+          "media_type": "image/webp",
+          "path": "ui-synthetic-plate-generator.webp",
+          "sha256": "e175587baba4afdd7826f168a99308b66e1287e5286e17ae72e73bd4d86675ff"
+        }
+      ]
+    }
+  ]
+}

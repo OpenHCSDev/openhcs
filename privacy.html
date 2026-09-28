@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Privacy information for the OpenHCS website and local software."
+    >
+    <meta name="theme-color" content="#0a0d16">
+    <title>Privacy — OpenHCS</title>
+    <link rel="icon" type="image/svg+xml" href="assets/logos/openhcs-favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="index.html#top" aria-label="OpenHCS home">
+        <img class="brand-lockup" src="assets/logos/openhcs-horizontal.svg" alt="OpenHCS">
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html">Home</a>
+        <a href="support.html">Support</a>
+        <a href="terms.html">Terms</a>
+        <a class="nav-github" href="https://github.com/OpenHCSDev/OpenHCS">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="policy-page" id="content">
+      <header class="policy-hero">
+        <span class="kicker">Public policy</span>
+        <h1>Privacy</h1>
+        <p>
+          This page explains the information boundaries of the OpenHCS website,
+          local software, and local MCP integration.
+        </p>
+        <span class="policy-date">Effective July 27, 2026</span>
+      </header>
+
+      <div class="policy-layout">
+        <nav class="policy-nav" aria-label="Privacy contents">
+          <strong>On this page</strong>
+          <a href="#scope">Scope</a>
+          <a href="#website-data">Website data</a>
+          <a href="#local-software">Local software</a>
+          <a href="#not-accessed">What is not accessed</a>
+          <a href="#sharing-retention">Sharing and retention</a>
+          <a href="#choices">Your choices</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <article class="policy-content">
+          <section id="scope">
+            <h2>Scope</h2>
+            <p>
+              OpenHCS is an open-source bioimage-analysis project maintained by
+              OpenHCS contributors. This policy covers this public project website
+              and information voluntarily included in support requests.
+            </p>
+            <p>
+              It does not govern ChatGPT or other OpenAI services, GitHub, PyPI,
+              Read the Docs, Google Fonts, or other linked services. Those providers
+              apply their own privacy terms. Local OpenHCS runs on the user's
+              computer and is not made remotely accessible by visiting this website.
+            </p>
+          </section>
+
+          <section id="website-data">
+            <h2>Website data</h2>
+            <p>
+              The OpenHCS website source does not provide user accounts, contact
+              forms, application analytics, advertising trackers, or an OpenHCS
+              cookie. The hosting and network providers may process ordinary request
+              metadata such as IP address, timestamp, requested page, browser type,
+              and security logs as part of serving the site.
+            </p>
+            <p>
+              Pages currently request font files from Google Fonts, so a visitor's
+              browser may send ordinary request metadata to Google. Following an
+              external link sends the visitor to the named third-party service.
+            </p>
+          </section>
+
+          <section id="local-software">
+            <h2>Local software and MCP clients</h2>
+            <p>
+              The OpenHCS desktop application and local MCP server run on the
+              user's computer. The project website does not receive local files,
+              prompts, pipeline definitions, execution results, or microscopy data
+              merely because OpenHCS is installed or connected to a local client.
+            </p>
+            <p>
+              ChatGPT desktop, Codex, Claude Desktop, and other local MCP clients
+              apply their own privacy and data-handling terms. Configure only the
+              readable and writable directories required for the analysis and do
+              not include credentials or sensitive data in public support reports.
+            </p>
+          </section>
+
+          <section id="not-accessed">
+            <h2>What the website does not access</h2>
+            <ul>
+              <li>Files, folders, images, or microscopy datasets on the user's computer.</li>
+              <li>The local OpenHCS GUI, Plate Manager, pipeline editor, Napari, or Fiji.</li>
+              <li>Local pipeline execution, viewers, or other processes on the user's machine.</li>
+              <li>Write operations or arbitrary host paths.</li>
+            </ul>
+            <p>
+              Do not place confidential, patient-identifiable, protected-health,
+              or other regulated data into public issues or support requests.
+            </p>
+          </section>
+
+          <section id="sharing-retention">
+            <h2>Sharing and retention</h2>
+            <p>
+              Website hosting and network providers may retain ordinary request and
+              security logs under their own policies. Public issues and discussions
+              are retained by GitHub according to its terms. OpenHCS does not sell
+              personal information or use website activity for advertising.
+            </p>
+            <p>
+              Information may also be preserved or disclosed when required to
+              investigate abuse, protect the website, or comply with applicable law.
+            </p>
+          </section>
+
+          <section id="choices">
+            <h2>Your choices</h2>
+            <p>
+              Visiting the website does not require an OpenHCS account. Browser
+              controls can restrict cookies, external fonts, and other third-party
+              requests. Local MCP access can be stopped by disabling or removing the
+              OpenHCS server in the connected client.
+            </p>
+          </section>
+
+          <section id="contact">
+            <h2>Contact</h2>
+            <p>
+              For a privacy question, contact the OpenHCS maintainer at
+              <a href="mailto:tristan.simas@mail.mcgill.ca">tristan.simas@mail.mcgill.ca</a>.
+              Do not send microscopy data, access tokens, credentials, or sensitive
+              personal information by email.
+            </p>
+            <p>
+              For ordinary product support, use the
+              <a href="support.html">OpenHCS support page</a>.
+            </p>
+          </section>
+        </article>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-brand">
+        <img class="footer-brand-logo" src="assets/logos/openhcs-stacked.svg" alt="OpenHCS">
+        <small>Open High-Content Screening.</small>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html" aria-current="page">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
+      <span class="copyright">MIT License · OpenHCS contributors</span>
+    </footer>
+  </body>
+</html>
