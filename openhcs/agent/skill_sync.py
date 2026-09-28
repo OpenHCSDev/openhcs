@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from uuid import uuid4
@@ -17,6 +18,7 @@ from openhcs.agent.knowledge_manifest import default_repo_root
 from openhcs.agent.skill_bundle import (
     AGENT_PLUGIN_MANIFEST_PATH,
     AgentSkillBundle,
+    path_is_redirected,
     unredirected_absolute_path,
 )
 
@@ -51,12 +53,20 @@ class SkillSyncResult:
     backup_path: str | None = None
 
 
+class SkillSyncPartialFailure(RuntimeError):
+    """A later publication failed after these outcomes were already produced."""
+
+    def __init__(self, results: tuple[SkillSyncResult, ...], error: Exception):
+        super().__init__(str(error))
+        self.results = results
+
+
 def _fingerprint(root: Path) -> dict[str, str]:
     unredirected_absolute_path(root)
     files: dict[str, str] = {}
     for path in sorted(root.rglob("*")):
-        if path.is_symlink():
-            raise ValueError(f"Refusing symlinked skill resource: {path}")
+        if path_is_redirected(path):
+            raise ValueError(f"Refusing redirected skill resource: {path}")
         if (
             path.is_file()
             and path.relative_to(root).as_posix() != SkillSyncReceipt.filename
@@ -74,22 +84,30 @@ def _verify_directory_identity(path: Path, expected: os.stat_result) -> None:
         raise ValueError(f"Directory changed during sync; refusing publication: {path}")
 
 
+def installed_skill_bundle() -> AgentSkillBundle:
+    """Resolve the skill declaration carried by this installed environment."""
+    return AgentSkillBundle.from_manifest(
+        default_repo_root() / AGENT_PLUGIN_MANIFEST_PATH
+    )
+
+
 def sync_skills(
     skills_directory: Path,
     *,
     dry_run: bool = False,
     bundle: AgentSkillBundle | None = None,
+    managed_only: bool = False,
 ) -> tuple[SkillSyncResult, ...]:
     """Install absent skills or update unchanged managed copies; retain backups."""
-    owner = bundle or AgentSkillBundle.from_manifest(
-        default_repo_root() / AGENT_PLUGIN_MANIFEST_PATH
-    )
+    owner = bundle or installed_skill_bundle()
     owner.source_paths()  # Validate the complete source tree before any mutation.
     destination = unredirected_absolute_path(skills_directory)
     roots = owner.skill_roots()
     planned: list[tuple[Path, Path, SkillSyncReceipt, SkillSyncReceipt | None]] = []
     for source in roots:
         target = destination / source.name
+        if managed_only and not (target / SkillSyncReceipt.filename).is_file():
+            continue
         unredirected_absolute_path(target)
         if source.resolve().is_relative_to(
             target.resolve()
@@ -107,14 +125,31 @@ def sync_skills(
         planned.append((source, target, desired, previous))
 
     results: list[SkillSyncResult] = []
+    try:
+        # extend retains already-yielded outcomes if a later publication raises.
+        results.extend(_sync_planned_skills(destination, planned, dry_run=dry_run))
+    except Exception as exc:
+        if results:
+            raise SkillSyncPartialFailure(tuple(results), exc) from exc
+        raise
+    return tuple(results)
+
+
+def _sync_planned_skills(
+    destination: Path,
+    planned: list[tuple[Path, Path, SkillSyncReceipt, SkillSyncReceipt | None]],
+    *,
+    dry_run: bool,
+) -> Iterator[SkillSyncResult]:
+    """Yield each completed outcome before attempting the next publication."""
     for source, target, desired, previous in planned:
         if previous == desired:
-            results.append(SkillSyncResult(str(target), "unchanged"))
+            yield SkillSyncResult(str(target), "unchanged")
             continue
         status = "installed" if previous is None else "updated"
         if dry_run:
             planned_status = "would_install" if previous is None else "would_update"
-            results.append(SkillSyncResult(str(target), planned_status))
+            yield SkillSyncResult(str(target), planned_status)
             continue
         destination.mkdir(parents=True, exist_ok=True)
         unredirected_absolute_path(target)
@@ -162,9 +197,7 @@ def sync_skills(
                     unredirected_absolute_path(target)
                     os.replace(backup, target)
                 raise
-            results.append(
-                SkillSyncResult(str(target), status, str(backup) if backup else None)
-            )
+            yield SkillSyncResult(str(target), status, str(backup) if backup else None)
         finally:
             try:
                 unredirected_absolute_path(stage)
@@ -177,7 +210,6 @@ def sync_skills(
                 # Keep the original stage rather than cleaning through a
                 # redirected parent into somebody else's directory.
                 pass
-    return tuple(results)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -188,6 +220,17 @@ def main(argv: list[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     try:
         results = sync_skills(arguments.skills_dir, dry_run=arguments.dry_run)
+    except SkillSyncPartialFailure as exc:
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": str(exc),
+                    "results": [asdict(result) for result in exc.results],
+                }
+            )
+        )
+        return 1
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}))
         return 1

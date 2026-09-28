@@ -26,6 +26,14 @@ from metaclass_registry import AutoRegisterMeta
 from tomlkit.items import InlineTable
 
 from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.skill_bundle import path_is_redirected
+from openhcs.agent.skill_sync import (
+    SkillSyncPartialFailure,
+    SkillSyncReceipt,
+    SkillSyncResult,
+    installed_skill_bundle,
+    sync_skills,
+)
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 
 CLIENT_REGISTRATION_SCHEMA_VERSION = "openhcs.mcp.client-registration.v1"
@@ -277,6 +285,16 @@ class ClientRegistrationResult:
 
 
 @dataclass(frozen=True, slots=True)
+class ClientSkillSyncResult:
+    """Skill outcome independent of the client's MCP connection outcome."""
+
+    target_id: str
+    required: bool
+    results: tuple[SkillSyncResult, ...] = ()
+    error: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ClientRegistrationReport:
     """Installer-facing aggregate with explicit partial-success semantics."""
 
@@ -284,14 +302,17 @@ class ClientRegistrationReport:
     ok: bool
     required_ok: bool
     results: tuple[ClientRegistrationResult, ...]
+    skill_sync: tuple[ClientSkillSyncResult, ...] = ()
 
     @classmethod
     def from_results(
         cls,
         results: Sequence[ClientRegistrationResult],
+        skill_sync: Sequence[ClientSkillSyncResult] = (),
     ) -> "ClientRegistrationReport":
         """Summarize all attempted registrations without erasing successes."""
         frozen_results = tuple(results)
+        frozen_skill_sync = tuple(skill_sync)
         failed = tuple(
             result
             for result in frozen_results
@@ -299,9 +320,17 @@ class ClientRegistrationReport:
         )
         return cls(
             schema_version=CLIENT_REGISTRATION_SCHEMA_VERSION,
-            ok=not failed,
-            required_ok=not any(result.required for result in failed),
+            ok=not failed
+            and not any(result.error is not None for result in frozen_skill_sync),
+            required_ok=(
+                not any(result.required for result in failed)
+                and not any(
+                    result.required and result.error is not None
+                    for result in frozen_skill_sync
+                )
+            ),
             results=frozen_results,
+            skill_sync=frozen_skill_sync,
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -311,6 +340,7 @@ class ClientRegistrationReport:
             "ok": self.ok,
             "required_ok": self.required_ok,
             "results": [asdict(result) for result in self.results],
+            "skill_sync": [asdict(result) for result in self.skill_sync],
         }
 
 
@@ -328,6 +358,73 @@ class McpClientRegistrationTarget(ABC, metaclass=AutoRegisterMeta):
 
     target_id: ClassVar[str | None] = None
     display_name: ClassVar[str] = ""
+
+    @classmethod
+    def skill_directory(cls, environment: ClientRegistrationEnvironment) -> Path | None:
+        """Return a documented discovery directory, or no skill capability."""
+        del environment
+        return None
+
+    @classmethod
+    def alternate_skill_directories(
+        cls, environment: ClientRegistrationEnvironment
+    ) -> tuple[Path, ...]:
+        """Return other known discovery paths that must not contain duplicates."""
+        del environment
+        return ()
+
+    @classmethod
+    def synchronise_skills(
+        cls,
+        environment: ClientRegistrationEnvironment,
+        *,
+        required: bool = False,
+        managed_only: bool = False,
+    ) -> ClientSkillSyncResult | None:
+        """Sync the packaged bundle through this client's declared capability."""
+        try:
+            directory = cls.skill_directory(environment)
+            if directory is None:
+                return None
+            bundle = installed_skill_bundle()
+            roots = bundle.skill_roots()
+            if managed_only:
+                roots = tuple(
+                    root
+                    for root in roots
+                    if (directory / root.name / SkillSyncReceipt.filename).is_file()
+                )
+            if not roots:
+                return None
+            for alternate in cls.alternate_skill_directories(environment):
+                if alternate == directory:
+                    continue
+                for root in roots:
+                    existing = alternate / root.name
+                    if existing.exists() or path_is_redirected(existing):
+                        raise ValueError(
+                            f"Existing skill left unchanged: {existing}. "
+                            "Resolve duplicate discovery before enabling managed sync."
+                        )
+            return ClientSkillSyncResult(
+                target_id=cls.require_target_id(),
+                required=required,
+                results=sync_skills(
+                    directory, bundle=bundle, managed_only=managed_only
+                ),
+            )
+        except SkillSyncPartialFailure as exc:
+            return ClientSkillSyncResult(
+                target_id=cls.require_target_id(),
+                required=required,
+                results=exc.results,
+                error=str(exc),
+            )
+        except Exception as exc:  # noqa: BLE001 - optional post-publication failure report
+            # This optional post-publication step cannot invalidate a desktop update.
+            return ClientSkillSyncResult(
+                target_id=cls.require_target_id(), required=required, error=str(exc)
+            )
 
     @classmethod
     def require_target_id(cls) -> str:
@@ -381,6 +478,17 @@ class CodexClientRegistrationTarget(McpClientRegistrationTarget):
     target_id = "codex"
     display_name = "ChatGPT desktop and OpenAI Codex"
     executable_candidates = ("codex",)
+
+    @classmethod
+    def skill_directory(cls, environment: ClientRegistrationEnvironment) -> Path:
+        """Codex's documented per-user discovery is separate from CODEX_HOME."""
+        return environment.home / ".agents" / "skills"
+
+    @classmethod
+    def alternate_skill_directories(
+        cls, environment: ClientRegistrationEnvironment
+    ) -> tuple[Path, ...]:
+        return (cls.config_path(environment).parent / "skills",)
 
     @classmethod
     def config_path(cls, environment: ClientRegistrationEnvironment) -> Path:
@@ -783,6 +891,7 @@ def register_mcp_clients(
     *,
     required_target_ids: Sequence[str] = (),
     register_detected: bool = False,
+    sync_client_skills: bool = False,
     environment: ClientRegistrationEnvironment | None = None,
 ) -> ClientRegistrationReport:
     """Register required and detected clients through their nominal owners."""
@@ -871,7 +980,31 @@ def register_mcp_clients(
                     )
                 )
 
-    return ClientRegistrationReport.from_results(results)
+    skill_results: list[ClientSkillSyncResult] = []
+    if sync_client_skills:
+        for result in results:
+            if result.status == ClientRegistrationStatus.FAILED.value:
+                continue
+            target = McpClientRegistrationTarget.target_for_id(result.target_id)
+            assert target is not None  # Successful results came from registered owners.
+            skill_result = target.synchronise_skills(host, required=result.required)
+            if skill_result is not None:
+                skill_results.append(skill_result)
+    return ClientRegistrationReport.from_results(results, skill_results)
+
+
+def refresh_managed_client_skills(
+    *,
+    environment: ClientRegistrationEnvironment | None = None,
+) -> tuple[ClientSkillSyncResult, ...]:
+    """Refresh existing receipt-enrolled copies; never enrol a new client."""
+    host = environment or ClientRegistrationEnvironment.current()
+    results: list[ClientSkillSyncResult] = []
+    for target in McpClientRegistrationTarget.registered_targets():
+        result = target.synchronise_skills(host, managed_only=True)
+        if result is not None:
+            results.append(result)
+    return tuple(results)
 
 
 def _arguments_from_json(value: str) -> tuple[str, ...]:
@@ -924,6 +1057,11 @@ def _parser() -> argparse.ArgumentParser:
         help="Also register clients detected on this host.",
     )
     parser.add_argument(
+        "--sync-skills",
+        action="store_true",
+        help="Also install/update packaged skills for clients with documented support.",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Emit the structured installer-facing JSON report.",
@@ -953,6 +1091,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         launcher,
         required_target_ids=arguments.register,
         register_detected=arguments.register_detected,
+        sync_client_skills=arguments.sync_skills,
     )
     payload = report.as_dict()
     if arguments.json:
@@ -967,6 +1106,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                     else sys.stdout
                 ),
             )
+        for result in report.skill_sync:
+            if result.error is not None:
+                print(f"{result.target_id} skills: {result.error}", file=sys.stderr)
+            else:
+                for skill in result.results:
+                    print(f"{result.target_id} skill: {skill.status} - {skill.path}")
     return 0 if report.required_ok else 1
 
 

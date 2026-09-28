@@ -32,7 +32,7 @@ and [plugin packaging documentation](https://developers.openai.com/plugins/build
 
 Run the same sync command with the newly installed OpenHCS environment after
 each install or update. An opted-in setup/update script can make this its final
-step; this PR does not automatically enrol native installers or in-app updates.
+step. Plain `pip install` does not enrol a harness automatically.
 It exports the guidance from that installed package, not an unrelated checkout.
 Do not assume a currently running agent has reread every instruction: use the
 harness's refresh/restart behaviour when its active skill remains stale.
@@ -41,6 +41,39 @@ An unchanged managed copy is not rewritten. A changed release can replace a
 copy only when its files still match the previous ownership receipt. The old
 tree is retained at the reported `backup_path`, outside normal skill discovery,
 so the previous version is recoverable.
+
+## Use native setup and desktop updates
+
+In the Windows or macOS installer, the agent-connection option explicitly
+includes analysis skills. Leave it unchecked to skip both MCP registration and
+skill installation. With it checked, setup registers the stable MCP launcher
+and requests skill sync for clients with a documented skill capability. Codex
+currently supports this route; an MCP connection to another client does not
+imply that client can discover the skill.
+
+For scripted setup, opt in with `openhcs-mcp-register --command /absolute/launcher
+--register codex --sync-skills --json`. The report separates `results` for MCP
+connections from `skill_sync` outcomes. A skill refusal does not undo a successful
+connection, but makes the report unsuccessful and leaves the conflicting skill
+unchanged. If a later skill fails after another was published, the report retains
+the completed outcomes alongside the error. Known legacy Codex skill paths are
+also checked to avoid installing a
+duplicate of a development symlink.
+
+After successful desktop publication, in-application updates refresh existing
+managed copies at the declared client paths. Each ownership receipt enrols only
+its own skill, not other skills added to a later bundle; no receipt means no new
+skill installation. Unmanaged, locally modified
+and redirected copies are not replaced. A refusal is reported as a warning and
+does not invalidate the published environment or restart target. This does not
+automatically refresh skills installed at arbitrary custom paths: run their
+explicit sync command after upgrading.
+
+Native setup skips this existing-copy refresh before applying its checkbox
+choice. Scripted desktop publication can do the same with `--skip-skill-sync`.
+To stop future managed refreshes, move the skill outside discovery, or remove its
+`.openhcs-skill.json` ownership receipt; subsequent sync treats it as custom and
+will not overwrite it.
 
 ## Resolve conflicts without losing local work
 

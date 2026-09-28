@@ -18,7 +18,8 @@ These installers are thin, user-scoped adapters over existing authorities:
 4. With the checked-by-default agent connection option, the installer projects
    that same stable launcher into supported local MCP clients. Client
    configuration never points at the version-stamped environment that an update
-   replaces.
+   replaces. The labelled option also requests the packaged analysis skill for
+   clients with documented skill discovery (currently Codex).
 
 The platform scripts do not carry dependency lists, Python download tables,
 launcher templates, shortcut construction, or an alternate OpenHCS startup
@@ -35,7 +36,17 @@ points remain authoritative.
 - Re-running an installer updates/reinstalls the same isolated environment.
 - Existing unrelated MCP client configuration is preserved. Setup owns only the
   local server entry named `openhcs`, and keeps a recoverable backup when it
-  changes an existing client configuration.
+   changes an existing client configuration.
+- Skill sync is separate from MCP connection success. It uses the installed
+  package's plugin declaration and refuses custom, locally edited, redirected,
+  or conflicting legacy skills. An update retains the previous managed copy at
+  its reported backup path. Leaving the setup agent option unchecked skips
+  both connection and skill changes.
+- In-application updates refresh only receipt-enrolled copies at declared
+  client discovery paths, after successful desktop publication. They do not
+  create a new skill or rerun MCP registration. A skill failure is a warning;
+  the published desktop environment and restart target remain usable. Custom
+  destinations still require the explicit `openhcs skills sync` command.
 - The default is the CPU-safe
   `openhcs[gui,viz,bioformats,mcp,cellprofiler-compat]` desktop surface: the Qt
   application, Napari, Fiji/PyImageJ, Bio-Formats, supported CellProfiler

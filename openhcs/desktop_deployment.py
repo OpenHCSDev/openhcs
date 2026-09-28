@@ -13,7 +13,7 @@ import struct
 import subprocess
 import sys
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from importlib.metadata import distribution
 from importlib.resources import files
 from pathlib import Path, PureWindowsPath
@@ -32,6 +32,10 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.mcp.bootstrap import (
     MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE,
     MCP_STABLE_LAUNCH_COMMAND_ENVIRONMENT_VARIABLE,
+)
+from openhcs.mcp.client_registration import (
+    ClientSkillSyncResult,
+    refresh_managed_client_skills,
 )
 from openhcs.resources.brand import (
     BRAND_PRODUCT_NAME,
@@ -157,6 +161,8 @@ class DesktopDeploymentReport:
     application_path: str | None
     restart_executable: str
     deferred_paths: tuple[str, ...] = ()
+    skill_sync: tuple[ClientSkillSyncResult, ...] = ()
+    skill_sync_error: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1058,7 +1064,7 @@ class MacOSDesktopDeployment(DesktopDeploymentAuthority):
         desktop_link = desktop_directory / (f"{context.application.product_name}.app")
         if _path_exists(desktop_link) and not desktop_link.is_symlink():
             raise DesktopDeploymentError(
-                "Refusing to replace a non-link Desktop item: " f"{desktop_link}"
+                f"Refusing to replace a non-link Desktop item: {desktop_link}"
             )
 
         environment_launcher = context.environment_root / "launch-openhcs.sh"
@@ -1105,11 +1111,19 @@ class MacOSDesktopDeployment(DesktopDeploymentAuthority):
 
 def refresh_installer_managed_desktop(
     installation_pointer: Path,
+    *,
+    refresh_skills: bool = True,
 ) -> DesktopDeploymentReport:
     """Refresh the current native installation through its platform authority."""
 
     context = DesktopDeploymentContext.from_runtime(installation_pointer)
-    return DesktopDeploymentAuthority.current().refresh(context)
+    report = DesktopDeploymentAuthority.current().refresh(context)
+    if refresh_skills:
+        try:
+            return replace(report, skill_sync=refresh_managed_client_skills())
+        except Exception as exc:  # noqa: BLE001 - desktop publication has already succeeded
+            return replace(report, skill_sync_error=str(exc))
+    return report
 
 
 def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
@@ -1124,6 +1138,11 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--skip-skill-sync",
+        action="store_true",
+        help="Publish desktop integration without refreshing existing managed skills.",
+    )
     return parser.parse_args(argv)
 
 
@@ -1138,7 +1157,22 @@ def main(argv: list[str] | None = None) -> int:
                 "desktop integration."
             )
         pointer = Path(raw_pointer)
-    report = refresh_installer_managed_desktop(pointer)
+    report = refresh_installer_managed_desktop(
+        pointer, refresh_skills=not arguments.skip_skill_sync
+    )
+    if report.skill_sync_error is not None:
+        print(
+            f"WARNING: analysis skills were not refreshed: {report.skill_sync_error}. "
+            "Desktop integration remains published.",
+            file=sys.stderr,
+        )
+    for result in report.skill_sync:
+        if result.error is not None:
+            print(
+                f"WARNING: {result.target_id} analysis skills were not refreshed: "
+                f"{result.error} Desktop integration remains published.",
+                file=sys.stderr,
+            )
     if arguments.json:
         print(json.dumps(asdict(report), sort_keys=True))
     else:
