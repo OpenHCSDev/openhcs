@@ -3,10 +3,15 @@
 import json
 import os
 import shutil
+import stat
+import subprocess
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from openhcs.agent import skill_bundle
 from openhcs.agent.skill_bundle import AgentSkillBundle
 from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
 
@@ -110,6 +115,46 @@ def test_redirected_ancestor_is_not_followed(bundle, tmp_path):
     redirected.symlink_to(real, target_is_directory=True)
     with pytest.raises(ValueError, match="redirected"):
         sync_skills(redirected / "skills", bundle=bundle)
+    assert not list(real.iterdir())
+
+
+def test_windows_reparse_attribute_rejects_destination_ancestor(tmp_path, monkeypatch):
+    redirected = tmp_path / "junction"
+    monkeypatch.setattr(skill_bundle.sys, "platform", "win32")
+    monkeypatch.setattr(Path, "is_symlink", lambda _: False)
+    monkeypatch.setattr(
+        Path,
+        "lstat",
+        lambda path: SimpleNamespace(
+            st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT
+            if path == redirected
+            else 0
+        ),
+    )
+    with pytest.raises(ValueError, match="redirected"):
+        skill_bundle.unredirected_absolute_path(redirected / "skills")
+
+
+def test_absent_windows_destination_is_not_a_reparse_point(tmp_path, monkeypatch):
+    destination = tmp_path / "absent"
+    monkeypatch.setattr(skill_bundle.sys, "platform", "win32")
+    assert not skill_bundle.path_is_redirected(destination)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Real junction needs Windows")
+def test_windows_junction_is_not_followed(bundle, tmp_path):
+    real = tmp_path / "real"
+    real.mkdir()
+    junction = tmp_path / "junction"
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(junction), str(real)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    with pytest.raises(ValueError, match="redirected"):
+        sync_skills(junction / "skills", bundle=bundle)
     assert not list(real.iterdir())
 
 

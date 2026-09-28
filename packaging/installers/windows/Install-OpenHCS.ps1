@@ -543,6 +543,7 @@ function Invoke-LoggedCommand {
         [Parameter(Mandatory = $true)][string[]]$ArgumentList,
         [Parameter(Mandatory = $true)][string]$Description,
         [Parameter(Mandatory = $true)][string]$CancellationPath,
+        [int[]]$AllowedExitCodes = @(0),
         [switch]$CaptureOutput
     )
 
@@ -633,8 +634,11 @@ function Invoke-LoggedCommand {
             "Installation was cancelled while running: $Description"
         )
     }
-    if ($exitCode -ne 0) {
+    if ($exitCode -notin $AllowedExitCodes) {
         throw "$Description failed with exit code $exitCode."
+    }
+    if ($exitCode -ne 0) {
+        Write-InstallLog "PARTIAL: $Description returned exit code $exitCode."
     }
     Assert-InstallerCancellationNotRequested $CancellationPath
     Write-InstallLog "DONE: $Description"
@@ -699,6 +703,7 @@ function Publish-LaunchAdapterAndShortcut {
                     "-I",
                     "-m", "openhcs.desktop_deployment_cli",
                     "--installation-pointer=$launcherPath",
+                    "--skip-skill-sync",
                     "--json"
                 ) `
                 -Description "Publish desktop application, launchers, and shortcut" `
@@ -774,6 +779,7 @@ function Register-InstalledMcpClients {
     $registrationArguments += @(
         "--register", "codex",
         "--register-detected",
+        "--sync-skills",
         "--json"
     )
     $reportPath = [IO.Path]::Combine(
@@ -788,6 +794,7 @@ function Register-InstalledMcpClients {
                 -ArgumentList $registrationArguments `
                 -Description "Connect OpenHCS to local agent clients" `
                 -CancellationPath $CancellationPath `
+                -AllowedExitCodes @(0, 1) `
                 -CaptureOutput
         )
         $jsonText = ($output -join [Environment]::NewLine)
@@ -1313,7 +1320,7 @@ function Show-InstallerWindow {
 
     $agentConnectionCheck = New-Object Windows.Forms.CheckBox
     $agentConnectionCheck.Text = (
-        "Connect OpenHCS to ChatGPT, Codex, and local AI agent apps"
+        "Connect AI agent apps and install OpenHCS analysis skills"
     )
     $agentConnectionCheck.Checked = $true
     $agentConnectionCheck.Location = New-Object Drawing.Point(31, 201)
