@@ -1,6 +1,9 @@
 """Tests for build-only MCP knowledge projection."""
 
+import glob
 import json
+import tomllib
+from pathlib import Path
 
 import pytest
 
@@ -117,3 +120,23 @@ def test_projection_includes_complete_declared_plugin_skill(tmp_path):
             destination / source.relative_to(project_root)
         ).read_bytes() == source.read_bytes()
     assert (destination / manifest.relative_to(project_root)).is_file()
+
+
+def test_wheel_globs_include_the_projected_hidden_plugin_manifest(tmp_path):
+    project_root = Path(__file__).resolve().parents[2]
+    package_root = tmp_path / "openhcs"
+    knowledge = package_root / "agent/resources/knowledge"
+    projected = project_knowledge_assets(project_root, knowledge)
+    plugin_manifest = next(
+        path
+        for path in projected
+        if path.parts[-2:] == (".codex-plugin", "plugin.json")
+    )
+    config = tomllib.loads((project_root / "pyproject.toml").read_text())
+    patterns = config["tool"]["setuptools"]["package-data"]["openhcs"]
+    included = {
+        Path(path)
+        for pattern in patterns
+        for path in glob.glob(str(package_root / pattern), recursive=True)
+    }
+    assert plugin_manifest in included
