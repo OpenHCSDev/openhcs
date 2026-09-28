@@ -25,6 +25,12 @@ stage-diagnostic, and validation-split rules; do not depend on a prior agent's
 conversation or on a separately installed assay skill. Follow the earliest
 failed-stage decision through one bounded diagnostic and inspect its retained
 artifacts before expanding the run.
+Read [the source-grounded evidence reference](references/biological-image-analysis-evidence.md),
+or search knowledge for `biological image analysis evidence raw overlay` and
+retrieve the same `openhcs_biological_image_analysis_evidence` source when
+interpreting a segmentation, intensity measurement, or recipe-transfer claim. Its cited
+scientific sources inform the review; live OpenHCS function contracts and the
+current assay's raw pixels remain the operational evidence.
 Before calling a tested pipeline a reusable recipe, follow
 [the blinded recipe promotion guide](references/blind-recipe-promotion.md).
 Treat compile/run success as technical evidence only; keep the held-out reserve

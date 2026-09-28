@@ -32,6 +32,8 @@ authoring contexts remain the operating authority for image inspection.
 4. Review spatially distributed fields at native coordinates. Save a raw-only
    view and a same-coordinate raw-plus-result view with channel identity,
    numeric display limits, Z/time, source identity, and the result artifact.
+   Retrieve `openhcs_biological_image_analysis_evidence` for the cited
+   display, segmentation, measurement, and reporting boundaries.
    Inspect the bitmaps yourself and record supported positives, plausible
    misses, splits/merges, and an explicit accept/reject/ambiguous judgement
    against stated biological criteria. Escalate ambiguous objects to a domain

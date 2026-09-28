@@ -344,7 +344,10 @@ class ViewerReviewAuthoringContext(
             "execution produced images, labels, or ROIs that need bounded visual "
             "and structured validation"
         ),
-        knowledge_targets=(KnowledgeBaseDocumentTarget("openhcs_viewer_management"),),
+        knowledge_targets=(
+            KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
+            KnowledgeBaseDocumentTarget("openhcs_biological_image_analysis_evidence"),
+        ),
     )
 
 

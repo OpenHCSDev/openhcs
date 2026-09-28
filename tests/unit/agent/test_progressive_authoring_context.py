@@ -459,13 +459,24 @@ def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> N
     assert "first-class Official30 corpus" in skill
     assert "Benchmark parity is meaningful validation for that reference scope" in skill
     assert "references/blind-recipe-promotion.md" in skill
+    assert "openhcs_biological_image_analysis_evidence" in skill
+    assert "references/biological-image-analysis-evidence.md" in skill
     assert (
         repository_root
         / "packaging/codex/openhcs/skills/use-openhcs/references/blind-recipe-promotion.md"
     ).is_file()
-    pipeline_context = AgentAuthoringContextService().get_authoring_context("pipeline").content
-    assert "first-class validated CellProfiler/Official30 benchmark corpus" in pipeline_context
+    pipeline_context = (
+        AgentAuthoringContextService().get_authoring_context("pipeline").content
+    )
+    assert (
+        "first-class validated CellProfiler/Official30 benchmark corpus"
+        in pipeline_context
+    )
     assert "Benchmark parity validates the tested reference scope" in pipeline_context
+    viewer_context = (
+        AgentAuthoringContextService().get_authoring_context("viewer_review").content
+    )
+    assert "openhcs_biological_image_analysis_evidence" in viewer_context
 
 
 def test_viewer_array_capabilities_expose_value_opt_in_and_bounded_tiling() -> None:

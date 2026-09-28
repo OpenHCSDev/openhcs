@@ -9,15 +9,15 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSearchRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.serialization.json import to_jsonable
+from openhcs.agent.services import (
+    knowledge_base_service as knowledge_base_service_module,
+)
 from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
 )
-from openhcs.agent.services import (
-    knowledge_base_service as knowledge_base_service_module,
-)
+from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.serialization.json import to_jsonable
 
 
 def test_knowledge_base_catalog_lists_source_backed_documents():
@@ -34,6 +34,7 @@ def test_knowledge_base_catalog_lists_source_backed_documents():
     assert "openhcs_configuration_model" in documents
     assert "openhcs_domain_expert_onboarding" in documents
     assert "openhcs_example_corpus_map" in documents
+    assert "openhcs_biological_image_analysis_evidence" in documents
     assert "openhcs_complete_examples" in documents
     assert "openhcs_system_overview" in documents
     assert "openhcs_nominal_ownership" in documents
@@ -116,6 +117,30 @@ def test_knowledge_base_search_returns_source_sections():
     assert result.hits
     assert payload["hits"][0]["document"]["source_path"].startswith("docs/")
     assert "ObjectState" in result.hits[0].snippet
+
+
+def test_biological_evidence_is_retrievable_with_primary_source_attribution():
+    service = KnowledgeBaseService()
+    document_id = "openhcs_biological_image_analysis_evidence"
+    hits = service.search(
+        KnowledgeBaseSearchRequest(
+            query="biological image analysis evidence raw overlay", limit=10
+        )
+    )
+    assert document_id in {hit.document.document_id for hit in hits.hits}
+
+    document = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id=document_id, max_chars=12_000
+        )
+    )
+    assert document.errors == ()
+    assert document.truncated is False
+    assert "https://bioimagebook.github.io/" in document.content
+    assert "https://doi.org/10.1371/journal.pbio.3002167" in document.content
+    assert "https://doi.org/10.1038/s41592-023-01987-9" in document.content
+    assert "benchmark-parity failure" in document.content
+    assert "not copy Agentic-J course content" in document.content
 
 
 def test_knowledge_base_search_covers_domain_expert_onboarding_terms():

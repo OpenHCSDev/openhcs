@@ -723,6 +723,25 @@
         "custom registration namespace"
       ],
       "title": "Callable and artifact authoring"
+    },
+    {
+      "document_id": "openhcs_biological_image_analysis_evidence",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/biological-image-analysis-evidence.md",
+      "summary": "Cited biological image-analysis evidence: display versus pixel values, raw-overlay segmentation review, measurement image choice, controls, calibration, publication reporting, and assay transfer beyond benchmark parity.",
+      "tags": [
+        "biological image analysis evidence",
+        "raw overlay",
+        "biological validation",
+        "segmentation review",
+        "intensity measurement",
+        "display contrast",
+        "pixel values",
+        "acquisition controls",
+        "spatial calibration",
+        "publication checklist"
+      ],
+      "title": "Biological image-analysis evidence"
     }
   ],
   "schema_version": 1
