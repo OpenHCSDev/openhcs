@@ -29,6 +29,7 @@ It distinguishes missing information from an unhelpful display.
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
 | Intensity, volume, colocalisation, comparisons or final figures | [openhcs_measurement_interpretation](measurement-interpretation.md) | Which pixels, geometry, units and experimental units support the claim? |
 | Repeated errors or transferring a successful recipe | [openhcs_analysis_learning](analysis-learning.md) | Is this a source-backed recipe, an observed repair or an untested hypothesis? |
+| Raw/overlay review or a changed viewer canvas | [openhcs_viewer_qa](viewer-qa.md) | Are the three views matched, interpretable and personally inspected? |
 
 Search the first-class Official30 examples for the closest task, retrieve the
 exact OpenHCS Python section and inspect the reference case's inputs and parity
@@ -45,7 +46,9 @@ parameter group. Retain its source, parameters and diagnostic intermediate.
 
 Use the canonical `image_analysis_workflow` and `viewer_review` contexts for
 native-coordinate raw-only, result-only and combined inspection, numeric display
-windows and viewer-state checks. Compare raw and processed images separately;
+windows and viewer-state checks; follow [the viewer QA procedure](viewer-qa.md)
+for the matched capture set, including user changes to canvas geometry.
+Compare raw and processed images separately;
 a prettier image or a plausible count does not establish improved segmentation.
 If the evidence contradicts the prediction, reject the hypothesis before adding
 more stages. Freeze the candidate and acceptance criteria before held-out access.

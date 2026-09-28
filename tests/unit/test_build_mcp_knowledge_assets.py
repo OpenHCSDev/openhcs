@@ -68,3 +68,32 @@ def test_projection_rejects_project_ancestor(tmp_path):
 
     with pytest.raises(ValueError, match="must not own"):
         project_knowledge_assets(project_root, tmp_path)
+
+
+def test_projection_includes_complete_declared_plugin_skill(tmp_path):
+    project_root, _, _ = _project_with_document(tmp_path)
+    plugin = project_root / "packaging/codex/openhcs"
+    manifest = plugin / ".codex-plugin/plugin.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({"skills": "./skills/"}))
+    skill = plugin / "skills/use-openhcs"
+    (skill / "agents").mkdir(parents=True)
+    (skill / "references").mkdir()
+    for relative, content in (
+        ("SKILL.md", "entrypoint"),
+        ("agents/openai.yaml", "metadata"),
+        ("references/not-a-knowledge-document.md", "skill-only guidance"),
+    ):
+        (skill / relative).write_text(content)
+    destination = tmp_path / "wheel/knowledge"
+    project_knowledge_assets(project_root, destination)
+    for relative in (
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/not-a-knowledge-document.md",
+    ):
+        source = skill / relative
+        assert (
+            destination / source.relative_to(project_root)
+        ).read_bytes() == source.read_bytes()
+    assert (destination / manifest.relative_to(project_root)).is_file()

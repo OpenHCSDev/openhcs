@@ -55,7 +55,7 @@ Keep function settings and backend semantics on their declaration owners; a
 knowledge note links to those contracts and tested sources rather than copying
 a second executable parameter catalogue. Retain attribution and source revision.
 
-Follow the blind-recipe promotion guide before claiming reusable validation.
+Follow [the blind-recipe promotion guide](blind-recipe-promotion.md) before claiming reusable validation.
 The metadata audit only checks claim coherence; it cannot authenticate receipts,
 judge pixels, enforce access or establish correctness. Ask for biological input
 when the target or ambiguity cannot be resolved from acquisition and raw data,

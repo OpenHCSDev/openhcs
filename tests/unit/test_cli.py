@@ -1,11 +1,11 @@
 """Tests for the package-level OpenHCS command dispatcher."""
 
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 
-import openhcs.cli as cli
+from openhcs import cli
 
 
 def _recording_entrypoint(calls, label):
@@ -58,6 +58,22 @@ def test_cli_mcp_command_uses_headless_entrypoint(monkeypatch):
     cli.main(["mcp"])
 
     assert calls == [("openhcs.mcp.bootstrap", ())]
+
+
+def test_cli_skill_sync_is_lazy_and_preserves_arguments(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        cli, "import_module", lambda name: _recording_entrypoint(calls, name)
+    )
+    assert (
+        cli.main(["skills", "sync", "--skills-dir", "/tmp/skills", "--dry-run"]) == 17
+    )
+    assert calls == [
+        (
+            "openhcs.agent.skill_sync",
+            ("sync", "--skills-dir", "/tmp/skills", "--dry-run"),
+        )
+    ]
 
 
 def test_cli_mcp_options_never_route_through_gui_startup(monkeypatch):

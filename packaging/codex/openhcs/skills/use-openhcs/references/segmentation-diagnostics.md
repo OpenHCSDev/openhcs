@@ -2,7 +2,7 @@
 
 Use this guide after identifying the raw target and the first failed stage.
 Retain the foreground, marker, label or secondary-growth artifact needed to
-distinguish hypotheses. Use the canonical viewer contexts for matched
+distinguish hypotheses. Use the canonical viewer contexts and [viewer QA procedure](viewer-qa.md) for matched
 raw-only/result-only/combined review. Never change several unrelated parameters
 just because the final count seems implausible.
 

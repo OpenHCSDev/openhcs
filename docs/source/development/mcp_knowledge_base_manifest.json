@@ -803,6 +803,22 @@
       "title": "Choose valid microscopy measurements and comparisons"
     },
     {
+      "document_id": "openhcs_viewer_qa",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md",
+      "summary": "Matched raw-only/result-only/combined inspection across channels, positions, scales and numeric windows; verify live viewer state and recapture after canvas changes.",
+      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "segmentation visual debugging"],
+      "title": "Review matched microscopy views"
+    },
+    {
+      "document_id": "openhcs_blind_recipe_promotion",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/blind-recipe-promotion.md",
+      "summary": "Retain recipe applicability, run and visual-review evidence through development, freeze and independent validation; metadata coherence is not pixel acceptance.",
+      "tags": ["blind recipe promotion", "freeze validation provenance", "recipe evidence audit", "held out"],
+      "title": "Promote a blinded analysis recipe"
+    },
+    {
       "document_id": "openhcs_analysis_learning",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-learning.md",

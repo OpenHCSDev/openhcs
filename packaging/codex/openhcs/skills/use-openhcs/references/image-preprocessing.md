@@ -80,6 +80,17 @@ seeds grown within a lower-threshold support mask (hysteresis/reconstruction).
 This can retain supported weak structure but can also connect into background;
 inspect endpoints, crossings and nearby disconnected debris on raw pixels.
 
+## Discover compatible OpenHCS implementations
+
+Search functions and inspect the full reflected contract before using a recipe.
+Possible starting points are `openhcs:cellprofiler_rescale_intensity`,
+`openhcs:processors_numpy_processor_tophat` and the paired
+`openhcs:cellprofiler_correct_illumination_calculate` /
+`openhcs:cellprofiler_correct_illumination_apply`; their availability and semantics
+come from the live registry, not this note. Retrieve `openhcs_function_library`
+section `choosing-preprocessing` and the closest Official30 illumination example
+for declared composition, grouping and reference settings.
+
 ## Compose one falsifiable change
 
 Test individual operations before their combination. Clipping before background

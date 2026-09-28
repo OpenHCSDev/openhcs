@@ -6,6 +6,8 @@ biological validation. This is a *how-to guide* for an analyst making a
 promotion decision; the current `image_analysis_workflow` and `viewer_review`
 authoring contexts remain the operating authority for image inspection.
 
+## Develop, review and validate a candidate
+
 1. Define the development and untouched validation reserve before tuning.
    Keep treatment labels and scoring references hidden. Inventory source
    carrier/channel semantics through authorised metadata only; do not open
@@ -33,9 +35,11 @@ authoring contexts remain the operating authority for image inspection.
    settings. Preserve known failures with the error type, failing stage,
    source/parameter identity, diagnostic change, and outcome. Do not turn an
    execution-only success into a known-good biological recipe.
-4. Review spatially distributed fields at native coordinates. Save a raw-only
-   view and a same-coordinate raw-plus-result view with channel identity,
-   numeric display limits, Z/time, source identity, and the result artifact.
+4. Review spatially distributed fields at native coordinates. Follow the
+   [viewer QA procedure](viewer-qa.md) and retain matched raw-only, result-only
+   and raw-plus-result views with channel identity, numeric display limits,
+   Z/time, source identity and the result artifact. Verify viewer state and
+   recapture the set if the user changes the canvas or presentation.
    Retrieve `openhcs_biological_image_analysis_evidence` for the cited
    display, segmentation, measurement, and reporting boundaries.
    Inspect the bitmaps yourself and record supported positives, plausible

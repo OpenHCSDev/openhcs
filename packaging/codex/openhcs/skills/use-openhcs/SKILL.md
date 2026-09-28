@@ -21,12 +21,17 @@ description: Operate local OpenHCS microscopy workflows through the bundled MCP 
 
 For segmentation, neurite tracing, faint structures, or a report that an overlay
 looks wrong, load both `image_analysis_workflow` and `viewer_review` before
-tuning or judging the result. These MCP contexts supply the shared raw-first
-biological interpretation, native-coordinate inspection, display-window,
-stage-diagnostic, and validation-split rules; do not depend on a prior agent's
-conversation or on a separately installed assay skill. Follow the earliest
-failed-stage decision through one bounded diagnostic and inspect its retained
-artifacts before expanding the run.
+tuning or judging the result, and read [the matched viewer-review procedure](references/viewer-qa.md)
+(`openhcs_viewer_qa`). Inventory the physical source's channels yourself;
+inspect matched raw channels across positions, scales and numeric contrast
+windows. Capture raw-only, result-only and combined views through MCP and open
+the bitmaps yourself. Re-read viewer state and recapture if the user changed
+the canvas, camera, axes or presentation. Log the witness, a clear positive,
+a plausible miss/ambiguity and your explicit decision before widening the run
+or reporting counts. Use the live contexts' typed evidence contracts and the
+procedure's capture details, not a previous conversation or separate assay
+skill. Follow the earliest failed stage through one bounded diagnostic and
+recheck a regression control.
 When an image defect motivates analytical preprocessing, read
 [the preprocessing decision guide](references/image-preprocessing.md), also
 retrievable as `openhcs_image_preprocessing`, before changing the pipeline.
@@ -57,3 +62,8 @@ For apparent round-object over-segmentation, discover the registered
 measurements at the same raw coordinates. Interpret them by the canonical
 `image_analysis_workflow` policy; do not invent a second segmentation or a
 viewer-only diagnosis.
+
+For package/skill version drift or harness installation, read
+[skill installation and synchronisation](references/installation.md).
+The package carries the full skill; `openhcs skills sync --skills-dir PATH`
+updates only unmodified managed copies and never replaces development symlinks.

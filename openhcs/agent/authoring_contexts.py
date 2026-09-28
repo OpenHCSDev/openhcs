@@ -348,6 +348,7 @@ class ViewerReviewAuthoringContext(
         knowledge_targets=(
             KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
             KnowledgeBaseDocumentTarget("openhcs_biological_image_analysis_evidence"),
+            KnowledgeBaseDocumentTarget("openhcs_viewer_qa"),
         ),
     )
 

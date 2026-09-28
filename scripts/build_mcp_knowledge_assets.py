@@ -15,6 +15,11 @@ _MANIFEST_SCHEMA = runpy.run_path(
         / "openhcs/agent/knowledge_manifest_schema.py"
     )
 )
+_SKILL_BUNDLE = runpy.run_path(
+    str(Path(__file__).resolve().parents[1] / "openhcs/agent/skill_bundle.py")
+)
+AgentSkillBundle = _SKILL_BUNDLE["AgentSkillBundle"]
+AGENT_PLUGIN_MANIFEST_PATH = _SKILL_BUNDLE["AGENT_PLUGIN_MANIFEST_PATH"]
 KnowledgeBaseManifestField = _MANIFEST_SCHEMA["KnowledgeBaseManifestField"]
 KNOWLEDGE_MANIFEST_RELATIVE_PATH = _MANIFEST_SCHEMA[
     "DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH"
@@ -79,6 +84,10 @@ def project_knowledge_assets(
             f"MCP knowledge destination must not own the project root: {destination}"
         )
     source_paths = declared_knowledge_source_paths(root)
+    plugin_manifest = root / AGENT_PLUGIN_MANIFEST_PATH
+    if plugin_manifest.is_file():
+        skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
+        source_paths = tuple(dict.fromkeys((*source_paths, *skill_sources)))
     if destination.exists():
         shutil.rmtree(destination)
     projected_paths: list[Path] = []

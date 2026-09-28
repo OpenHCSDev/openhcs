@@ -24,6 +24,8 @@ TASKS = (
     ("volume anisotropic Z spacing", "openhcs_measurement_interpretation"),
     ("Pearson Manders Costes", "openhcs_measurement_interpretation"),
     ("recipe error memory", "openhcs_analysis_learning"),
+    ("canvas resize recapture", "openhcs_viewer_qa"),
+    ("blind recipe promotion", "openhcs_blind_recipe_promotion"),
 )
 
 
@@ -97,8 +99,8 @@ def test_domain_knowledge_remains_progressively_retrieved():
         for document in catalogue.documents
         if document.document_id in {document_id for _, document_id in TASKS}
     }
-    assert len(transferred) == 6
-    assert len({document.source_path for document in transferred.values()}) == 6
+    assert len(transferred) == 8
+    assert len({document.source_path for document in transferred.values()}) == 8
     # Catalogue summaries do not eagerly expand teaching chapters or answers.
     assert all(len(document.summary) < 600 for document in transferred.values())
     assert all(document.section_count > 2 for document in transferred.values())
@@ -111,7 +113,10 @@ def test_domain_knowledge_remains_progressively_retrieved():
     # A skill-only reader must be able to follow the same topic routes without
     # guessing filenames or needing the live knowledge service.
     for document in transferred.values():
-        if document.document_id != "openhcs_autonomous_analysis_strategy":
+        if document.document_id not in (
+            "openhcs_autonomous_analysis_strategy",
+            "openhcs_blind_recipe_promotion",
+        ):
             assert Path(document.source_path).name in links
 
 
