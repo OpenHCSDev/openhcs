@@ -13,6 +13,8 @@ plus object measurements, retrieve `openhcs_callable_artifact_authoring`: its
 executable synthetic example demonstrates the ABI, not an assay algorithm.
 Record the missing operation and expected input axes, dtype, units, memory
 backend, outputs and empty-input behaviour before writing source.
+For centre detection, specify what defines a centre, coordinate order/origin,
+label identity and whether a count covers one plane or the whole volume.
 
 Implement only that operation. Keep channel selection, filename interpretation,
 grouping and output destinations in the pipeline declarations. Do not read
@@ -64,6 +66,9 @@ process. A timeout leaves mutation outcome uncertain: reconcile the exact name
 on the same endpoint before any explicit retry. Creating an existing name is
 not a persistence upgrade; use an exposed lifecycle update route or record the
 missing capability rather than overwriting its file or mutating private state.
+If a lifecycle update is unavailable, a deliberately versioned new callable
+may be registered within the authorised scope after verifying name absence;
+preserve the predecessor and distinguish both identities in the pipeline log.
 
 ## Prove pipeline use before judging the biology
 
