@@ -263,6 +263,7 @@ class ImageAnalysisWorkflowAuthoringContext(
             "mosaic quality control, segmentation review, or image-result provenance"
         ),
         knowledge_targets=(
+            KnowledgeBaseDocumentTarget("openhcs_autonomous_analysis_strategy"),
             KnowledgeBaseDocumentTarget("openhcs_example_corpus_map"),
             KnowledgeBaseDocumentTarget("openhcs_data_dimensions"),
             KnowledgeBaseDocumentTarget("openhcs_function_patterns"),

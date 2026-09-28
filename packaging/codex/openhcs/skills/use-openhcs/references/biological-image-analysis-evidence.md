@@ -4,8 +4,11 @@ This reference records transferable scientific checks for a microscopy result.
 It complements the `openhcs_example_corpus_map` knowledge document and the
 `image_analysis_workflow` and `viewer_review` authoring contexts. It does not
 prescribe a detector, threshold, or assay-specific acceptance criterion. The
-domain expert supplies the biological target and interprets ambiguous objects;
-OpenHCS supplies source, pipeline, artifact, and viewer evidence.
+agent should proactively form a provisional interpretation from acquisition
+metadata and matched multiscale raw channels, then test it against retained
+OpenHCS source, pipeline, artifact and viewer evidence. Ask the domain expert
+when missing target information or genuinely unresolved biology changes the
+decision; do not defer ordinary channel comparison or failure diagnosis.
 
 ## Scientific source and applicability
 
@@ -65,3 +68,7 @@ source and applicability discipline, not OpenHCS API authorities. This page
 paraphrases and links to primary educational and publication sources; it does
 not copy Agentic-J course content, import its Groovy workflows, or add a
 second retrieval database alongside OpenHCS's source-backed knowledge service.
+The [autonomous strategy guide](analysis-strategy.md) routes to expanded
+OpenHCS-adapted interpretation, preprocessing, segmentation, measurement and
+experience guides. They include source/version attribution, candidate recipes,
+failure modes and transfer limits without importing worked benchmark answers.

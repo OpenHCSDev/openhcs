@@ -86,7 +86,7 @@
       "document_id": "openhcs_example_corpus_map",
       "section_count": 0,
       "source_path": "docs/source/guides/example_corpus_map.rst",
-      "summary": "Practical recipe map and CellProfiler-to-OpenHCS translation guide for the source-backed Official30 recipes, lazily generated public OpenHCS Python, the typed MFD preset authority, and the boundary between current examples and migration evidence.",
+      "summary": "Official30 OpenHCS/CellProfiler recipes, typed MFD presets, and current versus historical examples.",
       "tags": [
         "CellProfiler examples",
         "CellProfiler translation",
@@ -761,6 +761,54 @@
         "publication checklist"
       ],
       "title": "Biological image-analysis evidence"
+    },
+    {
+      "document_id": "openhcs_autonomous_analysis_strategy",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md",
+      "summary": "Task-specific domain decisions and failure diagnostics.",
+      "tags": ["autonomous analysis strategy", "AgenticJ", "Agentic-J", "unfamiliar assay", "biological target", "channel verification", "preprocessing", "segmentation diagnostics", "recipe error learning", "RAM budget"],
+      "title": "Analysis strategy"
+    },
+    {
+      "document_id": "openhcs_image_interpretation",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/image-interpretation.md",
+      "summary": "Interpret raw channels before detection: scientific channels versus RGB, nuclei versus cell bodies and subcellular signal, display windows, histograms, saturation, dtype, calibration, projections and source geometry.",
+      "tags": ["image interpretation", "channel identity", "cell body subcellular signal", "RGB composite", "display window", "contrast clipping", "saturation", "histograms", "bit depth", "pixel spacing", "Z time site", "Bankhead"],
+      "title": "Interpret raw microscopy images before analysis"
+    },
+    {
+      "document_id": "openhcs_image_preprocessing",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/image-preprocessing.md",
+      "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, Gaussian/median denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis; preserve measurement pixels and faint biology.",
+      "tags": ["preprocessing method selection validation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
+      "title": "Choose and test microscopy preprocessing"
+    },
+    {
+      "document_id": "openhcs_segmentation_diagnostics",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/segmentation-diagnostics.md",
+      "summary": "Diagnose foreground, seeds, watershed and secondary growth: false nucleus splits, merged neighbours, zero-growth cytoplasm, neurite topology, puncta, learned-model applicability, tiling and label identity. Retain failed-stage and regression-control artifacts.",
+      "tags": ["segmentation diagnostics", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "primary secondary", "neurite outgrowth", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
+      "title": "Diagnose microscopy segmentation by stage"
+    },
+    {
+      "document_id": "openhcs_measurement_interpretation",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/measurement-interpretation.md",
+      "summary": "Measurement-image choice, calibrated 2-D versus 3-D quantities, anisotropic Z spacing, Pearson/Manders and colocalisation controls, randomisation-statistic interpretation, biological replicate hierarchy and comparable figures.",
+      "tags": ["measurement interpretation", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
+      "title": "Choose valid microscopy measurements and comparisons"
+    },
+    {
+      "document_id": "openhcs_analysis_learning",
+      "section_count": 0,
+      "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-learning.md",
+      "summary": "Reuse diagnosed failures and validated recipes through existing source-backed knowledge: retrieve by symptom, retain failed-predecessor/repair/rerun lineage, distinguish technical from biological acceptance, scope lessons by version, protect blind answers and test skill changes independently.",
+      "tags": ["analysis learning", "recipe error memory", "repair lineage", "failed predecessor rerun", "recipe promotion", "version applicability", "source backed knowledge", "AgenticJ", "Agentic-J", "timeout startup memory leak", "blind evaluation"],
+      "title": "Reuse analysis recipes and diagnosed failures"
     }
   ],
   "schema_version": 1

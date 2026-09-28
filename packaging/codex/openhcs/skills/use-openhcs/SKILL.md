@@ -11,6 +11,7 @@ description: Operate local OpenHCS microscopy workflows through the bundled MCP 
 4. Call `openhcs_search_capabilities` with task-relevant workflow, target, or text filters. Its current `surface_profile`, registry-owned workflow metadata, side effects, and security metadata—not a remembered tool list—decide whether to use a UI-visible or exposed headless route. Use `openhcs_list_capabilities` only when the complete selected surface is required.
 5. Start with validated OpenHCS/CellProfiler benchmark examples, especially the first-class Official30 corpus. Search the biological task plus `OpenHCS Python`, retrieve the exact `openhcs_official30_benchmark_recipes` section with `max_chars=50000`, and inspect its native reference, pipeline, input/channel assumptions, settings, and case-specific parity evidence. Benchmark parity is meaningful validation for that reference scope; it is not biological raw/overlay acceptance for a different assay. Record the example source and evidence tier before adapting it. CellProfiler image, object, measurement, relationship, and export semantics lower into the same OpenHCS declarations and runtime.
    For a compact, structured example of those fields, retrieve `openhcs_official30_examplehuman_nuclei_recipe_card` when the task involves ExampleHuman-style nuclei segmentation; its selected-value parity and unassessed new-assay QA are deliberately separate.
+   For an unfamiliar assay or an unresolved biological failure, read [the autonomous analysis strategy](references/analysis-strategy.md), also retrievable as `openhcs_autonomous_analysis_strategy`. It routes to task-specific image interpretation, preprocessing, segmentation diagnostics, measurements and recipe/error learning. Retrieve only the relevant guide; infer a provisional strategy from acquisition and matched raw channels before asking the user for missing information. These guides adapt Agentic-J's domain knowledge, not its Fiji command strings or model defaults.
 6. Inspect real plate data and registered function declarations before authoring. If the microscope is unsupported, use typed pipeline-level `SourceBindingsConfig` declarations to filter files, extract metadata, name semantic sources, and project a virtual workspace; make each consuming `FunctionStep` select those aliases through its step-local source bindings. Never parse filenames inside processing functions. Reflect `global` or `pipeline` configuration with `openhcs_describe_config_schema` before setting non-obvious fields. Keep filesystem operations inside configured read and write roots.
 7. Validate and compile before execution. Do not infer that source code, UI state, or an earlier validation result implies a current compiled plan.
 8. Start read-only. Use capability-registry metadata as the authority for mutation and exposure; before mutation, execution, UI actions, viewer launch, network use, or external data exposure, show the target/change, obtain approval, and refresh revision or request tokens.
@@ -26,6 +27,13 @@ stage-diagnostic, and validation-split rules; do not depend on a prior agent's
 conversation or on a separately installed assay skill. Follow the earliest
 failed-stage decision through one bounded diagnostic and inspect its retained
 artifacts before expanding the run.
+When an image defect motivates analytical preprocessing, read
+[the preprocessing decision guide](references/image-preprocessing.md), also
+retrievable as `openhcs_image_preprocessing`, before changing the pipeline.
+For false splits, merged neighbours, zero-growth cytoplasm or disconnected
+neurites, use [stage-specific segmentation diagnostics](references/segmentation-diagnostics.md)
+(`openhcs_segmentation_diagnostics`) to choose one discriminating trial rather
+than retuning the entire chain. Preserve raw and processed routes for comparison.
 Read [the source-grounded evidence reference](references/biological-image-analysis-evidence.md),
 or search knowledge for `biological image analysis evidence raw overlay` and
 retrieve the same `openhcs_biological_image_analysis_evidence` source when
@@ -38,6 +46,11 @@ Treat compile/run success as technical evidence only; keep the held-out reserve
 sealed until the candidate, parameters, and biological acceptance criteria are
 frozen. The guide's metadata audit is read-only and cannot prove biological
 validity or enforce blinding by itself.
+For transferring a repair or contributing reusable knowledge, read
+[analysis recipe and failure learning](references/analysis-learning.md)
+(`openhcs_analysis_learning`). Keep failed-predecessor and rerun evidence distinct
+from biological acceptance; do not write personal memory or publish a recipe
+without the authority for that action.
 
 For apparent round-object over-segmentation, discover the registered
 `inspect_metaxpress_round_objects` function and inspect its typed labels and
