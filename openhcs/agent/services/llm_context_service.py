@@ -274,7 +274,8 @@ class ExampleCorpusSection(AuthoringContextSection, ExampleCorpusContext):
         return f"""=== EXAMPLE CORPUS FIRST ===
 - Search with {agent_capabilities.search_knowledge.name} for the biological task plus "OpenHCS Python" or "official30 recipe" before inventing source bindings or pipeline structure; follow the returned document_id and section_id rather than guessing a case name.
 - The official30 knowledge target listed below is the broad current corpus. Each exact <case>-openhcs-python section is generated lazily through the public CellProfiler importer and defines PipelineConfig plus FunctionStep declarations; retrieve only the matching section with a max_chars bound large enough for the source, and require truncated=false before validating or applying it.
-- The example-corpus-map target identifies the smaller current native preset authority and separates validated examples from older benchmark/debug migration evidence.
+- The example-corpus-map target identifies current native presets and the first-class validated CellProfiler/Official30 benchmark corpus, distinct from older debug or migration scripts.
+- Begin with the closest validated Official30 or native OpenHCS benchmark example, then inspect its document/section ID, native reference, settings, input/channel assumptions, and case-specific parity evidence. Benchmark parity validates the tested reference scope; it does not establish raw-plus-overlay biological acceptance after transfer to a new assay. Preserve that evidence tier and known failure modes when adapting the pipeline.
 - Treat structured source or conversion errors as authoritative. Do not substitute stale checked-in scripts or raw .cppipe text when an exact generated section is unavailable."""
 
 
