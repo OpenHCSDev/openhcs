@@ -254,3 +254,109 @@ native bounded regressions pass, the installed/current public MCP contract is
 verified, and an isolated tiny fresh-process synthetic reopening succeeds.
 None of those implementation/test gates is complete at this checkpoint. Live
 analysis integration and biological QA remain main's independent frozen route.
+
+## Native diagnosis and audit recovery receipt, 2026-09-29
+
+Source remains unchanged from the initial Python snapshot. Documentation head
+before this receipt: `4d83353411f6376e9abc36a94ce99ee08e47b190`.
+Main additionally approved existing writer/finalisation/worker observation
+owners where necessary to propagate actual successful materialization receipts.
+No production source, pinned dependency clone or gitlink has been edited.
+
+The successful-save boundary is
+`processing/materialization/core.py:BackendSaver.save_all:1666`: it filters
+backend acceptance and calls `filemanager.save_batch` for supported batches.
+`materialize:4111` returns only a primary-path string, not an address/location
+receipt. Receipt propagation must originate from accepted batches after saves
+return successfully, not recreate outputs or admit unsupported candidate paths.
+
+### Scan attempts and profile
+
+- The smaller-envelope compact summary passed the >=9 GiB/PSI gate but was
+  terminated at sampled RSS 789612 KiB. Exit 143, 25.45 seconds, timing peak
+  789320 KiB; no JSON findings. Receipt stem:
+  `/tmp/openhcs-pr153.LeLQct/scan-recovery-summary-768`.
+- All nine positional report roots plus the same nine explicit context roots
+  normalise to `report_roots=()` and `has_report_filter=False`. NRA's loaded
+  `AnalysisPathScope` confirmed this without analysis. This preserves every
+  production owner and reports dependency findings too; it is not an exclusion.
+  The initial argument-order error is preserved separately at
+  `scan-recovery-summary-all-roots-768` (exit 2, no analysis).
+- Corrected all-root argv hit NRA's 160-second deadline: JSON `complete=false`,
+  reported stage `startup`, 160.89 seconds, timing peak 284280 KiB. Receipt stem:
+  `/tmp/openhcs-pr153.LeLQct/scan-recovery-summary-all-roots-argv2-768`.
+  Its guard's separate exit 127 resulted from editing the running Bash file;
+  preserve that error, not as NRA's exit code. NRA stderr records exit 124.
+  The guard now captures wait status explicitly and remains unchanged while live.
+- Sibling py-spy attachment was permission-denied; no elevation or retry.
+  The first child-profile guard failed on an uninitialised RSS variable before
+  recording; its receipt is preserved as `scan-recovery-all-roots-profile-768`.
+  Both recorded child PIDs were verified absent before correcting the guard.
+- The corrected py-spy-child profile produced 199 samples and zero sample
+  errors over 20 seconds, elapsed wrapper time 21.33 seconds, sampled aggregate
+  scanner/profiler peak 109692 KiB. Former profiler/scanner PIDs 3573210/3573211
+  were absent and `scanner_live_after_cleanup=false` is recorded. Receipt stem:
+  `/tmp/openhcs-pr153.LeLQct/scan-recovery-all-roots-profile-supervised-768`.
+  Its `.json` file contains profiler stdout, not an NRA JSON completion receipt.
+  The profiler completed, but NRA emitted no scan result before the child ended.
+- Main invoked the separately authorised FULL/2048 MiB guard at
+  2026-09-29T04:27:58Z. It exited 78 before launching NRA: available memory
+  11330576 KiB, PSI full avg10 0.00, below the 11534336 KiB (11 GiB) start
+  threshold. Exact receipt:
+  `/tmp/openhcs-pr153.LeLQct/scan-recovery-full-2048.guard`.
+  No FULL scanner started and no FULL JSON/stderr was produced. This is a
+  pre-launch gate attempt, not an executed 2048 MiB FULL scan. The allowance
+  remains unused. The worker remains terminal while Jason's diagnostic runs;
+  main owns any subsequent launch authorisation/invocation.
+
+Observed inclusive stacks in that initial 20-second window:
+`build_compact_projection_shard` (NRA `analysis.py:1101`) 159/199 samples;
+`collect_family_batch` (`ast_tools.py:2268`) 95/199;
+`store_items` (`ast_tools.py:2153`) 59/199;
+`collected_family_items_content_signature` (`ast_tools.py:1924`) 42/199.
+These overlap and are not additive. They identify collection/cache-signature
+work in the sampled window, not the whole 160-second hot path or proof that
+the deadline's `startup` label describes its actual computational stage.
+
+All 79 detector declarations remain requested, but completed detector counts,
+omissions, R1 raw findings and full source-export evidence remain unavailable.
+No partial cache, successful profile, census or native diagnostic authorises
+Python implementation or resuming Jason on a completed common audit.
+In this NRA revision the ordinary FULL profile requests source-index,
+observation/fibre and recipe sections, which exclude the compact-analysis
+branch. Cached findings do not discharge those export obligations. No missing
+sections or coverage status has been fabricated to bypass the gate.
+
+### PolyStore prerequisite and native codec evidence
+
+Main accepted the native defect and opened OpenHCSDev/PolyStore#12. Its separate
+owned worktree is `/home/ts/code/projects/polystore-point-roi-20260929`, branch
+`fix/native-imagej-point-roi-20260929`, tracking head
+`05c4e7d1e01490b4f05fc68d55cf0d9451f54148`, draft PR #13. This is documentation
+only. Its base and the parent scan's unchanged clone remain
+`0efe67fdd14985bf90cee6e0f0c4735d41d265d1`. Dependency production repair is
+approved only after the full NRA/R1 gate; parent gitlink integration requires
+validated dependency merge and main's explicit recorded-SHA authorisation.
+
+The actual native codec run has three cases: polygon control passes, production
+point archive and independent standard POINT archive both fail with
+`Polygon must have at least 3 vertices, got 1`. First completed diagnostic:
+0.39 seconds, peak 53168 KiB; canonical JSON-metadata repeat: same outcomes,
+0.28 seconds, peak 51808 KiB. The earlier missing-numcodecs import failure is
+separate and not codec evidence. Source/version receipts verify own pinned
+PolyStore/ArrayBridge/metaclass-registry/ZMQRuntime imports; CPython 3.14.6,
+NumPy 2.5.1, PolyStore 0.2.19, roifile 2026.2.10, numcodecs 0.17.0.
+
+Production POINT encoding is FREEHAND. Exact native XY `(3.5,1.25)` and logical
+metadata label/object/source/plane index 2 survive serialisation; native Z is
+unset. The independent POINT fixture preserves native one-based Z=3 and XY
+through roifile before PolyStore decoding fails. Canonical expected metadata
+comes from public `roi_zip_metadata_payload` plus JSON decoding. These native
+codec diagnostics neither exercise artifact admission nor prove managed
+streaming, MCP, viewer orientation or scientific correctness.
+
+Exact codec receipts: `/tmp/openhcs-pr153.LeLQct/` with stems
+`scan-recovery-point-native-prerequisite-768` and
+`scan-recovery-point-native-canonical-768`. Only tiny synthetic archives were
+written. Production files, frozen analysis and live viewer processes were not
+loaded or changed.
