@@ -2073,7 +2073,10 @@ class QueryPlateFilesCapability(PlatePathCapability):
         "Read-only query of image/result file records exposed "
         "by a local plate inventory. Returns virtual image names, source "
         "paths, result artifact paths, and metadata from the same inventory "
-        "API used by the Image Browser."
+        "API used by the Image Browser. For retained outputs outside the standard "
+        "plate layout, pass result_directory with kind='result'. This inspects "
+        "persisted files and bounded native previews without microscope detection "
+        "or inferred acquisition identity; it does not attest writer success."
     )
     service = "plate_inspection"
     data_exposure = (

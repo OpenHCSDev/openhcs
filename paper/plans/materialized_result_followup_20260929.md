@@ -33,6 +33,32 @@ shared H002 process, or biologically accept the frozen count of 28.
 
 ## Current source evidence and crossing
 
+### Inspection checkpoint ownership decision
+
+Corpus at 86868031: plate DTO, inspection service and core plate inventory.
+NRA ModuleSyntaxIndex enumerated all 78 original ClassDefs; all 78 uniquely
+joined CompactClassFamilyIndex. Global R1/MRO/equivalence proofs remain OPEN.
+This is an intentional feature extension, not a proved-equivalent DSL replay.
+
+Task authority: inspect the retained arbitrary result directory without rerun,
+relocation or invented source identity. The existing PlateFileQueryRequest owns
+the explicit directory selection, AgentPathPolicy owns readable admission,
+PlateResultFileInventory owns file record construction, and its existing native
+preview reader owns bounded decoding. Capability schema derives from the DTO.
+BOUND-2 forbids bypassing the native preview owner; IDEN-1 forbids treating a
+file path as source/axis/object provenance or proof of successful execution.
+
+New-case check: a supported native result format added to the existing inventory
+format/preview owner automatically reaches explicit-directory queries without a
+second registry. Missing directories, unauthorized roots and escaping symlinks
+must fail before preview. A misleading acquisition-like filename must not gain
+well/channel/source metadata. Component filtering is rejected for this route.
+The plate/context path and result-file location retain separate roles.
+
+This checkpoint delivers file inspection only. It does not substitute for the
+remaining observed-artifact admission, schema-bearing measurement preview and
+provenance-aware image/ROI reopening in the required workflow above.
+
 RuntimeArtifactAddress/RuntimeArtifactLocation own semantic artifact/storage
 identity. RuntimeArtifactProgressPayload currently retains addresses only.
 LiveMeasurementTablePreview already retains schema, bounded rows, locations

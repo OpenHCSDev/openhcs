@@ -945,6 +945,159 @@ def test_plate_inspection_reports_result_only_openhcs_output_root(tmp_path: Path
     )
 
 
+def test_explicit_result_directory_queries_native_previews_without_source_guesses(
+    tmp_path: Path,
+) -> None:
+    class NoHandlerService(PlateInspectionService):
+        @staticmethod
+        def _create_handler(request, plate_path, filemanager):
+            pytest.fail(
+                "Explicit result-directory inspection must not detect a handler"
+            )
+
+    plate = tmp_path / "source_plate"
+    plate.mkdir()
+    results = tmp_path / "retained_outputs"
+    results.mkdir()
+    csv_path = results / "A01_w2_centres.csv"
+    csv_path.write_text("label,y,x\n1,4.25,6.5\n2,8.5,10.25\n", encoding="utf-8")
+    roi_path = results / "A01_w2_centres.roi.zip"
+    _write_roi_archive(roi_path)
+    text_path = results / "details.txt"
+    text_path.write_text("retained output\nsecond line\n", encoding="utf-8")
+    service = NoHandlerService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    request = PlateFileQueryRequest.from_fields(
+        plate_path=str(plate),
+        result_directory=str(results),
+        kind=PlateFileKind.RESULT,
+        max_preview_lines=1,
+        limit=2,
+    )
+    assert request.as_tool_arguments()["result_directory"] == str(results)
+
+    result = service.query_files(request)
+
+    assert result.errors == ()
+    assert result.plate_path == str(plate)
+    assert result.result_directory == str(results)
+    assert result.total_count == 3
+    assert result.returned_count == 2
+    assert result.truncated_count == 1
+    assert result.handler_class is None
+    assert result.parser_class is None
+    assert result.detected_microscope_type is None
+    assert result.records[0].full_path == str(csv_path)
+    assert result.records[0].preview.csv_columns == ("label", "y", "x")
+    assert result.records[0].preview.csv_rows == (
+        {"label": "1", "y": "4.25", "x": "6.5"},
+    )
+    assert result.records[1].full_path == str(roi_path)
+    assert result.records[1].preview.roi_count == 1
+    for record in result.records:
+        assert "well" not in record.metadata
+        assert "channel" not in record.metadata
+        assert "source_image_name" not in record.metadata
+
+
+def test_explicit_result_directory_empty_and_oversized_previews(tmp_path: Path) -> None:
+    results = tmp_path / "outputs"
+    results.mkdir()
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    request = PlateFileQueryRequest(
+        plate_path=str(tmp_path),
+        result_directory=str(results),
+        kind=PlateFileKind.RESULT,
+        max_preview_bytes=4,
+    )
+    empty = service.query_files(request)
+    assert empty.errors == ()
+    assert empty.total_count == 0
+    assert empty.handler_class is None
+    (results / "large.txt").write_text("more than four bytes", encoding="utf-8")
+    result = service.query_files(request)
+    assert result.errors == ()
+    assert result.records[0].preview.text_lines == ()
+    assert (
+        result.records[0].preview.omitted_reason == "file exceeds max preview bytes (4)"
+    )
+
+
+@pytest.mark.parametrize(
+    "kind,well",
+    ((PlateFileKind.IMAGE, None), (None, None), (PlateFileKind.RESULT, "A01")),
+)
+def test_explicit_result_directory_rejects_acquisition_selection(
+    tmp_path: Path,
+    kind,
+    well,
+) -> None:
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=())
+    )
+    result = service.query_files(
+        PlateFileQueryRequest(
+            plate_path=str(tmp_path),
+            result_directory=str(tmp_path),
+            kind=kind,
+            well=well,
+        )
+    )
+    assert result.errors[0].code == "plate_result_directory_selection_invalid"
+    assert result.records == ()
+
+
+@pytest.mark.parametrize("target_kind", ("outside", "missing", "file", "symlink"))
+def test_explicit_result_directory_rejects_unreadable_targets_before_preview(
+    tmp_path: Path,
+    target_kind: str,
+    monkeypatch,
+) -> None:
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    secret = outside / "secret.txt"
+    secret.write_text("must not be previewed", encoding="utf-8")
+    targets = {
+        "outside": outside,
+        "missing": allowed / "missing",
+        "file": allowed / "file.txt",
+        "symlink": allowed,
+    }
+    (allowed / "file.txt").write_text("not a directory", encoding="utf-8")
+    if target_kind == "symlink":
+        (allowed / "escape.txt").symlink_to(secret)
+
+    from openhcs.core.plate_image_inventory import PlateResultFilePreviewReader
+
+    def forbidden_preview(*args, **kwargs):
+        pytest.fail("Rejected result paths must not reach native preview")
+
+    monkeypatch.setattr(PlateResultFilePreviewReader, "preview", forbidden_preview)
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(readable_roots=(allowed,), writable_roots=())
+    )
+    result = service.query_files(
+        PlateFileQueryRequest(
+            plate_path=str(allowed),
+            result_directory=str(targets[target_kind]),
+            kind=PlateFileKind.RESULT,
+        )
+    )
+    assert result.errors
+    assert result.records == ()
+    assert result.handler_class is None
+    assert result.errors[0].code == (
+        PlateInspectionIssueCode.PATH_POLICY_REJECTED.value
+        if target_kind in {"outside", "missing", "symlink"}
+        else PlateInspectionIssueCode.PATH_NOT_DIRECTORY.value
+    )
+
+
 def test_plate_file_query_auto_image_result_only_root_skips_handler_detection(
     tmp_path: Path,
 ) -> None:
