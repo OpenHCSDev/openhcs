@@ -356,6 +356,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
             0: SimpleNamespace(
                 execution_scope=FunctionStepExecutionScope.AXIS,
                 device_assignment=FrameworkDeviceAssignment(),
+                owns_runtime_outputs=False,
             )
         },
     )
