@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime
 from pathlib import Path
@@ -854,11 +854,33 @@ class PlateResultFileInventory:
         result_directory: "AnalysisResultDirectory",
         parser: "FilenameParser | None",
     ) -> tuple[tuple[PlateResultFileRecord, ...], int]:
+        inventory = cls.from_directory_files(
+            plate_path=plate_path,
+            result_directory=result_directory,
+            file_paths=(
+                path for path in result_directory.path.rglob("*") if path.is_file()
+            ),
+            parser=parser,
+        )
+        return inventory.records, inventory.scanned_file_count
+
+    @classmethod
+    def from_directory_files(
+        cls,
+        *,
+        plate_path: Path,
+        result_directory: "AnalysisResultDirectory",
+        file_paths: Iterable[Path],
+        parser: "FilenameParser | None" = None,
+    ) -> "PlateResultFileInventory":
+        """Project exact directory files admitted by a caller's read authority.
+
+        This is also the shared record builder for handler-declared directories.
+        Without a parser, paths identify files only, not acquisition components.
+        """
         records: list[PlateResultFileRecord] = []
         scanned_file_count = 0
-        for file_path in sorted(result_directory.path.rglob("*")):
-            if not file_path.is_file():
-                continue
+        for file_path in sorted(file_paths):
             scanned_file_count += 1
             file_format = cls._result_file_format(file_path)
             if file_format is None:
@@ -892,7 +914,11 @@ class PlateResultFileInventory:
                     ),
                 )
             )
-        return tuple(records), scanned_file_count
+        return cls(
+            plate_path=plate_path,
+            records=tuple(records),
+            scanned_file_count=scanned_file_count,
+        )
 
     @staticmethod
     def _result_file_format(file_path: Path) -> FileFormat | None:

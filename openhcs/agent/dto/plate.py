@@ -317,6 +317,7 @@ class PlateFileQueryRequest:
     """Query image/result files exposed by a local plate inventory."""
 
     plate_path: str
+    result_directory: str | None = None
     microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
@@ -333,6 +334,7 @@ class PlateFileQueryRequest:
         cls,
         *,
         plate_path: str,
+        result_directory: str | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
@@ -346,6 +348,7 @@ class PlateFileQueryRequest:
     ) -> "PlateFileQueryRequest":
         return cls(
             plate_path=plate_path,
+            result_directory=result_directory,
             microscope_type=microscope_type,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
@@ -361,6 +364,7 @@ class PlateFileQueryRequest:
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "plate_path": self.plate_path,
+            "result_directory": self.result_directory,
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
@@ -983,6 +987,7 @@ class PlateFileQueryResult(AgentResultEnvelope):
     """Bounded plate file query result."""
 
     plate_path: str
+    result_directory: str | None = None
     requested_microscope_type: str
     detected_microscope_type: str | None = None
     handler_class: str | None = None
