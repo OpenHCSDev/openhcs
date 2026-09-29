@@ -895,6 +895,10 @@ class ExecutionSessionService:
     ) -> ArtifactPlanInspection:
         progress_queue = AgentProgressQueue()
         plate = self._path_policy.assert_readable(request.identity.plate_id)
+        # Orchestrator initialization persists workspace metadata even when no
+        # scientific execution is submitted. Admit that write before the gateway
+        # can create metadata or locks in a read-only source directory.
+        self._path_policy.assert_writable(plate)
         metadata_path = _openhcs_metadata_path(plate)
         metadata_existed_before = metadata_path.exists()
         try:
