@@ -5,6 +5,77 @@ Branch: `fix/input-preparation-20260929`.
 Worktree: `/home/ts/wt/openhcs-input-preparation-20260929`.
 Issues: #172 and #132.
 
+## Independent review follow-through: physical admission and Java lifecycle
+
+Review: https://github.com/OpenHCSDev/openhcs/pull/206#issuecomment-5897315214.
+The complete comment reviewed parent `006361ff2`, recorded child `f94bbbe`, and
+ROI source `8c886e7`. Both returned production findings were valid, despite the
+earlier scoped review below. Lovelace picked up both; no competing owner/PR.
+Current source commits: OpenHCS `32a2b27e22220b28f4a75db1977973aa61384a10`,
+paired PolyStore `0aa057bc3b4241d77f5f3905e10e31efe2ee87e4`.
+
+1. IMPL-12 / BOUND-2: `NamedSourceBinding.physical_path_matches` at
+   `source_bindings.py:963` owns explicit-source resolution/equality and delegates
+   path clauses to `SourceSelector.path_filters_match:706`. That selector calls
+   the existing matcher/target-resolver families through `source_filters_match`.
+   Discovery (`SourceBindingsConfig.discovery_path_matches:1868`) and final
+   projection (`SourceBindingWorkspaceProjector.candidate_matches_binding:965`)
+   both invoke the same binding operation. Delete their duplicated exact-path
+   procedures and selector-filter loops, plus the projector's unused matcher
+   import. Config still owns global filters and alias union; the projector still
+   owns decoded metadata/components. A binding path-policy change now needs one
+   owner edit instead of synchronized consumer edits. No filename registry,
+   companion roster, raw record or metadata mirror.
+2. IMPL-13 / BOUND-2: `BioFormatsJavaContext.is_single_file:158` owns the decoder
+   capability. Both it and existing `declares_path:153` use context-owned
+   `_probe_reader:168` for initialization, construction and unconditional close.
+   OpenHCS calls `context.is_single_file` at `bioformats_adapter.py:791`; delete
+   its entire `_is_single_file` helper and the fixture's imitation reader lifetime.
+   A compound reader remains discoverable when its entrypoint fails path filters;
+   decoded companion provenance remains available for final selection. Source
+   admission policy stays OpenHCS-owned. No setId/OME metadata open in the probe.
+   The existing valid ROI ownership/optimization is unchanged by this follow-up.
+
+Light executed evidence: **28 passed in 0.50s**, peak Python RSS **72.8 MiB**.
+`tests/unit/test_source_binding_path_admission.py` has 16 behavior cases plus one
+AST guard: relative/absolute/file-URI exact identity, directory-regex/OR-group
+clauses, unknown metadata/component deferral, decoded companion filters without
+replacing exact entrypoint identity, and unrestricted alias union without erasing
+another alias's restrictions. `external/PolyStore/tests/test_bioformats_java.py`
+has four existing context cases, six new true/false/failure/retry probe cases and
+one AST guard. Controlled external Java responses exercise actual context
+initialization and close, not a JVM. Guards prevent the reviewed consumer bypasses
+and prevent probe operations from copying construction/close instead of using
+their shared context lifetime. New tests and touched child source pass Ruff;
+both repository diffs pass whitespace checks. No full NRA scan/global proof.
+
+Driver: recorded interpreter with explicit worktree/eight submodule src paths,
+verified actual OpenHCS, SourceBindings/projector, PolyStore Java, ObjectState and
+metaclass-registry imports. Import the existing `openhcs` entrypoint first, then
+`pytest.main` with `-q --tb=short --noconftest --import-mode=importlib
+-p no:cacheprovider -o addopts=` and the two files above. Automatic plugins
+disabled; shell bound 45s. No global application fixture/viewer cleanup, MCP,
+JVM, GUI, environment creation or shared validation-lock acquisition. Two pytest
+warnings report unused asyncio configuration with plugins disabled. Initial
+26-case run passed before adding the two ownership guards (0.23s/67.1 MiB).
+
+Resource guard: 11.4 GiB available / historical swap warning 11.9 GiB; explicit
+8 GiB admission checked. Final available RAM 11.2 GiB; not a continuous peak-RAM
+claim. Confucius's runtime/lock/frozen installation were not touched. Tiny scratch
+owner Lovelace, purpose empty source fixtures, path
+`/home/ts/.cache/agent-scratch/openhcs-issue-input-20260929`: 92 KiB removed after
+retaining results. No source, biological input/output or saved session removed.
+
+These 28 contract/guard passes **do not resolve** the original combined-suite
+**141 passed / 26 failed** result. Separate-context application preservation,
+the retained sixteen-container/AUTO/real-TIFF controls at this new source pair,
+the after-change bounded ROI profile, real Java capability/CZI fidelity and
+installed user-path acceptance remain open for a coordinator-handed-off finite
+slot. The profile did not run. The recorded gitlink remains `f94bbbe`; the new
+OpenHCS call requires the paired context commit before integration. Coordinator
+owns validated gitlink adoption, normal main integration, merge/install and live
+acceptance. No issue closure or installed readiness is claimed.
+
 ## First checkpoint: #172
 
 Zero pixel overlap uses unrestricted cell positions, not empty random ranges.
@@ -107,11 +178,13 @@ MaskShape is unsupported by the existing ImageJ ROI codec. Do not invent an
 equivalence algorithm. Exact masks and label TIFFs are separate evidence. 3D and
 private diagnostic fidelity remain unverified. No biology/Euler output opened.
 
-## Essential catalog review (changed surface only)
+## Earlier essential catalog review (changed surface only)
 
 Audited against fetched `openhcsdev/main` at `98d9b9d23` and the working #206
 checkpoint, using the owner's current archived catalog. This is source/AST and
 owner tracing, not a full NRA scan, proof replay or global clean-debt claim.
+The later independent review found two bypasses this receipt missed; the
+follow-through above supersedes its admission/lifecycle ownership claims.
 
 | Pattern | Concrete owner / witness | New-case check and disposition |
 | --- | --- | --- |
