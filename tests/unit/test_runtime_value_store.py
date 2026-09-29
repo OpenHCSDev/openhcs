@@ -1505,9 +1505,8 @@ def test_paired_channel_input_rejects_other_well_or_producer(producer_axis, prod
 
 def test_cross_channel_input_without_source_declaration_remains_exact():
     store, _record, runtime_input = _paired_channel_label_input()
-    strict_input = _ungrouped_runtime_artifact_input(
-        runtime_input.edge_plan.storage_plan,
-        axis_scope=runtime_input.axis_scope,
+    strict_input = replace(
+        runtime_input, source_binding_plan=CompiledSourceBindingPlan.empty(),
     )
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):

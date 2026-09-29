@@ -196,3 +196,20 @@ Removed its 608 KiB after preserving evidence and the fully self-seeding source
 reproducer. Generated arrays and logs are regeneratable; no source or saved
 sessions were stored there. No owned large scratch artifacts were created. Viewer-bind and ROI
 materialization implementation surfaces remain with their assigned owners.
+
+Current-main local build prerequisite: `a0263e82a1` adds the required
+`_granularity_reconstruct` extension, reached by intensity -> shape -> zernike ->
+granularity imports. A fresh source import failed with `ModuleNotFoundError`
+before a test could execute. Zeno owns the bounded worktree-only build using the
+existing `setup.py build_ext --inplace` declaration, with native intermediates
+under `/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929/native`.
+This does not install packages or modify the shared environment or installed
+source. The existing build completed in 2.33 seconds with 97,264 KiB maximum
+resident memory. Intensity, primary, secondary, and the generated native extension
+all import from this worktree; available RAM before the build was 10.8 GiB.
+Removed the 136 KiB owned disposable native intermediates after this successful
+import check. They are regeneratable. The generated ignored `.abi3.so` stays in
+this worktree for source validation. This is import/build evidence, not a complete
+headless or installed journey. The strengthened missing-source regression retains
+the context relation and removes only its source declaration: one focused case
+passes, with 47 unrelated cases deselected in that one-test check.
