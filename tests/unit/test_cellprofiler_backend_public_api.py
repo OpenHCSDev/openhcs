@@ -80,6 +80,47 @@ def test_raw_callable_reference_construction_does_not_discover_other_modules() -
     assert completed.returncode == 0, completed.stderr or completed.stdout
 
 
+def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> None:
+    script = textwrap.dedent("""
+        import importlib
+        import sys
+
+        from openhcs.core.callable_contract import (
+            CallableImportIdentity,
+            prepare_processing_callable,
+        )
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        module_name = "openhcs.processing.backends.cellprofiler.crop"
+        raw_crop = vars(importlib.import_module(module_name))["crop"]
+        prefix = "openhcs.processing.backends.cellprofiler."
+        before = {
+            name for name in sys.modules if name.startswith(prefix)
+        }
+
+        identity = CallableImportIdentity.from_callable(raw_crop)
+        owner = CellProfilerModule.for_callable_import_identity(identity)
+        assert owner is not None
+        assert owner.require_module_name() == "Crop"
+        prepare_processing_callable(raw_crop)
+
+        after = {
+            name for name in sys.modules if name.startswith(prefix)
+        }
+        assert after == before, sorted(after - before)
+        assert not CellProfilerModule.__registry__._discovered
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
 def test_submodule_import_does_not_replace_backend_callable() -> None:
     import openhcs.processing.backends.cellprofiler as cellprofiler_backend
 
