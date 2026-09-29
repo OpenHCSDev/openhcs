@@ -2,13 +2,33 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `283b21275`, fetched and merged normally on 2026-09-29.
+Base: `openhcsdev/main` at `de23449a4`, fetched and merged normally on 2026-09-29
+through `21c15ad41`. The output-policy checkpoint used `283b21275`.
 The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
 main through normal merge `9f5d444515`. No parent/main-worktree edits, rebases,
 resets, installed-source edits, or gitlink changes.
 
 Closes #133. References #204; its paired-channel and actual GUI acceptance remain
 open. This is a source-verified draft, not an installed/live-readiness claim.
+
+## Frozen-harness compile incident: triaged, regression retained
+
+The original server5793 request `4f8e1d55-07f0-4bde-9f37-d24c0ea398f9`
+failed at 20:24:35 UTC with `MeasureCells_4_measurements` group `"1"` having no
+declared group-scope source. The original saved technical request's source hash
+matches the server's `5fb62ebed47d`: it produces exact `Cells` under channel group
+`"2"`, but explicitly dispatches its size/shape measurement under group `"1"`.
+The real module already declares the exact labels-owned group lineage and object
+subject. This is an invalid authored grouping, **not missing backend projection**.
+
+The new real-declaration/planner regression preserves that failure and proves
+matching-group and declaration-derived controls compile: **3 passed**. Combined
+with the output-policy review cases, **23 passed** in 1.87 seconds after current
+main integration. No production relaxation, frozen replay or installation change
+was made. Original request/variant identities, owner trace, pattern IDs and
+acceptance boundaries are preserved in
+`docs/plans/measurement_group_scope_triage_20260929.md`. This technical case stays
+on #204/PR205; it does not resolve the separate paired runtime/live gate.
 
 ## Implemented
 
@@ -294,6 +314,7 @@ Draft PR: https://github.com/OpenHCSDev/openhcs/pull/205.
 - `tests/integration/test_measurement_declaration_journey.py`
 - `docs/plans/issue133_204_measurement_contract_checkpoint_20260929.md`
 - `docs/plans/issue204_catalog_diagnosis_20260929.md`
+- `docs/plans/measurement_group_scope_triage_20260929.md`
 
 Owned disposable test output was `/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929`,
 owner Zeno, purpose tiny synthetic plate and bounded pytest temporary outputs.

@@ -19,6 +19,7 @@ from openhcs.core.artifacts import (
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
+    ObjectMeasurementSubjectRelation,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
@@ -2416,6 +2417,123 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         "1": ("measure_blue",),
         "2": ("measure_green",),
     }
+
+
+@pytest.mark.parametrize("measurement_group", ["1", "2", DEFAULT_GROUP_KEY])
+def test_real_object_measurement_preserves_selected_labels_group_scope(
+    measurement_group,
+):
+    """An exact label selector does not rewrite an explicitly authored group."""
+    from openhcs.core.function_patterns import normalize_function_pattern
+    from openhcs.interop.cellprofiler.compile_time_contracts import (
+        CellProfilerInvocationContractProvider,
+    )
+    from openhcs.processing.backends.cellprofiler.shape import (
+        MeasureObjectSizeShapeModule,
+        measure_object_size_shape,
+    )
+
+    planner = _artifact_planner_stub()
+    labels_plan = _record_declared_output(
+        planner,
+        ArtifactOutputPlan(
+            name="Cells",
+            path="/memory/Cells.pkl",
+            artifact_type=ObjectLabelsArtifactType,
+            group_keys=("2",),
+            group_component=AllComponents.CHANNEL,
+            variable_components=(AllComponents.SITE,),
+            paths_by_group={"2": "/memory/Cells_2.pkl"},
+        ),
+    )
+    selector = (
+        MeasureObjectSizeShapeModule.object_measurement_binding.require_parameter_name()
+    )
+    invocation_pattern = (measure_object_size_shape, {selector: "Cells"})
+    pattern = (
+        invocation_pattern
+        if measurement_group == DEFAULT_GROUP_KEY
+        else {measurement_group: [invocation_pattern]}
+    )
+    snapshot = _snapshot(name="MeasureCells", func=pattern)
+    labels_input = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    step_context = ArtifactDeclarationStepContext(
+        step_name=snapshot.step.name,
+        step_index=snapshot.index,
+        group_by=GroupBy.CHANNEL,
+        available_artifacts=ArtifactSpecCollection((labels_input,)),
+        available_artifact_producers=(
+            ArtifactProducer(
+                ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+                groups=labels_plan.group_keys,
+                invocation_keys=(),
+                producer_step_index=2,
+            ),
+        ),
+    )
+    authored = next(normalize_function_pattern(pattern).iter_items())
+    blocks, consumed_names = MeasureObjectSizeShapeModule.module_blocks_for_invocation(
+        invocation=authored,
+        step_context=step_context,
+    )
+    (numbered_blocks,), _ = MeasureObjectSizeShapeModule.number_step_invocation_blocks(
+        (blocks,), first_module_num=4
+    )
+    contract, consumed_names = MeasureObjectSizeShapeModule.invocation_callable_contract(
+        invocation=authored,
+        numbered_module_blocks=numbered_blocks,
+        consumed_kwarg_names=consumed_names,
+        step_context=step_context,
+    )
+    provider = CellProfilerInvocationContractProvider(
+        {(snapshot.index, authored.key): InvocationContractPlan(contract, consumed_names)}
+    )
+    declarations = extract_artifact_declarations(
+        pattern,
+        invocation_contract_provider=provider,
+        step_context=step_context,
+    )
+    (measurement,) = contract.artifact_outputs.of_artifact_type(MeasurementsArtifactType)
+    (object_input,) = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert object_input.ref() == labels_input.ref()
+    assert object_input.parameter_name == "labels"
+    assert measurement.measurement_feature_owner is MeasureObjectSizeShapeModule
+    assert measurement.name == "MeasureCells_4_measurements"
+    assert measurement.group_scope_sources() == (labels_input.ref(),)
+    assert (
+        MeasurementsArtifactType.require_output_subject(measurement)
+        == ObjectMeasurementSubjectRelation(labels_input.ref()).measurement_subject()
+    )
+    assert selector in consumed_names
+    group_scope = PathPlannerGroupScope.from_raw(
+        ("1", "2"), component=AllComponents.CHANNEL
+    )
+
+    if measurement_group == "1":
+        with pytest.raises(
+            ValueError,
+            match="MeasureCells_4_measurements.*group '1' has no declared group-scope source",
+        ):
+            planner.artifacts.compile_plan_maps(snapshot, 3, declarations, group_scope)
+        return
+
+    maps = planner.artifacts.compile_plan_maps(snapshot, 3, declarations, group_scope)
+    measurement_plan = maps.outputs[measurement.ref()]
+    assert maps.inputs[labels_input.ref()].group_keys == labels_plan.group_keys
+    assert measurement_plan.group_keys == ("2",)
+    assert measurement_plan.group_scope_sources_by_group == {
+        "2": (labels_input.ref(),),
+    }
+    compiled = compile_function_pattern(
+        pattern,
+        maps.inputs,
+        maps.outputs,
+        invocation_contract_provider=provider,
+        step_context=step_context,
+    )
+    (invocation,) = tuple(compiled.iter_invocations())
+    assert selector not in dict(invocation.kwargs)
+    assert invocation.contract is contract
 
 
 def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
