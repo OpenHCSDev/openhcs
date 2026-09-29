@@ -9,6 +9,8 @@ from polystore.roi import ROI, PointShape, load_rois_from_zip
 
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
@@ -61,6 +63,34 @@ def test_source_metadata_is_optional_only_for_external_shapes():
     malformed = replace(roi, metadata={ROIArchiveSourceMetadata.FIELD: {"unknown": 1}})
     with pytest.raises((TypeError, ValueError)):
         ROIArchiveSourceMetadata.decode([malformed])
+
+
+def test_native_sidecar_preserves_retained_source_planes(tmp_path):
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/z1.tif", "/source/z2.tif"),
+            component_metadata=(
+                {"well": "B02", "z_index": 1},
+                {"well": "B02", "z_index": 2},
+            ),
+        ),
+        source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    )
+    rois = [ROI([PointShape(3.25, 4.5)], {"label": 12, "plane_indices": (1,)})]
+    path = tmp_path / "unrelated-name.roi.zip"
+    DiskStorageBackend().save(ROIArchiveSourceMetadata.bind(rois, metadata), path)
+    restored = load_rois_from_zip(path)
+    decoded = ROIArchiveSourceMetadata.decode(restored)
+    assert decoded.source_provenance == metadata.source_provenance
+    assert metadata.retained_plane_component_values() == {"z_index": ("1", "2")}
+    assert (
+        decoded.retained_plane_component_values()
+        == metadata.retained_plane_component_values()
+    )
+    assert decoded.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert decoded.source_voxel_spacing == metadata.source_voxel_spacing
+    assert ROIArchiveSourceMetadata.geometry(restored) == rois
 
 
 def test_real_roi_materialization_persists_output_source_metadata(tmp_path):
