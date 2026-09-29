@@ -52,11 +52,13 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import (
     FijiPayloadKind,
     OpenHCSViewerServerABC,
+    OpenHCSViewerControlMessageType,
     ViewerBatchContextWireField,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlMessageType,
+    ViewerControlField,
     ViewerControlReplyHeader,
     ViewerControlReplyPayload,
     ViewerControlResponseField,
@@ -1217,6 +1219,9 @@ class FijiControlRequestContext:
     windows: FijiWindowRegistry
     imagej_runtime: object
     settlement: FijiBatchSettlementState
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
 
 class FijiControlMessagePlan(ABC, metaclass=AutoRegisterMeta):
@@ -1307,6 +1312,25 @@ class FijiClearStateControlPlan(FijiControlMessagePlan):
                 response_type="clear_state_ack",
                 message="Dimension values cleared",
             ),
+        )
+
+
+class FijiProcessLaunchControlPlan(FijiControlMessagePlan):
+    """Project the server-owned launch declaration through the common boundary."""
+
+    wire_value = OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
+
+    def response(
+        self, context: FijiControlRequestContext, payload: object | None
+    ) -> FijiControlMessageResponse:
+        return FijiControlMessageResponse(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.SUCCESS, response_type="process_launch_ack"
+            ),
+            fields={
+                ViewerControlField.PROCESS_LAUNCH.value:
+                    context.process_launch.to_wire_mapping(),
+            },
         )
 
 
@@ -2129,6 +2153,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
                 self.windows,
                 self.ij,
                 self.batch_processor.settlement,
+                self.launch_config.process_launch,
             )
         ).response_for(message)
         if response.shutdown_requested:

@@ -19,6 +19,7 @@ from polystore.streaming.viewer_transport import ViewerStreamKwarg, ViewerStream
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
+from zmqruntime.viewer_state import ViewerStateManager
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ObjectLabelsArtifactType
@@ -67,6 +68,7 @@ from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     DetachedViewerServerEntrypointSpec,
+    ManagedViewerLifecycleMixin,
     ViewerControlMessageRequest,
     ViewerControlResponse,
     ViewerLaunchContext,
@@ -1221,29 +1223,33 @@ def test_stream_rois_rejects_unresolved_source_plane_metadata() -> None:
         )
 
 
+@pytest.fixture
+def lifecycle_manager(monkeypatch):
+    # Exercise the real manager/acquisition path without starting or stopping
+    # any real viewer, endpoint, Qt application or foreign process.
+    monkeypatch.setattr(ViewerStateManager, "_instance", None)
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "is_running", property(lambda self: True)
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "wait_for_ready", lambda self, timeout: True
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "force_stop",
+        lambda self: self.lifecycle_state.mark_stopped(),
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "start",
+        lambda self: (_ for _ in ()).throw(AssertionError("must not restart")),
+    )
+    manager = ViewerStateManager.get_instance()
+    yield manager
+    manager.stop_all_viewers()
+
+
 def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
-    monkeypatch,
+    monkeypatch, lifecycle_manager,
 ) -> None:
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            del viewer_type, port
-            return None
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh attach")
-
-    monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
-    )
-    monkeypatch.setattr(
-        "zmqruntime.get_or_create_viewer",
-        lambda **_kwargs: (_ for _ in ()).throw(
-            AssertionError("viewer restart path used")
-        ),
-    )
     monkeypatch.setattr(
         NapariStreamVisualizer,
         "existing_viewer_is_ready",
@@ -1276,23 +1282,10 @@ def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
 )
 def test_streaming_viewer_lifecycle_projects_launch_context_for_every_viewer(
     monkeypatch,
+    lifecycle_manager,
     config,
     visualizer_type,
 ) -> None:
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            del viewer_type, port
-            return None
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh attach")
-
-    monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
-    )
     monkeypatch.setattr(
         visualizer_type,
         "existing_viewer_is_ready",
@@ -1360,36 +1353,51 @@ def test_streaming_viewer_lifecycle_reports_bounded_launch_log(
     assert str(error.value.log_file) in str(error.value)
 
 
-def test_streaming_viewer_lifecycle_reuses_manager_owned_viewer(monkeypatch) -> None:
-    existing_viewer = FakeViewer()
-
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            assert viewer_type == "napari"
-            assert port == 5563
-            return existing_viewer
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh reuse")
-
+@pytest.mark.parametrize("config_type", (NapariStreamingConfig, FijiStreamingConfig))
+@pytest.mark.parametrize(
+    ("owns_process", "requested_host", "reusable"),
+    ((True, "127.0.0.1", False), (True, "*", True), (False, "127.0.0.1", True)),
+)
+def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition(
+    monkeypatch, lifecycle_manager, config_type, owns_process, requested_host, reusable
+) -> None:
+    active_config = config_type(enabled=True, port=5563, persistent=True, listen_host="*")
+    existing_viewer = active_config.create_visualizer(FakeFileManager())
+    existing_viewer.lifecycle_state.mark_connected_external()
     monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
+        ManagedViewerLifecycleMixin, "owned_viewer_process_is_alive",
+        lambda self: owns_process,
     )
     monkeypatch.setattr(
-        NapariStreamingConfig,
+        ViewerControlMessageRequest, "send",
+        lambda self: ViewerControlResponse({
+            "status": "success",
+            "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
+        }),
+    )
+    lifecycle_manager.get_or_create_viewer(
+        active_config.viewer_type.wire_value, 5563, lambda: existing_viewer
+    )
+    monkeypatch.setattr(
+        config_type,
         "create_visualizer",
-        lambda self, filemanager, visualizer_config=None: (_ for _ in ()).throw(
-            AssertionError("external viewer probe should not run")
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("managed reuse must not construct another viewer")
         ),
     )
 
-    viewer = StreamingViewerLifecycle.get_or_create_visualizer(
-        filemanager=FakeFileManager(),
-        config=NapariStreamingConfig(enabled=True, port=5563, persistent=True),
-        fresh=False,
+    requested = config_type(
+        enabled=True, port=5563, persistent=True, listen_host=requested_host
     )
-
-    assert viewer is existing_viewer
+    if reusable:
+        assert StreamingViewerLifecycle.get_or_create_visualizer(
+            filemanager=FakeFileManager(), config=requested, fresh=False,
+        ) is existing_viewer
+    else:
+        with pytest.raises(RuntimeError, match="does not match the requested process launch"):
+            StreamingViewerLifecycle.get_or_create_visualizer(
+                filemanager=FakeFileManager(), config=requested, fresh=False,
+            )
+    assert lifecycle_manager.get_viewer(
+        active_config.viewer_type.wire_value, 5563
+    ) is existing_viewer
