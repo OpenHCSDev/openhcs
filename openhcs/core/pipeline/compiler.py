@@ -1283,32 +1283,31 @@ class PipelineCompiler:
         axis_id: str,
         metadata_writer: bool,
     ) -> Dict[str, ProcessingContext]:
-        temp_context = request.context_for(axis_id)
-        temp_session = PipelineCompiler.build_initialize_axis_session(
+        context = request.context_for(axis_id)
+        session = PipelineCompiler.build_initialize_axis_session(
             request,
-            temp_context,
+            context,
             metadata_writer,
         )
-        PipelineCompiler._validate_sequential_components_for_session(temp_session)
+        PipelineCompiler._validate_sequential_components_for_session(session)
         PipelineCompiler.analyze_pipeline_sequential_mode(
-            temp_context,
-            temp_session.global_config,
+            context,
+            session.global_config,
             request.orchestrator,
         )
         if (
-            temp_context.pipeline_sequential_mode
-            and temp_context.pipeline_sequential_combinations
+            context.pipeline_sequential_mode
+            and context.pipeline_sequential_combinations
         ):
             return PipelineCompiler._compile_sequential_axis_contexts(
                 request=request,
-                temp_context=temp_context,
+                temp_context=context,
                 axis_id=axis_id,
                 metadata_writer=metadata_writer,
             )
         context = PipelineCompiler._compile_single_axis_context(
-            request=request,
-            axis_id=axis_id,
-            metadata_writer=metadata_writer,
+            session,
+            enable_visualizer_override=request.enable_visualizer_override,
         )
         return {axis_id: context}
 
@@ -1363,28 +1362,17 @@ class PipelineCompiler:
 
     @staticmethod
     def _compile_single_axis_context(
+        session: CompilationSession,
         *,
-        request: AxisCompilationRequest,
-        axis_id: str,
-        metadata_writer: bool,
+        enable_visualizer_override: bool,
     ) -> ProcessingContext:
-        context = request.context_for(axis_id)
-        session = PipelineCompiler.build_initialize_axis_session(
-            request,
-            context,
-            metadata_writer,
-        )
+        """Finish a nonsequential axis using its validated initial plan."""
+        context = session.context
         PipelineCompiler.declare_zarr_stores(session)
         PipelineCompiler.plan_materialization_flags(session)
-        PipelineCompiler._validate_sequential_components_for_session(session)
-        PipelineCompiler.analyze_pipeline_sequential_mode(
-            context,
-            session.global_config,
-            request.orchestrator,
-        )
         PipelineCompiler._run_post_plan_compile_stages(
             session,
-            enable_visualizer_override=request.enable_visualizer_override,
+            enable_visualizer_override=enable_visualizer_override,
         )
         context.freeze()
         return context

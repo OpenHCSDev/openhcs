@@ -98,6 +98,66 @@ def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
     assert "_resolve_steps_for_context" not in vars(PipelineCompiler)
 
 
+def test_nonsequential_axis_compilation_finishes_its_initial_session(monkeypatch):
+    """Do not plan the same axis a second time after checking sequential mode."""
+    events: list[str] = []
+    context = SimpleNamespace(
+        pipeline_sequential_mode=False,
+        pipeline_sequential_combinations=None,
+        freeze=lambda: events.append("freeze"),
+    )
+    session = SimpleNamespace(context=context, global_config=GlobalPipelineConfig())
+    request = SimpleNamespace(
+        context_for=lambda axis_id: events.append(f"context:{axis_id}") or context,
+        orchestrator=SimpleNamespace(),
+        enable_visualizer_override=False,
+    )
+    monkeypatch.setattr(
+        PipelineCompiler,
+        "build_initialize_axis_session",
+        lambda *_args: events.append("plan") or session,
+    )
+    monkeypatch.setattr(
+        PipelineCompiler,
+        "analyze_pipeline_sequential_mode",
+        lambda *_args: events.append("analyze"),
+    )
+    monkeypatch.setattr(
+        PipelineCompiler,
+        "declare_zarr_stores",
+        lambda planned: events.append("stores") if planned is session else None,
+    )
+    monkeypatch.setattr(
+        PipelineCompiler,
+        "plan_materialization_flags",
+        lambda planned: (
+            events.append("materialization") if planned is session else None
+        ),
+    )
+    monkeypatch.setattr(
+        PipelineCompiler,
+        "_run_post_plan_compile_stages",
+        lambda planned, **_kwargs: (
+            events.append("post_plan") if planned is session else None
+        ),
+    )
+
+    compiled = PipelineCompiler._compile_axis_value(
+        request=request, axis_id="A01", metadata_writer=True
+    )
+
+    assert compiled == {"A01": context}
+    assert events == [
+        "context:A01",
+        "plan",
+        "analyze",
+        "stores",
+        "materialization",
+        "post_plan",
+        "freeze",
+    ]
+
+
 @artifact_inputs(
     ArtifactSpec.input(
         "DNA",
