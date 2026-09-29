@@ -45,7 +45,7 @@ def main() -> None:
         linestyle="--",
         linewidth=1.7,
         color="#b46239",
-        label="Native CP (16w projected)",
+        label="Native CP (16 × cold-launch reference)",
     )
     scaling.set(
         title="Integrated checkout: one vs 16 wells",
@@ -103,8 +103,8 @@ def main() -> None:
     figure.text(
         0.5,
         0.015,
-        "Native CP: one sample measured; 16 wells = 16 × that measurement, "
-        "not a native plate run.",
+        "Native CP: one fresh subprocess measured; 16 wells = 16 × that cold-launch "
+        "measurement, not a native plate run.",
         ha="center",
         fontsize=8,
         color="#555555",
