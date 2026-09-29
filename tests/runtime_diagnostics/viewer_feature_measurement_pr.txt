@@ -1,4 +1,4 @@
-Implements #221; integrates the canonical empirical guide checkpoint from #223 (normal merge of e6b26458b). Draft: source-tested, NOT installed/live accepted.
+Implements #221; integrates the canonical empirical guide checkpoint from #223 (normal merge of e6b26458b), and normal-merges main213439a04. Draft: source-tested and actual MCP numerics exercised, NOT fully live accepted or installed ready.
 
 Done:
 - First-class read-only openhcs_measure_viewer_polyline and openhcs_measure_viewer_region, automatically projected from declared service DTO/capability owners.
@@ -10,12 +10,17 @@ Done:
 
 Validation:
 - 94 focused provider-free feature/presentation/protocol tests passed in9.03s, one process/native threads1, installed interpreter importing this source worktree. Actual Napari ViewerModel/Image and in-process automatic MCP tool binding are exercised; no Qt viewer or MCP process launched.
+- Final source shard after current-main integration and journey preparation:95passed in6.86s, same bounded process/thread policy. Original94-test receipt retained; these source tests are separate from the real runtime journey.
 - Native scaled/translated anisotropy, affine geometry, raw-value profiles, readonly presentation, route/channel selection, DTO serialization, discovery, invalid/oversized inputs covered.
 - NRA global-context scan did not complete its budget; no clean/global proof claim. Owner-chain review is recorded in the checkpoint receipt.
 
 Pending / acceptance gaps:
-- Real source-pinned installed synthetic continuous MCP/viewer journey and author-opened captures require a parent-released isolated runtime slot. H001/H002 cap is preserved; no runtime launched here.
+- Real source-pinned installed-interpreter MCP/viewer journey ran on :88/5792 at c662202df; health, mount, native profile/region numerics and unchanged raw/presentation behavior verified on observed mounted planes. No increased timeout or duplicate/replay. Owned runtime closed and lock released; frozen biological data/harness untouched.
+- Overall live acceptance FAILED/ABSTAIN: inventory streaming drops original crop/relative anisotropic metadata (mounted origin0/scale1); supported MCP snapshots fail DTO unpickle on missing polystore.source_tile_geometry in installed viewer dependency surface. No bitmaps were generated/opened; no X/console workaround. Parent repair/integration authority and paired install are needed before another released-slot acceptance run.
+- bool/outside/sparse/invalid-axis fail-closed verified live; NaN attempt was converted to null by transport and rejected by StrictFloat schema, not a live native nonfinite-guard proof (native guard has source tests).
+- Provider-free intensity selector shard8passed/1failed due changed error wording; retained reproducer, implementation owner, no production edit under subsequent source-review scope. Unfiltered legacy shard hit mocked-entrypoint/real-QWidget abort; failure retained, not called a pass.
 - Parent integration review, including PR159 disjoint lifecycle work and #223 guide integration; fresh installed affected entrypoint proof still required. Draft/tests are not readiness.
-- Live journey driver will be added as a follow-up commit on this same branch before runtime-slot handoff.
+- Parent-reported new installed bf9aae462/c16b8fc pair was NOT the completed journey's environment. Historical PolyStore commit SHA was not captured (only installed0.2.19 version/editable path); this provenance gap is explicit in the live receipt.
+- Live journey driver and controlled two-plane persisted fixture are now on this branch; it asserts original crop/relative anisotropy before measurement rather than silently adjusting expectations. The actual attempt's early virtual/physical path assertion stopped; author continued supported operations on the same client with explicit observed-plane limitations. Future driver resolves paths through the returned inventory mapping.
 
-Receipt: tests/runtime_diagnostics/viewer_feature_measurement_checkpoint_20260929.json. Frozen H003 outputs and installed biological harness untouched.
+Receipts: tests/runtime_diagnostics/viewer_feature_measurement_checkpoint_20260929.json and viewer_feature_measurement_live_20260929.json; full persistent MCP request/result journal path and artifact hashes are recorded. Guide lists exact arguments and honest acceptance boundaries. Parent merge/install actual affected entrypoint remains separate.

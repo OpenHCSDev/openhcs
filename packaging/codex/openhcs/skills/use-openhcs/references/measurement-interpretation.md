@@ -72,7 +72,9 @@ measurements, not ground truth or an automatically validated parameter choice.
 
 Availability is determined by the **live** capability registry, not this guide.
 These source contracts accompany [issue221](https://github.com/OpenHCSDev/openhcs/issues/221);
-their installed live acceptance is pending. Both operations are read-only and
+their live numeric/readonly path has been exercised, but original crop/calibration
+propagation and supported bitmap QA remain blocked; this is not installed
+readiness. Both operations are read-only and
 require a settled, scalar, non-multiscale image route in a native YX 2-D display.
 Unbound stacks/RGB, ambiguous records, missing axes, sparse padding, nonfinite
 inputs/pixels and out-of-bounds geometry fail explicitly; no coordinate clamps.
@@ -82,12 +84,21 @@ Both tools take `host="localhost"`, required `port`, optional `transport_mode`,
 `axis_indices` (zero-based; `{}` only for a route with no component axes), and
 `vertices_yx` as source-native `[y,x]` pixel-centre pairs. Discover route-local
 axes and labels from viewer state/payloads; do not guess channel index from its
-name. Coordinates include the original source path, producer, channel/component
+name. Coordinates include the streamed record path (which may be virtual),
+producer, channel/component
 values, selected aggregate plane, source origin/shape/spacing, layer axes,
 scale/translation and declared world units. Returned world vertices use the
 full native `data_to_world` transform, including affine rotation/shear.
 `physical_calibration_verified=false`: declared units/spacing are provenance,
 not independent calibration; scale1 is not proof of micrometres.
+Retain the stream inventory's virtual-to-physical source mapping with the
+measurement receipt. Check the returned source domain/spacing against original
+declared metadata before interpreting source-native or transformed quantities:
+the c662202df live attempt has a retained inventory-stream failure reproducer that
+loses crop/spacing metadata. A mounted scale1 plane is not acceptance of the
+original acquisition coordinates. That attempt's snapshot contract also failed
+on an installed paired-dependency import; no bitmap/render QA is claimed. A new
+paired installation needs its own proof rather than inheriting this result.
 
 `openhcs_measure_viewer_polyline` accepts 2..64 vertices and optional
 `line_width=1` (1..31), `interpolation_order=1` (0 nearest or1 bilinear),

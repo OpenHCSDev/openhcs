@@ -254,7 +254,7 @@ def main() -> None:
                     and not health["server_source_changed_since_import"]
                 )
                 receipt["mcp_pid"] = health["server_process_id"]
-                call(
+                streamed = call(
                     "openhcs_stream_plate_files_to_viewer",
                     {
                         **connection,
@@ -272,19 +272,38 @@ def main() -> None:
                 )
                 bindings = []
                 for path in paths:
+                    inventory_records = [
+                        record
+                        for record in streamed["resolved_records"]
+                        if record["source_path"] == str(path)
+                    ]
+                    assert len(inventory_records) == 1, inventory_records
+                    stream_path = inventory_records[0]["virtual_path"]
                     matches = [
                         (layer, record)
                         for layer in payloads["layers"]
                         for record in layer["payloads"]
-                        if record["path"] == str(path)
+                        if record["path"] == stream_path
                     ]
                     assert len(matches) == 1, matches
                     payload_layer, record = matches[0]
+                    assert record["summary"]["spatial_origin_yx"] == [
+                        7,
+                        11,
+                    ], "Stream lost original crop origin"
+                    assert record["summary"]["source_spatial_shape_yx"] == [
+                        80,
+                        100,
+                    ], "Stream lost original source shape"
                     state_layer = next(
                         layer
                         for layer in before["layers"]
                         if layer["route_key"] == payload_layer["route_key"]
                     )
+                    assert state_layer["native_transform"]["scale"][-2:] == [
+                        2.0,
+                        3.0,
+                    ], "Stream lost relative anisotropy"
                     axes = {
                         axis: (
                             state_layer["axis_component_values"][axis].index(
@@ -335,7 +354,10 @@ def main() -> None:
                 assert measured["profile_values"] == list(range(110, 120)) + list(
                     range(129, 210, 10)
                 )
-                assert line["coordinates"]["source_path"] == str(paths[0])
+                assert (
+                    line["coordinates"]["source_path"]
+                    == streamed["streamed_image_paths"][0]
+                )
                 assert line["coordinates"]["physical_calibration_verified"] is False
                 polygon = [[17.0, 21.0], [17.0, 30.0], [26.0, 30.0], [26.0, 21.0]]
                 background = [[37.0, 41.0], [37.0, 45.0], [41.0, 45.0], [41.0, 41.0]]
