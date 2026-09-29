@@ -393,26 +393,12 @@ class ZMQExecutionServer(ExecutionServer):
     ):
         logger.info("[%s] Starting plate %s", execution_id, request_payload.plate_id)
 
-        self._function_catalog_preparation.wait_until_ready()
-
         import openhcs.processing.func_registry as func_registry_module
 
-        logger.info(
-            "[%s] Registry initialized status BEFORE check: %s",
-            execution_id,
-            func_registry_module._registry_initialized,
-        )
-        with func_registry_module._registry_lock:
-            if not func_registry_module._registry_initialized:
-                logger.info("[%s] Initializing registry...", execution_id)
-                func_registry_module._auto_initialize_registry()
-                logger.info(
-                    "[%s] Registry initialized status AFTER init: %s",
-                    execution_id,
-                    func_registry_module._registry_initialized,
-                )
-            else:
-                logger.info("[%s] Registry already initialized, skipping", execution_id)
+        if func_registry_module.pipeline_source_requires_import_projection(
+            request_payload.pipeline_code
+        ):
+            func_registry_module.initialize_registry()
 
         self._cleanup_compiled_artifacts()
 

@@ -1,6 +1,7 @@
+import sys
 from pathlib import Path
 from queue import SimpleQueue
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from objectstate import get_current_global_config
@@ -188,7 +189,11 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
 ) -> None:
     import openhcs.processing.func_registry as func_registry_module
 
-    monkeypatch.setattr(func_registry_module, "_registry_initialized", True)
+    monkeypatch.setattr(
+        func_registry_module,
+        "initialize_registry",
+        lambda: pytest.fail("Direct-import pipeline initialized the full registry"),
+    )
     monkeypatch.setattr(
         ZMQExecutionServer,
         "_cleanup_compiled_artifacts",
@@ -224,6 +229,59 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
     assert isinstance(context.configs.global_pipeline, GlobalPipelineConfig)
     assert isinstance(context.pipeline_config, PipelineConfig)
     assert context.compile_artifact_id == "compile-1"
+
+
+def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
+    monkeypatch,
+) -> None:
+    import openhcs
+    import openhcs.processing.func_registry as func_registry_module
+
+    initialized: list[str] = []
+
+    def initialize_registry() -> None:
+        initialized.append("registry")
+        package = ModuleType("openhcs.codex_virtual")
+        package.__path__ = []
+        module = ModuleType("openhcs.codex_virtual.filters")
+        module.noop = lambda value: value
+        package.filters = module
+        monkeypatch.setitem(sys.modules, package.__name__, package)
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        monkeypatch.setattr(openhcs, "codex_virtual", package, raising=False)
+
+    monkeypatch.setattr(
+        func_registry_module, "initialize_registry", initialize_registry
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer, "_cleanup_compiled_artifacts", lambda self: None
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer,
+        "_execute_with_orchestrator",
+        lambda self, context: context,
+    )
+    request_payload = ZMQExecutionRequestPayload(
+        identity=ZMQExecutionIdentity(plate_id="/tmp/plate"),
+        pipeline_code=(
+            "from openhcs.codex_virtual.filters import noop\n"
+            "from openhcs.core.config import PipelineConfig\n"
+            "pipeline_config = PipelineConfig()\n"
+            "pipeline_steps = []\n"
+        ),
+        config_transport=ZMQExecutionConfigTransport(
+            config_code=(
+                "from openhcs.core.config import GlobalPipelineConfig\n"
+                "config = GlobalPipelineConfig()\n"
+            ),
+        ),
+        compile_control=ZMQExecutionCompileControl(),
+    )
+
+    context = ZMQExecutionServer()._execute_pipeline("exec-1", request_payload)
+
+    assert initialized == ["registry"]
+    assert context.pipeline_steps == []
 
 
 def test_zmq_server_forwards_parent_execution_progress_without_worker_claim() -> None:
