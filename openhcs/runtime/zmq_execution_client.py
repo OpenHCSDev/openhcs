@@ -911,6 +911,20 @@ class ZMQExecutionClient(
             response
         ).result
 
+    def custom_function_registration_destination(self, request):
+        """Require the selected endpoint's native admission contract before mutation."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+            FunctionCatalogControlPayload,
+        )
+
+        if not self.is_connected() and not self.connect():
+            raise RuntimeError("Failed to connect to execution server")
+        response = self._send_control_request(
+            FunctionCatalogControlPayload.from_request(request).to_dict()
+        )
+        return CustomFunctionRegistrationDestinationControlResponse.from_control_response(response).destination
+
     def _send_function_catalog_control_request(
         self,
         request: dict,

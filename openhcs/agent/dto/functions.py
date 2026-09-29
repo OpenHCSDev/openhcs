@@ -6,14 +6,18 @@ import hashlib
 import json
 from abc import ABC
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from enum import Enum
+from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar, cast
 
+from zmqruntime.config import TransportMode
 from zmqruntime.messages import MessageFields, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.function_reference import FunctionReference
 
@@ -28,6 +32,7 @@ class FunctionCatalogControlMessageType(str, Enum):
     READ_DETAIL = "openhcs_function_detail_read"
     READ_REFERENCE = "openhcs_function_reference_read"
     REGISTER_CUSTOM = "openhcs_custom_function_register"
+    CUSTOM_REGISTRATION_DESTINATION = "openhcs_custom_function_registration_destination"
 
 
 class FunctionCatalogControlField(str, Enum):
@@ -114,8 +119,66 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     source_code: str
     persist: bool = True
     compact_signature: bool = True
+    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
+    function_name: str | None = None
+    storage_dir: str | None = None
+    admission_policy: AgentPathPolicy | None = field(default=None, repr=False, compare=False)
 
     message_type = FunctionCatalogControlMessageType.REGISTER_CUSTOM
+
+    @classmethod
+    def from_fields(
+        cls, *, source_code: str, persist: bool = True,
+        compact_signature: bool = True, function_name: str | None = None,
+        storage_dir: str | None = None, host: str = "localhost",
+        port: int | None = None, transport_mode: TransportMode | None = None,
+        persistent: bool = True,
+    ) -> Self:
+        """Public boundary: callers cannot supply their own write authority."""
+        return cls(
+            source_code=source_code, persist=persist, compact_signature=compact_signature,
+            function_name=function_name, storage_dir=storage_dir,
+            connection=ExecutionConnectionSpec(
+                host=host, port=port, transport_mode=transport_mode, persistent=persistent,
+            ),
+        )
+
+    def admitted(self, policy: AgentPathPolicy) -> Self:
+        """Admit the exact destination before endpoint dispatch or source evaluation."""
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        self.connection.require_port("Custom function registration")
+        if self.persist:
+            if self.function_name is None or self.storage_dir is None:
+                raise ValueError("Persisted registration requires function_name and the endpoint's storage_dir.")
+            root = Path(self.storage_dir).expanduser()
+            if not root.is_absolute():
+                raise ValueError("Custom function storage_dir must be absolute.")
+            policy.assert_writable(root)
+            policy.assert_writable(CustomFunctionManager.source_path_for_name(root, self.function_name))
+        return replace(self, admission_policy=policy)
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequestABC):
+    """Read the persistence owner's exact path without evaluating source."""
+
+    function_name: str | None = None
+    message_type = FunctionCatalogControlMessageType.CUSTOM_REGISTRATION_DESTINATION
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationDestination:
+    storage_dir: str
+    source_file_path: str | None
+
+    def require_request(self, request: CustomFunctionRegistrationRequest) -> None:
+        """Reject a different native store before sending executable source."""
+        if request.persist and Path(self.storage_dir).resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
+            raise ValueError(
+                f"Selected endpoint owns custom storage {self.storage_dir}, "
+                f"not requested {request.storage_dir}; no source was dispatched."
+            )
 
 
 class FunctionParameterSource(str, Enum):
@@ -463,6 +526,7 @@ class CustomFunctionRegistrationResult(AgentResultEnvelope):
     source_file_paths: tuple[str, ...] = ()
     functions: tuple[FunctionCatalogEntry, ...] = ()
     next_steps: tuple[str, ...] = ()
+    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
 
 
 class CustomFunctionRegistrationControlResponse(
@@ -475,6 +539,17 @@ class CustomFunctionRegistrationControlResponse(
 
     @property
     def result(self) -> CustomFunctionRegistrationResult:
+        return self.value
+
+
+class CustomFunctionRegistrationDestinationControlResponse(
+    FunctionCatalogControlResponseBase[CustomFunctionRegistrationDestination]
+):
+    field = FunctionCatalogControlField.RESULT
+    value_type = CustomFunctionRegistrationDestination
+
+    @property
+    def destination(self) -> CustomFunctionRegistrationDestination:
         return self.value
 
 

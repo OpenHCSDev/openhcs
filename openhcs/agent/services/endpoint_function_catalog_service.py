@@ -6,7 +6,7 @@ import logging
 import threading
 from collections.abc import Callable, Mapping
 from concurrent.futures import CancelledError, Future
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
@@ -14,6 +14,7 @@ from zmqruntime import OperationCancellation
 
 from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogControlRequest,
@@ -24,6 +25,8 @@ from openhcs.agent.dto.functions import (
     FunctionReferenceControlRequest,
     FunctionSearchRequest,
 )
+from openhcs.agent.exceptions import AgentFacingErrorMixin
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
@@ -32,6 +35,18 @@ if TYPE_CHECKING:
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
 logger = logging.getLogger(__name__)
+
+
+class CustomFunctionRegistrationUncertainError(AgentFacingErrorMixin, RuntimeError):
+    agent_error_code = "custom_function_registration_uncertain"
+    agent_error_hint = "Preserve this request and endpoint receipt. Do not replay or fall back; persistence may have completed."
+
+    def __init__(self, request: CustomFunctionRegistrationRequest):
+        super().__init__(
+            f"Registration observation failed after invoking {request.connection.transport_endpoint()}; "
+            f"destination={request.storage_dir}, function={request.function_name!r}. "
+            "Outcome is uncertain; source or registry mutation may have completed."
+        )
 
 
 FunctionCatalogClientFactory = Callable[
@@ -166,8 +181,10 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         config_provider: Callable[[], OpenHCSZMQConfig],
         *,
         client_factory: FunctionCatalogClientFactory | None = None,
+        path_policy: AgentPathPolicy | None = None,
     ) -> None:
         self._config_provider = config_provider
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._client_factory = client_factory or self._new_client
         self._client_session: FunctionCatalogClientSession | None = None
         self._endpoint_state: FunctionCatalogEndpointState | None = None
@@ -350,14 +367,34 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
     ) -> CustomFunctionRegistrationResult:
         """Register source at the endpoint and project ephemeral source locally."""
 
-        endpoint = self._config_provider()
-        result = self._client_for(endpoint).register_custom_function(request)
+        request = request.admitted(self._path_policy)
+        endpoint = replace(
+            self._config_provider(),
+            default_port=request.connection.require_port("Custom function registration"),
+            client_host=request.connection.host,
+            transport_mode=request.connection.transport_endpoint().transport_mode,
+            persistent=request.connection.persistent,
+        )
+        client = self._client_for(endpoint)
+        destination = client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(function_name=request.function_name)
+        )
+        destination.require_request(request)
+        if request.persist:
+            self._path_policy.assert_writable(destination.storage_dir)
+            self._path_policy.assert_writable(destination.source_file_path)
+        self.invalidate()
+        self._config_provider = lambda: endpoint
+        try:
+            result = client.register_custom_function(request)
+        except (TimeoutError, ConnectionError, OSError) as error:
+            raise CustomFunctionRegistrationUncertainError(request) from error
         if not request.persist:
             from openhcs.processing.custom_functions.manager import (
                 CustomFunctionManager,
             )
 
-            CustomFunctionManager().register_from_code(
+            CustomFunctionManager(create_storage=False).register_from_code(
                 request.source_code,
                 persist=False,
                 clear_caches=False,

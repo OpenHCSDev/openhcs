@@ -93,10 +93,24 @@ class CustomFunctionManager:
                 "recompile the pipeline."
             )
 
-    def __init__(self):
+    storage_subdirectory = "custom_functions"
+
+    @classmethod
+    def default_storage_directory(cls) -> Path:
+        """Resolve the native store without creating or migrating any files."""
+        return get_data_file_path(cls.storage_subdirectory, create=False)
+
+    @staticmethod
+    def source_path_for_name(storage_dir: Path, function_name: str) -> Path:
+        """Own source naming for both admission and actual persistence."""
+        if not function_name.isidentifier() or function_name.startswith("_"):
+            raise ValidationError("Custom function name must be a public Python identifier.")
+        return storage_dir / f"{function_name}.py"
+
+    def __init__(self, *, create_storage: bool = True):
         """Initialize manager and create storage directory if needed."""
-        self.storage_dir: Path = get_data_file_path("custom_functions")
-        if not self.storage_dir.exists():
+        self.storage_dir: Path = self.default_storage_directory()
+        if create_storage and not self.storage_dir.exists():
             self.storage_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Created custom functions directory: {self.storage_dir}")
 
@@ -107,6 +121,8 @@ class CustomFunctionManager:
         *,
         clear_caches: bool = True,
         emit_signal: bool = True,
+        expected_function_name: str | None = None,
+        write_admission: Callable[[Path], Path] | None = None,
     ) -> list[Callable]:
         """
         Validate and register the single declaration owned by this source.
@@ -127,12 +143,26 @@ class CustomFunctionManager:
             ValueError: If no valid functions found
             RuntimeError: If function registration fails
         """
+        if persist and write_admission is not None:
+            if expected_function_name is None:
+                raise ValueError("Write admission requires an explicit custom function name.")
+            write_admission(self.storage_dir)
+            write_admission(self.source_path_for_name(self.storage_dir, expected_function_name))
         metadata = self._prepare_source(code)
+        if expected_function_name is not None and metadata.original_name != expected_function_name:
+            raise ValidationError(
+                f"Prepared declaration {metadata.original_name!r} does not match "
+                f"admitted function {expected_function_name!r}."
+            )
         lifetime = CustomFunctionLifetime.from_persist(persist)
         with CustomFunctionRuntimeRegistry.lifecycle():
             CustomFunctionRuntimeRegistry.ensure_can_publish(metadata)
             if persist:
                 source_path = self.source_path_for_function(metadata.func)
+                if write_admission is not None:
+                    write_admission(self.storage_dir)
+                    write_admission(source_path)
+                self.storage_dir.mkdir(parents=True, exist_ok=True)
                 if source_path.exists():
                     raise ValueError(
                         f"Custom function '{metadata.original_name}' already exists; "
@@ -160,7 +190,7 @@ class CustomFunctionManager:
 
     def source_path_for_function(self, func: Callable) -> Path:
         """Return the persisted source path used for a registered function."""
-        return self.storage_dir / f"{func.__name__}.py"
+        return self.source_path_for_name(self.storage_dir, func.__name__)
 
     def source_revision(self) -> CustomFunctionSourceRevision:
         """Return a content-derived revision of all persisted declarations."""
@@ -541,7 +571,7 @@ class CustomFunctionManager:
             func_name: Name of function (used as filename)
             code: Python source code
         """
-        file_path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
         temp_path = self._write_temporary_source(code)
         try:
             os.replace(temp_path, file_path)

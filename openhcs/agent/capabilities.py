@@ -1895,7 +1895,10 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     description = (
         "Validates, registers, and optionally persists custom function Python "
         "source through CustomFunctionManager, then returns registry function_id "
-        "values for MCP pipeline authoring."
+        "values for MCP pipeline authoring. Requires an explicit execution port; "
+        "persist=true also requires the endpoint's exact storage_dir and function_name "
+        "under AgentPathPolicy writable roots before dispatch. A transport timeout "
+        "is uncertain, not proof that no source or registry mutation occurred."
     )
     service = "function_catalog"
     exposition = FunctionCatalogCapability.exposition.refine(
@@ -1905,7 +1908,7 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     side_effects = ("writes_custom_function_file", "updates_function_registry")
     input_contract = CustomFunctionRegistrationRequest
     output_contract = CustomFunctionRegistrationResult
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.register_custom_function(request),
     )

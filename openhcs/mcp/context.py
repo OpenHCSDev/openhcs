@@ -116,7 +116,7 @@ class OpenHCSAgentContext:
                 FunctionCatalogService,
             )
 
-            self._function_catalog = FunctionCatalogService()
+            self._function_catalog = FunctionCatalogService(path_policy=self.path_policy)
         return self._function_catalog
 
     @property
@@ -286,8 +286,12 @@ def create_agent_context() -> OpenHCSAgentContext:
     from openhcs.pyqt_gui.config import load_cached_ui_execution_endpoint_sync
 
     endpoint_config = load_cached_ui_execution_endpoint_sync()
+    path_policy = AgentPathPolicy.from_environment()
     return OpenHCSAgentContext(
-        function_catalog=ZMQFunctionCatalogService(lambda: endpoint_config)
+        path_policy=path_policy,
+        function_catalog=ZMQFunctionCatalogService(
+            lambda: endpoint_config, path_policy=path_policy,
+        ),
     )
 
 

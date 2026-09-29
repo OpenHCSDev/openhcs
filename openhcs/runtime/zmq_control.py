@@ -307,6 +307,26 @@ class FunctionReferenceReadMessageStrategy(FunctionCatalogMessageStrategy):
         ).to_control_response()
 
 
+class CustomFunctionRegistrationDestinationMessageStrategy(ZMQControlMessageStrategy):
+    """Native store admission must not initialize/evaluate the function catalog."""
+
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationDestinationRequest
+
+    request_type = CustomFunctionRegistrationDestinationRequest
+    registry_key = request_type.message_type.value
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        from openhcs.agent.dto.functions import CustomFunctionRegistrationDestinationControlResponse
+
+        try:
+            request = self.request_type.from_control_payload(message)
+            return CustomFunctionRegistrationDestinationControlResponse(
+                value=context.require_function_catalog().custom_function_registration_destination(request),
+            ).to_control_response()
+        except Exception as error:
+            return self.error_response(error)
+
+
 class CustomFunctionRegistrationMessageStrategy(FunctionCatalogMessageStrategy):
     """Register custom source through the execution endpoint catalog owner."""
 
