@@ -2,3 +2,6 @@
 # Do not replace with PyPI 2.x: it owns a different PyTorch API.
 # Source checkpoint; import/fit/compiled MCP acceptance remains pending.
 BaSiCPy @ git+https://github.com/OpenHCSDev/BaSiCPy.git@29f0a327d2069324f13d0c6fa0809a5c7566a6d4
+# Typed native direct-call default, stacked on reviewed retained-history fix.
+# https://github.com/OpenHCSDev/ArrayBridge/pull/2 (depends on PR1)
+arraybridge @ git+https://github.com/OpenHCSDev/ArrayBridge.git@7f94d27925348f0cf0e4cc200692a4214c3722b2

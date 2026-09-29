@@ -7,18 +7,56 @@ import numpy as np
 from basicpy import BaSiC
 from basicpy.basicpy import FittingMode
 
-from openhcs.constants.constants import GroupBy, VariableComponents
+from openhcs.constants.constants import GroupBy
+from openhcs.core.artifacts import (
+    ArtifactSidecarRole,
+    ArtifactSpec,
+    ArtifactViewerStreaming,
+    ImageArtifactType,
+    MainFlowPlaneProjectionOutputSpec,
+    MainFlowStackOutputSpec,
+)
+from openhcs.core.config import DtypeConfig
 from openhcs.core.memory import jax as jax_func
 from openhcs.core.pipeline.function_contracts import (
     allowed_group_by,
+    artifact_outputs,
     required_variable_components,
 )
+from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    MaterializedFilenameIdentity,
+)
 
 
-@jax_func(contract=ProcessingContract.PURE_3D)
+def _fitted_field_output(name: str) -> ArtifactSpec:
+    """Project group lineage; runtime field owns aggregate contributor context."""
+    return MainFlowPlaneProjectionOutputSpec.output(
+        name,
+        ImageArtifactType,
+        sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+        materialization=MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        ),
+        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    )
+
+
+CORRECTED_OUTPUT = MainFlowStackOutputSpec.output("basic_corrected", ImageArtifactType)
+FLATFIELD_OUTPUT = _fitted_field_output("basic_flatfield")
+DARKFIELD_OUTPUT = _fitted_field_output("basic_darkfield")
+
+
+@jax_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())
 @allowed_group_by(GroupBy.CHANNEL)
-@required_variable_components(VariableComponents.SITE)
+@required_variable_components(FittedIlluminationFieldOutput.observation_axis)
+@artifact_outputs(CORRECTED_OUTPUT, FLATFIELD_OUTPUT, DARKFIELD_OUTPUT)
 def basic_flatfield_correction_jax(
     image: jnp.ndarray,
     max_iterations: int = 50,
@@ -29,7 +67,7 @@ def basic_flatfield_correction_jax(
     get_darkfield: bool = False,
     fitting_mode: FittingMode = FittingMode.ladmap,
     working_size: int | None = 128,
-) -> jnp.ndarray:
+) -> tuple[jnp.ndarray, FittedIlluminationFieldOutput, FittedIlluminationFieldOutput]:
     """Fit one BaSiC model to independent observations and apply its fields.
 
     The leading N axis contains independent timepoints or mosaic positions,
@@ -53,7 +91,11 @@ def basic_flatfield_correction_jax(
         working_size: Spatial working size, or None for no rescaling.
 
     Returns:
-        Floating-point corrected observations, with the input shape. BaSiC's
+        Corrected observations, fitted flatfield and fitted darkfield, all from
+        this same fit. The first image remains the pipeline's main flow; fields
+        are persisted image sidecars, available for on-demand inspection. When
+        get_darkfield=False the darkfield is the model's zero additive field.
+        Floating-point corrected observations retain the input shape. BaSiC's
         (image - darkfield) / flatfield retains intensity units, fractions and
         negative values; no clipping, normalization, integer recast or temporal
         baseline subtraction is applied. Values can exceed the input range.
@@ -65,6 +107,7 @@ def basic_flatfield_correction_jax(
         raise ValueError("BaSiC requires multiple independent observations.")
     if not np.isfinite(observations).all():
         raise ValueError("BaSiC observations must contain only finite values.")
+    FittedIlluminationFieldOutput.validate_observation_domain(image)
 
     model = BaSiC(
         max_iterations=max_iterations,
@@ -77,4 +120,9 @@ def basic_flatfield_correction_jax(
         working_size=working_size,
     )
     corrected = model.fit_transform(observations, timelapse=False)
-    return jnp.asarray(corrected)
+    observation_count = observations.shape[0]
+    return (
+        jnp.asarray(corrected),
+        FittedIlluminationFieldOutput(jnp.asarray(model.flatfield), observation_count),
+        FittedIlluminationFieldOutput(jnp.asarray(model.darkfield), observation_count),
+    )

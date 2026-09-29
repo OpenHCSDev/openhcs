@@ -2,7 +2,9 @@
 
 Status: draft **source integration**, not installed, import- or fit-validated.
 Backend/dependency owner: Linnaeus. Parent PR151 owns recipes/policy. Memory/
-session PR208 remains independently pending actual live acceptance.
+session PR208 remains independently pending actual live acceptance. Its two
+independent authority findings are corrected/published in `d69d65adb`; no memory
+MCP measurement or installed-history readiness is inferred from that source fix.
 
 ## Implementation and dependency source
 
@@ -18,6 +20,18 @@ the actual parameters; exported declarations/saved histories are not modified.
 knob reaches the model. Corrected output remains floating point; no integer
 recast, clipping or unit-interval conversion is performed by this adapter.
 `timelapse=False` avoids subtracting the estimated per-observation baseline.
+
+Source tracing found another range boundary: ArrayBridge's outer decorator
+defaults to preserving/rescaling into the input dtype on **direct** calls. Removing
+the adapter's `astype` alone was therefore insufficient. The paired
+[ArrayBridge PR2](https://github.com/OpenHCSDev/ArrayBridge/pull/2) extends the
+existing dtype wrapper's typed `dtype_config_default` keyword and reflected
+parameter owner; no BaSiC-specific wrapper, registry or bypass is introduced.
+OpenHCS declares `DtypeConfig()` (its existing native-output owner) on this
+callable. Explicit caller/step dtype policies can still override that default.
+The exact ArrayBridge commit `7f94d27925348f0cf0e4cc200692a4214c3722b2` is recorded
+in both the gitlink and source requirements. PR2 is stacked on the separate
+retained-history PR1; neither is merged or installed here.
 
 The paired [BaSiCPy draft](https://github.com/OpenHCSDev/BaSiCPy/pull/1) reuses
 Tristan's clean JAX prototype `ae2c647`, rather than PyPI 2.x's PyTorch API.
@@ -48,21 +62,25 @@ The existing `PURE_3D`, `required_variable_components(SITE)` and
 `allowed_group_by(CHANNEL)` declarations require a real cross-site stack and
 reject a Z-only/mixed-channel FunctionStep. Direct calls accept `(N,Y,X)` or
 `(N,Z,Y,X)`; they do not split volumes into separate fits. Pipeline acceptance
-targets exactly `[SITE]`, with fixed Z/time and channel grouping. Multi-axis
-SITE+Z/time grids and time-only pipeline admission are not claimed by this
-checkpoint: the existing required-axis declaration checks inclusion, not an
-exact alternative independent-axis set. Do not advertise those configurations
-as validated.
+targets exactly `[SITE]`, with fixed Z/time and channel grouping. In addition to
+the existing required-axis inclusion check, the fitted-field declaration owns
+an exact metadata-backed observation-domain check before fitting: retained
+varying components must be SITE only. Mixed SITE+Z/time/channel and Z-only stacks
+are rejected, not silently flattened into observations. Raw direct-array callers
+declare the leading N themselves; absent source metadata is not invented.
+Time-only pipeline admission and numerical volume readiness remain unverified.
 
-Fitted flatfield/darkfield artifacts remain to implement/verify. Existing
-`artifact_outputs`, image sidecars, `SourceProjectedImageOutput` and
-`ImagePayloadMetadata.collapse_leading_plane_axis()` provide the likely route:
-a fitted field is an aggregate of all observations, with contributor provenance,
-not one selected source plane. Repeating the field N times or lying about a
-plane projection would introduce identity/RAM debt. Core artifact/runtime files
-are Zeno-owned; this patch does not edit them or introduce a second artifact
-pipeline. Source-only aggregate projection feasibility is being checked before
-adding a local behavior-owning output leaf.
+The wrapper now returns corrected main flow plus flatfield/darkfield from the
+**same real fit**, through existing `artifact_outputs` image sidecars. Local
+`FittedIlluminationFieldOutput(SourceProjectedImageOutput)` owns the aggregate
+source-context transformation: complete-stack/count/grid admission, all
+contributor provenance via the existing metadata owner's
+`collapse_leading_plane_axis()`, and clearing pixel-range metadata that does not
+describe fitted parameters. It does not select a false source plane or repeat
+the field N times. Existing declaration bindings retain group lineage; artifact
+names own persisted filenames, with on-demand viewer inspection. No shared
+core artifact/runtime/config file or generic registry was changed. Runtime
+materialization and compiled/MCP routing still require real acceptance.
 
 ## Actual evidence
 
@@ -80,18 +98,38 @@ Executed here, source only:
   --basicpy-source /home/ts/wt/basicpy-python314-20260929/src/basicpy/basicpy.py
 ```
 
-Five checks pass (0.009s): knobs against actual upstream declaration fields,
-enum owner, existing pipeline declarations, no integer cast/hidden dependency
-failure, reviewed source pin and JAX-owned dependency matching. Focused Ruff and
+Initial five checks passed (0.009s); the current expanded seven source checks
+pass in 0.018s under Python3.14.7. The new API guard initially selected a local
+variable's name instead of the factory's `decorator` declaration; the selector
+was corrected without changing an API or weakening a runtime assertion. Checks
+cover aggregate field-owner projection and the paired typed-default API in
+addition to knobs/enum/contracts/range/source-pin ownership. Focused Ruff and
 diff checks pass. These checks do not import OpenHCS/JAX or execute a model.
-Normal merge of freshly fetched `openhcsdev/main` is up to date at `a0263e82a`;
-all recorded submodules are initialized in the isolated worktree.
+Normal merge of fetched `openhcsdev/main283b21275` is `2e4409871`; recorded
+submodules are initialized, with only the reviewed paired ArrayBridge gitlink
+advanced. Parent #151/#212 is now merged/installed; this worker did not install.
+
+Provider-free numerical/projection regressions are written but **not run**:
+
+- Nine fitted-field metadata cases retain all contributor paths/common fixed
+  components and reject mixed/Z-only axes, one-plane context, wrong grid/count.
+- Two real BaSiC tests use only 24 synthetic 32x32 same-channel observations:
+  direct decorated-call floating range and formula/known-shading field inspection,
+  plus moving-object versus stationary-pattern biological-leakage controls.
+  No mocked BaSiC, alternate pipeline or blind input/reference is used.
+- Paired ArrayBridge has four real NumPy regressions for native fractions,
+  negative/out-of-uint16 values, explicit override and unchanged legacy defaults.
+
+Those runtime assertions are prospective checks, not passing evidence. No new
+scientific framework import, fit, MCP server or GUI/JVM startup was performed for
+this follow-through under Confucius's shared slot.
 
 ## Focused antipattern / new-case review
 
 Scope: changed wrapper, shared flatfield enum, JAX dependency declaration and
 paired fork's DCT/Pydantic owners. Focused source/AST/catalog review, not full NRA
-scan or global proof.
+scan or global proof. Aggregate outputs and direct-call dtype policy are included
+in this follow-through's source review.
 
 - BOUND-7: removed `hasattr(shape/dtype)` probing of a known array argument.
   Validate finite observations once, and preserve real model errors.
@@ -103,15 +141,22 @@ scan or global proof.
   optimizer defaults with actual observation semantics and model-owned defaults.
 - IMPL-13/TIME-1: paired fork reuses the public JAX DCT owner; copied private
   helper is deleted in place. Pydantic models retain durable schema ownership.
-- New output case must extend existing image-output/artifact owners and prove
-  aggregate provenance, not add metric/artifact dictionaries or special-name
-  dispatch to generic consumers. This part remains under source review.
+- BOUND-2 / IDEN-4: direct-call dtype semantics come from the existing typed
+  ArrayBridge/OpenHCS config owner, not the adapter's output dtype assertion.
+  The paired API changes the callable declaration; generic consumers and
+  explicit overrides remain on the same wrapper and runner family.
+- IDEN-4 / BOUND-2: aggregate field identity belongs to its new existing-base
+  output leaf and the existing metadata projection owner. New fitted outputs
+  reuse that leaf plus one artifact declaration; no changes to generic runtime,
+  artifact catalogs, switches, metric dictionaries or registries are needed.
+  Added projection tests are the new-case experiment, still pending execution.
 
 ## Pending scheduled acceptance
 
-Parent #151/#212 gets first released validation slot. This worker waits for
-explicit next-slot handoff, then uses nonblocking flock/resource guard. No new
-environment/GUI/JVM/runtime, install or active baseline changes happened here.
+Parent #151/#212's finite validation/install completed; Confucius now owns the
+heavy live slot and frozen installed harness. This worker remains on source work
+until the next-slot handoff, then uses nonblocking flock/resource guard. No new
+environment/GUI/JVM/runtime, install or active baseline change happens here.
 
 1. Verify imported paths first; real isolated Python3.14 dependency resolve and
    import against the exact paired source, without an old JAX downgrade.
