@@ -691,7 +691,8 @@ class FunctionStepExecutor:
         try:
             executor = cls(context, step_index)
             step_name = executor.plan.step_name or step_name
-            return executor.run()
+            with context.runtime_step_scope():
+                return executor.run()
         except Exception as error:
             full_traceback = traceback.format_exc()
             logger.error(
