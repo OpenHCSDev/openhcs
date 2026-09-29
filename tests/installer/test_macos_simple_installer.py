@@ -489,6 +489,8 @@ def test_macos_installer_registers_agent_clients_through_stable_launcher() -> No
     assert "--args-json '[\"mcp\"]'" in source
     assert "--register codex" in source
     assert "--register-detected" in source
+    assert "--sync-skills" in source
+    assert "--skip-skill-sync" in source
     assert "OPENHCS_UV_EXECUTABLE" in source
     assert "openhcs.desktop_deployment_cli" in source
     assert "agent-registration.json" in source
@@ -501,7 +503,7 @@ def test_macos_installer_registers_agent_clients_through_stable_launcher() -> No
     assert '"$registration_ok" != true' in source
 
     assert "connectAgentsCheckbox" in app_source
-    assert "Connect OpenHCS to ChatGPT, Codex, and local AI agent apps" in app_source
+    assert "Connect AI agent apps and install OpenHCS analysis skills" in app_source
     assert "connectAgentsCheckbox.state = .on" in app_source
     assert 'environment["OPENHCS_INSTALLER_REGISTER_MCP_CLIENTS"]' in app_source
     assert 'installerStateValue(named: "agent-registration-status")' in app_source

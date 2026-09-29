@@ -12,6 +12,7 @@ from typing import ClassVar, Generic, TypeVar, cast
 
 import zmq
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping
 from polystore.streaming.identity import StreamProducerIdentity
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
 from zmqruntime.client import (
@@ -74,6 +75,7 @@ from openhcs.agent.dto.viewer import (
     viewer_window_probe_from_state,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
+from openhcs.runtime.viewer_controls import ViewerNativeDimensions
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
     ComponentValues,
@@ -2210,6 +2212,10 @@ class ViewerWindowService:
                     self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT)
                 )
             ),
+            native_dimensions=dataclass_from_mapping(
+                ViewerNativeDimensions,
+                self._required_mapping(response, ViewerControlField.NATIVE_DIMENSIONS),
+            ),
             active_dimension_label_route=self._optional_typed(
                 response,
                 ViewerControlField.ACTIVE_DIMENSION_LABEL_ROUTE,
@@ -2285,6 +2291,7 @@ class ViewerWindowService:
             visible=target_layer.visible if target_layer is not None else None,
             selected=target_layer.selected if target_layer is not None else None,
             data_index=request.navigation.data_index,
+            native_dimensions=state.native_dimensions,
             feature_row_count=(
                 target_layer.feature_row_count if target_layer is not None else 0
             ),

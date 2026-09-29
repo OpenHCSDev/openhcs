@@ -306,14 +306,21 @@ def _cellprofiler_convex_hull(
             continue
         y_values = point_y[start:stop]
         x_values = point_x[start:stop]
-        columns = np.unique(x_values)
-        candidates: list[tuple[int, int]] = []
-        for column in columns:
-            rows = y_values[x_values == column]
-            candidates.append((int(np.min(rows)), int(column)))
-        for column in columns[::-1]:
-            rows = y_values[x_values == column]
-            candidates.append((int(np.max(rows)), int(column)))
+        first_column = int(np.min(x_values))
+        relative_columns = x_values - first_column
+        column_count = int(np.max(relative_columns)) + 1
+        row_minimum = np.full(column_count, np.iinfo(np.int64).max, dtype=np.int64)
+        row_maximum = np.full(column_count, np.iinfo(np.int64).min, dtype=np.int64)
+        np.minimum.at(row_minimum, relative_columns, y_values)
+        np.maximum.at(row_maximum, relative_columns, y_values)
+        columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
+        candidates = [
+            (int(row_minimum[column]), int(column + first_column)) for column in columns
+        ]
+        candidates.extend(
+            (int(row_maximum[column]), int(column + first_column))
+            for column in columns[::-1]
+        )
 
         vertices: list[tuple[int, int]] = []
         for candidate in candidates:

@@ -263,6 +263,7 @@ class ImageAnalysisWorkflowAuthoringContext(
             "mosaic quality control, segmentation review, or image-result provenance"
         ),
         knowledge_targets=(
+            KnowledgeBaseDocumentTarget("openhcs_autonomous_analysis_strategy"),
             KnowledgeBaseDocumentTarget("openhcs_example_corpus_map"),
             KnowledgeBaseDocumentTarget("openhcs_data_dimensions"),
             KnowledgeBaseDocumentTarget("openhcs_function_patterns"),
@@ -288,6 +289,7 @@ class CustomFunctionAuthoringContext(
             KnowledgeBaseDocumentTarget("openhcs_custom_functions"),
             KnowledgeBaseDocumentTarget("openhcs_custom_function_management"),
             KnowledgeBaseDocumentTarget("openhcs_artifact_contract_system"),
+            KnowledgeBaseDocumentTarget("openhcs_custom_function_workflow"),
         ),
     )
 
@@ -344,7 +346,11 @@ class ViewerReviewAuthoringContext(
             "execution produced images, labels, or ROIs that need bounded visual "
             "and structured validation"
         ),
-        knowledge_targets=(KnowledgeBaseDocumentTarget("openhcs_viewer_management"),),
+        knowledge_targets=(
+            KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
+            KnowledgeBaseDocumentTarget("openhcs_biological_image_analysis_evidence"),
+            KnowledgeBaseDocumentTarget("openhcs_viewer_qa"),
+        ),
     )
 
 

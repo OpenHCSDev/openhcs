@@ -10,12 +10,13 @@ from pathlib import Path
 
 import pytest
 
-import openhcs.desktop_deployment as desktop_deployment
+from openhcs import desktop_deployment
 from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
 from openhcs.desktop_deployment import (
     DesktopDeploymentAuthority,
     DesktopDeploymentContext,
     DesktopDeploymentError,
+    DesktopDeploymentReport,
     MacOSDesktopDeployment,
     WindowsDesktopDeployment,
 )
@@ -23,8 +24,175 @@ from openhcs.mcp.bootstrap import (
     MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE,
     MCP_STABLE_LAUNCH_COMMAND_ENVIRONMENT_VARIABLE,
 )
+from openhcs.mcp.client_registration import ClientSkillSyncResult
 from openhcs.resources.brand import BrandAsset, brand_asset_path
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+
+def test_optional_skill_failure_retains_published_restart_target(
+    tmp_path, monkeypatch, capsys
+):
+    report = DesktopDeploymentReport(
+        platform=AgentRuntimePlatformKey.MACOS,
+        launcher_path=str(tmp_path / "launcher"),
+        desktop_shortcut_path=str(tmp_path / "shortcut"),
+        application_path=None,
+        restart_executable=str(tmp_path / "restart"),
+        skill_sync=(
+            ClientSkillSyncResult("codex", False, error="locally modified skill"),
+        ),
+    )
+    monkeypatch.setattr(
+        desktop_deployment,
+        "refresh_installer_managed_desktop",
+        lambda *args, **kwargs: report,
+    )
+    assert (
+        desktop_deployment.main(
+            [
+                f"--installation-pointer={tmp_path / 'current'}",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    assert payload["restart_executable"] == report.restart_executable
+    assert payload["skill_sync"][0]["error"] == "locally modified skill"
+    assert "WARNING" in output.err
+    assert "remains published" in output.err
+
+
+@pytest.mark.parametrize("refresh_skills", (False, True))
+def test_desktop_refresh_runs_skill_updates_only_after_successful_publication(
+    tmp_path,
+    monkeypatch,
+    refresh_skills,
+):
+    context = _context(tmp_path, pointer_name="current")
+    events = []
+    report = DesktopDeploymentReport(
+        platform=AgentRuntimePlatformKey.MACOS,
+        launcher_path=str(tmp_path / "launcher"),
+        desktop_shortcut_path=str(tmp_path / "shortcut"),
+        application_path=None,
+        restart_executable=str(tmp_path / "restart"),
+    )
+
+    class Deployment:
+        def refresh(self, actual_context):
+            assert actual_context == context
+            events.append("publish")
+            return report
+
+    def refresh():
+        events.append("skill sync")
+        return (ClientSkillSyncResult("codex", False, error="permission denied"),)
+
+    monkeypatch.setattr(
+        DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
+    )
+    monkeypatch.setattr(
+        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+    )
+    monkeypatch.setattr(desktop_deployment, "refresh_managed_client_skills", refresh)
+    result = desktop_deployment.refresh_installer_managed_desktop(
+        context.installation_pointer,
+        refresh_skills=refresh_skills,
+    )
+    assert events == (["publish", "skill sync"] if refresh_skills else ["publish"])
+    assert result.restart_executable == report.restart_executable
+    assert bool(result.skill_sync) == refresh_skills
+
+
+def test_failed_desktop_publication_never_refreshes_skills(tmp_path, monkeypatch):
+    context = _context(tmp_path, pointer_name="current")
+
+    class Deployment:
+        def refresh(self, context):
+            raise DesktopDeploymentError("not published")
+
+    monkeypatch.setattr(
+        DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
+    )
+    monkeypatch.setattr(
+        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+    )
+    monkeypatch.setattr(
+        desktop_deployment,
+        "refresh_managed_client_skills",
+        lambda: pytest.fail("Unexpected sync"),
+    )
+    with pytest.raises(DesktopDeploymentError, match="not published"):
+        desktop_deployment.refresh_installer_managed_desktop(
+            context.installation_pointer
+        )
+
+
+def test_native_setup_can_explicitly_skip_receipt_enrolled_refresh(
+    tmp_path, monkeypatch
+):
+    kwargs = {}
+    report = DesktopDeploymentReport(
+        platform=AgentRuntimePlatformKey.MACOS,
+        launcher_path=str(tmp_path / "launcher"),
+        desktop_shortcut_path=str(tmp_path / "shortcut"),
+        application_path=None,
+        restart_executable=str(tmp_path / "restart"),
+    )
+
+    def refresh(pointer, **arguments):
+        kwargs.update(arguments)
+        return report
+
+    monkeypatch.setattr(
+        desktop_deployment, "refresh_installer_managed_desktop", refresh
+    )
+    assert (
+        desktop_deployment.main(
+            [
+                f"--installation-pointer={tmp_path / 'current'}",
+                "--skip-skill-sync",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    assert kwargs == {"refresh_skills": False}
+
+
+def test_unexpected_optional_refresh_error_cannot_invalidate_publication(
+    tmp_path, monkeypatch
+):
+    context = _context(tmp_path, pointer_name="current")
+    report = DesktopDeploymentReport(
+        platform=AgentRuntimePlatformKey.MACOS,
+        launcher_path=str(tmp_path / "launcher"),
+        desktop_shortcut_path=str(tmp_path / "shortcut"),
+        application_path=None,
+        restart_executable=str(tmp_path / "restart"),
+    )
+
+    class Deployment:
+        def refresh(self, actual_context):
+            return report
+
+    def failure():
+        raise RuntimeError("host capture failed")
+
+    monkeypatch.setattr(
+        DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
+    )
+    monkeypatch.setattr(
+        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+    )
+    monkeypatch.setattr(desktop_deployment, "refresh_managed_client_skills", failure)
+    result = desktop_deployment.refresh_installer_managed_desktop(
+        context.installation_pointer
+    )
+    assert result.restart_executable == report.restart_executable
+    assert result.skill_sync_error == "host capture failed"
 
 
 def test_desktop_deployment_import_does_not_load_agent_dto_graph() -> None:

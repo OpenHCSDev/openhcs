@@ -100,6 +100,10 @@ class ZMQExecutionContext:
         return self.request_payload.request_signature
 
     @property
+    def compilation_signature(self) -> str:
+        return self.request_payload.compilation_signature
+
+    @property
     def debug_replay_signature(self) -> str:
         return self.request_payload.debug_replay_signature
 
@@ -654,7 +658,7 @@ class ZMQExecutionServer(ExecutionServer):
             orchestrator=orchestrator,
             wells=wells,
             compile_artifact_id=request_context.compile_artifact_id,
-            request_signature=request_context.request_signature,
+            compilation_signature=request_context.compilation_signature,
             debug_replay_signature=request_context.debug_replay_signature,
             retain_compile_artifact=self._retain_compile_artifact(
                 debug_execution_config
@@ -805,7 +809,7 @@ class ZMQExecutionServer(ExecutionServer):
             ZMQCompileArtifactRecord(
                 execution_id=request_context.execution_id,
                 plate_id=request_context.plate_id,
-                request_signature=request_context.request_signature,
+                compilation_signature=request_context.compilation_signature,
                 debug_replay_signature=request_context.debug_replay_signature,
                 compilation=compilation,
             )
@@ -814,7 +818,7 @@ class ZMQExecutionServer(ExecutionServer):
             "[%s] Compilation-only request completed and artifact stored (artifact_id=%s sig=%s)",
             request_context.execution_id,
             request_context.execution_id,
-            request_context.request_signature[:12],
+            request_context.compilation_signature[:12],
         )
         self._set_compile_status("compiled success")
         return compilation.execution_bundle.runtime_contexts

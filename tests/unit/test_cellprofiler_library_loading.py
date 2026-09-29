@@ -3965,6 +3965,30 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
     assert illumination.dtype == image.dtype
 
 
+def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
+    import centrosome.cpmorphology
+
+    from openhcs.processing.backends.cellprofiler.label_geometry import (
+        _cellprofiler_convex_hull,
+    )
+
+    labels = np.zeros((91, 103), dtype=np.int32)
+    labels[3:35, 5:41] = 11
+    labels[12:20, 17:28] = 0
+    labels[40:80, 48:94] = 23
+    labels[40:80:3, 48:94:4] = 0
+    labels[85, 100] = 99
+    object_ids = np.array([11, 23, 99, 123], dtype=np.int32)
+
+    expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
+        labels, object_ids
+    )
+    actual_hull, actual_counts = _cellprofiler_convex_hull(labels, object_ids)
+
+    np.testing.assert_array_equal(actual_hull, expected_hull)
+    np.testing.assert_array_equal(actual_counts, expected_counts)
+
+
 def test_absorbed_convex_hull_transform_matches_centrosome_oracle():
     import centrosome.cpmorphology
     import centrosome.filter

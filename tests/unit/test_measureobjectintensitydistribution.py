@@ -403,6 +403,46 @@ def test_measure_object_intensity_distribution_preserves_runtime_slice_axis():
     assert set(columnar_row_values(measurements, "slice_index")) == {1}
 
 
+def test_default_intensity_zernike_rows_match_explicit_native_with_missing_objects():
+    image = np.arange(32 * 32, dtype=np.float32).reshape(32, 32) / 1024
+    labels = np.zeros(image.shape, dtype=np.int32)
+    labels[2:13, 3:15] = 1
+    labels[17:30, 19:31] = 3
+    object_labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(declared_object_count=3),
+    )
+
+    def measure(backend_provider=None):
+        kwargs = (
+            {}
+            if backend_provider is None
+            else {"zernike_backend_provider": backend_provider}
+        )
+        return measure_object_intensity_distribution(
+            source_image(image),
+            object_labels,
+            wants_zernikes=mid.ZernikeMode.MAGNITUDES_AND_PHASE,
+            zernike_degree=5,
+            **kwargs,
+        )[1]
+
+    default_rows = measure()
+    native_rows = measure(CellProfilerBackendProvider.NATIVE)
+    for field in ("object_label", "feature_name", "source_image_name", "n", "m"):
+        np.testing.assert_array_equal(
+            columnar_row_values(default_rows, field),
+            columnar_row_values(native_rows, field),
+        )
+    np.testing.assert_allclose(
+        columnar_row_values(default_rows, "result_value"),
+        columnar_row_values(native_rows, "result_value"),
+        rtol=1e-10,
+        atol=1e-12,
+        equal_nan=True,
+    )
+
+
 def test_measure_object_intensity_distribution_rejects_unprojected_label_stack():
     image = np.ones((2, 4, 4), dtype=np.float32)
     labels = np.zeros(image.shape, dtype=np.int32)

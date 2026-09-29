@@ -902,6 +902,14 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
             "viewer_ndim": 5,
             "current_step": (0, 0, 0, 0, 0),
             "axis_labels": ("well", "site", "channel", "y", "x"),
+            "native_dimensions": {
+                "order": (0, 1, 2, 3, 4),
+                "ndisplay": 2,
+                "displayed_axes": ("y", "x"),
+                "point": (0.0, 0.0, 0.0, 0.0, 0.0),
+                "camera_angles": (0.0, 0.0, 90.0),
+                "canvas_size": (640, 480),
+            },
             "component_group_count": 1,
             "component_item_count": 2,
         }

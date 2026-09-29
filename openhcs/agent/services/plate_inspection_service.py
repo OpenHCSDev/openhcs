@@ -1139,6 +1139,9 @@ class PlateInspectionService:
                 ),
             )
 
+        if request.result_directory is not None:
+            return self._query_explicit_result_directory(request, plate_path)
+
         query_kind = request.kind
         if (
             query_kind is PlateFileKind.RESULT
@@ -1226,6 +1229,76 @@ class PlateInspectionService:
             warnings=tuple(warnings),
         )
 
+    def _query_explicit_result_directory(
+        self,
+        request: PlateFileQueryRequest,
+        plate_path: Path,
+    ) -> PlateFileQueryResult:
+        """Read persisted files without inventing a microscope/source identity."""
+        if request.kind is not PlateFileKind.RESULT or request.well is not None:
+            return self._query_files_error(
+                request,
+                AgentError(
+                    code="plate_result_directory_selection_invalid",
+                    message=(
+                        "Explicit result-directory inspection requires kind='result' "
+                        "and no acquisition-component filter. Native previews do not "
+                        "establish a file's source or writer success."
+                    ),
+                ),
+                plate_path=plate_path,
+            )
+
+        result_path, errors = self._resolve_plate_path(request.result_directory)
+        if errors:
+            return self._query_files_error(
+                request,
+                errors[0],
+                plate_path=plate_path,
+            )
+        if result_path is None:
+            raise RuntimeError("Result directory resolution returned no path or error.")
+        try:
+            file_inventory = self.result_directory_inventory(result_path)
+        except AgentPathPolicyError as exc:
+            return self._query_files_error(
+                request,
+                AgentError.from_exception(
+                    PlateInspectionIssueCode.PATH_POLICY_REJECTED.value,
+                    exc,
+                    path=request.result_directory,
+                ),
+                plate_path=plate_path,
+            )
+        return self._query_files_from_inventory(
+            request=request,
+            plate_path=plate_path,
+            file_inventory=file_inventory,
+            detected_microscope_type=None,
+            handler_class=None,
+            parser_class=None,
+            warnings=(),
+        )
+
+    def result_directory_inventory(self, directory: Path) -> PlateFileInventory:
+        """Admit persisted files once for both inspection and viewer reopening."""
+        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+
+        result_path = self._path_policy.assert_readable(directory)
+        if not result_path.is_dir():
+            raise ValueError(f"Result path is not a directory: {result_path}")
+        return PlateFileInventory.from_inventories(
+            image_inventory=PlateImageInventory(plate_path=result_path, records=()),
+            result_inventory=PlateResultFileInventory.from_directory_files(
+                plate_path=result_path,
+                result_directory=AnalysisResultDirectory(
+                    subdirectory_name=result_path.name,
+                    path=result_path,
+                ),
+                file_paths=self._path_policy.iter_readable_files(result_path),
+            ),
+        )
+
     @staticmethod
     def _query_files_from_inventory(
         *,
@@ -1249,6 +1322,11 @@ class PlateInspectionService:
         return PlateFileQueryResult(
             schema_version=SCHEMA_VERSION,
             plate_path=str(plate_path),
+            result_directory=(
+                str(file_inventory.plate_path)
+                if request.result_directory is not None
+                else None
+            ),
             requested_microscope_type=request.microscope_type,
             detected_microscope_type=detected_microscope_type,
             handler_class=handler_class,

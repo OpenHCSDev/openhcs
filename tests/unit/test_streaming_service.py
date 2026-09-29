@@ -7,6 +7,10 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
+from polystore.roi import ROI, PointShape
+from polystore.roi_converters import NapariROIConverter
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -30,10 +34,22 @@ from openhcs.core.config import (
     StreamingConfig,
     get_all_streaming_ports,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+)
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import SourceArtifactProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -56,6 +72,19 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLaunchContext,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentAxisSemantics,
+    ViewerComponentValueDomainPayload,
+    ViewerLayerAxisProjectionRequestAuthority,
+    ViewerLayerAxisProjector,
+    ViewerObjectDisplayConfigInput,
+    ViewerRouteComponentValueTracker,
+)
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    PointROIOptions,
+    materialize,
+)
 
 
 class FakeFileManager:
@@ -64,6 +93,10 @@ class FakeFileManager:
 
     def load(self, path: str, read_backend: str):
         return np.zeros((4, 5), dtype=np.uint16)
+
+    def resolve_address(self, address: str, backend: str, *, base_path: Path):
+        del backend
+        return str(base_path / address)
 
     def exists(self, path, backend):
         return False
@@ -316,6 +349,67 @@ def test_stream_images_uses_resolved_config_backend_not_viewer_name(
         "invocation_key": None,
         "artifact_kind": None,
     }
+
+
+@pytest.mark.parametrize(
+    "config", (FijiStreamingConfig(enabled=True), NapariStreamingConfig(enabled=True))
+)
+@pytest.mark.parametrize(
+    "spacing",
+    (
+        SourceVoxelSpacing(),
+        SourceVoxelSpacing((2.0, 0.4, 0.7)),
+        SourceVoxelSpacing((1.0, 2.0), SourceVoxelSpacingUnit.RELATIVE),
+    ),
+)
+def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing(
+    config,
+    spacing,
+) -> None:
+    pixels = np.arange(20, dtype=np.uint16).reshape(4, 5)
+
+    class CalibratedFileManager(FakeFileManager):
+        def load(self, path, read_backend):
+            return ImagePayloadMetadata(source_voxel_spacing=spacing).payload_with(
+                pixels
+            )
+
+    class CalibratedMetadataHandler(FakeMetadataHandler):
+        def get_pixel_size(self, plate_path):
+            if spacing.has_values:
+                raise AssertionError("Native calibration must not query plate defaults")
+            return super().get_pixel_size(plate_path)
+
+    filemanager = CalibratedFileManager()
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(
+                parse_filename=lambda _name: filename_parse_result()
+            ),
+            metadata_handler=CalibratedMetadataHandler(),
+        ),
+        plate_path=Path("/plate"),
+    )
+    result = service.stream_images(
+        ImageStreamingRequest(
+            viewer=FakeViewer(),
+            config=config,
+            status_callback=lambda _message: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=("A01/img.tif",),
+            read_backend="disk",
+        )
+    )
+    assert result.streamed_count == 1
+    data, _paths, _backend, metadata = filemanager.saved_batches[0]
+    expected = spacing if spacing.has_values else SourceVoxelSpacing((1.3556, 1.3556))
+    np.testing.assert_array_equal(image_payload_data(data[0]), pixels)
+    stream_request = metadata[ViewerStreamKwarg.STREAM_REQUEST.value]
+    wire_metadata = ImagePayloadMetadata.from_viewer_image_metadata(
+        stream_request.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
+    )
+    assert wire_metadata.source_voxel_spacing == expected
 
 
 def test_manual_image_projection_identity_separates_independent_selections() -> None:
@@ -676,7 +770,7 @@ def test_stream_rois_supplies_per_path_component_metadata_from_artifact_name(
     )
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -731,7 +825,7 @@ def test_stream_rois_supplies_per_path_component_metadata_from_artifact_name(
 def test_stream_rois_uses_explicit_component_metadata(monkeypatch) -> None:
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -786,10 +880,230 @@ def test_stream_rois_uses_explicit_component_metadata(monkeypatch) -> None:
     assert image_metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
 
 
+@pytest.mark.parametrize("config_type", [FijiStreamingConfig, NapariStreamingConfig])
+def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
+    tmp_path, config_type, monkeypatch
+):
+    from polystore.disk import DiskStorageBackend
+
+    paths = []
+    metadata_items = []
+    for channel, spacing in [(3, (0.65, 0.65)), (4, (2.0, 0.8, 0.8))]:
+        metadata = ImagePayloadMetadata(
+            source_path=f"/actual/source/channel-{channel}.tif",
+            source_component_metadata={
+                "well": "B02",
+                "site": 1,
+                "channel": channel,
+                "z_index": 7,
+                "timepoint": 1,
+            },
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(10, 20), source_shape_yx=(100, 200)
+            ),
+            source_voxel_spacing=SourceVoxelSpacing(spacing),
+        )
+        path = tmp_path / f"misleading_A01_w{channel}.roi.zip"
+        DiskStorageBackend().save(
+            ROIArchiveSourceMetadata.bind(
+                [ROI([PointShape(32.25, 40.5)], {"label": channel})], metadata
+            ),
+            path,
+        )
+        paths.append(str(path))
+        metadata_items.append(metadata)
+    filemanager = FakeFileManager()
+    metadata_handler = FakeMetadataHandler()
+    monkeypatch.setattr(
+        metadata_handler,
+        "get_pixel_size",
+        lambda _path: pytest.fail("Native explicit spacing must not be replaced"),
+    )
+    handler = SimpleNamespace(
+        parser=SimpleNamespace(
+            parse_filename=lambda _filename: pytest.fail(
+                "Native metadata must not use a filename guess"
+            )
+        ),
+        metadata_handler=metadata_handler,
+    )
+    result = StreamingService(filemanager, handler, Path("/actual/source")).stream_rois(
+        RoiStreamingRequest(
+            viewer=FakeViewer(),
+            config=config_type(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: pytest.fail(error),
+            roi_filenames=tuple(paths),
+            require_source_metadata=True,
+        )
+    )
+    assert result.streamed_paths == tuple(paths)
+    assert len(filemanager.saved_batches) == 2
+    for (data, batch_paths, _backend, kwargs), expected in zip(
+        filemanager.saved_batches, metadata_items, strict=True
+    ):
+        stream = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+        metadata = ImagePayloadMetadata.from_viewer_image_metadata(
+            stream.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
+        )
+        assert metadata.source_voxel_spacing == expected.source_voxel_spacing
+        assert metadata.source_spatial_domain == expected.source_spatial_domain
+        assert (
+            stream.source.metadata.metadata_by_path[batch_paths[0]]
+            == expected.source_component_metadata
+        )
+        assert data[0][0].metadata == {
+            "label": expected.source_component_metadata["channel"]
+        }
+        assert data[0][0].shapes == [PointShape(32.25, 40.5)]
+
+
+def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
+    import tifffile
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    source_paths = tuple(
+        str(source_directory / f"A01_s001_w1_z{z + 1:03d}_t001.tif") for z in range(4)
+    )
+    for z, path in enumerate(source_paths):
+        source_pixels = np.zeros((8, 8), dtype=np.uint16)
+        if z == 2:
+            source_pixels[1:3, 3:5] = 2048
+        tifffile.imwrite(path, source_pixels)
+    source_path = source_paths[0]
+    components = tuple(
+        {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+        for z in range(4)
+    )
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path=source_path,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=source_paths,
+            component_metadata=components,
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    features = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    filemanager = FakeFileManager()
+    handler = SimpleNamespace(
+        metadata_handler=FakeMetadataHandler(),
+        parser=SimpleNamespace(
+            parse_filename=lambda _filename: pytest.fail(
+                "Native point archive must not infer provenance from filenames"
+            )
+        ),
+    )
+    config = NapariStreamingConfig(enabled=True)
+    result = StreamingService(filemanager, handler, tmp_path).stream_rois(
+        RoiStreamingRequest(
+            viewer=FakeViewer(),
+            config=config,
+            status_callback=lambda _status: None,
+            error_callback=lambda error: pytest.fail(error),
+            roi_filenames=(archive,),
+            require_source_metadata=True,
+        )
+    )
+    assert result.streamed_paths == (archive,)
+    assert len(filemanager.saved_batches) == 1
+    data, paths, _backend, kwargs = filemanager.saved_batches[0]
+    stream = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+    assert paths == [archive]
+    assert data[0][0].metadata["response"] == 4.75
+    assert data[0][0].metadata["openhcs_fractional_z"] == 2.375
+    assert stream.source.metadata.metadata_by_path[archive]["z_index"] == 0
+    assert stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value][
+        "z_index"
+    ] == [0, 1, 2, 3]
+    domain = ViewerComponentValueDomainPayload.from_wire_mapping(
+        stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value],
+        context="native point archive",
+    )
+    semantics = ViewerComponentAxisSemantics(
+        entries=domain.entries,
+        layout=ViewerObjectDisplayConfigInput(config).layout(),
+    )
+    item = SimpleNamespace(
+        address=SimpleNamespace(
+            components=stream.source.metadata.metadata_by_path[archive]
+        ),
+        data=NapariROIConverter.rois_to_shapes(data[0]),
+    )
+    request = ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
+        route_key="centres",
+        component_axis_semantics=semantics,
+        layer_items=[item],
+        route_value_tracker=ViewerRouteComponentValueTracker(),
+        aggregate_component_values={},
+        geometric_component_values={},
+    )
+    projection = ViewerLayerAxisProjector().project(request)
+    assert "z_index" in projection.projected_axis_components
+    from openhcs.runtime.napari_viewer_server import _build_nd_points
+
+    points, properties = _build_nd_points([item], projection)
+    assert points[0, projection.projected_axis_components.index("z_index")] == 2.375
+    assert properties["response"] == [4.75]
+
+
+def test_explicit_native_reopening_rejects_an_external_roi_without_source(tmp_path):
+    from polystore.disk import DiskStorageBackend
+
+    path = tmp_path / "A01_s001_w1_z001_t001.roi.zip"
+    DiskStorageBackend().save([ROI([PointShape(1, 2)], {"label": 1})], path)
+    filemanager = FakeFileManager()
+    with pytest.raises(ValueError, match="Native ROI source metadata is required"):
+        StreamingService(filemanager, SimpleNamespace(), tmp_path).stream_rois(
+            RoiStreamingRequest(
+                viewer=FakeViewer(),
+                config=NapariStreamingConfig(enabled=True),
+                status_callback=lambda _status: None,
+                error_callback=lambda error: pytest.fail(error),
+                roi_filenames=(str(path),),
+                require_source_metadata=True,
+            )
+        )
+    assert filemanager.saved_batches == []
+
+
 def test_stream_rois_preserves_per_artifact_producer_identities(monkeypatch) -> None:
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -845,7 +1159,11 @@ def test_stream_rois_keeps_producer_identity_aligned_when_archive_is_empty(
     )
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda path: [] if str(path).endswith("A01_empty.roi.zip") else [object()],
+        lambda path: (
+            []
+            if str(path).endswith("A01_empty.roi.zip")
+            else [ROI(shapes=[PointShape(1, 2)])]
+        ),
     )
     filemanager = FakeFileManager()
     producer_identities = tuple(

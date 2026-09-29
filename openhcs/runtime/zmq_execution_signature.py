@@ -90,17 +90,42 @@ class ZMQAuxiliaryExecutionParams:
         if self.debug_execution_config is not None:
             params.update(self.debug_execution_config.to_config_params())
         if self.runtime_observation_export_path is not None:
-            params[ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value] = str(
-                self.runtime_observation_export_path
-            )
-            if (
-                self.runtime_observation_export_scope
-                is not ZMQRuntimeObservationExportScope.VALUES
-            ):
-                params[
-                    ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
-                ] = self.runtime_observation_export_scope.value
+            params.update(self.runtime_observation_items())
         return params
+
+    def runtime_observation_items(self) -> TransportRequestItems:
+        """Project the complete observation-only field family, including defaults."""
+
+        return (
+            (
+                ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value,
+                (
+                    None
+                    if self.runtime_observation_export_path is None
+                    else str(self.runtime_observation_export_path)
+                ),
+            ),
+            (
+                ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value,
+                self.runtime_observation_export_scope.value,
+            ),
+        )
+
+    @classmethod
+    def compilation_config_params(
+        cls, config_params: Mapping[str, Any] | None
+    ) -> dict[str, Any] | None:
+        """Exclude only fields owned by the runtime observation projection."""
+
+        auxiliary = cls.from_transport(config_params)
+        if config_params is None:
+            return None
+        observation_fields = dict(auxiliary.runtime_observation_items())
+        return {
+            key: value
+            for key, value in config_params.items()
+            if key not in observation_fields
+        } or None
 
     @classmethod
     def from_transport(
@@ -338,11 +363,21 @@ class ZMQExecutionRequestPayload:
         return self.signature_for_config_params(self.config_params)
 
     @property
+    def compilation_signature(self) -> str:
+        return self.signature_for_config_params(
+            ZMQAuxiliaryExecutionParams.compilation_config_params(self.config_params)
+        )
+
+    @property
     def debug_replay_signature(self) -> str:
         from openhcs.core.debug import DebugExecutionConfig
 
         return self.signature_for_config_params(
-            DebugExecutionConfig.compatibility_config_params(self.config_params)
+            DebugExecutionConfig.compatibility_config_params(
+                ZMQAuxiliaryExecutionParams.compilation_config_params(
+                    self.config_params
+                )
+            )
         )
 
     @property

@@ -66,13 +66,13 @@ class ManifestPathRootDeclaration:
         """Resolve this declaration to a filesystem path."""
         resolved_path = os.environ.get(self.env) if self.env is not None else None
         if resolved_path is not None:
-            return Path(os.path.expandvars(resolved_path)).expanduser()
+            return _absolute_path(resolved_path)
         if self.path is not None:
-            return Path(os.path.expandvars(self.path)).expanduser()
+            return _absolute_path(self.path)
         if self.default_kind is not None:
-            return resolve_benchmark_path_root(self.default_kind)
+            return resolve_benchmark_path_root(self.default_kind).resolve()
         if self.default is not None:
-            return Path(os.path.expandvars(self.default)).expanduser()
+            return _absolute_path(self.default)
         raise ValueError(
             f"Manifest path root {root_name!r} must declare path, default, "
             "default_kind, or env."
@@ -199,3 +199,8 @@ def _optional_string(value: JSONValue | None, field_name: str) -> str | None:
     if isinstance(value, str):
         return value
     raise ValueError(f"Manifest path root field {field_name!r} must be a string.")
+
+
+def _absolute_path(value: str) -> Path:
+    """Resolve a declared root before it crosses a process boundary."""
+    return Path(os.path.expandvars(value)).expanduser().resolve()
