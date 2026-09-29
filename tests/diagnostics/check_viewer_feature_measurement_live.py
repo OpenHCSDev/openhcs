@@ -153,6 +153,7 @@ def main() -> None:
         DISPLAY=args.display,
         OPENHCS_CPU_ONLY="true",
         POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD="false",
+        POLYSTORE_IMAGEJ_CACHE_ROOT="/home/ts/.cache/polystore/imagej",
         PYTHONDONTWRITEBYTECODE="1",
         OPENHCS_AGENT_READ_ROOTS=os.pathsep.join(
             (str(output), str(SOURCE / "packaging"))
@@ -186,6 +187,11 @@ def main() -> None:
     from openhcs.core.streaming_config_declarations import ViewerType
     from zmqruntime.config import TransportMode
     from openhcs.serialization.json import to_jsonable
+    from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+    from polystore.imagej_distribution import (
+        FijiArchiveDistribution,
+        ImageJArchiveDownloadPolicy,
+    )
 
     endpoint = ViewerRuntimeEndpoint(
         ViewerTransportEndpoint(
@@ -289,6 +295,27 @@ def main() -> None:
                 owned_identity = heartbeat.process_identity
                 receipt["viewer_identity"] = to_jsonable(owned_identity)
                 receipt["heartbeat"] = to_jsonable(heartbeat)
+                child_environment = AgentRuntimePlatformAuthority.current().graphical_process_environment(
+                    owned_identity.pid,
+                    additional_keys=(
+                        FijiArchiveDistribution.cache_root_environment_key,
+                        ImageJArchiveDownloadPolicy.allow_download_environment_key,
+                    ),
+                )
+                assert child_environment is not None
+                child_cache = FijiArchiveDistribution.cache_root_from_environment(
+                    child_environment
+                )
+                child_downloads = ImageJArchiveDownloadPolicy.from_environment(
+                    child_environment
+                ).allow_download
+                assert child_cache == Path("/home/ts/.cache/polystore/imagej")
+                assert not child_downloads
+                receipt["child_policy"] = {
+                    "imagej_cache_root": str(child_cache),
+                    "downloads_allowed": child_downloads,
+                    "owner": "AgentRuntimePlatformAuthority process environment + FijiArchiveDistribution/ImageJArchiveDownloadPolicy",
+                }
                 save()
                 payloads = call(
                     "openhcs_get_viewer_window_payloads",
@@ -455,9 +482,24 @@ def main() -> None:
                     {**connection, "output_dir_path": str(output / "captures")},
                 )
                 assert capture["captured"]
+                receipt["raw_capture_state"] = after
                 call(
                     "openhcs_navigate_viewer_window",
                     {**bindings[1], "display_axes": ["y", "x"]},
+                )
+                call(
+                    "openhcs_set_viewer_image_intensity",
+                    {
+                        **connection,
+                        "route_key": bindings[1]["route_key"],
+                        "presentation": {"contrast_limits": [5.0, 80.0], "gamma": 1.0},
+                    },
+                )
+                receipt["region_capture_state"] = call(
+                    "openhcs_get_viewer_window_state", connection
+                )
+                receipt["qa_presentation_intervention"] = (
+                    "After unchanged-measurement proof, deliberately navigate Ch2/Z2 and set display-only contrast5..80/gamma1 for region QA. No source pixels changed."
                 )
                 region_capture = call(
                     "openhcs_viewer_snapshot_window",

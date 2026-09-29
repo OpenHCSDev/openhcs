@@ -72,9 +72,11 @@ measurements, not ground truth or an automatically validated parameter choice.
 
 Availability is determined by the **live** capability registry, not this guide.
 These source contracts accompany [issue221](https://github.com/OpenHCSDev/openhcs/issues/221);
-their live numeric/readonly path has been exercised, but original crop/calibration
-propagation and supported bitmap QA remain blocked; this is not installed
-readiness. Both operations are read-only and
+their source-pinned synthetic MCP/viewer path has verified original crop and
+relative spacing, empirical values, unchanged raw pixels/presentation and
+author-opened MCP bitmaps at b5f78e34c with PolyStore c16b8fc. This is not a
+physical-calibration claim or installed readiness: parent merge/install and its
+affected-entrypoint check remain separate. Both operations are read-only and
 require a settled, scalar, non-multiscale image route in a native YX 2-D display.
 Unbound stacks/RGB, ambiguous records, missing axes, sparse padding, nonfinite
 inputs/pixels and out-of-bounds geometry fail explicitly; no coordinate clamps.
@@ -97,8 +99,13 @@ declared metadata before interpreting source-native or transformed quantities:
 the c662202df live attempt has a retained inventory-stream failure reproducer that
 loses crop/spacing metadata. A mounted scale1 plane is not acceptance of the
 original acquisition coordinates. That attempt's snapshot contract also failed
-on an installed paired-dependency import; no bitmap/render QA is claimed. A new
-paired installation needs its own proof rather than inheriting this result.
+on an unmatched child dependency import; the historical dependency SHA was not
+captured. Those failures remain preserved, not retrospectively called passes.
+The repaired inventory retains the original nominal source projection; ordinary
+crop admission is separate from strict full-window receipt replay. Initialized
+exact submodules plus the existing launcher/source bootstrap resolved the fresh
+child snapshot failure. A paired installation needs its own proof rather than
+inheriting source-pinned acceptance.
 
 `openhcs_measure_viewer_polyline` accepts 2..64 vertices and optional
 `line_width=1` (1..31), `interpolation_order=1` (0 nearest or1 bilinear),
