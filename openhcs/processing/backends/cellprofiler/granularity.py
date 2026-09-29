@@ -91,6 +91,9 @@ from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows i
     ObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.cellprofiler._granularity_reconstruct import (
+    reconstruct_f32 as _reconstruct_f32,
+)
 
 GRANULARITY_SPECTRUM_LENGTH = 16
 
@@ -800,7 +803,7 @@ class NumbaGranularityReconstructionBackendStrategy(
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NUMBA
-    is_default_backend = True
+    is_default_backend = False
 
     def prepare_backend(self) -> None:
         for dtype in (np.float32, np.float64):
@@ -855,6 +858,114 @@ class NumbaGranularityReconstructionBackendStrategy(
             reconstruction = _granularity_reconstruction_radius_one_numba_with_queue(
                 np.ascontiguousarray(ero),
                 pixels_array,
+                queue_rows,
+                queue_cols,
+                queued,
+            )
+            reconstruction_seconds += time.perf_counter() - phase_started_at
+            log_profile(
+                "granularity_reconstruction_iteration",
+                time.perf_counter() - phase_started_at,
+                function="measure_granularity_objects",
+                iteration=index + 1,
+                shape=tuple((int(value) for value in pixels_array.shape)),
+            )
+            reconstructions.append(reconstruction)
+        log_profile(
+            "granularity_reconstruction_erosion_total",
+            erosion_seconds,
+            function="measure_granularity_objects",
+            reconstructions=len(reconstructions),
+        )
+        log_profile(
+            "granularity_reconstruction_dilation_total",
+            reconstruction_seconds,
+            function="measure_granularity_objects",
+            reconstructions=len(reconstructions),
+        )
+        return tuple(reconstructions)
+
+
+class CppGranularityReconstructionBackendStrategy(
+    GranularityReconstructionBackendStrategy
+):
+    """Exact single-thread reconstruction backed by the C++ extension."""
+
+    backend_key = CellProfilerBackendAuthority.backend_key(
+        MemoryType.NUMPY,
+        CellProfilerBackendProvider.CPP,
+    )
+    memory_type = MemoryType.NUMPY
+    backend_provider = CellProfilerBackendProvider.CPP
+    is_default_backend = True
+
+    def reconstruct_radius_one(
+        self,
+        seed: np.ndarray,
+        mask: np.ndarray,
+    ) -> np.ndarray:
+        seed_array = np.asarray(seed)
+        mask_array = np.asarray(mask)
+        if seed_array.ndim != 2 or mask_array.ndim != 2:
+            raise ValueError("Granularity reconstruction requires 2-D arrays.")
+        if seed_array.shape != mask_array.shape:
+            raise ValueError(
+                "Granularity reconstruction seed and mask shapes must match, "
+                f"got {seed_array.shape!r} and {mask_array.shape!r}."
+            )
+        if seed_array.dtype != np.float32 or mask_array.dtype != np.float32:
+            return (
+                NumbaGranularityReconstructionBackendStrategy().reconstruct_radius_one(
+                    seed_array, mask_array
+                )
+            )
+        seed_array = np.ascontiguousarray(seed_array)
+        mask_array = np.ascontiguousarray(mask_array)
+        output = np.empty_like(seed_array)
+        capacity = seed_array.size
+        _reconstruct_f32(
+            seed_array,
+            mask_array,
+            output,
+            np.empty(capacity, dtype=np.uint32),
+            np.empty(capacity, dtype=np.uint32),
+            np.empty(capacity, dtype=np.uint8),
+        )
+        return output
+
+    def reconstruct_series(
+        self,
+        pixels: np.ndarray,
+        spectrum_length: int,
+    ) -> tuple[np.ndarray, ...]:
+        pixels_array = np.ascontiguousarray(np.asarray(pixels))
+        if pixels_array.ndim != 2:
+            raise ValueError("Granularity reconstruction requires 2-D arrays.")
+        if pixels_array.dtype != np.float32:
+            return NumbaGranularityReconstructionBackendStrategy().reconstruct_series(
+                pixels_array, spectrum_length
+            )
+        from skimage import morphology
+
+        ero = pixels_array.copy()
+        footprint = morphology.disk(1, dtype=np.uint8)
+        capacity = pixels_array.size
+        queue_rows = np.empty(capacity, dtype=np.uint32)
+        queue_cols = np.empty(capacity, dtype=np.uint32)
+        queued = np.empty(capacity, dtype=np.uint8)
+        reconstructions = []
+        erosion_seconds = 0.0
+        reconstruction_seconds = 0.0
+        for index in range(int(spectrum_length)):
+            phase_started_at = time.perf_counter()
+            ero = granularity_grey_erosion(ero, footprint)
+            erosion_seconds += time.perf_counter() - phase_started_at
+            phase_started_at = time.perf_counter()
+            reconstruction = np.empty_like(pixels_array)
+            _reconstruct_f32(
+                np.ascontiguousarray(ero),
+                pixels_array,
+                reconstruction,
                 queue_rows,
                 queue_cols,
                 queued,
