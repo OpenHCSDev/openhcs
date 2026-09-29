@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -72,8 +71,8 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ExecutionSubmissionPreparationTimeoutError,
@@ -894,7 +893,12 @@ class ExecutionSessionService:
         # scientific execution is submitted. Admit that write before the gateway
         # can create metadata or locks in a read-only source directory.
         self._path_policy.assert_writable(plate)
-        metadata_path = _openhcs_metadata_path(plate)
+        for destination in METADATA_CONFIG.managed_paths(plate):
+            self._path_policy.assert_writable(destination)
+            # Atomic replacement stages temporary files alongside the original
+            # destination, even when the destination itself is a symlink.
+            self._path_policy.assert_writable(destination.parent)
+        metadata_path = METADATA_CONFIG.metadata_path(plate)
         metadata_existed_before = metadata_path.exists()
         try:
             document = PipelineDocumentAuthority.from_source(request.pipeline_source)
@@ -1375,13 +1379,6 @@ def artifact_plan_inspection_from_compilation(
         ),
         progress_event_count=progress_event_count,
         warnings=warnings,
-    )
-
-
-def _openhcs_metadata_path(plate: Path) -> Path:
-    return plate / os.getenv(
-        "OPENHCS_METADATA_FILENAME",
-        OpenHCSMetadataHandler.METADATA_FILENAME,
     )
 
 
