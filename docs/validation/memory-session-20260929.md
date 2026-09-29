@@ -34,8 +34,17 @@ pipeline document, scope and ObjectState owners; it is not desktop live proof.
 The minimal repaired callable round trip executed successfully (14,424-byte
 payload); its restored NumPy result was `[0, 1]` for thresholding `[1, 4]` at 3.
 The paired upstream's three focused decorator/context tests passed (0.15s),
-and changed-source Ruff/diff checks passed. The OpenHCS native regression and
-real desktop journey are pending at this initial checkpoint. Paired upstream
+and changed-source Ruff/diff checks passed. OpenHCS source validation passed:
+
+- 12 tests (15.61s): the native durability regression, memory diagnostic tests
+  and existing `test_pipeline_history_occurrence_restart_regression.py`.
+- 6 tests (3.16s), after the ownership revision: five diagnostic regressions
+  and `test_durable_decorated_history.py`.
+
+The first native test assertion omitted normalized processor default kwargs;
+it now compares the complete declaration captured before persistence against
+the restored declaration. Snapshot identities and historical execution remain
+asserted. The real desktop journey is still pending. Paired upstream
 draft: https://github.com/OpenHCSDev/ArrayBridge/pull/1.
 H001 was already closed by explicit owner disposition;
 there is no request or authorization to recover its lost history.
@@ -52,7 +61,11 @@ The receipt records PID, monotonic time, RSS, PSS, private clean/dirty, swap,
 threads, imports/native libraries/frameworks, catalog/custom declarations and
 ObjectState snapshots before/after every operation and after full GC. Repeated
 read-only health/authoring/capability queries are measured after a separate
-warm-up round. Per-round slopes describe this sequence only. Flat measurements
+warm-up round. Optional `--sequence-json` decodes 1..16 requests through the
+existing `McpDevToolCall` owner and rejects capabilities declaring side effects;
+it does not introduce a second capability registry. The JSON report retains the
+exact request sequence and typed sample events (`events[].receipt`).
+Per-round slopes describe this sequence only. Flat measurements
 cannot prove catalog/compile/custom-source/execution/GPU/JVM paths leak-free;
 positive slopes alone cannot establish causation or a leak.
 
@@ -61,7 +74,9 @@ Run only with the validation slot and at least 8 GiB available RAM:
 ```sh
 flock -n /home/ts/wt/openhcs-issue-batch-20260929/validation.lock \
   /home/ts/code/projects/openhcs/.venv/bin/python -m benchmark.mcp_memory_diagnostic \
-  --rounds 4 --output docs/validation/mcp-memory-receipt-20260929.json
+  --rounds 4 \
+  --scratch-root /home/ts/.cache/agent-scratch/openhcs-issue-memory-session-20260929 \
+  --output docs/validation/mcp-memory-receipt-20260929.json
 ```
 
 Set `PYTHONPATH` to this worktree and its recorded submodule `src` directories,
@@ -76,6 +91,66 @@ The diagnostic has no access to another server's process lifecycle; transport
 teardown affects only its own fresh subprocess. No services or tmpfs data are
 removed to influence results.
 
+No real MCP measurement has run yet. There is no leak or no-leak finding at this
+checkpoint, and the source tests do not substitute for that run.
+
+## Catalog-pattern review and new-case ownership check
+
+The comparison baseline is OpenHCS checkpoint `7a76b57d3`; review covers the
+changed diagnostic, native history regression and paired ArrayBridge change.
+This is focused source/AST/catalog review, not a full NRA proof or repository
+audit. The current archived refactor-audit catalog supplies the pattern IDs.
+
+- **BOUND-2 / BOUND-1:** baseline `diagnose.sample` returns a raw mapping even
+  though `ProcessMemoryReceipt` already declares its exact shape. Health reads
+  also bypass `McpServerHealthResult`. `MemoryDiagnosticMcpClient.sample()` now
+  decodes once with the existing `python_introspect.dataclass_from_mapping`
+  mechanism into `ProcessMemoryReceipt`; health uses its existing DTO. Samples,
+  events and reports stay typed. Linux `/proc` field parsing and the inherited
+  child environment remain legitimate external boundaries, not violations.
+- **BOUND-2:** baseline `call()` separately classifies wire `isError` and payload
+  `.get("status")`, alongside `McpDevToolResult.has_errors()`. Source review of
+  that owner confirms it already owns transport and structured agent errors.
+  The diagnostic now calls only that owner; it does not restate a status roster
+  or add another failure contract.
+- **MEMB-2:** baseline slope selection spells a tuple of four field names and
+  `retained_slope_kib(Sequence[dict], field)` reads each by string. Eligibility
+  and projection now live in `RetentionMetric` metadata on receipt fields;
+  `ProcessMemoryReceipt.retention_slopes()` derives selection from those
+  declarations. The standalone string-dispatched slope helper is deleted.
+- **MEMB-1:** the hand-written framework roster mixed array frameworks with
+  SciPy/JVM packages and omitted an existing ArrayBridge member. Array-framework
+  observations now derive from `MemoryType` and its `loaded_module()` behavior,
+  without importing an optional framework. All native library paths and total
+  module counts remain recorded; this is not comprehensive JVM/GPU attribution.
+- **Runtime versus durable owner:** paired ArrayBridge code moves the handle
+  onto the existing importable `ThreadGPUContext`, deleting the module-global
+  thread-local and forwarding function. No second store, pickle fallback or
+  history exclusion is added. The native regression exercises retained callable
+  history while an unpickleable runtime handle remains alive.
+
+`scripts/check_mcp_memory_ownership.py` is a bounded AST regression guard, not a
+general detector. Against `7a76b57d3` it reports five literal mapping reads plus
+one duplicate status classification (six findings); against the revision it
+passes. The baseline's variable-key slope helper was additionally reviewed
+directly, not counted by this guard.
+
+The new-case test adds slope eligibility to the previously unmarked
+`private_clean_kib` field on a receipt subclass. It decodes the same JSON shape
+and obtains the new slope without changing the MCP client, metric selection,
+report or a registry. Only the field declaration changes. Separate tests reject
+unknown fields, boolean-as-integer input and mutating request sequences.
+
+Lightweight repeatable audit commands:
+
+```sh
+/home/ts/code/projects/openhcs/.venv/bin/python scripts/check_mcp_memory_ownership.py
+git show 7a76b57d3:benchmark/mcp_memory_diagnostic.py | \
+  /home/ts/code/projects/openhcs/.venv/bin/python scripts/check_mcp_memory_ownership.py --stdin
+```
+
+The second command intentionally exits 1 and reports the original violations.
+
 ## Boundaries and remaining scope
 
 - Source review/AST coverage is focused on history serialization and the new
@@ -84,9 +159,16 @@ removed to influence results.
   the existing environment. Initial combined test collection exposed duplicate
   `tests.conftest` package names across repositories; run the two repositories
   separately. No test assertion was weakened.
-- Resource guard reported about 12-13 GiB available RAM but exits 2 for existing
-  host swap pressure. Large validation is deferred, and the nonblocking batch
-  lock has been busy during attempted focused runs. No unrelated cleanup occurs.
+- The focused runs above used the shared nonblocking validation lock and have
+  finished; no heavy worker run or runtime handle is being restarted. The latest
+  coordinator resource checkpoint reports 14.8 GiB available RAM, zero PSI and
+  11.5 GiB historical swap. New MCP/JVM/GUI/heavy runs are deferred until Euler
+  releases validation for H003. No unrelated cleanup occurs.
+- Owned disposable pytest artifacts were under this worktree's
+  `.validation/typed-native-check-2` (60 KiB of generated declarations/history
+  and sequence fixtures, not user sessions). They were removed after recording
+  the result; tests regenerate them. The diagnostic has not yet created a
+  scratch process directory. No large output is retained.
 - Coordinator must serialize a new desktop capture/restore and verify the paired
   installed entrypoint after review/integration. No worker merge/install and no
   extra display use are authorized. Neither issue is marked Closes at checkpoint.

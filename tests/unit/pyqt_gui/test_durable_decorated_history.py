@@ -47,6 +47,7 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
             )
             PipelineObjectStateBinding.commit_plate_state(SCOPE)
         baseline_id = ObjectStateRegistry.get_branch_history()[-1].id
+        expected_baseline = PipelineObjectStateBinding.steps_for_plate(SCOPE)[0]
         with ObjectStateRegistry.atomic("current native declaration"):
             PipelineObjectStateBinding.update_plate_steps(
                 SCOPE,
@@ -54,6 +55,7 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
             )
             PipelineObjectStateBinding.commit_plate_state(SCOPE)
         head_id = ObjectStateRegistry.get_branch_history()[-1].id
+        expected_current = PipelineObjectStateBinding.steps_for_plate(SCOPE)[0]
         snapshot_ids = tuple(s.id for s in ObjectStateRegistry.get_branch_history())
         source = PipelineDocumentAuthority.render(
             PipelineDocumentAuthority.from_values(
@@ -77,12 +79,12 @@ def test_declarations_and_retained_callable_history_survive_native_restart(
         )
         current = PipelineObjectStateBinding.steps_for_plate(SCOPE)[0]
         assert current.name == "current"
-        assert current.func == (tophat, {"selem_radius": 17})
+        assert current.func == expected_current.func
         assert ObjectStateRegistry.time_travel_to_snapshot(baseline_id)
         restored = PipelineObjectStateBinding.steps_for_plate(SCOPE)[0]
         historical, kwargs = restored.func
         assert restored.name == "old custom"
-        assert kwargs == {"scale": 7}
+        assert kwargs == expected_baseline.func[1]
         np.testing.assert_array_equal(
             historical(np.array([1, 2], dtype=np.uint16), **kwargs), [7, 14]
         )
