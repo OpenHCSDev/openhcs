@@ -18,6 +18,8 @@ from openhcs.core.config import (
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
+    RuntimeContextObservation,
+    RuntimeExecutionObservation,
     RuntimeObservationMode,
 )
 from openhcs.core.progress import (
@@ -161,7 +163,10 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         ),
     )
     compilation = SimpleNamespace(
-        execution_bundle=SimpleNamespace(runtime_contexts={}),
+        execution_bundle=SimpleNamespace(
+            runtime_contexts={},
+            requires_parent_runtime_observation=False,
+        ),
         output_plate=SimpleNamespace(output_plate_root=tmp_path),
     )
     monkeypatch.setattr(
@@ -169,17 +174,33 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         lambda contexts, root: (root,),
     )
 
+    declared_output = tmp_path / "exports" / "Saved.tiff"
+    declared_output.parent.mkdir()
+    declared_output.write_bytes(b"image evidence")
     server._export_runtime_observation(
         request_context=request_context,
         compilation=compilation,
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={
+            "A01": ExecutionResult.success(
+                "A01",
+                runtime_observation=RuntimeExecutionObservation(
+                    contexts=(
+                        RuntimeContextObservation(
+                            "context",
+                            (),
+                            runtime_export_paths=(declared_output,),
+                        ),
+                    )
+                ),
+            )
+        },
     )
 
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
     assert export.successful_axis_count == 1
     assert export.execution_id == record.execution_id
     assert export.exports is not None
-    assert export.exports.output_files == ()
+    assert export.exports.output_files == (declared_output,)
     assert record.get_extra("runtime_observation_export_path") == str(export_path)
     assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 

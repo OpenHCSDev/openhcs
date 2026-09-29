@@ -240,7 +240,7 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
         ZMQCompileArtifactRecord(
             execution_id="compile-1",
             plate_id="/plates/one",
-            request_signature="request",
+            compilation_signature="request",
             debug_replay_signature="debug",
             compilation=ZMQCompilationResult(
                 execution_bundle=bundle,

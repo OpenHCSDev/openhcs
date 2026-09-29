@@ -9,7 +9,11 @@ from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     NamedArtifactPayload,
 )
-from openhcs.core.runtime_tabular_values import ColumnarRows
+from openhcs.core.runtime_tabular_values import (
+    ColumnarRows,
+    FieldSpec,
+    MeasurementObjectRowIdentity,
+)
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenanceFields,
@@ -41,6 +45,7 @@ import re
 class MeasurementTable(
     SourceImageProvenanceFields,
     NamedArtifactPayload,
+    ColumnarRows,
 ):
     """Native OpenHCS measurement table value."""
 
@@ -49,6 +54,25 @@ class MeasurementTable(
     source_image_name: str | None = None
     subject: MeasurementSubject
     measurement_feature_owner: type[RuntimeMeasurementFeatureOwner] | None = None
+
+    @property
+    def columns(self) -> Any:
+        return self.rows.columns
+
+    @property
+    def fields(self) -> tuple[FieldSpec, ...]:
+        return self.rows.fields
+
+    @property
+    def object_row_identity(self) -> MeasurementObjectRowIdentity | None:
+        return self.rows.object_row_identity
+
+    @property
+    def covers_declared_object_measurement_domain(self) -> bool:
+        return self.rows.covers_declared_object_measurement_domain
+
+    def iter_row_mappings(self) -> Iterable[Mapping[str, object]]:
+        return self.rows.iter_row_mappings()
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.absorb_explicit_source_provenance(

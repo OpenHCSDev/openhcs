@@ -1,0 +1,77 @@
+{
+  "case": "ExampleImagingFlowCytometryObjectsInGrid",
+  "wells": 1,
+  "native_jobs": 1,
+  "image_sets_per_well": 2,
+  "total_image_sets": 2,
+  "timing": [
+    {
+      "repetition": -1,
+      "invocation_start_skew_seconds": 0.0,
+      "invocation_through_completion_makespan_seconds": 59.921455225907266,
+      "first_module_start_skew_seconds": 0.0,
+      "first_module_through_completion_makespan_seconds": 59.5916538736783,
+      "first_module_overlap_seconds": 59.5916538736783
+    },
+    {
+      "repetition": 0,
+      "invocation_start_skew_seconds": 0.0,
+      "invocation_through_completion_makespan_seconds": 59.67985070962459,
+      "first_module_start_skew_seconds": 0.0,
+      "first_module_through_completion_makespan_seconds": 59.623687164857984,
+      "first_module_overlap_seconds": 59.623687164857984
+    }
+  ],
+  "reports": [
+    {
+      "startup_seconds": 0.5750663881190121,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/native_jobs/0_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+        "input_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/inputs",
+        "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/native_jobs/0",
+        "expected_image_sets": 2,
+        "repetitions": 1,
+        "file_list_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/file_list.txt",
+        "first_image_set": 1,
+        "last_image_set": 2,
+        "report_path": null,
+        "start_barrier_root": null,
+        "start_barrier_job_count": 1,
+        "start_barrier_job_index": 0
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/native_jobs/0/-1",
+          "image_set_count": 2,
+          "invocation_seconds": 59.921455225907266,
+          "pre_first_module_seconds": 0.32980135222896934,
+          "first_module_through_post_run_seconds": 59.5916538736783,
+          "invocation_started_monotonic_seconds": 3484184.845231744,
+          "first_module_started_monotonic_seconds": 3484185.175033096,
+          "completed_monotonic_seconds": 3484244.76668697
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-synthetic-imaging-1w1j-clean-20260929/native_jobs/0/0",
+          "image_set_count": 2,
+          "invocation_seconds": 59.67985070962459,
+          "pre_first_module_seconds": 0.0561635447666049,
+          "first_module_through_post_run_seconds": 59.623687164857984,
+          "invocation_started_monotonic_seconds": 3484244.766701618,
+          "first_module_started_monotonic_seconds": 3484244.822865163,
+          "completed_monotonic_seconds": 3484304.446552328
+        }
+      ]
+    }
+  ]
+}

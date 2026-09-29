@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -9,15 +10,15 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSearchRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.serialization.json import to_jsonable
+from openhcs.agent.services import (
+    knowledge_base_service as knowledge_base_service_module,
+)
 from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
 )
-from openhcs.agent.services import (
-    knowledge_base_service as knowledge_base_service_module,
-)
+from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.serialization.json import to_jsonable
 
 
 def test_knowledge_base_catalog_lists_source_backed_documents():
@@ -34,6 +35,7 @@ def test_knowledge_base_catalog_lists_source_backed_documents():
     assert "openhcs_configuration_model" in documents
     assert "openhcs_domain_expert_onboarding" in documents
     assert "openhcs_example_corpus_map" in documents
+    assert "openhcs_biological_image_analysis_evidence" in documents
     assert "openhcs_complete_examples" in documents
     assert "openhcs_system_overview" in documents
     assert "openhcs_nominal_ownership" in documents
@@ -116,6 +118,73 @@ def test_knowledge_base_search_returns_source_sections():
     assert result.hits
     assert payload["hits"][0]["document"]["source_path"].startswith("docs/")
     assert "ObjectState" in result.hits[0].snippet
+
+
+def test_biological_evidence_is_retrievable_with_primary_source_attribution():
+    service = KnowledgeBaseService()
+    document_id = "openhcs_biological_image_analysis_evidence"
+    hits = service.search(
+        KnowledgeBaseSearchRequest(
+            query="biological image analysis evidence raw overlay", limit=10
+        )
+    )
+    assert document_id in {hit.document.document_id for hit in hits.hits}
+
+    document = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id=document_id, max_chars=12_000
+        )
+    )
+    assert document.errors == ()
+    assert document.truncated is False
+    assert "https://bioimagebook.github.io/" in document.content
+    assert "https://doi.org/10.1371/journal.pbio.3002167" in document.content
+    assert "https://doi.org/10.1038/s41592-023-01987-9" in document.content
+    assert "benchmark-parity failure" in document.content
+    assert "not copy Agentic-J course content" in document.content
+
+
+def test_examplehuman_recipe_note_preserves_parity_scope_and_sources():
+    service = KnowledgeBaseService()
+    document_id = "openhcs_official30_examplehuman_nuclei_recipe_card"
+    hits = service.search(
+        KnowledgeBaseSearchRequest(query="ExampleHuman nuclei recipe parity", limit=10)
+    )
+    assert document_id in {hit.document.document_id for hit in hits.hits}
+
+    document = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(document_id=document_id)
+    )
+    assert document.errors == ()
+    assert document.truncated is False
+    assert "examplehuman-openhcs-python" in document.content
+    assert "8–80 pixel diameter" in document.content
+    assert "selected reference values" in document.content
+    assert "New-assay biological raw/overlay QA: **not assessed**" in document.content
+    assert "not observed ExampleHuman failures" in document.content
+
+    repo_root = Path(__file__).resolve().parents[3]
+    source = repo_root / (
+        "benchmark/native_refs/official30_scoped_rows/"
+        "ExampleHuman_ExampleHuman_wells_include_first1/"
+        "native_cellprofiler_headless/ExampleHuman.cppipe"
+    )
+    assert "Typical diameter of objects, in pixel units (Min,Max):8,80" in (
+        source.read_text(encoding="utf-8")
+    )
+    observations = repo_root / (
+        "benchmark/results/official30_unified_value_comparison_20260916/"
+        "observations.jsonl"
+    )
+    with observations.open(encoding="utf-8") as stream:
+        row = next(
+            json.loads(line) for line in stream if '"case_name": "ExampleHuman"' in line
+        )
+    assert row["equivalent"] is True
+    assert row["difference_count"] == 0
+    assert row["openhcs"]["provenance"]["submitted_pipeline_source_sha"] == (
+        "29853227ae88"
+    )
 
 
 def test_knowledge_base_search_covers_domain_expert_onboarding_terms():

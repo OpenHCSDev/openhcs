@@ -28,7 +28,13 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
         "A01": ExecutionResult.success(
             "A01",
             runtime_observation=RuntimeExecutionObservation(
-                contexts=(RuntimeContextObservation("context", (runtime_value,)),)
+                contexts=(
+                    RuntimeContextObservation(
+                        "context",
+                        (runtime_value,),
+                        runtime_export_paths=(declared_output,),
+                    ),
+                )
             ),
         ),
         "B01": ExecutionResult.error(

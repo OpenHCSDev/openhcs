@@ -1406,6 +1406,7 @@ class ViewerLayerAxisProjectionRequestAuthority:
         layer_items: Sequence[ViewerComponentAddressedItem],
         route_value_tracker: ViewerRouteComponentValueTracker,
         aggregate_component_values: ComponentValues,
+        geometric_component_values: ComponentValues,
     ) -> ViewerLayerAxisProjectionRequest:
         axis_components = component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
@@ -1416,6 +1417,12 @@ class ViewerLayerAxisProjectionRequestAuthority:
                 route_key,
                 axis_components,
                 aggregate_component_values,
+            )
+        if geometric_component_values:
+            route_value_tracker.update_component_values(
+                route_key,
+                axis_components,
+                geometric_component_values,
             )
         declared_component_values = component_axis_semantics.required_component_values(
             axis_components

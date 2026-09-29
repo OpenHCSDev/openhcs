@@ -357,7 +357,7 @@ class RegistryService:
         with cls._registry_inventory_lock:
             cached = cls._resolved_reference_callables.get(cache_key)
             if cached is not None:
-                return cached.func
+                return reference.require_current_declaration(cached.func)
             catalog_metadata = (
                 None
                 if cls._metadata_cache is None
@@ -415,6 +415,7 @@ class RegistryService:
             resolved = registry.reconstruct_cached_callable(declared, contract)
 
         with cls._registry_inventory_lock:
+            resolved = reference.require_current_declaration(resolved)
             cls._resolved_reference_callables[cache_key] = ResolvedRegistryFunction(
                 reference, resolved
             )

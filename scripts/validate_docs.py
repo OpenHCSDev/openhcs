@@ -66,7 +66,7 @@ MARKDOWN_FENCE = re.compile(r"^\s*```(?:python|py)\s*$", re.IGNORECASE)
 LITERAL_INCLUDE = re.compile(r"^\s*\.\.\s+literalinclude::\s+(?P<target>\S+)\s*$")
 REPOSITORY_SOURCE_PATH = re.compile(
     r"(?P<target>(?:benchmark|docs|external|openhcs|scripts)/[A-Za-z0-9_.\-/]+"
-    r"\.(?:json|md|py|rst|toml|yaml|yml))"
+    r"\.(?:jsonl|json|md|py|rst|toml|yaml|yml))(?![A-Za-z0-9_])"
 )
 EXTERNAL_URL = re.compile(r"https?://\S+")
 

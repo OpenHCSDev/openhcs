@@ -1,0 +1,55 @@
+{
+  "case": "ExampleColocalization",
+  "source_well": "A01",
+  "synthetic_wells": [
+    "W001"
+  ],
+  "source_inventory": [
+    {
+      "well": "W001",
+      "path": "W001/0_1_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_G.png",
+      "size_bytes": 1165089,
+      "sha256": "db19c1b2fb22b62bd7d0d2737cdcf3a94126c8ad2a7f3cf0ffb6311c49a2ffbc"
+    },
+    {
+      "well": "W001",
+      "path": "W001/0_1_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_R.png",
+      "size_bytes": 757033,
+      "sha256": "5f9ead36f4c06a1e0928112c46df0197a914c3c01ebefcdee01624919a7e3b9c"
+    },
+    {
+      "well": "W001",
+      "path": "W001/0_2_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_G.png",
+      "size_bytes": 1194872,
+      "sha256": "9ebf121a2ed219735a66f99ab251922b291752b54c4c959895dfb395005a8716"
+    },
+    {
+      "well": "W001",
+      "path": "W001/0_2_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_R.png",
+      "size_bytes": 754954,
+      "sha256": "c0a8f47e8e204b53a92ef80e2b51b64305ecd51d0fa0b4158d18d2e4082cc056"
+    }
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "640e5c936dddb1a4f030c78db6b8ff038ff41ff322804439dc0cda914f2a688c",
+  "driver_sha256": "de987613fe1ee2c1f8e29be505846595ec8f829f1d2148ca4b3d51e2304b2954",
+  "native_worker_sha256": "c309f4369f2df81cacab7f1098cb12b4d159122d136e3b489013d943d0811b7f",
+  "source_commit": "fdeeb3d938e4f000b13413acf9696a4acbb3b0d0",
+  "source_dirty": false,
+  "native_jobs": 1,
+  "image_sets_per_well": 2,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": null,
+    "NPY_DISABLE_CPU_FEATURES": null,
+    "PYTHONHASHSEED": null,
+    "JAVA_HOME": "/home/ts/.local/share/openhcs-benchmark/jdk-11"
+  }
+}

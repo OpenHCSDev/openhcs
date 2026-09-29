@@ -53,6 +53,44 @@ def test_manifest_default_kind_resolves_shared_benchmark_cache(
     )
 
 
+def test_manifest_relative_root_is_resolved_before_subprocess_execution(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    manifest_path = workspace / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "path_roots": {
+                    "reference_pipelines": {
+                        "default": "benchmark/reference_exports",
+                    }
+                },
+                "cases": [
+                    {
+                        "cppipe_path_root": "reference_pipelines",
+                        "cppipe_path": "Example.cppipe",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(workspace)
+
+    manifest = ComparisonManifest.load(manifest_path, materialize_roots=False)
+
+    assert (
+        manifest.path_resolver.resolve(
+            manifest.payload["cases"][0],
+            "cppipe_path",
+        )
+        == (workspace / "benchmark/reference_exports/Example.cppipe").resolve()
+    )
+
+
 def test_manifest_git_sparse_root_materializes_missing_paths(
     tmp_path: Path,
     monkeypatch,

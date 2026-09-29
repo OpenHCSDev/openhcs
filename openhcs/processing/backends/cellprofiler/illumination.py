@@ -1921,10 +1921,17 @@ def _cellprofiler_convex_hull_transform(
             next_vertices[:, 0],
             next_vertices[:, 1],
         )
+        row_minimum = np.full(
+            image_array.shape[1], np.iinfo(np.int64).max, dtype=np.int64
+        )
+        row_maximum = np.full(
+            image_array.shape[1], np.iinfo(np.int64).min, dtype=np.int64
+        )
+        np.minimum.at(row_minimum, columns, rows)
+        np.maximum.at(row_maximum, columns, rows)
         for column in np.unique(columns):
-            column_rows = rows[columns == column]
             output_levels[
-                int(np.min(column_rows)) : int(np.max(column_rows)) + 1,
+                int(row_minimum[column]) : int(row_maximum[column]) + 1,
                 int(column),
             ] = int(level)
     return scale[output_levels]
