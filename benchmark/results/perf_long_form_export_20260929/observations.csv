@@ -1,0 +1,7 @@
+pair,variant,case_name,well_count,worker_count,compile_seconds,execute_seconds,total_seconds,native_single_sample_execution_seconds,projected_native_execution_seconds,status,source_run
+integrated_1w,control,ExampleImagingFlowCytometryObjectsInGrid,1,1,3.2013087272644043,20.1071674823761,25.94524993514642,61.60158259188756,61.60158259188756,success,perf-long-form-control-imaging-1w-20260929
+integrated_1w,candidate,ExampleImagingFlowCytometryObjectsInGrid,1,1,3.307213544845581,18.91513967514038,24.847436835058033,61.60158259188756,61.60158259188756,success,perf-long-form-candidate-imaging-1w-20260929
+integrated_16w,control,ExampleImagingFlowCytometryObjectsInGrid,16,4,10.152604818344116,126.07837319374084,139.30536010675132,61.60158259188756,985.625321470201,success,perf-plate-transport-imaging-candidate-20260929
+integrated_16w,candidate,ExampleImagingFlowCytometryObjectsInGrid,16,4,10.064554452896118,115.80782866477966,128.91339134192094,61.60158259188756,985.625321470201,success,perf-long-form-candidate-imaging-16w-repeat-20260929
+stacked_pr_16w,control,ExampleImagingFlowCytometryObjectsInGrid,16,4,10.149492979049683,171.0489354133606,184.28444628976285,61.60158259188756,985.625321470201,success,perf-long-form-stacked-control-imaging-16w-repeat-20260929
+stacked_pr_16w,candidate,ExampleImagingFlowCytometryObjectsInGrid,16,4,10.166336059570312,160.49793696403503,173.7326781200245,61.60158259188756,985.625321470201,success,perf-long-form-stacked-imaging-16w-repeat-20260929
