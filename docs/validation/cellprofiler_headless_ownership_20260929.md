@@ -104,5 +104,6 @@ actual Python 3.9 `python-identity`/strict `native-probe` entrypoints passed.
 Earlier source-hashed receipts prove real Java/Pipeline/shutdown in the existing
 oracle, with setuptools 69.5.1 drift. They do not certify the nominal-command
 revision. Its next full native lifecycle check waits for Euler to release shared
-validation, and fresh creation still requires separate owner approval. #138 stays
+validation. Fresh creation is now owner-authorized within the 4 GiB owned-output
+budget; it does not require another approval request. #138 stays
 open; no merge/install/current-version live-readiness claim is made.

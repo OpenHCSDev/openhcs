@@ -88,9 +88,11 @@ or a fresh dependency closure succeeds.
 
 ## Outstanding acceptance
 
-Owner approval is required for a bounded fresh environment: no more than 4 GiB
-owned output, only the two declared native builds, and no JDK/interpreter
-download. Coordinator messages explicitly did not grant that approval. Leave
+Owner approval has now been granted for the bounded fresh environment, after
+Euler releases shared validation: no more than 4 GiB owned disposable output,
+only the two declared native builds, and no JDK/interpreter download. Earlier
+coordinator messages did not grant it; the newer owner instruction does. See the
+[authorized run plan](cellprofiler_headless_fresh_acceptance_20260929.md). Leave
 #138 open until an approved `create` run emits a strict `verified` receipt with
 setuptools 80.9.0. Temurin-specific fresh validation is also not covered by the
 Arch-JDK observation. No merge, installation, biological, parity, or performance

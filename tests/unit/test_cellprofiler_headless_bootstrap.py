@@ -63,6 +63,8 @@ def test_install_plan_covers_every_pin_once_without_gui_resolution():
     for stage in stages:
         command = stage.command(Path("/oracle/bin/python"))
         assert "--no-deps" in command
+        assert "--isolated" in command
+        assert "--no-user" in command
         assert not any("wxpython" in argument.lower() for argument in command)
         if isinstance(stage, bootstrap.SourceBuildStage):
             assert numpy_stage < stages.index(stage)
@@ -87,6 +89,7 @@ def test_native_environment_does_not_inherit_openhcs_or_debug_java_settings(
     assert environment["PATH"] == "/jdk11/bin:/bin"
     assert environment["JAVA_HOME"] == "/jdk11"
     assert environment["OPENBLAS_NUM_THREADS"] == "1"
+    assert environment["PIP_CONFIG_FILE"] == bootstrap.os.devnull
 
 
 @pytest.mark.parametrize(
@@ -597,3 +600,52 @@ def verify(stdout):
         "IMPL-1",
         "BOUND-1/BOUND-2",
     }
+
+
+def test_pip_redirect_config_cannot_escape_the_fresh_environment(monkeypatch):
+    monkeypatch.setenv("PIP_CONFIG_FILE", "/shared/config")
+    monkeypatch.setenv("PIP_TARGET", "/shared/site-packages")
+    environment = bootstrap.native_environment(Path("/jdk11"))
+    assert environment["PIP_CONFIG_FILE"] == bootstrap.os.devnull
+    stage = bootstrap.BuildPrerequisitesStage(
+        (bootstrap.PackagePin("numpy", "1.24.4"),)
+    )
+    command = stage.command(
+        Path("/owned/oracle/bin/python"), cache_dir=Path("/owned/pip-cache")
+    )
+    assert command[:6] == (
+        "/owned/oracle/bin/python",
+        "-I",
+        "-m",
+        "pip",
+        "--isolated",
+        "install",
+    )
+    assert command[command.index("--cache-dir") + 1] == "/owned/pip-cache"
+    assert command[command.index("--index-url") + 1] == "https://pypi.org/simple"
+    assert "--no-user" in command
+    assert not any("/shared" in part for part in command)
+
+
+def test_plan_and_create_share_declared_owned_cache_capability():
+    for declaration in (bootstrap.PlanCommand, bootstrap.CreateCommand):
+        namespace = bootstrap.Command.parser().parse_args(
+            [
+                declaration.cli_name(),
+                "--python",
+                "/native/python",
+                "--venv",
+                "/owned/oracle",
+                "--cache-dir",
+                "/owned/cache",
+            ]
+            + (
+                ["--receipt", "/owned/receipt.json"]
+                if declaration is bootstrap.CreateCommand
+                else []
+            )
+        )
+        command = declaration.from_namespace(namespace)
+        assert command.pip_cache == Path("/owned/cache")
+        for argv in command.construction_commands()[1:]:
+            assert argv[argv.index("--cache-dir") + 1] == "/owned/cache"

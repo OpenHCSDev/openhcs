@@ -167,6 +167,8 @@ def native_environment(java_home: Path) -> dict[str, str]:
         OPENBLAS_NUM_THREADS="1",
         MKL_NUM_THREADS="1",
         PYTHONNOUSERSITE="1",
+        # pip honors this even in isolated mode: disable global/site config too.
+        PIP_CONFIG_FILE=os.devnull,
     )
     return environment
 
@@ -261,17 +263,24 @@ class InstallStage(ABC):
     def selects(cls, pin: PackagePin) -> bool:
         """Choose from pins not consumed by earlier declared stages."""
 
-    def command(self, python: Path) -> tuple[str, ...]:
+    def command(
+        self, python: Path, *, cache_dir: Optional[Path] = None
+    ) -> tuple[str, ...]:
         return (
             str(python),
             "-I",
             "-m",
             "pip",
+            "--isolated",
             "install",
             "--disable-pip-version-check",
             "--no-deps",
+            "--no-user",
+            "--index-url",
+            "https://pypi.org/simple",
             "--constraint",
             str(CONSTRAINTS),
+            *(("--cache-dir", str(cache_dir)) if cache_dir is not None else ()),
             *self.build_options(),
             *(pin.requirement for pin in self.pins),
         )
@@ -648,7 +657,28 @@ class OracleCapability(NativePythonCapability, JavaHomeCapability):
 
 
 @dataclass(frozen=True)
-class VenvCapability:
+class PipCacheCapability:
+    cache_dir: Optional[Path] = None
+
+    @classmethod
+    def configure_parser(cls, parser):
+        super().configure_parser(parser)
+        parser.add_argument(
+            "--cache-dir",
+            type=Path,
+            default=argparse.SUPPRESS,
+            help="Explicit pip cache (use an owned directory for bounded acceptance)",
+        )
+
+    @property
+    def pip_cache(self) -> Optional[Path]:
+        return (
+            None if self.cache_dir is None else self.cache_dir.expanduser().absolute()
+        )
+
+
+@dataclass(frozen=True)
+class VenvCapability(PipCacheCapability):
     venv: Path = SCRIPT.parent.parent / ".venv-cellprofiler39"
 
     @classmethod
@@ -664,7 +694,12 @@ class VenvCapability:
         stages = install_stages(read_pins())
         return [
             [str(self.python_entrypoint), "-I", "-m", "venv", str(self.target)],
-            *(list(stage.command(self.target / "bin/python")) for stage in stages),
+            *(
+                list(
+                    stage.command(self.target / "bin/python", cache_dir=self.pip_cache)
+                )
+                for stage in stages
+            ),
         ]
 
 

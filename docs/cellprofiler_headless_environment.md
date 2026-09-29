@@ -47,6 +47,12 @@ The environment and receipt paths must be new, with existing parent directories.
 An existing environment is refused, never upgraded or repaired in place. A failed
 build is retained with a failure receipt rather than erased or silently retried.
 
+For an owned disposable acceptance environment, add `--cache-dir /owned/run/pip-cache`
+to `plan` and `create`; keep build scratch (`TMPDIR`) in the same owned run.
+Pip uses isolated configuration, disables global/site config files and user
+installation, and selects the public PyPI index. Inherited target/prefix/user
+settings cannot redirect writes into a shared installation.
+
 The pinned [constraints](../scripts/cellprofiler-headless-constraints.txt) own the
 installation versions. Pip installs the explicit closure with `--no-deps`, so
 CellProfiler cannot pull wxPython. NumPy 1.24.4, setuptools 80.9.0, and build tools
