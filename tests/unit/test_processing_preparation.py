@@ -2,11 +2,16 @@
 
 import multiprocessing
 import os
+import signal
+import subprocess
 import sys
+import textwrap
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 
+import psutil
 import pytest
 
 from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
@@ -205,3 +210,91 @@ def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
         int((tmp_path / operation.name).read_text()) == os.getpid()
         for operation in operations
     )
+
+
+def test_registry_preparation_derives_obligations_even_with_cached_metadata(
+    monkeypatch, declared_module
+):
+    from types import SimpleNamespace
+
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+
+    process = declare_process(declared_module)
+    events = []
+    process.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("hook")
+    )
+    metadata = {
+        "first": SimpleNamespace(func=process),
+        "alias": SimpleNamespace(func=process),
+    }
+    monkeypatch.setattr(RegistryService, "_metadata_cache", metadata)
+    monkeypatch.setattr(
+        PreparationCacheBatch,
+        "populate_child_caches",
+        lambda batch: events.append(
+            tuple(item.module_name for item in batch.preparations)
+        ),
+    )
+
+    assert RegistryService.prepare_in_current_process() is metadata
+    assert RegistryService.prepare_in_current_process() is metadata
+    assert events == [(declared_module.__name__,), "hook", (declared_module.__name__,)]
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_cancelling_registry_child_reaps_its_live_cache_workers(tmp_path):
+    """SIGTERM must unwind the owned worker scope, without leaving descendants."""
+
+    script = textwrap.dedent("""
+        import os
+        import sys
+        import time
+        from pathlib import Path
+        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+        from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+        from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+
+        directory = Path(sys.argv[1])
+        class SlowPreparation(PreparationOperation):
+            def __init__(self, name): self.name = name
+            @property
+            def identity(self): return self.name
+            def can_prepare_in_child(self): return True
+            def execute(self):
+                (directory / self.name).write_text(str(os.getpid()))
+                time.sleep(60)
+
+        batch = PreparationCacheBatch(tuple(SlowPreparation(name) for name in ('first', 'second')))
+        RegistryService.prepare_in_current_process = batch.populate_child_caches
+        FunctionCatalogPreparation.prepare_persistent_catalog()
+    """)
+    process = subprocess.Popen(
+        (sys.executable, "-c", script, str(tmp_path)),
+        cwd=Path(__file__).parents[2],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        deadline = time.monotonic() + 15
+        while not all((tmp_path / name).exists() for name in ("first", "second")):
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "cache workers did not start"
+            time.sleep(0.02)
+        worker_pids = tuple(
+            int((tmp_path / name).read_text()) for name in ("first", "second")
+        )
+        process.send_signal(signal.SIGTERM)
+        _, stderr = process.communicate(timeout=5)
+        assert process.returncode != 0
+        assert "CancelledError" in stderr
+        assert all(not psutil.pid_exists(pid) for pid in worker_pids)
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate(timeout=5)
