@@ -372,6 +372,7 @@ class MeasureObjectIntensityDistributionModule(
 ):
     module_name = "MeasureObjectIntensityDistribution"
     function_name = "measure_object_intensity_distribution"
+    zernike_backend_provider = CellProfilerBackendProvider.LEGACY_FAST
     validated = True
     confidence = 1.0
     measurement_category_prefixes = (
@@ -2273,7 +2274,9 @@ def measure_object_intensity_distribution(
     zernike_degree: int = 9,
     center_choice: CenterChoice = CenterChoice.SELF,
     radial_distribution_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    zernike_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    zernike_backend_provider: BackendProviderInput = (
+        MeasureObjectIntensityDistributionModule.zernike_backend_provider
+    ),
     slice_index: int | None = None,
     heatmap_groups: tuple[IntensityDistributionHeatmapGroup, ...] = (),
     heatmap_outputs: tuple[IntensityDistributionHeatmapRuntimeOutput, ...] = (),
