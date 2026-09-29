@@ -14,14 +14,17 @@ from typing import TYPE_CHECKING
 from openhcs.constants import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.processing.custom_functions.source_namespace import (
+    CustomFunctionSource,
+    CustomFunctionSourceNamespace,
+)
 
 if TYPE_CHECKING:
     from openhcs.processing.backends.lib_registry.unified_registry import (
         FunctionMetadata,
     )
-    from openhcs.processing.custom_functions.manager import (
-        CustomFunctionSourceRevision,
-    )
+
+    from .source_namespace import CustomFunctionSourceRevision
 
 
 class CustomFunctionLifetime(Enum):
@@ -29,6 +32,15 @@ class CustomFunctionLifetime(Enum):
 
     PERSISTED = auto()
     EPHEMERAL = auto()
+
+    def require_current_source(self, source: CustomFunctionSource) -> None:
+        """Validate the durable source only for the lifetime that owns a file."""
+        if self is CustomFunctionLifetime.PERSISTED:
+            from openhcs.processing.custom_functions.manager import (
+                CustomFunctionManager,
+            )
+
+            CustomFunctionManager().require_source(source)
 
     @classmethod
     def from_persist(cls, persist: bool) -> CustomFunctionLifetime:
@@ -42,6 +54,17 @@ class CustomFunctionRuntimeDeclaration:
     metadata: FunctionMetadata
     lifetime: CustomFunctionLifetime
 
+    def require_source_namespace(
+        self,
+        namespace: CustomFunctionSourceNamespace,
+    ) -> None:
+        """Require this exact canonical namespace, with the declared source lifetime."""
+        if vars(self.metadata.func).get(namespace.export_attribute) is not namespace:
+            raise RuntimeError(
+                "Custom source namespace changed; recompile the pipeline."
+            )
+        self.lifetime.require_current_source(namespace.source)
+
 
 class CustomFunctionRuntimeRegistry:
     """Atomic process projection of custom-function declarations.
@@ -54,10 +77,46 @@ class CustomFunctionRuntimeRegistry:
 
     _declarations_by_name: dict[str, CustomFunctionRuntimeDeclaration] = {}
     _published_exports: dict[str, Callable] = {}
-    _preparation_outcomes: dict[tuple[str, str], Future[FunctionMetadata]] = {}
-    _preparation_threads: dict[tuple[str, str], int] = {}
+    _preparation_outcomes: dict[CustomFunctionSource, Future[FunctionMetadata]] = {}
+    _preparation_threads: dict[CustomFunctionSource, int] = {}
     _source_revision: CustomFunctionSourceRevision | None = None
     _lock = threading.RLock()
+
+    @classmethod
+    def _canonical_metadata_for_publication(
+        cls,
+        metadata: FunctionMetadata,
+    ) -> FunctionMetadata:
+        """Retain an exact source owner recreated after preparation selected it.
+
+        Every caller holds the lifecycle lock through selection and publication.
+        Unrevisioned declarations have no source-content identity to reselect.
+        """
+        revision = cls._declaration_revision(metadata)
+        if revision is None:
+            return metadata
+        declaration = cls.declaration_for_source(
+            CustomFunctionSource(metadata.original_name, revision)
+        )
+        return metadata if declaration is None else declaration.metadata
+
+    @classmethod
+    def declaration_for_source(
+        cls,
+        source: CustomFunctionSource,
+    ) -> CustomFunctionRuntimeDeclaration | None:
+        """Return the canonical declaration for this exact source, if published."""
+        with cls._lock:
+            declaration = cls._declarations_by_name.get(source.function_name)
+            if declaration is None:
+                return None
+            if cls._declaration_revision(
+                declaration.metadata
+            ) != source.content_sha256 or not cls.owns_published_export(
+                source.function_name
+            ):
+                return None
+            return declaration
 
     @classmethod
     @contextmanager
@@ -92,31 +151,35 @@ class CustomFunctionRuntimeRegistry:
     @classmethod
     def prepare_source_once(
         cls,
-        function_name: str,
-        content_sha256: str,
+        source: CustomFunctionSource,
         factory: Callable[[], FunctionMetadata],
     ) -> FunctionMetadata:
         """Share one preparation outcome for one exact persisted source revision."""
 
-        key = (function_name, content_sha256)
         current_thread = threading.get_ident()
         with cls._lock:
+            published = cls.declaration_for_source(source)
+            if published is not None:
+                return published.metadata
             for stale_key in tuple(cls._preparation_outcomes):
-                if stale_key[0] == function_name and stale_key != key:
+                if (
+                    stale_key.function_name == source.function_name
+                    and stale_key != source
+                ):
                     cls._preparation_outcomes.pop(stale_key, None)
                     cls._preparation_threads.pop(stale_key, None)
-            outcome = cls._preparation_outcomes.get(key)
+            outcome = cls._preparation_outcomes.get(source)
             prepares = outcome is None
             if outcome is None:
                 outcome = Future()
-                cls._preparation_outcomes[key] = outcome
-                cls._preparation_threads[key] = current_thread
+                cls._preparation_outcomes[source] = outcome
+                cls._preparation_threads[source] = current_thread
             elif (
                 not outcome.done()
-                and cls._preparation_threads.get(key) == current_thread
+                and cls._preparation_threads.get(source) == current_thread
             ):
                 raise RuntimeError(
-                    f"Recursive preparation of custom function {function_name!r} "
+                    f"Recursive preparation of custom function {source.function_name!r} "
                     "for the same source revision is not supported."
                 )
 
@@ -127,8 +190,11 @@ class CustomFunctionRuntimeRegistry:
                 outcome.set_exception(exc)
             finally:
                 with cls._lock:
-                    cls._preparation_threads.pop(key, None)
-        return outcome.result()
+                    cls._preparation_threads.pop(source, None)
+        prepared = outcome.result()
+        with cls._lock:
+            published = cls.declaration_for_source(source)
+            return prepared if published is None else published.metadata
 
     @classmethod
     def publish(
@@ -139,6 +205,7 @@ class CustomFunctionRuntimeRegistry:
         """Publish one prepared declaration with its exact source lifetime."""
 
         with cls._lock:
+            metadata = cls._canonical_metadata_for_publication(metadata)
             cls._publish_locked(metadata, lifetime)
             if lifetime is CustomFunctionLifetime.PERSISTED:
                 cls._source_revision = None
@@ -186,6 +253,7 @@ class CustomFunctionRuntimeRegistry:
         """Atomically replace one runtime declaration, including a rename."""
 
         with cls._lock:
+            metadata = cls._canonical_metadata_for_publication(metadata)
             new_name = metadata.original_name
             cls._ensure_export_available_locked(
                 new_name,
@@ -207,6 +275,10 @@ class CustomFunctionRuntimeRegistry:
         """Replace persisted declarations while retaining ephemeral owners."""
 
         with cls._lock:
+            metadata_by_name = {
+                name: cls._canonical_metadata_for_publication(metadata)
+                for name, metadata in metadata_by_name.items()
+            }
             for function_name in metadata_by_name:
                 cls._ensure_export_available_locked(function_name)
             ephemeral_declarations = {
@@ -289,7 +361,15 @@ class CustomFunctionRuntimeRegistry:
         metadata: FunctionMetadata,
         lifetime: CustomFunctionLifetime,
     ) -> None:
-        cls._ensure_declaration_available_locked(metadata.original_name)
+        existing = cls._declarations_by_name.get(metadata.original_name)
+        replacing_name = (
+            metadata.original_name
+            if existing is not None and existing.metadata is metadata
+            else None
+        )
+        cls._ensure_declaration_available_locked(
+            metadata.original_name, replacing_name=replacing_name
+        )
         cls._ensure_export_available_locked(metadata.original_name)
         cls._declarations_by_name[metadata.original_name] = (
             CustomFunctionRuntimeDeclaration(
@@ -320,7 +400,7 @@ class CustomFunctionRuntimeRegistry:
         """Forget source outcomes when their persisted declaration is removed."""
 
         for key in tuple(cls._preparation_outcomes):
-            if key[0] == function_name:
+            if key.function_name == function_name:
                 cls._preparation_outcomes.pop(key, None)
                 cls._preparation_threads.pop(key, None)
 
@@ -406,14 +486,14 @@ def project_custom_function(
 
     registry = OpenHCSRegistry()
     if declaration_revision is not None:
-        vars(func)[
-            FunctionContractAttribute.declaration_revision
-        ] = declaration_revision
+        vars(func)[FunctionContractAttribute.declaration_revision] = (
+            declaration_revision
+        )
     wrapped = registry.apply_contract_wrapper(func, processing_contract)
     if declaration_revision is not None:
-        vars(wrapped)[
-            FunctionContractAttribute.declaration_revision
-        ] = declaration_revision
+        vars(wrapped)[FunctionContractAttribute.declaration_revision] = (
+            declaration_revision
+        )
     metadata = FunctionMetadata(
         name=func.__name__,
         func=wrapped,
