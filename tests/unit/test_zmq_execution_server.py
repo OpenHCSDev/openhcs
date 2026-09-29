@@ -98,6 +98,16 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
             RuntimeObservationMode.MERGE_INTO_PARENT,
         ),
         (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            None,
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+        ),
+        (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            "/tmp/runtime-observation.pkl",
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+        (
             RuntimeObservationMode.MERGE_INTO_PARENT,
             None,
             RuntimeObservationMode.MERGE_INTO_PARENT,
@@ -115,7 +125,10 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
         else None
     )
     execution_bundle = SimpleNamespace(
-        requires_parent_runtime_observation=compiled_mode.collects_records
+        requires_parent_runtime_observation=compiled_mode.collects_records,
+        requires_full_parent_runtime_observation=(
+            compiled_mode is RuntimeObservationMode.MERGE_INTO_PARENT
+        ),
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
@@ -126,7 +139,10 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
         runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
         runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
     )
-    execution_bundle = SimpleNamespace(requires_parent_runtime_observation=False)
+    execution_bundle = SimpleNamespace(
+        requires_parent_runtime_observation=False,
+        requires_full_parent_runtime_observation=False,
+    )
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)

@@ -818,8 +818,9 @@ def _execute_axis_with_sequential_combinations(
             frozen_context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
-        retained_records = (
-            observed_records if runtime_observation_mode.collects_records else ()
+        retained_records = runtime_observation_mode.retain_records(
+            observed_records,
+            frozen_context,
         )
         if retained_records or runtime_export_paths:
             runtime_observations.append(

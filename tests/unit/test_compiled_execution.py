@@ -114,7 +114,7 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
                 FunctionStepExecutionScope.AXIS,
                 FunctionStepExecutionScope.PLATE,
             ),
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
         ),
     ),
 )
@@ -141,12 +141,7 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
         runtime_environment=_runtime_environment(),
     )
 
-    assert (
-        RuntimeObservationMode.from_parent_requirement(
-            bundle.requires_parent_runtime_observation
-        )
-        is expected_mode
-    )
+    assert RuntimeObservationMode.for_compiled_bundle(bundle) is expected_mode
 
 
 @pytest.mark.parametrize(
@@ -193,6 +188,43 @@ def test_consolidation_retains_declared_persistent_export_records(
     )
 
     assert bundle.requires_parent_runtime_observation is expected
+    assert bundle.requires_full_parent_runtime_observation is expected
+    assert RuntimeObservationMode.for_compiled_bundle(bundle) is (
+        RuntimeObservationMode.MERGE_INTO_PARENT
+        if expected
+        else RuntimeObservationMode.OMIT
+    )
+
+
+def test_plate_input_retention_uses_compiled_consumer_types() -> None:
+    plate_input = SimpleNamespace(artifact_type=MeasurementsArtifactType)
+    plate_plan = SimpleNamespace(
+        execution_scope=FunctionStepExecutionScope.PLATE,
+        compiled_function_pattern=SimpleNamespace(
+            default_group=SimpleNamespace(
+                invocations=(
+                    SimpleNamespace(
+                        contract=SimpleNamespace(artifact_inputs=(plate_input,))
+                    ),
+                )
+            )
+        ),
+    )
+    context = ProcessingContext(axis_id="A01", step_plans={0: plate_plan})
+    image_record = SimpleNamespace(key=SimpleNamespace(artifact_type=ImageArtifactType))
+    measurement_record = SimpleNamespace(
+        key=SimpleNamespace(artifact_type=MeasurementsArtifactType)
+    )
+    records = (image_record, measurement_record)
+
+    assert RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records(
+        records, context
+    ) == (measurement_record,)
+    assert (
+        RuntimeObservationMode.MERGE_INTO_PARENT.retain_records(records, context)
+        == records
+    )
+    assert RuntimeObservationMode.OMIT.retain_records(records, context) == ()
 
 
 def test_runtime_observation_mode_can_only_be_strengthened() -> None:
