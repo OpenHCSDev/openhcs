@@ -3,6 +3,54 @@
 Base:OpenHCSDev/openhcs main0c7b898f852a8bedc0e1bc38b93f36088d301808.
 Tracking issue:#134. This is an implementation workstream, not a completed fix.
 
+## Current owner checkpoint: native codec delivered
+
+This section supersedes the historical FULL-audit implementation hold below.
+The user explicitly authorized bounded NRA queries plus refactor-audit census
+and overlay, keeping global FULL/R1 coverage and native proof gaps distinct.
+Integration owner: main OpenHCS blind-analysis coordinator. Persistent worktree:
+`/home/ts/wt/openhcs-materialized-result-route-20260929`.
+
+OpenHCSDev/PolyStore#13 is merged. Recorded dependency main:
+`e430c331ad931edc92dfe9d4fcd0d837a3cfeea8`. The parent gitlink is being advanced
+to that reviewed merge. The existing codec declarations now own native ImageJ
+POINT/polygon/polyline/oval encode/decode; the ZIP reader no longer substitutes
+PolygonShape for unrelated geometry. Exact subpixel points and all points in
+a native member survive. Malformed one-point FREEHAND archives stay invalid;
+no legacy reader, axis guess, or frozen-data rewrite is added.
+
+All 114 ROI/disk/streaming metadata and identity tests passed on source overrides,
+then again against installed wheels outside source roots: installed test run
+0.81 seconds, wall 1.33 seconds, peak RSS 104,272 KiB. Fifteen existing parent
+streaming/materialization tests also passed in 5.26 seconds, with two expected
+pytest configuration warnings because plugin autoload was disabled. These are
+sanity checks, not live viewer or scientific acceptance.
+
+Isolated installed environment and disposable cache:
+`/home/ts/.cache/agent-scratch/openhcs-point-codec-20260929`. Its small live venv
+installs this parent and its eight pinned dependency wheels while borrowing
+unchanged scientific libraries from the existing OpenHCS environment. Actual
+OpenHCS, PolyStore, arraybridge and ZMQRuntime imports resolve inside that venv,
+not source overrides. Shared packages and the dirty main checkout are unchanged.
+An initial no-build-isolation install failed on absent hatchling; the ordinary
+declared isolated builds completed. Fresh installed MCP health is OK, with
+56 packaged resources present and no stale source or missing resource warnings.
+
+Installed MCP to the existing viewer on TCP 5690 is NOT validated: native pickle
+decoding fails on ViewerWindowGeometry, a type in the dirty shared viewer source
+but absent from recorded main. The old viewer and its visible evidence are
+preserved; do not add a compatibility alias. A matched-version, tiny synthetic
+managed viewer is the next live check. Original H002 scientific results remain
+frozen and biologically ambiguous.
+
+Before extending materialization writer/worker observations, coordinate with
+the active OpenHCSDev/openhcs#157 owner: that PR changes worker_execution,
+runtime_exports and function_artifact_materialization to retain outcome export
+paths after cleanup. Its string path outcome is useful integration context but
+not yet proof of a provenance-bearing writer-success receipt for #134.
+The explicit result-directory inventory/reopening fix and orthogonal viewer
+control remain unfinished; this checkpoint does not close #134 or PR #153.
+
 Observed: actual typed measurement outputs carry disk locations outside the
 default result directory. Public inventory/existing-file stream does not
 resolve that declared directory and fails handler detection or file lookup.
