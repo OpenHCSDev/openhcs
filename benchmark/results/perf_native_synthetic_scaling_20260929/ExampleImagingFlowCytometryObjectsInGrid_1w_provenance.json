@@ -1,0 +1,69 @@
+{
+  "case": "ExampleImagingFlowCytometryObjectsInGrid",
+  "source_well": "A01",
+  "synthetic_wells": [
+    "W001"
+  ],
+  "source_inventory": [
+    {
+      "well": "W001",
+      "path": "W001/Ch1_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "02987163847f1345b0ef2d110cabb7b962182f7aaf12938a0217749512c3814f"
+    },
+    {
+      "well": "W001",
+      "path": "W001/Ch1_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch1_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "3e072df6c9aa7871a88961190fbd3dbfe329b44ba3cb367894c5abe9b488164f"
+    },
+    {
+      "well": "W001",
+      "path": "W001/Ch6_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "54f7f7d0eca2933c1ee903f838dcd86b83f7b99a57b9cfd1d8e51b06a53a0695"
+    },
+    {
+      "well": "W001",
+      "path": "W001/Ch6_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch6_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "5f3a09ad2277ab921f1cca13ae63067c897c8a5ba98193131e9919eb4591094f"
+    },
+    {
+      "well": "W001",
+      "path": "W001/Ch7_1.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_1.tif",
+      "size_bytes": 10890270,
+      "sha256": "adfc4e0337ec7a9da2fc5eaeb01e78919d1947497ac919df286434a83688c350"
+    },
+    {
+      "well": "W001",
+      "path": "W001/Ch7_2.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images/Ch7_2.tif",
+      "size_bytes": 10890270,
+      "sha256": "117482f9e0dca2e47d5716da2ecf2653e2c097a7619f7e671741c3a2f4468a53"
+    }
+  ],
+  "manifest_sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+  "cppipe_sha256": "9f0de0630d2d07210c4ffc640b0e64c637565ea6850a3746c7f6759744830500",
+  "driver_sha256": "de987613fe1ee2c1f8e29be505846595ec8f829f1d2148ca4b3d51e2304b2954",
+  "native_worker_sha256": "c309f4369f2df81cacab7f1098cb12b4d159122d136e3b489013d943d0811b7f",
+  "source_commit": "2a0603e09597d9aca0a571471e11a0ce9441a62d",
+  "source_dirty": false,
+  "native_jobs": 1,
+  "image_sets_per_well": 2,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": null,
+    "NPY_DISABLE_CPU_FEATURES": null,
+    "PYTHONHASHSEED": null,
+    "JAVA_HOME": "/home/ts/.local/share/openhcs-benchmark/jdk-11"
+  }
+}
