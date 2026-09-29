@@ -193,6 +193,20 @@ one native thread; acquires the shared nonblocking lock and records measured
 call durations (not session ages), sentinels, original inputs and handles.
 Unexpected calls are not retried. This prepared driver is not a passing receipt.
 
+Pre-live checkpoint9020cae18 is published in the existing draft233. New source
+changes were completed before any live handle existed. Ruff on both diagnostic
+files and the admission test, `git diff --check`, and the stdlib-only diagnostic
+CLI help pass. Five new filename-owner cases are written but have **not yet
+run**; the earlier94/23 results do not cover these changes or this main merge.
+
+The actual guard now warns about non-swap disk headroom (/home19.8 GiB), with
+RAM13.0–13.6 GiB. Parent explicitly withdrew new heavy-runtime admission until
+its own cleanup and recheck. No live process, JVM, GUI, registration call or
+validation-lock holder was started here. The diagnostic rejects any non-swap
+guard warning; source-only preparation/publication continues. Remaining named
+dependency is parent's verified resource-headroom release, followed by this
+source-pinned synthetic journey and parent-owned installation/acceptance.
+
 After verified closure of the frozen author's owned MCP/viewer and release of
 the technical slot, run controlled owned-vs-shared endpoint, escaping-path and
 delayed-response checks, plus register/discover/compile/execute on a tiny

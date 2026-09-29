@@ -161,7 +161,9 @@ def run(args) -> None:
         check=False,
     )
     resources = json.loads(guard.stdout)
-    if resources["ram_available_gib"] < 8 or resources["level"] == "critical":
+    if resources["ram_available_gib"] < 8 or any(
+        not reason.startswith("swap used ") for reason in resources["reasons"]
+    ):
         raise SystemExit("Resource guard disallows this finite validation.")
     receipt_dir.mkdir(parents=True)
     scratch.mkdir()
