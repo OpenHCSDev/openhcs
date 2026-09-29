@@ -21,11 +21,12 @@ def summed(dataset: dict[str, dict[str, str]], column: str) -> float:
 
 
 control = rows(HERE / "control.csv")
+lookup_only = rows(HERE / "lookup_only.csv")
 candidate = rows(HERE / "candidate.csv")
 native = rows(HERE.parent / "perf_lazy_catalog_20260929" / "native_cp_summary.csv")
-assert control.keys() == candidate.keys()
+assert control.keys() == lookup_only.keys() == candidate.keys()
 
-observations = (control, candidate)
+observations = (control, lookup_only, candidate)
 compile_time = [summed(dataset, "compile_seconds") for dataset in observations]
 execute_time = [summed(dataset, "execute_seconds") for dataset in observations]
 totals = [summed(dataset, "total_seconds") for dataset in observations]
@@ -37,8 +38,8 @@ native_five_x_line = (
     sum(float(row["median_native_total_phase_seconds"]) for row in native.values()) / 5
 )
 
-fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
-x = np.arange(2)
+fig, ax = plt.subplots(figsize=(9, 5), layout="constrained")
+x = np.arange(3)
 ax.bar(x, compile_time, label="Server compilation", color="#697b8c")
 ax.bar(x, execute_time, bottom=compile_time, label="Server execution", color="#d87a57")
 ax.bar(
@@ -65,10 +66,10 @@ ax.axhline(
     linewidth=1,
     label="Native CP total-phase / 5 (different timer boundary)",
 )
-ax.set_xticks(x, ("Control", "Exact lookup"))
+ax.set_xticks(x, ("Control", "Exact lookup", "Recorded owner"))
 ax.set_ylabel("Sum of 30 fresh-server observations (seconds)")
 ax.set_ylim(0, max(totals) + 25)
-ax.set_title("Exact CellProfiler lookup cuts compilation; execution rises")
+ax.set_title("Exact owners avoid cold catalog scans in compilation and export")
 ax.legend(
     frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=2
 )
@@ -96,7 +97,7 @@ ax.set_yticks(y, ordered, fontsize=7)
 ax.invert_yaxis()
 ax.axvline(0, color="#2f3640", linewidth=0.8)
 ax.set_xlabel("Candidate minus control seconds per case (lower is faster)")
-ax.set_title("Compilation improves in all cases; execution often rises")
+ax.set_title("Compilation falls; execution is near parity")
 ax.legend(frameon=False, loc="lower right")
 fig.savefig(HERE / "per_case_phase_deltas.png", dpi=180)
 plt.close(fig)

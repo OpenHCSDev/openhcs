@@ -121,6 +121,46 @@ def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> No
     assert completed.returncode == 0, completed.stderr or completed.stdout
 
 
+def test_experiment_measurements_use_recorded_owner_without_catalog_discovery() -> None:
+    script = textwrap.dedent("""
+        import sys
+
+        from openhcs.core.measurement_row_materialization import MeasurementProjectedColumnarRows
+        from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
+        from openhcs.core.runtime_tabular_values import FieldSpec
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.image_quality import MeasureImageQualityModule
+
+        feature = "ImageQuality_ThresholdOtsu_OrigHoechst_2W"
+        table = MeasurementTable(
+            name="MeasureImageQuality_measurements",
+            rows=MeasurementProjectedColumnarRows(
+                {feature: (0.2, 0.4)},
+                fields=(FieldSpec(feature, float, required=False),),
+            ),
+            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            measurement_feature_owner=MeasureImageQualityModule,
+        )
+        prefix = "openhcs.processing.backends.cellprofiler."
+        before = {name for name in sys.modules if name.startswith(prefix)}
+        (experiment_table,) = CellProfilerModule.derive_experiment_measurement_tables((table,))
+        after = {name for name in sys.modules if name.startswith(prefix)}
+
+        assert experiment_table.name == "MeasureImageQuality_experiment_measurements"
+        assert before == after, sorted(after - before)
+        assert not CellProfilerModule.__registry__._discovered
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
 def test_submodule_import_does_not_replace_backend_callable() -> None:
     import openhcs.processing.backends.cellprofiler as cellprofiler_backend
 

@@ -441,12 +441,16 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
         """Dispatch plate reductions to the exact recorded measurement owners."""
 
         table_sequence = tuple(tables)
+        # Tables retain their exact nominal feature owner. Check that owner
+        # against the already-registered declaration instead of discovering
+        # every CellProfiler backend module during a timed export step.
         owners = tuple(
             dict.fromkeys(
-                module_type
+                owner
                 for table in table_sequence
-                for module_type in cls.__registry__.values()
-                if table.measurement_feature_owner is module_type
+                if (owner := table.measurement_feature_owner) is not None
+                and isinstance((owner_name := getattr(owner, "module_name", None)), str)
+                and dict.get(cls.__registry__, owner_name) is owner
             )
         )
         return tuple(
