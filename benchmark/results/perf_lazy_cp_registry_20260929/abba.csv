@@ -1,0 +1,5 @@
+case_name,order,label,compile_seconds,execute_seconds,total_seconds,cli_wall_seconds,status
+cp4_supplement_combine_objects,1,control,2.139312267303467,0.15736961364746094,4.48111128481105,7.648961,success
+cp4_supplement_combine_objects,2,candidate,1.3080499172210693,0.27982664108276367,3.396154886111617,7.233749,success
+cp4_supplement_combine_objects,3,candidate,1.3100476264953613,0.2861313819885254,3.4510732609778643,6.611549,success
+cp4_supplement_combine_objects,4,control,2.1626040935516357,0.15944886207580566,4.49277756921947,8.273562,success

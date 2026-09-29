@@ -49,6 +49,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_bindings import NamedSourceBinding, StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
 )
@@ -631,6 +632,10 @@ def test_image_quality_experiment_measurements_use_exact_columnar_schema() -> No
     (experiment_table,) = MeasureImageQualityModule.experiment_measurement_tables(
         (image_table,)
     )
+    (dispatched_table,) = CellProfilerModule.derive_experiment_measurement_tables(
+        (image_table,)
+    )
+    assert dispatched_table.rows.row_mappings() == experiment_table.rows.row_mappings()
 
     assert experiment_table.rows.fields == (
         FieldSpec(
