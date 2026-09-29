@@ -23,6 +23,7 @@ from openhcs.core.function_patterns import (
     CompiledFunctionPattern,
     FunctionInvocationKey,
 )
+from openhcs.core.processing_preparation import PreparationCacheBatch
 from openhcs.core.steps.function_runtime import prepare_compiled_context_callables
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
@@ -55,6 +56,10 @@ class _SecondCacheFamily(_FirstCacheFamily):
     __registry__: ClassVar[dict] = {}
 
 
+def _processing_callable(image):
+    return image
+
+
 @pytest.mark.skipif(
     "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
 )
@@ -70,11 +75,8 @@ def test_child_preparation_deduplicates_registries_and_propagates_failure(
             lambda module: (_FirstCacheFamily, _FirstCacheFamily, _SecondCacheFamily)
         ),
     )
-    import sys
-
-    AutoRegisterRegistryPreparation.prepare_module_caches_in_children(
-        (sys.modules[__name__],)
-    )
+    batch = PreparationCacheBatch.from_callables((_processing_callable,))
+    batch.populate_child_caches()
     assert {path.name for path in tmp_path.iterdir()} == {
         "_FirstCacheFamily",
         "_SecondCacheFamily",
@@ -83,9 +85,7 @@ def test_child_preparation_deduplicates_registries_and_propagates_failure(
 
     monkeypatch.setattr(_SecondCacheFamily, "fail", True)
     with pytest.raises(RuntimeError, match="preparation failed"):
-        AutoRegisterRegistryPreparation.prepare_module_caches_in_children(
-            (sys.modules[__name__],)
-        )
+        batch.populate_child_caches()
 
 
 def test_backend_child_preparation_requires_empty_explicit_cpu_cache(
@@ -111,13 +111,19 @@ def test_backend_child_preparation_requires_empty_explicit_cpu_cache(
 def test_platform_without_fork_keeps_parent_preparation_path(monkeypatch):
     monkeypatch.setattr(multiprocessing, "get_all_start_methods", lambda: ["spawn"])
 
-    def modules():
+    def discover(module):
         raise AssertionError(
             "unsupported child preparation must not discover registries"
         )
-        yield
 
-    AutoRegisterRegistryPreparation.prepare_module_caches_in_children(modules())
+    monkeypatch.setattr(
+        AutoRegisterRegistryPreparation,
+        "module_registry_families",
+        staticmethod(discover),
+    )
+    PreparationCacheBatch.from_callables(
+        (_processing_callable,)
+    ).populate_child_caches()
 
 
 def test_compiled_context_preparation_runs_parent_hook_after_children(
@@ -149,12 +155,14 @@ def test_compiled_context_preparation_runs_parent_hook_after_children(
         step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)}
     )
 
-    def prepare_children(modules):
-        events.append(tuple(module.__name__ for module in modules))
+    def prepare_children(batch):
+        events.append(
+            tuple(preparation.module_name for preparation in batch.preparations)
+        )
 
     monkeypatch.setattr(
-        AutoRegisterRegistryPreparation,
-        "prepare_module_caches_in_children",
+        PreparationCacheBatch,
+        "populate_child_caches",
         prepare_children,
     )
     reset_processing_callable_preparation_cache()
