@@ -346,6 +346,8 @@ from openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba i
 )
 from openhcs.processing.backends.cellprofiler.shape import (
     ShapeMeasurementBackendStrategy,
+)
+from openhcs.processing.backends.cellprofiler.label_geometry import (
     _numpy124_aquicksort_indices,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
