@@ -232,13 +232,8 @@ gpu = [
     "torch>=2.6.0,<2.8.0",
     "torchvision>=0.21.0,<0.23.0",
     
-    # JAX
-    "jax>=0.5.3,<0.6.0",
-    "jaxlib>=0.5.3,<0.6.0",
-    
-    # JAX CUDA plugins
-    "jax-cuda12-pjrt>=0.5.3,<0.6.0",
-    "jax-cuda12-plugin>=0.5.3,<0.6.0",
+    # JAX owns matching JAXlib/CUDA plugins; retain local CUDA installation.
+    "jax[cuda12-local]>=0.9.2,<0.10",
     
     # CuPy
     "cupy-cuda12x>=13.3.0,<14.0.0",
@@ -282,10 +277,7 @@ all = [
     # GPU
     "torch>=2.6.0,<2.8.0",
     "torchvision>=0.21.0,<0.23.0",
-    "jax>=0.5.3,<0.6.0",
-    "jaxlib>=0.5.3,<0.6.0",
-    "jax-cuda12-pjrt>=0.5.3,<0.6.0",
-    "jax-cuda12-plugin>=0.5.3,<0.6.0",
+    "jax[cuda12-local]>=0.9.2,<0.10",
     "cupy-cuda12x>=13.3.0,<14.0.0",
     "cucim-cu12>=25.6.0,<26.0.0",
     "tensorflow>=2.19.0,<2.20.0",
@@ -367,8 +359,11 @@ openhcs = [
 ]
 
 # GPU Dependencies Version Notes:
-# - JAX 0.4.38: Last version compatible with CuDNN 9.5.x (JAX 0.5.0+ requires CuDNN 9.8+)
-# - JAX CUDA plugins must exactly match JAX version for PJRT API compatibility
+# - JAX owns exact plugin/JAXlib matching through its cuda12-local extra.
+#   This uses a locally provisioned CUDA/cuDNN, not bundled CUDA dependencies.
+#   Review driver/library requirements at https://docs.jax.dev/en/latest/installation.html
+# - BaSiCPy JAX fork is source-pinned in requirements-basicpy.txt while its
+#   paired draft is validated. Direct Git URLs must not enter PyPI metadata.
 # - PyTorch 2.7.x: Compatible with CUDA 12.6 and CuDNN 9.5.x
 # - TensorFlow 2.15-2.19: Stable DLPack support (2.12+ required for DLPack)
 # - CuPy: Use cupy-cuda12x for broad CUDA 12.x compatibility (not cupy-cuda120)

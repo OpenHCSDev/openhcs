@@ -8,10 +8,3 @@ class FlatfieldCorrectionMode(Enum):
 
     DIVIDE = "divide"
     SUBTRACT = "subtract"
-
-
-class BasicFittingMode(Enum):
-    """Optimization algorithm exposed by BaSiCPy."""
-
-    LADMAP = "ladmap"
-    APPROXIMATE = "approximate"
