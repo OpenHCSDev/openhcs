@@ -27,8 +27,10 @@ PROBE = SOURCE / "tests/diagnostics/registration_probe_source.py"
 
 def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
     """Diagnostic fault seam on the real launcher/server, not another registry."""
+    import polystore
     from zmqruntime.messages import ControlErrorResponse, MessageFields
 
+    import openhcs
     from openhcs.agent.dto.functions import (
         CustomFunctionRegistrationControlResponse,
         FunctionCatalogControlField,
@@ -36,6 +38,16 @@ def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
     )
     from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
     from openhcs.runtime.zmq_execution_server_launcher import main
+
+    native_imports = {"openhcs": openhcs.__file__, "polystore": polystore.__file__}
+    assert Path(openhcs.__file__).resolve() == SOURCE / "openhcs/__init__.py"
+    assert (
+        Path(polystore.__file__).resolve().is_relative_to(SOURCE / "external/PolyStore")
+    )
+    with audit.open("a") as stream:
+        stream.write(
+            json.dumps({"event": "native_imports", "paths": native_imports}) + "\n"
+        )
 
     class DiagnosticExecutionServer(ZMQExecutionServer):
         _server_type = "registration_acceptance_fixture"
@@ -136,6 +148,11 @@ def fixture(root: Path) -> tuple[Path, object]:
 def run(args) -> None:
     if Path(sys.executable).resolve() != PYTHON.resolve():
         raise SystemExit("Use the existing shared interpreter.")
+    if args.installed_entrypoint:
+        if "PYTHONPATH" in os.environ:
+            raise SystemExit("Installed acceptance requires PYTHONPATH unset.")
+        if Path.cwd().resolve().is_relative_to(SOURCE):
+            raise SystemExit("Installed acceptance requires cwd outside source.")
     if (
         subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=SOURCE, text=True
@@ -236,7 +253,11 @@ def run(args) -> None:
         "submodules": dependencies,
         "resources": resources,
         "driver_pid": os.getpid(),
-        "source_live_not_installed": True,
+        "source_live_not_installed": not args.installed_entrypoint,
+        "installed_entrypoint": args.installed_entrypoint,
+        "launch_cwd": str(
+            Path.cwd().resolve() if args.installed_entrypoint else SOURCE
+        ),
         "calls": [],
         "processes": [],
         "original033": "preserved; not replayed",
@@ -432,7 +453,7 @@ def run(args) -> None:
                     str(receipt_dir / f"{role}.log"),
                 ],
                 env=env,
-                cwd=SOURCE,
+                cwd=Path(receipt["launch_cwd"]),
                 stdout=log,
                 stderr=subprocess.STDOUT,
             )
@@ -458,7 +479,8 @@ def run(args) -> None:
             server_stderr=stderr,
             initialize_timeout_seconds=10,
         )
-        client.server_spec = SourceMcpServerSpec(str(PYTHON))
+        if not args.installed_entrypoint:
+            client.server_spec = SourceMcpServerSpec(str(PYTHON))
         client.start()
         health = call("openhcs_health_check", {})
         assert (
@@ -510,6 +532,7 @@ def run(args) -> None:
             "sha256_before_after": sentinel_hash,
             "unchanged": True,
         }
+        call("openhcs_search_functions", {"query": "registration_live_probe", "limit": 5}, FunctionCatalogPage)
         registration = register()
         assert registration.connection.port == args.port
         assert registration.server_identity.pid == servers[0][1].pid
@@ -776,6 +799,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--released-runtime-slot", action="store_true", required=True)
     parser.add_argument("--expected-source-sha", required=True)
+    parser.add_argument(
+        "--installed-entrypoint",
+        action="store_true",
+        help="Require ordinary installed imports with PYTHONPATH unset and cwd outside source.",
+    )
     parser.add_argument("--receipts", type=Path, required=True)
     parser.add_argument("--scratch", type=Path, required=True)
     parser.add_argument("--port", type=int, default=15991)

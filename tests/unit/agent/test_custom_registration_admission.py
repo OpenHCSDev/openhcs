@@ -117,6 +117,10 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
                 source_file_paths=(str(root / "boundary_probe.py"),),
             )
 
+        def get_function_catalog(self, read_request):
+            assert not hasattr(read_request, "source_code")
+            assert not mutations
+
         def disconnect(self):
             pass
 
@@ -277,6 +281,10 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
                 server_identity=replace(ProcessIdentity.current(), create_time=0),
             )
 
+        def get_function_catalog(self, read_request):
+            assert not hasattr(read_request, "source_code")
+            assert not mutations
+
         def disconnect(self):
             pass
 
@@ -291,6 +299,44 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
         ):
             catalog.register_custom_function(request(tmp_path))
         assert len(mutations) == 1
+        assert catalog._config_provider().default_port == 15993
+    finally:
+        catalog.close()
+
+
+def test_readiness_failure_precedes_mutation_and_is_not_postdispatch_uncertainty(
+    tmp_path,
+):
+    observed = []
+
+    class Client:
+        def custom_function_registration_destination(self, probe):
+            observed.append("destination")
+            return CustomFunctionRegistrationDestination(
+                str(tmp_path), str(tmp_path / "boundary_probe.py")
+            )
+
+        def get_function_catalog(self, read_request):
+            assert not hasattr(read_request, "source_code")
+            observed.append("read-only-preparation")
+            raise RuntimeError("native preparation failed")
+
+        def register_custom_function(self, admitted):
+            pytest.fail("Source must not be dispatched after readiness failure")
+
+        def disconnect(self):
+            pass
+
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda endpoint: Client(),
+        path_policy=policy(tmp_path),
+    )
+    try:
+        with pytest.raises(RuntimeError, match="native preparation failed") as failure:
+            catalog.register_custom_function(request(tmp_path))
+        assert not isinstance(failure.value, CustomFunctionRegistrationUncertainError)
+        assert observed == ["destination", "read-only-preparation"]
         assert catalog._config_provider().default_port == 15993
     finally:
         catalog.close()

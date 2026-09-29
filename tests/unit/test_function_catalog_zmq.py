@@ -360,6 +360,52 @@ def test_catalog_client_cancellation_prevents_another_poll(monkeypatch) -> None:
         )
 
 
+@pytest.mark.parametrize("response_kind", ("ready", "pending", "timeout"))
+def test_registration_client_sends_mutation_once_even_if_pending_or_uncertain(
+    monkeypatch,
+    response_kind,
+) -> None:
+    client = ZMQExecutionClient(port=22319, persistent=True)
+    monkeypatch.setattr(client, "is_connected", lambda: True)
+    observed = []
+    result = CustomFunctionRegistrationResult(schema_version="openhcs.agent.v1")
+
+    def send(payload):
+        observed.append(payload)
+        if response_kind == "timeout":
+            raise TimeoutError("postdispatch observation")
+        if response_kind == "pending":
+            return FunctionCatalogPreparationControlResponse(
+                status=EndpointStartupStatus(
+                    phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
+                    message="Preparing",
+                    sequence=1,
+                    timestamp=1.0,
+                ),
+            ).to_control_response()
+        return CustomFunctionRegistrationControlResponse(
+            value=result
+        ).to_control_response()
+
+    monkeypatch.setattr(client, "_send_control_request", send)
+    monkeypatch.setattr(
+        client,
+        "_send_function_catalog_control_request",
+        lambda _payload: pytest.fail("Mutation cannot use the preparation poll loop"),
+    )
+    request = CustomFunctionRegistrationRequest(
+        source_code="not evaluated", persist=False
+    )
+    if response_kind == "ready":
+        assert client.register_custom_function(request) is result
+    else:
+        with pytest.raises(
+            TimeoutError if response_kind == "timeout" else RuntimeError
+        ):
+            client.register_custom_function(request)
+    assert observed == [FunctionCatalogControlPayload.from_request(request).to_dict()]
+
+
 def test_catalog_client_applies_request_cancellation_to_endpoint_startup(
     monkeypatch,
 ) -> None:
@@ -533,23 +579,37 @@ def test_zmq_router_registers_custom_source_through_catalog_owner(
 
 
 def test_native_registration_destination_bypasses_catalog_preparation(
-    tmp_path, monkeypatch,
+    tmp_path,
+    monkeypatch,
 ) -> None:
     from zmqruntime.messages import ProcessIdentity
 
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "absent"))
     context = _context(Future())
+
     def reject_preparation():
-        raise AssertionError("Destination admission cannot prepare the function catalog")
-    monkeypatch.setattr(context.function_catalog_preparation, "ensure_started", reject_preparation)
+        raise AssertionError(
+            "Destination admission cannot prepare the function catalog"
+        )
+
+    monkeypatch.setattr(
+        context.function_catalog_preparation, "ensure_started", reject_preparation
+    )
     response = ZMQControlMessageRouter.handle(
         FunctionCatalogControlPayload.from_request(
             CustomFunctionRegistrationDestinationRequest(function_name="boundary_probe")
-        ).to_dict(), context,
+        ).to_dict(),
+        context,
     )
-    destination = CustomFunctionRegistrationDestinationControlResponse.from_control_response(response).destination
+    destination = (
+        CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+            response
+        ).destination
+    )
     assert destination.server_identity == ProcessIdentity.current()
-    assert destination.source_file_path == str(tmp_path / "absent" / "openhcs" / "custom_functions" / "boundary_probe.py")
+    assert destination.source_file_path == str(
+        tmp_path / "absent" / "openhcs" / "custom_functions" / "boundary_probe.py"
+    )
     assert not (tmp_path / "absent").exists()
 
 

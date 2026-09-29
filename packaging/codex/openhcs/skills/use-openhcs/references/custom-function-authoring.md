@@ -96,6 +96,13 @@ evaluating the source. The execution service independently admits the native
 write before evaluation and persistence. Receipt checks after writing verify
 the outcome; they are not write admission or a Python sandbox.
 
+Complete read-only catalog discovery on the intended endpoint before mutation.
+Cold preparation failures belong to that boundary: the service prepares via
+the existing read-only catalog request, then sends registration exactly once.
+It never polls/resends a source-bearing request, even if a server responds
+preparation-pending. A read-only observation timeout does not justify a new
+mutation; retain its handle/progress and reconcile that preparation first.
+
 For isolated sessions, also pin `OPENHCS_UI_CONFIG_CACHE_FILE` before MCP
 startup and verify the selected catalog. That launch-time selector still owns
 initial discovery; passing a later GUI connection does not redirect it.

@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from zmqruntime import OperationCancellation
+from zmqruntime import OperationCancellation, OperationDeadline
 
 from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
@@ -376,9 +376,13 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
             transport_mode=request.connection.transport_endpoint().transport_mode,
             persistent=request.connection.persistent,
         )
+        deadline = OperationDeadline.after_milliseconds(
+            endpoint.control_timeout_ms, operation="custom function registration",
+        )
         client = self._client_for(endpoint)
         destination = client.custom_function_registration_destination(
-            CustomFunctionRegistrationDestinationRequest(function_name=request.function_name)
+            CustomFunctionRegistrationDestinationRequest(function_name=request.function_name),
+            operation_deadline=deadline,
         )
         destination.require_request(request)
         if request.persist:
@@ -387,8 +391,15 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         request = replace(request, server_identity=destination.server_identity)
         self.invalidate()
         self._config_provider = lambda: endpoint
+        # The existing read-only owner may poll preparation, but it must not
+        # carry executable source. Failure here precedes mutation dispatch.
+        client.get_function_catalog(
+            FunctionCatalogControlRequest(compact_signatures=request.compact_signatures),
+            operation_deadline=deadline,
+        )
+        deadline.remaining_seconds()
         try:
-            result = client.register_custom_function(request)
+            result = client.register_custom_function(request, operation_deadline=deadline)
             destination.require_result(request, result)
             if not request.persist:
                 from openhcs.processing.custom_functions.manager import (
