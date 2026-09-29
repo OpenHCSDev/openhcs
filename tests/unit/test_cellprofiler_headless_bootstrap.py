@@ -2,11 +2,13 @@
 
 import json
 import subprocess
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import pytest
 
 from scripts import bootstrap_cellprofiler_headless as bootstrap
+from scripts.audit_cellprofiler_headless_ownership import audit_source
 
 
 def fake_preflight():
@@ -114,7 +116,12 @@ def test_preflight_rejects_wrong_python_platform_or_jdk(
     results = iter(
         [
             subprocess.CompletedProcess(
-                [], 0, json.dumps(["/python", version, system, machine, "/include"]), ""
+                [],
+                0,
+                bootstrap.PythonIdentity(
+                    "/python", version, system, machine, "/include"
+                ).to_json(),
+                "",
             ),
             subprocess.CompletedProcess([], 0, "", 'openjdk version "' + java + '"'),
             subprocess.CompletedProcess([], 0, "javac " + javac, ""),
@@ -152,7 +159,7 @@ def test_strict_native_probe_reports_drift_without_starting_java(monkeypatch):
     )
     monkeypatch.setattr(bootstrap.metadata, "version", lambda name: "69.5.1")
     monkeypatch.setattr(bootstrap.metadata, "requires", lambda name: [])
-    result = bootstrap.native_probe(False)
+    result = asdict(bootstrap.native_probe(False))
     assert result["version_drift"] == [
         {
             "owner": "setuptools",
@@ -180,7 +187,7 @@ def test_missing_non_gui_dependency_is_never_allowed_as_version_drift(monkeypatc
     monkeypatch.setattr(
         bootstrap.metadata, "requires", lambda name: ["wxPython>=4", "numpy>=1"]
     )
-    result = bootstrap.native_probe(True)
+    result = asdict(bootstrap.native_probe(True))
     assert result["omitted_dependencies"][0]["requirement"] == "wxPython>=4"
     assert result["dependency_errors"][0]["requirement"] == "numpy>=1"
     assert result["java_started"] is False
@@ -206,11 +213,11 @@ def test_creation_is_the_only_mutating_command_and_refuses_existing_env(
         command,
         "--java-home",
         str(tmp_path),
-        "--venv",
-        str(environment),
-        "--receipt",
-        str(tmp_path / "receipt.json"),
     ]
+    if command != "verify":
+        arguments.extend(["--venv", str(environment)])
+    if command != "plan":
+        arguments.extend(["--receipt", str(tmp_path / "receipt.json")])
     if command == "create":
         with pytest.raises(SystemExit):
             bootstrap.main(arguments)
@@ -230,12 +237,31 @@ def test_receipt_never_overwrites_prior_evidence(tmp_path):
 
 @pytest.mark.parametrize(
     "drift,status",
-    [([], "verified"), ([{"owner": "setuptools"}], "verified_with_version_drift")],
+    [
+        ([], "verified"),
+        (
+            [
+                {
+                    "owner": "setuptools",
+                    "requirement": "setuptools==80.9.0",
+                    "observed": "69.5.1",
+                }
+            ],
+            "verified_with_version_drift",
+        ),
+    ],
 )
 def test_verification_receipt_distinguishes_live_success_from_target_drift(
     tmp_path, monkeypatch, drift, status
 ):
     native = {
+        "python_executable": "/python",
+        "python_version": "3.9.25",
+        "python_prefix": "/oracle",
+        "versions": {},
+        "omitted_dependencies": [],
+        "dependency_errors": [],
+        "imported_paths": {},
         "error": None,
         "version_drift": drift,
         "java_started": True,
@@ -271,3 +297,303 @@ def test_native_subprocess_failure_leaves_a_failed_receipt(tmp_path, monkeypatch
         == 1
     )
     assert json.loads(receipt_path.read_text())["status"] == "failed"
+
+
+@pytest.mark.parametrize(
+    "started,constructed,stopped",
+    [
+        (False, False, False),
+        (True, False, True),
+        (True, True, False),
+    ],
+)
+def test_incomplete_native_lifecycle_cannot_certify_environment(
+    started, constructed, stopped
+):
+    receipt = bootstrap.NativeProbeReceipt(
+        "/python",
+        "3.9.25",
+        "/oracle",
+        {},
+        [],
+        [],
+        [],
+        started,
+        constructed,
+        stopped,
+        {},
+        None,
+    )
+    assert receipt.verification_status() == "failed"
+
+
+def test_malformed_native_response_is_retained_as_failed_receipt(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bootstrap,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            [], 0, bootstrap.PROBE_PREFIX + '{"error":null}', ""
+        ),
+    )
+    receipt_path = tmp_path / "receipt.json"
+    assert (
+        bootstrap.verify(Path("/python"), Path("/jdk"), fake_preflight(), receipt_path)
+        == 1
+    )
+    receipt = json.loads(receipt_path.read_text())
+    assert receipt["status"] == "failed"
+    assert "missing" in receipt["error"]
+
+
+def test_creation_runs_exact_plan_then_verifies_new_oracle(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "inspect", lambda *args: fake_preflight()
+    )
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "require_build_tools", lambda *args: None
+    )
+    monkeypatch.setattr(bootstrap, "require_creation_headroom", lambda *args: None)
+    commands = []
+
+    def run(command, *args, **kwargs):
+        commands.append([str(part) for part in command])
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(bootstrap, "run", run)
+    verified = []
+    monkeypatch.setattr(
+        bootstrap,
+        "verify",
+        lambda *args, **kwargs: verified.append((args, kwargs)) or 0,
+    )
+    target = tmp_path / "new-env"
+    assert (
+        bootstrap.main(
+            [
+                "create",
+                "--java-home",
+                str(tmp_path),
+                "--python",
+                "/python",
+                "--venv",
+                str(target),
+                "--receipt",
+                str(tmp_path / "receipt.json"),
+            ]
+        )
+        == 0
+    )
+    assert commands[0] == ["/python", "-I", "-m", "venv", str(target)]
+    assert commands[1:] == [
+        list(stage.command(target / "bin/python"))
+        for stage in bootstrap.install_stages(bootstrap.read_pins())
+    ]
+    assert verified[0][0][0] == target / "bin/python"
+    # JSON evidence carries arrays regardless of the command builder's tuples.
+    assert (
+        json.loads(json.dumps(verified[0][1]["construction"]["commands"])) == commands
+    )
+    assert "allow_version_drift" not in verified[0][1]
+
+
+def test_native_build_failure_preserves_receipt_and_stops_remaining_stages(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "inspect", lambda *args: fake_preflight()
+    )
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "require_build_tools", lambda *args: None
+    )
+    monkeypatch.setattr(bootstrap, "require_creation_headroom", lambda *args: None)
+    commands = []
+
+    def fail_native_build(command, *args, **kwargs):
+        commands.append(command)
+        if "--no-build-isolation" in command:
+            raise subprocess.CalledProcessError(
+                1, command, "build stdout", "compiler failed"
+            )
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(bootstrap, "run", fail_native_build)
+    target = tmp_path / "new-env"
+    receipt_path = tmp_path / "receipt.json"
+    with pytest.raises(subprocess.CalledProcessError):
+        bootstrap.main(
+            [
+                "create",
+                "--java-home",
+                str(tmp_path),
+                "--python",
+                "/python",
+                "--venv",
+                str(target),
+                "--receipt",
+                str(receipt_path),
+            ]
+        )
+    assert len(commands) == 3
+    receipt = json.loads(receipt_path.read_text())
+    assert receipt["status"] == "construction_failed"
+    assert receipt["stderr"] == "compiler failed"
+    assert "python-javabridge==4.0.5" in receipt["failed_command"]
+
+
+@pytest.mark.parametrize(
+    "free_bytes,available_kib",
+    [
+        (3 * 1024**3, 16 * 1024**2),
+        (10 * 1024**3, 7 * 1024**2),
+    ],
+)
+def test_creation_headroom_rejects_low_disk_or_ram(
+    tmp_path, monkeypatch, free_bytes, available_kib
+):
+    monkeypatch.setattr(
+        bootstrap.shutil,
+        "disk_usage",
+        lambda path: bootstrap.shutil._ntuple_diskusage(20 * 1024**3, 0, free_bytes),
+    )
+    monkeypatch.setattr(
+        bootstrap.Path,
+        "read_text",
+        lambda *args: "MemAvailable: " + str(available_kib) + " kB\n",
+    )
+    with pytest.raises(ValueError, match="GiB"):
+        bootstrap.require_creation_headroom(tmp_path)
+
+
+def test_new_command_is_discovered_parsed_and_executed_from_one_declaration(capsys):
+    @dataclass(frozen=True)
+    class ExtensionCommand(bootstrap.Command):
+        def execute(self):
+            print("extension executed")
+            return 17
+
+    name = ExtensionCommand.cli_name()
+    namespace = bootstrap.Command.parser().parse_args([name])
+    assert namespace.command_type is ExtensionCommand
+    assert bootstrap.main([name]) == 17
+    assert "extension executed" in capsys.readouterr().out
+
+
+def test_new_stage_is_selected_from_its_declaration_without_a_classifier_edit():
+    class ExtensionStage(bootstrap.InstallStage):
+        order = 15
+
+        @classmethod
+        def selects(cls, pin):
+            return pin.normalized_name == "extension-package"
+
+    pin = bootstrap.PackagePin("extension-package", "1.0")
+    pins = (*bootstrap.read_pins(), pin)
+    stages = bootstrap.install_stages(pins)
+    extension = next(stage for stage in stages if type(stage) is ExtensionStage)
+    assert extension.pins == (pin,)
+    assert [candidate for stage in stages for candidate in stage.pins].count(pin) == 1
+    assert stages.index(extension) < next(
+        index
+        for index, stage in enumerate(stages)
+        if type(stage) is bootstrap.NativeExtensionsStage
+    )
+
+
+@pytest.mark.parametrize("command", ["create", "plan", "preflight"])
+def test_diagnostic_flag_is_not_part_of_non_diagnostic_commands(command, capsys):
+    arguments = [command, "--allow-version-drift"]
+    if command == "create":
+        arguments.extend(["--receipt", "unused-evidence.json"])
+    with pytest.raises(SystemExit):
+        bootstrap.Command.parser().parse_args(arguments)
+    assert "unrecognized arguments: --allow-version-drift" in capsys.readouterr().err
+
+
+def valid_native_receipt():
+    return bootstrap.NativeProbeReceipt(
+        "/python",
+        "3.9.25",
+        "/oracle",
+        {"numpy": "1.24.4"},
+        [],
+        [],
+        [],
+        True,
+        True,
+        True,
+        {},
+        None,
+        "11.0.32",
+        "test vendor",
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("java_started", 1),
+        ("java_stopped", "true"),
+        ("versions", {"numpy": 1}),
+        (
+            "version_drift",
+            [{"owner": "numpy", "requirement": "numpy==1", "observed": 1}],
+        ),
+    ],
+)
+def test_subprocess_schema_rejects_wrong_leaf_and_nested_types(field, value):
+    payload = asdict(valid_native_receipt())
+    payload[field] = value
+    with pytest.raises(TypeError):
+        bootstrap.NativeProbeReceipt.from_stdout(
+            bootstrap.PROBE_PREFIX + json.dumps(payload)
+        )
+
+
+def test_subprocess_identity_decodes_once_into_its_nominal_owner():
+    identity = bootstrap.PythonIdentity(
+        "/python", "3.9.25", "linux", "x86_64", "/include"
+    )
+    decoded = bootstrap.PythonIdentity.from_json(identity.to_json())
+    assert decoded == identity
+    decoded.require_supported()
+    with pytest.raises(TypeError):
+        bootstrap.PythonIdentity.from_json(
+            json.dumps(["/python", "3.9.25", "linux", "x86_64", "/include"])
+        )
+
+
+def test_new_record_field_uses_the_existing_schema_decoder_without_reader_edit():
+    @dataclass
+    class ExtendedReceipt(bootstrap.NativeProbeReceipt):
+        evidence: str = "new declaration field"
+
+    receipt = ExtendedReceipt(**asdict(valid_native_receipt()))
+    decoded = ExtendedReceipt.from_json(receipt.to_json())
+    assert decoded.evidence == "new declaration field"
+    assert decoded.verification_status() == "verified"
+
+
+def test_actual_bootstrap_source_passes_focused_ownership_guards():
+    assert audit_source(bootstrap.SCRIPT.read_text()) == ()
+
+
+def test_guards_detect_the_replaced_real_pattern_forms():
+    source = """
+def main(args, parser):
+    parser.add_argument("command", choices=("preflight", "plan"))
+    if args.command == "plan":
+        pass
+def install_stages(pins):
+    names = {"numpy", "pip"}
+    return [pin for pin in pins if pin.normalized_name in names]
+def verify(stdout):
+    data = json.loads(stdout)
+"""
+    findings = audit_source(source)
+    assert {item.pattern for item in findings} == {
+        "IMPL-7/IMPL-1",
+        "MEMB-1",
+        "MEMB-2",
+        "IMPL-1",
+        "BOUND-1/BOUND-2",
+    }
