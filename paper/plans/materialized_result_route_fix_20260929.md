@@ -5,6 +5,40 @@ Tracking issue:#134. This is an implementation workstream, not a completed fix.
 
 ## Current owner checkpoint: native codec delivered
 
+### Live calibration defect and bounded ownership decision
+
+The installed POINT archive now reopens through public MCP on a separate
+synthetic viewer (:90/TCP5691), with three exact fractional coordinates and
+source components retained. A real capture was opened. It is REJECTED as an
+aligned witness: the raw image's XY scale is (1,1), while POINTs use (0.65,0.65)
+from this synthetic plate's acquisition metadata. New issue #171 is owned by
+the same integration coordinator; it is not a biological segmentation claim.
+
+Before a production edit, NRA's original ModuleSyntaxIndex class census joined
+31/31 classes to CompactClassFamilyIndex across viewer_streaming_service,
+runtime_image_loading, runtime_image_values and source_metadata. No unprojected
+classes in that corpus; wall 1.16s, peak RSS 67,484 KiB. External bases and native
+execution/MRO remain OPEN; this is not a complete detector/raw-record audit.
+
+Task-admitted relation: the acquisition metadata owns unspecified source XY
+calibration; existing source/carrier calibration owns its richer explicit values.
+ViewerStreamingSource already determines plate calibration for ROI streaming.
+Its load_image consumer bypasses that shared answer (BOUND-2), allowing the
+native image projection to use unit scale. ImagePayloadMetadata and
+SourceVoxelSpacing already own missing-spatial-context composition and explicit
+unit semantics. Extend those existing owners, not a parallel viewer adjustment.
+Rename the ROI-only method to plate_image_metadata and migrate its sole ROI
+consumer; after native image metadata resolution, fill absent spacing from that
+same method. Never query scalar plate calibration or overwrite anisotropic or
+relative native spacing when the source already supplies it.
+
+This is an intentional behavior fix with authored source patches, not an NRA
+DSL transaction or an equivalence theorem. New-case controls cover both viewer
+backends, unspecified spacing and explicit anisotropic/relative carriers.
+Installed live raw/result/combined alignment is required before shipping.
+The initial audit-script --root=file invocation selected zero files and is
+invalid coverage; use the scripts' bounded native Python APIs instead.
+
 This section supersedes the historical FULL-audit implementation hold below.
 The user explicitly authorized bounded NRA queries plus refactor-audit census
 and overlay, keeping global FULL/R1 coverage and native proof gaps distinct.

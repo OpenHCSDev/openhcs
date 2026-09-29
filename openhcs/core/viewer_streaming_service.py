@@ -322,8 +322,8 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             filemanager=self.filemanager,
         ).projection_or_empty()
 
-    def roi_image_metadata(self) -> ImagePayloadMetadata:
-        """Return plate-owned physical calibration for ROI pixel coordinates."""
+    def plate_image_metadata(self) -> ImagePayloadMetadata:
+        """Return acquisition-owned calibration for source-pixel coordinates."""
         pixel_size = float(
             self.microscope_handler.metadata_handler.get_pixel_size(self.plate_path)
         )
@@ -358,6 +358,10 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             filemanager=self.filemanager,
             source_address=source_path,
         ).metadata(image)
+        if not metadata.source_voxel_spacing.has_values:
+            metadata = metadata.with_source_spatial_context_from(
+                self.plate_image_metadata()
+            )
         return metadata.payload_with(
             image_payload_data(image), image_payload_mask(image)
         )
@@ -844,7 +848,7 @@ class StreamingService:
             ),
         ).with_item_fields(
             StreamImagePayloadMetadataProjector.item_fields(
-                self.source.roi_image_metadata(),
+                self.source.plate_image_metadata(),
                 message_authority.layout.component_order,
             )
         )

@@ -30,10 +30,13 @@ from openhcs.core.config import (
     StreamingConfig,
     get_all_streaming_ports,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import SourceArtifactProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -316,6 +319,67 @@ def test_stream_images_uses_resolved_config_backend_not_viewer_name(
         "invocation_key": None,
         "artifact_kind": None,
     }
+
+
+@pytest.mark.parametrize(
+    "config", (FijiStreamingConfig(enabled=True), NapariStreamingConfig(enabled=True))
+)
+@pytest.mark.parametrize(
+    "spacing",
+    (
+        SourceVoxelSpacing(),
+        SourceVoxelSpacing((2.0, 0.4, 0.7)),
+        SourceVoxelSpacing((1.0, 2.0), SourceVoxelSpacingUnit.RELATIVE),
+    ),
+)
+def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing(
+    config,
+    spacing,
+) -> None:
+    pixels = np.arange(20, dtype=np.uint16).reshape(4, 5)
+
+    class CalibratedFileManager(FakeFileManager):
+        def load(self, path, read_backend):
+            return ImagePayloadMetadata(source_voxel_spacing=spacing).payload_with(
+                pixels
+            )
+
+    class CalibratedMetadataHandler(FakeMetadataHandler):
+        def get_pixel_size(self, plate_path):
+            if spacing.has_values:
+                raise AssertionError("Native calibration must not query plate defaults")
+            return super().get_pixel_size(plate_path)
+
+    filemanager = CalibratedFileManager()
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(
+                parse_filename=lambda _name: filename_parse_result()
+            ),
+            metadata_handler=CalibratedMetadataHandler(),
+        ),
+        plate_path=Path("/plate"),
+    )
+    result = service.stream_images(
+        ImageStreamingRequest(
+            viewer=FakeViewer(),
+            config=config,
+            status_callback=lambda _message: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=("A01/img.tif",),
+            read_backend="disk",
+        )
+    )
+    assert result.streamed_count == 1
+    data, _paths, _backend, metadata = filemanager.saved_batches[0]
+    expected = spacing if spacing.has_values else SourceVoxelSpacing((1.3556, 1.3556))
+    np.testing.assert_array_equal(image_payload_data(data[0]), pixels)
+    stream_request = metadata[ViewerStreamKwarg.STREAM_REQUEST.value]
+    wire_metadata = ImagePayloadMetadata.from_viewer_image_metadata(
+        stream_request.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
+    )
+    assert wire_metadata.source_voxel_spacing == expected
 
 
 def test_manual_image_projection_identity_separates_independent_selections() -> None:
