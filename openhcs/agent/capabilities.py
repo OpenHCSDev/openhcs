@@ -2608,9 +2608,14 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
         "Compiles a complete pycodified PipelineDocument with an explicit progress queue "
         "and returns bounded axis, step, group-key, virtual source-workspace, "
         "path, main-flow checkpoint, viewer-streaming, and artifact-output plans."
+        " Initialization may persist workspace metadata; the plate must be under "
+        "an authorized write root. Use an explicitly staged writable plate when "
+        "preserving read-only originals."
         f" Source workspace: {getdoc(SourceWorkspaceSummary)}"
     )
     service = "execution_session"
+    mutating = True
+    side_effects = ("may_persist_workspace_metadata",)
     exposition = PipelineDraftCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.VALIDATION,
     )

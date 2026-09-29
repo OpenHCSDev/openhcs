@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -72,8 +71,8 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ExecutionSubmissionPreparationTimeoutError,
@@ -164,7 +163,6 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
     def compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
         from objectstate.lazy_factory import ensure_global_config_context
 
-        import openhcs.processing.func_registry as func_registry_module
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.core.progress import set_progress_queue
@@ -173,10 +171,6 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
             GlobalPipelineConfig,
             request.global_pipeline_config,
         )
-        with func_registry_module._registry_lock:
-            if not func_registry_module._registry_initialized:
-                func_registry_module._auto_initialize_registry()
-
         orchestrator = PipelineOrchestrator(
             plate_path=request.plate,
             pipeline_config=request.pipeline_document.pipeline_config,
@@ -895,7 +889,16 @@ class ExecutionSessionService:
     ) -> ArtifactPlanInspection:
         progress_queue = AgentProgressQueue()
         plate = self._path_policy.assert_readable(request.identity.plate_id)
-        metadata_path = _openhcs_metadata_path(plate)
+        # Orchestrator initialization persists workspace metadata even when no
+        # scientific execution is submitted. Admit that write before the gateway
+        # can create metadata or locks in a read-only source directory.
+        self._path_policy.assert_writable(plate)
+        for destination in METADATA_CONFIG.managed_paths(plate):
+            self._path_policy.assert_writable(destination)
+            # Atomic replacement stages temporary files alongside the original
+            # destination, even when the destination itself is a symlink.
+            self._path_policy.assert_writable(destination.parent)
+        metadata_path = METADATA_CONFIG.metadata_path(plate)
         metadata_existed_before = metadata_path.exists()
         try:
             document = PipelineDocumentAuthority.from_source(request.pipeline_source)
@@ -1376,13 +1379,6 @@ def artifact_plan_inspection_from_compilation(
         ),
         progress_event_count=progress_event_count,
         warnings=warnings,
-    )
-
-
-def _openhcs_metadata_path(plate: Path) -> Path:
-    return plate / os.getenv(
-        "OPENHCS_METADATA_FILENAME",
-        OpenHCSMetadataHandler.METADATA_FILENAME,
     )
 
 

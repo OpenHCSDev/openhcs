@@ -6,7 +6,10 @@ import threading
 from types import SimpleNamespace
 
 import pytest
-from polystore.imagej_distribution import FijiArchiveDistribution
+from polystore.imagej_distribution import (
+    FijiArchiveDistribution,
+    ImageJArchiveDownloadPolicy,
+)
 
 from openhcs.agent.capabilities import InspectPlatePathCapability
 from openhcs.agent.dto.common import SCHEMA_VERSION
@@ -22,10 +25,13 @@ def test_mcp_launch_preserves_bundle_root_separately_from_run_cache(
     bundle_root = str(tmp_path / "bundles")
     run_cache = str(tmp_path / "run-cache")
     monkeypatch.setenv(key, bundle_root)
+    download_key = ImageJArchiveDownloadPolicy.allow_download_environment_key
+    monkeypatch.setenv(download_key, "false")
     monkeypatch.setenv("XDG_CACHE_HOME", run_cache)
     assert key in OpenHCSProcessEnvironment.child_process_environment_keys()
     environment = McpDevServerSpec(sys.executable).environment()
     assert environment[key] == bundle_root
+    assert environment[download_key] == "false"
     assert environment["XDG_CACHE_HOME"] == run_cache
 
 

@@ -8,6 +8,25 @@ steps to concatenate. Discover and describe the compatible registered OpenHCS
 callable before choosing parameters; the live contract owns backend, dtype,
 axes, units and artifact flow.
 
+## Establish spatial coverage before tuning
+
+Choose development witnesses from the whole field before fitting a correction or
+tuning a detector. Include observed bright/dim background, centre/edge and
+sparse/dense regions, with a faint positive and a genuine close pair or thin path.
+Keep those witnesses across trials; add newly discovered failures rather than
+replacing inconvenient controls. Compare local background level/spread and
+signal-to-background contrast. A dim region may reflect additive background,
+multiplicative shading, focus, missing photons or genuine biology; do not flatten
+it simply because it differs. Saturation and lost focus are not repaired by
+normalisation.
+
+Review the correction field or denoising residual, raw/processed images and
+downstream labels across the same positions and scales. Record numeric display
+limits in each image's units; independent auto-contrast can hide a failed
+correction. Local improvement is insufficient if other regions develop misses,
+merges, erased faint structures or unsupported foreground. Keep held-out pixels
+sealed while choosing the method, fitting sample, parameters and QA criteria.
+
 ## Bright outliers and compressed display range
 
 First compare numeric display windows; a few bright objects may only make the
@@ -41,6 +60,47 @@ Official30 illumination examples and inspect the calculation/application pair's
 source grouping, rather than fitting a fresh field independently for every
 condition without justification.
 
+### Shared-field calculation and application recipe
+
+Discover `openhcs:cellprofiler_correct_illumination_calculate` and
+`openhcs:cellprofiler_correct_illumination_apply`, then retrieve the closest
+Official30 illumination pipeline. Fit one channel-specific field from comparable
+development observations using the declared `calculation_scope`; `EACH` is a
+current-invocation fit, while all-images scopes average the leading-axis
+observations. Verify which physical fields the compiled grouping actually pools.
+Never relabel Z as observations or pool independent channels to satisfy an array
+shape. Reuse the named fitted artifact on the original image route, not on the
+calculation output, and inspect its exact source/producer relation in the plan.
+
+Choose `IlluminationCorrectionMethod.DIVIDE` for evidenced multiplicative
+shading or `SUBTRACT` for additive background. Select estimation/smoothing scale
+above the biology to retain, and inspect the field itself for cell outlines,
+tissue gradients and tile seams. Inspect dim edges for amplified noise. Reflect
+`truncate_low`/`truncate_high` and input scaling: the application's high clamp
+is at 1, not the maximum of an arbitrary raw intensity range. Record clipping
+fractions and preserve float analytical output when needed. Compare untreated
+and corrected detection, not just background uniformity. Freeze the fit policy
+and its data provenance before evaluation; using evaluation images to refit is
+only permissible under an explicitly declared evaluation protocol.
+
+### BaSiCPy recipe and readiness boundary
+
+BaSiCPy's upstream workflow fits a flatfield, optional darkfield and observation
+baseline, then transforms images. Use comparable same-channel observations with
+changing foreground and shared acquisition shading; inspect the fitted fields
+for biological structure before applying them. An observation stack is not
+automatically a physical Z stack. Do not claim that the bundled NumPy/CuPy
+BaSiC-style approximations are the upstream BaSiCPy algorithm.
+
+Search and describe `basic_flatfield_correction_jax`, but treat registry presence
+as discovery only. Confirm the installed BaSiCPy/JAX versions and a bounded real
+fit/transform through the compiled runtime before selecting it. Inspect actual
+parameter forwarding, observation grouping, output dtype/range and whether field
+artifacts can be retained for QA. A missing package or misleading wrapper
+parameter is an implementation gap, not a reason to silently substitute an
+unvalidated approximation. Separate numerical smoke-test evidence from
+biological acceptance across the distributed witnesses.
+
 ## Noise and false markers
 
 For grainy foreground or too many local maxima, test mild Gaussian smoothing
@@ -50,6 +110,33 @@ shorten thin processes. Photon noise is signal-dependent; background noise
 alone does not characterise every bright object. Denoising cannot recover
 unrecorded photons or saturated acquisition. Compare the same faint positive,
 close pair and noise-only background before accepting a filter.
+
+### Fast non-local means recipe
+
+Discover `openhcs:cellprofiler_reducenoise`. This existing CPU implementation
+uses scikit-image's `denoise_nl_means(..., fast_mode=True)` with `patch_size`,
+`patch_distance` and `cutoff_distance` (the upstream `h`). It needs no GPU or
+`torch_nlm`. Start with a small odd patch below the feature scale and a bounded
+search distance; increase search support only when the improvement justifies
+measured runtime and memory. Fast mode trades additional memory for speed.
+
+Establish the incoming detection-image units and noise scale first. The wrapper
+casts integer input to float without normalising its values, so `h=0.1` has a
+different meaning on raw detector counts and unit-range data. Use a registered
+noise estimate or bounded local statistics when available, and test a modest
+noise-scale-based cutoff bracket rather than copying a normalised-image default.
+This wrapper does not expose upstream `sigma`; do not invent that kwarg or claim
+noise-variance compensation. Keep estimated noise and cutoff in the same units.
+
+Describe the full-stack execution contract and compile the observation/axis
+scope: avoid denoising across independent fields, channels or time points merely
+because they share a stack. Keep runtime-owned slice controls out of callable
+kwargs. Review raw-minus-denoised residuals for erased puncta, bodies and thin
+paths, plus denoised foreground/markers and downstream labels at dim and bright
+witnesses. Reject newly joined neighbours or lost weak positives even if noise
+looks lower. Keep untreated measurement pixels unless the denoised measurement
+route has separate validation. NLM reduces noise; it does not estimate a shading
+field or justify a globally tuned threshold on uneven illumination.
 
 ## Local contrast and local thresholds
 
@@ -112,3 +199,7 @@ Agentic-J's [course package](https://github.com/MMV-Lab/Agentic-J/tree/7f3e1f088
 records book commit `a017bbc2656a747ab3c87e5d721e9897881ed4c2`,
 CC BY 4.0, Pete Bankhead. Assay-specific recipes and validation decisions here
 are OpenHCS adaptations, not parameter defaults demonstrated by that course.
+
+Implementation references: scikit-image's [non-local means API](https://scikit-image.org/docs/stable/api/skimage.restoration.html#skimage.restoration.denoise_nl_means)
+and BaSiCPy's [fit/transform example](https://basicpy.readthedocs.io/en/latest/notebooks/timelapse_brightfield.html).
+These upstream interfaces do not establish local dependency or wrapper readiness.
