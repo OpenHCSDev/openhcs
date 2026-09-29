@@ -38,6 +38,11 @@ or reporting counts. Use the live contexts' typed evidence contracts and the
 procedure's capture details, not a previous conversation or separate assay
 skill. Follow the earliest failed stage through one bounded diagnostic and
 recheck a regression control.
+Before choosing size, separation, smoothing, background or shape parameters,
+read [the empirical feature-measurement procedure](references/measurement-interpretation.md)
+(`openhcs_measurement_interpretation`). Measure representative raw features at
+native coordinates through exposed MCP contracts, retain uncertainty and units,
+and record how each observation supports the chosen callable parameter.
 When an image defect motivates analytical preprocessing, read
 [the preprocessing decision guide](references/image-preprocessing.md), also
 retrievable as `openhcs_image_preprocessing`, before changing the pipeline.

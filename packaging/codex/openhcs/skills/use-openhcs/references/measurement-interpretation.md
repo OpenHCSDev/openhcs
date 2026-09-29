@@ -1,5 +1,83 @@
 # Choose valid microscopy measurements and comparisons
 
+## Measure feature scales before choosing parameters
+
+Use this procedure before setting object diameter, seed separation, smoothing,
+background-removal scale, spot/ridge width or a shape prior. Base a starting
+range on representative raw features in the managed Napari viewer, not a
+remembered cell size or a convenient detector default. These are development
+measurements, not ground truth or an automatically validated parameter choice.
+
+1. Read `image_analysis_workflow` and `viewer_review`, then search the current
+   capability registry for measurement, profile and geometry operations.
+   Establish source/route/channel, Z/time, native dimensions, layer transforms
+   and verified spacing. Inspect raw-only at object scale and retain a context
+   view using [the matched viewer procedure](viewer-qa.md). Camera zoom and
+   canvas pixels are not source pixels. World coordinates must be converted
+   through the layer transform before becoming index-space sample coordinates.
+2. Choose clear isolated objects, a genuine close pair and faint/small examples
+   across preselected bright/dim, sparse/dense and centre/edge regions. Retain
+   extremes and ambiguity rather than measuring only objects the current
+   detector finds. For 3-D, inspect multiple Z planes and orthogonal views when
+   exposed; a projected width does not establish Z extent.
+3. Use exposed native measurement capabilities where available and retain their
+   receipts. For bounded raw evidence, `openhcs_sample_viewer_window_image`
+   takes `route_key`, route-local `axis_indices`, native `y`, `x`, `height`,
+   `width` and optional exact values. Request `include_array_values=true` with
+   `height*width<=max_array_elements` when the claim needs pixels. A 16x16 XY
+   tile needs at least256 elements; its origin comes from the actual source,
+   not this example. Verify returned record identity, origin, dimensions, dtype
+   and truncation; tile a larger region rather than treating a partial sample
+   as a whole object. `openhcs_get_viewer_window_payloads` exposes bounded
+   image/shape geometry; `openhcs_summarize_viewer_window_rois` exposes existing
+   ROI bounds and area summaries. Neither establishes independently verified
+   raw-cell masks. For a feature-bearing layer, select `data_index` through
+   `openhcs_navigate_viewer_window` and verify the returned selection and
+   object/point identity before linking a table row to a visible object.
+4. Measure the feature relevant to the intended parameter:
+
+   | Intended input | Evidence to collect | Avoid |
+   | --- | --- | --- |
+   | Object-size range | Long/short raw boundary spans across isolated and touching examples; per-axis extent for 3-D | Calling a current mask's size independent evidence, or confusing radius with diameter |
+   | Seed separation | Centre-to-centre distance of genuine neighbours and multiple maxima within one textured object | Using diameter as minimum separation and suppressing real close pairs |
+   | Smoothing/spot/ridge scale | Narrowest supported feature width, noise texture and nearby close-pair/path control | Equating diameter with Gaussian sigma or erasing a faint neurite |
+   | Background-removal scale | Target width plus extent and variation of nearby background in multiple regions | A universal kernel radius or subtracting cell signal as background |
+   | Threshold/prominence | Raw object-versus-local-background values, weak positives, noise and saturation on the consumed channel | Deriving analytical thresholds from contrast limits, gamma or label colours |
+   | Roundness/shape prior | Isolated raw contours, elongated/lobed examples and an unsupported-shape control | Forcing every cell to be round or treating a round-looking mask as validation |
+
+   Retain native coordinates, measurement method, units and boundary uncertainty.
+   Straight calibrated XY distance is
+   `sqrt((delta_y*spacing_y)^2+(delta_x*spacing_x)^2)`; keep the selected endpoints.
+   Without verified calibration report pixels/voxels, not micrometres. A curved
+   neurite needs path length, not an endpoint chord. Given an independently
+   supported 2-D area, equivalent-circle diameter is `2*sqrt(area/pi)`; it is
+   neither a major-axis length nor evidence of roundness. ROI contour-member
+   count is not necessarily instance count.
+5. Record source/route/axes, witness coordinates, receipt/capture, raw measurement
+   and uncertainty, chosen callable/parameter, unit conversion and rationale in
+   the trial log. Summarise the observed range and regional variation. Reflect
+   the exact registered callable before applying a number: radius versus
+   diameter, sigma versus kernel width, anisotropic spacing and intensity units
+   differ between algorithms. Keep unsupported precision as an interval or
+   limitation. Label mask-derived estimates provisional and check against raw,
+   including missed objects; do not tune a detector solely from its own output.
+6. Compile one bounded candidate, inspect its earliest changed intermediate,
+   then compare matched raw/result/combined at the measured failures and
+   regression controls. Revisit distributed regions after every change; a
+   local repair can fail elsewhere under uneven illumination. Freeze measurement
+   receipts and rationale with the complete candidate before held-out access.
+   Expected counts or reference masks must not choose measurements in a blind run.
+
+Sampling and ROI summaries are not a dedicated ruler or line-profile contract.
+If the live registry lacks the required operation, record the missing input/
+output contract and use the [custom-function route](custom-function-authoring.md)
+or report the limitation. Do not infer quantitative lengths from a resized
+screenshot, inject mouse input, or substitute unregistered console/array analysis.
+Simple arithmetic on returned coordinates is distinct from a reproducible image
+measurement. Any measurement operation must preserve source pixels and report
+its coordinates, axes, units and sampling conventions; a native layer scale of1
+does not verify physical calibration.
+
 ## Detection pixels versus measurement pixels
 
 Thresholding, CLAHE, nonlinear gamma, high-end clipping, denoising and
