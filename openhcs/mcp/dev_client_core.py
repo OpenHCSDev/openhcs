@@ -12,7 +12,7 @@ import sys
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -1555,12 +1555,17 @@ async def open_mcp_dev_session(
 
     if probe_socket_alive(socket_path):
         McpDevTransportAuthority.clear_spawn_failure(socket_path)
-        try:
-            async with _socket_session() as session:
+        async with AsyncExitStack() as connected_session:
+            try:
+                session = await connected_session.enter_async_context(_socket_session())
+            except (OSError, McpDevProtocolError, McpDevJsonRpcError):
+                pass
+            else:
+                # Only establishment failures can select another transport.
+                # Once yielded, a request may have taken effect: propagate its
+                # failure without spawning a server or yielding a second time.
                 yield session
-            return
-        except (OSError, McpDevProtocolError, McpDevJsonRpcError):
-            pass
+                return
 
     if McpDevTransportAuthority.recent_spawn_failure(socket_path):
         async with new_stdio_session() as session:
