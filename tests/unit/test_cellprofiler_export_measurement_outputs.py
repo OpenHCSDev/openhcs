@@ -33,6 +33,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
+    MeasurementRowValueField,
     MeasurementScope,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactBatch, RuntimeValueStore
@@ -339,6 +340,33 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
     )
     assert {row[MeasurementRowAxisField.SLICE_INDEX.value] for row in row_mappings} == {
         3
+    }
+
+    multi_axis_context = ProcessingContext(axis_id="A01")
+    multi_axis_context.execution_runtime = SimpleNamespace(
+        execution_axis_values=("A01", "A02")
+    )
+    _returned_main, _saved, scoped_rows = save_images_with_measurements(
+        image,
+        image_to_save=image,
+        saved_image_name="DNA",
+        filename_method=SaveImagesFilenameMethod.SINGLE_NAME,
+        single_file_name="SavedDNA",
+        file_format=SaveImagesFileFormat.PNG,
+        output_location="exports",
+        slice_index=3,
+        context=multi_axis_context,
+    )
+    scoped_row_values = {
+        row[MeasurementRowAxisField.FEATURE_NAME.value]: row[
+            MeasurementRowValueField.RESULT_VALUE.value
+        ]
+        for row in scoped_rows.iter_row_mappings()
+    }
+    assert scoped_row_values == {
+        "FileName_DNA": "SavedDNA.png",
+        "PathName_DNA": "A01/exports",
+        "URL_DNA": "file:A01/exports/SavedDNA.png",
     }
 
     measurement_plan = ArtifactOutputPlan(

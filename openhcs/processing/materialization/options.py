@@ -13,6 +13,10 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
+from openhcs.processing.materialization.path_scopes import (
+    MaterializationRelativePathScope,
+    SharedMaterializationRelativePathScope,
+)
 
 
 class MaterializedFilenameIdentity(str, Enum):
@@ -174,6 +178,9 @@ class ImageFileOptions(FileOutputOptions, SourceOptions):
     """One image file written through the registered image format family."""
 
     relative_path_template: str | None = None
+    relative_path_scope: MaterializationRelativePathScope = field(
+        default_factory=SharedMaterializationRelativePathScope
+    )
 
 
 @dataclass(frozen=True)
