@@ -227,9 +227,15 @@ class PlateStreamingService:
             )
             if request.result_directory is not None:
                 read_backend = Backend.DISK.value
-            source_projection, producer = self._receipt_source_projection(
-                request, resolved_records, stream_context
-            )
+            if request.source_receipt is None:
+                source_projection = self._inventory_source_projection(
+                    resolved_records, stream_context
+                )
+                producer = None
+            else:
+                source_projection, producer = self._receipt_source_projection(
+                    request, resolved_records, stream_context
+                )
 
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
                 filemanager=stream_context.filemanager,
@@ -321,6 +327,22 @@ class PlateStreamingService:
             status_messages=tuple(status_messages),
             warnings=all_warnings,
         )
+
+    @staticmethod
+    def _inventory_source_projection(
+        records: tuple[PlateFileRecord, ...],
+        context: PlateInspectionContext,
+    ) -> VirtualWorkspaceSourceProjection | None:
+        """Carry inventory-owned physical image identities into viewer loading."""
+        builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        for record in records:
+            image_path = record.streamable_image_path
+            if image_path is None or record.source_ref is None:
+                continue
+            builder.record_workspace_source_path(image_path, record.source_ref)
+            if record.metadata:
+                builder.record_source_metadata(image_path, record.metadata)
+        return builder.projection() if builder.workspace_source_refs else None
 
     def _receipt_source_projection(
         self,

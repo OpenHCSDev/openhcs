@@ -94,6 +94,10 @@ class FakeFileManager:
     def load(self, path: str, read_backend: str):
         return np.zeros((4, 5), dtype=np.uint16)
 
+    def resolve_address(self, address: str, backend: str, *, base_path: Path):
+        del backend
+        return str(base_path / address)
+
     def exists(self, path, backend):
         return False
 
