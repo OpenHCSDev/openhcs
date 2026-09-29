@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import multiprocessing
 import sys
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from types import ModuleType
@@ -46,33 +44,6 @@ class AutoRegisterRegistryPreparation:
         return cls._scan_module_registries(modules, prepare_families=False)
 
     @classmethod
-    def prepare_module_caches_in_children(
-        cls,
-        modules: Iterable[ModuleType | None],
-    ) -> None:
-        """Populate eligible cold compiler caches before normal parent preparation."""
-        if "fork" not in multiprocessing.get_all_start_methods():
-            return
-        families = tuple(
-            family
-            for family in cls._unique_module_registry_families(
-                modules, compiler_prepared_only=True
-            )
-            if family.can_prepare_in_child()
-        )
-        if len(families) < 2:
-            return
-        with ProcessPoolExecutor(
-            max_workers=min(4, len(families)),
-            mp_context=multiprocessing.get_context("fork"),
-        ) as executor:
-            futures = tuple(
-                executor.submit(family.prepare_registered_family) for family in families
-            )
-            for future in futures:
-                future.result()
-
-    @classmethod
     def _scan_module_registries(
         cls,
         modules: Iterable[ModuleType | None],
@@ -81,7 +52,7 @@ class AutoRegisterRegistryPreparation:
     ) -> AutoRegisterRegistryPreparationReport:
         """Scan module registries and optionally prepare module-owned families."""
         report = AutoRegisterRegistryPreparationReport()
-        for candidate in cls._unique_module_registry_families(
+        for candidate in cls.module_registry_owners(
             modules, compiler_prepared_only=prepare_families
         ):
             registry = candidate.__registry__
@@ -93,7 +64,7 @@ class AutoRegisterRegistryPreparation:
         return report
 
     @classmethod
-    def _unique_module_registry_families(
+    def module_registry_owners(
         cls,
         modules: Iterable[ModuleType | None],
         *,

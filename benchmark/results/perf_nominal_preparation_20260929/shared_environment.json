@@ -1,0 +1,105 @@
+{
+  "packages": [
+    {
+      "distribution": "openhcs",
+      "version": "0.8.6",
+      "loaded_file": "/home/ts/code/projects/openhcs/openhcs/__init__.py",
+      "revision": "8b090e2e9a1a1550a01b7096c3f6cdf7d65ab2f6",
+      "direct_url": null
+    },
+    {
+      "distribution": "objectstate",
+      "version": "1.1.8",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/ObjectState/src/objectstate/__init__.py",
+      "revision": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/ObjectState"
+      }
+    },
+    {
+      "distribution": "python-introspect",
+      "version": "0.1.14",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/python-introspect/src/python_introspect/__init__.py",
+      "revision": "4e8f8bde5f750d9a50eacac80acd3806123addd8",
+      "direct_url": null
+    },
+    {
+      "distribution": "metaclass-registry",
+      "version": "0.2.1",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/metaclass-registry/src/metaclass_registry/__init__.py",
+      "revision": "ca0a87e873f929b311a87a4d60cd3bfba315dbcf",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/metaclass-registry"
+      }
+    },
+    {
+      "distribution": "arraybridge",
+      "version": "0.3.4",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/arraybridge/src/arraybridge/__init__.py",
+      "revision": "fddd9857bcd21468d20bc8547a769e0c6c9f1906",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/arraybridge"
+      }
+    },
+    {
+      "distribution": "pycodify",
+      "version": "0.1.3",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/pycodify/src/pycodify/__init__.py",
+      "revision": "792b03413331fdf107e369c924c257a2f0b16126",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/pycodify"
+      }
+    },
+    {
+      "distribution": "polystore",
+      "version": "0.2.19",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/PolyStore/src/polystore/__init__.py",
+      "revision": "c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7",
+      "direct_url": null
+    },
+    {
+      "distribution": "pyqt-reactive",
+      "version": "0.3.24",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/pyqt-reactive/src/pyqt_reactive/__init__.py",
+      "revision": "a51c3d965f8ffdefe95a2b4b37347a85341d483a",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/pyqt-reactive"
+      }
+    },
+    {
+      "distribution": "zmqruntime",
+      "version": "0.2.24",
+      "loaded_file": "/home/ts/code/projects/openhcs/external/zmqruntime/src/zmqruntime/__init__.py",
+      "revision": "1d3b32f4fcead23d5d2079c975eb2ae7646a1478",
+      "direct_url": {
+        "dir_info": {
+          "editable": true
+        },
+        "url": "file:///home/ts/code/projects/openhcs/external/zmqruntime"
+      }
+    }
+  ],
+  "child_environment_keys": [
+    "OPENHCS_CPU_ONLY",
+    "OPENHCS_HEADLESS",
+    "NUMBA_CACHE_DIR",
+    "OPENHCS_USE_THREADING",
+    "POLYSTORE_IMAGEJ_CACHE_ROOT",
+    "POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD"
+  ]
+}

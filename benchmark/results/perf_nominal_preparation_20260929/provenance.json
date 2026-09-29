@@ -1,0 +1,56 @@
+{
+  "benchmarked_base": "213439a04",
+  "synced_base": "875332be1",
+  "candidate_source_sha256": {
+    "openhcs/core/autoregister_preparation.py": "49762654d81fbe90073930950cb27c94b3552f529e34c5e0afa860ab0d27bdf0",
+    "openhcs/core/callable_contract.py": "2a2373ff5b0d733f536ce04a06d4490d69d125496cc32de2342f82d77fbea469",
+    "openhcs/core/processing_preparation.py": "3bcb8adb4bf6ea8f917e265aee5144ecb8f6c8a538131e3830d6a2e233d82496",
+    "openhcs/core/steps/function_runtime.py": "cb5da938b25e74c46b90f152f9caedafbe21efd9aefc37dc58b5f80cc9337efe"
+  },
+  "advisor_revision": "0844525",
+  "before_class_census": {
+    "modules": 696,
+    "original_classes": 5014,
+    "projected_classes": 5002,
+    "open_classes": 12
+  },
+  "after_class_census": {
+    "modules": 697,
+    "original_classes": 5022,
+    "projected_classes": 5010,
+    "open_classes": 12
+  },
+  "full_semantic_scan": {
+    "shell_budget_seconds": 165,
+    "exit_code": 124,
+    "completed": false
+  },
+  "bounded_raw_scan": {
+    "before_modules": 4,
+    "after_modules": 5,
+    "before_findings": 2,
+    "after_findings": 2,
+    "global_ownership_proof": false
+  },
+  "validation": {
+    "unit_tests": 294,
+    "black_changed_files": 6,
+    "ruff_baseline_findings": 37,
+    "ruff_candidate_findings": 36,
+    "ruff_new_findings": 0
+  },
+  "nra_artifact_root": "/home/ts/code/projects/openhcs-benchmark-runs",
+  "no_numerical_algorithm_change": true,
+  "shared_environment_update": {
+    "checkout_revision": "8b090e2e9",
+    "polystore_revision": "c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7",
+    "resolver_upgrade_strategy": "eager",
+    "pip_check_passed": true,
+    "actual_fresh_mcp_health_passed": true,
+    "environment_tests_passed": 32,
+    "compiler_tests_passed_after_upgrade": 294,
+    "package_provenance": "shared_environment.json",
+    "frozen_versions": "shared_requirements.txt",
+    "mcp_health": "shared_mcp_health.json"
+  }
+}

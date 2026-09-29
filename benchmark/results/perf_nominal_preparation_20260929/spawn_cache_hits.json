@@ -1,0 +1,137 @@
+{
+  "start_method": "spawn",
+  "parent_pid": 1255845,
+  "total_seconds": 1.8188385558314621,
+  "workers": [
+    {
+      "pid": 1255847,
+      "parent_pid": 1255845,
+      "cache_directory": "/tmp/openhcs-cold-candidate-20260929-c1",
+      "preparation_seconds": 0.3565232176333666,
+      "cache_hits": 12,
+      "cache_misses": 0,
+      "dispatchers": [
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_quantiles_grouped_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_scan_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_foreground_edges_3d_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_scan_3d_sparse_batch_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_quantiles_3d_sparse_batch_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.analysis.region_properties._dense_label_region_properties_2d_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.label_geometry._numpy124_aquicksort_indices_numba",
+          "cache_hits": 2,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.label_geometry._feret_diameters_from_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._radius_features_from_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._distance_to_label_edge_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._has_touching_foreground_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        }
+      ]
+    },
+    {
+      "pid": 1255848,
+      "parent_pid": 1255845,
+      "cache_directory": "/tmp/openhcs-cold-candidate-20260929-c1",
+      "preparation_seconds": 0.35315418988466263,
+      "cache_hits": 12,
+      "cache_misses": 0,
+      "dispatchers": [
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_quantiles_grouped_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_scan_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_foreground_edges_3d_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_scan_3d_sparse_batch_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba._object_intensity_quantiles_3d_sparse_batch_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.analysis.region_properties._dense_label_region_properties_2d_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.label_geometry._numpy124_aquicksort_indices_numba",
+          "cache_hits": 2,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.label_geometry._feret_diameters_from_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._radius_features_from_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._distance_to_label_edge_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        },
+        {
+          "callable": "openhcs.processing.backends.cellprofiler.shape._has_touching_foreground_labels_numba",
+          "cache_hits": 1,
+          "cache_misses": 0
+        }
+      ]
+    }
+  ]
+}
