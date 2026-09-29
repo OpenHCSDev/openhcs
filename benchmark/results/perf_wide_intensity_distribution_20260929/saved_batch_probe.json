@@ -1,0 +1,15 @@
+{
+  "source_pickle": "/home/ts/code/projects/openhcs-benchmark-runs/perf-spreadsheet-batch-imaging-8w-20260929.pkl",
+  "records": 24,
+  "long_rows": 3110400,
+  "wide_rows": 43200,
+  "control_render_seconds": 20.3367,
+  "wide_render_seconds": 15.4535,
+  "control_pickle_bytes": 249234664,
+  "wide_pickle_bytes": 115165543,
+  "control_pickle_seconds": 0.935,
+  "wide_pickle_seconds": 0.263,
+  "csv_bytes": 92194901,
+  "csv_sha256": "87b68418e19a69f20b57cf7c9bda4d1ed4f4b73d4b22507d84c61accc4a9bbca",
+  "note": "Initial saved-artifact prototype. Pivot is outside the render timer; production constructs columns directly."
+}

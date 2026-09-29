@@ -31,7 +31,9 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import KeywordRuntimeParameter
-from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
+from openhcs.core.measurement_row_materialization import (
+    MeasurementProjectedColumnarRows,
+)
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
@@ -40,6 +42,10 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.equivalence.policy import (
+    RuntimeMeasurementQualifierSuffixMatchStrategy,
+)
 from openhcs.core.registry_strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -64,8 +70,8 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    MeasurementRowValueField,
     RuntimeMeasurementFeature,
+    RuntimeMeasurementIndexedDescriptorDeclaration,
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
@@ -92,6 +98,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
     parse_cellprofiler_int,
 )
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CELLPROFILER_MEASUREMENT_DIALECT,
+    cellprofiler_projected_measurement_feature_name,
+)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
@@ -104,7 +114,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
 )
 from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
+    WideObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryPropagationBackendStrategy,
@@ -359,6 +369,86 @@ class MeasureObjectIntensityDistributionObjectMeasurementRowPolicy(
     missing_value_policy = (
         MissingObjectMeasurementValuePolicy.ZERO_WITHIN_POSITIVE_EXTENT
     )
+
+
+@dataclass(frozen=True, slots=True)
+class IndexedRadialDistributionFeature:
+    """Identity of one source-qualified radial feature and its bin."""
+
+    feature: RuntimeMeasurementFeature
+    source_image_name: str
+    bin_index: int
+    bin_count: int
+
+
+class RadialDistributionFeatureDeclaration(
+    RuntimeMeasurementIndexedDescriptorDeclaration
+):
+    """Radial bin suffix ownership shared by production columns and lookup."""
+
+    declaration_key = "cellprofiler_radial_distribution_bin"
+
+    @classmethod
+    def from_feature_name(
+        cls, feature_name: str
+    ) -> IndexedRadialDistributionFeature | None:
+        tokens = tuple(normalize_runtime_identifier(feature_name).split("_"))
+        suffix_width = cls.bin_suffix_width(tokens)
+        if suffix_width is None:
+            return None
+        source_end = len(tokens) - suffix_width
+        for feature in MeasureObjectIntensityDistributionModule.MeasurementFeature:
+            prefix = tuple(
+                normalize_runtime_identifier(
+                    feature.source_qualified_name(source_image_name="")
+                ).split("_")
+            )
+            if source_end <= len(prefix) or tokens[: len(prefix)] != prefix:
+                continue
+            return IndexedRadialDistributionFeature(
+                feature=feature,
+                source_image_name="_".join(tokens[len(prefix) : source_end]),
+                bin_index=int(tokens[-suffix_width]),
+                bin_count=int(tokens[-1]),
+            )
+        return None
+
+    @classmethod
+    def feature_name(cls, identity: object) -> str:
+        if not isinstance(identity, IndexedRadialDistributionFeature):
+            raise TypeError(
+                "Radial feature rendering requires IndexedRadialDistributionFeature."
+            )
+        return cellprofiler_projected_measurement_feature_name(
+            identity.feature.source_qualified_name(
+                source_image_name=identity.source_image_name
+            ),
+            (
+                (MeasurementRowAxisField.BIN_INDEX.value, identity.bin_index),
+                (MeasurementRowAxisField.BIN_COUNT.value, identity.bin_count),
+            ),
+        )
+
+    @classmethod
+    def indexed_suffix_token_width(cls, feature_tokens: tuple[str, ...]) -> int | None:
+        if cls.from_feature_name("_".join(feature_tokens)) is None:
+            return None
+        return cls.bin_suffix_width(feature_tokens)
+
+    @staticmethod
+    def bin_suffix_width(feature_tokens: tuple[str, ...]) -> int | None:
+        qualifier = next(
+            qualifier
+            for qualifier in CELLPROFILER_MEASUREMENT_DIALECT.row_qualifiers
+            if qualifier.field_names
+            == (
+                MeasurementRowAxisField.BIN_INDEX.value,
+                MeasurementRowAxisField.BIN_COUNT.value,
+            )
+        )
+        return RuntimeMeasurementQualifierSuffixMatchStrategy.for_enum_member(
+            qualifier.value_mode
+        ).matched_token_width(feature_tokens, len(feature_tokens), qualifier)
 
 
 class MeasureObjectIntensityDistributionModule(
@@ -1319,8 +1409,15 @@ class IntensityDistributionMeasurementRequest:
                 row_identity=MeasurementObjectRowIdentity.LABEL_ID,
                 backend_provider=self.zernike_backend_provider,
             ).rows()
-            measurements = ConcatenatedColumnarRows(
-                (measurements, zernike_measurements)
+            measurements = MeasurementProjectedColumnarRows(
+                MappingProxyType(
+                    {**measurements.columns, **zernike_measurements.columns}
+                ),
+                fields=FieldSpec.merge_exact(
+                    (measurements.fields, zernike_measurements.fields)
+                ),
+                declared_object_measurement_domain_covered=True,
+                object_row_identity=MeasurementObjectRowIdentity.LABEL_ID,
             )
             self.profiler.record_rows(
                 "idist_zernike_rows", phase_started_at, len(measurements)
@@ -1329,7 +1426,9 @@ class IntensityDistributionMeasurementRequest:
 
 
 @dataclass(slots=True)
-class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumnarRows):
+class ObjectIntensityDistributionMeasurementColumnarRows(
+    WideObjectMeasurementColumnarRows
+):
     """Columnar radial intensity-distribution rows."""
 
     object_row_identity = MeasurementObjectRowIdentity.LABEL_ID
@@ -1361,15 +1460,15 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
 
     def __post_init__(self) -> None:
         object_ids = np.asarray(
-            tuple((int(object_id) for object_id in self.object_ids))
+            tuple((int(object_id) for object_id in self.object_ids)), dtype=np.int64
         )
-        row_count = int(object_ids.size) * int(self.radial_arrays.n_bins) * 3
-        object_labels = np.empty(row_count, dtype=np.int32)
-        feature_names = np.empty(row_count, dtype=object)
-        source_image_names = np.full(row_count, self.source_image_name, dtype=object)
-        bin_indices = np.empty(row_count, dtype=np.int32)
-        bin_counts = np.full(row_count, int(self.bin_count), dtype=np.int32)
-        result_values = np.empty(row_count, dtype=np.float64)
+        field_columns: list[tuple[FieldSpec, np.ndarray]] = [
+            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_ids),
+            (
+                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
+                np.full(object_ids.size, self.source_image_name, dtype=object),
+            ),
+        ]
         object_has_pixels_by_index = self.radial_arrays.object_has_pixels
         fraction_at_distance = self.radial_arrays.fraction_at_distance
         mean_pixel_fraction = self.radial_arrays.mean_pixel_fraction
@@ -1378,69 +1477,71 @@ class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumn
             object_ids,
             object_has_pixels_by_index,
         )
-        row_index = 0
+        source_indices = object_ids - 1
+        valid_objects = (source_indices >= 0) & (
+            source_indices < object_has_pixels_by_index.size
+        )
+        valid_positions = np.flatnonzero(valid_objects)
+        valid_objects[valid_positions] = object_has_pixels_by_index[
+            source_indices[valid_positions]
+        ]
+        measured_positions = np.flatnonzero(valid_objects)
+        measured_indices = source_indices[measured_positions]
         for bin_idx in range(self.radial_arrays.n_bins):
             bin_index = bin_idx + 1
-            fraction_at_distance_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.FRACTION_AT_DISTANCE.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
-            mean_fraction_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.MEAN_FRACTION.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
-            radial_cv_feature = MeasureObjectIntensityDistributionModule.MeasurementFeature.RADIAL_CV.source_qualified_name(
-                source_image_name=self.source_image_name,
-            )
             radial_cv = radial_cv_by_bin[bin_idx]
-            for object_label in object_ids:
-                object_row = DeclaredRadialDistributionObjectRow(
-                    int(object_label), object_has_pixels_by_index.size
+            fraction_values = np.full(object_ids.size, np.nan, dtype=np.float64)
+            mean_values = np.full(object_ids.size, np.nan, dtype=np.float64)
+            cv_values = np.asarray(
+                [radial_cv_missing_values[int(label)] for label in object_ids],
+                dtype=np.float64,
+            )
+            fraction_values[measured_positions] = fraction_at_distance[
+                measured_indices, bin_idx
+            ]
+            mean_values[measured_positions] = mean_pixel_fraction[
+                measured_indices, bin_idx
+            ]
+            measured_cv = np.asarray(radial_cv[measured_indices], dtype=np.float64)
+            cv_values[measured_positions] = np.where(
+                np.isfinite(measured_cv), measured_cv, 0.0
+            )
+            for feature, feature_values in (
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.FRACTION_AT_DISTANCE,
+                    fraction_values,
+                ),
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.MEAN_FRACTION,
+                    mean_values,
+                ),
+                (
+                    MeasureObjectIntensityDistributionModule.MeasurementFeature.RADIAL_CV,
+                    cv_values,
+                ),
+            ):
+                field_columns.append(
+                    (
+                        FieldSpec(
+                            RadialDistributionFeatureDeclaration.feature_name(
+                                IndexedRadialDistributionFeature(
+                                    feature=feature,
+                                    source_image_name=self.source_image_name,
+                                    bin_index=bin_index,
+                                    bin_count=self.bin_count,
+                                )
+                            ),
+                            float,
+                        ),
+                        feature_values,
+                    )
                 )
-                obj_idx = object_row.array_index
-                object_has_pixels = obj_idx is not None and bool(
-                    object_has_pixels_by_index[obj_idx]
-                )
-                object_labels[row_index : row_index + 3] = int(object_label)
-                feature_names[row_index] = fraction_at_distance_feature
-                feature_names[row_index + 1] = mean_fraction_feature
-                feature_names[row_index + 2] = radial_cv_feature
-                bin_indices[row_index : row_index + 3] = bin_index
-                result_values[row_index] = (
-                    float(fraction_at_distance[obj_idx, bin_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else np.nan
-                )
-                result_values[row_index + 1] = (
-                    float(mean_pixel_fraction[obj_idx, bin_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else np.nan
-                )
-                result_values[row_index + 2] = (
-                    RadialCVMissingValueAuthority.export_value(radial_cv[obj_idx])
-                    if object_has_pixels and obj_idx is not None
-                    else radial_cv_missing_values[int(object_label)]
-                )
-                row_index += 3
-        field_columns: tuple[tuple[FieldSpec, np.ndarray], ...] = (
-            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_labels),
-            (FieldSpec(MeasurementRowAxisField.FEATURE_NAME.value, str), feature_names),
-            (
-                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
-                source_image_names,
-            ),
-            (FieldSpec(MeasurementRowAxisField.BIN_INDEX.value, int), bin_indices),
-            (FieldSpec(MeasurementRowAxisField.BIN_COUNT.value, int), bin_counts),
-            (
-                FieldSpec(MeasurementRowValueField.RESULT_VALUE.value, float),
-                result_values,
-            ),
-        )
         if self.slice_index is not None:
-            field_columns = (
-                *field_columns,
+            field_columns.append(
                 (
                     FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
-                    np.full(row_count, int(self.slice_index), dtype=np.int32),
-                ),
+                    np.full(object_ids.size, int(self.slice_index), dtype=np.int32),
+                )
             )
         self._fields = tuple(field_spec for field_spec, _values in field_columns)
         self._columns = MappingProxyType(
@@ -1474,14 +1575,6 @@ class DeclaredRadialDistributionObjectRow:
 
 class RadialCVMissingValueAuthority:
     """CellProfiler missing-row values for RadialCV over a dense object domain."""
-
-    @staticmethod
-    def export_value(value: float) -> float:
-        """Normalize undefined radial coefficients to CellProfiler's export value."""
-        raw_value = float(value)
-        if not np.isfinite(raw_value):
-            return 0.0
-        return raw_value
 
     @classmethod
     def values(

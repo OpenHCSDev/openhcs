@@ -1,0 +1,13 @@
+{
+  "control_commit": "a0263e82a1b3296f34f8c5cdd50ffae5c33ef7dd",
+  "candidate_source_commit": "2bfbeb88c272456c47d0f9205c24eddb100112bc",
+  "rebased_onto": "283b21275553c54261cf9aeedb7374c113d07f2b",
+  "note": "Ready measurements preceded the rebase, with the same performance source changes. New main commits change agent guidance and MCP compile inspection. Rebased candidate separately verifies the integrated ordinary route.",
+  "python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "worker_start_method": "fork",
+  "server_lifecycle": "fresh-per-observation",
+  "numba_cache_state": "warm",
+  "cpu": "AMD Ryzen 5 5500",
+  "run_root": "/home/ts/code/projects/openhcs-benchmark-runs",
+  "native_reference_directory": "benchmark/results/perf_native_synthetic_scaling_20260929"
+}
