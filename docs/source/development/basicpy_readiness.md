@@ -105,9 +105,11 @@ was corrected without changing an API or weakening a runtime assertion. Checks
 cover aggregate field-owner projection and the paired typed-default API in
 addition to knobs/enum/contracts/range/source-pin ownership. Focused Ruff and
 diff checks pass. These checks do not import OpenHCS/JAX or execute a model.
-Normal merge of fetched `openhcsdev/main283b21275` is `2e4409871`; recorded
-submodules are initialized, with only the reviewed paired ArrayBridge gitlink
-advanced. Parent #151/#212 is now merged/installed; this worker did not install.
+Normal merge of fetched `openhcsdev/main283b21275` is `2e4409871`. The source
+follow-through is `a61f8bf82`, followed by normal merge `3938002b9` of latest
+main `de23449a4` (#219, outside this surface). Recorded submodules are initialized,
+with only the reviewed paired ArrayBridge gitlink advanced. Parent #151/#212 is
+now merged/installed; this worker did not install.
 
 Provider-free numerical/projection regressions are written but **not run**:
 
