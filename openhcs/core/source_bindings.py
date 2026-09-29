@@ -1830,6 +1830,45 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
 
         return tuple(self.source_filters or ())
 
+    def source_path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match the declared source universe against physical path identities."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(
+            source_filters_match(identity, self.source_filter_declarations)
+            for identity in identities
+        )
+
+    def discovery_path_matches(self, root: Path, path: Path) -> bool:
+        """Apply known physical-path selections before decoding a source store.
+
+        Metadata and component selectors still belong to plane projection. An
+        unrestricted binding keeps discovery unrestricted, not just the first
+        filtered alias. All matching uses the existing source-filter owners.
+        """
+        from openhcs.core.source_matching import source_filters_match
+
+        root = root.resolve(strict=False)
+        resolved = path.resolve(strict=False)
+        identities = (resolved.as_posix(),)
+        if root.is_file():
+            identities = (resolved.name, *identities)
+        elif resolved.is_relative_to(root):
+            identities = (resolved.relative_to(root).as_posix(), *identities)
+        if not self.source_path_filters_match(identities):
+            return False
+        return not self.binding_declarations or any(
+            (
+                binding.explicit_source is None
+                or Path(binding.explicit_source.resolved(root).uri).resolve() == resolved
+            )
+            and any(
+                source_filters_match(identity, binding.selector.filters)
+                for identity in identities
+            )
+            for binding in self.binding_declarations
+        )
+
     def declaration_identity(self) -> str:
         """Return a stable identity for this complete source declaration."""
 

@@ -3044,7 +3044,7 @@ def _write_roi_zip(
             )
 
     summary = (
-        f"Segmentation ROIs: {total_roi_count} cells\n"
+        f"Segmentation ROIs: {total_roi_count} parent labels\n"
         "Spatial dimensions: 2D\n"
         f"Projected source planes: {len(materialization_input.items)}\n"
     )

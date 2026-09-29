@@ -678,6 +678,9 @@ class SourceBindingWorkspaceProjector:
                 ),
             )
             for candidate in candidates
+            if self.source_bindings.source_path_filters_match(
+                candidate.source_filter_path_identities()
+            )
         )
 
         candidates = tuple(
@@ -902,13 +905,7 @@ class SourceBindingWorkspaceProjector:
             filter_paths = tuple(
                 dict.fromkeys((relative_path, _normalized_source_path(path)))
             )
-            if not any(
-                source_filters_match(
-                    filter_path,
-                    self.source_bindings.source_filter_declarations,
-                )
-                for filter_path in filter_paths
-            ):
+            if not self.source_bindings.source_path_filters_match(filter_paths):
                 continue
             metadata = self.source_bindings.coerce_metadata(
                 metadata_from_rules(

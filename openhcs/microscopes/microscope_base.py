@@ -238,8 +238,18 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
         )
 
     @classmethod
-    def detect(cls, plate_folder: Path, filemanager: FileManager) -> bool:
-        """Return whether this handler can initialize the plate."""
+    def detect(
+        cls,
+        plate_folder: Path,
+        filemanager: FileManager,
+        source_bindings_config: Optional["SourceBindingsConfig"] = None,
+    ) -> bool:
+        """Detect this handler; store-backed declarations can narrow discovery.
+
+        Ordinary metadata handlers detect one plate declaration, without opening
+        its image containers. Store-backed handlers own selected discovery in
+        their implementation of this same method.
+        """
         from polystore.exceptions import MetadataNotFoundError
 
         metadata_handler_class = cls._metadata_handler_class
@@ -939,6 +949,7 @@ def create_microscope_handler(
             plate_folder,
             filemanager,
             allowed_types=allowed_auto_types,
+            source_bindings_config=source_bindings,
         )
         if detected_microscope_type is None:
             if source_bindings is None or source_bindings.is_empty:
@@ -1024,6 +1035,7 @@ def _auto_detect_microscope_type(
     plate_folder: Path,
     filemanager: FileManager,
     allowed_types: Optional[List[str]] = None,
+    source_bindings_config: Optional["SourceBindingsConfig"] = None,
 ) -> Optional[str]:
     """
     Auto-detect microscope type using registry iteration.
@@ -1064,7 +1076,9 @@ def _auto_detect_microscope_type(
     for handler_name in detection_order:
         handler_class = MICROSCOPE_HANDLERS[handler_name]
 
-        if handler_class.detect(plate_folder, filemanager):
+        if handler_class.detect(
+            plate_folder, filemanager, source_bindings_config
+        ):
             logger.info(f"Auto-detected {handler_name} microscope type")
             return handler_name
         logger.debug(f"{handler_name} metadata not found in {plate_folder}")

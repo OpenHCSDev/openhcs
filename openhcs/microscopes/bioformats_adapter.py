@@ -26,6 +26,7 @@ from polystore.zarr_batch import ZarrStoredBatchSemantics
 
 from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
+from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.source_matching import (
     merge_source_metadata,
     with_source_component_metadata,
@@ -487,6 +488,17 @@ class SourcePlaneStoreAdapter(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
     registry_key: ClassVar[str | None] = None
 
+    def __init__(self, source_bindings: SourceBindingsConfig | None = None):
+        self.source_bindings = source_bindings or SourceBindingsConfig()
+
+    def selected_source_paths(self, root: Path) -> tuple[Path, ...]:
+        """Select physical entrypoints before opening unrelated containers."""
+        return tuple(
+            path
+            for path in _candidate_source_paths(root)
+            if self.source_bindings.discovery_path_matches(root, path)
+        )
+
     def source_metadata_for_path(self, path: Path) -> SourceMetadataMapping:
         """Enrich a filename-bound physical source without replacing its axes."""
         del path
@@ -532,13 +544,17 @@ class SourcePlaneStoreAdapter(ABC, metaclass=AutoRegisterMeta):
         return True
 
     @classmethod
-    def discover_dataset(cls, root: str | Path) -> SourcePlaneDataset:
+    def discover_dataset(
+        cls, root: str | Path, *, source_bindings: SourceBindingsConfig | None = None
+    ) -> SourcePlaneDataset:
         root_path = Path(root).resolve(strict=False)
         if not root_path.exists():
             raise BioFormatsAdapterUnavailableError(
                 f"Plane-store collection does not exist: {root_path}"
             )
-        adapters = tuple(adapter_type() for adapter_type in cls.__registry__.values())
+        adapters = tuple(
+            adapter_type(source_bindings) for adapter_type in cls.__registry__.values()
+        )
         collection_owners = tuple(
             adapter for adapter in adapters if adapter.claims_collection(root_path)
         )
@@ -626,6 +642,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
         return tuple(
             self._discover_store(root, location)
             for location in OmeZarrLocation.discover(root)
+            if self.source_bindings.discovery_path_matches(root, Path(location.path))
         )
 
     def _discover_store(
@@ -769,6 +786,11 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
                 continue
             if not self._declares_path(context, source_path):
                 continue
+            if (
+                not self.source_bindings.discovery_path_matches(root, source_path)
+                and self._is_single_file(context, source_path)
+            ):
+                continue
             try:
                 dataset = self._discover_container(root, source_path)
             except BioFormatsNoScalarSourceError as exc:
@@ -801,6 +823,21 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
                 diagnostics=(*datasets[0].diagnostics, *exclusions),
             )
         return tuple(datasets)
+
+    @staticmethod
+    def _is_single_file(context: BioFormatsJavaContext, path: Path) -> bool:
+        """Ask the decoder before pruning a potentially compound entrypoint.
+
+        ImageReader.isSingleFile identifies its format without setId/OME
+        metadata initialization. A companion path can select a multi-file store
+        whose entrypoint itself does not match; decoded projection decides that.
+        """
+        context.ensure_initialized()
+        reader = context.ImageReader()
+        try:
+            return bool(reader.isSingleFile(str(path)))
+        finally:
+            reader.close()
 
     @staticmethod
     def _declares_path(context: BioFormatsJavaContext, path: Path) -> bool:
@@ -877,7 +914,7 @@ class ImageFileStoreAdapter(SourcePlaneStoreAdapter):
     def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
         datasets = []
         identity = SourceDatasetIdentity.for_root(root)
-        for source_path in _candidate_source_paths(root):
+        for source_path in self.selected_source_paths(root):
             if not ImageFileFormat.is_image_path(source_path):
                 continue
             image_format = ImageFileFormat.require_path(source_path)
