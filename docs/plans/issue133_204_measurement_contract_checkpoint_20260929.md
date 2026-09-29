@@ -188,6 +188,14 @@ duplicate-resolution removal is factoring; no pure file move is claimed.
   #151/#212 and its useful merge/installation checkpoint. Zeno will run the full
   six-case headless journey only after the explicit next-slot handoff. No race for
   fresh environments, GUI, JVM, or installed-baseline changes is authorized.
+- Parent also owns the cold-inspection deletion in
+  `InProcessCompileInspectionGateway`; Zeno does not edit that method or its
+  catalog-initialization call. The pending continuous regression is strengthened
+  to verify the secondary declaration's exact source-context relation and the
+  primary/secondary records' actual typed channel coordinates, in addition to
+  the existing exact selector and measured-secondary-region assertions. These
+  additional assertions are syntax-checked only until the worker slot is handed
+  off; no end-to-end success is inferred from source review.
 - Source-only explanation of the apparent grouped/ungrouped distinction: group
   coordinates are selected by the compiled edge, while the previous predicate
   compared fixed coordinates on either side. Binding-owned channel identities

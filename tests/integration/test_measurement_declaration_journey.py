@@ -250,6 +250,14 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     global_config = GlobalPipelineConfig(num_workers=1, use_threading=True)
     bundle = _compile(tmp_path, reconstructed, global_config)
     context = bundle.runtime_contexts["A01"]
+    secondary_invocation = next(
+        context.step_plans[1].compiled_function_pattern.iter_invocations()
+    )
+    label_input, image_input = IdentifySecondaryObjectsModule.segmentation_inputs(
+        secondary_invocation.contract.artifact_inputs
+    )
+    assert label_input.source_context_sources() == (image_input.ref(),)
+    assert image_input.name == ("DNA" if same_source else "Actin")
     plan = context.step_plans[2]
     invocation = next(plan.compiled_function_pattern.iter_invocations())
     (edge,) = (
@@ -267,6 +275,10 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     store = context.runtime_value_store
     [primary] = store.find(name="Nuclei", axis_id="A01")
     [secondary] = store.find(name="Cells", axis_id="A01")
+    assert primary.key.scope.value_text_for_component(AllComponents.CHANNEL) == "1"
+    assert secondary.key.scope.value_text_for_component(AllComponents.CHANNEL) == (
+        "1" if same_source else "2"
+    )
     primary_area = np.count_nonzero(object_label_dense_array(primary.value.data))
     secondary_area = np.count_nonzero(object_label_dense_array(secondary.value.data))
     assert secondary_area > primary_area > 0
