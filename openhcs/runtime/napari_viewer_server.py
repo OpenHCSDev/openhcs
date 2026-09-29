@@ -6285,7 +6285,7 @@ def run_napari_viewer_process(
     import polystore
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
-    logger.info(
+    logger.warning(
         "Viewer import provenance: server=%s; openhcs_root=%s; polystore=%s",
         __file__,
         OpenHCSRuntimeImportAuthority.current().import_root,

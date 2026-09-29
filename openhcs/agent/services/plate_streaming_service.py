@@ -55,6 +55,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionBuilder,
 )
 from openhcs.core.viewer_streaming_service import (
+    FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     RoiStreamingRequest,
     StreamingService,
@@ -228,11 +229,13 @@ class PlateStreamingService:
             if request.result_directory is not None:
                 read_backend = Backend.DISK.value
             if request.source_receipt is None:
+                image_request_type = ImageStreamingRequest
                 source_projection = self._inventory_source_projection(
                     resolved_records, stream_context
                 )
                 producer = None
             else:
+                image_request_type = FullWindowImageStreamingRequest
                 source_projection, producer = self._receipt_source_projection(
                     request, resolved_records, stream_context
                 )
@@ -252,7 +255,7 @@ class PlateStreamingService:
             status_messages: list[str] = []
             if image_paths:
                 streaming_service.stream_images(
-                    ImageStreamingRequest(
+                    image_request_type(
                         viewer=viewer,
                         config=config,
                         status_callback=status_messages.append,

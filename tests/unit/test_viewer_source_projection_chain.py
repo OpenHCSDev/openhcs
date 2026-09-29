@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from openhcs.agent.dto.plate import PlatePathInspectionRequest
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -11,7 +12,11 @@ from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.plate_image_inventory import PlateFileKind
 from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
-from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.core.viewer_streaming_service import (
+    FullWindowImageStreamingRequest,
+    ImageStreamingRequest,
+    ViewerStreamingSource,
+)
 from tests.diagnostics.check_viewer_feature_measurement_live import make_fixture
 
 
@@ -51,6 +56,22 @@ def test_inventory_stream_preserves_original_nominal_crop_and_spacing(tmp_path: 
         assert metadata.source_spatial_domain.origin_yx == (7, 11)
         assert metadata.source_spatial_domain.source_shape_yx == (80, 100)
         assert metadata.source_voxel_spacing.values_zyx == (2, 3)
+        request_fields = dict(
+            viewer=None,
+            config=None,
+            status_callback=lambda _: None,
+            error_callback=lambda _: None,
+            filenames=(record.streamable_image_path,),
+            read_backend=record.source_ref.backend,
+            source_projection=projection,
+        )
+        ImageStreamingRequest(**request_fields).require_image_window(
+            source, record.streamable_image_path, payload, projection
+        )
+        with pytest.raises(ValueError, match="window conflicts"):
+            FullWindowImageStreamingRequest(**request_fields).require_image_window(
+                source, record.streamable_image_path, payload, projection
+            )
         if record.metadata["channel"] == 1:
             np.testing.assert_array_equal(
                 image_payload_data(payload),
