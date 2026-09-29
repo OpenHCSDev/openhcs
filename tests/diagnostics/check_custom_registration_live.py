@@ -301,6 +301,8 @@ def run(args) -> None:
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
         FunctionCatalogPage,
+        FunctionCatalogPreparationOutcome,
+        FunctionCatalogPreparationState,
         FunctionDetail,
     )
 
@@ -532,7 +534,51 @@ def run(args) -> None:
             "sha256_before_after": sentinel_hash,
             "unchanged": True,
         }
-        call("openhcs_search_functions", {"query": "registration_live_probe", "limit": 5}, FunctionCatalogPage)
+        register(error_code="function_catalog_not_ready")
+        preparation_started = time.monotonic()
+        state = call(
+            "openhcs_start_function_catalog_preparation",
+            {
+                "port": args.port,
+                "host": "127.0.0.1",
+                "transport_mode": "tcp",
+            },
+            FunctionCatalogPreparationState,
+        )
+        receipt["preparation_handle"] = to_jsonable(state.handle)
+        preparation_deadline = time.monotonic() + 100
+        if not state.outcome.ready:
+            register(error_code="function_catalog_not_ready")
+        while not state.outcome.ready:
+            assert not state.outcome.terminal, state
+            if time.monotonic() >= preparation_deadline:
+                raise RuntimeError(
+                    "Preparation observation budget exhausted; preserve exact handle."
+                )
+            time.sleep(1)
+            state = call(
+                "openhcs_get_function_catalog_preparation_status",
+                to_jsonable(state.handle),
+                FunctionCatalogPreparationState,
+            )
+        assert state.outcome is FunctionCatalogPreparationOutcome.READY
+        receipt["cold_preparation_elapsed_seconds"] = (
+            time.monotonic() - preparation_started
+        )
+        audit_before_mutation = [
+            json.loads(row)
+            for row in (receipt_dir / "owned-control.jsonl").read_text().splitlines()
+        ]
+        assert all(
+            row.get("type") != CustomFunctionRegistrationRequest.message_type.value
+            for row in audit_before_mutation
+        )
+        receipt["zero_source_dispatch_before_ready"] = True
+        call(
+            "openhcs_search_functions",
+            {"query": "registration_live_probe", "limit": 5},
+            FunctionCatalogPage,
+        )
         registration = register()
         assert registration.connection.port == args.port
         assert registration.server_identity.pid == servers[0][1].pid
@@ -671,6 +717,13 @@ def run(args) -> None:
             for row in (receipt_dir / "owned-control.jsonl").read_text().splitlines()
         ]
         assert (
+            sum(
+                row.get("type") == CustomFunctionRegistrationRequest.message_type.value
+                for row in audit_rows
+            )
+            == 2
+        ), "Exactly one initial and one controlled-delayed source dispatch; no resend"
+        assert (
             len(
                 [
                     row
@@ -682,6 +735,7 @@ def run(args) -> None:
         )
         receipt.update(
             accepted=True,
+            source_bearing_register_rpc_count=2,
             no_registration_replay=True,
             unchanged_input_sha256=before_hash,
         )

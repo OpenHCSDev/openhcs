@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import ProcessIdentity
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
@@ -16,6 +17,10 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    FunctionCatalogNotReadyError,
+    FunctionCatalogPreparationHandle,
+    FunctionCatalogPreparationOutcome,
+    FunctionCatalogPreparationState,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.endpoint_function_catalog_service import (
@@ -45,6 +50,17 @@ def request(root, **changes):
 
 def policy(root):
     return AgentPathPolicy.with_roots(readable_roots=(root,), writable_roots=(root,))
+
+
+def preparation_state(handle, outcome=FunctionCatalogPreparationOutcome.READY):
+    return FunctionCatalogPreparationState(
+        schema_version=SCHEMA_VERSION,
+        handle=handle,
+        outcome=outcome,
+        progress=EndpointStartupStatus(
+            phase=EndpointStartupPhase.PREPARING_CAPABILITIES, message="Witness"
+        ),
+    )
 
 
 def test_missing_explicit_route_rejects_before_client_creation(tmp_path):
@@ -96,14 +112,16 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
     endpoints = []
 
     class Client:
-        def custom_function_registration_destination(self, probe):
+        def custom_function_registration_destination(
+            self, probe, *, operation_deadline=None
+        ):
             assert probe.function_name == "boundary_probe"
             native = tmp_path / "foreign" if wrong_store else root
             return CustomFunctionRegistrationDestination(
                 str(native), str(native / "boundary_probe.py")
             )
 
-        def register_custom_function(self, admitted):
+        def register_custom_function(self, admitted, *, operation_deadline=None):
             mutations.append(admitted)
             assert admitted.admission_policy == policy(tmp_path)
             assert admitted.server_identity == ProcessIdentity.current()
@@ -117,9 +135,12 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
                 source_file_paths=(str(root / "boundary_probe.py"),),
             )
 
-        def get_function_catalog(self, read_request):
+        def function_catalog_preparation(
+            self, read_request, *, operation_deadline=None
+        ):
             assert not hasattr(read_request, "source_code")
             assert not mutations
+            return preparation_state(read_request.handle)
 
         def disconnect(self):
             pass
@@ -268,12 +289,14 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
     mutations = []
 
     class Client:
-        def custom_function_registration_destination(self, probe):
+        def custom_function_registration_destination(
+            self, probe, *, operation_deadline=None
+        ):
             return CustomFunctionRegistrationDestination(
                 str(tmp_path), str(tmp_path / "boundary_probe.py")
             )
 
-        def register_custom_function(self, admitted):
+        def register_custom_function(self, admitted, *, operation_deadline=None):
             mutations.append(admitted)
             return CustomFunctionRegistrationResult(
                 schema_version=SCHEMA_VERSION,
@@ -281,9 +304,12 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
                 server_identity=replace(ProcessIdentity.current(), create_time=0),
             )
 
-        def get_function_catalog(self, read_request):
+        def function_catalog_preparation(
+            self, read_request, *, operation_deadline=None
+        ):
             assert not hasattr(read_request, "source_code")
             assert not mutations
+            return preparation_state(read_request.handle)
 
         def disconnect(self):
             pass
@@ -304,24 +330,33 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
         catalog.close()
 
 
+@pytest.mark.parametrize(
+    "outcome",
+    tuple(state for state in FunctionCatalogPreparationOutcome if not state.ready),
+)
 def test_readiness_failure_precedes_mutation_and_is_not_postdispatch_uncertainty(
     tmp_path,
+    outcome,
 ):
     observed = []
 
     class Client:
-        def custom_function_registration_destination(self, probe):
+        def custom_function_registration_destination(
+            self, probe, *, operation_deadline=None
+        ):
             observed.append("destination")
             return CustomFunctionRegistrationDestination(
                 str(tmp_path), str(tmp_path / "boundary_probe.py")
             )
 
-        def get_function_catalog(self, read_request):
+        def function_catalog_preparation(
+            self, read_request, *, operation_deadline=None
+        ):
             assert not hasattr(read_request, "source_code")
             observed.append("read-only-preparation")
-            raise RuntimeError("native preparation failed")
+            return preparation_state(read_request.handle, outcome)
 
-        def register_custom_function(self, admitted):
+        def register_custom_function(self, admitted, *, operation_deadline=None):
             pytest.fail("Source must not be dispatched after readiness failure")
 
         def disconnect(self):
@@ -333,7 +368,7 @@ def test_readiness_failure_precedes_mutation_and_is_not_postdispatch_uncertainty
         path_policy=policy(tmp_path),
     )
     try:
-        with pytest.raises(RuntimeError, match="native preparation failed") as failure:
+        with pytest.raises(FunctionCatalogNotReadyError) as failure:
             catalog.register_custom_function(request(tmp_path))
         assert not isinstance(failure.value, CustomFunctionRegistrationUncertainError)
         assert observed == ["destination", "read-only-preparation"]
@@ -494,3 +529,58 @@ def test_real_generated_mcp_boundary_excludes_authority_and_denies_before_client
     )
     assert not made
     catalog.close()
+
+
+def test_generated_mcp_preparation_tools_use_reflected_connection_and_handle():
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+    from openhcs.mcp.server import build_server
+
+    observed = []
+    handle = FunctionCatalogPreparationHandle(
+        ExecutionConnectionSpec(port=15993, transport_mode=TransportMode.TCP),
+        ProcessIdentity.current(),
+    )
+
+    class Catalog:
+        def start_catalog_preparation(self, connection):
+            observed.append(connection)
+            return preparation_state(handle, FunctionCatalogPreparationOutcome.PENDING)
+
+        def catalog_preparation_status(self, current_handle):
+            observed.append(current_handle)
+            return preparation_state(current_handle)
+
+        def cancel_catalog_preparation(self, current_handle):
+            observed.append(current_handle)
+            return preparation_state(
+                current_handle, FunctionCatalogPreparationOutcome.CANCELLED
+            )
+
+    async def invoke():
+        built = build_server(SimpleNamespace(endpoint_function_catalog=Catalog()))
+        tools = {tool.name: tool for tool in await built.list_tools()}
+        assert {"port", "host", "transport_mode"} <= tools[
+            "openhcs_start_function_catalog_preparation"
+        ].inputSchema["properties"].keys()
+        assert {"connection", "server_identity"} == tools[
+            "openhcs_get_function_catalog_preparation_status"
+        ].inputSchema["properties"].keys()
+        started = await built.call_tool(
+            "openhcs_start_function_catalog_preparation",
+            {"port": 15993, "transport_mode": "tcp"},
+        )
+        from openhcs.serialization.json import to_jsonable
+
+        args = to_jsonable(handle)
+        status = await built.call_tool(
+            "openhcs_get_function_catalog_preparation_status", args
+        )
+        cancelled = await built.call_tool(
+            "openhcs_cancel_function_catalog_preparation", args
+        )
+        for response in (started, status, cancelled):
+            content = response[0] if isinstance(response, tuple) else response.content
+            assert not json.loads(content[0].text).get("errors")
+
+    asyncio.run(invoke())
+    assert observed == [handle.connection, handle, handle]

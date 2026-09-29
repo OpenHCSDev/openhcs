@@ -1,235 +1,154 @@
-# Custom-function admission (#230)
+# Custom-function admission and responsive preparation (#230)
 
-Implementation owner: Lovelace; integration/live scheduling owner: coordinator.
-Source tree: `/home/ts/wt/openhcs-custom-function-admission-20260929`.
-Initial base: `openhcsdev/main` 6c2bc4671. Subsequent normal integration of
-main250fd1ecf (#234) is merge5899d6323; recorded PolyStore1209068 is checked out
-only in this worker's isolated submodule. Implementation commits625e82fce and
-4ffc2b202 precede that merge. No frozen installed source is edited.
+Implementation owner: Lovelace. Integration/install owner: coordinator.
+Draft PR233: https://github.com/OpenHCSDev/openhcs/pull/233
+Source: /home/ts/wt/openhcs-custom-function-admission-20260929.
+This checkpoint follows normal main238 integration f5dbebb27 (main01d1a8c55c);
+recorded PolyStore1209068 is unchanged. No installed tree is edited.
 
-## Verified boundary and checkpoint
+## Working source
 
-The preserved H002 receipt033 timed out, but the shared execution log records
-saving `/home/ts/.local/share/openhcs/custom_functions/detect_h002_centres.py` at
-22:00:08 UTC. The missing cache selector selected shared7777. Documentation
-already requires the selector; additional prose does not enforce admission.
-No original request is replayed, no saved side effect is removed, and no assay
-source, pixels or output is used in the regression fixtures.
+Registration requires an explicit reflected ExecutionConnectionSpec port, also
+for ephemeral source. Persistence requires the deliberately authored function_name
+and caller-intended absolute storage_dir. Existing AgentPathPolicy admits the
+directory and Manager.source_path_for_name before client creation. A read-only
+native destination request verifies that endpoint's actual Manager-owned store,
+exact file, and ProcessIdentity (PID plus creation time), without evaluating source
+or starting catalogue preparation. Unsupported or mismatched destinations reject
+before source dispatch. The native service repeats caller/native write admission
+before evaluation and atomic persistence. Post-write receipt checks are not admission.
 
-Registration now requires an explicit `ExecutionConnectionSpec` port. Persisted
-registration also requires the intended native store and public function name.
-`AgentPathPolicy` admits that store and its exact owner-derived source path
-before even creating an execution client. A read-only control request asks the
-selected server's existing `CustomFunctionManager` owner for its actual store
-without source evaluation, catalog preparation or directory creation. A
-different or unsupported server fails before executable source is dispatched.
-The destination carries existing `ProcessIdentity` (PID plus creation time).
-That exact token is required by the native service before source evaluation and
-returned with the typed connection in the mutation receipt. A changed owner or
-malformed mutation receipt is not silently accepted. The server repeats both
-its own and the caller's admission before evaluation and persistence; caller
-roots and the selected token are internal transport state, not public MCP
-parameters. The real generated tool signature verifies their exclusion.
+Cold catalogue/kernel warming belongs to the existing native FunctionCatalogPreparation
+future, cancellation and supervised child from #238. New typed start/status/cancel
+requests and nominal control strategies project that same owner promptly. They add
+no process launcher, future store, cache roster or warmup registry. The handle is the
+explicit connection plus native process incarnation; stale owners reject. Cancellation
+signals that owner without joining inline; status observes terminal cleanup.
 
-Successful admission selects the existing catalog connection for subsequent
-discovery/reference operations. Post-dispatch transport failure is reported as
-`custom_function_registration_uncertain`; it does not retry or select a fallback
-endpoint. Existing control timeout limits are unchanged.
+Registration performs one bounded destination/readiness observation under the existing
+control deadline. NOT_STARTED, PENDING, CANCELLING, FAILED or CANCELLED rejects before
+any source-bearing registration RPC. The native mutation handler likewise refuses
+cold source without initiating warming. Only READY permits one _send_control_request.
+The previous mutation resend loop and inline catalogue polling were removed in place.
+After source dispatch, timeout/error/malformed receipt stays uncertain; no replay,
+fallback or timeout inflation. Pending preparation cannot write later on behalf of
+a registration call whose observation expired.
 
-## Focused evidence and resource bounds
+EndpointFunctionCatalogServiceABC composes the catalogue contract with these three
+typed preparation operations; ZMQFunctionCatalogService implements it. Capabilities
+use the context's typed endpoint_function_catalog dependency, not undeclared methods
+on FunctionCatalogServiceABC. Normal factory and raw local MCP contexts share one
+endpoint service for catalogue and preparation. Explicit endpoint injection is
+supported. Hosted contexts retain explicitly injected native FunctionCatalogService;
+compiler/server native catalogues acquire no second future. No NotImplemented stub,
+getattr cast, isinstance dispatch, or second function registry was added.
 
-Explicit shared-venv Python with this worktree and all eight recorded submodule
-`src` paths: OpenHCS, ObjectState, metaclass_registry and PolyStore import paths
-were verified in this source tree. Ten provider-free tests pass in 2.41 seconds,
-with 181760 KiB peak RSS; available RAM after the check was 14.26 GiB. The resource
-guard warned about historical swap; no heavy runtime was started. The tests
-cover missing-route denial, ordinary/ancestor/file-symlink denial before client
-creation, native-store mismatch before mutation, exact selected route,
-single-dispatch uncertainty, read-only destination lookup and public-authority
-field exclusion. `git diff --check` and new-test Ruff checks pass. Whole touched
-source Ruff is not claimed clean: existing unrelated findings remain.
+The canonical custom-function-authoring how-to now explains explicit routing,
+controlled-launch Manager destination lookup, start/status/cancel handle fields,
+READY-only mutation and precise postdispatch uncertainty. The knowledge manifest
+summary/tags track this; document digests remain derived, not duplicated.
 
-Follow-up evidence: **94 tests passed, two plugin-disabled configuration warnings,
-10.41 seconds, peak RSS 323352 KiB**. This runs the new admission file, existing
-custom-function lifecycle and function-catalog ZMQ suites, and three affected
-MCP/CLI regressions. It adds native ordinary/ancestor/file-symlink denial with
-unchanged registry membership and sentinel bytes, PID-incarnation rejection,
-independent native-server policy, exact destination/receipt validation, and
-actual manager persistence plus lazy package reopen/invocation on a synthetic
-2x2 array. Read-only destination routing is tested with unfinished catalog
-preparation and asserts it is never started. The current CLI adapter derives
-connection options/defaults from `ExecutionConnectionSpec` and the public
-request factory. Its real `python -m openhcs.mcp.dev_client
-register-custom-function --help` entrypoint succeeds and exposes those fields;
-missing port is rejected before launching a client.
+## Actual evidence (source, not installed acceptance)
 
-One attempted extension of that shard could not collect
-`test_function_step_transport.py::test_persisted_custom_function_is_importable_from_package`:
-the module imports the unbuilt CellProfiler `_granularity_reconstruct` extension.
-No tests ran in that failed invocation (exit4, 7.16 seconds, peak373668 KiB).
-Its mocked XDG helper is updated to accept the new non-creating projection;
-that module is **not claimed passed**. No extension build/install or collection
-workaround is performed during the freeze. Subsequent isolated shard result is
-the 94-test evidence above, not a claim that this missing dependency disappeared.
+Current focused provider-free shard: **47 passed, 25 deselected, 7.32 seconds**;
+process elapsed8.13s, peak305992KiB, exit0. Existing shared Python, explicit reviewed
+worktree plus eight submodule src paths, pinned shared bundle/downloadfalse,
+threads1, plugins/conftest disabled, nonblocking validation lock.
+OpenHCS and PolyStore imports resolve in this tree. Two warnings are disabled
+async-plugin configuration options, not failed tests.
+Receipt: tests/runtime_diagnostics/registration_readiness_20260929/.
 
-Available RAM stayed above 8 GiB (latest13.4 GiB); guard still warns about
-historical11.1 GiB swap. No heavy runtime or validation-lock holder was created.
+This shard covers all registration/admission cases, five Manager filename-owner
+interceptions, generated MCP controls, real default/raw/explicit context construction,
+responsive pending start/status/cancel with a controlled future, stale incarnation
+rejection, failed preflight zero mutation, native cold-registration rejection, one
+source-bearing client RPC on ready/pending/timeout, and #238 readiness/error propagation.
+The controlled pending unit future is not the actual 53-second cold kernel job.
 
-Owned disposable fixtures (now removed after all handles were terminal):
-`/home/ts/.cache/agent-scratch/openhcs-registration-230-20260929/pytest`.
-The final owned parent directory contained3.5 MiB of synthetic pytest fixtures;
-it was deleted after retaining these results. Fixtures can be regenerated from
-the tests. Source, receipts, original033 and the foreign saved file are preserved.
-No MCP/JVM/GUI handle was started. Tests are source evidence, not installed or
-live acceptance, and the frozen installed 17/228 tree remains untouched.
+Historical source checkpoints: 94 cases passed10.41s/323352KiB before newer merges;
+23 cases passed6.18s/287876KiB after234; five filename cases passed3.02s/183520KiB at
+c10bb3f85. These do not substitute for current live or full-suite evidence.
 
-Following #234 integration, isolated source environments explicitly pin
-`POLYSTORE_IMAGEJ_CACHE_ROOT=/home/ts/.cache/polystore/imagej` and
-`POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false` before imports. This is not a request
-to download, copy or launch a bundle; no native runtime is started by these
-admission tests.
+The standard existing source abi3 extension was built with setup.py build_ext
+--inplace --parallel1 and named owned build-temp/build-lib: **1.48s,93004KiB,exit0**.
+Import receipt verifies the source binary45440bytes and source/binary hashes:
+tests/runtime_diagnostics/registration_native_build_20260929/.
+No install, build-dependency download, CellProfiler skip or replacement registry.
+Installed225 already contains its own compiled extension; the previous absence
+was in this source-only test tree, not a proved installed dependency defect.
 
-At merge5899d6323, with recorded PolyStore1209068 and the explicit cache policy,
-the post-integration check runs only the22 admission cases plus the real native
-control-router destination case: **23 passed, 6.18 seconds, peak287876 KiB**.
-OpenHCS and PolyStore import paths resolve inside this isolated tree. AST parsing
-of all15 changed Python source/test files passes; this is a focused source check,
-not a full NRA scan or a global proof.
+## Preserved failed live predecessor
 
-Source commands used the shared Python executable, explicit worktree/submodule
-PYTHONPATH, `OPENHCS_CPU_ONLY=true`, `PYTHONDONTWRITEBYTECODE=1`, and
-`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. Import OpenHCS before `pytest.main`; pass
-`--noconftest --import-mode=importlib -p no:cacheprovider -o addopts= -q --tb=short`
-and a basetemp below the owned scratch directory. The94-test selectors were:
+At exact81e636ad4, attempt01 used ordinary stdio MCP and three owned headless
+synthetic endpoints. Health/context, missing-route, outside/file/ancestor symlink,
+foreign store and unsupported-proof checks passed; protected sentinel was unchanged,
+foreign/unsupported audits had zero source-bearing registration RPCs. Positive
+call11 expired at10.011s and remained uncertain. Native audit showed automatic
+mutation resends while cold preparation was pending. Same-handle read-only observation
+exposed the unbuilt source extension. Compilation/execution and delayed acceptance
+were not reached. This is **failed source-live evidence**, not acceptance.
+tests/runtime_diagnostics/registration_live_20260929_attempt01/ retains original
+arguments, failure, native control journals, stderr and close-owned disposition.
+MCP and all three native handles are terminal; each server returned0, identities
+were verified and the lock released. Original H002033 and foreign saved side effect
+are preserved and never replayed. No science, shared7777 contact, GUI or JVM.
 
-```text
-tests/unit/agent/test_custom_registration_admission.py
-tests/unit/test_custom_function_lifecycle.py
-tests/unit/test_function_catalog_zmq.py
-tests/unit/agent/test_mcp_server.py::test_mcp_register_custom_function_delegates_to_function_catalog_service
-tests/unit/agent/test_mcp_server.py::test_mcp_dev_client_function_commands_project_tool_arguments
-tests/unit/agent/test_mcp_server.py::test_mcp_dev_client_register_custom_function_renders_next_steps
-```
+## Focused architectural audit
 
-All lightweight check handles are terminal; this worker has never acquired a
-heavy runtime slot for230. No optional hosted CI is blocking the checkpoint.
+Scope: changed production declarations, callers and source tests; no full NRA scan
+or global proof. Actual catalog witnesses:
 
-## Changed paths
+- IMPL-4: endpoint preparation contract now owns all three methods. Default/raw/
+  explicit MCP construction cases execute the generated controls; native compiler/
+  hosted catalogues remain their own complete family, with no dummy method bodies.
+- IMPL-13: start/status/cancel extends the one native future/cancellation/child.
+  Repeated start coalesces the exact future/thread; failed readiness sends zero
+  register RPCs. Mutation no longer borrows the discovery retry mechanism.
+- IMPL-12: Manager.source_path_for_name owns save/admission, named reads/deletes/
+  updates, require_source and rename destinations. Five interception cases prove
+  those operations cannot bypass it. Directory enumeration reads real files and
+  remains enumeration, not a companion filename roster.
+- MEMB-2/MEMB-3: control/capability membership derives from existing declarations;
+  each new request leaf owns its operation/strategy. A new case extends that family,
+  not an action switch or hand-maintained catalogue.
+- IDEN-8: one handle and destination token reuse ProcessIdentity; changing creation
+  time while retaining PID rejects before cancellation/evaluation.
+- BOUND-1/BOUND-2/BOUND-6: existing typed request/response codecs decode at control/
+  MCP boundaries; native Manager and AgentPathPolicy remain path/write authorities.
+  No second destination resolver or source-code name parser.
+- TIME-1/TIME-5: replaced registration polling was deleted in place. Existing
+  catalogue polling remains read-only discovery, not a legacy mutation path.
+  Delayed/unsupported fault injection lives only in the diagnostic driver.
 
-Production:
+## Remaining live gates and resource bounds
 
-- `openhcs/agent/capabilities.py`
-- `openhcs/agent/dto/functions.py`
-- `openhcs/agent/services/endpoint_function_catalog_service.py`
-- `openhcs/agent/services/function_catalog_service.py`
-- `openhcs/core/xdg_paths.py`
-- `openhcs/mcp/context.py`
-- `openhcs/mcp/dev_client_commands/knowledge_pipeline.py`
-- `openhcs/processing/custom_functions/manager.py`
-- `openhcs/runtime/zmq_control.py`
-- `openhcs/runtime/zmq_execution_client.py`
+The diagnostic now freezes the reviewed source SHA and submodule pins, starts three
+headless fixture endpoints with native threads1, limits each observation to10s and
+the journey to240s, acquires nonblocking validation.lock, and rechecks actual RAM/
+disk plus scratch<80MiB before dispatch. It asserts **zero source-bearing register
+RPCs before READY and exactly two total** (initial positive plus controlled delayed),
+not merely one persistence marker. The complete journey is registration/discovery/
+compile/execution of an8x8 plus-three synthetic function, escaping-path sentinels,
+foreign/unsupported predispatch denials and same-handle uncertain receipt reconciliation.
 
-Tests:
+--installed-entrypoint mode requires PYTHONPATH unset, cwd outside SOURCE, actual
+OpenHCS/PolyStore imports matching the reviewed installed source, and the ordinary
+McpDevServerSpec. It is implemented but not live-proved. Source mode is explicitly
+labelled source_live_not_installed. Parent owns final merge/install and installed
+acceptance; no frozen installation changes are authorised here.
 
-- `tests/unit/agent/test_custom_registration_admission.py`
-- `tests/unit/agent/test_mcp_server.py`
-- `tests/unit/test_custom_function_lifecycle.py`
-- `tests/unit/test_function_catalog_zmq.py`
-- `tests/unit/test_function_step_transport.py` (fixture projection only; module
-  collection blocked as recorded above)
+At the latest worker guard, /home19.9GiB and RAM12.1GiB add a non-swap disk warning.
+No new heavy runtime starts under that warning. The bounded47-case source shard
+allocated328KiB fixture scratch; it is terminal and released the lock. Pending
+dependency: verified non-swap headroom release/recheck, then finite cold source-live
+journey and parent installed acceptance. No optional hosted CI wait.
 
-Receipt/body: `docs/plans/custom_registration_admission_20260929.md`.
-Shared-owner coordination: `docs/plans/custom_registration_205_coordination.md`,
-posted directly to the existing #205 owner at
-https://github.com/OpenHCSDev/openhcs/pull/205#issuecomment-5900395883.
-The local direct-DM route did not resolve this worker; no thread registration,
-bus repair, agent restart or goal replay was attempted. Coordination scope is
-the registration-specific DTO/service regions, not measurement declarations.
+Owned disposable build objects136KiB, filename-test fixtures40KiB and current
+source-test fixtures328KiB were removed after retaining receipts. They are reproducible
+from the tests/build command; the source in-place extension remains for acceptance.
+Original attempt01 synthetic scratch remains identified separately from receipts/UNKNOWN input.
 
-## Actual pattern review (focused source, not a full NRA proof)
-
-- BOUND-2/BOUND-6: existing `AgentPathPolicy` owns write permission;
-  `CustomFunctionManager` and XDG helpers own paths. A different native storage
-  declaration changes that owner, not a new endpoint-to-filename registry.
-- IMPL-12: replaced the manager's repeated name-to-file construction with its
-  `source_path_for_name`, consumed by admission, save, named load/read/delete,
-  revision checking (`require_source`) and both rename destinations. The six
-  remaining same-schema constructions were removed in the pre-live follow-up.
-  Five owner-interception cases witness that those named operations cannot
-  bypass it. Directory enumeration still reads actual persisted paths; it is
-  not name-to-file construction and has not been replaced by a filename roster.
-  New public names take the same helper, not a second source parser.
-- MEMB-2/MEMB-3: the new control action declares its message on the existing
-  request/strategy family. Existing registration/discovery registries remain
-  derived; no companion roster, new runner or duplicate custom registry.
-- IMPL-13: admission extends the existing DTO, endpoint service, typed control
-  protocol and atomic manager persistence, rather than forking registration.
-- IDEN-8: destination admission and the mutation receipt reuse existing
-  `ProcessIdentity` (PID plus creation time), not bare PID/new UUID state. The
-  new-case witness changes creation time while retaining PID: native registration
-  rejects before manager evaluation. This is not authentication of hostile
-  servers or a proof that a remote filesystem is shared with the MCP process.
-- BOUND-1/IMPL-13: the existing CLI's public factory/typed connection projects
-  the new route fields; no internal admission authority is generated as an
-  option and no alternate registration implementation is added.
-
-## Remaining acceptance (not closed)
-
-The current normal merge includes mainfbf6b2d91 (#225/#236), merge8fc0ecc63.
-The authoring how-to now requires explicit reflected routing, deliberately
-authored name and a caller-intended absolute store obtained through the native
-Manager in the controlled server launch environment. It describes pre-dispatch
-destination/incarnation proof and postdispatch uncertainty separately; a
-receipt after writing is not admission. No arbitrary-server MCP destination
-lookup is claimed. The existing knowledge manifest summary is updated; it
-contains no checked-in document digest to duplicate. The empirical guide now
-records parent's merged/installed #225 synthetic acceptance, not biology.
-
-`tests/diagnostics/check_custom_registration_live.py` is a reusable bounded
-ordinary stdio MCP/native server journey, with a test-only delayed-response and
-unsupported-proof seam through the existing server launch owner. It pins all
-source imports, controlled XDG roots, shared-cache/download-false policy and
-one native thread; acquires the shared nonblocking lock and records measured
-call durations (not session ages), sentinels, original inputs and handles.
-Unexpected calls are not retried. This prepared driver is not a passing receipt.
-
-Pre-live checkpoint9020cae18 is published in the existing draft233. New source
-changes were completed before any live handle existed. Ruff on both diagnostic
-files and the admission test, `git diff --check`, and the stdlib-only diagnostic
-CLI help pass. At exact sourcec10bb3f85, the five new filename-owner cases
-**pass in3.02 seconds**, peak183520 KiB RSS, with OpenHCS and PolyStore imports
-verified inside this tree. They intercept `require_source`, named load/read,
-delete and update before source reads/evaluation, proving use of the filename
-owner. The earlier94/23 results do not cover this main merge. Exact command,
-paths and output: `tests/runtime_diagnostics/registration_owner_five_20260929/`
-(`receipt.json`, `pytest.txt`). Two pytest warnings concern disabled async
-plugins' configuration options; these five cases are synchronous.
-
-The actual guard now warns about non-swap disk headroom (/home19.8 GiB), with
-RAM13.0–13.6 GiB. Parent explicitly withdrew new heavy-runtime admission until
-its own cleanup and recheck. No live process, JVM, GUI, registration call or
-validation-lock holder was started here. The diagnostic rejects any non-swap
-guard warning; source-only preparation/publication continues. Remaining named
-dependency is parent's verified resource-headroom release, followed by this
-source-pinned synthetic journey and parent-owned installation/acceptance.
-
-Parent explicitly authorized just these five bounded lightweight cases during
-its cleanup. The single existing-interpreter test process used the nonblocking
-validation lock, one native thread and no conftest/auto-loaded plugins. It is
-terminal and the lock released. Guard at this test's dispatch showed RAM13.4
-GiB, /home20.1 GiB, and only historical-swap warning; this does **not** assume
-parent's heavy-runtime slot release. Owned disposable source-test scratch:
-`/home/ts/.cache/agent-scratch/openhcs-registration-owner-five-20260929`.
-
-After verified closure of the frozen author's owned MCP/viewer and release of
-the technical slot, run controlled owned-vs-shared endpoint, escaping-path and
-delayed-response checks, plus register/discover/compile/execute on a tiny
-synthetic function through the actual installed MCP path. The integration owner
-controls review, installation and slot handoff; no scientific execution, JVM,
-installation or foreign namespace cleanup is authorized to this source worker.
-This PR remains draft and references #230 without claiming closure.
-
-Ordinary persistence admission is not a sandbox for arbitrary authorized Python;
-filesystem races and hostile remote servers are not claimed globally solved.
-Broad #206/#16 preparation/ROI scope and its 26 combined-suite failures remain
-in their separate trees/PRs. No ROI profile or preservation pass is invented.
+This draft references #230, #238, #233 and does not claim Closes acceptance yet.
+Broad #206/PolyStore16 scope and its26 combined-suite failures remain in their separate
+trees/PRs; no ROI profile or preservation pass is invented. Ordinary write admission
+is not a Python sandbox or proof against hostile remote servers/filesystem races.

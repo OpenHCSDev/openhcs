@@ -11,6 +11,9 @@ if TYPE_CHECKING:
         ArchitectureProjectionService,
     )
     from openhcs.agent.services.config_service import ConfigService
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        EndpointFunctionCatalogServiceABC,
+    )
     from openhcs.agent.services.execution_session_service import ExecutionSessionService
     from openhcs.agent.services.function_catalog_service import (
         FunctionCatalogServiceABC,
@@ -26,14 +29,14 @@ if TYPE_CHECKING:
     from openhcs.agent.services.plate_inspection_service import PlateInspectionService
     from openhcs.agent.services.plate_streaming_service import PlateStreamingService
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
-    from openhcs.agent.services.viewer_endpoint_discovery import (
-        ViewerEndpointDiscoveryService,
-    )
     from openhcs.agent.services.selected_plate_service import SelectedPlateService
     from openhcs.agent.services.synthetic_plate_service import (
         SyntheticPlateGenerationService,
     )
     from openhcs.agent.services.ui_bridge_service import UiBridgeService
+    from openhcs.agent.services.viewer_endpoint_discovery import (
+        ViewerEndpointDiscoveryService,
+    )
     from openhcs.agent.services.viewer_window_service import ViewerWindowService
 
 
@@ -46,6 +49,7 @@ class OpenHCSAgentContext:
         "_authoring_context_service",
         "_config_service",
         "_execution_service",
+        "_endpoint_function_catalog",
         "_function_catalog",
         "_knowledge_base_service",
         "_object_state_field_help_service",
@@ -69,6 +73,7 @@ class OpenHCSAgentContext:
         config_service: "ConfigService | None" = None,
         execution_service: "ExecutionSessionService | None" = None,
         function_catalog: "FunctionCatalogServiceABC | None" = None,
+        endpoint_function_catalog: "EndpointFunctionCatalogServiceABC | None" = None,
         knowledge_base_service: "KnowledgeBaseService | None" = None,
         object_state_field_help_service: "ObjectStateFieldHelpService | None" = None,
         pipeline_service: "PipelineAuthoringService | None" = None,
@@ -87,6 +92,7 @@ class OpenHCSAgentContext:
         self._config_service = config_service
         self._execution_service = execution_service
         self._function_catalog = function_catalog
+        self._endpoint_function_catalog = endpoint_function_catalog
         self._knowledge_base_service = knowledge_base_service
         self._object_state_field_help_service = object_state_field_help_service
         self._pipeline_service = pipeline_service
@@ -112,12 +118,23 @@ class OpenHCSAgentContext:
     @property
     def function_catalog(self) -> "FunctionCatalogServiceABC":
         if self._function_catalog is None:
-            from openhcs.agent.services.function_catalog_service import (
-                FunctionCatalogService,
-            )
-
-            self._function_catalog = FunctionCatalogService(path_policy=self.path_policy)
+            self._function_catalog = self.endpoint_function_catalog
         return self._function_catalog
+
+    @property
+    def endpoint_function_catalog(self) -> "EndpointFunctionCatalogServiceABC":
+        """Compose one typed endpoint authority for local catalog/control tools."""
+        if self._endpoint_function_catalog is None:
+            from openhcs.agent.services.endpoint_function_catalog_service import (
+                ZMQFunctionCatalogService,
+            )
+            from openhcs.pyqt_gui.config import load_cached_ui_execution_endpoint_sync
+
+            endpoint = load_cached_ui_execution_endpoint_sync()
+            self._endpoint_function_catalog = ZMQFunctionCatalogService(
+                lambda: endpoint, path_policy=self.path_policy,
+            )
+        return self._endpoint_function_catalog
 
     @property
     def config_service(self) -> "ConfigService":
@@ -287,15 +304,19 @@ def create_agent_context() -> OpenHCSAgentContext:
 
     endpoint_config = load_cached_ui_execution_endpoint_sync()
     path_policy = AgentPathPolicy.from_environment()
+    catalog = ZMQFunctionCatalogService(
+        lambda: endpoint_config, path_policy=path_policy,
+    )
     return OpenHCSAgentContext(
         path_policy=path_policy,
-        function_catalog=ZMQFunctionCatalogService(
-            lambda: endpoint_config, path_policy=path_policy,
-        ),
+        function_catalog=catalog,
+        endpoint_function_catalog=catalog,
     )
 
 
 def create_hosted_agent_context() -> OpenHCSAgentContext:
     """Create the self-contained catalog authority used by hosted MCP."""
 
-    return OpenHCSAgentContext()
+    from openhcs.agent.services.function_catalog_service import FunctionCatalogService
+
+    return OpenHCSAgentContext(function_catalog=FunctionCatalogService())

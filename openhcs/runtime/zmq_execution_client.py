@@ -75,7 +75,9 @@ if TYPE_CHECKING:
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
         FunctionCatalogControlRequest,
+        FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
+        FunctionCatalogPreparationState,
         FunctionDetail,
         FunctionDetailControlRequest,
         FunctionReferenceControlRequest,
@@ -814,7 +816,6 @@ class ZMQExecutionClient(
         request: FunctionCatalogControlRequest,
         *,
         cancellation: OperationCancellation | None = None,
-        operation_deadline: OperationDeadline | None = None,
     ) -> FunctionCatalogPage:
         """Read the authoritative callable catalog from this execution endpoint."""
 
@@ -829,14 +830,12 @@ class ZMQExecutionClient(
             )
             if not connection_attempt.connect(
                 EndpointConnectionPolicy.ATTACH_OR_START,
-                (self.config.client_connect_timeout_seconds if operation_deadline is None
-                 else operation_deadline.cap_seconds(self.config.client_connect_timeout_seconds)),
+                self.config.client_connect_timeout_seconds,
             ):
                 raise RuntimeError("Failed to connect to execution server")
         response = self._send_function_catalog_control_request(
             FunctionCatalogControlPayload.from_request(request).to_dict(),
             cancellation=cancellation,
-            operation_deadline=operation_deadline,
         )
         return FunctionCatalogControlResponse.from_control_response(response).catalog
 
@@ -899,7 +898,8 @@ class ZMQExecutionClient(
     def register_custom_function(
         self,
         request: CustomFunctionRegistrationRequest,
-        *, operation_deadline: OperationDeadline | None = None,
+        *,
+        operation_deadline: OperationDeadline | None = None,
     ) -> CustomFunctionRegistrationResult:
         """Send one mutation; readiness belongs to preceding read-only discovery.
 
@@ -912,18 +912,27 @@ class ZMQExecutionClient(
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect(operation_deadline=operation_deadline):
+        if not self.is_connected() and not self.connect(
+            operation_deadline=operation_deadline
+        ):
             raise RuntimeError("Failed to connect to execution server")
         payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = (self._send_control_request(payload) if operation_deadline is None
-                    else self._send_control_request(payload, timeout_ms=operation_deadline.remaining_milliseconds()))
+        response = (
+            self._send_control_request(payload)
+            if operation_deadline is None
+            else self._send_control_request(
+                payload, timeout_ms=operation_deadline.remaining_milliseconds()
+            )
+        )
         return CustomFunctionRegistrationControlResponse.from_control_response(
             response
         ).result
 
     def custom_function_registration_destination(
-        self, request: CustomFunctionRegistrationDestinationRequest,
-        *, operation_deadline: OperationDeadline | None = None,
+        self,
+        request: CustomFunctionRegistrationDestinationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
     ) -> CustomFunctionRegistrationDestination:
         """Require the selected endpoint's native admission contract before mutation."""
         from openhcs.agent.dto.functions import (
@@ -931,19 +940,59 @@ class ZMQExecutionClient(
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect(operation_deadline=operation_deadline):
+        if not self.is_connected() and not self.connect(
+            operation_deadline=operation_deadline
+        ):
             raise RuntimeError("Failed to connect to execution server")
         payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = (self._send_control_request(payload) if operation_deadline is None
-                    else self._send_control_request(payload, timeout_ms=operation_deadline.remaining_milliseconds()))
-        return CustomFunctionRegistrationDestinationControlResponse.from_control_response(response).destination
+        response = (
+            self._send_control_request(payload)
+            if operation_deadline is None
+            else self._send_control_request(
+                payload, timeout_ms=operation_deadline.remaining_milliseconds()
+            )
+        )
+        return (
+            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+                response
+            ).destination
+        )
+
+    def function_catalog_preparation(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> FunctionCatalogPreparationState:
+        """One responsive start/status/cancel exchange on an existing endpoint."""
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogControlPayload,
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="function catalog preparation observation",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0)
+        ):
+            raise RuntimeError(
+                "Function catalog preparation requires an existing execution endpoint."
+            )
+        response = self._send_control_request(
+            FunctionCatalogControlPayload.from_request(request).to_dict(),
+            timeout_ms=deadline.remaining_milliseconds(),
+        )
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
 
     def _send_function_catalog_control_request(
         self,
         request: dict,
         *,
         cancellation: OperationCancellation | None = None,
-        operation_deadline: OperationDeadline | None = None,
     ) -> dict:
         """Poll read-only discovery while endpoint catalog preparation is active."""
 
@@ -956,8 +1005,7 @@ class ZMQExecutionClient(
         while True:
             if cancellation.requested():
                 raise CancelledError("Function catalog preparation was cancelled")
-            response = (self._send_control_request(request) if operation_deadline is None
-                        else self._send_control_request(request, timeout_ms=operation_deadline.remaining_milliseconds()))
+            response = self._send_control_request(request)
             pending = FunctionCatalogPreparationControlResponse.from_control_response(
                 response
             )
@@ -974,9 +1022,7 @@ class ZMQExecutionClient(
                     pending.status.phase,
                     pending.status.message,
                 )
-            wait_seconds = (pending.retry_after_seconds if operation_deadline is None
-                            else operation_deadline.cap_seconds(pending.retry_after_seconds))
-            if cancellation.wait(wait_seconds):
+            if cancellation.wait(pending.retry_after_seconds):
                 raise CancelledError("Function catalog preparation was cancelled")
 
     def send_debug_worker_command(

@@ -96,12 +96,35 @@ evaluating the source. The execution service independently admits the native
 write before evaluation and persistence. Receipt checks after writing verify
 the outcome; they are not write admission or a Python sandbox.
 
-Complete read-only catalog discovery on the intended endpoint before mutation.
-Cold preparation failures belong to that boundary: the service prepares via
-the existing read-only catalog request, then sends registration exactly once.
-It never polls/resends a source-bearing request, even if a server responds
-preparation-pending. A read-only observation timeout does not justify a new
-mutation; retain its handle/progress and reconcile that preparation first.
+Prepare the catalogue on the intended endpoint **before submitting source**:
+
+1. Call `openhcs_start_function_catalog_preparation` with the same explicit
+   `port`, `host`, `transport_mode` and `persistent` connection fields. It starts
+   or coalesces the endpoint's existing catalogue/kernel preparation future,
+   including its supervised preparation child and declared kernel-cache writes.
+   It returns promptly, not after the cold preparation finishes.
+2. Retain the returned `handle` exactly: its `connection` and
+   `server_identity` (PID plus creation time) identify that native owner.
+   Pass those two fields to `openhcs_get_function_catalog_preparation_status`.
+   Observe `outcome` and `progress`; do not infer readiness from elapsed time or
+   a progress message. Only `outcome="ready"` admits registration. Pending
+   observations do not start another future or submit custom source.
+3. If preparation fails or is cancelled, retain the error and handle. Do not
+   submit source or replace the runtime implicitly. To cancel your pending
+   operation, pass the same fields to `openhcs_cancel_function_catalog_preparation`;
+   it signals the existing owner promptly. Continue observing that handle until
+   terminal, preserving the supervised child's cleanup rather than restarting it.
+4. Once ready, complete catalogue discovery on the selected endpoint, then
+   send registration once. Registration independently observes readiness once
+   within the existing control deadline. `function_catalog_not_ready` means no
+   source-bearing registration RPC was sent by this service; the native handler
+   also refuses cold registration without initiating preparation. It does not
+   poll a cold catalogue and write later after the caller's observation expires.
+
+The service never polls/resends a source-bearing request, including on pending,
+error or missing receipt. A start/status observation timeout is not proof that
+preparation did not start or finish: preserve its input/handle and reconcile
+the same owner. It does not authorise a new source mutation or runtime fallback.
 
 For isolated sessions, also pin `OPENHCS_UI_CONFIG_CACHE_FILE` before MCP
 startup and verify the selected catalog. That launch-time selector still owns

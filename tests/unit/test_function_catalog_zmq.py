@@ -4,6 +4,7 @@ import ast
 import inspect
 import textwrap
 import threading
+import time
 from concurrent.futures import CancelledError, Future
 from dataclasses import replace
 
@@ -11,8 +12,10 @@ import pytest
 from zmqruntime import OperationCancellation
 from zmqruntime.client import EndpointConnectionPolicy
 from zmqruntime.execution import ExecutionServer
+from zmqruntime.messages import ProcessIdentity
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationControlResponse,
     CustomFunctionRegistrationDestinationControlResponse,
@@ -24,7 +27,12 @@ from openhcs.agent.dto.functions import (
     FunctionCatalogControlRequestABC,
     FunctionCatalogControlResponse,
     FunctionCatalogEntry,
+    FunctionCatalogPreparationCancelRequest,
     FunctionCatalogPreparationControlResponse,
+    FunctionCatalogPreparationOutcome,
+    FunctionCatalogPreparationStartRequest,
+    FunctionCatalogPreparationStateControlResponse,
+    FunctionCatalogPreparationStatusRequest,
     FunctionDetail,
     FunctionDetailControlRequest,
     FunctionDetailControlResponse,
@@ -38,6 +46,7 @@ from openhcs.agent.dto.functions import (
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.core.callable_contract import CallableImportIdentity
 from openhcs.core.function_reference import ImportableFunctionReference
+from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 from openhcs.runtime.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
@@ -95,6 +104,7 @@ def test_local_mcp_context_uses_persisted_desktop_execution_endpoint(
     context = create_agent_context()
 
     assert isinstance(context.function_catalog, ZMQFunctionCatalogService)
+    assert context.function_catalog is context.endpoint_function_catalog
     assert context.function_catalog._config_provider() == endpoint_config
     context.function_catalog.close()
 
@@ -105,6 +115,94 @@ def test_hosted_mcp_context_keeps_self_contained_catalog() -> None:
     context = create_hosted_agent_context()
 
     assert isinstance(context.function_catalog, FunctionCatalogService)
+
+
+@pytest.mark.parametrize("construction", ("default_factory", "raw", "injected"))
+def test_real_mcp_context_composes_typed_preparation_and_catalog_authority(
+    monkeypatch, construction
+) -> None:
+    import asyncio
+    import json
+
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        EndpointFunctionCatalogServiceABC,
+        ZMQFunctionCatalogService,
+    )
+    from openhcs.mcp.context import OpenHCSAgentContext, create_agent_context
+    from openhcs.mcp.server import build_server
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.serialization.json import to_jsonable
+
+    connection = ExecutionConnectionSpec(port=22319)
+    endpoint = replace(OPENHCS_ZMQ_CONFIG, default_port=connection.port)
+    monkeypatch.setattr(
+        "openhcs.pyqt_gui.config.load_cached_ui_execution_endpoint_sync",
+        lambda: endpoint,
+    )
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    preparation._future = Future()
+    native = ZMQControlRequestContext(
+        compiled_artifacts={},
+        function_catalog_preparation=preparation,
+    )
+    observed = []
+
+    class Client:
+        def function_catalog_preparation(self, request, *, operation_deadline=None):
+            observed.append(request)
+            response = ZMQControlMessageRouter.handle(
+                FunctionCatalogControlPayload.from_request(request).to_dict(),
+                native,
+            )
+            return FunctionCatalogPreparationStateControlResponse.from_control_response(
+                response
+            ).value
+
+        def disconnect(self):
+            pass
+
+    monkeypatch.setattr(
+        ZMQFunctionCatalogService, "_new_client", lambda self, config: Client()
+    )
+    factories = {
+        "default_factory": create_agent_context,
+        "raw": OpenHCSAgentContext,
+        "injected": lambda: OpenHCSAgentContext(
+            endpoint_function_catalog=ZMQFunctionCatalogService(lambda: endpoint),
+        ),
+    }
+    context = factories[construction]()
+    assert isinstance(
+        context.endpoint_function_catalog, EndpointFunctionCatalogServiceABC
+    )
+    assert context.function_catalog is context.endpoint_function_catalog
+
+    async def invoke():
+        built = build_server(context)
+        started = await built.call_tool(
+            "openhcs_start_function_catalog_preparation",
+            {"port": connection.port},
+        )
+        content = started[0] if isinstance(started, tuple) else started.content
+        payload = json.loads(content[0].text)
+        assert not payload["errors"]
+        assert payload["outcome"] == "pending"
+        arguments = to_jsonable(preparation.start(connection).handle)
+        for tool in (
+            "openhcs_get_function_catalog_preparation_status",
+            "openhcs_cancel_function_catalog_preparation",
+        ):
+            response = await built.call_tool(tool, arguments)
+            content = response[0] if isinstance(response, tuple) else response.content
+            assert not json.loads(content[0].text)["errors"]
+
+    try:
+        asyncio.run(invoke())
+        assert len(observed) == 3
+        assert preparation._thread is None
+        assert preparation._cancellation.requested()
+    finally:
+        context.endpoint_function_catalog.close()
 
 
 def test_gui_application_setup_does_not_initialize_execution_catalog() -> None:
@@ -156,32 +254,19 @@ def _detail(entry: FunctionCatalogEntry | None = None) -> FunctionDetail:
     )
 
 
-class _StaticFunctionCatalogPreparation:
-    def __init__(self, future: Future[None]) -> None:
-        self.future = future
-
-    def ensure_started(self) -> Future[None]:
-        return self.future
-
-    def snapshot(self) -> EndpointStartupStatus:
-        return EndpointStartupStatus(
-            sequence=1,
-            phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
-            message="Discovering functions",
-            timestamp=1.0,
-        )
-
-
 def _context(
     preparation_future: Future[None] | None = None,
 ) -> ZMQControlRequestContext:
     ready = preparation_future or Future()
     if preparation_future is None:
         ready.set_result(None)
+    catalog = FunctionCatalogService()
+    preparation = FunctionCatalogPreparation(catalog)
+    preparation._future = ready
     return ZMQControlRequestContext(
         compiled_artifacts={},
-        function_catalog=FunctionCatalogService(),
-        function_catalog_preparation=_StaticFunctionCatalogPreparation(ready),
+        function_catalog=catalog,
+        function_catalog_preparation=preparation,
     )
 
 
@@ -551,7 +636,9 @@ def test_zmq_router_registers_custom_source_through_catalog_owner(
     monkeypatch,
 ) -> None:
     request = CustomFunctionRegistrationRequest(
-        source_code="@numpy\ndef sample(image):\n    return image\n"
+        source_code="@numpy\ndef sample(image):\n    return image\n",
+        connection=ExecutionConnectionSpec(port=22319),
+        server_identity=ProcessIdentity.current(),
     )
     result = CustomFunctionRegistrationResult(
         schema_version="openhcs.agent.v1",
@@ -611,6 +698,102 @@ def test_native_registration_destination_bypasses_catalog_preparation(
         tmp_path / "absent" / "openhcs" / "custom_functions" / "boundary_probe.py"
     )
     assert not (tmp_path / "absent").exists()
+
+
+def test_native_preparation_start_status_cancel_are_responsive_and_incarnation_owned():
+    entered = threading.Event()
+
+    class ControlledCatalog:
+        def prepare(self, *, status_callback, cancellation):
+            status_callback("Controlled preparation remains pending")
+            entered.set()
+            assert cancellation.wait(2)
+            raise CancelledError()
+
+    preparation = FunctionCatalogPreparation(ControlledCatalog())
+    context = ZMQControlRequestContext(
+        compiled_artifacts={}, function_catalog_preparation=preparation
+    )
+
+    def dispatch(request):
+        started = time.monotonic()
+        response = ZMQControlMessageRouter.handle(
+            FunctionCatalogControlPayload.from_request(request).to_dict(), context
+        )
+        assert time.monotonic() - started < 0.5
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
+
+    try:
+        connection = ExecutionConnectionSpec(port=22319)
+        state = dispatch(FunctionCatalogPreparationStartRequest(connection))
+        assert state.outcome is FunctionCatalogPreparationOutcome.PENDING
+        assert entered.wait(1)
+        future, thread = preparation._future, preparation._thread
+        assert (
+            dispatch(FunctionCatalogPreparationStartRequest(connection)).handle
+            == state.handle
+        )
+        assert preparation._future is future and preparation._thread is thread
+        assert (
+            dispatch(FunctionCatalogPreparationStatusRequest(state.handle)).outcome
+            is FunctionCatalogPreparationOutcome.PENDING
+        )
+        stale = replace(
+            state.handle,
+            server_identity=replace(state.handle.server_identity, create_time=0),
+        )
+        with pytest.raises(RuntimeError, match="owner changed"):
+            preparation.cancel_preparation(stale)
+        assert not preparation._cancellation.requested()
+        cancelled = dispatch(FunctionCatalogPreparationCancelRequest(state.handle))
+        assert cancelled.outcome in (
+            FunctionCatalogPreparationOutcome.CANCELLING,
+            FunctionCatalogPreparationOutcome.CANCELLED,
+        )
+        preparation.cancel_and_join()
+        assert (
+            dispatch(FunctionCatalogPreparationStatusRequest(state.handle)).outcome
+            is FunctionCatalogPreparationOutcome.CANCELLED
+        )
+        assert preparation._future is future and not thread.is_alive()
+    finally:
+        preparation.cancel_and_join()
+
+
+def test_native_registration_does_not_start_or_wait_for_cold_preparation(monkeypatch):
+    context = ZMQControlRequestContext(
+        compiled_artifacts={},
+        function_catalog=FunctionCatalogService(),
+        function_catalog_preparation=FunctionCatalogPreparation(
+            FunctionCatalogService()
+        ),
+    )
+    monkeypatch.setattr(
+        context.function_catalog_preparation,
+        "ensure_started",
+        lambda: pytest.fail("Mutation cannot initiate warmup"),
+    )
+    monkeypatch.setattr(
+        context.function_catalog,
+        "register_custom_function",
+        lambda _request: pytest.fail("Cold mutation must reject before evaluation"),
+    )
+    request = CustomFunctionRegistrationRequest(
+        source_code="never evaluated",
+        persist=False,
+        connection=ExecutionConnectionSpec(port=22319),
+        server_identity=ProcessIdentity.current(),
+    )
+    response = ZMQControlMessageRouter.handle(
+        FunctionCatalogControlPayload.from_request(request).to_dict(), context
+    )
+    assert (
+        response["status"] == "error"
+        and "No source was dispatched" in response["error"]
+    )
+    assert context.function_catalog_preparation._future is None
 
 
 def test_zmq_router_delegates_search_to_catalog_owner(monkeypatch) -> None:

@@ -17,6 +17,7 @@ from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.function_reference import FunctionReference
@@ -33,6 +34,9 @@ class FunctionCatalogControlMessageType(str, Enum):
     READ_REFERENCE = "openhcs_function_reference_read"
     REGISTER_CUSTOM = "openhcs_custom_function_register"
     CUSTOM_REGISTRATION_DESTINATION = "openhcs_custom_function_registration_destination"
+    START_PREPARATION = "openhcs_function_catalog_prepare"
+    READ_PREPARATION = "openhcs_function_catalog_preparation_status"
+    CANCEL_PREPARATION = "openhcs_function_catalog_preparation_cancel"
 
 
 class FunctionCatalogControlField(str, Enum):
@@ -97,6 +101,83 @@ class FunctionSearchRequest(FunctionCatalogControlRequestABC):
     compact_signatures: bool = True
 
     message_type = FunctionCatalogControlMessageType.SEARCH_CATALOG
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationHandle:
+    """The one preparation owner in this exact execution-server incarnation."""
+
+    connection: ExecutionConnectionSpec
+    server_identity: ProcessIdentity
+
+    def require_current_owner(self) -> None:
+        if self.server_identity != ProcessIdentity.current():
+            raise RuntimeError(
+                "Function catalog preparation owner changed; handle is stale."
+            )
+
+
+class FunctionCatalogPreparationOutcome(str, Enum):
+    NOT_STARTED = "not_started"
+    PENDING = "pending"
+    CANCELLING = "cancelling"
+    READY = "ready"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+    @property
+    def ready(self) -> bool:
+        return self is self.READY
+
+    @property
+    def terminal(self) -> bool:
+        return self in (self.READY, self.FAILED, self.CANCELLED)
+
+
+@dataclass(frozen=True, kw_only=True)
+class FunctionCatalogPreparationState(AgentResultEnvelope):
+    handle: FunctionCatalogPreparationHandle
+    outcome: FunctionCatalogPreparationOutcome
+    progress: EndpointStartupStatus
+
+    def require_ready(self) -> None:
+        if not self.outcome.ready:
+            raise FunctionCatalogNotReadyError(self)
+
+    def require_handle(self, expected: FunctionCatalogPreparationHandle) -> None:
+        if self.handle != expected:
+            raise RuntimeError(
+                "Function catalog preparation response changed owner/connection."
+            )
+
+
+class FunctionCatalogNotReadyError(AgentFacingErrorMixin, RuntimeError):
+    agent_error_code = "function_catalog_not_ready"
+    agent_error_hint = "Start/observe the same typed catalog preparation handle; no source was dispatched."
+
+    def __init__(self, state: FunctionCatalogPreparationState) -> None:
+        self.preparation = state
+        super().__init__(
+            f"Catalog preparation {state.handle!r} is {state.outcome.value}: {state.progress.message}. No source was dispatched."
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationStartRequest(FunctionCatalogControlRequestABC):
+    connection: ExecutionConnectionSpec
+    message_type = FunctionCatalogControlMessageType.START_PREPARATION
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationStatusRequest(FunctionCatalogControlRequestABC):
+    handle: FunctionCatalogPreparationHandle
+    message_type = FunctionCatalogControlMessageType.READ_PREPARATION
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationCancelRequest(FunctionCatalogControlRequestABC):
+    handle: FunctionCatalogPreparationHandle
+    message_type = FunctionCatalogControlMessageType.CANCEL_PREPARATION
 
 
 @dataclass(frozen=True, slots=True)
@@ -491,6 +572,13 @@ class FunctionCatalogControlResponse(
     @property
     def catalog(self) -> FunctionCatalogPage:
         return self.value
+
+
+class FunctionCatalogPreparationStateControlResponse(
+    FunctionCatalogControlResponseBase[FunctionCatalogPreparationState]
+):
+    field = FunctionCatalogControlField.PREPARATION
+    value_type = FunctionCatalogPreparationState
 
 
 class FunctionCatalogPreparationStatus(str, Enum):
