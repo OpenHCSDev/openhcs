@@ -1,9 +1,12 @@
 # Draft: accuracy-oriented analysis harness follow-up
 
 Baseline: OpenHCS main `0c7b898f852a8bedc0e1bc38b93f36088d301808`.
-Status: research and design proposal only. No runtime implementation, full NRA
-ownership audit, blind accuracy result or human-superiority claim is included.
-Keep this draft open while the implementation surfaces and tests are resolved.
+Status: research proposal plus a narrow implemented guidance checkpoint. The
+existing typed QA policy now owns development continuation and intervention
+provenance rules; the existing skill strategy reference describes their use.
+No runtime trial controller, full NRA proof, blind accuracy improvement or
+human-superiority claim is included. Keep this draft open while remaining
+implementation surfaces and tests are resolved.
 
 ## Existing work, not new gaps
 
@@ -69,10 +72,11 @@ Do not implement another knowledge catalogue or copy these guides.
 
 ## Implementation boundaries and remaining work
 
-These are ranked hypotheses, not a completed architecture plan. Before Python
-changes, perform the complete NRA ownership/dependency scan and record its raw
-coverage, declaration owners, consumers, proposed trajectory and native proof
-limits. Keep semantics on existing nominal owners and use MI/MRO composition
+These are ranked hypotheses, not a completed architecture plan. Record the
+ownership/dependency evidence appropriate to each change and distinguish focused
+source/AST checks from complete NRA scans and native proofs. The owner permits
+lighter checks when a large NRA scan would block useful delivery. Keep semantics
+on existing nominal owners and use MI/MRO composition
 where capabilities are independent. Never substitute a second registry, type-name
 dispatch, fallback import or arbitrary metadata store for the owning contract.
 
@@ -92,6 +96,7 @@ biological evidence tiers to match it. Later official implementation features
 are design evidence, not established causes of the published result.
 
 This draft contains no scientific inputs, expected counts, notebook answers,
-dataset-specific thresholds, held-out outcomes or tuned pipelines. Validation so
-far is document scope/path/diff review only. Runtime implementation and controlled
-blind evaluation remain outstanding and must be published as coherent PRs.
+dataset-specific thresholds, held-out outcomes or tuned pipelines. Validation
+includes packaging checks and four focused policy-projection tests. These prove
+guidance availability, not autonomous decisions. Live MCP delivery, remaining
+runtime infrastructure and controlled blind evaluation remain outstanding.

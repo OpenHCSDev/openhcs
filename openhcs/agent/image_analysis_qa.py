@@ -194,6 +194,22 @@ class ImageQaEvidenceRule(Enum):
         "reject a black, empty, stale, or mismatched capture when its active route, "
         "component values, or routed payload identity do not match the intended evidence"
     )
+    DEVELOPMENT_REPAIR_CONTINUATION = (
+        "a rejected development candidate is a preserved comparison checkpoint, not "
+        "a terminal analysis or accepted recipe. Select the next discriminating "
+        "repair from observed raw/intermediate failures, rerun under the existing "
+        "authorization and resource budget, and review a regression control. Stop "
+        "only at the declared budget or a concrete unresolved information, contract, "
+        "permission, or resource boundary; keep reference answers sealed"
+    )
+    AUTONOMY_INTERVENTION_PROVENANCE = (
+        "retain human biological hints, parameter corrections and per-candidate "
+        "coaching as interventions. Assisted development is not an uncoached "
+        "autonomous evaluation. For a fresh blind evaluation freeze the harness "
+        "and skill first, provide the task brief and authorized images without "
+        "worked answers or prior trial conclusions, and include failures and "
+        "abstentions in the evaluation rather than reporting selected successes"
+    )
     SPARSE_DIAGNOSTIC_LOCALIZATION = (
         "for a sparse diagnostic mask, use its viewer-reported exact nonzero bounds "
         "and bounded example coordinates to navigate to evidence before judging a "
