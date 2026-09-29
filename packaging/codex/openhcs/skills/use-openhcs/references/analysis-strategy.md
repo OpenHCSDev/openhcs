@@ -67,6 +67,24 @@ a prettier image or a plausible count does not establish improved segmentation.
 If the evidence contradicts the prediction, reject the hypothesis before adding
 more stages. Freeze the candidate and acceptance criteria before held-out access.
 
+Rejection ends that hypothesis, not the authorised development workflow. Preserve
+the failed candidate and choose the next discriminating trial from observed raw
+and intermediate evidence; recheck the failure and a regression control after
+each change. A frozen rejected checkpoint is neither an accepted recipe nor a
+reason to wait for the user to select routine parameters. Continue while the
+task's trial/resource budget permits useful diagnostics. If progress requires
+missing biological information, a missing tool contract, new authority or unsafe
+resource use, report the exact boundary and retain the best candidate with its
+known failures. Do not force unsupported structures into a mask to finish.
+
+For an autonomous-performance evaluation, freeze the harness and skill before a
+fresh context-isolated run. Supply the scientific task brief, acquisition facts
+and authorised images, not the intended method, suspect failure, prior trial
+conclusions or worked answer. Internal agent review may be part of the declared
+harness, but human channel hints, parameter corrections and candidate coaching
+must remain visible as interventions; do not count an assisted repair as an
+uncoached success. Keep failures and abstentions in the evaluation denominator.
+
 ## Keep execution bounded
 
 Begin with one bounded sample and estimate array bytes from dimensions and
