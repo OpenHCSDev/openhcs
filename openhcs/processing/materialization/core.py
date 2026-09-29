@@ -2435,9 +2435,14 @@ def _image_relative_output_path(
         options.relative_path_template,
     )
     expanded = _format_image_sequence_index(expanded, sequence_index)
+    relative_path = _normalized_relative_materialization_path(expanded)
+    scoped_relative_path = options.relative_path_scope.project(
+        relative_path,
+        context.context,
+    )
     return _relative_materialization_output_path(
         context.base_path,
-        _normalized_relative_materialization_path(expanded),
+        _normalized_relative_materialization_path(str(scoped_relative_path)),
     )
 
 

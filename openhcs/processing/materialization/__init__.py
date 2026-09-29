@@ -28,6 +28,11 @@ from openhcs.processing.materialization.options import (
     TextOptions,
     TiffStackOptions,
 )
+from openhcs.processing.materialization.path_scopes import (
+    ExecutionAxisMaterializationRelativePathScope,
+    MaterializationRelativePathScope,
+    SharedMaterializationRelativePathScope,
+)
 from openhcs.processing.materialization.presets import (
     csv_dataclass_materializer,
     csv_materializer,
@@ -74,4 +79,7 @@ __all__ = [
     "tiff_stack",
     "text_only",
     "tabular_field_names_from_materialization",
+    "MaterializationRelativePathScope",
+    "SharedMaterializationRelativePathScope",
+    "ExecutionAxisMaterializationRelativePathScope",
 ]

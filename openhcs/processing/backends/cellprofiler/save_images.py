@@ -22,6 +22,7 @@ from openhcs.core.artifacts import (
     MaterializationSourceIdentityRelation,
     MeasurementsArtifactType,
 )
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.image_file_serialization import image_payload_as_uint8
 from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (
@@ -66,9 +67,11 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.processing.materialization import (
+    ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,
     MaterializedFilenameIdentity,
+    WriteMode,
 )
 
 if TYPE_CHECKING:
@@ -358,6 +361,7 @@ class SaveImagesModule(
     function_variants = ("save_images_with_measurements",)
     validated = True
     confidence = 1.0
+    relative_path_scope = ExecutionAxisMaterializationRelativePathScope()
 
     image_kind_setting = SettingNameFamily("Select the type of image to save")
     source_image_setting = SettingNameFamily("Select the image to save")
@@ -892,8 +896,14 @@ class SaveImagesModule(
             filename_suffix=f"{suffix}{file_format.value}",
             filename_identity=filename_identity,
             relative_path_template=relative_path_template,
+            relative_path_scope=cls.relative_path_scope,
         )
-        materialization = MaterializationSpec(options)
+        write_mode = (
+            WriteMode.OVERWRITE
+            if _bool_setting(module, cls.overwrite_setting, True)
+            else WriteMode.ERROR
+        )
+        materialization = MaterializationSpec(options, write_mode=write_mode)
         materialization.candidate_paths(f"{output_name}.pkl")
         return materialization
 
@@ -921,6 +931,7 @@ def _recorded_save_images_rows(
     filename_suffix: str,
     file_format: SaveImagesFileFormat,
     output_location: str | None,
+    context: ProcessingContext | None,
 ) -> DataclassMeasurementColumnarRows:
     suffix = filename_suffix if append_suffix else ""
     if filename_method is SaveImagesFilenameMethod.FROM_IMAGE_FILENAME:
@@ -937,7 +948,12 @@ def _recorded_save_images_rows(
         )
     else:
         filename = f"{single_file_name}{suffix}{file_format.value}"
-    relative_path = _relative_template(output_location, filename)
+    relative_path = str(
+        SaveImagesModule.relative_path_scope.project(
+            PurePosixPath(_relative_template(output_location, filename)),
+            context,
+        )
+    )
     pathname = PurePosixPath(relative_path).parent.as_posix()
     if pathname == ".":
         pathname = ""
@@ -983,6 +999,7 @@ def save_images(
     base_image_folder: str | None = None,
     series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIMEPOINT,
     lossless_compression: bool = True,
+    context: ProcessingContext | None = None,
 ) -> tuple[RuntimeArrayData, RuntimeArrayData]:
     """Prepare a selected image or object set for saving without replacing the pipeline image.
 
@@ -1004,6 +1021,7 @@ def save_images(
         base_image_folder,
         series_axis,
         lossless_compression,
+        context,
     )
     return image, _converted_saved_image(
         image_to_save,
@@ -1038,6 +1056,7 @@ def save_images_with_measurements(
     series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIMEPOINT,
     lossless_compression: bool = True,
     slice_index: int = 0,
+    context: ProcessingContext | None = None,
 ) -> tuple[RuntimeArrayData, RuntimeArrayData, DataclassMeasurementColumnarRows]:
     """Prepare an image for saving and record its output-file measurements.
 
@@ -1069,6 +1088,7 @@ def save_images_with_measurements(
         filename_suffix=filename_suffix,
         file_format=file_format,
         output_location=output_location,
+        context=context,
     )
     return image, converted, rows
 
