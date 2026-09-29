@@ -347,6 +347,119 @@ def test_sweep_cli_reports_recorded_failure_with_nonzero_exit(
     assert args.cli_command.run(args) == 1
 
 
+def test_sweep_cli_passes_complete_native_summary_baselines(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import benchmark.cellprofiler_benchmark_cli as cli
+    import benchmark.well_throughput_scaling as throughput
+
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "Example",
+                        "dataset_path": str(dataset_path),
+                        "cppipe_path": str(cppipe_path),
+                    }
+                ],
+                "well_throughput_modes": ["1w_1t"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    summary_path = tmp_path / "summary.csv"
+    with summary_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=("case_name", "median_native_execution_seconds"),
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "case_name": "Example",
+                "median_native_execution_seconds": "2.5",
+            }
+        )
+    captured: dict[str, object] = {}
+
+    def fake_run_well_throughput_suite(*_args, **kwargs):
+        captured.update(kwargs)
+        return ()
+
+    monkeypatch.setattr(cli, "configure_headless_cpu_benchmark_runtime", lambda _: None)
+    monkeypatch.setattr(
+        throughput,
+        "run_well_throughput_suite",
+        fake_run_well_throughput_suite,
+    )
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-well-throughput",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+            "--native-summary-csv",
+            str(summary_path),
+        )
+    )
+
+    assert args.cli_command.run(args) == 0
+    assert captured["native_execution_baselines"] == {
+        "Example": NativeCellProfilerExecutionBaseline("Example", 2.5)
+    }
+
+
+def test_sweep_cli_rejects_incomplete_native_summary(
+    tmp_path: Path,
+) -> None:
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "Example",
+                        "dataset_path": str(dataset_path),
+                        "cppipe_path": str(cppipe_path),
+                    }
+                ],
+                "well_throughput_modes": ["1w_1t"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    summary_path = tmp_path / "summary.csv"
+    summary_path.write_text(
+        "case_name,median_native_execution_seconds\nOther,1.0\n",
+        encoding="utf-8",
+    )
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-well-throughput",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+            "--native-summary-csv",
+            str(summary_path),
+        )
+    )
+
+    with pytest.raises(ValueError, match="no usable execution baseline.*Example"):
+        args.cli_command.run(args)
+
+
 def test_repeated_wells_keep_all_declared_projection_fields_coherent(
     tmp_path: Path,
 ) -> None:
@@ -724,6 +837,47 @@ def test_rerun_missing_memory_filters_completed_rows(
 
     assert calls == [("Example", "12w_3c")]
     assert rows == (completed, replace(rerun, run_input_sha256=run_input_sha256))
+
+
+def test_run_input_hash_binds_benchmark_implementation(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    (dataset_path / "image.tif").write_bytes(b"image")
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    case = SimpleNamespace(
+        name="Example",
+        dataset_path=dataset_path,
+        cppipe_path=cppipe_path,
+        well_filter_config=None,
+    )
+    kwargs = {
+        "cases": (case,),
+        "modes": (WellThroughputMode("1w_1t", 1, 1),),
+        "start_method": MultiprocessingStartMethod.FORK,
+        "native_baselines": {},
+        "max_memory_mb": None,
+    }
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "_benchmark_implementation_sha256",
+        lambda: "implementation-a",
+    )
+    first = well_throughput_run_input_sha256(manifest_path, **kwargs)
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "_benchmark_implementation_sha256",
+        lambda: "implementation-b",
+    )
+
+    assert well_throughput_run_input_sha256(manifest_path, **kwargs) != first
 
 
 def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> None:

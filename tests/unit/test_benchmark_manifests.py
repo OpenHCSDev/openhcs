@@ -60,6 +60,12 @@ def test_official30_portable_manifest_declares_roots_without_absolute_cases(
         not Path(case["dataset_path"]).is_absolute() for case in payload["cases"]
     )
     assert all(not Path(case["cppipe_path"]).is_absolute() for case in payload["cases"])
+    all_method_case = next(
+        case
+        for case in payload["cases"]
+        if case["name"] == "ExampleIlluminationCorrection_Example1_AllMethod"
+    )
+    assert all_method_case["cellprofiler_timeout_seconds"] == 1800.0
     cases = load_comparison_cases(manifest_path)
 
     assert len(cases) == 30

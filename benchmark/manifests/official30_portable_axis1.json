@@ -62,7 +62,7 @@
       "value_only": true
     },
     {
-      "cellprofiler_timeout_seconds": 900.0,
+      "cellprofiler_timeout_seconds": 1800.0,
       "cppipe_path": "ExampleIlluminationCorrection/ExampleIlluminationCorrection_Example1_AllMethod.cppipe",
       "cppipe_path_root": "cellprofiler_examples",
       "dataset_id": "ExampleIlluminationCorrection",

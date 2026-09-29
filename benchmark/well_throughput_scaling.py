@@ -2147,6 +2147,35 @@ def _source_tree_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _benchmark_implementation_sha256() -> str:
+    """Hash executable Python sources used by the throughput benchmark."""
+
+    project_root = Path(__file__).resolve().parent.parent
+    source_roots = (
+        project_root / "benchmark",
+        project_root / "openhcs",
+        project_root / "external",
+    )
+    excluded_roots = (
+        project_root / "benchmark" / "native_refs",
+        project_root / "benchmark" / "results",
+    )
+    digest = hashlib.sha256()
+    for source_root in source_roots:
+        if not source_root.exists():
+            continue
+        for source_path in sorted(source_root.rglob("*")):
+            if source_path.suffix not in {".py", ".pyi"} or not source_path.is_file():
+                continue
+            resolved = source_path.resolve()
+            if any(resolved.is_relative_to(root) for root in excluded_roots):
+                continue
+            relative = resolved.relative_to(project_root).as_posix().encode("utf-8")
+            digest.update(b"file\0" + relative + b"\0")
+            digest.update(bytes.fromhex(sha256_file(resolved)))
+    return digest.hexdigest()
+
+
 def well_throughput_run_input_sha256(
     manifest_path: Path,
     *,
@@ -2167,7 +2196,8 @@ def well_throughput_run_input_sha256(
         return {"path": str(resolved), "sha256": source_hashes[resolved]}
 
     declaration = {
-        "schema": "openhcs.benchmark.well-throughput-inputs.v1",
+        "schema": "openhcs.benchmark.well-throughput-inputs.v2",
+        "implementation_sha256": _benchmark_implementation_sha256(),
         "manifest": source_record(manifest_path),
         "cases": [
             {
