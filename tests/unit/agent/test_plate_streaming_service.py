@@ -25,7 +25,23 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
 from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    PointROIOptions,
+    materialize,
+)
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
@@ -394,6 +410,7 @@ def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
     pixels = np.stack(
         [np.full((8, 8), value, dtype=np.uint16) for value in (11, 22, 33, 44)]
     )
+    pixels[2, 1:3, 3:5] = 2048
     tifffile.imwrite(
         plate / "image.ome.tif", pixels, ome=True, metadata={"axes": "ZYX"}
     )
@@ -417,15 +434,65 @@ def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
         microscope_handler=context.handler,
         plate_path=str(plate),
     )
-    for record, expected in zip(records, (11, 22, 33, 44), strict=True):
+    for index, record in enumerate(records):
         image = source.load_image(
             record.streamable_image_path,
             record.source_ref.backend,
             source_projection=projection,
             component_metadata=record.metadata,
         )
-        assert np.all(image_payload_data(image) == expected)
-        assert record.metadata["z_index"] == (11, 22, 33, 44).index(expected) + 1
+        np.testing.assert_array_equal(image_payload_data(image), pixels[index])
+        assert record.metadata["z_index"] == index + 1
+
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path=records[0].full_virtual_path,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(record.full_virtual_path for record in records),
+            component_metadata=tuple(
+                {
+                    component: record.metadata[component]
+                    for component in ("well", "site", "channel", "z_index", "timepoint")
+                }
+                for record in records
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    features = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    assert Path(archive).exists()
 
 
 def test_inventory_source_projection_loads_exact_ordinary_tiff(tmp_path):
