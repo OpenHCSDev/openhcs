@@ -55,11 +55,14 @@ class ArtifactPlanKeySelector(ABC):
             selected.append(plan)
         return tuple(selected)
 
-    def validate_artifact_relation_refs(self, *, owner_name: str) -> None:
-        output_specs = self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs
-        for spec in output_specs:
+    def validate_artifact_output_declarations(self) -> None:
+        """Validate output kinds when this declaration owns returned payloads."""
+
+        for spec in self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs:
             spec.artifact_type.validate_output_declaration(spec)
+
+    def validate_artifact_relation_refs(self, *, owner_name: str) -> None:
         self.artifact_specs.validate_registered_relation_refs(
             owner_name=owner_name,
-            relation_specs=output_specs,
+            relation_specs=self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs,
         )

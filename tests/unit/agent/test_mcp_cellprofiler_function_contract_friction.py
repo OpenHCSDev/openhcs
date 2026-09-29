@@ -16,6 +16,9 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
+from openhcs.core.artifacts import ObjectLabelsArtifactType
 
 
 @dataclass(frozen=True)
@@ -189,3 +192,35 @@ def test_catalog_exposes_declared_exact_object_selector_and_authoring_guidance(
     assert "do not pass labels" in contract.source_binding_rule
     parameters = {parameter.name: parameter for parameter in detail.parameters}
     assert parameters["labels"].supplied_by is FunctionParameterSource.ARTIFACT_INPUT
+
+
+def test_catalog_projects_registered_and_new_binding_declarations_without_a_roster():
+    from openhcs.agent.services.function_catalog_service import (
+        _cellprofiler_artifact_binding_summary,
+    )
+
+    registered = tuple(
+        binding
+        for module in CellProfilerModule.__registry__.values()
+        for binding in module.declared_artifact_bindings()
+    )
+    assert registered
+    new_bindings = (
+        SettingToKeywordBinding.input(
+            "Select future object cohort",
+            ObjectLabelsArtifactType,
+            runtime_parameter_name="labels",
+            repeated=True,
+        ),
+        SettingToKeywordBinding.output(
+            "Name future object cohort",
+            ObjectLabelsArtifactType,
+            parameter_name="exact_future_output",
+        ),
+    )
+    for binding in (*registered, *new_bindings):
+        summary = _cellprofiler_artifact_binding_summary(binding)
+        assert summary.parameter_name == binding.require_parameter_name()
+        assert summary.runtime_parameter_name == binding.runtime_parameter_name
+        assert summary.repeated is binding.repeated
+        assert summary.kind == binding.require_artifact_type().require_value()

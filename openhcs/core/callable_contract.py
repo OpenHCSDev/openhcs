@@ -1146,6 +1146,14 @@ class CallableContract(ArtifactPlanKeySelector):
                 ) from exc
         return tuple(kwargs.items())
 
+    def validate_artifact_output_declarations(self) -> None:
+        """Validate native returns, leaving adapter-recorded rows with their owner."""
+
+        adapter = self.runtime_adapter
+        if adapter is not None and adapter.manages_artifact_outputs:
+            return
+        super(CallableContract, self).validate_artifact_output_declarations()
+
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
 

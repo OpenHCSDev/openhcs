@@ -2320,7 +2320,7 @@ class _NativeCountRow:
     cell_count: int
 
 
-@pytest.mark.parametrize("boundary", ["inspection", "compile"])
+@pytest.mark.parametrize("boundary", ["contract", "compile"])
 def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
     spec = ArtifactSpec.output(
         "cell_counts",
@@ -2333,8 +2333,10 @@ def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
         raise AssertionError("Invalid measurement declarations must not execute")
 
     with pytest.raises(ValueError, match="cell_counts.*no declared measurement subject") as exc:
-        if boundary == "inspection":
-            extract_artifact_declarations(count)
+        if boundary == "contract":
+            from openhcs.core.callable_contract import CallableContract
+
+            CallableContract.from_callable(count).validate_artifact_output_declarations()
         else:
             compile_function_pattern(count, {}, {})
     assert "ImageMeasurementSubjectRelation" in str(exc.value)
@@ -2760,7 +2762,11 @@ def test_execute_function_core_requires_all_declared_artifact_values():
     context = ContextStub()
 
     @artifact_outputs(
-        ArtifactSpec.output("measurements", MeasurementsArtifactType),
+        ArtifactSpec.output(
+            "measurements",
+            MeasurementsArtifactType,
+            relations=(ArtifactMeasurementSubjectRelation(),),
+        ),
     )
     def analyze(image):
         return (image,)
