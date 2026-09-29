@@ -376,6 +376,14 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         parser.add_argument("--max-memory-mb", type=float)
         parser.add_argument("--execution-port", type=int)
         parser.add_argument(
+            "--reuse-execution-server",
+            action="store_true",
+            help=(
+                "Keep one client-owned server across observations. Per-observation "
+                "total_seconds then excludes server startup and shutdown."
+            ),
+        )
+        parser.add_argument(
             "--native-summary-csv",
             type=Path,
             help=(
@@ -463,6 +471,11 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
                             ),
                             "modes": plan.modes,
                             "start_method": start_method.value,
+                            "server_lifecycle": (
+                                "reused-per-sweep"
+                                if args.reuse_execution_server
+                                else "fresh-per-observation"
+                            ),
                             "warnings": case_catalog.warnings,
                         }
                     ),
@@ -500,6 +513,7 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             existing_results=existing_results,
             max_memory_mb=args.max_memory_mb,
             execution_port=args.execution_port,
+            reuse_execution_server=args.reuse_execution_server,
             native_execution_baselines=native_execution_baselines,
         )
         print(f"rows={len(rows)}")

@@ -99,6 +99,16 @@ instead of presets. A non-empty output directory is refused; use `--resume` to
 continue its ordinary-route `well_throughput.csv`. Failed observations remain in
 that CSV and make the command exit non-zero.
 
+Use `--reuse-execution-server` to keep one client-owned execution server across
+the selected observations. Its `server_lifecycle` column is `reused-per-sweep`,
+and each `total_seconds` measures the observation after the server is ready.
+Startup and shutdown are excluded from those per-observation totals; use the
+default `fresh-per-observation` lifecycle to include them for each observation.
+Both totals begin after the input workspace is prepared. The reused-server
+option cannot be combined with `--max-memory-mb`, whose guard may kill the
+shared server before later observations.
+The two lifecycles have distinct resume hashes and cannot be mixed in figures.
+
 To populate the CellProfiler-relative timing and speedup columns, first produce a
 fresh native comparison summary with `openhcs-benchmark run`, then pass it to the
 throughput command:

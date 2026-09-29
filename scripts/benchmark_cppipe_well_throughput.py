@@ -22,6 +22,14 @@ def main() -> int:
             "The run refuses to attach to an existing server."
         ),
     )
+    parser.add_argument(
+        "--reuse-execution-server",
+        action="store_true",
+        help=(
+            "Keep one client-owned server across observations. Per-observation "
+            "total_seconds then excludes server startup and shutdown."
+        ),
+    )
     parser.add_argument("--case", action="append", dest="case_names")
     parser.add_argument("--wells", type=int, action="append")
     parser.add_argument("--workers", type=int, action="append")
@@ -152,6 +160,7 @@ def main() -> int:
         rerun_missing_memory=args.rerun_missing_memory,
         max_memory_mb=args.max_memory_mb,
         execution_port=args.execution_port,
+        reuse_execution_server=args.reuse_execution_server,
     )
     print(f"observations={len(results)}")
     print(f"csv={csv_path}")
