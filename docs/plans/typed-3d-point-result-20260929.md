@@ -1,7 +1,8 @@
 # Typed 3-D point result: implementation boundary
 
-Status: design and source inspection only. No runtime code, tests, installed
-entrypoint, or biological result is claimed by this checkpoint.
+Status: measurement payload retention implemented in this draft. The point
+writer, native 3-D projection, installed entrypoint, and biological result are
+not yet implemented or claimed.
 
 Base: OpenHCSDev/openhcs `9644febe2785aace85bbc8bd1d2ce062525c56d2`.
 Issue: OpenHCSDev/openhcs#134. Integration owner: blind-analysis coordinator.
@@ -15,9 +16,11 @@ Coordinate the worker/export crossing with open PR #157; do not edit its
   (`openhcs/core/runtime_measurements.py:41`). The subject's declared ID field
   is supplied by `ObjectMeasurementSubjectRelation`
   (`openhcs/core/artifacts.py:1344`).
-- `MeasurementsArtifactType.materialization_payload` hands only `table.rows`
-  to every writer (`openhcs/core/artifacts.py:704`). The table's provenance,
-  subject and feature owner are therefore unavailable to a measurement writer.
+- Before this draft, `MeasurementsArtifactType.materialization_payload` handed
+  only `table.rows` to every writer (`openhcs/core/artifacts.py:704`). This
+  draft retains the complete table through the existing `ColumnarRows`
+  contract, while CSV and JSON still serialize only rows. Its provenance,
+  subject and feature owner are now available to a measurement writer.
   `MaterializationSpec` already admits multiple writer options for the same
   artifact; a separate hand-built file bundle is not required.
 - The existing ROI writer extracts image-label contours, not measurement

@@ -1056,7 +1056,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
         context,
     )
 
-    assert [(tuple(data), path) for data, path in materialized] == [
+    assert [(data.row_mappings(), path) for data, path in materialized] == [
         (({"object_id": 1, "area": 42},), "/analysis/measurements_1.roi.zip")
     ]
 
@@ -1113,7 +1113,8 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
     assert spec.outputs[0].filename_suffix == "_details.csv"
-    assert tuple(data) == ({"object_id": 1, "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"object_id": 1, "area": 42},)
     assert path == "/analysis/A01_measurements_step7.roi.zip"
 
 
@@ -1184,6 +1185,9 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
 
     [materialization] = runtime_artifact_materializations(plan, context)
 
+    assert isinstance(materialization.data, MeasurementTable)
+    assert materialization.data.subject == table.subject
+    assert len(materialization.data.source_image_provenance_planes.planes) == 4
     assert str(materialization.base_path) == ("/analysis/A01_cell_counts_step7.roi.zip")
     assert tuple(output.path for output in materialization.outputs(plan, context)) == (
         "/analysis/A01_cell_counts_step7_details.csv",
@@ -2179,7 +2183,8 @@ def test_materialize_tabular_artifact_does_not_build_viewer_stream_kwargs(
 
     spec, data, path, backends, backend_kwargs = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
-    assert tuple(data) == ({"object_id": 1, "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"object_id": 1, "area": 42},)
     assert path == "/analysis/A01_measurements_step7.roi.zip"
     assert backends == ["disk"]
     assert dict(backend_kwargs["disk"]) == {}
@@ -2243,7 +2248,8 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
     assert len(materialized) == 1
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
-    assert tuple(data) == ({"site": "1", "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"site": "1", "area": 42},)
     assert path == "/analysis/A01_w1_measurements_step7.roi.zip"
 
 
@@ -2523,7 +2529,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
         "/analysis/A01_s001_w5_z001_t001_measurements_step7.roi.zip",
         "/analysis/A01_s002_w5_z001_t001_measurements_step7.roi.zip",
     ]
-    assert [tuple(data) for _spec, data, _path in materialized] == [
+    assert [data.row_mappings() for _spec, data, _path in materialized] == [
         ({"site": "1", "object_id": 1, "area": 42},),
         ({"site": "2", "object_id": 2, "area": 84},),
     ]

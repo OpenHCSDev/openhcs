@@ -2225,6 +2225,14 @@ def json_payload_mapping(value: dict) -> dict:
     return {key: JsonPayloadAuthority.jsonable(item) for key, item in value.items()}
 
 
+@json_payload_value.register(ColumnarRows)
+def json_payload_columnar_rows(value: ColumnarRows) -> list[dict]:
+    return [
+        {key: JsonPayloadAuthority.jsonable(item) for key, item in row.items()}
+        for row in value.iter_row_mappings()
+    ]
+
+
 @json_payload_value.register(list)
 def json_payload_list(value: list) -> list:
     return [JsonPayloadAuthority.jsonable(item) for item in value]

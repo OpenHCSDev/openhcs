@@ -43,6 +43,11 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+)
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -63,6 +68,7 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
@@ -702,6 +708,47 @@ def test_csv_materialization_preserves_declared_fields_for_empty_rows() -> None:
 
     assert out == "/tmp/A01_measurements_details.csv"
     assert fm.load(out, "memory").splitlines()[0] == "object_label,area"
+
+
+@pytest.mark.unit
+def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            ({"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5},),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("z", float),
+                FieldSpec("y", float),
+                FieldSpec("x", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    fm = FileManager({"memory": MemoryStorageBackend()})
+
+    materialize(
+        MaterializationSpec(
+            CsvOptions(filename_suffix=".csv"),
+            JsonOptions(filename_suffix=".json"),
+        ),
+        data=table,
+        path="/tmp/centres",
+        filemanager=fm,
+        backends=["memory"],
+        backend_kwargs={},
+    )
+
+    assert fm.load("/tmp/centres.csv", "memory").splitlines() == [
+        "object_label,z,y,x",
+        "7,2.375,1.25,3.5",
+    ]
+    assert json.loads(fm.load("/tmp/centres.json", "memory")) == [
+        {"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5}
+    ]
+    assert table.source_path == "/source/image.ome.tif"
+    assert table.subject.object_id_field == "object_label"
 
 
 @pytest.mark.unit
