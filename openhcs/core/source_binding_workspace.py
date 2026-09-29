@@ -35,7 +35,6 @@ from openhcs.core.source_matching import (
     overlay_source_metadata,
     semantic_source_metadata_value,
     source_component_metadata_values,
-    source_filters_match,
     source_metadata_component,
     source_metadata_value,
     source_metadata_values_equal,
@@ -970,22 +969,15 @@ class SourceBindingWorkspaceProjector:
         source_root: Path,
     ) -> bool:
         """Return whether one candidate satisfies one typed binding selector."""
-        if binding.explicit_source is not None:
-            explicit_path = Path(
-                binding.explicit_source.resolved(source_root).uri
-            ).resolve()
-            candidate_path = Path(candidate.relative_path)
-            if not candidate_path.is_absolute():
-                candidate_path = Path(source_root) / candidate_path
-            if candidate_path.resolve() != explicit_path:
-                return False
+        if not binding.physical_path_matches(
+            source_root,
+            candidate.relative_path,
+            candidate.source_filter_path_identities(),
+        ):
+            return False
         selector = binding.selector
         return (
-            any(
-                source_filters_match(path, selector.filters)
-                for path in candidate.source_filter_path_identities()
-            )
-            and all(
+            all(
                 (
                     value := semantic_source_metadata_value(
                         candidate.metadata, item.field

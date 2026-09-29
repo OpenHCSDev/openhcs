@@ -788,7 +788,7 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
                 continue
             if (
                 not self.source_bindings.discovery_path_matches(root, source_path)
-                and self._is_single_file(context, source_path)
+                and context.is_single_file(source_path)
             ):
                 continue
             try:
@@ -823,21 +823,6 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
                 diagnostics=(*datasets[0].diagnostics, *exclusions),
             )
         return tuple(datasets)
-
-    @staticmethod
-    def _is_single_file(context: BioFormatsJavaContext, path: Path) -> bool:
-        """Ask the decoder before pruning a potentially compound entrypoint.
-
-        ImageReader.isSingleFile identifies its format without setId/OME
-        metadata initialization. A companion path can select a multi-file store
-        whose entrypoint itself does not match; decoded projection decides that.
-        """
-        context.ensure_initialized()
-        reader = context.ImageReader()
-        try:
-            return bool(reader.isSingleFile(str(path)))
-        finally:
-            reader.close()
 
     @staticmethod
     def _declares_path(context: BioFormatsJavaContext, path: Path) -> bool:

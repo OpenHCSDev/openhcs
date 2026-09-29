@@ -47,17 +47,8 @@ class _SelectionContext(FakeBioFormatsContext):
 
     single_file = True
 
-    def ensure_initialized(self):
-        pass
-
-    def ImageReader(self):
-        return self
-
-    def isSingleFile(self, path):
+    def is_single_file(self, path):
         return self.single_file
-
-    def close(self):
-        pass
 
 
 @pytest.mark.parametrize("selection", ("global", "binding"))
