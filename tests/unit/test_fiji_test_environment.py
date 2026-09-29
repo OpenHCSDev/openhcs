@@ -11,17 +11,20 @@ from polystore.imagej_distribution import (
     ImageJArchiveDownloadPolicy,
 )
 
-from tests.fiji_test_environment import configure_fiji_test_environment
-
-
 def test_default_root_is_pinned_before_fixture_cache_isolation(monkeypatch, tmp_path):
     initial = tmp_path / "initial"
     monkeypatch.setenv("XDG_CACHE_HOME", str(initial))
     values = {}
-    configure_fiji_test_environment(values)
+    FijiArchiveDistribution.configure_process_environment(
+        environment=values,
+        default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False),
+    )
     root = values[FijiArchiveDistribution.cache_root_environment_key]
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "fixture"))
-    configure_fiji_test_environment(values)
+    FijiArchiveDistribution.configure_process_environment(
+        environment=values,
+        default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False),
+    )
     assert values[FijiArchiveDistribution.cache_root_environment_key] == root
     assert values[ImageJArchiveDownloadPolicy.allow_download_environment_key] == "false"
 
@@ -32,7 +35,10 @@ def test_explicit_root_and_provisioning_permission_are_authoritative(tmp_path):
         FijiArchiveDistribution.cache_root_environment_key: str(root),
         ImageJArchiveDownloadPolicy.allow_download_environment_key: "true",
     }
-    configure_fiji_test_environment(values)
+    FijiArchiveDistribution.configure_process_environment(
+        environment=values,
+        default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False),
+    )
     assert values[FijiArchiveDistribution.cache_root_environment_key] == str(root)
     assert ImageJArchiveDownloadPolicy.from_environment(values).allow_download
 
@@ -40,9 +46,10 @@ def test_explicit_root_and_provisioning_permission_are_authoritative(tmp_path):
 @pytest.mark.parametrize("root", ("", "relative"))
 def test_invalid_explicit_root_does_not_fall_back(root):
     with pytest.raises(RuntimeError, match="absolute bundle-cache"):
-        configure_fiji_test_environment({
-            FijiArchiveDistribution.cache_root_environment_key: root
-        })
+        FijiArchiveDistribution.configure_process_environment(
+            environment={FijiArchiveDistribution.cache_root_environment_key: root},
+            default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False),
+        )
 
 
 def test_fresh_collection_configures_runtime_before_import_and_forbids_network(tmp_path):
