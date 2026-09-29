@@ -288,11 +288,25 @@ class OpenHCSRegistry(LibraryRegistryBase):
         functions[metadata.name] = metadata
 
     def _ensure_module_inventory(self) -> None:
-        """Discover backend modules only when the full catalog is requested."""
+        """Discover backend module names without importing their implementations."""
 
         if self.MODULES_TO_SCAN is not None:
             return
         self.MODULES_TO_SCAN = self._get_openhcs_modules()
+
+    def _prepare_cached_function_inventory(self) -> None:
+        """Validate all source mtimes without importing uncached backend modules."""
+
+        self._ensure_module_inventory()
+
+    def is_available_for_catalog(self) -> bool:
+        """The native registry can validate cache inputs without importing modules."""
+
+        if not self.is_library_available():
+            return False
+        self._ensure_library_warmed()
+        self._ensure_module_inventory()
+        return True
 
     def _get_openhcs_modules(self) -> List[str]:
         """Get list of OpenHCS processing modules to scan using automatic discovery."""
@@ -399,11 +413,8 @@ class OpenHCSRegistry(LibraryRegistryBase):
         Custom functions are NOT cached - they're loaded fresh from .py files
         each time and added to the result here.
         """
-        for _, module in self.get_modules_to_scan():
-            if isinstance(module, OpenHCSFunctionCatalogModule):
-                module.openhcs_registry_functions()
-
-        # Get module-based functions from cache or discovery
+        # Cached callable imports resolve their own declarations. A cache miss
+        # enters discover_functions(), which imports every candidate module.
         functions = super().load_or_discover_functions()
         if not self.MODULES_TO_SCAN:
             return functions
