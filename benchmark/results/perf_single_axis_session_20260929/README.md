@@ -1,6 +1,6 @@
 # One validated session per nonsequential axis (2026-09-29)
 
-This report supports [OpenHCS issue #190](https://github.com/OpenHCSDev/openhcs/issues/190). The control is integration commit `65bc344b8`, including the exact CellProfiler owner and scoped-lookup work in draft PR #189. Each official30 observation uses one well, one OpenHCS thread, `fork`, and a fresh client-owned ZMQ server. The candidate finishes a nonsequential context from the initial `CompilationSession` used to check sequential mode. Sequential pipelines retain their separate session per combination.
+This report supports [OpenHCS issue #190](https://github.com/OpenHCSDev/openhcs/issues/190) and [draft PR #191](https://github.com/OpenHCSDev/openhcs/pull/191). The control is integration commit `65bc344b8`, including the exact CellProfiler owner and scoped-lookup work in draft PR #189. Each official30 observation uses one well, one OpenHCS thread, `fork`, and a fresh client-owned ZMQ server. The candidate finishes a nonsequential context from the initial `CompilationSession` used to check sequential mode. Sequential pipelines retain their separate session per combination.
 
 An advanced-segmentation compiler profile attributed **3.83 of 6.61 profiled seconds** to the two `build_initialize_axis_session` calls. The second call repeats the resolved axis plan. Its removal affects compilation; no runtime algorithm changes.
 
