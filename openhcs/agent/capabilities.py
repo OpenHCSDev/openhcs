@@ -2038,6 +2038,8 @@ class GenerateSyntheticPlateCapability(PlatePathCapability):
 
 
 class InspectPlatePathCapability(PlatePathCapability):
+    progress_heartbeat_seconds = 5.0
+    progress_worker_thread_safe = True
     name = "openhcs_inspect_plate_path"
     cli_command = "inspect-plate"
     kind = CapabilityKind.TOOL
@@ -2049,9 +2051,18 @@ class InspectPlatePathCapability(PlatePathCapability):
         "workspace-preparation advice, and structured workflow routing. "
         "It does not configure a running UI or make a handler override the setup "
         "route; use the PlateManager code document plus selected-plate init when "
-        "the result must remain visible in the desktop."
+        "the result must remain visible in the desktop. Optional Bio-Formats "
+        "cold preparation can download verified Fiji artifacts into its declared "
+        "bundle cache and start Java; progress keeps this operation observable "
+        "without blocking unrelated MCP reads. Plate contents remain read-only."
     )
     service = "selected_plate"
+    mutating = True
+    side_effects = (
+        "may_download_verified_fiji_runtime",
+        "may_write_runtime_bundle_cache",
+        "may_start_java_runtime",
+    )
     data_exposure = (
         "local_plate_path",
         "microscope_metadata",
