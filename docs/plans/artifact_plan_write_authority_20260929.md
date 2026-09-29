@@ -37,3 +37,37 @@ earlier lock-gated attempt returned 75 and did not start tests. These small chec
 do not start another GUI/JVM or run scientific data. Live MCP acceptance remains
 pending while Euler owns the substantial validation slot. This is not an
 installed/readiness claim; do not close the issue on source tests alone.
+
+## Released-slot real MCP checkpoint
+
+The previous analysis owner saved its rejected candidate and closed its owned
+viewer/client/MCP before this checkpoint. A fresh actual stdio MCP server
+projected the truthful capability metadata. Both denied directories (with and
+without preexisting metadata) returned `agent_path_policy_rejected` and their
+recursive byte hashes were unchanged. A generated single-field ImageXpress
+fixture was preserved after the allowed cold inspection hit the unchanged
+10-second transport limit; only its generated TIFF/HTD files existed at closure.
+No scientific execution was submitted or replayed.
+
+That cold path forced full function-catalog preparation in
+`InProcessCompileInspectionGateway`, despite `PipelineDocumentAuthority` already
+normalizing each callable through `FunctionStepTransportAuthority` and the
+registry's declaration-local metadata. Delete that redundant initialization;
+the existing document, compiler, registered-callable and function-reference
+owners remain authoritative. No new registry, special-case roster or timeout
+increase. The same real MCP inspection then completed in 1.19 seconds with
+one axis, one step and one virtual source file, and reported the authorized
+metadata creation. This is the cold-inspection follow-up to #178, not a global
+latency or numerical-accuracy claim.
+
+A real one-field gateway regression rejects any full-catalog preparation while
+compiling the registered NLM declaration. The first two new regression assertions
+confused the summary count with the core projection's relative/full-path lookup
+aliases. Use the existing canonical artifact-plan projection to count files;
+the successful compile assertions and catalog prohibition remain unchanged.
+The corrected focused suite passes: nine tests, 101 deselected, 6.00 seconds;
+two plugin-disabled pytest configuration warnings. The full real MCP sequence
+then passes with all thirteen QA rules, source-identical preprocessing guidance,
+truthful capability metadata, both unchanged denied directories and the allowed
+one-axis/one-step/one-file plan. Source pass is not installed acceptance; that
+check follows publication. No scientific NLM execution or accuracy is claimed.

@@ -164,7 +164,6 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
     def compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
         from objectstate.lazy_factory import ensure_global_config_context
 
-        import openhcs.processing.func_registry as func_registry_module
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
         from openhcs.core.progress import set_progress_queue
@@ -173,10 +172,6 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
             GlobalPipelineConfig,
             request.global_pipeline_config,
         )
-        with func_registry_module._registry_lock:
-            if not func_registry_module._registry_initialized:
-                func_registry_module._auto_initialize_registry()
-
         orchestrator = PipelineOrchestrator(
             plate_path=request.plate,
             pipeline_config=request.pipeline_document.pipeline_config,
