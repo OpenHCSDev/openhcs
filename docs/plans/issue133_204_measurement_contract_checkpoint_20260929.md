@@ -133,8 +133,9 @@ Draft PR: https://github.com/OpenHCSDev/openhcs/pull/205.
 - `docs/plans/issue133_204_measurement_contract_checkpoint_20260929.md`
 - `docs/plans/issue204_catalog_diagnosis_20260929.md`
 
-Owned disposable test output: `/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929`,
+Owned disposable test output was `/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929`,
 owner Zeno, purpose tiny synthetic plate and bounded pytest temporary outputs.
-Clean after preserving test evidence; no source or saved sessions are stored there.
-No owned large scratch artifacts have been created. Viewer-bind and ROI
+Removed its 608 KiB after preserving evidence and the fully self-seeding source
+reproducer. Generated arrays and logs are regeneratable; no source or saved
+sessions were stored there. No owned large scratch artifacts were created. Viewer-bind and ROI
 materialization implementation surfaces remain with their assigned owners.
