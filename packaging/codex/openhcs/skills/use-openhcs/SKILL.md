@@ -17,6 +17,12 @@ description: Operate local OpenHCS microscopy workflows through the bundled MCP 
 8. Start read-only. Use capability-registry metadata as the authority for mutation and exposure; before mutation, execution, UI actions, viewer launch, network use, or external data exposure, show the target/change, obtain approval, and refresh revision or request tokens.
 9. Preserve the active ownership route. Discover the GUI bridge before UI tools and apply code/state changes with current tokens. Use headless tools only when their workflow group is exposed. Treat structured errors and recovery hints as authoritative; never bypass path policy, stale-process checks, compile requirements, or bridge authentication.
 
+If registry discovery finds no contract-compatible operation, request the
+`custom_function` authoring context and read
+[how to add a missing analysis operation](references/custom-function-authoring.md)
+(`openhcs_custom_function_workflow`). A custom callable becomes an ordinary
+typed registry function, not an alternative pipeline or viewer execution route.
+
 ## Image-analysis QA
 
 For segmentation, neurite tracing, faint structures, or a report that an overlay
