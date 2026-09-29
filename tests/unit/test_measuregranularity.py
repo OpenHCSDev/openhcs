@@ -11,6 +11,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     GranularitySpectrumDescriptor,
     GranularitySpectrumDescriptorDeclaration,
     MeasureGranularityModule,
+    CppGranularityReconstructionBackendStrategy,
     NativeGranularityReconstructionBackendStrategy,
     NumbaGranularityReconstructionBackendStrategy,
     ObjectGranularityMeasurementRows,
@@ -242,10 +243,31 @@ def test_background_corrected_pixels_match_reference_operations():
     np.testing.assert_allclose(pixels, expected)
 
 
-def test_granularity_reconstruction_default_backend_is_numba():
+def test_granularity_reconstruction_default_backend_is_cpp():
     assert isinstance(
         granularity_reconstruction_backend(),
-        NumbaGranularityReconstructionBackendStrategy,
+        CppGranularityReconstructionBackendStrategy,
+    )
+
+
+def test_cpp_granularity_reconstruction_matches_numba_and_native():
+    import skimage.morphology
+
+    rng = np.random.default_rng(25)
+    pixels = rng.random((40, 41), dtype=np.float32)
+    seed = granularity_grey_erosion(pixels, skimage.morphology.disk(1, dtype=np.uint8))
+    native = NativeGranularityReconstructionBackendStrategy().reconstruct_radius_one(
+        seed, pixels
+    )
+    cpp = CppGranularityReconstructionBackendStrategy().reconstruct_radius_one(
+        seed, pixels
+    )
+    np.testing.assert_array_equal(cpp, native)
+    np.testing.assert_array_equal(
+        cpp,
+        NumbaGranularityReconstructionBackendStrategy().reconstruct_radius_one(
+            seed, pixels
+        ),
     )
 
 

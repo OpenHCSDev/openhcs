@@ -3454,6 +3454,54 @@ def test_compile_inspection_counts_source_workspace_for_empty_pipeline_axis_filt
     }
 
 
+@pytest.mark.parametrize("metadata_exists", (False, True))
+def test_compile_inspection_rejects_read_only_plate_before_initialization(
+    monkeypatch,
+    tmp_path: Path,
+    metadata_exists: bool,
+):
+    plate = tmp_path / "input"
+    output = tmp_path / "output"
+    plate.mkdir()
+    output.mkdir()
+    if metadata_exists:
+        (plate / "openhcs_metadata.json").write_text('{"saved": true}')
+    before = {path.name: path.read_bytes() for path in plate.iterdir()}
+    gateway = _WorkspacePreparingCompileInspectionGateway()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(plate,),
+            writable_roots=(output,),
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+
+    with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
+        service.inspect_pipeline_source_artifact_plan(
+            PipelineSourceSessionRequest(
+                identity=ZMQExecutionIdentity(plate_id=str(plate)),
+                pipeline_source=_pipeline_document_source(),
+                global_config_id=None,
+                connection=ExecutionConnectionSpec(),
+            ),
+        )
+
+    assert gateway.requests == []
+    assert {path.name: path.read_bytes() for path in plate.iterdir()} == before
+
+
+def test_compile_inspection_capability_declares_workspace_persistence():
+    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
+
+    spec = InspectPipelineSourceArtifactPlanCapability.to_spec()
+    assert spec.mutating is True
+    assert spec.read_only is False
+    assert spec.side_effects == ("may_persist_workspace_metadata",)
+
+
 def test_execution_session_service_warns_when_compile_inspection_initializes_workspace(
     monkeypatch,
     tmp_path: Path,

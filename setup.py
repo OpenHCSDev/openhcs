@@ -3,10 +3,11 @@
 Dependency and package metadata comes exclusively from ``pyproject.toml``.
 """
 
+import os
 import runpy
 import shutil
 from pathlib import Path
-from setuptools import setup
+from setuptools import Extension, setup
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.sdist import sdist as _sdist
 
@@ -49,9 +50,20 @@ class SdistWithMcpKnowledge(_sdist):
         )
 
 
+_native_granularity_extension = Extension(
+    "openhcs.processing.backends.cellprofiler._granularity_reconstruct",
+    sources=["openhcs/processing/backends/cellprofiler/_granularity_reconstruct.cpp"],
+    language="c++",
+    define_macros=[("Py_LIMITED_API", "0x030B0000")],
+    py_limited_api=True,
+    extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
+)
+
+
 setup(
+    ext_modules=[_native_granularity_extension],
     cmdclass={
         "build_py": BuildPyWithMcpKnowledge,
         "sdist": SdistWithMcpKnowledge,
-    }
+    },
 )
