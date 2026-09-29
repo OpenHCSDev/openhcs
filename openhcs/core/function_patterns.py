@@ -1223,6 +1223,9 @@ def _compile_invocation(
         )
         item = replace(item, contract=contract_plan.contract)
     artifact_selector = declaration_provider(item, step_context)
+    artifact_selector.validate_artifact_relation_refs(
+        owner_name=item.contract.function_name,
+    )
     artifact_input_plans = artifact_selector.select_plans(
         ArtifactInputPlan,
         input_plans,

@@ -56,7 +56,10 @@ class ArtifactPlanKeySelector(ABC):
         return tuple(selected)
 
     def validate_artifact_relation_refs(self, *, owner_name: str) -> None:
+        output_specs = self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs
+        for spec in output_specs:
+            spec.artifact_type.validate_output_declaration(spec)
         self.artifact_specs.validate_registered_relation_refs(
             owner_name=owner_name,
-            relation_specs=self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs,
+            relation_specs=output_specs,
         )

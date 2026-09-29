@@ -12,6 +12,10 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
 )
 from openhcs.processing.backends.cellprofiler.skeleton import measure_object_skeleton
+from openhcs.processing.backends.cellprofiler.intensity import (
+    MeasureObjectIntensityModule,
+    measure_object_intensity,
+)
 
 
 @dataclass(frozen=True)
@@ -156,3 +160,32 @@ def test_function_detail_classifies_normalized_artifact_fed_parameter(monkeypatc
     assert "do not pass this as a function kwarg" in (
         parameters["seed_labels"].description or ""
     )
+
+
+def test_catalog_exposes_declared_exact_object_selector_and_authoring_guidance(
+    monkeypatch,
+):
+    catalog = _catalog(
+        monkeypatch,
+        "openhcs:cellprofiler_measure_object_intensity",
+        measure_object_intensity,
+    )
+    detail = catalog.get("openhcs:cellprofiler_measure_object_intensity")
+    contract = detail.runtime_contract
+    assert contract is not None
+    assert contract.cellprofiler_module is not None
+    (selector,) = (
+        binding
+        for binding in contract.cellprofiler_module.artifact_bindings
+        if binding.runtime_parameter_name == "labels"
+    )
+    owner = MeasureObjectIntensityModule.object_measurement_binding
+    assert owner.parameter_name is None
+    assert selector.parameter_name == owner.require_parameter_name()
+    assert selector.parameter_name == "select_object_sets_to_measure"
+    assert selector.repeated is True
+    assert contract.source_binding_rule is not None
+    assert "one-element tuple selects one producer" in contract.source_binding_rule
+    assert "do not pass labels" in contract.source_binding_rule
+    parameters = {parameter.name: parameter for parameter in detail.parameters}
+    assert parameters["labels"].supplied_by is FunctionParameterSource.ARTIFACT_INPUT

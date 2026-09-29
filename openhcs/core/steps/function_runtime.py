@@ -629,13 +629,7 @@ class MeasurementsFunctionOutputContextStrategy(ProjectedFunctionOutputContextSt
     def _declared_subject(output_plan: ArtifactOutputPlan | None) -> MeasurementSubject:
         if output_plan is None:
             raise ValueError("Measurement outputs require a compiled output plan.")
-        subject = output_plan.measurement_subject()
-        if subject is None:
-            raise ValueError(
-                f"Measurement output {output_plan.ref()!r} has no declared "
-                "measurement subject relation."
-            )
-        return subject
+        return MeasurementsArtifactType.require_output_subject(output_plan)
 
     @staticmethod
     def _validate_nominal_table(

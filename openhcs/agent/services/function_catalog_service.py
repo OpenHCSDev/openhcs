@@ -1081,7 +1081,7 @@ def _cellprofiler_artifact_binding_summary(
         direction="input" if plan_type is ArtifactInputPlan else "output",
         kind=binding.require_artifact_type().require_value(),
         setting_names=setting_names(binding.setting_name),
-        parameter_name=binding.parameter_name,
+        parameter_name=binding.require_parameter_name(),
         runtime_parameter_name=binding.runtime_parameter_name,
         repeated=binding.repeated,
     )
@@ -1098,7 +1098,7 @@ def _source_binding_rule(
     contract: CallableContract,
 ) -> str | None:
     if cellprofiler_module is not None:
-        return "CellProfiler exact artifact names are resolved from the module declaration, concrete FunctionStep groups, and compile-time setting identities. Callable-level artifact arrays can therefore be empty before compilation; inspect the module artifact_bindings here and the compiled artifact plan for exact names."
+        return "CellProfiler exact artifact names are resolved from the module declaration, concrete FunctionStep groups, and compile-time setting identities. Callable-level artifact arrays can therefore be empty before compilation; inspect the module artifact_bindings here and the compiled artifact plan for exact names. Author selectors in FunctionStep func kwargs using each binding's parameter_name; for repeated bindings, use a tuple of exact artifact names (a one-element tuple selects one producer). These compile-time selectors are consumed by the declaration, not passed to the callable. runtime_parameter_name is runtime-owned: do not pass labels or other runtime payloads as function kwargs. When multiple label producers are available, select the exact intended output name; omission remains ambiguous and fails closed."
     if contract.artifact_inputs:
         return "Artifact input bindings are resolved from canonical CallableContract artifact_inputs during compilation."
     return None

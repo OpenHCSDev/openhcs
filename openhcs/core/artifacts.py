@@ -143,6 +143,12 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         return f"<{cls.__name__}: {cls.require_value()!r}>"
 
     @classmethod
+    def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Validate kind-owned output requirements before runtime planning."""
+
+        del spec
+
+    @classmethod
     def normalize_group_scoped_payload(
         cls,
         output_plan: "ArtifactOutputPlan",
@@ -663,6 +669,29 @@ class MeasurementsArtifactType(ArtifactType):
 
     value = "measurements"
     payload_shape = ArtifactPayloadShape.TABLE
+
+    @classmethod
+    def require_output_subject(
+        cls,
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject":
+        """Require the same declared subject at compile and runtime boundaries."""
+
+        subject = ArtifactSpecRelation.measurement_subject_for_output(output)
+        if subject is None:
+            raise ValueError(
+                f"Measurement output {output.ref()!r} has no declared "
+                "measurement subject relation. Add ImageMeasurementSubjectRelation "
+                "with the exact declared image ref for image-level rows, "
+                "ObjectMeasurementSubjectRelation with the exact object-label ref "
+                "for object-level rows, or ArtifactMeasurementSubjectRelation() "
+                "for artifact-level rows to ArtifactSpec.output(..., relations=(...,))."
+            )
+        return subject
+
+    @classmethod
+    def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        cls.require_output_subject(spec)
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:
@@ -1209,6 +1238,27 @@ class ArtifactSpecRelation(ABC, metaclass=AutoRegisterMeta):
         """Return the exact measurement subject declared by this relation."""
 
         return None
+
+    @staticmethod
+    def measurement_subject_for_output(
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject | None":
+        """Resolve the sole subject from an output's original relation owners."""
+
+        subjects = tuple(
+            dict.fromkeys(
+                subject
+                for relation in output.relations
+                for subject in (relation.measurement_subject(),)
+                if subject is not None
+            )
+        )
+        if len(subjects) > 1:
+            raise ValueError(
+                f"Artifact output {output.ref()!r} declares multiple measurement "
+                f"subjects: {subjects!r}."
+            )
+        return subjects[0] if subjects else None
 
     def object_subject_binding(self) -> ObjectArtifactSubjectBinding | None:
         """Return the target-local identity bound to one object subject."""
@@ -2731,20 +2781,7 @@ class ArtifactOutputPlan(ArtifactPlan):
     def measurement_subject(self) -> "MeasurementSubject | None":
         """Return the sole measurement subject declared by this output."""
 
-        subjects = tuple(
-            dict.fromkeys(
-                subject
-                for relation in self.relations
-                for subject in (relation.measurement_subject(),)
-                if subject is not None
-            )
-        )
-        if len(subjects) > 1:
-            raise ValueError(
-                f"Artifact output {self.ref()!r} declares multiple measurement "
-                f"subjects: {subjects!r}."
-            )
-        return subjects[0] if subjects else None
+        return ArtifactSpecRelation.measurement_subject_for_output(self)
 
     def object_subject_binding(self) -> ObjectArtifactSubjectBinding | None:
         """Return the sole object-subject binding declared by this output."""

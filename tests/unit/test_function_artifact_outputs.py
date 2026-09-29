@@ -16,6 +16,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    ImageMeasurementSubjectRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
     MetadataArtifactType,
@@ -51,6 +52,7 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     special_outputs,
 )
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.source_bindings import (
@@ -114,6 +116,7 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )
@@ -2315,6 +2318,90 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
 class _NativeCountRow:
     slice_index: int
     cell_count: int
+
+
+@pytest.mark.parametrize("boundary", ["inspection", "compile"])
+def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
+    spec = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        materialization=MaterializationSpec(CsvOptions()),
+    )
+
+    @artifact_outputs(spec)
+    def count(image):
+        raise AssertionError("Invalid measurement declarations must not execute")
+
+    with pytest.raises(ValueError, match="cell_counts.*no declared measurement subject") as exc:
+        if boundary == "inspection":
+            extract_artifact_declarations(count)
+        else:
+            compile_function_pattern(count, {}, {})
+    assert "ImageMeasurementSubjectRelation" in str(exc.value)
+    assert "ArtifactSpec.output" in str(exc.value)
+
+
+def test_corrected_image_measurement_subject_compiles_and_executes_columnar_rows():
+    image = ArtifactSpec.output("CountedImage", ImageArtifactType)
+    rows = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        materialization=MaterializationSpec(CsvOptions()),
+        relations=(ImageMeasurementSubjectRelation(image.ref()),),
+    )
+
+    @artifact_outputs(image, rows)
+    def count(image):
+        return image, DataclassMeasurementColumnarRows((_NativeCountRow(0, 2),))
+
+    graph = extract_artifact_declarations(count)
+    assert graph.outputs[rows.ref()] == rows
+    context = ContextStub()
+    _execute_function_core(
+        CoreExecutionRequest(
+            func_callable=count,
+            main_data_arg=ImagePayloadMetadata(
+                source_path="/input/A01_s1_w1.tif"
+            ).payload_with(np.zeros((1, 4, 5), dtype=np.uint16)),
+            base_kwargs={},
+            context=context,
+            artifact_inputs={},
+            artifact_outputs={
+                spec.ref(): ArtifactOutputPlan(
+                    spec.name,
+                    f"/memory/{spec.name}.pkl",
+                    artifact_type=spec.artifact_type,
+                    relations=spec.relations,
+                )
+                for spec in (image, rows)
+            },
+        )
+    )
+    [stored] = context.runtime_value_store.find(name=rows.name, axis_id=context.axis_id)
+    assert isinstance(stored.value.data, MeasurementTable)
+    assert stored.value.data.subject == MeasurementSubject(
+        MeasurementScope.IMAGE, image.name
+    )
+    assert tuple(stored.value.data.rows.column_values("cell_count")) == (2,)
+
+
+def test_compile_rejects_conflicting_measurement_subject_relations():
+    image = ArtifactSpec.output("CountedImage", ImageArtifactType)
+    rows = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        relations=(
+            ImageMeasurementSubjectRelation(image.ref()),
+            ArtifactMeasurementSubjectRelation(),
+        ),
+    )
+
+    @artifact_outputs(image, rows)
+    def count(image):
+        return image
+
+    with pytest.raises(ValueError, match="multiple measurement subjects"):
+        compile_function_pattern(count, {}, {})
 
 
 def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_identity():
