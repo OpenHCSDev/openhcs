@@ -1,0 +1,26 @@
+{
+  "base_revision": "fbf6b2d91b7d54cad986ef488d3d9cdc4e12e768",
+  "source_checkout": "/home/ts/code/projects/openhcs-compile-perf",
+  "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "cpu_only": true,
+  "numba_cache": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2",
+  "warmup_log": "/home/ts/code/projects/openhcs-benchmark-runs/perf-registry-kernel-warming-production-c2-20260929.log",
+  "warmup_seconds": 53.52896271692589,
+  "valid_metadata_before_warmup": true,
+  "numba_indexes_before": 0,
+  "numba_indexes_after": 205,
+  "catalog_functions": 266,
+  "ordinary_run": "/home/ts/code/projects/openhcs-benchmark-runs/perf-registry-kernel-prewarmed-ordinary-c2-1w-20260929",
+  "ordinary_endpoint_log": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1790722334249421.log",
+  "ordinary_cache_data_loads": 65,
+  "ordinary_cache_data_saves": 0,
+  "output_bytes": 11550064,
+  "output_sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be",
+  "timing_scope": "Ordinary total excludes prior catalog warmup and input staging. Includes fresh endpoint lifecycle, compilation, execution/export, outcomes and shutdown. Not a first-ever cold end-to-end improvement.",
+  "validation": {
+    "preparation_registry_zmq_tests": 65,
+    "compiler_tests": 206,
+    "backend_module_tests": 550
+  },
+  "nra_scope": "Global ModuleSyntaxIndex/ClassFamily census plus bounded ownership trace and source-checked authored transactions; no full global semantic proof."
+}

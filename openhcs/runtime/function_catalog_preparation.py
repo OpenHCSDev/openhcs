@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import signal
 import threading
 import time
 from collections.abc import Callable
@@ -29,7 +30,14 @@ class FunctionCatalogPreparation:
             RegistryService,
         )
 
-        RegistryService.prepare_in_current_process()
+        def cancel_preparation(_signal_number, _frame) -> None:
+            raise CancelledError
+
+        previous_handler = signal.signal(signal.SIGTERM, cancel_preparation)
+        try:
+            RegistryService.prepare_in_current_process()
+        finally:
+            signal.signal(signal.SIGTERM, previous_handler)
 
     def __init__(
         self,
@@ -117,8 +125,7 @@ class FunctionCatalogPreparation:
 
     def _prepare(self, future: Future[None]) -> None:
         try:
-            self._function_catalog.catalog(
-                compact_signatures=True,
+            self._function_catalog.prepare(
                 status_callback=self._set_message,
                 cancellation=self._cancellation,
             )

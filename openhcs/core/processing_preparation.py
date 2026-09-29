@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import importlib
 import multiprocessing
+import signal
+import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Iterator
-from concurrent.futures import ProcessPoolExecutor
+from contextlib import ExitStack
 from dataclasses import dataclass
+from multiprocessing.connection import Connection
+from multiprocessing.process import BaseProcess
 from threading import Lock
 from typing import ClassVar
 
@@ -175,6 +179,78 @@ class CallablePreparation:
         return (ModuleRegistryPreparation(module_name),)
 
 
+def _execute_cache_preparation(operation, result_connection) -> None:
+    """Report completion while allowing the parent to terminate its exact worker."""
+
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
+    try:
+        operation.execute()
+    except BaseException:
+        result_connection.send(traceback.format_exc()[-4000:])
+        raise
+    else:
+        result_connection.send(None)
+    finally:
+        result_connection.close()
+
+
+@dataclass(frozen=True, slots=True)
+class PreparationCacheWorker:
+    """Own one cache process and its completion channel through cancellation."""
+
+    process: BaseProcess
+    result_connection: Connection
+
+    @classmethod
+    def start(cls, context, operation: PreparationOperation) -> PreparationCacheWorker:
+        receiver, sender = context.Pipe(duplex=False)
+        process = context.Process(
+            target=_execute_cache_preparation, args=(operation, sender)
+        )
+        try:
+            process.start()
+        except BaseException:
+            receiver.close()
+            process.close()
+            raise
+        finally:
+            sender.close()
+        return cls(process, receiver)
+
+    def wait(self) -> None:
+        try:
+            error = self.result_connection.recv()
+        except EOFError as error:
+            self.process.join()
+            raise RuntimeError(
+                f"Cache preparation worker exited without a result (exit code {self.process.exitcode})"
+            ) from error
+        self.process.join()
+        if error is not None:
+            raise RuntimeError(error)
+        if self.process.exitcode != 0:
+            raise RuntimeError(
+                f"Cache preparation worker failed (exit code {self.process.exitcode})"
+            )
+
+    def close(self) -> None:
+        """Stop and reap only this worker; never scan unrelated descendants."""
+
+        try:
+            if self.process.is_alive():
+                self.process.terminate()
+                self.process.join(timeout=0.25)
+            if self.process.is_alive():
+                self.process.kill()
+                self.process.join(timeout=1.0)
+            if self.process.is_alive():
+                raise TimeoutError("Cache preparation worker did not terminate")
+            self.process.join()
+            self.process.close()
+        finally:
+            self.result_connection.close()
+
+
 @dataclass(frozen=True, slots=True)
 class PreparationCacheBatch:
     """Schedule derived cache operations without interpreting backend families."""
@@ -207,12 +283,13 @@ class PreparationCacheBatch:
         )
         if len(children) < 2:
             return
-        with ProcessPoolExecutor(
-            max_workers=min(4, len(children)),
-            mp_context=multiprocessing.get_context("fork"),
-        ) as executor:
-            futures = tuple(
-                executor.submit(operation.execute) for operation in children
-            )
-            for future in futures:
-                future.result()
+        context = multiprocessing.get_context("fork")
+        for offset in range(0, len(children), 4):
+            with ExitStack() as resources:
+                workers: list[PreparationCacheWorker] = []
+                for operation in children[offset : offset + 4]:
+                    worker = PreparationCacheWorker.start(context, operation)
+                    resources.callback(worker.close)
+                    workers.append(worker)
+                for worker in workers:
+                    worker.wait()
