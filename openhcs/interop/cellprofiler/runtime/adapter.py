@@ -139,6 +139,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             edge_plan=edge_plan,
             axis_scope=self.request.axis_scope,
             backend=self.backend,
+            source_binding_plan=self.request.source_binding_plan,
         )
 
     def artifact_input_records(

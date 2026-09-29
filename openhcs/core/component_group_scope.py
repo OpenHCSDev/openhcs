@@ -17,7 +17,11 @@ from openhcs.core.source_metadata import (
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.source_matching import SourceAxisMetadataScope
+    from openhcs.core.source_matching import (
+        SourceAxisMetadataScope,
+        SourceImageSetIdentity,
+        SourceImageSetIdentityPolicy,
+    )
 
 ComponentGroupKey = str | None
 RuntimeFixedComponentValues = tuple[tuple[AllComponents, str], ...]
@@ -528,6 +532,25 @@ class RuntimeExecutionAxisScope:
                 "Runtime execution source scope is missing its multiprocessing axis."
             )
         return SourceAxisMetadataScope.from_component_values(component_values)
+
+    def source_image_set_identity(
+        self,
+        policy: "SourceImageSetIdentityPolicy",
+        *,
+        components: ComponentSet,
+    ) -> "SourceImageSetIdentity":
+        """Project typed coordinates through declared image-set membership."""
+
+        from openhcs.core.source_matching import SourceImageSetIdentity
+
+        return SourceImageSetIdentity(
+            tuple(
+                (component.value, value)
+                for component, value in self.source_component_values
+                if component in components
+                if policy.is_identity_component(component)
+            )
+        )
 
     def matching_component_plane_indices(
         self,

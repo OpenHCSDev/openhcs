@@ -41,6 +41,7 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_matching import (
     SourceAxisMetadataScope,
+    SourceImageSetIdentityCompatibility,
     SourceImageSetIdentityPolicy,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
@@ -259,6 +260,9 @@ class RuntimeArtifactInput:
     edge_plan: InvocationArtifactInputEdgePlan
     axis_scope: RuntimeExecutionAxisScope
     backend: str
+    source_binding_plan: CompiledSourceBindingPlan = dataclass_field(
+        default_factory=CompiledSourceBindingPlan.empty
+    )
 
     def __post_init__(self) -> None:
         if not isinstance(self.edge_plan, InvocationArtifactInputEdgePlan):
@@ -554,7 +558,7 @@ class RuntimeArtifactInput:
         self,
         record: StoredRuntimeValue,
     ) -> bool:
-        """Match fixed consumer coordinates not carried on producer payload axes."""
+        """Match image-set context, preserving declared producer/axis projections."""
 
         projected_components = ComponentSet.coerce(
             self.edge_plan.projection.projected_variable_components(
@@ -562,19 +566,36 @@ class RuntimeArtifactInput:
             )
         )
         record_scope = record.key.scope
-        for component, value in self.axis_scope.fixed_component_values:
-            if component in projected_components:
-                continue
-            producer_value = record_scope.value_text_for_component(component)
-            if producer_value is not None and producer_value != value:
-                return False
-        for component, value in record_scope.fixed_component_values:
-            if component in projected_components:
-                continue
-            consumer_value = self.axis_scope.value_text_for_component(component)
-            if consumer_value is not None and consumer_value != value:
-                return False
-        return True
+        # Producer groups are selected above by the exact compiled edge. Fixed
+        # coordinates constrain context on either side; projected stack axes are
+        # selected from payload provenance by _axis_value, not by record scope.
+        context_components = ComponentSet.collect(
+            (component for component, _value in self.axis_scope.fixed_component_values),
+            (component for component, _value in record_scope.fixed_component_values),
+            (
+                component
+                for component in AllComponents
+                if component.is_multiprocessing_axis()
+            ),
+        ).excluding(projected_components)
+        # Only a declared source-context relation supplies plane membership.
+        # Unrelated visible bindings must not relax an exact artifact input.
+        context_sources = self.edge_plan.spec.source_context_sources()
+        identity_policy = (
+            SourceImageSetIdentityPolicy.from_source_bindings(
+                self.source_binding_plan.for_artifact_refs(context_sources)
+            )
+            if context_sources
+            else SourceImageSetIdentityPolicy()
+        )
+        return SourceImageSetIdentityCompatibility(
+            record_scope.source_image_set_identity(
+                identity_policy, components=context_components,
+            ),
+            self.axis_scope.source_image_set_identity(
+                identity_policy, components=context_components,
+            ),
+        ).matches()
 
 
 @dataclass(frozen=True, slots=True)

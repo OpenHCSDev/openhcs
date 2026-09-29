@@ -658,6 +658,7 @@ class RuntimeInputBindingRequest:
                 edge_plan=runtime_edge,
                 axis_scope=self.adapter.request.axis_scope,
                 backend=self.adapter.backend,
+                source_binding_plan=self.adapter.request.source_binding_plan,
             )
             value = cast(
                 RuntimeCallableArgument,

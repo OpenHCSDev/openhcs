@@ -32,8 +32,15 @@ input-scope defect before measurement: the secondary step requests exact
 belongs to channel 1. `RuntimeArtifactInput._matches_execution_scope` rejects
 that address-matched record. This remains an explicit acceptance blocker; it is
 not evidence of a missing selector and is not bypassed with fallback selection.
-The integration owner must assign/coordinate that runtime/input change. Actual
-GUI interaction and installed-stack verification also remain coordinator-owned.
+Zeno now owns that runtime/input change under the explicit scope extension. PR205
+reuses the existing secondary input's `InputGroupLineageSourceRelation` and
+declaration-derived typed image-set identity policy, not a global channel-ignore
+flag or another selector. All 48 lightweight runtime-store regressions pass,
+including both adapter consumers and wrong well/site/z/time/producer, missing
+relation/source, wrong referenced source, absent site plane, and ambiguity cases.
+The full paired headless journey could not acquire Euler's validation lock
+(exit 75, no pytest started) and remains pending without deselection. Actual GUI
+interaction and installed-stack verification also remain coordinator-owned.
 
 ## Original observed failure and acceptance (preserved)
 

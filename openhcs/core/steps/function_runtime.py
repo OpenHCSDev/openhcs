@@ -1669,6 +1669,7 @@ def _load_artifact_input_values(
         edge_plan=input_plan,
         axis_scope=runtime_scope.axis_scope,
         backend=Backend.MEMORY.value,
+        source_binding_plan=runtime_scope.source_binding_plan,
     ).projected_values(context.runtime_value_store)
 
 

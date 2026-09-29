@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -8,6 +10,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
     ImageArtifactType,
+    InputGroupLineageSourceRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
@@ -29,6 +32,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementObservationAxis,
 )
@@ -55,6 +59,14 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
+from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
+from openhcs.core.source_bindings import (
+    CompiledSourceBindingPlan,
+    ComponentSelector,
+    NamedSourceBinding,
+)
+from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 
 
 def _runtime_input_edge(
@@ -1339,6 +1351,7 @@ def _ungrouped_runtime_artifact_input(
     storage_plan: ArtifactInputPlan,
     *,
     axis_scope: RuntimeExecutionAxisScope = RuntimeExecutionAxisScope(axis_id="A01"),
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty(),
 ) -> RuntimeArtifactInput:
     ungrouped = ComponentGroupScope.ungrouped()
     return RuntimeArtifactInput(
@@ -1351,7 +1364,227 @@ def _ungrouped_runtime_artifact_input(
         ),
         axis_scope=axis_scope,
         backend="memory",
+        source_binding_plan=source_binding_plan,
     )
+
+
+def _paired_channel_label_input(*, producer_axis="A01", producer_values=(), producer_path=None):
+    """One exact DNA producer consumed in its paired actin image-set context."""
+
+    fixed_values = {
+        AllComponents.CHANNEL: "1",
+        AllComponents.SITE: "1",
+        AllComponents.Z_INDEX: "1",
+        AllComponents.TIMEPOINT: "1",
+        **dict(producer_values),
+    }
+    storage_plan = ArtifactInputPlan(
+        name="Nuclei",
+        path="/memory/primary/Nuclei.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        source_step_id=0,
+    )
+    output_plan = ArtifactOutputPlan(
+        name=storage_plan.name,
+        path=producer_path or storage_plan.path,
+        artifact_type=storage_plan.artifact_type,
+    )
+    value = RuntimeValue.normalize_for_execution_scope(
+        output_plan,
+        ObjectLabelSet(
+            name=storage_plan.name,
+            variant_data=ObjectLabelVariantData(labels=np.ones((2, 2), dtype=np.uint16)),
+        ),
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            producer_axis,
+            component=None,
+            value=None,
+            fixed_component_values=tuple(fixed_values.items()),
+        ),
+    )
+    store = RuntimeValueStore()
+    record = store.record(value, path=output_plan.path, backend="memory")
+    consumer_scope = RuntimeExecutionAxisScope.from_raw(
+        "A01",
+        component=None,
+        value=None,
+        fixed_component_values=(
+            (AllComponents.CHANNEL, "2"),
+            (AllComponents.SITE, "1"),
+            (AllComponents.Z_INDEX, "1"),
+            (AllComponents.TIMEPOINT, "1"),
+        ),
+    )
+    source_bindings = CompiledSourceBindingPlan(
+        bindings=(NamedSourceBinding(
+            alias="Actin",
+            component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        ),),
+    )
+    runtime_input = _ungrouped_runtime_artifact_input(
+        storage_plan,
+        axis_scope=consumer_scope,
+        source_binding_plan=source_bindings,
+    )
+    declared_spec = runtime_input.edge_plan.spec.with_group_scope_relation(
+        InputGroupLineageSourceRelation(
+            source=source_bindings.binding_declarations[0].input_spec().ref()
+        )
+    )
+    return store, record, replace(
+        runtime_input,
+        edge_plan=replace(runtime_input.edge_plan, spec=declared_spec),
+    )
+
+
+def test_declared_paired_channel_label_input_matches_image_set_context():
+    store, record, runtime_input = _paired_channel_label_input()
+
+    assert runtime_input.records(store) == (record,)
+    assert runtime_input.resolve_value(store).name == "Nuclei"
+
+
+def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
+    store, record, runtime_input = _paired_channel_label_input()
+    edge = runtime_input.edge_plan
+
+    def consume_labels(image, labels):
+        return image
+
+    (source_binding,) = runtime_input.source_binding_plan.binding_declarations
+    source_spec = source_binding.input_spec()
+    source_edge = InvocationArtifactInputEdgePlan(
+        key=InvocationArtifactInputProjectionKey(edge.key.invocation_key, 1),
+        spec=source_spec,
+        storage_plan=None,
+        projection=None,
+    )
+    contract = CallableContract.from_callable(consume_labels)
+    contract = replace(
+        contract,
+        module_name="SecondaryConsumer",
+        metadata=replace(contract.metadata, artifact_inputs=(edge.spec, source_spec)),
+    )
+    adapter = cellprofiler_runtime_adapter_for_test(
+        runtime_value_store=store,
+        callable_contract=contract,
+        artifact_inputs={edge.key: edge, source_edge.key: source_edge},
+        source_binding_plan=runtime_input.source_binding_plan,
+        axis_scope=runtime_input.axis_scope,
+    )
+
+    assert adapter.artifact_input_records("Nuclei", ObjectLabelsArtifactType) == (record,)
+    request = RuntimeInputBindingRequest(
+        adapter=adapter, kwargs={}, current_image=np.zeros((2, 2))
+    )
+    assert request.artifact_request(edge).value is record.value.data
+
+
+@pytest.mark.parametrize("component", [AllComponents.SITE, AllComponents.Z_INDEX, AllComponents.TIMEPOINT])
+def test_paired_channel_input_rejects_other_context_coordinate(component):
+    store, _record, runtime_input = _paired_channel_label_input(
+        producer_values=((component, "2"),),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        runtime_input.records(store)
+
+
+@pytest.mark.parametrize("producer_axis,producer_path", [
+    ("B01", None),
+    ("A01", "/memory/other_producer/Nuclei.pkl"),
+])
+def test_paired_channel_input_rejects_other_well_or_producer(producer_axis, producer_path):
+    store, _record, runtime_input = _paired_channel_label_input(
+        producer_axis=producer_axis, producer_path=producer_path,
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        runtime_input.records(store)
+
+
+def test_cross_channel_input_without_source_declaration_remains_exact():
+    store, _record, runtime_input = _paired_channel_label_input()
+    strict_input = _ungrouped_runtime_artifact_input(
+        runtime_input.edge_plan.storage_plan,
+        axis_scope=runtime_input.axis_scope,
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        strict_input.records(store)
+
+
+def test_visible_source_binding_without_context_relation_remains_exact():
+    store, _record, runtime_input = _paired_channel_label_input()
+    unrelated_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            runtime_input.edge_plan,
+            spec=replace(runtime_input.edge_plan.spec, relations=()),
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        unrelated_input.records(store)
+
+
+def test_context_relation_to_another_source_does_not_borrow_visible_plane_membership():
+    store, _record, runtime_input = _paired_channel_label_input()
+    unrelated_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            runtime_input.edge_plan,
+            spec=replace(
+                runtime_input.edge_plan.spec,
+                relations=(InputGroupLineageSourceRelation(
+                    ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref()
+                ),),
+            ),
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        unrelated_input.records(store)
+
+
+def test_paired_channel_projection_rejects_a_different_producer_site_plane():
+    store, record, runtime_input = _paired_channel_label_input()
+    edge = runtime_input.edge_plan
+    payload = replace(
+        record.value.data,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/site2_DNA.tif",),
+            component_metadata=({"site": "2", "channel": "1"},),
+        ),
+    )
+    store.replace(
+        replace(record.value, data=payload), path=record.path, backend=record.backend
+    )
+    projected_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            edge,
+            storage_plan=replace(edge.storage_plan, variable_components=(AllComponents.SITE,)),
+            projection=replace(
+                edge.projection,
+                component_scopes=(ComponentGroupScope(("1",), component=AllComponents.SITE),),
+            ),
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="no producer plane"):
+        projected_input.resolve_value(store)
+
+
+def test_paired_channel_input_rejects_ambiguous_address_matched_contexts():
+    store, _record, runtime_input = _paired_channel_label_input()
+    _other_store, other_record, _other_input = _paired_channel_label_input(
+        producer_values=((AllComponents.CHANNEL, "3"),),
+    )
+    store.record(other_record.value, path=other_record.path, backend=other_record.backend)
+
+    with pytest.raises(RuntimeError, match="Ambiguous RuntimeValueStore records"):
+        runtime_input.records(store)
 
 
 def test_runtime_artifact_input_preserves_same_scope_semantic_partitions():
