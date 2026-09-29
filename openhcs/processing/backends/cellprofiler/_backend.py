@@ -7,6 +7,7 @@ from collections.abc import Hashable
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
 
 from metaclass_registry import AutoRegisterMeta
@@ -17,6 +18,7 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
 )
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 
 class CellProfilerBackendProvider(str, Enum):
@@ -292,6 +294,26 @@ class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
         DEFAULT_CELLPROFILER_BACKEND_PROVIDER
     )
     is_default_backend: ClassVar[bool] = False
+
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        """Compile an empty persistent Numba cache under CPU-only execution."""
+        if cls is CellProfilerBackendStrategyMixin:
+            return False
+        if not OpenHCSProcessEnvironment.cpu_only_mode():
+            return False
+        if not any(
+            strategy.requires_explicit_prepare_backend()
+            for strategy in cls.__registry__.values()
+        ):
+            return False
+        from numba import config as numba_config
+
+        cache_directory = numba_config.CACHE_DIR
+        return (
+            bool(cache_directory)
+            and next(Path(cache_directory).rglob("*.nbi"), None) is None
+        )
 
     @classmethod
     def prepare_registered_family(cls) -> None:

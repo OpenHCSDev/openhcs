@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from functools import singledispatch
 import logging
 import os
+import importlib
 import time
 from collections.abc import Sequence as SequenceABC
 from dataclasses import dataclass, field, replace
@@ -42,6 +43,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
+    CallableProjection,
     CallableRuntimeCacheKey,
     prepare_processing_callable,
 )
@@ -1690,6 +1692,7 @@ def prepare_compiled_context_callables(
     """Prepare every compiled callable visible in the compiled contexts."""
     prepared_group_keys: set[tuple[str, int, str]] = set()
     prepared_invocation_count = 0
+    groups: list[CompiledFunctionGroup] = []
     for context_key, context in compiled_contexts.items():
         step_plans = context.step_plans
         if not step_plans:
@@ -1706,9 +1709,29 @@ def prepare_compiled_context_callables(
                 )
                 if prepare_key in prepared_group_keys:
                     continue
-                prepare_compiled_function_group(group)
+                groups.append(group)
                 prepared_invocation_count += len(group.invocations)
                 prepared_group_keys.add(prepare_key)
+    module_names = dict.fromkeys(
+        projection.module_name
+        for group in groups
+        for invocation in group.invocations
+        for projection in (
+            CallableProjection.from_callable(
+                invocation.contract.resolve_canonical_raw_callable()
+            ),
+        )
+        if projection.module_name is not None
+    )
+    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+
+    AutoRegisterRegistryPreparation.prepare_module_caches_in_children(
+        importlib.import_module(name) for name in module_names
+    )
+    for group in groups:
+        # Parent preparation loads child-produced machine code and owns every
+        # process-local hook/cache that execution workers inherit.
+        prepare_compiled_function_group(group)
     logger.info(
         "Prepared %d compiled callable invocations across %d groups.",
         prepared_invocation_count,

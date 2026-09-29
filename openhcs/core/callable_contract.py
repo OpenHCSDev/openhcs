@@ -152,6 +152,11 @@ class CompilerPreparedAutoRegisterFamily(ABC):
     def prepare_registered_family(cls) -> None:
         """Prepare registered implementations before timed callable execution."""
 
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        """Whether preparation populates a persistent cache the parent can load."""
+        return False
+
 
 class FunctionStepExecutionScope(str, Enum):
     """Lifecycle scope for one compiled FunctionStep callable."""
