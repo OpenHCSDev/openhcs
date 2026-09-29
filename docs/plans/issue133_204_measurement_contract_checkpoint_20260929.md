@@ -94,6 +94,35 @@ Runtime checkpoint after the explicit scope extension:
 - The resource guard reported 11.6 GiB available RAM; its warning was historical
   11.5 GiB used swap. Only lightweight source/unit checks proceeded.
 
+Coordinator scope-preservation witness, followed through:
+
+- Ordinary exact unscoped inputs and producer-only, consumer-only, shared-partial,
+  and disjoint-partial fixed scopes were explicitly tested through
+  `RuntimeArtifactInput.records`, not only through a predicate. They already
+  passed because the earlier projection retained the exact axis key.
+- A genuinely empty projected-context witness uses a context-carrying object-label
+  artifact and an existing source declaration whose plane membership projects
+  the axis key. The published candidate then reproduced **four failures**:
+  unscoped, producer-only, consumer-only, and disjoint-partial inputs lost their
+  exact address-matched record because `bool(shared_keys)` was false. This proves
+  a focused runtime failure for the witness, not its prevalence in real pipelines.
+- Artifact admission now derives shared additional constraints from the typed
+  scope owners, compiled variable-axis projection, and declared image-set policy.
+  No shared additional constraint is vacuously satisfied after producer/address/
+  group selection. Otherwise the existing typed predicate checks their values.
+  The artificial shared axis key was removed from this additional-context test.
+- `SourceImageSetIdentityCompatibility` is **unchanged**. Each projected-context
+  case asserts it still rejects identities with no shared evidence; exact artifact
+  admission has a different, already-proven identity boundary. Wrong well and
+  producer paths still fail before this additional-constraint check.
+- `pytest -q tests/unit/test_runtime_value_store.py --tb=short`: **56 passed**,
+  1.67 seconds in the final run including the exact-address negative assertions.
+  Original conflicting spatial/time,
+  exact producer/group, retained-plane, and ambiguity assertions still pass.
+- Only `core/runtime_stores.py`, its typed scope owner, and their tests were
+  modified for this witness. No source-binding owner, shared artifact declaration,
+  CellProfiler adapter, or #214 diagnostic-output field was modified in this step.
+
 ## Essential anti-pattern audit: actual ownership evidence
 
 This is a focused source/caller and AST audit against the current archived
@@ -110,6 +139,7 @@ That guard detects listed shapes, not every possible semantic ownership defect.
 | IDEN-7, IMPL-10 | An initial placement incorrectly rejected heterogeneous CellProfiler records. Validation now runs after invocation-contract finalization, where the existing `runtime_adapter.manages_artifact_outputs` capability names the output owner. Native table-wide subject invariants apply only to native returned payloads, not adapter-recorded tables. Real primary/secondary compilation and execution plus native missing/corrected tests exercise both owners. |
 | AGENT-2/3/6/7, TIME-5/9 | No second mechanism, format converter, test-only production switch, or dormant feature was added. One pre-existing cardinality fixture received a valid artifact-level subject so its original missing-return assertion remains meaningful. The paired-channel failure is retained, not hidden by weaker expectations; publication proceeds with that exact acceptance gap stated. |
 | IDEN-1/6/7, BOUND-2, MEMB-1/2/3, IMPL-5/12, TIME-1/3 | Exact compiled producer/address selection and contextual source compatibility answer different questions. `RuntimeArtifactInput` derives context membership from `edge.spec.source_context_sources()` and the referenced original source bindings, then delegates matching to the existing typed identity predicate. `RuntimeExecutionAxisScope` owns its typed-coordinate projection. No literal channel/site/z/time matching roster, new registry, global ignore flag, alternate reader, or copied predicate was added. All three constructors are migrated; two actual adapter consumers and fail-closed new cases execute. The replaced fixed-coordinate loops are gone. |
+| IDEN-7, BOUND-2, IMPL-5 | Artifact admission asks whether an already-selected producer violates any shared additional coordinate constraint, not whether unknown plane identities prove correspondence. The four failing empty/asymmetric witnesses distinguish these questions. `ComponentSet.intersection`, scope-owned `source_components`, and policy-owned `identity_components()` derive the applicable constraint domain. No copied compatibility matcher or weakened global empty-identity semantics was introduced. |
 
 Caller review covered the default invocation declaration provider (returns the
 finalized `CallableContract`), every call to the new output-validation hook and
@@ -154,6 +184,10 @@ duplicate-resolution removal is factoring; no pure file move is claimed.
   present and store regressions pass, but complete paired execution remains
   unverified. No `core/source_bindings.py`, `core/source_binding_workspace.py`,
   source preparation, ROI, viewer, or #211 authorization method/test was modified.
+- Scheduling: the parent owns the first released validation slot for real MCP
+  #151/#212 and its useful merge/installation checkpoint. Zeno will run the full
+  six-case headless journey only after the explicit next-slot handoff. No race for
+  fresh environments, GUI, JVM, or installed-baseline changes is authorized.
 - Source-only explanation of the apparent grouped/ungrouped distinction: group
   coordinates are selected by the compiled edge, while the previous predicate
   compared fixed coordinates on either side. Binding-owned channel identities

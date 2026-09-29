@@ -3,7 +3,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
+from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
     ArtifactInputPlan,
@@ -32,6 +32,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.component_set import ComponentSet
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementObservationAxis,
@@ -65,6 +66,7 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
 )
+from openhcs.core.source_matching import SourceImageSetIdentityCompatibility, SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 
@@ -1594,7 +1596,24 @@ def test_runtime_artifact_input_preserves_same_scope_semantic_partitions():
     )
 
 
-def test_runtime_artifact_input_accepts_consumer_coordinate_absent_from_producer():
+@pytest.mark.parametrize("producer_values,consumer_values", [
+    pytest.param((), (), id="exact-unscoped"),
+    pytest.param((), ((AllComponents.Z_INDEX, "1"),), id="consumer-only"),
+    pytest.param(((AllComponents.TIMEPOINT, "1"),), (), id="producer-only"),
+    pytest.param(
+        ((AllComponents.TIMEPOINT, "1"),),
+        ((AllComponents.Z_INDEX, "1"),),
+        id="disjoint-partial",
+    ),
+    pytest.param(
+        ((AllComponents.TIMEPOINT, "1"),),
+        ((AllComponents.Z_INDEX, "1"), (AllComponents.TIMEPOINT, "1")),
+        id="shared-partial",
+    ),
+])
+def test_runtime_artifact_input_accepts_exact_unscoped_and_partial_coordinates(
+    producer_values, consumer_values,
+):
     store = RuntimeValueStore()
     storage_plan = ArtifactInputPlan(
         name="positions",
@@ -1620,7 +1639,7 @@ def test_runtime_artifact_input_accepts_consumer_coordinate_absent_from_producer
             "A01",
             component=None,
             value=None,
-            fixed_component_values=((AllComponents.TIMEPOINT, "1"),),
+            fixed_component_values=producer_values,
         ),
     )
     record = store.replace(value, path=storage_plan.path, backend="memory")
@@ -1628,16 +1647,86 @@ def test_runtime_artifact_input_accepts_consumer_coordinate_absent_from_producer
         "A01",
         component=None,
         value=None,
-        fixed_component_values=(
-            (AllComponents.Z_INDEX, "1"),
-            (AllComponents.TIMEPOINT, "1"),
-        ),
+        fixed_component_values=consumer_values,
     )
 
     assert _ungrouped_runtime_artifact_input(
         storage_plan,
         axis_scope=consumer_scope,
     ).records(store) == (record,)
+
+
+@pytest.mark.parametrize("producer_values,consumer_values", [
+    pytest.param((), (), id="empty-projected-context"),
+    pytest.param(((AllComponents.TIMEPOINT, "1"),), (), id="producer-only"),
+    pytest.param((), ((AllComponents.Z_INDEX, "1"),), id="consumer-only"),
+    pytest.param(
+        ((AllComponents.TIMEPOINT, "1"),),
+        ((AllComponents.Z_INDEX, "1"),),
+        id="disjoint-partial",
+    ),
+])
+def test_exact_input_admits_no_shared_projected_context_constraints(
+    producer_values, consumer_values,
+):
+    _store, original, original_input = _paired_channel_label_input()
+    storage_plan = original_input.edge_plan.storage_plan
+    producer_scope = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None, fixed_component_values=producer_values,
+    )
+    store = RuntimeValueStore()
+    record = store.record(
+        replace(original.value, key=replace(original.key, scope=producer_scope)),
+        path=original.path, backend=original.backend,
+    )
+    source = NamedSourceBinding(
+        alias="Reference",
+        component_identity=(ComponentSelector(get_multiprocessing_axis(), "A01"),),
+    )
+    consumer_scope = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None, fixed_component_values=consumer_values,
+    )
+    runtime_input = _ungrouped_runtime_artifact_input(
+        storage_plan, axis_scope=consumer_scope,
+        source_binding_plan=CompiledSourceBindingPlan(bindings=(source,)),
+    )
+    runtime_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            runtime_input.edge_plan,
+            spec=runtime_input.edge_plan.spec.with_group_scope_relation(
+                InputGroupLineageSourceRelation(source.input_spec().ref())
+            ),
+        ),
+    )
+
+    # Plane-identity compatibility still requires evidence of a shared identity.
+    # Exact artifact admission instead has a proven producer/address and only
+    # checks the additional coordinates constrained on both sides.
+    assert runtime_input.edge_plan.spec.source_context_sources() == (source.input_spec().ref(),)
+    policy = SourceImageSetIdentityPolicy.from_source_bindings(runtime_input.source_binding_plan)
+    components = ComponentSet.collect(
+        (component for component, _value in producer_scope.source_component_values),
+        (component for component, _value in consumer_scope.source_component_values),
+    )
+    assert not SourceImageSetIdentityCompatibility(
+        producer_scope.source_image_set_identity(policy, components=components),
+        consumer_scope.source_image_set_identity(policy, components=components),
+    ).matches()
+    assert runtime_input.records(store) == (record,)
+    wrong_well = replace(
+        runtime_input, axis_scope=replace(consumer_scope, axis_id="B01"),
+    )
+    wrong_producer = replace(
+        runtime_input,
+        edge_plan=replace(
+            runtime_input.edge_plan,
+            storage_plan=replace(storage_plan, path="/memory/other/Nuclei.pkl"),
+        ),
+    )
+    for rejected_input in (wrong_well, wrong_producer):
+        with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+            rejected_input.records(store)
 
 
 def test_runtime_artifact_input_rejects_conflicting_declared_fixed_coordinate():

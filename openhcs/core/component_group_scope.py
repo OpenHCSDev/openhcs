@@ -552,6 +552,14 @@ class RuntimeExecutionAxisScope:
             )
         )
 
+    @property
+    def source_components(self) -> ComponentSet:
+        """Return the typed components whose coordinates this scope declares."""
+
+        return ComponentSet.collect(
+            (component for component, _value in self.source_component_values)
+        )
+
     def matching_component_plane_indices(
         self,
         component_metadata: Sequence[Mapping[str, object] | None],

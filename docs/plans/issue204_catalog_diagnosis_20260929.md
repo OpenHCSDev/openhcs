@@ -42,6 +42,15 @@ The full paired headless journey could not acquire Euler's validation lock
 (exit 75, no pytest started) and remains pending without deselection. Actual GUI
 interaction and installed-stack verification also remain coordinator-owned.
 
+The coordinator's empty/asymmetric scope witness is now covered explicitly.
+It reproduced four address-matched input failures when declaration projection
+left no shared context keys. The artifact boundary now admits vacuous additional
+constraints after exact producer selection; the unrelated plane-identity
+compatibility predicate remains unchanged and still rejects empty identities.
+All 56 runtime-store cases pass after this correction. Full paired execution
+awaits the explicit worker validation-slot handoff after the parent's #151/#212
+MCP/installation checkpoint; no first-release race or baseline change will occur.
+
 ## Original observed failure and acceptance (preserved)
 
 Original title: Allow typed exact object-label selection for scalar CellProfiler measurement steps

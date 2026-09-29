@@ -572,11 +572,6 @@ class RuntimeArtifactInput:
         context_components = ComponentSet.collect(
             (component for component, _value in self.axis_scope.fixed_component_values),
             (component for component, _value in record_scope.fixed_component_values),
-            (
-                component
-                for component in AllComponents
-                if component.is_multiprocessing_axis()
-            ),
         ).excluding(projected_components)
         # Only a declared source-context relation supplies plane membership.
         # Unrelated visible bindings must not relax an exact artifact input.
@@ -588,6 +583,17 @@ class RuntimeArtifactInput:
             if context_sources
             else SourceImageSetIdentityPolicy()
         )
+        context_components = (
+            context_components
+            .intersection(record_scope.source_components)
+            .intersection(self.axis_scope.source_components)
+            .intersection(ComponentSet(identity_policy.identity_components()))
+        )
+        # Exact producer/address/group selection has already proved identity.
+        # No shared additional constraint is vacuously satisfied here; this does
+        # not relax the evidence requirement of plane-identity compatibility.
+        if not context_components:
+            return True
         return SourceImageSetIdentityCompatibility(
             record_scope.source_image_set_identity(
                 identity_policy, components=context_components,
