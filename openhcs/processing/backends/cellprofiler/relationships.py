@@ -773,7 +773,7 @@ from openhcs.core.source_plane_alignment import (
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    cellprofiler_lookup_dialect_for_measurement_owner,
 )
 
 
@@ -1719,13 +1719,16 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                     for local_slice_index in local_slice_indexes
                 )
 
+            table_dialect = cellprofiler_lookup_dialect_for_measurement_owner(
+                table.measurement_feature_owner
+            )
             queries = tuple(
                 (
                     feature_name,
                     MeasurementFeatureQuery(
                         feature_name,
                         object_name=child_spec.name,
-                        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                        dialect=table_dialect,
                     ),
                 )
                 for feature_name in aggregate_features
