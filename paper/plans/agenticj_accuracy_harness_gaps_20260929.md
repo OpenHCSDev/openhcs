@@ -82,11 +82,15 @@ on existing nominal owners and use MI/MRO composition
 where capabilities are independent. Never substitute a second registry, type-name
 dispatch, fallback import or arbitrary metadata store for the owning contract.
 
-The known client timeout/fallback defect remains separate: the session context
-manager catches failures across its yielded caller and can mask an operation
-error. Preserve uncertain mutation identities and never fix this by replaying a
-Run or increasing timeouts. Optimise measured cold/warm behaviour separately from
-biological accuracy; prewarming is useful only with scoped ownership and RAM limits.
+The post-dispatch transport fallback defect was repaired in merged
+[PR181](https://github.com/OpenHCSDev/openhcs/pull/181); the issue receipt records
+an installed actual resident-session check preserving caller failure and
+reconnecting to the same healthy process. Do not implement a competing fix.
+Cold/preparation latency remains separate under
+[issue178](https://github.com/OpenHCSDev/openhcs/issues/178). Preserve uncertain
+mutation identities; never replay a Run or increase timeouts as a speed fix.
+Optimise measured cold/warm behaviour separately from biological accuracy;
+prewarming is useful only with scoped ownership and RAM limits.
 
 ## Source and evaluation limits
 
