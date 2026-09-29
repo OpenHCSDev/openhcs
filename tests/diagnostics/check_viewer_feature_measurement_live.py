@@ -330,7 +330,7 @@ def main() -> None:
                 line = call("openhcs_measure_viewer_polyline", request)
                 measured = line["measurement"]
                 assert measured["data_length"] == 18 and measured["world_length"] == 45
-                assert abs(measured["data_chord_length"] - (162 ** .5)) < 1e-10
+                assert abs(measured["data_chord_length"] - (162**0.5)) < 1e-10
                 assert measured["world_vertices"][0][-2:] == [34.0, 63.0]
                 assert measured["profile_values"] == list(range(110, 120)) + list(
                     range(129, 210, 10)
@@ -409,8 +409,14 @@ def main() -> None:
                     {**connection, "output_dir_path": str(output / "captures")},
                 )
                 assert capture["captured"]
-                call("openhcs_navigate_viewer_window", {**bindings[1], "display_axes": ["y", "x"]})
-                region_capture = call("openhcs_viewer_snapshot_window", {**connection, "output_dir_path": str(output / "captures-region")})
+                call(
+                    "openhcs_navigate_viewer_window",
+                    {**bindings[1], "display_axes": ["y", "x"]},
+                )
+                region_capture = call(
+                    "openhcs_viewer_snapshot_window",
+                    {**connection, "output_dir_path": str(output / "captures-region")},
+                )
                 assert region_capture["captured"]
                 receipt.update(
                     numeric_journey_passed=True,
@@ -447,11 +453,6 @@ def main() -> None:
                     )
                     save()
 
-    receipt["client_closed"] = True
-    save()
-    print(json.dumps({"receipt": str(output / "journey.json"), "numeric_journey_passed": receipt.get("numeric_journey_passed", False), "author_opened_bitmaps": False}), flush=True)
-    if receipt.get("failure"):
-        raise SystemExit(1)
                     print(inspection.rendered_output, flush=True)
             finally:
                 save()  # Freeze evidence BEFORE closing only proved owned runtime.
@@ -471,6 +472,21 @@ def main() -> None:
                         "No proved viewer identity or uncertain dispatch; preserve for explicit disposition, no replay/foreign cleanup."
                     )
                     save()
+
+    receipt["client_closed"] = True
+    save()
+    print(
+        json.dumps(
+            {
+                "receipt": str(output / "journey.json"),
+                "numeric_journey_passed": receipt.get("numeric_journey_passed", False),
+                "author_opened_bitmaps": False,
+            }
+        ),
+        flush=True,
+    )
+    if receipt.get("failure"):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
