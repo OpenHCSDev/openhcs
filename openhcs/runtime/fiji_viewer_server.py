@@ -30,6 +30,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 from openhcs.core.config import FijiDisplayConfig
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
@@ -1969,7 +1970,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         super().__init__(
             launch_config.port,
             viewer_type=ViewerType.FIJI.wire_value,
-            host="*",
+            host=launch_config.process_launch.listen_host,
             log_file_path=launch_config.log_file_path,
             data_socket_type=zmq.REP,
             transport_mode=launch_config.transport_mode,
@@ -3139,6 +3140,7 @@ def fiji_viewer_server_process(
     display_enabled: bool = True,
     transport_mode: TransportMode = TransportMode.IPC,
     zmq_config: ZMQConfig | None = None,
+    listen_host: str = "127.0.0.1",
 ):
     """
     Fiji viewer server process function.
@@ -3152,6 +3154,7 @@ def fiji_viewer_server_process(
         log_file_path: Path to log file (for client discovery via ping/pong)
         transport_mode: ZMQ transport mode (IPC or TCP)
         zmq_config: ZMQ configuration object (optional, uses default if None)
+        listen_host: Explicit TCP bind interface; defaults to local-only
     """
     server = None
     try:
@@ -3166,6 +3169,7 @@ def fiji_viewer_server_process(
                 display_enabled=display_enabled,
                 transport_mode=transport_mode,
                 zmq_config=zmq_config,
+                process_launch=ViewerProcessLaunchConfig(listen_host=listen_host),
             )
         )
 

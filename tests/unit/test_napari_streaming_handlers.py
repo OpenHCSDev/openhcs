@@ -3566,8 +3566,9 @@ def test_napari_runtime_launch_carries_the_projected_scope_accent():
         log_file=Path("/tmp/napari-6200.log")
     )
 
-    assert arguments.expressions[-2].source == "'#1464c8'"
-    assert arguments.expressions[-1].source == "None"
+    assert arguments.expressions[-3].source == "'#1464c8'"
+    assert arguments.expressions[-2].source == "None"
+    assert arguments.expressions[-1].source == "'127.0.0.1'"
 
 
 def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):

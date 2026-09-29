@@ -667,7 +667,7 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
 
 
 def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
-    config = ViewerProcessLaunchConfig(qt_font_dpi=96)
+    config = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="192.0.2.1")
 
     assert (
         ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
@@ -679,6 +679,13 @@ def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
         ViewerProcessLaunchConfig.from_wire_mapping({"qt_font_dpi": True})
     with pytest.raises(ValueError):
         ViewerProcessLaunchConfig(qt_font_dpi=0)
+
+    with pytest.raises(TypeError, match="listen host must be a string"):
+        ViewerProcessLaunchConfig.from_wire_mapping(
+            {"qt_font_dpi": None, "listen_host": True}
+        )
+    with pytest.raises(ValueError, match="listen host must not be blank"):
+        ViewerProcessLaunchConfig(listen_host=" ")
 
 
 def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():

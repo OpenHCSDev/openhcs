@@ -1,0 +1,9 @@
+# Managed viewer bind implementation checkpoint
+
+Replaces the planning-only state of PR #159; relates to #135. The connection address remains `StreamingDefaults.host`. The independently declared `StreamingDefaults.listen_host` defaults to `127.0.0.1` and projects through the existing `ViewerProcessLaunchConfig` into both detached Napari/Fiji entrypoints. Both server constructors pass that declaration to the existing ZMQ endpoint owner, which derives and binds data and control sockets. Explicit interfaces and `*` remain supported; IPC ignores the bind host. Externally owned viewers are connected to, not rebound by this change.
+
+No new catalog, registry, launch store, or string-switch router was introduced. The existing exact Napari process-launch declaration comparison includes the listen address so a different requested process-global policy cannot silently match. Missing old wire declarations fail that comparison rather than acquiring a compatibility default.
+
+Focused source verification: 46 tests passed in 3.58 seconds across `test_viewer_listener_binding.py`, `test_streaming_config_factory_registry.py`, and `test_viewer_protocol.py`. The network cases construct real Napari/Fiji server owners and bind their actual data/control sockets, asserting `ZMQ_LAST_ENDPOINT` for loopback, explicit wildcard, and IPC. They do not start the GUI or Fiji JVM. The detached argument test verifies connection host and bind host remain independent.
+
+Outstanding acceptance: actual fresh detached Napari process through the installed user entrypoint, both OS listeners observed, and image/control response; existing external-viewer reuse through that same live path; explicit remote bind in a controlled environment. Installed source remains unchanged while the blind H003 run is active. This checkpoint is an implementation draft, not a live-readiness claim. Heavy validation is serialized with the issue batch's resource lock.

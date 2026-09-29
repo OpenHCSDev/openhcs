@@ -94,6 +94,7 @@ class NapariStreamVisualizer(ManagedViewerLifecycleMixin):
             DetachedViewerPythonExpression.symbol("transport_mode"),
             DetachedViewerPythonExpression.literal(self.scope_accent_color),
             DetachedViewerPythonExpression.literal(self.process_launch.qt_font_dpi),
+            DetachedViewerPythonExpression.literal(self.process_launch.listen_host),
         )
 
     def existing_viewer_matches_process_launch(self) -> bool:

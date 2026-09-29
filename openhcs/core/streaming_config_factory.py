@@ -80,6 +80,7 @@ class ViewerProcessLaunchField(str, Enum):
     """Wire fields projected from the viewer process-launch declaration."""
 
     QT_FONT_DPI = "qt_font_dpi"
+    LISTEN_HOST = "listen_host"
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,16 +88,22 @@ class ViewerProcessLaunchConfig:
     """Process-global settings that must exist before viewer construction."""
 
     qt_font_dpi: int | None = None
+    listen_host: str = "127.0.0.1"
 
     def __post_init__(self) -> None:
+        if not isinstance(self.listen_host, str):
+            raise TypeError("Viewer listen host must be a string.")
+        if not self.listen_host.strip():
+            raise ValueError("Viewer listen host must not be blank.")
         if self.qt_font_dpi is not None and self.qt_font_dpi <= 0:
             raise ValueError("Viewer Qt font DPI must be positive when provided.")
 
-    def to_wire_mapping(self) -> dict[str, int | None]:
+    def to_wire_mapping(self) -> dict[str, str | int | None]:
         """Project the launch declaration onto the viewer control boundary."""
 
         return {
             ViewerProcessLaunchField.QT_FONT_DPI.value: self.qt_font_dpi,
+            ViewerProcessLaunchField.LISTEN_HOST.value: self.listen_host,
         }
 
     @classmethod
@@ -111,7 +118,10 @@ class ViewerProcessLaunchConfig:
             not isinstance(value, int) or isinstance(value, bool)
         ):
             raise TypeError("Viewer Qt font DPI must be an integer or None.")
-        return cls(qt_font_dpi=value)
+        return cls(
+            qt_font_dpi=value,
+            listen_host=payload[ViewerProcessLaunchField.LISTEN_HOST.value],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,7 +200,7 @@ class StreamingConfigBehaviorMixin:
     def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
         """Return process-launch settings owned by this viewer declaration."""
 
-        return ViewerProcessLaunchConfig()
+        return ViewerProcessLaunchConfig(listen_host=self.listen_host)
 
     def viewer_surface(
         self,
