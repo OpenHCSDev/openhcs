@@ -7,6 +7,37 @@ Tracking issue:#134. This is an implementation workstream, not a completed fix.
 
 ### Live calibration defect and bounded ownership decision
 
+The implemented checkpoint now passes the installed live MCP review. Both
+raw and POINT layers report XY scale (0.65,0.65), zero translation, exact
+fractional coordinates and labels 1..3. Six bitmaps were individually opened:
+raw-only/result-only/combined under numeric windows (444,26058) and (444,4000),
+gamma 1. All keep the same native camera/axes and 1440x950 capture geometry.
+These are deliberately synthetic transport markers, not cell detections.
+Full native receipts and the six SHA-verified witness copies are preserved at
+`/home/ts/wt/openhcs-live-point-evidence-20260929`. The first capture stdout was
+truncated by the observation tool and rejected; the complete replacement
+contains all 20 response envelopes. The viewer will be closed through MCP.
+
+41 focused streaming/agent tests passed on source (3.83s, wall 4.55s,
+295,092 KiB RSS), then on isolated installed wheels (3.81s, wall 4.52s,
+294,804 KiB RSS). Initial source-test collection imported installed PolyStore
+too early; the source import authority correctly rejected that mixed context.
+Importing this OpenHCS checkout first activated its own pinned externals.
+
+The corrected bounded census/overlay uses the refactor-audit native APIs on
+the actual one-module source at 02d7b05 and a578008, wall 4.11s, peak RSS
+262,156 KiB, with no parse omissions. Production code lines 766→770; string
+dispatch/raw-key/type-switch measures are unchanged. The added `.has_values`
+query increases the syntactic foreign_absence_probe count 6→7, but invokes
+SourceVoxelSpacing's own explicit state contract rather than reconstructing
+its values or units. Two pre-existing long procedures stay unchanged. The
+one-module overlay's dead-module lead is false: agent and GUI consumers outside
+that bounded package import it. No global-debt or native equivalence claim.
+
+Ship this useful native POINT/calibration checkpoint now. Continue explicit
+materialized directory admission and writer provenance under issue #134 in a
+follow-up PR; do not imply those remaining parts or scientific QA are complete.
+
 The installed POINT archive now reopens through public MCP on a separate
 synthetic viewer (:90/TCP5691), with three exact fractional coordinates and
 source components retained. A real capture was opened. It is REJECTED as an
@@ -46,7 +77,7 @@ Integration owner: main OpenHCS blind-analysis coordinator. Persistent worktree:
 `/home/ts/wt/openhcs-materialized-result-route-20260929`.
 
 OpenHCSDev/PolyStore#13 is merged. Recorded dependency main:
-`e430c331ad931edc92dfe9d4fcd0d837a3cfeea8`. The parent gitlink is being advanced
+`e430c331ad931edc92dfe9d4fcd0d837a3cfeea8`. The parent gitlink has advanced
 to that reviewed merge. The existing codec declarations now own native ImageJ
 POINT/polygon/polyline/oval encode/decode; the ZIP reader no longer substitutes
 PolygonShape for unrelated geometry. Exact subpixel points and all points in
@@ -73,8 +104,8 @@ declared isolated builds completed. Fresh installed MCP health is OK, with
 Installed MCP to the existing viewer on TCP 5690 is NOT validated: native pickle
 decoding fails on ViewerWindowGeometry, a type in the dirty shared viewer source
 but absent from recorded main. The old viewer and its visible evidence are
-preserved; do not add a compatibility alias. A matched-version, tiny synthetic
-managed viewer is the next live check. Original H002 scientific results remain
+preserved; do not add a compatibility alias. The matched-version tiny synthetic
+managed viewer passed as recorded above. Original H002 scientific results remain
 frozen and biologically ambiguous.
 
 Before extending materialization writer/worker observations, coordinate with
