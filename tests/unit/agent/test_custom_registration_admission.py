@@ -371,6 +371,42 @@ def test_manager_admitted_persistence_uses_existing_registry_and_source_owner(
         CustomFunctionRuntimeRegistry.clear()
 
 
+@pytest.mark.parametrize("operation", ("require", "load", "read", "delete", "update"))
+def test_manager_named_source_operations_use_filename_owner(
+    tmp_path, monkeypatch, operation
+):
+    from openhcs.processing.custom_functions.source_namespace import (
+        CustomFunctionSource,
+    )
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    manager = CustomFunctionManager(create_storage=False)
+    selected = []
+
+    def own_path(root, name):
+        selected.append((root, name))
+        raise LookupError("filename-owner-witness")
+
+    monkeypatch.setattr(manager, "source_path_for_name", own_path)
+    operations = {
+        "require": lambda: manager.require_source(
+            CustomFunctionSource(
+                function_name="boundary_probe", content_sha256="0" * 64
+            )
+        ),
+        "load": lambda: manager.load_custom_function("boundary_probe"),
+        "read": lambda: manager.get_function_code("boundary_probe"),
+        "delete": lambda: manager.delete_custom_function("boundary_probe"),
+        "update": lambda: manager.update_custom_function(
+            "boundary_probe", "not evaluated"
+        ),
+    }
+    with pytest.raises(LookupError, match="filename-owner-witness"):
+        operations[operation]()
+    assert selected == [(manager.storage_dir, "boundary_probe")]
+    assert not manager.storage_dir.exists()
+
+
 @pytest.mark.parametrize("missing_route", (False, True))
 def test_real_generated_mcp_boundary_excludes_authority_and_denies_before_client(
     tmp_path, missing_route

@@ -152,8 +152,13 @@ the registration-specific DTO/service regions, not measurement declarations.
   `CustomFunctionManager` and XDG helpers own paths. A different native storage
   declaration changes that owner, not a new endpoint-to-filename registry.
 - IMPL-12: replaced the manager's repeated name-to-file construction with its
-  `source_path_for_name`, consumed by admission and actual save. New public names
-  take the same helper, not a second source parser.
+  `source_path_for_name`, consumed by admission, save, named load/read/delete,
+  revision checking (`require_source`) and both rename destinations. The six
+  remaining same-schema constructions were removed in the pre-live follow-up.
+  Five owner-interception cases witness that those named operations cannot
+  bypass it. Directory enumeration still reads actual persisted paths; it is
+  not name-to-file construction and has not been replaced by a filename roster.
+  New public names take the same helper, not a second source parser.
 - MEMB-2/MEMB-3: the new control action declares its message on the existing
   request/strategy family. Existing registration/discovery registries remain
   derived; no companion roster, new runner or duplicate custom registry.
@@ -169,6 +174,24 @@ the registration-specific DTO/service regions, not measurement declarations.
   option and no alternate registration implementation is added.
 
 ## Remaining acceptance (not closed)
+
+The current normal merge includes mainfbf6b2d91 (#225/#236), merge8fc0ecc63.
+The authoring how-to now requires explicit reflected routing, deliberately
+authored name and a caller-intended absolute store obtained through the native
+Manager in the controlled server launch environment. It describes pre-dispatch
+destination/incarnation proof and postdispatch uncertainty separately; a
+receipt after writing is not admission. No arbitrary-server MCP destination
+lookup is claimed. The existing knowledge manifest summary is updated; it
+contains no checked-in document digest to duplicate. The empirical guide now
+records parent's merged/installed #225 synthetic acceptance, not biology.
+
+`tests/diagnostics/check_custom_registration_live.py` is a reusable bounded
+ordinary stdio MCP/native server journey, with a test-only delayed-response and
+unsupported-proof seam through the existing server launch owner. It pins all
+source imports, controlled XDG roots, shared-cache/download-false policy and
+one native thread; acquires the shared nonblocking lock and records measured
+call durations (not session ages), sentinels, original inputs and handles.
+Unexpected calls are not retried. This prepared driver is not a passing receipt.
 
 After verified closure of the frozen author's owned MCP/viewer and release of
 the technical slot, run controlled owned-vs-shared endpoint, escaping-path and

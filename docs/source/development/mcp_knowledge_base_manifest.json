@@ -822,7 +822,7 @@
       "document_id": "openhcs_custom_function_workflow",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md",
-      "summary": "Add a missing analysis operation through existing typed custom-function owners: discover contracts, scope catalog and persistence, verify fresh-process imports, compile artifacts, inspect bounded outputs and separate technical reuse from biological recipe acceptance.",
+      "summary": "Add a missing operation through typed custom-function owners: explicit endpoint/name/store admission before dispatch, controlled-launch native destination proof, postdispatch uncertainty without replay, stable imports, compilation and bounded outputs; separate technical reuse from biological acceptance.",
       "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
       "title": "Add a missing analysis operation as a typed custom function"
     },

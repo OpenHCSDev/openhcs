@@ -49,31 +49,73 @@ the source and intended storage target within the existing mutation authority.
 Retain exact source bytes and hash, MCP process identity, execution endpoint,
 registration receipt, returned function ID, import path and persisted paths.
 
-For parallel isolated sessions, verify catalog ownership as well as GUI bridge
-ownership. In the current local stdio route, the catalog endpoint is selected
-from the UI config cache when the MCP process starts; passing a GUI connection
-to a later UI call does not redirect catalog registration. Pin the owned cache
-selector (`OPENHCS_UI_CONFIG_CACHE_FILE`) before starting that MCP process, then
-verify its endpoint. Use the current reflected contract if this route changes.
-Do not resolve a timeout by registering on a peer or default catalog.
+Registration requires an explicit `port`, including for `persist=false`; the
+UI cache is not mutation-route authority. Inspect the reflected connection
+fields (`host`, `transport_mode`, `persistent`) and supply the intended owned
+execution endpoint. For `persist=true`, also supply `function_name` (the public
+identifier you deliberately authored) and an absolute `storage_dir`. Do not
+infer the name by parsing source or omit the route to use a default server.
 
-Also verify the persisted-source storage owner. Local custom-function imports
-resolve through `CustomFunctionManager.storage_dir`; in an isolated session,
-carry the GUI/backend's appropriate `XDG_DATA_HOME` into each consuming MCP
-process at startup. The UI cache selects a catalog endpoint, not that local
-source directory. Compare the registration receipt's persisted path with the
-consumer's storage scope, then prove the stable import on that consumer.
-Changing the launch environment does not update an already running process.
-Do not copy the source into default storage or re-register it merely to mask
-a directory mismatch; reconcile ownership and any uncertain mutation first.
+Derive the caller-intended store through its native owner in the **exact launch
+environment of the owned execution server**, before starting either process:
+
+```python
+from openhcs.processing.custom_functions.manager import CustomFunctionManager
+intended_store = CustomFunctionManager.default_storage_directory()
+```
+
+This is a non-creating lookup, not a new filename resolver. In a controlled
+isolated launch, pin `XDG_DATA_HOME` in that environment and carry it into every
+consumer needing stable imports. Retain the returned absolute path and owned
+endpoint from the launcher. If the native launch environment is unknown, stop
+and obtain that owner contract; do not guess a default path or submit source
+to discover where it gets saved. No public MCP destination-discovery tool is
+currently exposed for an arbitrary existing server.
+
+For example, the controlled synthetic acceptance driver supplies the native
+owner's path and deliberately authored name, not a receipt-derived permission:
+
+```python
+arguments = {
+    "source_code": reviewed_source,
+    "function_name": "registration_live_probe",
+    "storage_dir": str(intended_store),
+    "port": owned_port,
+    "host": "127.0.0.1",
+    "transport_mode": "tcp",
+    "persist": True,
+}
+```
+
+The existing MCP path policy admits the intended directory and owner-derived
+file **before any endpoint dispatch**. The service then queries the native
+read-only destination owner, verifies its actual store/file and process
+incarnation, and binds that proof to the one registration request. Unsupported
+destination proof, a different store, or a changed process rejects without
+evaluating the source. The execution service independently admits the native
+write before evaluation and persistence. Receipt checks after writing verify
+the outcome; they are not write admission or a Python sandbox.
+
+For isolated sessions, also pin `OPENHCS_UI_CONFIG_CACHE_FILE` before MCP
+startup and verify the selected catalog. That launch-time selector still owns
+initial discovery; passing a later GUI connection does not redirect it.
+An admitted registration selects its explicit endpoint for subsequent catalog
+reads, including uncertainty reconciliation. The cache does not select the
+local source directory. Changing environment variables does not update an
+already running process. Verify the receipt's endpoint, process incarnation,
+function ID, stable import and source bytes on each actual consuming process.
+Do not copy into default storage to mask a mismatch.
 
 Use `openhcs_register_custom_function`, which delegates validation, persistence
-and registry publication to `CustomFunctionManager`. Choose persistence when
-the reviewed pipeline needs a stable import across GUI, backend or fresh worker
-processes, after confirming the returned storage directory is in scope.
-An ephemeral backend registration does not prove importability in another
-process. A timeout leaves mutation outcome uncertain: reconcile the exact name
-on the same endpoint before any explicit retry. Creating an existing name is
+and registry publication to `CustomFunctionManager`. An ephemeral registration
+does not prove importability in another process. After mutation dispatch, a
+timeout or invalid receipt returns `custom_function_registration_uncertain`:
+it preserves the explicit endpoint, intended store/name and process identity,
+and performs no fallback or automatic registration retry. Keep the same MCP
+handle and original input. Read-only discovery on that endpoint and inspection
+of the admitted source may reconcile publication; a failed observation is not
+proof of no mutation. Obtain explicit disposition before any new mutation.
+Creating an existing name is
 not a persistence upgrade; use an exposed lifecycle update route or record the
 missing capability rather than overwriting its file or mutating private state.
 If a lifecycle update is unavailable, a deliberately versioned new callable

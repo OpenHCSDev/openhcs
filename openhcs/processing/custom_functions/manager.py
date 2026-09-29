@@ -85,7 +85,7 @@ class CustomFunctionManager:
     def require_source(self, expected: CustomFunctionSource) -> None:
         """Reject a persisted declaration whose actual source bytes changed."""
         current = self._snapshot_source(
-            self.storage_dir / f"{expected.function_name}.py"
+            self.source_path_for_name(self.storage_dir, expected.function_name)
         )
         if current is None or current.source != expected:
             raise RuntimeError(
@@ -273,7 +273,7 @@ class CustomFunctionManager:
         Returns:
             Number of functions registered from the persisted file.
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
         snapshot = self._snapshot_source(file_path)
         if snapshot is None:
             return 0
@@ -325,7 +325,7 @@ class CustomFunctionManager:
         Returns:
             True if function file was deleted, False if not found
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
 
         with CustomFunctionRuntimeRegistry.lifecycle():
             if not file_path.exists():
@@ -392,7 +392,7 @@ class CustomFunctionManager:
         Raises:
             ValueError: If function file not found
         """
-        file_path: Path = self.storage_dir / f"{func_name}.py"
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
 
         if not file_path.exists():
             raise ValueError(f"Custom function '{func_name}' not found")
@@ -419,7 +419,7 @@ class CustomFunctionManager:
             ValidationError: If new code is invalid
             OSError: If file operations fail
         """
-        old_file_path = self.storage_dir / f"{old_name}.py"
+        old_file_path = self.source_path_for_name(self.storage_dir, old_name)
         old_snapshot = self._snapshot_source(old_file_path)
         if old_snapshot is None:
             raise ValueError(f"Custom function '{old_name}' not found")
@@ -431,7 +431,7 @@ class CustomFunctionManager:
         else:
             metadata = self._prepare_source(new_code)
         new_name = metadata.original_name
-        new_file_path = self.storage_dir / f"{new_name}.py"
+        new_file_path = self.source_path_for_name(self.storage_dir, new_name)
         temp_path = self._write_temporary_source(new_code)
         try:
             with CustomFunctionRuntimeRegistry.lifecycle():
