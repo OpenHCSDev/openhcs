@@ -3,7 +3,97 @@
 Implementation owner: Lovelace. Integration owner: OpenHCS coordinator.
 Branch: `fix/input-preparation-20260929`.
 Worktree: `/home/ts/wt/openhcs-input-preparation-20260929`.
-Issues: #172 and #132.
+Issues: #172, #132 and runtime follow-through #224.
+
+## Bundle-only cache and responsive inspection checkpoint: #224
+
+Issue https://github.com/OpenHCSDev/openhcs/issues/224, implementation owner
+Lovelace; existing drafts206/16. Parent owns disk recovery/integration, no
+competing code patch. Coordinator reported fresh H001/H002 inspection creating
+separate roughly859 MiB Fiji bundles through per-run XDG_CACHE_HOME, blocking
+cold MCP and leaving queued10-second reads uncertain before disk-guard shutdown.
+These are reported runtime observations, not worker-opened biological receipts.
+No replay/restart, author coaching, installation or frozen-source/skill changes.
+
+No old supported application projection was found: cache_root was constructor-
+owned but canonical FIJI_IMAGEJ_DISTRIBUTION/FIJI_IMAGEJ_RUNTIME/BioFormats context
+had no process entrypoint. Inspection lacked the existing progress declaration,
+so its synchronous operation ran on the MCP event-loop thread.
+Source commits: OpenHCS `101a6a4b0ec80a8ce970478399fb9527ef2f5b51`, paired
+PolyStore `5e656f8c20b0949139fe1273c31390931ea7ef6d`.
+
+- FijiArchiveDistribution declares **POLYSTORE_IMAGEJ_CACHE_ROOT** through
+  cache_root_environment_key at imagej_distribution.py:357.
+  cache_root_from_environment:368 decodes that owner key once into existing
+  cache_root when the canonical distribution is constructed at:520. Unset keeps
+  platformdirs policy; invalid explicit/relative settings fail, not fallback to
+  another per-run bundle. Release/digest/overlays, checksum, lock/staging and
+  runtime-policy authority remain unchanged.
+- Existing OpenHCSProcessEnvironment.child_process_environment_keys at:48 derives
+  the dependency owner's key, not a copied spelling/default registry. Existing
+  McpDevServerSpec.environment at:300 preserves it through platform sanitization,
+  independently of per-run XDG_CACHE_HOME and log/cache policy.
+- Existing InspectPlatePathCapability at:2036 declares five-second progress and
+  worker-thread execution. Existing MCP binding/heartbeat owns offloading and
+  observability; no new task/job/progress store or tool-name switch. Optional
+  downloads/cache writes/Java startup have truthful side effects and mutating
+  metadata; plate contents stay read-only. Artifact-plan/viewer/config owners
+  remain untouched.
+
+Exact new entrypoint: set POLYSTORE_IMAGEJ_CACHE_ROOT to an absolute reviewed
+bundle directory **before process import/start**, keep per-run XDG_CACHE_HOME,
+then use normal `python -m openhcs.mcp --surface full` or McpDevClient. This
+requires the reviewed pair; the unchanged frozen installation does not support
+the new projection. No real bundle was relocated. Do not configure retroactively
+or restart/replay a live/uncertain process. Coordinator owns future startup.
+
+Executed **28 passed in5.07s / peak driver RSS267.4 MiB**:17 existing distribution
+cases, six new root cases and five application projection/progress cases.
+New files: external/PolyStore/tests/test_imagej_cache_environment.py,
+external/PolyStore/tests/imagej_cache_process_fixture.py,
+tests/unit/agent/test_plate_inspection_cold_runtime.py.
+Two fresh Python processes import actual canonical distribution/runtime with
+verified assigned paths. Only external host/artifact response is controlled: a
+tiny local ZIP with real SHA-256, no overlays/JVM. Production verification,
+lock/staging/discovery/reuse run. Independent XDG/log roots stay distinct;
+verified download counts[1,0], one bundle directory, no temporary download
+residue. Not a real859 MiB/Fiji/JVM performance claim.
+
+Actual in-process FastMCP binding/service invocation completes canonical
+capability discovery while controlled inspection I/O is held on another thread.
+Existing progress helper emits started/running and propagates the identical
+terminal error. No MCP process/listen startup, JVM, GUI, remote download,
+environment creation or paid provider. Not a continuous installed cold journey:
+real stdio progress-token/queued reads, Java and live acceptance remain gates.
+
+Retain first10-pass/1-failure run4.91s/280.1 MiB: registry correctly rejected
+effects without mutating metadata; fix declaration, not validator/assertions.
+Two unused asyncio-option warnings with plugin autoload disabled. New tests,
+helper and touched child source pass Ruff; six touched files parse, both diffs
+pass whitespace. Whole environment-file Ruff reports untouched S110/BLE001 in
+is_headless_mode; no broad clean claim. Driver uses recorded interpreter/explicit
+parent and eight submodule src paths, verified imports, OpenHCS bootstrap before
+pytest, disabled plugins/conftests and `-q --tb=short --noconftest
+--import-mode=importlib -p no:cacheprovider -o addopts=`; shell45s bound.
+Guard10.6 GiB available/historical swap11.9 GiB; explicit8 GiB admission,
+final10.2 GiB. RSS is this driver, not continuous fleet peak-RAM evidence.
+
+Owned316 KiB tiny ZIP/cache/empty fixtures at the recorded scratch path removed
+after results retained. A force-style cleanup was denied before execution; normal
+non-force recursive removal of the validated exact owned path completed. No
+source, saved sessions or blind data/output removed. All finite handles terminal;
+no scientific validation-lock takeover. Original141-pass/26-failure receipt and
+**not-run** after-change ROI profile remain open. Recorded gitlink staysf94bbbe;
+validated paired adoption, normal main integration, preservation/profile and
+installed/live acceptance await the next finite coordinator handoff. No closure.
+
+NRA/catalog receipt: BOUND-2/6 keeps cache_root/canonical distribution as config
+authority; process consumers reference its declaration. MEMB-2/3: no second
+environment/default registry, companion roster or cache copy/symlink. IMPL-1/4/13:
+capability consumes existing generic progress/worker mechanism, not another
+dispatch/job store. New root/run-cache values need configuration, not consumer
+edits. Focused source/AST/contract checks only, not full NRA/native proof. Existing
+ROI ownership and both previous review corrections remain intact.
 
 ## Independent review follow-through: physical admission and Java lifecycle
 
