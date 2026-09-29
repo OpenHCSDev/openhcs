@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from weakref import ref
 
 from napari import Viewer
+from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QComboBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
@@ -31,9 +32,19 @@ class OpenHCSOrthogonalWidget(QWidget):
             layout.addWidget(widget)
         self.routes.currentIndexChanged.connect(self.refresh_planes)
         self.apply_button.clicked.connect(self.apply_plane)
-        server.viewer.dims.events.order.connect(self.read_native_state)
-        server.viewer.dims.events.ndisplay.connect(self.read_native_state)
+        self._refresh_timer = QTimer(self)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.timeout.connect(self.refresh)
+        server.viewer.layers.events.inserted.connect((self, "queue_refresh"))
+        server.viewer.layers.events.removed.connect((self, "queue_refresh"))
+        server.viewer.dims.events.order.connect((self, "read_native_state"))
+        server.viewer.dims.events.ndisplay.connect((self, "read_native_state"))
+        server.viewer.dims.events.axis_labels.connect((self, "read_native_state"))
         self.refresh()
+
+    def queue_refresh(self, *_args) -> None:
+        """Coalesce native mount events until the route owner finishes this Qt turn."""
+        self._refresh_timer.start(0)
 
     @property
     def server(self) -> NapariViewerServer:
@@ -107,4 +118,11 @@ def make_orthogonal_widget(napari_viewer: Viewer) -> OpenHCSOrthogonalWidget:
         raise ValueError(
             "OpenHCS orthogonal review requires an OpenHCS managed viewer."
         )
-    return OpenHCSOrthogonalWidget(widgets[0].server)
+    server = widgets[0].server
+    if server.viewer is not napari_viewer or any(
+        widget.server is not server for widget in widgets
+    ):
+        raise ValueError(
+            "Orthogonal widget graph has conflicting managed viewer ownership."
+        )
+    return OpenHCSOrthogonalWidget(server)

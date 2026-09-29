@@ -51,3 +51,15 @@ plugin and generated MCP same-owner exercise, plus the actual affected installed
 managed viewer on an isolated display and public MCP roundtrip. No frozen science
 rerun, oracle opening, shared-package change or old viewer mutation is authorized.
 Source tests alone do not establish installed/live readiness or biological quality.
+
+## Published implementation checkpoint
+
+Existing PR #154 now contains the production navigation/state/plugin implementation
+and regressions. Supported Napari 0.9.1: 74 native/navigation/presentation checks
+passed on isolated :90/XCB, and 30 viewer-service checks passed. An initial
+offscreen-only full Viewer construction exited before reporting the unmanaged
+plugin test; the isolated XCB path passed that test and actual button/native
+readback. Preserve that distinction: ViewerModel-only results are not GUI proof.
+The original full-scan and native-only checkpoints above are historical, not
+relabelled as complete R1/equivalence or installed/MCP acceptance. Installed and
+public MCP checks are in progress, using only the owned test installation.

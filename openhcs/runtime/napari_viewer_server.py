@@ -3984,7 +3984,10 @@ class NapariViewerStateProjection(NapariViewerProjectionABC[ViewerStateControlOp
             point=tuple(float(value) for value in dims.point),
             camera_angles=tuple(float(angle) for angle in viewer.camera.angles),
             canvas_size=(
-                tuple(int(value) for value in viewer.window.qt_viewer.canvas.size)
+                (
+                    int(viewer.window.qt_viewer.canvas.native.width()),
+                    int(viewer.window.qt_viewer.canvas.native.height()),
+                )
                 if isinstance(viewer, napari.Viewer)
                 else None
             ),
@@ -6099,8 +6102,7 @@ def run_napari_viewer_process(
             # The socket-owning transport thread has already copied shared-memory
             # payloads. Drain those immutable batches before control settlement so
             # a SETTLE request cannot overtake accepted display work.
-            if server.process_accepted_stream_messages():
-                orthogonal_widget.refresh()
+            server.process_accepted_stream_messages()
 
             # Process control messages (ping/pong handled by ABC) on Qt because
             # viewer state and navigation remain Qt-owned.

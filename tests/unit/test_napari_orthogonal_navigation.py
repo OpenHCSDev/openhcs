@@ -349,3 +349,22 @@ def test_bundled_plugin_factory_rejects_unmanaged_viewer(qtbot):
             make_orthogonal_widget(viewer)
     finally:
         viewer.close()
+
+
+def test_plugin_late_native_mount_populates_routes_without_polling(qtbot):
+    from openhcs.runtime.napari_orthogonal_widget import OpenHCSOrthogonalWidget
+
+    viewer = ViewerModel()
+    server = harness(viewer)
+    widget = OpenHCSOrthogonalWidget(server)
+    qtbot.addWidget(widget)
+    assert widget.routes.count() == 0 and not widget.apply_button.isEnabled()
+    # Native insertion fires BEFORE the route owner records the mounted layer.
+    image = viewer.add_image(np.zeros((3, 4, 5)), rgb=False)
+    mount(server, "late-raw", image, ("z_index",))
+    qtbot.waitUntil(lambda: widget.routes.currentData() == "late-raw", timeout=1000)
+    assert widget.apply_button.isEnabled() and widget.planes.count() == 3
+    server.layer_route_state.purge_route("late-raw")
+    viewer.layers.remove(image)
+    qtbot.waitUntil(lambda: widget.routes.count() == 0, timeout=1000)
+    assert not widget.apply_button.isEnabled()

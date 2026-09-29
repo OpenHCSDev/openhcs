@@ -179,7 +179,7 @@ class ViewerResultElementCoordinateAuthority:
 
 @dataclass(frozen=True, slots=True)
 class ViewerNativeDimensions:
-    """Actual native dimensional/canvas readback, never desired-plane state."""
+    """Actual native readback; canvas_size is logical Qt (width, height)."""
 
     order: tuple[int, ...]
     ndisplay: int
