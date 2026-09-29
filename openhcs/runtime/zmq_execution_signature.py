@@ -73,8 +73,8 @@ class ZMQAuxiliaryExecutionParams:
     ) -> RuntimeObservationMode:
         """Resolve retention from compiled needs plus an explicit export request."""
 
-        return RuntimeObservationMode.from_parent_requirement(
-            execution_bundle.requires_parent_runtime_observation
+        return RuntimeObservationMode.for_compiled_bundle(
+            execution_bundle
         ).including_parent_requirement(
             self.runtime_observation_export_path is not None
             and self.runtime_observation_export_scope

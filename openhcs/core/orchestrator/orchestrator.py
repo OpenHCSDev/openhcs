@@ -710,9 +710,7 @@ class PipelineOrchestrator:
                 log_file_base=log_file_base,
                 progress_queue=progress_queue,
                 runtime_observation_mode=(
-                    RuntimeObservationMode.from_parent_requirement(
-                        execution_bundle.requires_parent_runtime_observation
-                    )
+                    RuntimeObservationMode.for_compiled_bundle(execution_bundle)
                     if runtime_observation_mode is None
                     else runtime_observation_mode
                 ),
