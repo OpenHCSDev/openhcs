@@ -86,6 +86,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--released-runtime-slot", action="store_true", required=True)
     parser.add_argument("--expected-source-sha", required=True)
+    parser.add_argument(
+        "--installed-entrypoint", action="store_true",
+        help="Require installed package resolution without a source sys.path override.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--display", choices=(":88",), required=True)
     parser.add_argument("--viewer-port", type=int, choices=(5792,), required=True)
@@ -134,6 +138,7 @@ def main() -> None:
         "source_root": str(SOURCE),
         "driver_pid": os.getpid(),
         "lock_owner_pid": os.getppid(),
+        "installed_entrypoint": args.installed_entrypoint,
     }
 
     def save() -> None:
@@ -163,7 +168,11 @@ def main() -> None:
         XDG_CACHE_HOME=str(output / "xdg-cache"),
         XDG_CONFIG_HOME=str(output / "xdg-config"),
     )
-    sys.path.insert(0, str(SOURCE))
+    if args.installed_entrypoint:
+        if os.environ.get("PYTHONPATH"):
+            raise SystemExit("Installed acceptance requires PYTHONPATH unset.")
+    else:
+        sys.path.insert(0, str(SOURCE))
     import openhcs
     import polystore
 
@@ -171,6 +180,11 @@ def main() -> None:
         "openhcs": openhcs.__file__,
         "polystore": polystore.__file__,
     }
+    if args.installed_entrypoint and (
+        Path(openhcs.__file__).resolve() != SOURCE / "openhcs/__init__.py"
+        or not Path(polystore.__file__).resolve().is_relative_to(SOURCE / "external/PolyStore")
+    ):
+        raise SystemExit("Installed packages do not resolve to this reviewed checkpoint.")
     receipt["submodules"] = subprocess.check_output(
         ["git", "submodule", "status", "--recursive"], cwd=SOURCE, text=True
     ).splitlines()
