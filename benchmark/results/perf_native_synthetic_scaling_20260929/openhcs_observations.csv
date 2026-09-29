@@ -1,0 +1,3 @@
+case,label,openhcs_1w_execution_seconds,openhcs_1w_total_seconds,openhcs_16w_execution_seconds,openhcs_16w_total_seconds,native_cold_1w_seconds,openhcs_source
+ExampleColocalization,Colocalization,3.1273117065429688,8.721822986844927,33.491028785705566,43.26270653307438,37.035618890076876,OpenHCS PR 193 official30_candidate.csv and multiwell.csv
+ExampleImagingFlowCytometryObjectsInGrid,ImagingFlow,18.91513967514038,24.847436835058033,115.80782866477966,128.91339134192094,61.60158259188756,OpenHCS PR 195 observations.csv
