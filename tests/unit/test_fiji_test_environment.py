@@ -9,7 +9,9 @@ import pytest
 from polystore.imagej_distribution import (
     FijiArchiveDistribution,
     ImageJArchiveDownloadPolicy,
+    ImageJDistributionUnavailableError,
 )
+
 
 def test_default_root_is_pinned_before_fixture_cache_isolation(monkeypatch, tmp_path):
     initial = tmp_path / "initial"
@@ -45,7 +47,7 @@ def test_explicit_root_and_provisioning_permission_are_authoritative(tmp_path):
 
 @pytest.mark.parametrize("root", ("", "relative"))
 def test_invalid_explicit_root_does_not_fall_back(root):
-    with pytest.raises(RuntimeError, match="absolute bundle-cache"):
+    with pytest.raises(ImageJDistributionUnavailableError, match="absolute bundle-cache"):
         FijiArchiveDistribution.configure_process_environment(
             environment={FijiArchiveDistribution.cache_root_environment_key: root},
             default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False),
