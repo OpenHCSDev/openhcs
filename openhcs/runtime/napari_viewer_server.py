@@ -19,6 +19,7 @@ from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from itertools import product
+from math import ceil
 from numbers import Integral
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Generic, Sequence, TypeAlias, TypeVar, cast
@@ -127,6 +128,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandlerMeta,
 )
 from openhcs.runtime.viewer_controls import (
+    ViewerFractionalZPointCoordinateAuthority,
     ViewerIntensityWindowControlOptions,
     ViewerNativeDimensions,
     ViewerResultElementCoordinateAuthority,
@@ -1137,7 +1139,7 @@ def _build_nd_points(
             for coord in coordinates:
                 point_dims = prepend_dims.copy()
                 if z_axis_index is not None and fractional_z is not None:
-                    point_dims[z_axis_index] = fractional_z.value
+                    point_dims[z_axis_index] += fractional_z.value
                 nd_coord = point_dims + list(coord)
                 all_points_nd.append(nd_coord)
 
@@ -1718,6 +1720,14 @@ class NapariLayerDisplayHandler(
 
     title_suffix: ClassVar[str] = ""
 
+    def geometric_component_values(
+        self,
+        items: Sequence[NapariStreamLayerItem],
+        component_axis_semantics: ViewerComponentAxisSemantics,
+    ) -> ComponentValues:
+        """Return component values occupied by geometry beyond item anchors."""
+        return {}
+
     def display_work(
         self,
         request: NapariLayerDisplayRequest,
@@ -1985,6 +1995,55 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.POINTS
     title_suffix: ClassVar[str] = "points"
 
+    def geometric_component_values(
+        self,
+        items: Sequence[NapariStreamLayerItem],
+        component_axis_semantics: ViewerComponentAxisSemantics,
+    ) -> ComponentValues:
+        """Keep the declared Z span containing fractional-Z points navigable."""
+        z_component = AllComponents.Z_INDEX.value
+        coordinates = tuple(
+            (item, fractional_z)
+            for item in items
+            for shape in item.data
+            if (payload := ShapePayload(shape)).shape_type == "points"
+            if (fractional_z := ROIFractionalZ.decode(payload.metadata.metadata))
+            is not None
+        )
+        if not coordinates:
+            return {}
+        if z_component not in component_axis_semantics.layout.components_for_mode(
+            ViewerComponentMode.STACK
+        ):
+            raise ValueError(
+                "Fractional-Z point ROI requires a projected z_index axis."
+            )
+        domain = component_axis_semantics.required_component_values((z_component,))[
+            z_component
+        ]
+        occupied: set[ComponentValue] = set()
+        for item, fractional_z in coordinates:
+            anchor = ViewerComponentCoordinateAuthority.required_value(
+                item.address.components,
+                z_component,
+                context="Napari fractional-Z point",
+            )
+            try:
+                start = domain.index(anchor)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Fractional-Z point anchor {anchor!r} is absent from the "
+                    f"declared Z domain {domain!r}."
+                ) from exc
+            stop = start + ceil(fractional_z.value)
+            if stop >= len(domain):
+                raise ValueError(
+                    f"Fractional-Z point {fractional_z.value!r} exceeds the "
+                    f"declared Z domain from anchor {anchor!r}."
+                )
+            occupied.update(domain[start : stop + 1])
+        return {z_component: [value for value in domain if value in occupied]}
+
     def handle(self, request: NapariLayerDisplayRequest) -> None:
         pipeline = request.pipeline
         presentation = request.presentation
@@ -2058,6 +2117,11 @@ class NapariLayerDisplayPipeline:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 
+        data_type = layer_items[0].address.stream_layer_data_type
+        geometric_component_values = NapariLayerDisplayHandler.for_data_type(
+            data_type
+        ).geometric_component_values(layer_items, component_axis_semantics)
+
         projection_request = (
             ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
                 route_key=layer_key,
@@ -2065,6 +2129,7 @@ class NapariLayerDisplayPipeline:
                 layer_items=layer_items,
                 route_value_tracker=self.server.component_values,
                 aggregate_component_values=aggregate_axis_bindings.component_values,
+                geometric_component_values=geometric_component_values,
             )
         )
         return self.axis_projector.project(projection_request)
@@ -5143,7 +5208,12 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             if displayed_axis_indices is None
             else displayed_axis_indices
         )
-        return ViewerResultElementCoordinateAuthority.axis_indices(
+        coordinate_authority = (
+            ViewerFractionalZPointCoordinateAuthority
+            if isinstance(layer, napari.layers.Points)
+            else ViewerResultElementCoordinateAuthority
+        )
+        return coordinate_authority.axis_indices(
             coordinates=cast(Sequence[object], coordinates),
             axis_labels=dimension_state.axis_labels,
             displayed_axis_indices=tuple(

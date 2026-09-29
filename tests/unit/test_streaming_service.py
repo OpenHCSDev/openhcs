@@ -1065,6 +1065,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         layer_items=[item],
         route_value_tracker=ViewerRouteComponentValueTracker(),
         aggregate_component_values={},
+        geometric_component_values={},
     )
     projection = ViewerLayerAxisProjector().project(request)
     assert "z_index" in projection.projected_axis_components
