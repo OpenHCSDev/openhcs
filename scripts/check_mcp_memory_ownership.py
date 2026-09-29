@@ -1,7 +1,7 @@
 """Focused BOUND-1/BOUND-2 guard for the MCP memory diagnostic.
 
-Literal mapping reads remain legitimate in Linux /proc parsing and the child
-environment boundary. Other diagnostic consumers must use decoded owners.
+Literal mapping reads remain legitimate in Linux /proc parsing. Other
+diagnostic consumers must use decoded owners and existing launch/admission authorities.
 ``git show REV:benchmark/mcp_memory_diagnostic.py | python ... --stdin`` proves
 the guard against the original violation without modifying a checkout.
 """
@@ -38,13 +38,30 @@ class MemoryOwnershipGuard(ast.NodeVisitor):
             and isinstance(node.slice.value, str)
         ):
             owner = ".".join(self.scope)
-            if owner not in {
-                "ProcessMemoryReceipt.capture",
-                "diagnose.DiagnosticServerSpec.environment",
-            }:
+            if owner != "ProcessMemoryReceipt.capture":
                 self.violations.append(
                     f"BOUND-1/BOUND-2:{node.lineno}: raw field {node.slice.value!r} in {owner}"
                 )
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        if ".".join(self.scope) == "read_request_sequence" and node.attr in {
+            "mutating",
+            "side_effects",
+        }:
+            self.violations.append(
+                f"BOUND-2:{node.lineno}: read-only admission bypasses AgentCapabilitySpec.read_only"
+            )
+        self.generic_visit(node)
+
+    def visit_Return(self, node: ast.Return) -> None:
+        if self.scope[-2:] == ["DiagnosticServerSpec", "process_args"] and any(
+            isinstance(item, ast.Constant) and item.value == "-m"
+            for item in ast.walk(node)
+        ):
+            self.violations.append(
+                f"IMPL-13:{node.lineno}: bare module launch bypasses source authority"
+            )
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
@@ -60,15 +77,33 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stdin", action="store_true")
     parser.add_argument(
-        "--path", type=Path, default=Path("benchmark/mcp_memory_diagnostic.py")
+        "--path",
+        type=Path,
+        action="append",
     )
     args = parser.parse_args()
-    source = sys.stdin.read() if args.stdin else args.path.read_text()
-    guard = MemoryOwnershipGuard()
-    guard.visit(ast.parse(source))
-    for violation in guard.violations:
+    sources = (
+        [sys.stdin.read()]
+        if args.stdin
+        else [
+            path.read_text()
+            for path in (
+                args.path
+                or [
+                    Path("openhcs/mcp/memory_diagnostic.py"),
+                    Path("openhcs/mcp/memory_diagnostic_launch.py"),
+                ]
+            )
+        ]
+    )
+    violations = []
+    for source in sources:
+        guard = MemoryOwnershipGuard()
+        guard.visit(ast.parse(source))
+        violations.extend(guard.violations)
+    for violation in violations:
         print(violation)
-    if guard.violations:
+    if violations:
         raise SystemExit(1)
     print("Focused MCP memory ownership guard passed")
 

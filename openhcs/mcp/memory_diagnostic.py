@@ -1,6 +1,6 @@
 """Bounded, provider-free retention measurements through the real MCP server.
 
-Run with ``python -m benchmark.mcp_memory_diagnostic --output receipt.json``.
+Run with ``python -m openhcs.mcp.memory_diagnostic --output receipt.json``.
 Only this disposable diagnostic entrypoint adds the process-local sampling tool;
 normal OpenHCS MCP capabilities, transport, context, and services are unchanged.
 No execution servers, JVMs, viewers, or GPU workloads are started by the sequence.
@@ -23,7 +23,11 @@ from typing import TYPE_CHECKING, Annotated, get_args, get_type_hints
 
 from python_introspect import dataclass_from_mapping
 
+import openhcs
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+
 if TYPE_CHECKING:
+    from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile
     from openhcs.agent.dto.mcp import McpServerHealthResult
     from openhcs.mcp.dev_client_core import (
         McpDevStdioSession,
@@ -32,11 +36,41 @@ if TYPE_CHECKING:
     )
 
 PROBE_TOOL = "openhcs_diagnostic_process_memory"
+DIAGNOSTIC_MODULE = "openhcs.mcp.memory_diagnostic"
 SCRATCH_ROOT = (
     Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
     / "agent-scratch"
     / "openhcs-mcp-memory-diagnostic"
 )
+
+
+@dataclass(frozen=True)
+class DiagnosticSourceIdentity:
+    """Observed child paths, checked against the parent's import authority."""
+
+    diagnostic_source_path: str
+    openhcs_source_path: str
+
+    @classmethod
+    def capture(cls) -> DiagnosticSourceIdentity:
+        return cls(
+            diagnostic_source_path=str(Path(__file__).resolve()),
+            openhcs_source_path=str(Path(openhcs.__file__).resolve()),
+        )
+
+    def require_authority(self, authority: OpenHCSRuntimeImportAuthority) -> None:
+        expected_diagnostic = authority.import_root.joinpath(
+            *DIAGNOSTIC_MODULE.split(".")
+        ).with_suffix(".py")
+        expected_package = (
+            authority.import_root / authority.package_name / "__init__.py"
+        )
+        if Path(self.diagnostic_source_path).resolve() != expected_diagnostic:
+            raise RuntimeError(
+                "Diagnostic child imported a different diagnostic source"
+            )
+        if Path(self.openhcs_source_path).resolve() != expected_package:
+            raise RuntimeError("Diagnostic child imported a different OpenHCS source")
 
 
 def require_ram_headroom() -> None:
@@ -89,6 +123,7 @@ class ProcessMemoryReceipt:
     custom_declarations: int
     history_snapshots: int
     imported_source_paths: tuple[str, ...]
+    source_identity: DiagnosticSourceIdentity
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, object]) -> ProcessMemoryReceipt:
@@ -166,6 +201,7 @@ class ProcessMemoryReceipt:
                 for name in ("openhcs", "objectstate", "arraybridge", "pyqt_reactive")
                 if name in modules
             ),
+            source_identity=DiagnosticSourceIdentity.capture(),
         )
 
 
@@ -241,21 +277,21 @@ class MemoryDiagnosticMcpClient:
     async def sample(self, *, collect: bool) -> ProcessMemoryReceipt:
         result = await self.call(PROBE_TOOL, {"collect": collect})
         receipt = ProcessMemoryReceipt.from_payload(result.payloads[0])
+        receipt.source_identity.require_authority(
+            OpenHCSRuntimeImportAuthority.current()
+        )
         if receipt.rss_kib > 2 * 1024**2:
             raise RuntimeError("Diagnostic MCP process exceeded its 2 GiB RSS budget")
         return receipt
 
 
-def serve() -> None:
+def serve(surface_profile: LocalCapabilitySurfaceProfile) -> None:
     """Instrument the real server without substituting any application owner."""
-    from openhcs.agent.capabilities import FullLocalCapabilitySurfaceProfile
     from openhcs.mcp.server import build_server
     from openhcs.mcp.stdio import McpStdioTransport
 
     with McpStdioTransport.reserve_process_stdio() as transport:
-        server = build_server(
-            capability_surface_profile=FullLocalCapabilitySurfaceProfile()
-        )
+        server = build_server(capability_surface_profile=surface_profile)
 
         @server.tool(name=PROBE_TOOL)
         def process_memory(collect: bool = False) -> dict:
@@ -278,7 +314,7 @@ def read_request_sequence(path: Path) -> tuple[McpDevToolCall, ...]:
     calls = tuple(dataclass_from_mapping(McpDevToolCall, item) for item in payload)
     for call in calls:
         capability = get_agent_capability(call.name)
-        if capability.side_effects:
+        if not capability.read_only:
             raise ValueError(
                 f"Diagnostic sequence requires read-only calls: {call.name}"
             )
@@ -290,15 +326,16 @@ async def diagnose(
     timeout: float,
     output: Path,
     *,
+    surface_profile: LocalCapabilitySurfaceProfile,
     scratch_root: Path = SCRATCH_ROOT,
     sequence_path: Path | None = None,
 ) -> MemoryDiagnosticReport:
     from openhcs.agent.capabilities import agent_capabilities
     from openhcs.mcp.dev_client_core import (
-        McpDevServerSpec,
         McpDevStdioSession,
         McpDevToolCall,
     )
+    from openhcs.mcp.memory_diagnostic_launch import DiagnosticServerSpec
 
     sequence = (
         read_request_sequence(sequence_path)
@@ -314,22 +351,6 @@ async def diagnose(
         )
     )
 
-    @dataclass(frozen=True, slots=True)
-    class DiagnosticServerSpec(McpDevServerSpec):
-        data_directory: str = ""
-
-        def process_args(self) -> tuple[str, ...]:
-            return ("-m", "benchmark.mcp_memory_diagnostic", "--server")
-
-        def environment(self) -> dict[str, str]:
-            return {
-                **McpDevServerSpec.environment(self),
-                "PYTHONPATH": os.environ["PYTHONPATH"],
-                "XDG_DATA_HOME": self.data_directory,
-                "XDG_CACHE_HOME": self.data_directory,
-                "XDG_CONFIG_HOME": self.data_directory,
-            }
-
     report = MemoryDiagnosticReport(rounds=rounds, request_sequence=sequence)
     output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -342,7 +363,9 @@ async def diagnose(
         tempfile.TemporaryFile(mode="w+", encoding="utf-8", dir=scratch) as stderr,
     ):
         spec = DiagnosticServerSpec(
-            python_executable=sys.executable, data_directory=scratch
+            python_executable=sys.executable,
+            data_directory=scratch,
+            surface_profile=surface_profile,
         )
         try:
             async with McpDevStdioSession(spec, stderr) as session:
@@ -398,8 +421,18 @@ async def diagnose(
 
 
 def main() -> None:
+    # Provenance inspection uses the same source owner without importing the
+    # application client or its scientific dependency graph.
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--server", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--source-identity",
+        action="store_true",
+        help="Print loaded diagnostic/OpenHCS paths and exit without starting MCP",
+    )
+    parser.add_argument(
+        "--surface", help="Existing capability surface used by the diagnostic server"
+    )
     parser.add_argument("--rounds", type=int, default=4)
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--output", type=Path, default=Path("mcp-memory-receipt.json"))
@@ -410,8 +443,21 @@ def main() -> None:
         help="JSON list of 1..16 existing read-only MCP calls (name/arguments)",
     )
     args = parser.parse_args()
+    if args.source_identity:
+        print(json.dumps(asdict(DiagnosticSourceIdentity.capture())))
+        return
+    from openhcs.agent.capabilities import (
+        FullLocalCapabilitySurfaceProfile,
+        LocalCapabilitySurfaceProfile,
+    )
+
+    surface_profile = (
+        FullLocalCapabilitySurfaceProfile()
+        if args.surface is None
+        else LocalCapabilitySurfaceProfile.for_name(args.surface)
+    )
     if args.server:
-        serve()
+        serve(surface_profile)
         return
     if not 2 <= args.rounds <= 10 or not 0 < args.timeout <= 60:
         parser.error("rounds must be 2..10 and timeout must be >0..60 seconds")
@@ -421,6 +467,7 @@ def main() -> None:
                 args.rounds,
                 args.timeout,
                 args.output,
+                surface_profile=surface_profile,
                 scratch_root=args.scratch_root,
                 sequence_path=args.sequence_json,
             ),

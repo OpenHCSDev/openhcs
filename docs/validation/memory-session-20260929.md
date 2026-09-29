@@ -51,7 +51,7 @@ there is no request or authorization to recover its lost history.
 
 ## #131: bounded retention diagnostic
 
-`benchmark/mcp_memory_diagnostic.py` constructs the real full-surface OpenHCS MCP
+`openhcs/mcp/memory_diagnostic.py` constructs the real full-surface OpenHCS MCP
 server and reserves the actual stdio transport. One harness-only tool samples
 that disposable process, optionally after `gc.collect()`. It does not replace
 the UI, application, capability services or protocol path with mocks, and does
@@ -62,7 +62,7 @@ threads, imports/native libraries/frameworks, catalog/custom declarations and
 ObjectState snapshots before/after every operation and after full GC. Repeated
 read-only health/authoring/capability queries are measured after a separate
 warm-up round. Optional `--sequence-json` decodes 1..16 requests through the
-existing `McpDevToolCall` owner and rejects capabilities declaring side effects;
+existing `McpDevToolCall` owner and admits only `AgentCapabilitySpec.read_only`;
 it does not introduce a second capability registry. The JSON report retains the
 exact request sequence and typed sample events (`events[].receipt`).
 Per-round slopes describe this sequence only. Flat measurements
@@ -73,7 +73,7 @@ Run only with the validation slot and at least 8 GiB available RAM:
 
 ```sh
 flock -n /home/ts/wt/openhcs-issue-batch-20260929/validation.lock \
-  /home/ts/code/projects/openhcs/.venv/bin/python -m benchmark.mcp_memory_diagnostic \
+  /home/ts/code/projects/openhcs/.venv/bin/python -m openhcs.mcp.memory_diagnostic \
   --rounds 4 \
   --scratch-root /home/ts/.cache/agent-scratch/openhcs-issue-memory-session-20260929 \
   --output docs/validation/mcp-memory-receipt-20260929.json
@@ -151,6 +151,82 @@ git show 7a76b57d3:benchmark/mcp_memory_diagnostic.py | \
 
 The second command intentionally exits 1 and reports the original violations.
 
+## Independent review correction: admission and source authority
+
+Review: https://github.com/OpenHCSDev/openhcs/pull/208#issuecomment-5897134270,
+against `dd5f177f0c381ebac1d470f9a05f8423c2c40dfb`. Latest main
+`283b21275553c54261cf9aeedb7374c113d07f2b` (including #212) was fetched and
+merged normally as `32decce9af2b7b4f51aa3dc8de39b4e0e58c5694` before correction.
+
+- **BOUND-2:** diagnostic admission now queries `capability.read_only`, not
+  either of its component fields. The new-case test changes only an existing
+  typed capability declaration to `mutating=True, side_effects=()` and proves
+  rejection without a consumer edit or registry. Integrated artifact-plan
+  inspection is also rejected using its actual current declaration from #212.
+- **IMPL-13 / BOUND-2:** `DiagnosticServerSpec` inherits the exact-root launch
+  projection from `McpDevServerSpec.process_args()`, which already delegates to
+  `OpenHCSRuntimeImportAuthority`. It adds only the instrumentation flag and
+  owned XDG isolation. Bare `-m` child launch and ambient PYTHONPATH copying are
+  deleted. The entrypoint moved under the supported OpenHCS module namespace;
+  the old benchmark module is deleted, with no alias or second launcher.
+- Observed diagnostic/OpenHCS paths are one `DiagnosticSourceIdentity` in every
+  typed memory receipt. The MCP client checks both against its parent authority,
+  independently of the existing health PID/staleness checks. This receipt records
+  observations, not a second import-root authority or source registry.
+- `--source-identity` reports those same source observations and exits before
+  importing the application client or constructing a server. Client launch
+  declarations live in `memory_diagnostic_launch.py`, so lightweight provenance
+  inspection does not import that client/scientific dependency graph. A new
+  diagnostic subclass extends the existing module/argument/environment hooks,
+  not a copied import bootstrap or a changed shared launch owner.
+
+Focused regression command, using the existing Python 3.12.3 venv with explicit
+worktree/recorded-submodule source paths verified first:
+
+```sh
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true OPENHCS_HEADLESS=true \
+  /home/ts/code/projects/openhcs/.venv/bin/python -m pytest \
+  --noconftest -c /dev/null -p no:cacheprovider \
+  --basetemp=/home/ts/wt/openhcs-memory-session-20260929/.validation/review-5897134270 \
+  tests/unit/test_mcp_memory_diagnostic.py tests/unit/test_runtime_import_authority.py -q
+```
+
+Result: **15 passed in 4.34s**. This excludes application cleanup/Qt fixtures and
+plugin startup; it does not replace full application acceptance. Two tests launch
+the actual diagnostic entrypoint with normal server-spec arguments plus
+provenance-only mode, from a competing checkout cwd: first with PYTHONPATH absent,
+then with a hostile competing PYTHONPATH. Both diagnostic and OpenHCS paths must
+equal this selected source tree. Separate tests reject either foreign receipt
+path. Existing import-authority tests also pass. The focused AST guard now catches
+all three returned old mechanisms at `dd5f177f` and passes both current modules;
+changed-source Ruff correctness and diff checks pass.
+
+Real source CLI check, from the selected worktree with no PYTHONPATH:
+
+```sh
+env -u PYTHONPATH OPENHCS_CPU_ONLY=true OPENHCS_HEADLESS=true \
+  PYTHONDONTWRITEBYTECODE=1 /home/ts/code/projects/openhcs/.venv/bin/python \
+  -m openhcs.mcp.memory_diagnostic --source-identity
+```
+
+It reports this worktree's `openhcs/mcp/memory_diagnostic.py` and
+`openhcs/__init__.py`; `/usr/bin/time -v` records 0.16s, 53,500 KiB peak RSS,
+zero swaps and exit 0. No MCP, JVM, GUI or fitting/execution workload started.
+The preliminary client-import path check loaded NumPy/CuPy modules (232,720 KiB
+RSS) but did not execute GPU work; the provenance entrypoint's application-client
+import was subsequently removed via the explicit launch-module boundary above.
+
+Before validation the guard reported 11.8 GiB available RAM and a warning for
+11.9 GiB historical swap (exit 2); no heavy validation was started. Confucius owns
+the shared live slot and frozen installed harness. Owned generated sequence and
+competing-package fixtures under `.validation/review-5897134270` were 164 KiB;
+they are disposable and removed after retaining this receipt. No installed
+package, skill, authoring process or scientific input/output was changed.
+
+These checks close the returned **source/launch defects**, not #131's real MCP
+retention measurement or #169's installed continuous desktop/history journey.
+Both implementation PRs remain draft pending those serialized live gates.
+
 ## Boundaries and remaining scope
 
 - Source review/AST coverage is focused on history serialization and the new
@@ -160,10 +236,10 @@ The second command intentionally exits 1 and reports the original violations.
   `tests.conftest` package names across repositories; run the two repositories
   separately. No test assertion was weakened.
 - The focused runs above used the shared nonblocking validation lock and have
-  finished; no heavy worker run or runtime handle is being restarted. The latest
-  coordinator resource checkpoint reports 14.8 GiB available RAM, zero PSI and
-  11.5 GiB historical swap. New MCP/JVM/GUI/heavy runs are deferred until Euler
-  releases validation for H003. No unrelated cleanup occurs.
+  finished; no heavy worker run or runtime handle is being restarted. The older
+  Euler resource receipt is historical; current restrictions and the latest
+  resource snapshot are recorded above. Confucius owns the live slot and frozen
+  installation; no new MCP/JVM/GUI/heavy run starts here. No unrelated cleanup occurs.
 - Owned disposable pytest artifacts were under this worktree's
   `.validation/typed-native-check-2` (60 KiB of generated declarations/history
   and sequence fixtures, not user sessions). They were removed after recording
