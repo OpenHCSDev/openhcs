@@ -1258,17 +1258,8 @@ class PlateInspectionService:
             )
         if result_path is None:
             raise RuntimeError("Result directory resolution returned no path or error.")
-        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
-
         try:
-            result_inventory = PlateResultFileInventory.from_directory_files(
-                plate_path=result_path,
-                result_directory=AnalysisResultDirectory(
-                    subdirectory_name=result_path.name,
-                    path=result_path,
-                ),
-                file_paths=self._path_policy.iter_readable_files(result_path),
-            )
+            file_inventory = self.result_directory_inventory(result_path)
         except AgentPathPolicyError as exc:
             return self._query_files_error(
                 request,
@@ -1282,14 +1273,30 @@ class PlateInspectionService:
         return self._query_files_from_inventory(
             request=request,
             plate_path=plate_path,
-            file_inventory=PlateFileInventory.from_inventories(
-                image_inventory=PlateImageInventory(plate_path=result_path, records=()),
-                result_inventory=result_inventory,
-            ),
+            file_inventory=file_inventory,
             detected_microscope_type=None,
             handler_class=None,
             parser_class=None,
             warnings=(),
+        )
+
+    def result_directory_inventory(self, directory: Path) -> PlateFileInventory:
+        """Admit persisted files once for both inspection and viewer reopening."""
+        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+
+        result_path = self._path_policy.assert_readable(directory)
+        if not result_path.is_dir():
+            raise ValueError(f"Result path is not a directory: {result_path}")
+        return PlateFileInventory.from_inventories(
+            image_inventory=PlateImageInventory(plate_path=result_path, records=()),
+            result_inventory=PlateResultFileInventory.from_directory_files(
+                plate_path=result_path,
+                result_directory=AnalysisResultDirectory(
+                    subdirectory_name=result_path.name,
+                    path=result_path,
+                ),
+                file_paths=self._path_policy.iter_readable_files(result_path),
+            ),
         )
 
     @staticmethod

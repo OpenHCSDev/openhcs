@@ -383,6 +383,7 @@ class PlateFileStreamRequest:
     """Stream image or ROI files exposed by a local plate inventory to a viewer."""
 
     plate_path: str
+    result_directory: str | None = None
     context_plate_path: str | None = None
     file_paths: tuple[str, ...] = ()
     microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
@@ -401,6 +402,7 @@ class PlateFileStreamRequest:
         cls,
         *,
         plate_path: str,
+        result_directory: str | None = None,
         file_paths: list[str] | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
@@ -418,6 +420,7 @@ class PlateFileStreamRequest:
     ) -> "PlateFileStreamRequest":
         return cls(
             plate_path=plate_path,
+            result_directory=result_directory,
             file_paths=tuple(file_paths or ()),
             microscope_type=microscope_type,
             pattern_format=pattern_format,
@@ -439,6 +442,7 @@ class PlateFileStreamRequest:
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "plate_path": self.plate_path,
+            "result_directory": self.result_directory,
             "file_paths": list(self.file_paths) if self.file_paths else None,
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
