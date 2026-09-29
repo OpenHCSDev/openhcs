@@ -15,6 +15,8 @@ from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationControlResponse,
+    CustomFunctionRegistrationDestinationControlResponse,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogControlPayload,
@@ -528,6 +530,27 @@ def test_zmq_router_registers_custom_source_through_catalog_owner(
         is result
     )
     assert observed_requests == [request]
+
+
+def test_native_registration_destination_bypasses_catalog_preparation(
+    tmp_path, monkeypatch,
+) -> None:
+    from zmqruntime.messages import ProcessIdentity
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "absent"))
+    context = _context(Future())
+    def reject_preparation():
+        raise AssertionError("Destination admission cannot prepare the function catalog")
+    monkeypatch.setattr(context.function_catalog_preparation, "ensure_started", reject_preparation)
+    response = ZMQControlMessageRouter.handle(
+        FunctionCatalogControlPayload.from_request(
+            CustomFunctionRegistrationDestinationRequest(function_name="boundary_probe")
+        ).to_dict(), context,
+    )
+    destination = CustomFunctionRegistrationDestinationControlResponse.from_control_response(response).destination
+    assert destination.server_identity == ProcessIdentity.current()
+    assert destination.source_file_path == str(tmp_path / "absent" / "openhcs" / "custom_functions" / "boundary_probe.py")
+    assert not (tmp_path / "absent").exists()
 
 
 def test_zmq_router_delegates_search_to_catalog_owner(monkeypatch) -> None:

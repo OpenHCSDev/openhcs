@@ -20,8 +20,13 @@ before even creating an execution client. A read-only control request asks the
 selected server's existing `CustomFunctionManager` owner for its actual store
 without source evaluation, catalog preparation or directory creation. A
 different or unsupported server fails before executable source is dispatched.
-The server repeats admission before evaluation and persistence; caller roots
-are internal transport state, not a generated public MCP parameter.
+The destination carries existing `ProcessIdentity` (PID plus creation time).
+That exact token is required by the native service before source evaluation and
+returned with the typed connection in the mutation receipt. A changed owner or
+malformed mutation receipt is not silently accepted. The server repeats both
+its own and the caller's admission before evaluation and persistence; caller
+roots and the selected token are internal transport state, not public MCP
+parameters. The real generated tool signature verifies their exclusion.
 
 Successful admission selects the existing catalog connection for subsequent
 discovery/reference operations. Post-dispatch transport failure is reported as
@@ -41,6 +46,32 @@ single-dispatch uncertainty, read-only destination lookup and public-authority
 field exclusion. `git diff --check` and new-test Ruff checks pass. Whole touched
 source Ruff is not claimed clean: existing unrelated findings remain.
 
+Follow-up evidence: **94 tests passed, two plugin-disabled configuration warnings,
+10.17 seconds, peak RSS 322984 KiB**. This runs the new admission file, existing
+custom-function lifecycle and function-catalog ZMQ suites, and three affected
+MCP/CLI regressions. It adds native ordinary/ancestor/file-symlink denial with
+unchanged registry membership and sentinel bytes, PID-incarnation rejection,
+independent native-server policy, exact destination/receipt validation, and
+actual manager persistence plus lazy package reopen/invocation on a synthetic
+2x2 array. Read-only destination routing is tested with unfinished catalog
+preparation and asserts it is never started. The current CLI adapter derives
+connection options/defaults from `ExecutionConnectionSpec` and the public
+request factory. Its real `python -m openhcs.mcp.dev_client
+register-custom-function --help` entrypoint succeeds and exposes those fields;
+missing port is rejected before launching a client.
+
+One attempted extension of that shard could not collect
+`test_function_step_transport.py::test_persisted_custom_function_is_importable_from_package`:
+the module imports the unbuilt CellProfiler `_granularity_reconstruct` extension.
+No tests ran in that failed invocation (exit4, 7.16 seconds, peak373668 KiB).
+Its mocked XDG helper is updated to accept the new non-creating projection;
+that module is **not claimed passed**. No extension build/install or collection
+workaround is performed during the freeze. Subsequent isolated shard result is
+the 94-test evidence above, not a claim that this missing dependency disappeared.
+
+Available RAM stayed above 8 GiB (latest13.4 GiB); guard still warns about
+historical11.1 GiB swap. No heavy runtime or validation-lock holder was created.
+
 Owned disposable fixtures:
 `/home/ts/.cache/agent-scratch/openhcs-registration-230-20260929/pytest`.
 No MCP/JVM/GUI handle was started. Tests are source evidence, not installed or
@@ -59,19 +90,24 @@ live acceptance, and the frozen installed 17/228 tree remains untouched.
   derived; no companion roster, new runner or duplicate custom registry.
 - IMPL-13: admission extends the existing DTO, endpoint service, typed control
   protocol and atomic manager persistence, rather than forking registration.
-- IDEN-8: endpoint process-token binding remains the immediate next change;
-  reuse existing `ProcessIdentity` (PID plus creation time), not a bare-PID or
-  new UUID authority. This checkpoint does not claim race-proof route identity.
+- IDEN-8: destination admission and the mutation receipt reuse existing
+  `ProcessIdentity` (PID plus creation time), not bare PID/new UUID state. The
+  new-case witness changes creation time while retaining PID: native registration
+  rejects before manager evaluation. This is not authentication of hostile
+  servers or a proof that a remote filesystem is shared with the MCP process.
+- BOUND-1/IMPL-13: the existing CLI's public factory/typed connection projects
+  the new route fields; no internal admission authority is generated as an
+  option and no alternate registration implementation is added.
 
 ## Remaining acceptance (not closed)
 
-Bind destination admission to the existing process-identity token and verify
-the same owner before server evaluation. Exercise the real generated MCP
-signature and native manager/registry preservation. After release of the
-technical slot, run controlled owned-vs-shared endpoint, escaping-path and
+After verified closure of the frozen author's owned MCP/viewer and release of
+the technical slot, run controlled owned-vs-shared endpoint, escaping-path and
 delayed-response checks, plus register/discover/compile/execute on a tiny
-synthetic function through the actual installed MCP path. No scientific
-execution, JVM, installation or foreign namespace cleanup is authorized here.
+synthetic function through the actual installed MCP path. The integration owner
+controls review, installation and slot handoff; no scientific execution, JVM,
+installation or foreign namespace cleanup is authorized to this source worker.
+This PR remains draft and references #230 without claiming closure.
 
 Ordinary persistence admission is not a sandbox for arbitrary authorized Python;
 filesystem races and hostile remote servers are not claimed globally solved.

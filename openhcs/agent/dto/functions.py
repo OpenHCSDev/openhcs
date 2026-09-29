@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar, cast
 
 from zmqruntime.config import TransportMode
-from zmqruntime.messages import MessageFields, ResponseType
+from zmqruntime.messages import MessageFields, ProcessIdentity, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
@@ -123,6 +123,7 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     function_name: str | None = None
     storage_dir: str | None = None
     admission_policy: AgentPathPolicy | None = field(default=None, repr=False, compare=False)
+    server_identity: ProcessIdentity | None = None
 
     message_type = FunctionCatalogControlMessageType.REGISTER_CUSTOM
 
@@ -130,9 +131,9 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     def from_fields(
         cls, *, source_code: str, persist: bool = True,
         compact_signature: bool = True, function_name: str | None = None,
-        storage_dir: str | None = None, host: str = "localhost",
+        storage_dir: str | None = None, host: str = ExecutionConnectionSpec().host,
         port: int | None = None, transport_mode: TransportMode | None = None,
-        persistent: bool = True,
+        persistent: bool = ExecutionConnectionSpec().persistent,
     ) -> Self:
         """Public boundary: callers cannot supply their own write authority."""
         return cls(
@@ -158,6 +159,16 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
             policy.assert_writable(CustomFunctionManager.source_path_for_name(root, self.function_name))
         return replace(self, admission_policy=policy)
 
+    def require_server_identity(self) -> ProcessIdentity:
+        """Require the same native owner that supplied the admission destination."""
+        actual = ProcessIdentity.current()
+        if self.server_identity != actual:
+            raise ValueError(
+                f"Custom registration selected server {self.server_identity!r}, "
+                f"but reached {actual!r}; no source was evaluated."
+            )
+        return actual
+
 
 @dataclass(frozen=True, slots=True)
 class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequestABC):
@@ -171,14 +182,43 @@ class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequest
 class CustomFunctionRegistrationDestination:
     storage_dir: str
     source_file_path: str | None
+    server_identity: ProcessIdentity = field(default_factory=ProcessIdentity.current)
 
     def require_request(self, request: CustomFunctionRegistrationRequest) -> None:
         """Reject a different native store before sending executable source."""
-        if request.persist and Path(self.storage_dir).resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
+        if not request.persist:
+            return
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        expected_root = Path(request.storage_dir).expanduser()
+        expected_file = CustomFunctionManager.source_path_for_name(
+            expected_root, request.function_name,
+        )
+        if (
+            Path(self.storage_dir).resolve(strict=False) != expected_root.resolve(strict=False)
+            or self.source_file_path is None
+            or Path(self.source_file_path).resolve(strict=False) != expected_file.resolve(strict=False)
+        ):
             raise ValueError(
                 f"Selected endpoint owns custom storage {self.storage_dir}, "
-                f"not requested {request.storage_dir}; no source was dispatched."
+                f"source {self.source_file_path}, not requested {expected_file}; "
+                "no source was dispatched."
             )
+
+    def require_result(
+        self, request: CustomFunctionRegistrationRequest,
+        result: CustomFunctionRegistrationResult,
+    ) -> None:
+        """Require the returned mutation receipt to identify the admitted owner."""
+        if result.server_identity != self.server_identity or result.connection != request.connection:
+            raise ValueError("Registration returned a different execution owner.")
+        if result.persisted != request.persist:
+            raise ValueError("Registration returned a different persistence policy.")
+        if request.persist and (
+            result.storage_dir != self.storage_dir
+            or result.source_file_paths != (self.source_file_path,)
+        ):
+            raise ValueError("Registration returned a different persistence destination.")
 
 
 class FunctionParameterSource(str, Enum):
@@ -527,6 +567,7 @@ class CustomFunctionRegistrationResult(AgentResultEnvelope):
     functions: tuple[FunctionCatalogEntry, ...] = ()
     next_steps: tuple[str, ...] = ()
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
+    server_identity: ProcessIdentity | None = None
 
 
 class CustomFunctionRegistrationControlResponse(

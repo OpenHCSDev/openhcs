@@ -547,16 +547,23 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         self, request: CustomFunctionRegistrationRequest
     ) -> CustomFunctionRegistrationResult:
         request = request.admitted(request.admission_policy or self._path_policy)
+        # Caller admission cannot enlarge this server's own policy.
+        request.admitted(self._path_policy)
+        server_identity = request.require_server_identity()
         manager = custom_function_manager.CustomFunctionManager(create_storage=False)
         if request.persist and manager.storage_dir.resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
             raise ValueError(
                 f"Selected endpoint owns custom storage {manager.storage_dir}, "
                 f"not requested {request.storage_dir}; no source was evaluated."
             )
+        def admit_write(path: Path) -> Path:
+            self._path_policy.assert_writable(path)
+            return request.admission_policy.assert_writable(path)
+
         registered_functions = manager.register_from_code(
             request.source_code, persist=request.persist,
             expected_function_name=request.function_name,
-            write_admission=request.admission_policy.assert_writable,
+            write_admission=admit_write,
         )
         function_ids = self.function_ids_for_callables(tuple(registered_functions))
         entries = tuple(
@@ -593,6 +600,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 )
             ),
             connection=request.connection,
+            server_identity=server_identity,
         )
 
     def custom_function_registration_destination(

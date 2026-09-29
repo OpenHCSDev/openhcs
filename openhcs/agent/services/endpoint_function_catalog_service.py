@@ -45,6 +45,7 @@ class CustomFunctionRegistrationUncertainError(AgentFacingErrorMixin, RuntimeErr
         super().__init__(
             f"Registration observation failed after invoking {request.connection.transport_endpoint()}; "
             f"destination={request.storage_dir}, function={request.function_name!r}. "
+            f"Selected server={request.server_identity!r}. "
             "Outcome is uncertain; source or registry mutation may have completed."
         )
 
@@ -383,24 +384,26 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         if request.persist:
             self._path_policy.assert_writable(destination.storage_dir)
             self._path_policy.assert_writable(destination.source_file_path)
+        request = replace(request, server_identity=destination.server_identity)
         self.invalidate()
         self._config_provider = lambda: endpoint
         try:
             result = client.register_custom_function(request)
-        except (TimeoutError, ConnectionError, OSError) as error:
-            raise CustomFunctionRegistrationUncertainError(request) from error
-        if not request.persist:
-            from openhcs.processing.custom_functions.manager import (
-                CustomFunctionManager,
-            )
+            destination.require_result(request, result)
+            if not request.persist:
+                from openhcs.processing.custom_functions.manager import (
+                    CustomFunctionManager,
+                )
 
-            CustomFunctionManager(create_storage=False).register_from_code(
-                request.source_code,
-                persist=False,
-                clear_caches=False,
-                emit_signal=False,
-            )
-        self.invalidate()
+                CustomFunctionManager(create_storage=False).register_from_code(
+                    request.source_code,
+                    persist=False,
+                    clear_caches=False,
+                    emit_signal=False,
+                )
+            self.invalidate()
+        except Exception as error:
+            raise CustomFunctionRegistrationUncertainError(request) from error
         return result
 
     def invalidate(self) -> None:

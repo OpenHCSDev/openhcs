@@ -1,10 +1,14 @@
 """Built-in destination and route admission before custom source side effects."""
 
+import asyncio
+import json
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from zmqruntime.config import TransportMode
+from zmqruntime.messages import ProcessIdentity
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
@@ -20,15 +24,23 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+)
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def request(root, **changes):
-    return replace(CustomFunctionRegistrationRequest.from_fields(
-        source_code="@numpy\ndef boundary_probe(image):\n    return image\n",
-        function_name="boundary_probe", storage_dir=str(root), port=15993,
-        transport_mode=TransportMode.TCP,
-    ), **changes)
+    return replace(
+        CustomFunctionRegistrationRequest.from_fields(
+            source_code="@numpy\ndef boundary_probe(image):\n    return image\n",
+            function_name="boundary_probe",
+            storage_dir=str(root),
+            port=15993,
+            transport_mode=TransportMode.TCP,
+        ),
+        **changes,
+    )
 
 
 def policy(root):
@@ -37,10 +49,15 @@ def policy(root):
 
 def test_missing_explicit_route_rejects_before_client_creation(tmp_path):
     made = []
-    catalog = ZMQFunctionCatalogService(lambda: OPENHCS_ZMQ_CONFIG,
-        client_factory=lambda endpoint: made.append(endpoint), path_policy=policy(tmp_path))
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda endpoint: made.append(endpoint),
+        path_policy=policy(tmp_path),
+    )
     with pytest.raises(ValueError, match="explicit port"):
-        catalog.register_custom_function(CustomFunctionRegistrationRequest(source_code="not evaluated"))
+        catalog.register_custom_function(
+            CustomFunctionRegistrationRequest(source_code="not evaluated")
+        )
     assert not made
 
 
@@ -59,37 +76,57 @@ def test_write_escape_rejects_before_endpoint_dispatch(tmp_path, escape):
         root.mkdir()
         (root / sentinel.name).symlink_to(sentinel)
     made = []
-    catalog = ZMQFunctionCatalogService(lambda: OPENHCS_ZMQ_CONFIG,
-        client_factory=lambda endpoint: made.append(endpoint), path_policy=policy(owned))
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda endpoint: made.append(endpoint),
+        path_policy=policy(owned),
+    )
     with pytest.raises(AgentPathPolicyError):
         catalog.register_custom_function(request(root))
     assert not made
     assert sentinel.read_text() == "preserve"
 
 
-@pytest.mark.parametrize("wrong_store, timeout", ((False, False), (True, False), (False, True)))
+@pytest.mark.parametrize(
+    "wrong_store, timeout", ((False, False), (True, False), (False, True))
+)
 def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, timeout):
     root = tmp_path / "custom"
     mutations = []
     endpoints = []
+
     class Client:
         def custom_function_registration_destination(self, probe):
             assert probe.function_name == "boundary_probe"
             native = tmp_path / "foreign" if wrong_store else root
-            return CustomFunctionRegistrationDestination(str(native), str(native / "boundary_probe.py"))
+            return CustomFunctionRegistrationDestination(
+                str(native), str(native / "boundary_probe.py")
+            )
+
         def register_custom_function(self, admitted):
             mutations.append(admitted)
             assert admitted.admission_policy == policy(tmp_path)
+            assert admitted.server_identity == ProcessIdentity.current()
             if timeout:
                 raise TimeoutError("controlled post-dispatch observation")
-            return CustomFunctionRegistrationResult(schema_version=SCHEMA_VERSION, connection=admitted.connection)
+            return CustomFunctionRegistrationResult(
+                schema_version=SCHEMA_VERSION,
+                connection=admitted.connection,
+                server_identity=admitted.server_identity,
+                storage_dir=str(root),
+                source_file_paths=(str(root / "boundary_probe.py"),),
+            )
+
         def disconnect(self):
             pass
+
     def factory(endpoint):
         endpoints.append(endpoint)
         return Client()
-    catalog = ZMQFunctionCatalogService(lambda: OPENHCS_ZMQ_CONFIG,
-        client_factory=factory, path_policy=policy(tmp_path))
+
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG, client_factory=factory, path_policy=policy(tmp_path)
+    )
     if wrong_store:
         with pytest.raises(ValueError, match="no source was dispatched"):
             catalog.register_custom_function(request(root))
@@ -111,24 +148,267 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
 
 def test_native_destination_query_does_not_create_storage(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "absent"))
-    result = FunctionCatalogService(path_policy=policy(tmp_path)).custom_function_registration_destination(
-        CustomFunctionRegistrationDestinationRequest(function_name="boundary_probe"))
+    result = FunctionCatalogService(
+        path_policy=policy(tmp_path)
+    ).custom_function_registration_destination(
+        CustomFunctionRegistrationDestinationRequest(function_name="boundary_probe")
+    )
     assert Path(result.storage_dir) == CustomFunctionManager.default_storage_directory()
-    assert Path(result.source_file_path) == CustomFunctionManager.source_path_for_name(Path(result.storage_dir), "boundary_probe")
+    assert Path(result.source_file_path) == CustomFunctionManager.source_path_for_name(
+        Path(result.storage_dir), "boundary_probe"
+    )
     assert not (tmp_path / "absent").exists()
 
 
 def test_local_denial_precedes_manager_evaluation_and_creation(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "foreign"))
     evaluated = []
-    monkeypatch.setattr(CustomFunctionManager, "_prepare_source", lambda *args: evaluated.append(args))
+    monkeypatch.setattr(
+        CustomFunctionManager, "_prepare_source", lambda *args: evaluated.append(args)
+    )
     root = CustomFunctionManager.default_storage_directory()
     with pytest.raises(AgentPathPolicyError):
-        FunctionCatalogService(path_policy=policy(tmp_path / "owned")).register_custom_function(request(root))
+        FunctionCatalogService(
+            path_policy=policy(tmp_path / "owned")
+        ).register_custom_function(request(root))
     assert not evaluated
     assert not (tmp_path / "foreign").exists()
 
 
+@pytest.mark.parametrize("escape", ("ordinary", "ancestor", "destination"))
+def test_native_escape_denial_preserves_registry_and_sentinel(
+    tmp_path, monkeypatch, escape
+):
+    owned = tmp_path / "owned"
+    outside = tmp_path / "outside"
+    owned.mkdir()
+    outside.mkdir()
+    sentinel = outside / "boundary_probe.py"
+    sentinel.write_text("preserve native sentinel")
+    data_home = outside if escape == "ordinary" else owned
+    monkeypatch.setenv("XDG_DATA_HOME", str(data_home))
+    root = CustomFunctionManager.default_storage_directory()
+    if escape == "ancestor":
+        root.parent.mkdir()
+        root.symlink_to(outside, target_is_directory=True)
+    elif escape == "destination":
+        root.mkdir(parents=True)
+        (root / sentinel.name).symlink_to(sentinel)
+    before = CustomFunctionRuntimeRegistry.metadata_by_name()
+    evaluated = []
+    monkeypatch.setattr(
+        CustomFunctionManager, "_prepare_source", lambda *args: evaluated.append(args)
+    )
+    with pytest.raises(AgentPathPolicyError):
+        FunctionCatalogService(path_policy=policy(owned)).register_custom_function(
+            request(root, server_identity=ProcessIdentity.current())
+        )
+    assert not evaluated
+    assert CustomFunctionRuntimeRegistry.metadata_by_name() == before
+    assert sentinel.read_text() == "preserve native sentinel"
+
+
 def test_public_factory_cannot_expand_write_authority(tmp_path):
     with pytest.raises(TypeError, match="admission_policy"):
-        CustomFunctionRegistrationRequest.from_fields(source_code="", admission_policy=policy(tmp_path))
+        CustomFunctionRegistrationRequest.from_fields(
+            source_code="", admission_policy=policy(tmp_path)
+        )
+    with pytest.raises(TypeError, match="server_identity"):
+        CustomFunctionRegistrationRequest.from_fields(
+            source_code="", server_identity=ProcessIdentity.current()
+        )
+
+
+@pytest.mark.parametrize(
+    "identity", (None, replace(ProcessIdentity.current(), create_time=0))
+)
+def test_changed_or_missing_native_owner_rejects_before_evaluation(
+    tmp_path, monkeypatch, identity
+):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    evaluated = []
+    monkeypatch.setattr(
+        CustomFunctionManager, "_prepare_source", lambda *args: evaluated.append(args)
+    )
+    root = CustomFunctionManager.default_storage_directory()
+    with pytest.raises(ValueError, match="no source was evaluated"):
+        FunctionCatalogService(path_policy=policy(tmp_path)).register_custom_function(
+            request(root, server_identity=identity)
+        )
+    assert not evaluated
+    assert not root.exists()
+
+
+def test_caller_admission_cannot_expand_native_server_policy(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    root = CustomFunctionManager.default_storage_directory()
+    admitted = request(root, server_identity=ProcessIdentity.current()).admitted(
+        policy(tmp_path)
+    )
+    with pytest.raises(AgentPathPolicyError):
+        FunctionCatalogService(
+            path_policy=policy(tmp_path / "restricted")
+        ).register_custom_function(admitted)
+    assert not root.exists()
+
+
+def test_native_destination_file_must_match_admitted_name(tmp_path):
+    destination = CustomFunctionRegistrationDestination(
+        str(tmp_path), str(tmp_path / "other.py")
+    )
+    with pytest.raises(ValueError, match="no source was dispatched"):
+        destination.require_request(request(tmp_path))
+
+
+def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
+    mutations = []
+
+    class Client:
+        def custom_function_registration_destination(self, probe):
+            return CustomFunctionRegistrationDestination(
+                str(tmp_path), str(tmp_path / "boundary_probe.py")
+            )
+
+        def register_custom_function(self, admitted):
+            mutations.append(admitted)
+            return CustomFunctionRegistrationResult(
+                schema_version=SCHEMA_VERSION,
+                connection=admitted.connection,
+                server_identity=replace(ProcessIdentity.current(), create_time=0),
+            )
+
+        def disconnect(self):
+            pass
+
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda endpoint: Client(),
+        path_policy=policy(tmp_path),
+    )
+    try:
+        with pytest.raises(
+            CustomFunctionRegistrationUncertainError, match="Selected server"
+        ):
+            catalog.register_custom_function(request(tmp_path))
+        assert len(mutations) == 1
+        assert catalog._config_provider().default_port == 15993
+    finally:
+        catalog.close()
+
+
+def test_registration_cli_projects_declarations_and_rejects_missing_route(tmp_path):
+    from openhcs.mcp.dev_client import _build_parser, _calls_from_args
+    from openhcs.mcp.dev_client_core import McpDevCliUsageError
+
+    parser = _build_parser()
+    missing = parser.parse_args(("register-custom-function", "--source-code", "source"))
+    with pytest.raises(McpDevCliUsageError, match="explicit port"):
+        _calls_from_args(missing)
+    args = parser.parse_args(
+        (
+            "register-custom-function",
+            "--source-code",
+            "source",
+            "--port",
+            "15993",
+            "--storage-dir",
+            str(tmp_path),
+            "--function-name",
+            "boundary_probe",
+            "--transport-mode",
+            "tcp",
+        )
+    )
+    (call,) = _calls_from_args(args)
+    assert call.name == "openhcs_register_custom_function"
+    assert call.arguments["port"] == 15993
+    assert call.arguments["transport_mode"] == "tcp"
+    assert call.arguments["storage_dir"] == str(tmp_path)
+    assert call.arguments["function_name"] == "boundary_probe"
+    assert "server_identity" not in call.arguments
+
+
+def test_manager_admitted_persistence_uses_existing_registry_and_source_owner(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    for name in (
+        "_declarations_by_name",
+        "_published_exports",
+        "_preparation_outcomes",
+        "_preparation_threads",
+    ):
+        monkeypatch.setattr(CustomFunctionRuntimeRegistry, name, {})
+    monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_source_revision", None)
+    manager = CustomFunctionManager(create_storage=False)
+    try:
+        [function] = manager.register_from_code(
+            request(manager.storage_dir).source_code,
+            expected_function_name="boundary_probe",
+            write_admission=policy(tmp_path).assert_writable,
+            clear_caches=False,
+            emit_signal=False,
+        )
+        source = manager.source_path_for_function(function)
+        assert source == manager.source_path_for_name(
+            manager.storage_dir, "boundary_probe"
+        )
+        assert source.read_text() == request(manager.storage_dir).source_code
+        assert (
+            CustomFunctionRuntimeRegistry.metadata_by_name()["boundary_probe"].func
+            is function
+        )
+        import numpy as np
+
+        image = np.arange(4).reshape(2, 2)
+        np.testing.assert_array_equal(function(image), image)
+        CustomFunctionRuntimeRegistry.clear()
+        from openhcs.processing.custom_functions import boundary_probe
+
+        assert boundary_probe.__module__ == "openhcs.processing.custom_functions"
+        np.testing.assert_array_equal(boundary_probe(image), image)
+    finally:
+        CustomFunctionRuntimeRegistry.clear()
+
+
+@pytest.mark.parametrize("missing_route", (False, True))
+def test_real_generated_mcp_boundary_excludes_authority_and_denies_before_client(
+    tmp_path, missing_route
+):
+    from openhcs.mcp.server import build_server
+
+    made = []
+    catalog = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda endpoint: made.append(endpoint),
+        path_policy=policy(tmp_path / "owned"),
+    )
+
+    async def invoke():
+        built = build_server(SimpleNamespace(function_catalog=catalog))
+        tool = next(
+            tool
+            for tool in await built.list_tools()
+            if tool.name == "openhcs_register_custom_function"
+        )
+        properties = tool.inputSchema["properties"]
+        assert {"port", "host", "storage_dir", "function_name"} <= properties.keys()
+        assert {"admission_policy", "server_identity"}.isdisjoint(properties)
+        arguments = {
+            "source_code": "not evaluated",
+            "function_name": "boundary_probe",
+            "storage_dir": str(tmp_path / "outside"),
+        }
+        if not missing_route:
+            arguments["port"] = 15993
+        return await built.call_tool("openhcs_register_custom_function", arguments)
+
+    result = asyncio.run(invoke())
+    content = result[0] if isinstance(result, tuple) else result.content
+    payload = json.loads(content[0].text)
+    error = payload["errors"][0]
+    assert error["code"] == (
+        "mcp_tool_failed" if missing_route else "agent_path_policy_rejected"
+    )
+    assert not made
+    catalog.close()

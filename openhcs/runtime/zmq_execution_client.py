@@ -70,6 +70,8 @@ from openhcs.runtime.zmq_execution_signature import (
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationDestination,
+        CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
         FunctionCatalogControlRequest,
@@ -911,7 +913,9 @@ class ZMQExecutionClient(
             response
         ).result
 
-    def custom_function_registration_destination(self, request):
+    def custom_function_registration_destination(
+        self, request: CustomFunctionRegistrationDestinationRequest,
+    ) -> CustomFunctionRegistrationDestination:
         """Require the selected endpoint's native admission contract before mutation."""
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationDestinationControlResponse,
