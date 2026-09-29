@@ -707,7 +707,7 @@ class MeasurementsArtifactType(ArtifactType):
         table = value.data
         if not isinstance(table, MeasurementTable):
             cls.validate_runtime_payload(value.name, table)
-        return table.rows
+        return table
 
     @classmethod
     def uses_aggregate_materialization_identity(cls, data: object) -> bool:

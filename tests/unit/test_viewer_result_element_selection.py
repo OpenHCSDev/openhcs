@@ -36,6 +36,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_controls import (
+    ViewerFractionalZPointCoordinateAuthority,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinateAuthority,
@@ -550,6 +551,72 @@ def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> N
             axis_labels=("channel", "z", "y", "x"),
             displayed_axis_indices=(2, 3),
         )
+
+
+def test_fractional_z_point_navigation_chooses_slice_without_rounding_geometry() -> (
+    None
+):
+    assert ViewerFractionalZPointCoordinateAuthority.axis_indices(
+        coordinates=(2.375, 1.25, 3.5),
+        axis_labels=("z_index", "y", "x"),
+        displayed_axis_indices=(1, 2),
+    ) == {"z_index": 2}
+    with pytest.raises(ValueError, match="integral slice"):
+        ViewerResultElementCoordinateAuthority.axis_indices(
+            coordinates=(2.375, 1.25, 3.5),
+            axis_labels=("z_index", "y", "x"),
+            displayed_axis_indices=(1, 2),
+        )
+
+
+def test_napari_navigation_selects_fractional_z_point_feature(qtbot) -> None:
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((4, 8, 8), dtype=np.uint8), name="Source planes")
+    layer = viewer.add_points(
+        np.array([[2.375, 1.25, 3.5]], dtype=float),
+        features={"response": [4.75]},
+        name="Centres",
+    )
+    server, _overlay, _dock, _window = _viewer_server(viewer, layer, "centres")
+    projection = ViewerLayerAxisProjection(
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [0, 1, 2, 3]},
+        routed_component_values={"z_index": [0, 1, 2, 3]},
+        axis_offsets=(0,),
+    )
+    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    server.layer_route_state.set_dimension_state(
+        "centres",
+        NapariDimensionLayerState(
+            labels={"z_index": ("Z 0", "Z 1", "Z 2", "Z 3")},
+            presentation=NapariAxisPresentation(
+                entries=semantics.entries,
+                layout=ViewerComponentLayout.from_parts(
+                    component_modes={"z_index": ViewerComponentMode.STACK},
+                    component_order=("z_index",),
+                ),
+                route_key="centres",
+                projection=projection,
+            ),
+        ),
+    )
+
+    response = NapariNavigationControlMessageAction().handle(
+        server,
+        {
+            ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
+                route_key="centres", visible=True, selected=True, data_index=0
+            )
+        },
+    )
+
+    assert response["status"] == "success", response
+    assert layer.selected_data == {0}
+    assert viewer.dims.current_step[0] == 2
+    assert layer.data[0, 0] == 2.375
+    assert layer.features.loc[0, "response"] == 4.75
 
 
 def test_napari_navigation_rejects_out_of_range_data_index(qtbot) -> None:

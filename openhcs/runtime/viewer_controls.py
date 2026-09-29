@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from math import isfinite
+from math import floor, isfinite
 from numbers import Real
 from typing import ClassVar, Self, TypeAlias, TypeVar
 
 from zmqruntime.viewer_protocol import ViewerWireField
+
+from openhcs.constants import AllComponents
 
 ViewerScalar: TypeAlias = str | int | float | bool | None
 ViewerPayloadAxisIndices: TypeAlias = tuple[int, ...] | dict[str, int]
@@ -148,7 +150,7 @@ class ViewerResultElementCoordinateAuthority:
         axis_label: str,
     ) -> int:
         coordinates = tuple(
-            cls._integral_coordinate(
+            cls._slice_coordinate(
                 row[axis_position],
                 axis_label=axis_label,
             )
@@ -162,7 +164,7 @@ class ViewerResultElementCoordinateAuthority:
         return coordinates[0]
 
     @staticmethod
-    def _integral_coordinate(value: object, *, axis_label: str) -> int:
+    def _slice_coordinate(value: object, *, axis_label: str) -> int:
         if isinstance(value, bool) or not isinstance(value, Real):
             raise TypeError(
                 f"Viewer result element coordinate for axis {axis_label!r} "
@@ -175,6 +177,23 @@ class ViewerResultElementCoordinateAuthority:
                 f"must identify one integral slice, got {value!r}."
             )
         return int(numeric_value)
+
+
+class ViewerFractionalZPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
+    """Navigate to the nearest Z slice without rounding stored point geometry."""
+
+    @staticmethod
+    def _slice_coordinate(value: object, *, axis_label: str) -> int:
+        if axis_label != AllComponents.Z_INDEX.value:
+            return ViewerResultElementCoordinateAuthority._slice_coordinate(
+                value, axis_label=axis_label
+            )
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError("Viewer point Z coordinate must be numeric.")
+        numeric_value = float(value)
+        if not isfinite(numeric_value):
+            raise ValueError("Viewer point Z coordinate must be finite.")
+        return floor(numeric_value + 0.5)
 
 
 @dataclass(frozen=True, slots=True)

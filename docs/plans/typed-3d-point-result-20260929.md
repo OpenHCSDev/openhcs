@@ -1,0 +1,85 @@
+# Typed 3-D point result: implementation boundary
+
+Status: measurement payload retention, typed point writer, native ROI ZIP
+round-trip and exact-Z Napari projection implemented in this draft. The native
+reopen path now derives its ordered Z domain from the table's declared source
+planes, including distinct physical files, and retains scalar measurement
+fields as Napari point features. The fresh-source MCP result-directory route
+inventoried and streamed a native ROI ZIP to an isolated viewer. Raw-image
+streaming is blocked by #201; installed entrypoint and biological result are
+not claimed.
+
+Base: OpenHCSDev/openhcs `9644febe2785aace85bbc8bd1d2ce062525c56d2`.
+Issue: OpenHCSDev/openhcs#134. Integration owner: blind-analysis coordinator.
+Coordinate the worker/export crossing with open PR #157; do not edit its
+`function_artifact_materialization.py` or worker/export paths competitively.
+
+## Current contract and failure
+
+- `MeasurementTable` owns schema-bearing rows, an object subject and optional
+  measurement-feature owner, plus source provenance
+  (`openhcs/core/runtime_measurements.py:41`). The subject's declared ID field
+  is supplied by `ObjectMeasurementSubjectRelation`
+  (`openhcs/core/artifacts.py:1344`).
+- Before this draft, `MeasurementsArtifactType.materialization_payload` handed
+  only `table.rows` to every writer (`openhcs/core/artifacts.py:704`). This
+  draft retains the complete table through the existing `ColumnarRows`
+  contract, while CSV and JSON still serialize only rows. Its provenance,
+  subject and feature owner are now available to a measurement writer.
+  `MaterializationSpec` already admits multiple writer options for the same
+  artifact; a separate hand-built file bundle is not required.
+- The existing ROI writer extracts image-label contours, not measurement
+  coordinates. `PointROIOptions` owns the Z/Y/X measurement-feature roles;
+  its writer uses the existing ROI ZIP backend. `ROIArchiveSourceMetadata` stores an existing
+  `ImagePayloadMetadata` declaration in the native archive sidecar; it is not
+  a second source schema (`openhcs/core/roi_source_metadata.py:15`).
+- OpenHCS pins PolyStore `e430c331ad931edc92dfe9d4fcd0d837a3cfeea8`.
+  Its native `PointShape(y, x)` codec preserves fractional XY, but has no Z
+  member. Standard ImageJ native Z is a discrete plane. OpenHCS's Napari
+  `_build_nd_points` prepends route component indices to 2-D coordinates
+  (`openhcs/runtime/napari_viewer_server.py:1089`); this draft replaces the
+  projected Z coordinate with typed `ROIFractionalZ` when present and rejects
+  a fractional-Z ROI if no Z axis is projected.
+- Frozen H002 hand-wrote an ImageJ POINT ZIP with rounded Z and no source
+  sidecar. It remains AMBIGUOUS and must not be rewritten or rerun as a repair.
+- The live desktop MCP process is healthy but uses an older dirty checkout whose
+  query tool does not expose `result_directory`. Remote main has the route;
+  source-worktree tests cannot substitute for a reviewed install and fresh MCP
+  handshake.
+- Fresh-source MCP on isolated display :91 streamed the native point ROI to
+  port 5791. BioFormats raw streaming then failed for both a four-plane OME
+  TIFF (ambiguous physical path) and four separate TIFF planes (fabricated
+  escaped-and-suffixed load path). Issue #201 has the reproducer and owner;
+  raw/result/combined visual QA remains open.
+
+## Required closure
+
+1. Keep coordinate roles and object ID on typed declarations: a producer must
+   declare which measurement features mean Z, Y, X and which subject owns the
+   object ID. Do not infer them from column spellings or filenames. Retain the
+   complete `MeasurementTable` through writer dispatch, adapting existing CSV
+   and JSON writers coherently rather than adding a side channel.
+2. Persist exact fractional ZYX, stable object ID and canonical source binding
+   in one inspectable typed point result. If the ImageJ ROI ZIP is retained as
+   the external format, its metadata sidecar must carry information the native
+   format cannot express, under an owning typed contract. No rounded-Z-only
+   fallback or legacy reader for the frozen malformed archive.
+3. Reopen the persisted result through the installed public MCP
+   `result_directory` route with the declared raw source, not a guessed plate
+   path. The managed viewer must show the exact fractional 3-D point location,
+   feature-row/object identity and orthogonal views. Preserve path policy and
+   reject foreign source identities and escaping paths.
+4. Verify one continuous synthetic compile/run/materialize/inspect/reopen
+   journey, then a new bounded context-isolated blind trial with raw-only,
+   result-only and combined captures at spatially distributed matched native
+   coordinates. Keep held-out answers sealed until pipeline freeze. A focused
+   source test or synthetic viewer does not establish biological acceptance.
+
+## Current stop conditions
+
+Do not claim a complete ownership proof from a partial scan or duplicate
+PR #157's worker/export owner. The resource guard currently warns on swap;
+do not start parallel agents, a large scan/test, or a new blind image load
+until headroom is restored. Source inspection and small isolated edits may
+continue, but a coherent change still needs complete ownership and native
+behavior evidence before merge.

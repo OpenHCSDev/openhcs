@@ -1,14 +1,21 @@
 from pathlib import Path
 
+import numpy as np
+import tifffile
+from polystore.bioformats_storage import BioFormatsPlaneRef
+from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
+    PlatePathInspectionRequest,
 )
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionContext
+from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants.constants import FileFormat
+from openhcs.constants.constants import Backend, FileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileKind,
@@ -16,6 +23,25 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileRecord,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    PointROIOptions,
+    materialize,
+)
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
@@ -317,6 +343,192 @@ def test_plate_streaming_service_streams_virtual_image_path(monkeypatch):
     }
     assert result.status_messages == ("streamed image",)
     assert result.resolved_records[0].virtual_path == "A01_s001_w1_z001_t001.tif"
+
+
+def test_plate_streaming_service_preserves_inventory_source_refs_for_each_plane(
+    monkeypatch,
+):
+    plate = Path("/plate")
+    records = tuple(
+        PlateImageRecord(
+            virtual_path=f"virtual_z{z}.tif",
+            full_virtual_path=str(plate / f"virtual_z{z}.tif"),
+            backend=Backend.BIOFORMATS.value,
+            source_path="/plate/image.ome.tif",
+            metadata={"well": "A01", "z_index": z},
+            source_ref=SourcePixelRef(
+                backend=Backend.BIOFORMATS.value,
+                backend_address=BioFormatsPlaneRef(
+                    source_path=Path("image.ome.tif"),
+                    series_index=0,
+                    plane_index=z - 1,
+                ).to_backend_address(),
+            ),
+        )
+        for z in (1, 2)
+    )
+    inventory = PlateFileInventory(
+        plate_path=plate, image_records=records, result_records=()
+    )
+    captured = {}
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service."
+        "StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: FakeViewer(),
+    )
+
+    def fake_stream_images(self, request):
+        del self
+        captured["request"] = request
+
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingService.stream_images",
+        fake_stream_images,
+    )
+
+    result = plate_streaming_service(FakeInspectionService(inventory)).stream_files(
+        PlateFileStreamRequest(plate_path=str(plate), kind=PlateFileKind.IMAGE, limit=2)
+    )
+
+    assert result.errors == ()
+    projection = captured["request"].source_projection
+    assert projection is not None
+    for record in records:
+        lookup = VirtualWorkspacePathLookup.from_paths(
+            record.virtual_path, record.full_virtual_path
+        )
+        assert projection.source_ref_for(lookup) == record.source_ref
+        assert (
+            projection.source_metadata_for(lookup)["z_index"]
+            == record.metadata["z_index"]
+        )
+
+
+def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    pixels = np.stack(
+        [np.full((8, 8), value, dtype=np.uint16) for value in (11, 22, 33, 44)]
+    )
+    pixels[2, 1:3, 3:5] = 2048
+    tifffile.imwrite(
+        plate / "image.ome.tif", pixels, ome=True, metadata={"axes": "ZYX"}
+    )
+    inspection = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        )
+    )
+    context, errors, _warnings = inspection.open_context(
+        PlatePathInspectionRequest(plate_path=str(plate))
+    )
+    assert errors == ()
+    assert context is not None
+    inventory, _warnings = inspection.file_inventory(context, kind=PlateFileKind.IMAGE)
+    records = inventory.file_records(kinds=(PlateFileKind.IMAGE,))
+    assert len(records) == 4
+    projection = PlateStreamingService._inventory_source_projection(records, context)
+    assert projection is not None
+    source = ViewerStreamingSource(
+        filemanager=context.filemanager,
+        microscope_handler=context.handler,
+        plate_path=str(plate),
+    )
+    for index, record in enumerate(records):
+        image = source.load_image(
+            record.streamable_image_path,
+            record.source_ref.backend,
+            source_projection=projection,
+            component_metadata=record.metadata,
+        )
+        np.testing.assert_array_equal(image_payload_data(image), pixels[index])
+        assert record.metadata["z_index"] == index + 1
+
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path=records[0].full_virtual_path,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(record.full_virtual_path for record in records),
+            component_metadata=tuple(
+                {
+                    component: record.metadata[component]
+                    for component in ("well", "site", "channel", "z_index", "timepoint")
+                }
+                for record in records
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    features = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    assert Path(archive).exists()
+
+
+def test_inventory_source_projection_loads_exact_ordinary_tiff(tmp_path):
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    pixels = np.arange(64, dtype=np.uint16).reshape(8, 8)
+    physical_path = plate / "A01_s001_w1_z001_t001.tif"
+    tifffile.imwrite(physical_path, pixels)
+    inspection = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        )
+    )
+    context, errors, _warnings = inspection.open_context(
+        PlatePathInspectionRequest(plate_path=str(plate))
+    )
+    assert errors == ()
+    assert context is not None
+    inventory, _warnings = inspection.file_inventory(context, kind=PlateFileKind.IMAGE)
+    (record,) = inventory.file_records(kinds=(PlateFileKind.IMAGE,))
+    assert record.streamable_image_path != physical_path.name
+    assert record.source_path == str(physical_path)
+    projection = PlateStreamingService._inventory_source_projection((record,), context)
+    assert projection is not None
+    source = ViewerStreamingSource(
+        filemanager=context.filemanager,
+        microscope_handler=context.handler,
+        plate_path=str(plate),
+    )
+    image = source.load_image(
+        record.streamable_image_path,
+        record.source_ref.backend,
+        source_projection=projection,
+        component_metadata=record.metadata,
+    )
+    np.testing.assert_array_equal(image_payload_data(image), pixels)
 
 
 def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):

@@ -7,7 +7,10 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from polystore.roi import ROI, PointShape
+from polystore.roi_converters import NapariROIConverter
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -36,6 +39,14 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
 )
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
@@ -61,6 +72,19 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLaunchContext,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentAxisSemantics,
+    ViewerComponentValueDomainPayload,
+    ViewerLayerAxisProjectionRequestAuthority,
+    ViewerLayerAxisProjector,
+    ViewerObjectDisplayConfigInput,
+    ViewerRouteComponentValueTracker,
+)
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    PointROIOptions,
+    materialize,
+)
 
 
 class FakeFileManager:
@@ -69,6 +93,10 @@ class FakeFileManager:
 
     def load(self, path: str, read_backend: str):
         return np.zeros((4, 5), dtype=np.uint16)
+
+    def resolve_address(self, address: str, backend: str, *, base_path: Path):
+        del backend
+        return str(base_path / address)
 
     def exists(self, path, backend):
         return False
@@ -928,6 +956,128 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
             "label": expected.source_component_metadata["channel"]
         }
         assert data[0][0].shapes == [PointShape(32.25, 40.5)]
+
+
+def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
+    import tifffile
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    source_paths = tuple(
+        str(source_directory / f"A01_s001_w1_z{z + 1:03d}_t001.tif") for z in range(4)
+    )
+    for z, path in enumerate(source_paths):
+        source_pixels = np.zeros((8, 8), dtype=np.uint16)
+        if z == 2:
+            source_pixels[1:3, 3:5] = 2048
+        tifffile.imwrite(path, source_pixels)
+    source_path = source_paths[0]
+    components = tuple(
+        {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+        for z in range(4)
+    )
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path=source_path,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=source_paths,
+            component_metadata=components,
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    features = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    filemanager = FakeFileManager()
+    handler = SimpleNamespace(
+        metadata_handler=FakeMetadataHandler(),
+        parser=SimpleNamespace(
+            parse_filename=lambda _filename: pytest.fail(
+                "Native point archive must not infer provenance from filenames"
+            )
+        ),
+    )
+    config = NapariStreamingConfig(enabled=True)
+    result = StreamingService(filemanager, handler, tmp_path).stream_rois(
+        RoiStreamingRequest(
+            viewer=FakeViewer(),
+            config=config,
+            status_callback=lambda _status: None,
+            error_callback=lambda error: pytest.fail(error),
+            roi_filenames=(archive,),
+            require_source_metadata=True,
+        )
+    )
+    assert result.streamed_paths == (archive,)
+    assert len(filemanager.saved_batches) == 1
+    data, paths, _backend, kwargs = filemanager.saved_batches[0]
+    stream = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+    assert paths == [archive]
+    assert data[0][0].metadata["response"] == 4.75
+    assert data[0][0].metadata["openhcs_fractional_z"] == 2.375
+    assert stream.source.metadata.metadata_by_path[archive]["z_index"] == 0
+    assert stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value][
+        "z_index"
+    ] == [0, 1, 2, 3]
+    domain = ViewerComponentValueDomainPayload.from_wire_mapping(
+        stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value],
+        context="native point archive",
+    )
+    semantics = ViewerComponentAxisSemantics(
+        entries=domain.entries,
+        layout=ViewerObjectDisplayConfigInput(config).layout(),
+    )
+    item = SimpleNamespace(
+        address=SimpleNamespace(
+            components=stream.source.metadata.metadata_by_path[archive]
+        ),
+        data=NapariROIConverter.rois_to_shapes(data[0]),
+    )
+    request = ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
+        route_key="centres",
+        component_axis_semantics=semantics,
+        layer_items=[item],
+        route_value_tracker=ViewerRouteComponentValueTracker(),
+        aggregate_component_values={},
+        geometric_component_values={},
+    )
+    projection = ViewerLayerAxisProjector().project(request)
+    assert "z_index" in projection.projected_axis_components
+    from openhcs.runtime.napari_viewer_server import _build_nd_points
+
+    points, properties = _build_nd_points([item], projection)
+    assert points[0, projection.projected_axis_components.index("z_index")] == 2.375
+    assert properties["response"] == [4.75]
 
 
 def test_explicit_native_reopening_rejects_an_external_roi_without_source(tmp_path):
