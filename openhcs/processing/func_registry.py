@@ -8,15 +8,18 @@ lookup API used by older callers without copying catalog state.
 
 from __future__ import annotations
 
+import ast
 import logging
 import sys
 import threading
 import types
 from collections.abc import Callable, Mapping
+from importlib.machinery import PathFinder
 from typing import Any
 
 from arraybridge.types import VALID_MEMORY_TYPES
 
+import openhcs
 from openhcs.core.callable_contract import CallableContract
 
 logger = logging.getLogger(__name__)
@@ -25,6 +28,56 @@ _registry_lock = threading.RLock()
 _registry_initialized = False
 _external_projection_exports: dict[str, set[str]] = {}
 _external_projection_modules: set[str] = set()
+
+
+def pipeline_source_requires_import_projection(source: str) -> bool:
+    """Admit direct imports without building the external virtual-module view.
+
+    The registry owns virtual ``openhcs.<library>`` modules, while real
+    OpenHCS package children are importable without registry initialization.
+    Dynamic imports conservatively retain the full projection.
+    """
+
+    requested_modules: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            requested_modules.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                return True
+            if node.module == "openhcs":
+                requested_modules.update(
+                    f"openhcs.{alias.name}" for alias in node.names
+                )
+            elif node.module is not None:
+                requested_modules.add(node.module)
+        elif isinstance(node, ast.Call) and (
+            (
+                isinstance(node.func, ast.Name)
+                and node.func.id in {"__import__", "exec", "eval"}
+            )
+            or (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr == "import_module"
+            )
+        ):
+            if not node.args or not isinstance(node.args[0], ast.Constant):
+                return True
+            imported = node.args[0].value
+            if not isinstance(imported, str):
+                return True
+            if isinstance(node.func, ast.Name) and node.func.id in {"exec", "eval"}:
+                return True
+            requested_modules.add(imported)
+
+    for module_name in requested_modules:
+        parts = module_name.split(".")
+        if len(parts) < 2 or parts[0] != "openhcs":
+            continue
+        top_level_module = f"openhcs.{parts[1]}"
+        if PathFinder.find_spec(top_level_module, openhcs.__path__) is None:
+            return True
+    return False
 
 
 def _create_external_virtual_modules(all_functions: Mapping[str, Any]) -> None:
