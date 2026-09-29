@@ -4598,7 +4598,9 @@ class NapariMountedRouteControlMessageAction(NapariControlMessageAction):
         presentation = dimension_state.presentation
         if presentation is None:
             if request.axis_indices:
-                raise ValueError("Image axis_indices require semantic axis projection.")
+                raise ValueError(
+                    "Image axis_indices require a route with semantic axis projection."
+                )
             return tuple(
                 (item, item.data, dict(item.address.components), (), ())
                 for item in items
@@ -6280,6 +6282,15 @@ def run_napari_viewer_process(
         scope_accent_color: Exact UI-owned scope accent used to frame this window
         font_dpi: Explicit Qt font DPI applied before viewer construction
     """
+    import polystore
+    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+
+    logger.info(
+        "Viewer import provenance: server=%s; openhcs_root=%s; polystore=%s",
+        __file__,
+        OpenHCSRuntimeImportAuthority.current().import_root,
+        polystore.__file__,
+    )
     server: NapariViewerServer | None = None
     try:
         request = NapariViewerServerRequest(

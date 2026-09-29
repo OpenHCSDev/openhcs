@@ -335,6 +335,7 @@ class PlateStreamingService:
     ) -> VirtualWorkspaceSourceProjection | None:
         """Carry inventory-owned physical image identities into viewer loading."""
         builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        projections = {}
         for record in records:
             image_path = record.streamable_image_path
             if image_path is None or record.source_ref is None:
@@ -342,6 +343,11 @@ class PlateStreamingService:
             builder.record_workspace_source_path(image_path, record.source_ref)
             if record.metadata:
                 builder.record_source_metadata(image_path, record.metadata)
+            if record.source_projection is not None:
+                projections[image_path] = record.source_projection
+        builder.ingest_source_projections(
+            VirtualWorkspaceSourceProjectionEntries(projections)
+        )
         return builder.projection() if builder.workspace_source_refs else None
 
     def _receipt_source_projection(

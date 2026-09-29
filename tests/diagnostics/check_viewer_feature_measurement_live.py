@@ -132,6 +132,8 @@ def main() -> None:
         "uncertain_dispatch": None,
         "python_executable": str(INSTALLED_PYTHON),
         "source_root": str(SOURCE),
+        "driver_pid": os.getpid(),
+        "lock_owner_pid": os.getppid(),
     }
 
     def save() -> None:
@@ -150,6 +152,7 @@ def main() -> None:
     os.environ.update(
         DISPLAY=args.display,
         OPENHCS_CPU_ONLY="true",
+        POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD="false",
         PYTHONDONTWRITEBYTECODE="1",
         OPENHCS_AGENT_READ_ROOTS=os.pathsep.join(
             (str(output), str(SOURCE / "packaging"))
@@ -160,6 +163,20 @@ def main() -> None:
         XDG_CONFIG_HOME=str(output / "xdg-config"),
     )
     sys.path.insert(0, str(SOURCE))
+    import openhcs
+    import polystore
+
+    receipt["parent_imports"] = {
+        "openhcs": openhcs.__file__,
+        "polystore": polystore.__file__,
+    }
+    receipt["submodules"] = subprocess.check_output(
+        ["git", "submodule", "status", "--recursive"], cwd=SOURCE, text=True
+    ).splitlines()
+    if any(row.startswith(("-", "+", "U")) for row in receipt["submodules"]):
+        raise SystemExit(
+            "Exact source dependency checkout not established; no MCP startup."
+        )
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.runtime.viewer_protocol import (
         ViewerRuntimeEndpoint,
@@ -254,6 +271,7 @@ def main() -> None:
                     and not health["server_source_changed_since_import"]
                 )
                 receipt["mcp_pid"] = health["server_process_id"]
+                call("openhcs_get_authoring_context", {"kind": "first_use"})
                 streamed = call(
                     "openhcs_stream_plate_files_to_viewer",
                     {
@@ -266,6 +284,12 @@ def main() -> None:
                     },
                 )
                 before = call("openhcs_get_viewer_window_state", connection)
+                heartbeat = endpoint.heartbeat(timeout_ms=1000)
+                assert heartbeat is not None and heartbeat.process_identity is not None
+                owned_identity = heartbeat.process_identity
+                receipt["viewer_identity"] = to_jsonable(owned_identity)
+                receipt["heartbeat"] = to_jsonable(heartbeat)
+                save()
                 payloads = call(
                     "openhcs_get_viewer_window_payloads",
                     {**connection, "include_array_values": False},

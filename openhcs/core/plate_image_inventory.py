@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         FilenameParser,
         MetadataHandler,
     )
-    from openhcs.core.source_projection import SourceCandidate
+    from openhcs.core.source_projection import SourceCandidate, SourceProjection
     from polystore.filemanager import FileManager
     from polystore.roi import ROI, ROIShape
 
@@ -52,6 +52,7 @@ class PlateImageRecord:
     source_path: str
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     @property
     def source_path_obj(self) -> Path:
@@ -277,6 +278,9 @@ class PlateImageInventory:
             source_path=source_path,
             metadata=metadata,
             source_ref=resolved_source_ref,
+            source_projection=(
+                None if projection is None else projection.source_projection_for(lookup)
+            ),
         )
 
     def require_record(self, image_path: str) -> PlateImageRecord:
@@ -338,6 +342,7 @@ class PlateFileRecord:
     full_path: str | None = None
     file_format: FileFormat | None = None
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     def require_image_source_ref(self) -> SourcePixelRef:
         """Return the inventory-authored source for an admitted native image."""
@@ -378,6 +383,7 @@ class PlateFileRecord:
             full_virtual_path=record.full_virtual_path,
             source_path=record.source_path,
             source_ref=record.source_ref,
+            source_projection=record.source_projection,
         )
 
     @classmethod
