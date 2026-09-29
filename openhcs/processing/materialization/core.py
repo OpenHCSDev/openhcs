@@ -3250,12 +3250,16 @@ def _write_point_roi_zip(
         z, y, x = coordinates
         rois.append(
             ROIFractionalZ(z).bind(
-                ROI(shapes=[PointShape(y=y, x=x)], metadata={"label": int(label)})
+                ROI(
+                    shapes=[PointShape(y=y, x=x)],
+                    metadata={**row, "label": int(label)},
+                )
             )
         )
     if not rois:
         raise ValueError("Point ROI ZIP requires at least one measured object.")
     metadata = ImagePayloadMetadata(source_provenance=provenance)
+    ROIFractionalZ.source_component_domain(rois, metadata)
     return [
         Output(
             path=ctx.paths(options).primary_output_path(options),

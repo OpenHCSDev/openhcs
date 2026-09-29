@@ -1,7 +1,9 @@
 # Typed 3-D point result: implementation boundary
 
 Status: measurement payload retention, typed point writer, native ROI ZIP
-round-trip and exact-Z Napari projection implemented in this draft. Synthetic
+round-trip and exact-Z Napari projection implemented in this draft. The native
+reopen path now derives its ordered Z domain from the table's declared source
+planes and retains scalar measurement fields as Napari point features. Synthetic
 source tests pass; installed entrypoint and biological result are not claimed.
 
 Base: OpenHCSDev/openhcs `9644febe2785aace85bbc8bd1d2ce062525c56d2`.
@@ -37,6 +39,10 @@ Coordinate the worker/export crossing with open PR #157; do not edit its
   a fractional-Z ROI if no Z axis is projected.
 - Frozen H002 hand-wrote an ImageJ POINT ZIP with rounded Z and no source
   sidecar. It remains AMBIGUOUS and must not be rewritten or rerun as a repair.
+- The live desktop MCP process is healthy but uses an older dirty checkout whose
+  query tool does not expose `result_directory`. Remote main has the route;
+  source-worktree tests cannot substitute for a reviewed install and fresh MCP
+  handshake.
 
 ## Required closure
 

@@ -773,6 +773,7 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
                     "center_z": 2.375,
                     "center_y": 1.25,
                     "center_x": 3.5,
+                    "response": 4.75,
                 },
             ),
             fields=(
@@ -780,9 +781,17 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
                 FieldSpec("center_z", float),
                 FieldSpec("center_y", float),
                 FieldSpec("center_x", float),
+                FieldSpec("response", float),
             ),
         ),
         source_path="/source/image.ome.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/image.ome.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
         subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
     )
     feature = ObjectCoreMeasurementFeature
@@ -804,6 +813,8 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     assert archive == str(tmp_path / "centres_points.roi.zip")
     assert len(rois) == 1
     assert rois[0].metadata["label"] == 7
+    assert rois[0].metadata["object_label"] == 7
+    assert rois[0].metadata["response"] == 4.75
     assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
     assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
     assert ROIArchiveSourceMetadata.decode(rois).source_path == "/source/image.ome.tif"
@@ -825,6 +836,12 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     )
     assert points.tolist() == [[2.375, 1.25, 3.5]]
     assert properties["label"] == [7]
+    assert properties["object_label"] == [7]
+    assert properties["response"] == [4.75]
+    from napari.layers import Points
+
+    native_layer = Points(points, properties=properties)
+    assert native_layer.features.loc[0, "response"] == 4.75
 
 
 @pytest.mark.unit

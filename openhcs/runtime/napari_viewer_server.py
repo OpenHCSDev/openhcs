@@ -64,6 +64,7 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.constants import AllComponents
 from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
@@ -1103,6 +1104,7 @@ def _build_nd_points(
     """
     all_points_nd = []
     all_properties = {"label": [], "component": []}
+    point_metadata: list[Mapping[str, NapariWireValue]] = []
 
     for item in layer_items:
         points_data = item.data
@@ -1145,6 +1147,26 @@ def _build_nd_points(
                 all_properties["component"].append(
                     metadata.value(VisualMetadataField.COMPONENT, 0)
                 )
+                point_metadata.append(metadata.metadata)
+
+    excluded = {
+        "label",
+        "component",
+        ROIFractionalZ.FIELD,
+        ROIArchiveSourceMetadata.FIELD,
+    }
+    feature_fields = {
+        key
+        for values in point_metadata
+        for key, value in values.items()
+        if key not in excluded and isinstance(value, (str, int, float, bool))
+    }
+    for field in sorted(feature_fields):
+        if all(
+            field in values and isinstance(values[field], (str, int, float, bool))
+            for values in point_metadata
+        ):
+            all_properties[field] = [values[field] for values in point_metadata]
 
     points_array = np.empty((0, 2 + len(axis_projection.projected_axis_components)))
     if all_points_nd:

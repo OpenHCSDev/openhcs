@@ -31,13 +31,17 @@ from zmqruntime.viewer_protocol import ViewerWireMapping
 
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.core.source_image_provenance import SourceImageIdentity
+from openhcs.core.source_image_provenance import (
+    SourceComponentMetadata,
+    SourceImageIdentity,
+)
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -778,6 +782,7 @@ class StreamingService:
         paths: list[str] = []
         loaded_indices: list[int] = []
         archive_metadata: list[ImagePayloadMetadata | None] = []
+        point_domains: dict[str, tuple[SourceComponentMetadata, ...]] = {}
 
         for i, filename in enumerate(request.roi_filenames, 1):
             file_path = Path(self.source.plate_path) / filename
@@ -796,6 +801,10 @@ class StreamingService:
                     "artifact filenames do not establish source identity."
                 )
             archive_metadata.append(metadata)
+            if metadata is not None:
+                point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
+                if point_domain is not None:
+                    point_domains[filename] = point_domain
             data_list.append(ROIArchiveSourceMetadata.geometry(rois))
             paths.append(filename)
             loaded_indices.append(i - 1)
@@ -866,8 +875,13 @@ class StreamingService:
             for path, metadata in zip(paths, archive_metadata, strict=True)
             if metadata is not None
         )
+        metadata_by_path.update(
+            (path, dict(domain[0])) for path, domain in point_domains.items()
+        )
         source_metadata_items = StreamSourceComponentMetadataItems.from_values(
-            metadata_by_path[path] for path in paths
+            component_metadata
+            for path in paths
+            for component_metadata in point_domains.get(path, (metadata_by_path[path],))
         )
         message_authority = StreamComponentMessageExtraAuthority.from_viewer_surface(
             viewer_surface,
@@ -884,8 +898,7 @@ class StreamingService:
         request.status_callback(message)
 
         payload_metadata = [
-            self.source.calibrated_metadata(metadata)
-            for metadata in archive_metadata
+            self.source.calibrated_metadata(metadata) for metadata in archive_metadata
         ]
         component_order = message_authority.layout.component_order
         for indices in StreamImagePayloadMetadataProjector.partition_indices(
