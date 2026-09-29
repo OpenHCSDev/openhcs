@@ -9,6 +9,7 @@ import math
 import statistics
 import time
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import ExitStack
 from dataclasses import asdict, dataclass, replace
 from enum import Enum, StrEnum
 from pathlib import Path
@@ -16,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import psutil
 from objectstate.lazy_factory import rebuild_lazy_config_with_new_global_reference
+from zmqruntime import DataControlPortPairAuthority
 
 if TYPE_CHECKING:
     from benchmark.reports.cppipe_figures import BenchmarkMetricRow
@@ -31,6 +33,7 @@ from benchmark.metrics.memory import MemoryMetric
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline,
+    execute_measured_openhcs_pipeline_on_client,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import AllComponents
@@ -66,7 +69,11 @@ from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_execution_client import (
+    OpenHCSExecutionSubmission,
+    ZMQExecutionClient,
+)
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
@@ -91,6 +98,13 @@ LEGACY_DIRECT_EXECUTION_ROUTE = WellThroughputExecutionRoute.LEGACY_DIRECT
 ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE = (
     WellThroughputExecutionRoute.ORDINARY_ZMQ_OUTCOMES
 )
+
+
+class WellThroughputServerLifecycle(StrEnum):
+    """Whether observation total time includes client-owned server startup."""
+
+    FRESH_PER_OBSERVATION = "fresh-per-observation"
+    REUSED_PER_SWEEP = "reused-per-sweep"
 
 
 @dataclass(frozen=True, slots=True)
@@ -2021,6 +2035,9 @@ class WellThroughputResult:
     memory_limit_mb: float | None = None
     error_message: str | None = None
     execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE
+    server_lifecycle: WellThroughputServerLifecycle = (
+        WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+    )
     run_input_sha256: str | None = None
 
     @classmethod
@@ -2038,6 +2055,9 @@ class WellThroughputResult:
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str | None = None,
         execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
+        server_lifecycle: WellThroughputServerLifecycle = (
+            WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+        ),
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -2067,6 +2087,7 @@ class WellThroughputResult:
             memory_limit_mb=memory_limit_mb,
             error_message=error_message,
             execution_route=execution_route,
+            server_lifecycle=server_lifecycle,
         )
 
     @classmethod
@@ -2083,6 +2104,9 @@ class WellThroughputResult:
         native_execution_baseline: NativeCellProfilerExecutionBaseline | None,
         error_message: str,
         execution_route: WellThroughputExecutionRoute = LEGACY_DIRECT_EXECUTION_ROUTE,
+        server_lifecycle: WellThroughputServerLifecycle = (
+            WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+        ),
     ) -> "WellThroughputResult":
         projected_native_execution_seconds = (
             native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -2111,6 +2135,7 @@ class WellThroughputResult:
             status=WellThroughputStatus.ERROR,
             error_message=error_message,
             execution_route=execution_route,
+            server_lifecycle=server_lifecycle,
         )
 
     def is_successful(self) -> bool:
@@ -2184,6 +2209,9 @@ def well_throughput_run_input_sha256(
     start_method: MultiprocessingStartMethod,
     native_baselines: Mapping[str, NativeCellProfilerExecutionBaseline],
     max_memory_mb: float | None,
+    server_lifecycle: WellThroughputServerLifecycle = (
+        WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+    ),
 ) -> str:
     """Bind resumable rows to their resolved declarations and source bytes."""
 
@@ -2196,7 +2224,7 @@ def well_throughput_run_input_sha256(
         return {"path": str(resolved), "sha256": source_hashes[resolved]}
 
     declaration = {
-        "schema": "openhcs.benchmark.well-throughput-inputs.v2",
+        "schema": "openhcs.benchmark.well-throughput-inputs.v3",
         "implementation_sha256": _benchmark_implementation_sha256(),
         "manifest": source_record(manifest_path),
         "cases": [
@@ -2215,6 +2243,7 @@ def well_throughput_run_input_sha256(
             for name, baseline in sorted(native_baselines.items())
         },
         "max_memory_mb": max_memory_mb,
+        "server_lifecycle": server_lifecycle.value,
     }
     encoded = json.dumps(declaration, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
@@ -2241,8 +2270,19 @@ def run_well_throughput_suite(
     rerun_missing_memory: bool = False,
     max_memory_mb: float | None = None,
     execution_port: int | None = None,
+    reuse_execution_server: bool = False,
 ) -> tuple[WellThroughputResult, ...]:
     """Run converted cppipes, refusing resumed rows from different inputs."""
+    if reuse_execution_server and max_memory_mb is not None:
+        raise ValueError(
+            "Reused execution servers cannot use --max-memory-mb: the memory "
+            "guard may terminate the server before later observations."
+        )
+    server_lifecycle = (
+        WellThroughputServerLifecycle.REUSED_PER_SWEEP
+        if reuse_execution_server
+        else WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+    )
     if any(
         result.execution_route is not ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
         for result in existing_results
@@ -2277,6 +2317,7 @@ def run_well_throughput_suite(
         start_method=effective_start_method,
         native_baselines=native_baselines,
         max_memory_mb=max_memory_mb,
+        server_lifecycle=server_lifecycle,
     )
     if any(result.run_input_sha256 != run_input_sha256 for result in existing_results):
         raise ValueError(
@@ -2294,32 +2335,55 @@ def run_well_throughput_suite(
         for result in results
     }
     skipped = set(skipped_observations)
-    for case in selected_cases:
-        for mode in benchmark_plan.modes:
-            observation_key = WellThroughputObservationKey(case.name, mode.name)
-            if observation_key in completed or observation_key in skipped:
-                continue
-            result = run_case_well_throughput(
-                case_name=case.name,
-                dataset_path=case.dataset_path,
-                cppipe_path=case.cppipe_path,
-                output_root=(
-                    output_root
-                    / case.name
-                    / f"wells_{mode.well_count}"
-                    / f"workers_{mode.worker_count}"
-                ),
-                mode=mode,
-                start_method=effective_start_method,
-                source_well_filter=case.well_filter_config,
-                native_execution_baseline=native_baselines.get(case.name),
-                max_memory_mb=max_memory_mb,
-                execution_port=execution_port,
-            )
-            result = replace(result, run_input_sha256=run_input_sha256)
-            results.append(result)
-            completed.add(observation_key)
-            write_well_throughput_csv(output_root / WELL_THROUGHPUT_ROWS_CSV, results)
+    with ExitStack() as client_stack:
+        shared_observer = (
+            _ZMQProgressTimingObserver() if reuse_execution_server else None
+        )
+        shared_client: ZMQExecutionClient | None = None
+        for case in selected_cases:
+            for mode in benchmark_plan.modes:
+                observation_key = WellThroughputObservationKey(case.name, mode.name)
+                if observation_key in completed or observation_key in skipped:
+                    continue
+                if reuse_execution_server and shared_client is None:
+                    client_port = execution_port
+                    if client_port is None:
+                        client_port = DataControlPortPairAuthority.acquire(
+                            OPENHCS_ZMQ_CONFIG,
+                            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+                        ).data_port
+                    shared_client = client_stack.enter_context(
+                        ZMQExecutionClient(
+                            port=client_port,
+                            persistent=False,
+                            progress_callback=shared_observer,
+                        )
+                    )
+                result = run_case_well_throughput(
+                    case_name=case.name,
+                    dataset_path=case.dataset_path,
+                    cppipe_path=case.cppipe_path,
+                    output_root=(
+                        output_root
+                        / case.name
+                        / f"wells_{mode.well_count}"
+                        / f"workers_{mode.worker_count}"
+                    ),
+                    mode=mode,
+                    start_method=effective_start_method,
+                    source_well_filter=case.well_filter_config,
+                    native_execution_baseline=native_baselines.get(case.name),
+                    max_memory_mb=max_memory_mb,
+                    execution_port=execution_port,
+                    execution_client=shared_client,
+                    timing_observer=shared_observer,
+                )
+                result = replace(result, run_input_sha256=run_input_sha256)
+                results.append(result)
+                completed.add(observation_key)
+                write_well_throughput_csv(
+                    output_root / WELL_THROUGHPUT_ROWS_CSV, results
+                )
     return tuple(results)
 
 
@@ -2335,8 +2399,19 @@ def run_case_well_throughput(
     native_execution_baseline: NativeCellProfilerExecutionBaseline | None = None,
     max_memory_mb: float | None = None,
     execution_port: int | None = None,
+    execution_client: ZMQExecutionClient | None = None,
+    timing_observer: _ZMQProgressTimingObserver | None = None,
 ) -> WellThroughputResult:
     """Run one converted cppipe over synthetic wells in a single OpenHCS execution."""
+    if (execution_client is None) != (timing_observer is None):
+        raise ValueError(
+            "A reused execution client and its progress observer must be supplied together."
+        )
+    server_lifecycle = (
+        WellThroughputServerLifecycle.REUSED_PER_SWEEP
+        if execution_client is not None
+        else WellThroughputServerLifecycle.FRESH_PER_OBSERVATION
+    )
     output_root.mkdir(parents=True, exist_ok=True)
     generated_module_path = output_root / f"{cppipe_path.stem}_openhcs.py"
     prepared = prepare_cellprofiler_input_workspace(
@@ -2417,9 +2492,9 @@ def run_case_well_throughput(
         )
     )
     progress_events: list[dict[str, Any]] = []
-    timing_observer = _ZMQProgressTimingObserver(
-        on_event=lambda event: progress_events.append(dict(event))
-    )
+    if timing_observer is None:
+        timing_observer = _ZMQProgressTimingObserver()
+    timing_observer.on_event = lambda event: progress_events.append(dict(event))
     phase_timing = PhaseTimingTrace(
         run_id=run_id,
         pipeline_name=case_name,
@@ -2440,14 +2515,24 @@ def run_case_well_throughput(
     ) as memory_metric:
         try:
             try:
-                completed, _ = execute_measured_openhcs_pipeline(
-                    submission=submission,
-                    phase_timing=phase_timing,
-                    timing_observer=timing_observer,
-                    expected_axis_count=len(well_ids),
-                    execution_port=execution_port,
-                    require_owned_server=True,
-                )
+                if execution_client is None:
+                    completed, _ = execute_measured_openhcs_pipeline(
+                        submission=submission,
+                        phase_timing=phase_timing,
+                        timing_observer=timing_observer,
+                        expected_axis_count=len(well_ids),
+                        execution_port=execution_port,
+                        require_owned_server=True,
+                    )
+                else:
+                    completed, _ = execute_measured_openhcs_pipeline_on_client(
+                        client=execution_client,
+                        submission=submission,
+                        phase_timing=phase_timing,
+                        timing_observer=timing_observer,
+                        expected_axis_count=len(well_ids),
+                        require_owned_server=True,
+                    )
                 outcome = completed.observation_export
                 if not isinstance(outcome, ZMQRuntimeExecutionOutcomeExport):
                     raise TypeError(
@@ -2481,6 +2566,7 @@ def run_case_well_throughput(
                             f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."
                         ),
                         execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+                        server_lifecycle=server_lifecycle,
                     )
                 raise
             except Exception as exc:
@@ -2499,6 +2585,7 @@ def run_case_well_throughput(
                         native_execution_baseline=native_execution_baseline,
                         error_message=str(exc),
                         execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+                        server_lifecycle=server_lifecycle,
                     )
                 return WellThroughputResult.failed(
                     case_name=case_name,
@@ -2511,6 +2598,7 @@ def run_case_well_throughput(
                     native_execution_baseline=native_execution_baseline,
                     error_message=str(exc),
                     execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+                    server_lifecycle=server_lifecycle,
                 )
         finally:
             _write_progress_diagnostics(
@@ -2536,6 +2624,7 @@ def run_case_well_throughput(
             native_execution_baseline=native_execution_baseline,
             error_message=(f"Process-tree RSS exceeded {max_memory_mb:.1f} MB."),
             execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+            server_lifecycle=server_lifecycle,
         )
     projected_native_execution_seconds = (
         native_execution_baseline.projected_execution_seconds(mode.well_count)
@@ -2568,6 +2657,7 @@ def run_case_well_throughput(
         ),
         peak_memory_mb=peak_memory_mb,
         execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+        server_lifecycle=server_lifecycle,
     )
 
 
@@ -2659,6 +2749,13 @@ def _require_single_execution_route(rows: Sequence[WellThroughputResult]) -> Non
             "Well-throughput figures cannot pool different execution routes: "
             f"{sorted(route.value for route in routes)!r}. "
             "Select one route before plotting."
+        )
+    lifecycles = {row.server_lifecycle for row in rows}
+    if len(lifecycles) > 1:
+        raise ValueError(
+            "Well-throughput figures cannot pool fresh and reused server totals: "
+            f"{sorted(lifecycle.value for lifecycle in lifecycles)!r}. "
+            "Select one server lifecycle before plotting."
         )
 
 
@@ -2911,6 +3008,10 @@ def _well_throughput_result_from_row(
         error_message=row.get("error_message") or None,
         execution_route=WellThroughputExecutionRoute(
             row.get("execution_route") or LEGACY_DIRECT_EXECUTION_ROUTE.value
+        ),
+        server_lifecycle=WellThroughputServerLifecycle(
+            row.get("server_lifecycle")
+            or WellThroughputServerLifecycle.FRESH_PER_OBSERVATION.value
         ),
         run_input_sha256=row.get("run_input_sha256") or None,
     )

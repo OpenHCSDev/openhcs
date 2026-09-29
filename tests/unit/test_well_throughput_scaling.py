@@ -28,6 +28,7 @@ from benchmark.well_throughput_scaling import (
     WellThroughputPresentationSources,
     WellThroughputPreset,
     WellThroughputResult,
+    WellThroughputServerLifecycle,
     WellThroughputStatus,
     _replicate_source_binding_workspace_wells,
     _require_declared_worker_observation,
@@ -61,6 +62,139 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+
+
+def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from benchmark import well_throughput_scaling
+
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    dataset_path = tmp_path / "dataset"
+    dataset_path.mkdir()
+    (dataset_path / "image.tif").write_bytes(b"image")
+    cppipe_path = tmp_path / "pipeline.cppipe"
+    cppipe_path.write_text("pipeline", encoding="utf-8")
+    cases = tuple(
+        SimpleNamespace(
+            name=name,
+            dataset_path=dataset_path,
+            cppipe_path=cppipe_path,
+            well_filter_config=None,
+        )
+        for name in ("CaseA", "CaseB")
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling, "load_comparison_cases", lambda _: cases
+    )
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "DataControlPortPairAuthority",
+        SimpleNamespace(
+            acquire=lambda *_args, **_kwargs: SimpleNamespace(data_port=7801)
+        ),
+    )
+    opened: list[object] = []
+    closed: list[object] = []
+
+    class FakeClient:
+        def __init__(self, *, port, persistent, progress_callback):
+            assert (port, persistent) == (7801, False)
+            self.progress_callback = progress_callback
+
+        def __enter__(self):
+            opened.append(self)
+            return self
+
+        def __exit__(self, *_args):
+            closed.append(self)
+
+    monkeypatch.setattr(well_throughput_scaling, "ZMQExecutionClient", FakeClient)
+    observed: list[tuple[str, object]] = []
+
+    def fake_run_case_well_throughput(**kwargs):
+        client = kwargs["execution_client"]
+        assert client.progress_callback is kwargs["timing_observer"]
+        observed.append((kwargs["case_name"], client))
+        return WellThroughputResult(
+            case_name=kwargs["case_name"],
+            mode_name=kwargs["mode"].name,
+            worker_count=1,
+            well_count=1,
+            compile_seconds=1.0,
+            prepare_seconds=0.0,
+            execute_seconds=2.0,
+            total_seconds=3.0,
+            wells_per_second=0.5,
+            successful_wells=1,
+            execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+            server_lifecycle=WellThroughputServerLifecycle.REUSED_PER_SWEEP,
+        )
+
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "run_case_well_throughput",
+        fake_run_case_well_throughput,
+    )
+    kwargs = dict(
+        output_root=tmp_path / "out",
+        well_counts=(),
+        worker_counts=(),
+        plan=WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 1),)),
+        start_method=MultiprocessingStartMethod.FORK,
+    )
+    rows = run_well_throughput_suite(
+        manifest_path, **kwargs, reuse_execution_server=True
+    )
+    assert [name for name, _ in observed] == ["CaseA", "CaseB"]
+    assert len(opened) == len(closed) == 1
+    assert all(client is opened[0] for _, client in observed)
+    assert all(
+        row.server_lifecycle is WellThroughputServerLifecycle.REUSED_PER_SWEEP
+        for row in rows
+    )
+    assert read_well_throughput_csv(tmp_path / "out" / "well_throughput.csv") == rows
+
+    assert (
+        run_well_throughput_suite(
+            manifest_path, **kwargs, existing_results=rows, reuse_execution_server=True
+        )
+        == rows
+    )
+    assert len(opened) == 1
+    with pytest.raises(ValueError, match="matching run-input SHA-256"):
+        run_well_throughput_suite(manifest_path, **kwargs, existing_results=rows)
+
+
+def test_figures_reject_mixed_server_lifecycles(tmp_path: Path) -> None:
+    row = WellThroughputResult(
+        case_name="CaseA",
+        mode_name="1w_1t",
+        worker_count=1,
+        well_count=1,
+        compile_seconds=1.0,
+        prepare_seconds=0.0,
+        execute_seconds=2.0,
+        total_seconds=3.0,
+        wells_per_second=0.5,
+        successful_wells=1,
+        execution_route=ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE,
+    )
+    csv_path = tmp_path / "well_throughput.csv"
+    write_well_throughput_csv(
+        csv_path,
+        (
+            row,
+            replace(
+                row,
+                case_name="CaseB",
+                server_lifecycle=WellThroughputServerLifecycle.REUSED_PER_SWEEP,
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="cannot pool fresh and reused server totals"):
+        generate_well_throughput_figures(csv_path, tmp_path / "figures")
 
 
 def test_well_throughput_presets_are_paired_modes() -> None:
