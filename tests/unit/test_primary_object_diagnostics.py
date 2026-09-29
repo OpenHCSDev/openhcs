@@ -158,6 +158,46 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
         assert value.metadata.intensity_scale is None
 
 
+def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identity():
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+    from openhcs.processing.backends.lib_registry.unified_registry import Pure2DAuxiliaryOutputAggregator
+    from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import DiagnosticPlaneSource
+
+    first = _source()
+    second = MaskedImagePayload(
+        first.data + 10, ~first.mask,
+        ImagePayloadMetadata(
+            source_path="/synthetic/A01_s002_DNA.tif", source_image_names=("DNA",),
+            source_spatial_domain=first.metadata.source_spatial_domain,
+        ),
+    )
+    planes = [DiagnosticPlaneSource.from_image(source).plane(source.data)
+              for source in (first, second)]
+    value = Pure2DAuxiliaryOutputAggregator.aggregate(
+        planes, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    )
+    np.testing.assert_array_equal(value.data, np.stack([first.data, second.data]))
+    np.testing.assert_array_equal(value.mask, np.stack([first.mask, second.mask]))
+    assert value.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert value.metadata.source_provenance.source_plane_count == 2
+
+
+def test_typed_stage_payloads_roundtrip_existing_pickle_boundary():
+    import pickle
+
+    source = _source()
+    diagnostics = PrimaryObjectDiagnosticPlanes.from_execution(
+        image=source, threshold_support=source.data > 15,
+        initial_components=_objects(source).labels,
+        declumping=UnexecutedDeclumpingEvidence(), objects=_objects(source),
+    )
+    reloaded = pickle.loads(pickle.dumps(diagnostics))
+    for before, after in zip(diagnostics, reloaded, strict=True):
+        np.testing.assert_array_equal(before.data, after.data)
+        np.testing.assert_array_equal(before.mask, after.mask)
+        assert before.metadata == after.metadata
+
+
 def test_new_stage_declaration_needs_no_catalog_or_dispatch_edit():
     # Run the actual declaration projection with a new nominal record field.
     class ExtendedPlanes(NamedTuple):

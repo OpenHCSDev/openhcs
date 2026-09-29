@@ -3,6 +3,7 @@
 Implementation owner: Singer. Base audited: `a0263e82a1b3296f34f8c5cdd50ffae5c33ef7dd`.
 Worktree: `/home/ts/wt/openhcs-primary-segmentation-diagnostics-20260929`.
 Issue: https://github.com/OpenHCSDev/openhcs/issues/214.
+Draft implementation: https://github.com/OpenHCSDev/openhcs/pull/215.
 
 ## Contract and ownership
 
@@ -38,7 +39,7 @@ unexecuted stages share one invalid mask. No input or private benchmark was read
 
 ## Actual focused checks
 
-Seven lightweight tests passed in 1.74 seconds, using the prescribed project
+Nine lightweight tests passed in 1.79 seconds, using the prescribed project
 Python 3.12 environment, this worktree and all eight recorded submodule source
 directories on `PYTHONPATH`, with `OPENHCS_CPU_ONLY=true`, thread limits of one,
 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` and:
@@ -69,6 +70,9 @@ This is a focused source/AST audit, not a complete NRA scan:
   body is unchanged except evidence captures and the augmented return.
 - The real image-output contextualizer preserves absent-stage masks and numeric
   pixels, provenance and stage intensity semantics.
+- The existing PURE_2D auxiliary aggregator preserves stage pixels, independent
+  masks and two-plane source provenance. A small pickle boundary roundtrip
+  preserves typed planes; this is not persisted MCP/result-review acceptance.
 - New-case experiment: one added nominal record field is picked up by the actual
   artifact projection without a catalog/dispatcher edit. A real new computed
   stage requires its field plus its same-execution producer argument (two sites);
