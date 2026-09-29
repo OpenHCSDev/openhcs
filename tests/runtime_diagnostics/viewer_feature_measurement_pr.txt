@@ -1,0 +1,21 @@
+Implements #221; integrates the canonical empirical guide checkpoint from #223 (normal merge of e6b26458b). Draft: source-tested, NOT installed/live accepted.
+
+Done:
+- First-class read-only openhcs_measure_viewer_polyline and openhcs_measure_viewer_region, automatically projected from declared service DTO/capability owners.
+- Native source-coordinate ruler/polyline length vs chord, raw nearest/bilinear profiles with explicit width/reduction/sampling, independently specified polygon geometry and raw foreground/background support statistics.
+- Exact source/route/channel/components/aggregate axes/native coordinates, native transformed world geometry and units; no assertion that scale1 verifies physical calibration.
+- Bounds before source copies/interpolation/rasterization; fail closed on invalid coordinates/axes, sparse padding, unsupported planes and nonfinite input/pixels/transforms. Native presentation/source pixels remain unchanged.
+- Existing nominal Napari control registry and MountedRoute selector reuse. Server edits are measurement subclasses/imports/selector promotion only, disjoint from PR159 lifecycle work. No second catalogs/kind switches, plugins/dependencies, installs, skill changes or frozen-harness changes.
+- Updated canonical empirical guide with exact operation arguments and pending-live caveat.
+
+Validation:
+- 94 focused provider-free feature/presentation/protocol tests passed in9.03s, one process/native threads1, installed interpreter importing this source worktree. Actual Napari ViewerModel/Image and in-process automatic MCP tool binding are exercised; no Qt viewer or MCP process launched.
+- Native scaled/translated anisotropy, affine geometry, raw-value profiles, readonly presentation, route/channel selection, DTO serialization, discovery, invalid/oversized inputs covered.
+- NRA global-context scan did not complete its budget; no clean/global proof claim. Owner-chain review is recorded in the checkpoint receipt.
+
+Pending / acceptance gaps:
+- Real source-pinned installed synthetic continuous MCP/viewer journey and author-opened captures require a parent-released isolated runtime slot. H001/H002 cap is preserved; no runtime launched here.
+- Parent integration review, including PR159 disjoint lifecycle work and #223 guide integration; fresh installed affected entrypoint proof still required. Draft/tests are not readiness.
+- Live journey driver will be added as a follow-up commit on this same branch before runtime-slot handoff.
+
+Receipt: tests/runtime_diagnostics/viewer_feature_measurement_checkpoint_20260929.json. Frozen H003 outputs and installed biological harness untouched.

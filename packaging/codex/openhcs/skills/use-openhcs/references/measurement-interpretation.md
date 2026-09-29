@@ -68,6 +68,64 @@ measurements, not ground truth or an automatically validated parameter choice.
    receipts and rationale with the complete candidate before held-out access.
    Expected counts or reference masks must not choose measurements in a blind run.
 
+### Native ruler, profile and independently specified region operations
+
+Availability is determined by the **live** capability registry, not this guide.
+These source contracts accompany [issue221](https://github.com/OpenHCSDev/openhcs/issues/221);
+their installed live acceptance is pending. Both operations are read-only and
+require a settled, scalar, non-multiscale image route in a native YX 2-D display.
+Unbound stacks/RGB, ambiguous records, missing axes, sparse padding, nonfinite
+inputs/pixels and out-of-bounds geometry fail explicitly; no coordinate clamps.
+
+Both tools take `host`, `port`, optional `transport_mode`, `persistent=true`,
+`timeout_ms=5000`, the exact `route_key`, **all** route-local component
+`axis_indices` (zero-based; `{}` only for a route with no component axes), and
+`vertices_yx` as source-native `[y,x]` pixel-centre pairs. Discover route-local
+axes and labels from viewer state/payloads; do not guess channel index from its
+name. Coordinates include the original source path, producer, channel/component
+values, selected aggregate plane, source origin/shape/spacing, layer axes,
+scale/translation and declared world units. Returned world vertices use the
+full native `data_to_world` transform, including affine rotation/shear.
+`physical_calibration_verified=false`: declared units/spacing are provenance,
+not independent calibration; scale1 is not proof of micrometres.
+
+`openhcs_measure_viewer_polyline` accepts 2..64 vertices and optional
+`line_width=1` (1..31), `interpolation_order=1` (0 nearest or1 bilinear),
+`max_samples=4096` (1..4096) and `max_pixels=262144` (1..262144).
+Two vertices give a ruler; more give a path. Results distinguish `data_length`
+and `data_chord_length` in pixels from `world_length` and
+`world_chord_length` in declared world units. The profile includes
+`profile_distance_data`, `profile_distance_world`, `profile_values` and raw
+statistics. Each segment uses `ceil(length+1)` endpoint-inclusive samples;
+shared junctions retain the preceding segment's sample. Width is a centred
+perpendicular pixel band reduced by mean, not a radius. The full band must
+fit real source support before interpolation. Constant exterior0 is the
+interpolator convention, not permission to measure outside source support.
+
+`openhcs_measure_viewer_region` accepts 3..64 vertices forming a simple polygon
+(closure is implicit; do not repeat the first vertex). Optional arguments are
+`background_vertices_yx` (a separately specified 3..64-vertex polygon),
+`support_threshold`, `background_sigma=2.0` (finite, nonnegative), and
+`max_pixels=262144` (1..262144). Foreground/background selected pixels may not
+overlap. Results separate continuous `polygon` area/perimeter/extent/roundness,
+transformed `world_area`/`world_perimeter`/`world_roundness`, and `raster`
+pixel-centre geometry from `skimage.regionprops` (boundary centres included,
+exclusive upper bbox bounds, 4-neighbour perimeter). Roundness is
+`4*pi*area/perimeter^2`, not clamped; raster perimeter may give values above1
+on tiny regions. Polygon geometry is **not a biological object mask**.
+
+`statistics` and optional `background_statistics` report raw-value count,
+minimum, maximum, mean, median, population standard deviation (`ddof=0`) and
+total in float64. Support is raw values **strictly greater** than
+`support_threshold`; if omitted with a background polygon, the threshold is
+background mean plus `background_sigma` times its population standard deviation.
+Without either threshold or background, support quantities remain null. The
+foreground-minus-background mean is reported separately; it does not replace
+raw statistics. Window and raster/interpolation work budgets are checked before
+pixel copies, masks or interpolation; lower `max_pixels` to constrain a request.
+Neither operation changes source pixels, contrast/gamma, transforms, camera,
+axes, selection or mounted layers.
+
 Sampling and ROI summaries are not a dedicated ruler or line-profile contract.
 If the live registry lacks the required operation, record the missing input/
 output contract and use the [custom-function route](custom-function-authoring.md)

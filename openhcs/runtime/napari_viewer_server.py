@@ -61,6 +61,7 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeLayerTransform,
     ViewerImageIntensityControlOptions,
     ViewerNativeViewportPresentation,
+    ViewerSourceSpatialDomainPayload,
 )
 
 from openhcs.constants import AllComponents
@@ -128,11 +129,20 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandlerMeta,
 )
 from openhcs.runtime.viewer_controls import (
+    ViewerFeatureMeasurementControlOptions,
+    ViewerMeasurementCoordinates,
+    ViewerPolylineControlOptions,
+    ViewerRegionControlOptions,
+    ViewerRoutedImageControlOptions,
     ViewerFractionalZPointCoordinateAuthority,
     ViewerIntensityWindowControlOptions,
     ViewerNativeDimensions,
     ViewerResultElementCoordinateAuthority,
 )
+from openhcs.runtime.viewer_measurements import (
+    NativeImageMeasurement,
+)
+from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     NapariViewerServerRequest,
@@ -4569,6 +4579,221 @@ class NapariMountedRouteControlMessageAction(NapariControlMessageAction):
             )
         return layer
 
+    @staticmethod
+    def matched_image_records(
+        items: list[NapariStreamLayerItem],
+        dimension_state: NapariDimensionLayerState,
+        request: ViewerRoutedImageControlOptions,
+    ) -> tuple[
+        tuple[
+            NapariStreamLayerItem,
+            LayerData,
+            dict[str, ComponentValue],
+            tuple[int, ...],
+            tuple[int, ...],
+        ],
+        ...,
+    ]:
+        """Select original image planes through the existing semantic axis owner."""
+        presentation = dimension_state.presentation
+        if presentation is None:
+            if request.axis_indices:
+                raise ValueError("Image axis_indices require semantic axis projection.")
+            return tuple(
+                (item, item.data, dict(item.address.components), (), ())
+                for item in items
+            )
+        aggregate_bindings = presentation.aggregate_axis_bindings
+        records = []
+        for item in items:
+            for (
+                aggregate_indices
+            ) in NapariViewerPayloadProjection.aggregate_index_tuples(
+                aggregate_bindings
+            ):
+                components = aggregate_bindings.item_component_values(
+                    item, aggregate_indices
+                )
+                axis_indices = presentation.projection.coordinate_index(
+                    components, context="Napari image payload selection"
+                )
+                if not presentation.route_local_component_indices_match(
+                    axis_indices,
+                    request.axis_indices,
+                    context="Viewer image axis_indices",
+                ):
+                    continue
+                records.append(
+                    (
+                        item,
+                        NapariViewerPayloadProjection.aggregate_data_slice(
+                            item.data, aggregate_indices
+                        ),
+                        dict(components),
+                        axis_indices,
+                        aggregate_indices,
+                    )
+                )
+        return tuple(records)
+
+
+class NapariFeatureMeasurementControlMessageAction(
+    NapariMountedRouteControlMessageAction
+):
+    """Read-only bounded measurement; executes on the owning Qt thread."""
+
+    request_type: ClassVar[type[ViewerFeatureMeasurementControlOptions]]
+
+    def handle(
+        self, server: "NapariViewerServer", message: Mapping[str, object]
+    ) -> dict[str, object]:
+        try:
+            request = message.get(ViewerControlResponseField.PAYLOAD.value)
+            if not isinstance(request, self.request_type):
+                raise TypeError(
+                    f"Measurement payload must be {self.request_type.__name__}."
+                )
+            measurement, coordinates = self._admitted_plane(server, request)
+            result = self.measure(measurement, request)
+            response = ViewerControlReplyHeader(
+                ViewerProtocolStatus.SUCCESS, response_type=f"{self.message_type}_ack"
+            ).to_wire_mapping()
+            response.update(
+                to_jsonable({"measurement": result, "coordinates": coordinates})
+            )
+            return response
+        except Exception as error:
+            return ViewerControlReplyHeader(
+                ViewerProtocolStatus.ERROR,
+                response_type=f"{self.message_type}_ack",
+                message=str(error),
+            ).to_wire_mapping()
+
+    @abstractmethod
+    def measure(
+        self,
+        plane: NativeImageMeasurement,
+        request: ViewerFeatureMeasurementControlOptions,
+    ) -> object:
+        """Measure the concrete declaration's geometry."""
+
+    def _admitted_plane(
+        self,
+        server: "NapariViewerServer",
+        request: ViewerFeatureMeasurementControlOptions,
+    ) -> tuple[NativeImageMeasurement, ViewerMeasurementCoordinates]:
+        if server.viewer is None or server.viewer.dims.ndisplay != 2:
+            raise ValueError("Measurement requires an available 2D viewer.")
+        if set(server.viewer.dims.displayed) != set(
+            range(server.viewer.dims.ndim - 2, server.viewer.dims.ndim)
+        ):
+            raise ValueError("Measurement requires the native YX spatial display axes.")
+        layer = self._mounted_layer(server, request.route_key)
+        if not isinstance(layer, napari.layers.Image) or layer.rgb or layer.multiscale:
+            raise TypeError(
+                "Measurement route must mount one scalar, non-multiscale Image."
+            )
+        if server.layer_route_state.pending_update_for(request.route_key) is not None:
+            raise ValueError(
+                "Measurement route has pending data; settle before measuring."
+            )
+        items = server.component_groups.existing_items_for(request.route_key)
+        if not items or len(items) > 128:
+            raise ValueError(
+                "Measurement requires a bounded route with 1..128 original items."
+            )
+        if any(
+            item.address.stream_layer_data_type is not StreamingDataType.IMAGE
+            for item in items
+        ):
+            raise TypeError("Measurement requires original image payloads.")
+        state = server.layer_route_state.dimension_state_for(request.route_key)
+        presentation = state.presentation
+        if presentation is not None:
+            if set(request.axis_indices) != set(
+                presentation.route_local_component_axes
+            ):
+                raise ValueError(
+                    f"Measurement requires exact route-local axes {presentation.route_local_component_axes!r}."
+                )
+            combinations = 1
+            for binding in presentation.aggregate_axis_bindings.bindings:
+                combinations *= binding.extent
+            if combinations * len(items) > 128:
+                raise ValueError(
+                    "Measurement routed plane selection exceeds128 records before slicing."
+                )
+        records = self.matched_image_records(items, state, request)
+        if len(records) != 1:
+            raise ValueError(
+                "Measurement coordinates must select exactly one original plane, not sparse padding or ambiguous records."
+            )
+        item, data, components, indices, aggregate_indices = records[0]
+        domain = item.image_metadata.source_spatial_domain
+        if not isinstance(data, np.ndarray) or data.ndim != 2:
+            raise ValueError(
+                "Measurement requires a native scalar 2D plane; unbound stack/color dimensions are unsupported."
+            )
+        domain.require_image_window(data.shape)
+        origin = domain.origin_yx if domain.origin_yx is not None else (0, 0)
+        labels = presentation.axis_labels if presentation is not None else ("y", "x")
+        local_indices = (
+            presentation.route_local_component_indices(
+                indices, context="Measurement coordinates"
+            )
+            if presentation is not None
+            else {}
+        )
+        prefix = tuple(float(local_indices.get(axis, 0)) for axis in labels[:-2])
+        if layer.ndim != len(prefix) + 2:
+            raise ValueError(
+                "Measurement image rank disagrees with declared native axes."
+            )
+
+        def world(point: tuple[float, float]) -> tuple[float, ...]:
+            return tuple(layer.data_to_world((*prefix, *point)))
+
+        coordinates = ViewerMeasurementCoordinates(
+            route_key=request.route_key,
+            source_path=item.address.path,
+            producer=item.producer,
+            components=components,
+            axis_indices=dict(request.axis_indices),
+            aggregate_axis_indices=aggregate_indices,
+            layer_axis_labels=labels,
+            source_domain=ViewerSourceSpatialDomainPayload(
+                origin_yx=domain.origin_yx, source_shape_yx=domain.source_shape_yx
+            ),
+            source_spacing=item.image_metadata.source_voxel_spacing,
+            native_transform=NapariNativeLayerTransformInspection(layer).snapshot(),
+            world_units=tuple(str(unit) for unit in layer.units),
+        )
+        return NativeImageMeasurement(data, origin, world), coordinates
+
+
+class NapariPolylineMeasurementControlMessageAction(
+    NapariFeatureMeasurementControlMessageAction
+):
+    message_type = OpenHCSViewerControlMessageType.MEASURE_POLYLINE.value
+    request_type = ViewerPolylineControlOptions
+
+    def measure(
+        self, plane: NativeImageMeasurement, request: ViewerPolylineControlOptions
+    ) -> object:
+        return plane.polyline(request)
+
+
+class NapariRegionMeasurementControlMessageAction(
+    NapariFeatureMeasurementControlMessageAction
+):
+    message_type = OpenHCSViewerControlMessageType.MEASURE_REGION.value
+    request_type = ViewerRegionControlOptions
+
+    def measure(
+        self, plane: NativeImageMeasurement, request: ViewerRegionControlOptions
+    ) -> object:
+        return plane.region(request)
+
 
 class NapariViewportControlMessageAction(NapariControlMessageAction):
     """Apply native 2D camera presentation through the owning Qt action."""
@@ -4681,7 +4906,7 @@ class NapariImageIntensityControlMessageAction(NapariMountedRouteControlMessageA
             ).to_wire_mapping()
 
 
-class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
+class NapariIntensityWindowControlMessageAction(NapariMountedRouteControlMessageAction):
     """Apply one percentile window derived from native routed image payloads."""
 
     message_type = ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
@@ -4741,7 +4966,7 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
                 f"payload types are {non_image_types!r}."
             )
         dimension_state = server.layer_route_state.dimension_state_for(route_key)
-        records = cls._matched_payload_records(items, dimension_state, request)
+        records = cls.matched_image_records(items, dimension_state, request)
         if not records:
             raise ValueError(
                 f"Napari image route {route_key!r} has no payload records matching "
@@ -4834,69 +5059,6 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
             }
         )
         return response
-
-    @staticmethod
-    def _matched_payload_records(
-        items: list[NapariStreamLayerItem],
-        dimension_state: NapariDimensionLayerState,
-        request: ViewerIntensityWindowControlOptions,
-    ) -> tuple[
-        tuple[
-            NapariStreamLayerItem,
-            LayerData,
-            dict[str, ComponentValue],
-            tuple[int, ...],
-            tuple[int, ...],
-        ],
-        ...,
-    ]:
-        presentation = dimension_state.presentation
-        if presentation is None:
-            if request.axis_indices:
-                raise ValueError(
-                    "Viewer intensity-window axis_indices require a route with "
-                    "semantic axis projection."
-                )
-            return tuple(
-                (item, item.data, dict(item.address.components), (), ())
-                for item in items
-            )
-
-        aggregate_bindings = presentation.aggregate_axis_bindings
-        records = []
-        for item in items:
-            for (
-                aggregate_indices
-            ) in NapariViewerPayloadProjection.aggregate_index_tuples(
-                aggregate_bindings
-            ):
-                components = aggregate_bindings.item_component_values(
-                    item,
-                    aggregate_indices,
-                )
-                axis_indices = presentation.projection.coordinate_index(
-                    components,
-                    context="Napari intensity-window payload selection",
-                )
-                if not presentation.route_local_component_indices_match(
-                    axis_indices,
-                    request.axis_indices,
-                    context="Viewer intensity-window axis_indices",
-                ):
-                    continue
-                records.append(
-                    (
-                        item,
-                        NapariViewerPayloadProjection.aggregate_data_slice(
-                            item.data,
-                            aggregate_indices,
-                        ),
-                        dict(components),
-                        axis_indices,
-                        aggregate_indices,
-                    )
-                )
-        return tuple(records)
 
     @staticmethod
     def _error(message: str) -> dict[str, object]:
