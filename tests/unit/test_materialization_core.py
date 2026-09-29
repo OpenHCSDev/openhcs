@@ -7,7 +7,9 @@ import pytest
 from polystore.base import DataSink
 from polystore.fiji_stream import FijiStreamingBackend
 from polystore.filemanager import FileManager
+from polystore.disk import DiskStorageBackend
 from polystore.memory import MemoryStorageBackend
+from polystore.roi import PointShape, load_rois_from_zip
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
     StreamingBatchMessageBuilder,
@@ -47,7 +49,10 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
+    ObjectCoreMeasurementFeature,
 )
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -86,6 +91,7 @@ from openhcs.processing.materialization import (
     JsonOptions,
     MaterializationSpec,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     TiffStackOptions,
     csv_only,
@@ -749,6 +755,101 @@ def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() 
     ]
     assert table.source_path == "/source/image.ome.tif"
     assert table.subject.object_id_field == "object_label"
+
+
+@pytest.mark.unit
+def test_point_roi_materialization_native_reopen_preserves_fractional_z(
+    tmp_path,
+) -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=feature.CENTER_Z,
+                y_feature=feature.CENTER_Y,
+                x_feature=feature.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert archive == str(tmp_path / "centres_points.roi.zip")
+    assert len(rois) == 1
+    assert rois[0].metadata["label"] == 7
+    assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
+    assert ROIArchiveSourceMetadata.decode(rois).source_path == "/source/image.ome.tif"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("source_path", "rows", "error"),
+    [
+        (None, ((7, 2.375, 1.25, 3.5),), "source-image path"),
+        ("/source/image.ome.tif", ((7, float("nan"), 1.25, 3.5),), "finite"),
+        ("/source/image.ome.tif", (), "at least one"),
+    ],
+)
+def test_point_roi_materialization_rejects_unreopenable_results(
+    tmp_path, source_path, rows, error
+) -> None:
+    fields = (
+        FieldSpec("object_label", int),
+        FieldSpec("center_z", float),
+        FieldSpec("center_y", float),
+        FieldSpec("center_x", float),
+    )
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            tuple(dict(zip((field.name for field in fields), row)) for row in rows),
+            fields=fields,
+        ),
+        source_path=source_path,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    with pytest.raises(ValueError, match=error):
+        materialize(
+            MaterializationSpec(
+                PointROIOptions(
+                    z_feature=feature.CENTER_Z,
+                    y_feature=feature.CENTER_Y,
+                    x_feature=feature.CENTER_X,
+                )
+            ),
+            data=table,
+            path=str(tmp_path / "invalid"),
+            filemanager=FileManager({"disk": DiskStorageBackend()}),
+            backends=["disk"],
+            backend_kwargs={},
+        )
+    assert not (tmp_path / "invalid_points.roi.zip").exists()
 
 
 @pytest.mark.unit
