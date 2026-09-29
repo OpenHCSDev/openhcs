@@ -75,8 +75,11 @@ the 94-test evidence above, not a claim that this missing dependency disappeared
 Available RAM stayed above 8 GiB (latest13.4 GiB); guard still warns about
 historical11.1 GiB swap. No heavy runtime or validation-lock holder was created.
 
-Owned disposable fixtures:
+Owned disposable fixtures (now removed after all handles were terminal):
 `/home/ts/.cache/agent-scratch/openhcs-registration-230-20260929/pytest`.
+The final owned parent directory contained3.5 MiB of synthetic pytest fixtures;
+it was deleted after retaining these results. Fixtures can be regenerated from
+the tests. Source, receipts, original033 and the foreign saved file are preserved.
 No MCP/JVM/GUI handle was started. Tests are source evidence, not installed or
 live acceptance, and the frozen installed 17/228 tree remains untouched.
 
@@ -136,6 +139,12 @@ Tests:
   collection blocked as recorded above)
 
 Receipt/body: `docs/plans/custom_registration_admission_20260929.md`.
+Shared-owner coordination: `docs/plans/custom_registration_205_coordination.md`,
+posted directly to the existing #205 owner at
+https://github.com/OpenHCSDev/openhcs/pull/205#issuecomment-5900395883.
+The local direct-DM route did not resolve this worker; no thread registration,
+bus repair, agent restart or goal replay was attempted. Coordination scope is
+the registration-specific DTO/service regions, not measurement declarations.
 
 ## Actual pattern review (focused source, not a full NRA proof)
 
