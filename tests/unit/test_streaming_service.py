@@ -955,7 +955,19 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
 
 
 def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
-    source_path = str(tmp_path / "source" / "image.ome.tif")
+    import tifffile
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    source_paths = tuple(
+        str(source_directory / f"A01_s001_w1_z{z + 1:03d}_t001.tif") for z in range(4)
+    )
+    for z, path in enumerate(source_paths):
+        source_pixels = np.zeros((8, 8), dtype=np.uint16)
+        if z == 2:
+            source_pixels[1:3, 3:5] = 2048
+        tifffile.imwrite(path, source_pixels)
+    source_path = source_paths[0]
     components = tuple(
         {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
         for z in range(4)
@@ -982,7 +994,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         ),
         source_path=source_path,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=(source_path,) * 4,
+            paths=source_paths,
             component_metadata=components,
         ),
         subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),

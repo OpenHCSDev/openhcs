@@ -3221,8 +3221,15 @@ def _write_point_roi_zip(
     if missing:
         raise ValueError(f"Point measurement fields are missing: {sorted(missing)!r}.")
     provenance = payload.source_provenance.with_common_scalar_identity_from_planes()
-    if provenance.source_path is None:
-        raise ValueError("Point ROI ZIP requires an unambiguous source-image path.")
+    source_planes = provenance.source_image_provenance_planes
+    if provenance.source_path is None and (
+        not source_planes.has_values
+        or any(path is None for path in source_planes.paths)
+    ):
+        raise ValueError(
+            "Point ROI ZIP requires a source-image path or exact paths for every "
+            "source plane."
+        )
     rois: list[ROI] = []
     seen_labels: set[int] = set()
     for row in payload.iter_row_mappings():

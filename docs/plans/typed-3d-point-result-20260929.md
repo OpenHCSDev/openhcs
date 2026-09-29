@@ -3,8 +3,11 @@
 Status: measurement payload retention, typed point writer, native ROI ZIP
 round-trip and exact-Z Napari projection implemented in this draft. The native
 reopen path now derives its ordered Z domain from the table's declared source
-planes and retains scalar measurement fields as Napari point features. Synthetic
-source tests pass; installed entrypoint and biological result are not claimed.
+planes, including distinct physical files, and retains scalar measurement
+fields as Napari point features. The fresh-source MCP result-directory route
+inventoried and streamed a native ROI ZIP to an isolated viewer. Raw-image
+streaming is blocked by #201; installed entrypoint and biological result are
+not claimed.
 
 Base: OpenHCSDev/openhcs `9644febe2785aace85bbc8bd1d2ce062525c56d2`.
 Issue: OpenHCSDev/openhcs#134. Integration owner: blind-analysis coordinator.
@@ -43,6 +46,11 @@ Coordinate the worker/export crossing with open PR #157; do not edit its
   query tool does not expose `result_directory`. Remote main has the route;
   source-worktree tests cannot substitute for a reviewed install and fresh MCP
   handshake.
+- Fresh-source MCP on isolated display :91 streamed the native point ROI to
+  port 5791. BioFormats raw streaming then failed for both a four-plane OME
+  TIFF (ambiguous physical path) and four separate TIFF planes (fabricated
+  escaped-and-suffixed load path). Issue #201 has the reproducer and owner;
+  raw/result/combined visual QA remains open.
 
 ## Required closure
 
