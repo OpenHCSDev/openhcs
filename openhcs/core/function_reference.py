@@ -66,6 +66,11 @@ class FunctionReference(ABC):
                 f"Function declaration {self.original_module}.{self.function_name} "
                 "changed after this reference was compiled; recompile the pipeline."
             )
+        validation = vars(resolved).get(
+            FunctionContractAttribute.declaration_validation
+        )
+        if validation is not None:
+            validation()
         return resolved
 
 

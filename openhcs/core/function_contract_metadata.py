@@ -46,3 +46,5 @@ class FunctionContractAttribute:
         "__openhcs_primary_image_carrier_transition__"
     )
     declaration_revision: ClassVar[str] = "__openhcs_declaration_revision__"
+
+    declaration_validation: ClassVar[str] = "__openhcs_declaration_validation__"
