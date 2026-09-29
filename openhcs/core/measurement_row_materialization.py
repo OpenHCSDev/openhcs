@@ -826,6 +826,25 @@ class WideMeasurementRowAccumulator:
                 raise ValueError("Long-form measurement columns have no value column.")
             feature_values = feature_field_columns[0]
             measurement_values = value_field_columns[0]
+            if (
+                object_name_values is None
+                and default_scope is MeasurementScope.OBJECT
+                and len(identity_columns) == 1
+                and len(object_id_columns) == 1
+                and not feature_columns
+            ):
+                self._add_object_scoped_long_form(
+                    row_count=row_count,
+                    subject=default_subject,
+                    identity_column=identity_columns[0],
+                    object_id_values=object_id_columns[0],
+                    feature_values=feature_values,
+                    measurement_values=measurement_values,
+                    qualifier_columns=qualifier_columns,
+                    project_feature_name=project_feature_name,
+                    missing_cell=missing_cell,
+                )
+                return
             subject_cache: dict[object, str] = {}
             source_cache: dict[object, str | None] = {}
             projected_feature_cache: dict[
@@ -1057,6 +1076,76 @@ class WideMeasurementRowAccumulator:
                     value,
                     missing_cell,
                 )
+
+    def _add_object_scoped_long_form(
+        self,
+        *,
+        row_count: int,
+        subject: str,
+        identity_column: tuple[str, Sequence[object]],
+        object_id_values: Sequence[object],
+        feature_values: Sequence[object],
+        measurement_values: Sequence[object],
+        qualifier_columns: tuple[tuple[str, Sequence[object]], ...],
+        project_feature_name: MeasurementFeatureNameProjection,
+        missing_cell: object,
+    ) -> None:
+        """Fold object-owned long rows without repeating fixed ownership work."""
+        subject_rows = self._rows.setdefault(subject, {})
+        subject_order = self._order.setdefault(subject, [])
+        if subject not in self._object_subjects:
+            self._object_subjects.append(subject)
+        identity_field, image_values = identity_column
+        absent_identity = self._absent_identity
+        projection_cache: dict[tuple[str, tuple[tuple[str, object], ...]], str] = {}
+        for row_index in range(row_count):
+            image_value = image_values[row_index]
+            object_label = measurement_object_label_value(object_id_values[row_index])
+            identity = (
+                image_value,
+                object_label if object_label is not None else absent_identity,
+            )
+            if image_value is absent_identity and object_label is None:
+                identity = (self._passthrough_identity, self._passthrough_index)
+                self._passthrough_index += 1
+            target = subject_rows.get(identity)
+            if target is None:
+                target = {identity_field: image_value}
+                if object_label is not None:
+                    target[MeasurementRowAxisField.OBJECT_LABEL.value] = object_label
+                subject_rows[identity] = target
+                subject_order.append(identity)
+            feature_value = feature_values[row_index]
+            if is_structural_missing_measurement_cell(feature_value):
+                continue
+            feature_name = (
+                feature_value if isinstance(feature_value, str) else str(feature_value)
+            )
+            if not feature_name:
+                raise ValueError("Long-form measurement row has an empty feature name.")
+            qualifier_values = tuple(
+                (field_name, value)
+                for field_name, values in qualifier_columns
+                for value in (values[row_index],)
+                if not is_structural_missing_measurement_cell(value)
+            )
+            projection_key = (feature_name, qualifier_values)
+            projected_feature = projection_cache.get(projection_key)
+            if projected_feature is None:
+                projected_feature = project_feature_name(*projection_key)
+                projection_cache[projection_key] = projected_feature
+            measurement_value = measurement_values[row_index]
+            if is_structural_missing_measurement_cell(measurement_value):
+                raise ValueError(
+                    f"Long-form measurement feature {feature_name!r} has no value."
+                )
+            self._assign(
+                target,
+                identity,
+                projected_feature,
+                measurement_value,
+                missing_cell,
+            )
 
     def row_mappings_by_subject(
         self,
