@@ -2942,6 +2942,7 @@ def _write_roi_zip(
     ctx: MaterializationContext,
 ) -> list[Output]:
     from polystore.roi import extract_rois_from_labeled_mask
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
     request = ROIMaterializationTargetRequest.from_context(data, options, ctx)
     materialization_input = request.materialization_input
@@ -3017,15 +3018,14 @@ def _write_roi_zip(
                         source_component_metadata=source_identity.component_metadata,
                     ).with_missing_from(item_metadata.source_provenance)
                 )
+            item_metadata = item_metadata.replace_fields(
+                source_spatial_domain=source_domain_authority.domain_for_target(target)
+            )
             outs.append(
                 Output(
                     path=target.archive.path,
-                    content=target_rois,
-                    metadata=item_metadata.replace_fields(
-                        source_spatial_domain=(
-                            source_domain_authority.domain_for_target(target)
-                        ),
-                    ),
+                    content=ROIArchiveSourceMetadata.bind(target_rois, item_metadata),
+                    metadata=item_metadata,
                 )
             )
 

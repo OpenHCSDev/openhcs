@@ -38,6 +38,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.constants import AllComponents, Backend
 from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
+    PlateFileKind,
     PlateFileInventoryQuery,
     PlateFileRecord,
 )
@@ -143,12 +144,26 @@ class PlateStreamingService:
                 transport_mode=config.transport_mode,
                 persistent=config.persistent,
             )
-            inventory, inventory_warnings = (
-                self._plate_inspection_service.file_inventory(
-                    stream_context,
-                    kind=None if request.file_paths else request.kind,
+            if request.result_directory is not None:
+                if request.kind is not PlateFileKind.RESULT or request.well is not None:
+                    raise ValueError(
+                        "Explicit result-directory streaming requires kind='result' "
+                        "and no acquisition-component filter."
+                    )
+                result_path = self._plate_inspection_service.resolve_readable_path(
+                    request.result_directory
                 )
-            )
+                inventory = self._plate_inspection_service.result_directory_inventory(
+                    result_path
+                )
+                inventory_warnings = context.warnings
+            else:
+                inventory, inventory_warnings = (
+                    self._plate_inspection_service.file_inventory(
+                        stream_context,
+                        kind=None if request.file_paths else request.kind,
+                    )
+                )
             resolved_records = self._resolve_records(request, inventory)
             (
                 image_paths,
@@ -156,6 +171,15 @@ class PlateStreamingService:
                 roi_component_metadata_by_path,
                 skipped_records,
             ) = self._streamable_paths(resolved_records)
+            if (
+                request.result_directory is not None
+                and image_paths
+                and request.source_receipt is None
+            ):
+                raise ValueError(
+                    "Explicit result images require an exact source receipt; "
+                    "artifact filenames do not establish source identity."
+                )
             all_warnings = inventory_warnings
             if skipped_records:
                 all_warnings = (
@@ -201,6 +225,8 @@ class PlateStreamingService:
             read_backend = stream_context.handler.get_primary_backend(
                 stream_context.plate_path, stream_context.filemanager
             )
+            if request.result_directory is not None:
+                read_backend = Backend.DISK.value
             source_projection, producer = self._receipt_source_projection(
                 request, resolved_records, stream_context
             )
@@ -240,7 +266,12 @@ class PlateStreamingService:
                     for record in resolved_records
                     if record.streamable_roi_path is not None
                 )
-                streaming_service.stream_rois(
+                roi_streaming_service = StreamingService(
+                    filemanager=context.filemanager,
+                    microscope_handler=context.handler,
+                    plate_path=context.plate_path,
+                )
+                roi_streaming_service.stream_rois(
                     RoiStreamingRequest(
                         viewer=viewer,
                         config=config,
@@ -249,6 +280,7 @@ class PlateStreamingService:
                         roi_filenames=roi_paths,
                         component_metadata_by_path=roi_component_metadata_by_path,
                         producer=roi_producer,
+                        require_source_metadata=request.result_directory is not None,
                     )
                 )
         except Exception as exc:
