@@ -293,12 +293,27 @@ def run(args) -> None:
         mcp_environment_keys = (*McpDevServerSpec.mcp_environment_keys, "PYTHONPATH")
 
     def call(name, arguments, result_type=None, *, error_code=None):
-        import psutil
-
-        available = psutil.virtual_memory().available / (1024**3)
-        receipt.setdefault("available_ram_gib", []).append(available)
-        if available < 8:
-            raise RuntimeError("RAM floor reached; no further dispatch.")
+        check = subprocess.run(
+            ["/home/ts/bin/agent-resource-check", "--assert-headroom"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        current_resources = json.loads(check.stdout)
+        scratch_bytes = sum(
+            path.lstat().st_size for path in scratch.rglob("*") if path.is_file()
+        )
+        receipt.setdefault("resource_observations", []).append(
+            {"guard": current_resources, "scratch_bytes": scratch_bytes}
+        )
+        save()
+        if scratch_bytes >= 80 * 1024 * 1024:
+            raise RuntimeError("80MiB scratch bound reached; no further dispatch.")
+        if current_resources["ram_available_gib"] < 8 or any(
+            not reason.startswith("swap used ")
+            for reason in current_resources["reasons"]
+        ):
+            raise RuntimeError("Non-swap resource gate closed; no further dispatch.")
         if time.monotonic() - started > 240:
             raise RuntimeError("Finite journey budget exhausted; no further dispatch.")
         row = {

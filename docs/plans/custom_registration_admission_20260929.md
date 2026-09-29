@@ -196,8 +196,14 @@ Unexpected calls are not retried. This prepared driver is not a passing receipt.
 Pre-live checkpoint9020cae18 is published in the existing draft233. New source
 changes were completed before any live handle existed. Ruff on both diagnostic
 files and the admission test, `git diff --check`, and the stdlib-only diagnostic
-CLI help pass. Five new filename-owner cases are written but have **not yet
-run**; the earlier94/23 results do not cover these changes or this main merge.
+CLI help pass. At exact sourcec10bb3f85, the five new filename-owner cases
+**pass in3.02 seconds**, peak183520 KiB RSS, with OpenHCS and PolyStore imports
+verified inside this tree. They intercept `require_source`, named load/read,
+delete and update before source reads/evaluation, proving use of the filename
+owner. The earlier94/23 results do not cover this main merge. Exact command,
+paths and output: `tests/runtime_diagnostics/registration_owner_five_20260929/`
+(`receipt.json`, `pytest.txt`). Two pytest warnings concern disabled async
+plugins' configuration options; these five cases are synchronous.
 
 The actual guard now warns about non-swap disk headroom (/home19.8 GiB), with
 RAM13.0–13.6 GiB. Parent explicitly withdrew new heavy-runtime admission until
@@ -206,6 +212,14 @@ validation-lock holder was started here. The diagnostic rejects any non-swap
 guard warning; source-only preparation/publication continues. Remaining named
 dependency is parent's verified resource-headroom release, followed by this
 source-pinned synthetic journey and parent-owned installation/acceptance.
+
+Parent explicitly authorized just these five bounded lightweight cases during
+its cleanup. The single existing-interpreter test process used the nonblocking
+validation lock, one native thread and no conftest/auto-loaded plugins. It is
+terminal and the lock released. Guard at this test's dispatch showed RAM13.4
+GiB, /home20.1 GiB, and only historical-swap warning; this does **not** assume
+parent's heavy-runtime slot release. Owned disposable source-test scratch:
+`/home/ts/.cache/agent-scratch/openhcs-registration-owner-five-20260929`.
 
 After verified closure of the frozen author's owned MCP/viewer and release of
 the technical slot, run controlled owned-vs-shared endpoint, escaping-path and
