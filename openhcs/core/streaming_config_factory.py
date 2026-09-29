@@ -106,6 +106,22 @@ class ViewerProcessLaunchConfig:
             ViewerProcessLaunchField.LISTEN_HOST.value: self.listen_host,
         }
 
+    def matches_existing_viewer(
+        self,
+        active: "ViewerProcessLaunchConfig",
+        *,
+        owns_process: bool,
+    ) -> bool:
+        """Require local bind policy only for a process this lifecycle owns.
+
+        An externally owned viewer's listen interface is not a client launch
+        setting: accepting its connection must not request a rebind/restart.
+        """
+
+        return self.qt_font_dpi == active.qt_font_dpi and (
+            not owns_process or self.listen_host == active.listen_host
+        )
+
     @classmethod
     def from_wire_mapping(
         cls,

@@ -119,7 +119,10 @@ class NapariStreamVisualizer(ManagedViewerLifecycleMixin):
                 error,
             )
             return False
-        return active_config == self.process_launch
+        return self.process_launch.matches_existing_viewer(
+            active_config,
+            owns_process=self.owned_viewer_process_is_alive(),
+        )
 
     def start_viewer(self, async_mode: bool = True):
         """

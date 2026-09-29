@@ -688,6 +688,15 @@ def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
         ViewerProcessLaunchConfig(listen_host=" ")
 
 
+def test_listener_match_respects_existing_process_ownership():
+    requested = ViewerProcessLaunchConfig(qt_font_dpi=96)
+    externally_bound = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="*")
+    assert requested.matches_existing_viewer(externally_bound, owns_process=False)
+    assert not requested.matches_existing_viewer(externally_bound, owns_process=True)
+    different_dpi = ViewerProcessLaunchConfig(qt_font_dpi=120, listen_host="*")
+    assert not requested.matches_existing_viewer(different_dpi, owns_process=False)
+
+
 def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():
     launch_context = ViewerLaunchContext.projected_graphical_session(
         {
