@@ -3,7 +3,9 @@
 Baseline: OpenHCS main `0c7b898f852a8bedc0e1bc38b93f36088d301808`.
 Status: research proposal plus a narrow implemented guidance checkpoint. The
 existing typed QA policy now owns development continuation and intervention
-provenance rules; the existing skill strategy reference describes their use.
+provenance rules, plus distributed preprocessing-regression review. The existing
+skill references describe their use and recipes for fast NLM, shared-field
+illumination correction and the BaSiCPy readiness boundary.
 No runtime trial controller, full NRA proof, blind accuracy improvement or
 human-superiority claim is included. Keep this draft open while remaining
 implementation surfaces and tests are resolved.
@@ -98,5 +100,10 @@ are design evidence, not established causes of the published result.
 This draft contains no scientific inputs, expected counts, notebook answers,
 dataset-specific thresholds, held-out outcomes or tuned pipelines. Validation
 includes packaging checks and four focused policy-projection tests. These prove
-guidance availability, not autonomous decisions. Live MCP delivery, remaining
-runtime infrastructure and controlled blind evaluation remain outstanding.
+source guidance projection, not autonomous decisions or recipe execution. Actual
+running MCP discovery/signature checks confirm the existing fast-mode ReduceNoise
+and illumination calculation/application routes. Installed metadata shows no
+BaSiCPy package in the current analysis environment; a wrapper's registry presence
+does not establish readiness. A separate backend owner is checking the existing
+`trissim/BaSiCPy` fork for Python 3.14 support. New guidance live MCP delivery,
+remaining runtime infrastructure and controlled blind evaluation remain outstanding.

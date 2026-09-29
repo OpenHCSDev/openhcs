@@ -194,6 +194,16 @@ class ImageQaEvidenceRule(Enum):
         "reject a black, empty, stale, or mismatched capture when its active route, "
         "component values, or routed payload identity do not match the intended evidence"
     )
+    SPATIAL_PREPROCESSING_REGRESSION = (
+        "choose distributed development witnesses before tuning, spanning observed "
+        "bright/dim background, centre/edge and sparse/dense regions. Uneven signal "
+        "requires a nuisance-model check, not a threshold fitted to one crop: "
+        "distinguish additive background, multiplicative shading and real biology. "
+        "Review raw, correction field or denoising residual, processed image and "
+        "downstream result at the same coordinates across those regions. Reject "
+        "local gains accompanied by remote misses, merges, erased faint structures "
+        "or unsupported background; a prettier or more uniform image is not acceptance"
+    )
     DEVELOPMENT_REPAIR_CONTINUATION = (
         "a rejected development candidate is a preserved comparison checkpoint, not "
         "a terminal analysis or accepted recipe. Select the next discriminating "
