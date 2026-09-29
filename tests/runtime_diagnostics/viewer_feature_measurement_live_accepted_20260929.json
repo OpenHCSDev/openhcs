@@ -1,0 +1,1524 @@
+{
+  "source_sha": "5da177ad9d20bef4132ff393828d41265909e03e",
+  "source_root": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929",
+  "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "parent_imports": {
+    "openhcs": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/external/PolyStore/src/polystore/__init__.py"
+  },
+  "submodules": [
+    " b0004daf3223326ac78689ba7b2e68abc18ae298 external/ObjectState (v1.1.8)",
+    " c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7 external/PolyStore (v0.2.19-8-gc16b8fc)",
+    " fddd9857bcd21468d20bc8547a769e0c6c9f1906 external/arraybridge (v0.3.4)",
+    " ca0a87e873f929b311a87a4d60cd3bfba315dbcf external/metaclass-registry (v0.2.1)",
+    " 792b03413331fdf107e369c924c257a2f0b16126 external/pycodify (v0.1.3)",
+    " a51c3d965f8ffdefe95a2b4b37347a85341d483a external/pyqt-reactive (v0.3.24)",
+    " 4e8f8bde5f750d9a50eacac80acd3806123addd8 external/python-introspect (v0.1.14-1-g4e8f8bd)",
+    " 1d3b32f4fcead23d5d2079c975eb2ae7646a1478 external/zmqruntime (v0.2.24)"
+  ],
+  "driver_pid": 1659999,
+  "lock_owner_pid": 1659989,
+  "mcp_pid": 1660195,
+  "viewer_identity": {
+    "pid": 1660398,
+    "create_time": 1790720104.01
+  },
+  "heartbeat": {
+    "port": 5792,
+    "control_port": 6792,
+    "ready": true,
+    "server": "NapariViewerServer",
+    "server_role": "viewer",
+    "control_capabilities": [
+      "ping",
+      "force_shutdown",
+      "shutdown"
+    ],
+    "server_type": "napari",
+    "log_file_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/xdg-data/openhcs/logs/napari_detached_port_5792.log",
+    "active_executions": null,
+    "running_executions": null,
+    "queued_executions": null,
+    "workers": null,
+    "uptime": null,
+    "progress_subscribers": null,
+    "process_identity": {
+      "pid": 1660398,
+      "create_time": 1790720104.01
+    },
+    "compile_status": null,
+    "compile_message": null,
+    "process_usage": {
+      "memory_mb": 642.38671875,
+      "cpu_percent": 0
+    },
+    "application": {
+      "identifier": "openhcs",
+      "version": "0.8.6"
+    }
+  },
+  "display": ":88",
+  "viewer_port": 5792,
+  "data_url": "tcp://localhost:5792",
+  "control_url": "tcp://localhost:6792",
+  "resources": {
+    "free_gib": {
+      "/": 8.6,
+      "/dev/shm": 15.4,
+      "/home": 21.1,
+      "/tmp": 9.6
+    },
+    "level": "warning",
+    "ram_available_gib": 13.1,
+    "reasons": [
+      "swap used 11.1 GiB"
+    ],
+    "swap_used_gib": 11.1
+  },
+  "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=65922704\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=63831098\n",
+  "bindings": [
+    {
+      "port": 5792,
+      "transport_mode": "tcp",
+      "host": "localhost",
+      "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+      "axis_indices": {
+        "site": 0,
+        "channel": 0,
+        "z_index": 0,
+        "timepoint": 0,
+        "well": 0
+      }
+    },
+    {
+      "port": 5792,
+      "transport_mode": "tcp",
+      "host": "localhost",
+      "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+      "axis_indices": {
+        "site": 0,
+        "channel": 1,
+        "z_index": 1,
+        "timepoint": 0,
+        "well": 0
+      }
+    }
+  ],
+  "child_policy": {
+    "imagej_cache_root": "/home/ts/.cache/polystore/imagej",
+    "downloads_allowed": false,
+    "owner": "AgentRuntimePlatformAuthority process environment + FijiArchiveDistribution/ImageJArchiveDownloadPolicy"
+  },
+  "source_hashes_before": {
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel1.tif": "45f5be72728c5275acd1130aeb4c6ce7a127905826cbd4407523cccc48fff760",
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel2.tif": "5fcac25545d0559049895eb580dbc240b93f9c57e820556e7b52fc6b8c1d9678"
+  },
+  "source_hashes_after": {
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel1.tif": "45f5be72728c5275acd1130aeb4c6ce7a127905826cbd4407523cccc48fff760",
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel2.tif": "5fcac25545d0559049895eb580dbc240b93f9c57e820556e7b52fc6b8c1d9678"
+  },
+  "numeric_journey_passed": true,
+  "close": {
+    "succeeded": true,
+    "endpoint_terminated": true
+  },
+  "client_closed": true,
+  "uncertain_dispatch": null,
+  "qa_presentation_intervention": "After unchanged-measurement proof, deliberately navigate Ch2/Z2 and set display-only contrast5..80/gamma1 for region QA. No source pixels changed.",
+  "bitmap": {
+    "uri": "file:///home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/captures/20260929T221512966672Z_napari_5792_OpenHCS_Napari_Visualization.png",
+    "title": "OpenHCS Napari Visualization",
+    "mime_type": "image/png",
+    "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/captures/20260929T221512966672Z_napari_5792_OpenHCS_Napari_Visualization.png",
+    "size_bytes": 78836,
+    "sha256": "af10d4def4dd0e67e31ccd8425b5850a3b0df5cfd43b9c726f8b8f4621226be4"
+  },
+  "region_bitmap": {
+    "uri": "file:///home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/captures-region/20260929T221513240923Z_napari_5792_OpenHCS_Napari_Visualization.png",
+    "title": "OpenHCS Napari Visualization",
+    "mime_type": "image/png",
+    "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/captures-region/20260929T221513240923Z_napari_5792_OpenHCS_Napari_Visualization.png",
+    "size_bytes": 77299,
+    "sha256": "5b1765fb264f47e6e2b4ded5e5361ae6b97f955eb510e3b19efb785754590e98"
+  },
+  "measurements": [
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 0,
+          "z_index": 0,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            17,
+            21
+          ],
+          [
+            17,
+            30
+          ],
+          [
+            26,
+            30
+          ]
+        ]
+      },
+      "elapsed_seconds": 0.06405472755432129,
+      "response": {
+        "tool": "openhcs_measure_viewer_polyline",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "connection": {
+              "host": "localhost",
+              "port": 5792,
+              "transport_mode": "tcp",
+              "persistent": true
+            },
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "observed": true,
+            "measurement": {
+              "vertices_yx": [
+                [
+                  17,
+                  21
+                ],
+                [
+                  17,
+                  30
+                ],
+                [
+                  26,
+                  30
+                ]
+              ],
+              "world_vertices": [
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  34,
+                  63
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  34,
+                  90
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  52,
+                  90
+                ]
+              ],
+              "data_length": 18,
+              "data_chord_length": 12.727922061357855,
+              "world_length": 45,
+              "world_chord_length": 32.449961479175904,
+              "profile_distance_data": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "profile_distance_world": [
+                0,
+                3,
+                6,
+                9,
+                12,
+                15,
+                18,
+                21,
+                24,
+                27,
+                29,
+                31,
+                33,
+                35,
+                37,
+                39,
+                41,
+                43,
+                45
+              ],
+              "profile_values": [
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                129,
+                139,
+                149,
+                159,
+                169,
+                179,
+                189,
+                199,
+                209
+              ],
+              "statistics": {
+                "count": 19,
+                "minimum": 110,
+                "maximum": 209,
+                "mean": 140.31578947368422,
+                "median": 119,
+                "standard_deviation": 32.56742420139446,
+                "total": 2666
+              },
+              "line_width": 1,
+              "interpolation_order": 1,
+              "reduction": "mean across centred perpendicular band",
+              "sampling": "ceil(segment length+1) endpoint-inclusive; repeated junction uses preceding segment; nearest(0)/bilinear(1), constant exterior=0 with full band admitted inside source",
+              "data_length_unit": "pixel",
+              "intensity_unit": "raw source value",
+              "statistics_precision": "float64, population standard deviation (ddof=0)"
+            },
+            "coordinates": {
+              "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+              "source_path": "A01_s001_w1_z001_t001.tif",
+              "producer": {
+                "origin": "manual",
+                "output_kind": "manual",
+                "output_key": "selected_images",
+                "projection_key": "selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+                "step_name": null,
+                "pipeline_position": null,
+                "step_scope_id": null,
+                "invocation_key": null,
+                "artifact_kind": null
+              },
+              "components": {
+                "site": 1,
+                "channel": 1,
+                "z_index": 1,
+                "timepoint": 1,
+                "well": "A01"
+              },
+              "axis_indices": {
+                "site": 0,
+                "channel": 0,
+                "z_index": 0,
+                "timepoint": 0,
+                "well": 0
+              },
+              "aggregate_axis_indices": [],
+              "layer_axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "source_domain": {
+                "origin_yx": [
+                  7,
+                  11
+                ],
+                "source_shape_yx": [
+                  80,
+                  100
+                ]
+              },
+              "source_spacing": {
+                "values_zyx": [
+                  2,
+                  3
+                ],
+                "unit": "relative"
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  2,
+                  3
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "world_units": [
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless"
+              ],
+              "physical_calibration_verified": false,
+              "coordinate_convention": "source-native (y,x) pixel centres; world points use mounted layer.data_to_world including full affine",
+              "calibration_note": "Source spacing/units are declared provenance, not independent physical verification; scale1 is not proof of micrometres."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "tool": "openhcs_measure_viewer_region",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 1,
+          "z_index": 1,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            17,
+            21
+          ],
+          [
+            17,
+            30
+          ],
+          [
+            26,
+            30
+          ],
+          [
+            26,
+            21
+          ]
+        ],
+        "background_vertices_yx": [
+          [
+            37,
+            41
+          ],
+          [
+            37,
+            45
+          ],
+          [
+            41,
+            45
+          ],
+          [
+            41,
+            41
+          ]
+        ]
+      },
+      "elapsed_seconds": 0.04941725730895996,
+      "response": {
+        "tool": "openhcs_measure_viewer_region",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "connection": {
+              "host": "localhost",
+              "port": 5792,
+              "transport_mode": "tcp",
+              "persistent": true
+            },
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "observed": true,
+            "measurement": {
+              "vertices_yx": [
+                [
+                  17,
+                  21
+                ],
+                [
+                  17,
+                  30
+                ],
+                [
+                  26,
+                  30
+                ],
+                [
+                  26,
+                  21
+                ]
+              ],
+              "world_vertices": [
+                [
+                  0,
+                  1,
+                  1,
+                  0,
+                  0,
+                  34,
+                  63
+                ],
+                [
+                  0,
+                  1,
+                  1,
+                  0,
+                  0,
+                  34,
+                  90
+                ],
+                [
+                  0,
+                  1,
+                  1,
+                  0,
+                  0,
+                  52,
+                  90
+                ],
+                [
+                  0,
+                  1,
+                  1,
+                  0,
+                  0,
+                  52,
+                  63
+                ]
+              ],
+              "polygon": {
+                "area": 81,
+                "perimeter": 36,
+                "extent": 1,
+                "roundness": 0.7853981633974483
+              },
+              "world_area": 486,
+              "world_perimeter": 90,
+              "world_roundness": 0.7539822368615504,
+              "raster": {
+                "area_pixels": 100,
+                "bbox_yx": [
+                  17,
+                  21,
+                  27,
+                  31
+                ],
+                "centroid_yx": [
+                  21.5,
+                  25.5
+                ],
+                "extent": 1,
+                "perimeter_pixels": 36,
+                "roundness": 0.969627362219072,
+                "eccentricity": 0
+              },
+              "statistics": {
+                "count": 100,
+                "minimum": 5,
+                "maximum": 80,
+                "mean": 79.25,
+                "median": 80,
+                "standard_deviation": 7.46240577829965,
+                "total": 7925
+              },
+              "background_vertices_yx": [
+                [
+                  37,
+                  41
+                ],
+                [
+                  37,
+                  45
+                ],
+                [
+                  41,
+                  45
+                ],
+                [
+                  41,
+                  41
+                ]
+              ],
+              "background_statistics": {
+                "count": 25,
+                "minimum": 5,
+                "maximum": 5,
+                "mean": 5,
+                "median": 5,
+                "standard_deviation": 0,
+                "total": 125
+              },
+              "support_threshold": 5,
+              "support_count": 99,
+              "support_fraction": 0.99,
+              "foreground_minus_background_mean": 74.25,
+              "background_sigma": 2,
+              "region_definition": "independent simple polygon; integer pixel centres including boundary; NOT a biological mask",
+              "support_definition": "raw values strictly > threshold; explicit threshold or background mean + sigma*population std",
+              "geometry_definition": "polygon area/perimeter are continuous; raster area/extent/perimeter use skimage.regionprops, 4-neighbour perimeter; roundness=4*pi*area/perimeter^2 (not clamped)",
+              "data_area_unit": "pixel^2",
+              "intensity_unit": "raw source value",
+              "statistics_precision": "float64, population standard deviation (ddof=0)"
+            },
+            "coordinates": {
+              "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+              "source_path": "A01_s001_w2_z002_t001.tif",
+              "producer": {
+                "origin": "manual",
+                "output_kind": "manual",
+                "output_key": "selected_images",
+                "projection_key": "selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+                "step_name": null,
+                "pipeline_position": null,
+                "step_scope_id": null,
+                "invocation_key": null,
+                "artifact_kind": null
+              },
+              "components": {
+                "site": 1,
+                "channel": 2,
+                "z_index": 2,
+                "timepoint": 1,
+                "well": "A01"
+              },
+              "axis_indices": {
+                "site": 0,
+                "channel": 1,
+                "z_index": 1,
+                "timepoint": 0,
+                "well": 0
+              },
+              "aggregate_axis_indices": [],
+              "layer_axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "source_domain": {
+                "origin_yx": [
+                  7,
+                  11
+                ],
+                "source_shape_yx": [
+                  80,
+                  100
+                ]
+              },
+              "source_spacing": {
+                "values_zyx": [
+                  2,
+                  3
+                ],
+                "unit": "relative"
+              },
+              "native_transform": {
+                "scale": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  2,
+                  3
+                ],
+                "translate": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "world_units": [
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless",
+                "dimensionless"
+              ],
+              "physical_calibration_verified": false,
+              "coordinate_convention": "source-native (y,x) pixel centres; world points use mounted layer.data_to_world including full affine",
+              "calibration_note": "Source spacing/units are declared provenance, not independent physical verification; scale1 is not proof of micrometres."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 0,
+          "z_index": 0,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            17,
+            21
+          ],
+          [
+            17,
+            30
+          ],
+          [
+            26,
+            30
+          ]
+        ],
+        "line_width": true
+      },
+      "elapsed_seconds": 0.007494926452636719,
+      "response": {
+        "tool": "openhcs_measure_viewer_polyline",
+        "mcp_error": true,
+        "payloads": [
+          {
+            "text": "Error executing tool openhcs_measure_viewer_polyline: 1 validation error for openhcs_measure_viewer_polylineArguments\nline_width\n  Input should be a valid integer [type=int_type, input_value=True, input_type=bool]\n    For further information visit https://errors.pydantic.dev/2.12/v/int_type"
+          }
+        ]
+      }
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 0,
+          "z_index": 0,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            null,
+            21
+          ],
+          [
+            17,
+            30
+          ]
+        ]
+      },
+      "elapsed_seconds": 0.009158134460449219,
+      "response": {
+        "tool": "openhcs_measure_viewer_polyline",
+        "mcp_error": true,
+        "payloads": [
+          {
+            "text": "Error executing tool openhcs_measure_viewer_polyline: 1 validation error for openhcs_measure_viewer_polylineArguments\nvertices_yx.0.0\n  Input should be a valid number [type=float_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/float_type"
+          }
+        ]
+      }
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 0,
+          "z_index": 0,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      "elapsed_seconds": 0.05206179618835449,
+      "response": {
+        "tool": "openhcs_measure_viewer_polyline",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "connection": {
+              "host": "localhost",
+              "port": 5792,
+              "transport_mode": "tcp",
+              "persistent": true
+            },
+            "schema_version": "openhcs.agent.v1",
+            "errors": [
+              {
+                "code": "viewer_feature_measurement_failed",
+                "message": "Measurement geometry is outside real source pixels (padding/out-of-bounds).",
+                "hint": null,
+                "exception_type": "ValueError",
+                "path": null
+              }
+            ],
+            "warnings": [],
+            "observed": false,
+            "measurement": null,
+            "coordinates": null
+          }
+        ]
+      }
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+        "axis_indices": {
+          "site": 0,
+          "channel": 0,
+          "z_index": 1,
+          "timepoint": 0,
+          "well": 0
+        },
+        "vertices_yx": [
+          [
+            17,
+            21
+          ],
+          [
+            17,
+            30
+          ],
+          [
+            26,
+            30
+          ]
+        ]
+      },
+      "elapsed_seconds": 0.048187971115112305,
+      "response": {
+        "tool": "openhcs_measure_viewer_polyline",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "connection": {
+              "host": "localhost",
+              "port": 5792,
+              "transport_mode": "tcp",
+              "persistent": true
+            },
+            "schema_version": "openhcs.agent.v1",
+            "errors": [
+              {
+                "code": "viewer_feature_measurement_failed",
+                "message": "Measurement coordinates must select exactly one original plane, not sparse padding or ambiguous records.",
+                "hint": null,
+                "exception_type": "ValueError",
+                "path": null
+              }
+            ],
+            "warnings": [],
+            "observed": false,
+            "measurement": null,
+            "coordinates": null
+          }
+        ]
+      }
+    }
+  ],
+  "call_timings": [
+    {
+      "tool": "openhcs_health_check",
+      "elapsed_seconds": 0.009991645812988281,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_get_authoring_context",
+      "elapsed_seconds": 1.2501046657562256,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_stream_plate_files_to_viewer",
+      "elapsed_seconds": 7.86491584777832,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_get_viewer_window_state",
+      "elapsed_seconds": 0.17218661308288574,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_get_viewer_window_payloads",
+      "elapsed_seconds": 0.041890621185302734,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_sample_viewer_window_image",
+      "elapsed_seconds": 0.04299187660217285,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_sample_viewer_window_image",
+      "elapsed_seconds": 0.049652814865112305,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "elapsed_seconds": 0.06405472755432129,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_region",
+      "elapsed_seconds": 0.04941725730895996,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "elapsed_seconds": 0.007494926452636719,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "elapsed_seconds": 0.009158134460449219,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "elapsed_seconds": 0.05206179618835449,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_measure_viewer_polyline",
+      "elapsed_seconds": 0.048187971115112305,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_sample_viewer_window_image",
+      "elapsed_seconds": 0.047592878341674805,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_sample_viewer_window_image",
+      "elapsed_seconds": 0.04903817176818848,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_get_viewer_window_state",
+      "elapsed_seconds": 0.04348421096801758,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_viewer_snapshot_window",
+      "elapsed_seconds": 1.029597282409668,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_navigate_viewer_window",
+      "elapsed_seconds": 0.0651712417602539,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_set_viewer_image_intensity",
+      "elapsed_seconds": 0.029766082763671875,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_get_viewer_window_state",
+      "elapsed_seconds": 0.042188167572021484,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_viewer_snapshot_window",
+      "elapsed_seconds": 0.1083681583404541,
+      "status": "returned"
+    },
+    {
+      "tool": "openhcs_close_viewer_window",
+      "elapsed_seconds": 0.15982890129089355,
+      "status": "returned"
+    }
+  ],
+  "source_mapping": [
+    [
+      {
+        "kind": "image",
+        "key": "A01_s001_w1_z001_t001.tif",
+        "metadata": {
+          "filename": "A01_s001_w1_z001_t001.tif",
+          "virtual_path": "A01_s001_w1_z001_t001.tif",
+          "full_virtual_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/A01_s001_w1_z001_t001.tif",
+          "source_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel1.tif",
+          "type": "Image",
+          "site": 1,
+          "channel": 1,
+          "z_index": 1,
+          "timepoint": 1,
+          "well": "A01",
+          "extension": ".tif",
+          "size": "8.2 KB",
+          "modified": "2026-09-29T18:14:57"
+        },
+        "virtual_path": "A01_s001_w1_z001_t001.tif",
+        "full_virtual_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/A01_s001_w1_z001_t001.tif",
+        "source_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel1.tif",
+        "relative_path": null,
+        "full_path": null,
+        "file_format": null,
+        "preview": null
+      },
+      {
+        "kind": "image",
+        "key": "A01_s001_w2_z002_t001.tif",
+        "metadata": {
+          "filename": "A01_s001_w2_z002_t001.tif",
+          "virtual_path": "A01_s001_w2_z002_t001.tif",
+          "full_virtual_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/A01_s001_w2_z002_t001.tif",
+          "source_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel2.tif",
+          "type": "Image",
+          "site": 1,
+          "channel": 2,
+          "z_index": 2,
+          "timepoint": 1,
+          "well": "A01",
+          "extension": ".tif",
+          "size": "8.2 KB",
+          "modified": "2026-09-29T18:14:57"
+        },
+        "virtual_path": "A01_s001_w2_z002_t001.tif",
+        "full_virtual_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/A01_s001_w2_z002_t001.tif",
+        "source_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/plate/synthetic-channel2.tif",
+        "relative_path": null,
+        "full_path": null,
+        "file_format": null,
+        "preview": null
+      }
+    ]
+  ],
+  "capture_states": [
+    {
+      "axis_labels": [
+        "site",
+        "channel",
+        "z_index",
+        "timepoint",
+        "well",
+        "y",
+        "x"
+      ],
+      "viewer_ndim": 7,
+      "current_step": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        39,
+        49
+      ],
+      "native_viewport": {
+        "center": [
+          0,
+          79,
+          148.5
+        ],
+        "zoom": 1.349
+      },
+      "native_dimensions": {
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "ndisplay": 2,
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          78,
+          147
+        ],
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          962,
+          426
+        ]
+      },
+      "layers": [
+        {
+          "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+          "title": "selected_images",
+          "mounted": true,
+          "item_count": 2,
+          "producer_identities": [
+            {
+              "origin": "manual",
+              "output_kind": "manual",
+              "output_key": "selected_images",
+              "projection_key": "selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+              "step_name": null,
+              "pipeline_position": null,
+              "step_scope_id": null,
+              "invocation_key": null,
+              "artifact_kind": null
+            }
+          ],
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "stack_axes": [
+            "channel",
+            "z_index"
+          ],
+          "pending_update": false,
+          "data_types": [
+            "image"
+          ],
+          "component_values": [],
+          "component_value_count": 2,
+          "component_values_truncated": true,
+          "payload_summaries": [],
+          "payload_summary_count": 2,
+          "payload_summaries_truncated": true,
+          "axis_offsets": [
+            0,
+            0
+          ],
+          "scalar_labels": [
+            "Site 1",
+            "T 1",
+            "Well A01"
+          ],
+          "labels": {
+            "channel": [
+              "Ch 1",
+              "Ch 2"
+            ],
+            "z_index": [
+              "Z 1",
+              "Z 2"
+            ]
+          },
+          "axis_component_values": {
+            "channel": [
+              1,
+              2
+            ],
+            "z_index": [
+              1,
+              2
+            ]
+          },
+          "routed_component_values": {
+            "channel": [
+              1,
+              2
+            ],
+            "z_index": [
+              1,
+              2
+            ]
+          },
+          "routed_component_coordinates": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "data_shape": [
+            1,
+            2,
+            2,
+            1,
+            1,
+            80,
+            100
+          ],
+          "native_transform": {
+            "scale": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              2,
+              3
+            ],
+            "translate": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "native_intensity": {
+            "contrast_limits": [
+              0,
+              693
+            ],
+            "gamma": 1
+          },
+          "visible": true,
+          "selected": true,
+          "feature_row_count": 0,
+          "selected_data_indices": []
+        }
+      ]
+    },
+    {
+      "axis_labels": [
+        "site",
+        "channel",
+        "z_index",
+        "timepoint",
+        "well",
+        "y",
+        "x"
+      ],
+      "viewer_ndim": 7,
+      "current_step": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        39,
+        49
+      ],
+      "native_viewport": {
+        "center": [
+          0,
+          79,
+          148.5
+        ],
+        "zoom": 1.349
+      },
+      "native_dimensions": {
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "ndisplay": 2,
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "point": [
+          0,
+          1,
+          1,
+          0,
+          0,
+          78,
+          147
+        ],
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          962,
+          426
+        ]
+      },
+      "layers": [
+        {
+          "route_key": "origin_manual_kind_manual_projection_selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+          "title": "selected_images",
+          "mounted": true,
+          "item_count": 2,
+          "producer_identities": [
+            {
+              "origin": "manual",
+              "output_kind": "manual",
+              "output_key": "selected_images",
+              "projection_key": "selected_images_fcc7d99f0f1bf668b068a10edbb186ef0fb511f26ae3983fd0cf14331cb15825",
+              "step_name": null,
+              "pipeline_position": null,
+              "step_scope_id": null,
+              "invocation_key": null,
+              "artifact_kind": null
+            }
+          ],
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "stack_axes": [
+            "channel",
+            "z_index"
+          ],
+          "pending_update": false,
+          "data_types": [
+            "image"
+          ],
+          "component_values": [],
+          "component_value_count": 2,
+          "component_values_truncated": true,
+          "payload_summaries": [],
+          "payload_summary_count": 2,
+          "payload_summaries_truncated": true,
+          "axis_offsets": [
+            0,
+            0
+          ],
+          "scalar_labels": [
+            "Site 1",
+            "T 1",
+            "Well A01"
+          ],
+          "labels": {
+            "channel": [
+              "Ch 1",
+              "Ch 2"
+            ],
+            "z_index": [
+              "Z 1",
+              "Z 2"
+            ]
+          },
+          "axis_component_values": {
+            "channel": [
+              1,
+              2
+            ],
+            "z_index": [
+              1,
+              2
+            ]
+          },
+          "routed_component_values": {
+            "channel": [
+              1,
+              2
+            ],
+            "z_index": [
+              1,
+              2
+            ]
+          },
+          "routed_component_coordinates": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "data_shape": [
+            1,
+            2,
+            2,
+            1,
+            1,
+            80,
+            100
+          ],
+          "native_transform": {
+            "scale": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              2,
+              3
+            ],
+            "translate": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "native_intensity": {
+            "contrast_limits": [
+              5,
+              80
+            ],
+            "gamma": 1
+          },
+          "visible": true,
+          "selected": true,
+          "feature_row_count": 0,
+          "selected_data_indices": []
+        }
+      ]
+    }
+  ],
+  "accepted": true,
+  "acceptance_scope": "source-pinned installed-interpreter synthetic MCP/Napari technical measurement journey only; not merged/installed entrypoint readiness, physical calibration, or biological acceptance",
+  "author_opened_bitmaps": true,
+  "author_observation": "Ch1/Z1 smooth gradient displayed as the expected anisotropic rectangle. Ch2/Z2 independent foreground patch on background is visible at contrast5..80/gamma1; top-left missing support pixel is consistent with fixture. No measurement overlay or biological mask is claimed.",
+  "raw_and_presentation_invariants_verified": "Both selected100-pixel windows and file hashes matched before/after; layers, transform, contrast/gamma, camera, dimensions, axes and current_step matched before/after valid and invalid measurements. QA navigation/window change occurs only afterwards and is explicit.",
+  "actual_child_provenance": "Viewer import provenance: server=/home/ts/wt/openhcs-viewer-feature-measurement-20260929/openhcs/runtime/napari_viewer_server.py; openhcs_root=/home/ts/wt/openhcs-viewer-feature-measurement-20260929; polystore=/home/ts/wt/openhcs-viewer-feature-measurement-20260929/external/PolyStore/src/polystore/__init__.py",
+  "artifacts": {
+    "journal": {
+      "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/journey.json",
+      "sha256": "45176f28bb0ee4413d85bce5fb0efb2fe28f59dbfa1161d987d80877ff7aa73d"
+    },
+    "viewer_log": {
+      "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_04/xdg-data/openhcs/logs/napari_detached_port_5792.log",
+      "sha256": "5d6478a208048165dfb16bad3b8e50b4e0242300de3ba55ef42127ac58f9e32e"
+    }
+  },
+  "remaining_gaps": [
+    "Native NaN guard is source-tested; MCP dev transport normalizes NaN to null before schema rejection, not a literal-NaN arrival proof.",
+    "2D scalar planes only. Full affine/translated geometry proof is source-level; this actual mounted fixture has anisotropic scale2/3 with zero layer translation and preserved native crop7/11.",
+    "Parent integration and installed affected-entrypoint verification pending; no installed packages changed.",
+    "Broad plate-service/OME shard is not a pass: timeout/download omission retained; later no-download OME failed detection. Existing receipt fixture omits metadata_handler and fails calibrated_metadata; no assertion weakened.",
+    "Cold mounted-viewer launch7.865s and first snapshot1.030s are preparation latency; no timeout increase. Ordinary measurements49/64ms."
+  ],
+  "owned_cleanup": {
+    "viewer_native_close_succeeded": true,
+    "all_owned_pids_absent": [
+      1659989,
+      1659999,
+      1660195,
+      1660398
+    ],
+    "global_lock_released": true,
+    "no_uncertain_dispatch": true,
+    "foreign_processes_preserved": true,
+    "no_jvm": true,
+    "no_imagej_download_or_per_run_bundle": true
+  },
+  "source_tests": "Final bounded one-process/native-threads1 shard96passed in6.93s with sharedcache+downloadsfalse; intensity regression9passed. No global NRA proof claimed.",
+  "published_bitmaps": {
+    "raw": {
+      "path": "tests/runtime_diagnostics/viewer_feature_measurement_gradient_20260929.png",
+      "sha256": "af10d4def4dd0e67e31ccd8425b5850a3b0df5cfd43b9c726f8b8f4621226be4"
+    },
+    "foreground": {
+      "path": "tests/runtime_diagnostics/viewer_feature_measurement_foreground_20260929.png",
+      "sha256": "5b1765fb264f47e6e2b4ded5e5361ae6b97f955eb510e3b19efb785754590e98"
+    }
+  },
+  "implementation_write_set": [
+    "openhcs/agent/capabilities.py",
+    "openhcs/agent/dto/viewer.py",
+    "openhcs/agent/services/plate_streaming_service.py",
+    "openhcs/agent/services/viewer_window_service.py",
+    "openhcs/core/plate_image_inventory.py",
+    "openhcs/core/viewer_streaming_service.py",
+    "openhcs/mcp/server.py",
+    "openhcs/runtime/napari_viewer_server.py",
+    "openhcs/runtime/viewer_controls.py",
+    "openhcs/runtime/viewer_measurements.py",
+    "openhcs/runtime/viewer_protocol.py"
+  ],
+  "documentation_and_evidence_write_set": [
+    "packaging/codex/openhcs/skills/use-openhcs/references/measurement-interpretation.md",
+    "tests/diagnostics/check_viewer_feature_measurement_live.py",
+    "tests/unit/test_viewer_feature_measurement.py",
+    "tests/unit/test_viewer_source_projection_chain.py",
+    "tests/runtime_diagnostics/viewer_feature_measurement_*"
+  ],
+  "inherited_parent_owned_guide": "Normal merge of PR223/e6b26458b includes other skill/package guidance files; installed skill/frozen harness untouched.",
+  "scratch_disposition": "Owned partial/cache647MiB already removed; final1.4MiB cache and604KiB disposable source-test fixtures removed after processes exit. Live attempt01..04 synthetic fixtures/journals/bitmaps preserved; no biological input/output touched."
+}
