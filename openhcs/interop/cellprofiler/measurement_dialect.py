@@ -108,6 +108,9 @@ CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT = RuntimeMeasurementLookupDialect(
         CellProfilerModule.alternative_measurement_feature_part_aliases
     ),
     source_qualified_feature_families_provider=CellProfilerModule.source_qualified_measurement_feature_family_parts,
+    indexed_descriptor_suffix_width_provider=(
+        RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for
+    ),
     object_domain_policy=CellProfilerMeasurementObjectDomainPolicy(),
 )
 

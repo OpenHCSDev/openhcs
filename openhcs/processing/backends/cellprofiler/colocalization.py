@@ -161,7 +161,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
 )
 from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
+    LongObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
@@ -2013,7 +2013,7 @@ class ObjectColocalizationMetricArrays:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectColocalizationColumnarMeasurements(ObjectMeasurementColumnarRows):
+class ObjectColocalizationColumnarMeasurements(LongObjectMeasurementColumnarRows):
     """Columnar object-colocalization rows preserving direct row iteration."""
 
     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(

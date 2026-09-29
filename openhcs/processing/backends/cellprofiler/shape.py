@@ -455,7 +455,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
+    LongObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
@@ -556,7 +556,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
         )
 
 
-class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
+class ShapeObjectMeasurementRows(LongObjectMeasurementColumnarRows):
     """Dense AreaShape rows that already span their declared object domain."""
 
     object_row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
