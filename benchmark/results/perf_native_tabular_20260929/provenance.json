@@ -1,0 +1,38 @@
+{
+  "base_revision": "01d1a8c55c1d606ea998dcc2f77dcbe3eac47058",
+  "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+  "source_root": "/home/ts/code/projects/openhcs-compile-perf",
+  "versions": {
+    "numpy": "2.5.3",
+    "numba": "0.67.0",
+    "scipy": "1.18.1",
+    "scikit-image": "0.26.0",
+    "setuptools": "84.0.0",
+    "abi3audit": "0.0.26"
+  },
+  "nra_revision": "0844525",
+  "class_census": {
+    "before": {
+      "source_revision": "01d1a8c55-before-tabular-migration",
+      "module_count": 699,
+      "original_class_count": 5047,
+      "projected_count": 5035
+    },
+    "after": {
+      "source_revision": "01d1a8c55-with-native-tabular-candidate",
+      "module_count": 699,
+      "original_class_count": 5050,
+      "projected_count": 5038
+    }
+  },
+  "wheel": {
+    "name": "openhcs-0.8.6-cp311-abi3-linux_x86_64.whl",
+    "bytes": 4088656,
+    "sha256": "7a097adc2cc8f33ff7137ef42e60608139fdce725cbe234c59b9364a1552cf73"
+  },
+  "numba_cache_dir": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2",
+  "cache_loads": 65,
+  "cache_writes": 0,
+  "output_bytes": 11550064,
+  "output_sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+}
