@@ -1,5 +1,10 @@
 from pathlib import PureWindowsPath
 
+from polystore.imagej_distribution import (
+    FijiArchiveDistribution,
+    ImageJArchiveDownloadPolicy,
+)
+
 from openhcs.agent.runtime_platform import WindowsAgentRuntimePlatformAuthority
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 from openhcs.utils.environment import OpenHCSProcessEnvironment
@@ -11,6 +16,8 @@ def test_process_environment_owns_inherited_mode_selectors() -> None:
         OpenHCSProcessEnvironment.headless_key,
         OpenHCSProcessEnvironment.numba_cache_key,
         OpenHCSProcessEnvironment.use_threading_key,
+        FijiArchiveDistribution.cache_root_environment_key,
+        ImageJArchiveDownloadPolicy.allow_download_environment_key,
     )
 
 

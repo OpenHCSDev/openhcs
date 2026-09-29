@@ -10,6 +10,10 @@ import sys
 from dataclasses import replace
 
 import pytest
+from polystore.imagej_distribution import (
+    FijiArchiveDistribution,
+    ImageJArchiveDownloadPolicy,
+)
 
 import openhcs.mcp.dev_client as dev_client
 from openhcs.pyqt_gui.config import (
@@ -55,6 +59,38 @@ def test_child_environment_does_not_invent_ui_config_override(monkeypatch) -> No
     environment = dev_client.McpDevServerSpec(sys.executable).environment()
 
     assert UIConfigCacheEnvironment.cache_file_path_key not in environment
+
+
+def test_fresh_child_consumes_declared_imagej_cache_and_download_policy(
+    tmp_path, monkeypatch
+) -> None:
+    cache_root = tmp_path / "shared-imagej-bundles"
+    monkeypatch.setenv(
+        FijiArchiveDistribution.cache_root_environment_key, str(cache_root)
+    )
+    monkeypatch.setenv(
+        ImageJArchiveDownloadPolicy.allow_download_environment_key, "false"
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import json; "
+                "from polystore.imagej_distribution import "
+                "FijiArchiveDistribution, ImageJArchiveDownloadPolicy; "
+                "print(json.dumps([str(FijiArchiveDistribution.cache_root_from_environment()), "
+                "ImageJArchiveDownloadPolicy.from_environment().allow_download]))"
+            ),
+        ],
+        env=dev_client.McpDevServerSpec(sys.executable).environment(),
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert json.loads(result.stdout) == [str(cache_root), False]
+    assert not cache_root.exists()
 
 
 def test_multi_call_command_honors_its_declared_timeout_floor() -> None:
