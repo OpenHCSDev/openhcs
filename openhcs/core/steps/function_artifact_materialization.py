@@ -1322,6 +1322,27 @@ def observed_materialized_artifact_output_paths(
     )
 
 
+def observed_runtime_export_artifact_output_paths(
+    plan: CompiledStepPlan,
+    context: "ProcessingContext",
+    records: tuple[StoredRuntimeValue, ...],
+) -> tuple[Path, ...]:
+    """Derive exact pipeline-declared exports from worker-observed records."""
+
+    if not plan.runtime_artifact_materialization.has_persistent_target:
+        return ()
+    return tuple(
+        Path(output.path)
+        for materialization in runtime_artifact_materializations_from_records(
+            plan,
+            context,
+            records,
+        )
+        if materialization.spec.participates_in_runtime_export_observation()
+        for output in materialization.outputs(plan, context)
+    )
+
+
 def observed_materialized_artifact_locations_by_address(
     plan: CompiledStepPlan,
     context: "ProcessingContext",

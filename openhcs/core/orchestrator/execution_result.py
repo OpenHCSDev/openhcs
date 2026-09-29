@@ -8,6 +8,7 @@ following OpenHCS standards for explicit contracts and type safety.
 import copyreg
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Optional
 
@@ -56,6 +57,7 @@ class RuntimeContextObservation:
 
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
+    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
