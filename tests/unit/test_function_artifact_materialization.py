@@ -75,7 +75,10 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
+    ObjectCoreMeasurementFeature,
 )
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
@@ -141,6 +144,7 @@ from openhcs.processing.materialization import (
     CsvOptions,
     FileBundleOptions,
     JsonOptions,
+    PointROIOptions,
     ROIOptions,
     TextOptions,
     csv_only,
@@ -1116,6 +1120,70 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
     assert isinstance(data, MeasurementTable)
     assert data.row_mappings() == ({"object_id": 1, "area": 42},)
     assert path == "/analysis/A01_measurements_step7.roi.zip"
+
+
+def test_runtime_artifact_plan_materializes_3d_point_measurements():
+    features = ObjectCoreMeasurementFeature
+    output_plan = ArtifactOutputPlan(
+        name="nuclei_centres",
+        path="/memory/A01_nuclei_centres_step7.pkl",
+        artifact_type=MeasurementsArtifactType,
+        materialization=MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        variable_components=(AllComponents.Z_INDEX,),
+    )
+    source_path = "/input/A01/image.ome.tif"
+    table = MeasurementTable(
+        name=output_plan.name,
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=(source_path,) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    context = _context(FileManagerStub())
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(output_plan, table, axis_id="A01"),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(output_plan, variable_components=(VariableComponents.Z_INDEX,))
+
+    [materialization] = runtime_artifact_materializations(plan, context)
+    [result] = materialization.outputs(plan, context)
+
+    assert result.path == "/analysis/A01_nuclei_centres_step7_points.roi.zip"
+    assert len(result.content) == 1
+    assert result.content[0].metadata["object_label"] == 7
+    assert result.content[0].metadata["response"] == 4.75
+    assert ROIFractionalZ.decode(result.content[0].metadata) == ROIFractionalZ(2.375)
+    assert ROIArchiveSourceMetadata.decode(result.content).source_path == source_path
 
 
 def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
