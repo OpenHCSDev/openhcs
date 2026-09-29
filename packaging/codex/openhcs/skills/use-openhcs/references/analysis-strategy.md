@@ -37,6 +37,19 @@ exact OpenHCS Python section and inspect the reference case's inputs and parity
 scope. Use it as a working starting point, not as proof for the new assay. The
 ExampleHuman nuclei card is one example, not the only eligible pipeline.
 
+Before authoring, retain an example-selection record in the authorised trial:
+the search query, returned document/section ID, retrieved source identity and
+`truncated=false`, reference case and available parity evidence, input axes,
+channel roles and units, and the decision to adapt or reject it for this assay.
+Inspect the complete generated pipeline, not just the search snippet or a
+function with a similar name. If none fits, record the closest example's
+specific contract mismatch before using the custom-function route. Do not
+invent parity evidence when only conversion or execution is evidenced.
+Reusable method examples are distinct from a blind task's worked answers;
+keep scoring references and held-out material sealed. A later retrieval must
+be recorded as later evidence, not retroactively claimed as the basis of an
+already frozen candidate.
+
 ## Run a discriminating development trial
 
 Choose a spatially distributed development sample before tuning: bright/dim,

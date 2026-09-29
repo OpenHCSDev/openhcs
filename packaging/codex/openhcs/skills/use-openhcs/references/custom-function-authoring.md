@@ -57,6 +57,16 @@ selector (`OPENHCS_UI_CONFIG_CACHE_FILE`) before starting that MCP process, then
 verify its endpoint. Use the current reflected contract if this route changes.
 Do not resolve a timeout by registering on a peer or default catalog.
 
+Also verify the persisted-source storage owner. Local custom-function imports
+resolve through `CustomFunctionManager.storage_dir`; in an isolated session,
+carry the GUI/backend's appropriate `XDG_DATA_HOME` into each consuming MCP
+process at startup. The UI cache selects a catalog endpoint, not that local
+source directory. Compare the registration receipt's persisted path with the
+consumer's storage scope, then prove the stable import on that consumer.
+Changing the launch environment does not update an already running process.
+Do not copy the source into default storage or re-register it merely to mask
+a directory mismatch; reconcile ownership and any uncertain mutation first.
+
 Use `openhcs_register_custom_function`, which delegates validation, persistence
 and registry publication to `CustomFunctionManager`. Choose persistence when
 the reviewed pipeline needs a stable import across GUI, backend or fresh worker
