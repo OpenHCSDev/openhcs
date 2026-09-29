@@ -61,19 +61,38 @@ phase and does not imply production does both. Three contour calls yield 902
 members; two `find_objects` calls confirm a repeated whole-mask bbox scan.
 These are single bounded observations, not a large-mask speedup claim.
 
-Remaining optimization belongs to PolyStore's
+The paired optimization belongs to PolyStore's
 `TwoDimensionalLabeledMaskROIExtractor.extract`: `regionprops` already supplies
 the bbox and cached region image, but extraction separately calls `find_objects`
-and constructs that binary crop again. Proposed in-place change: reuse those
-existing properties, retaining labels, bbox, origin and contour ordering. No
-external submodule was changed without coordinator coordination. No parallel
-extractor/cache will be added in OpenHCS. The coordinator must authorize/assign
-this paired submodule change before implementation and validation resume.
+and constructs that binary crop again. The owner authorized the in-place change;
+it is published in [PolyStore draft #16](https://github.com/OpenHCSDev/PolyStore/pull/16),
+commit `8c886e7`, using those public properties and deleting the replaced scan,
+crop/equality construction and cast. No new extractor/cache/registry. Source
+pruning and provenance are unchanged. Scope excludes coordinator #211's
+execution-session/capability write-authority repair and Zeno's #204 runtime repair.
 
-Fidelity limits: this fixture checks disconnected islands, identities, metadata,
-coordinates and int32 raster preservation. It does not establish arbitrary
-hole/border/topology rasterization equivalence, 3D fidelity, or fidelity of the
-private diagnostic archives. No biological inputs or frozen Euler output opened.
+New child regressions are authored for holes with nested other-parent islands,
+all borders, one-pixel bridges, diagonal contact, disconnected border pixels,
+zero/nonzero origins, exact contour vertices/order, parent metadata, archive
+reopen, exact full-canvas masks and one bbox scan. Parent raster-only TIFF
+materialization now has an additional holes/borders fixture. These new checks
+have passed source AST/Ruff/diff guards, but have NOT run: the validation lock
+probe returned 75 (busy). Euler retains the H003 slot; no test/JVM/GUI started.
+Available RAM at that checkpoint: 13.2 GiB, historical swap 11.5 GiB.
+
+The parent recorded gitlink remains `f94bbbe8631a4c78f7ceaec72fb99671b58c9a18`.
+The local isolated child is on published `8c886e7` for the future paired test;
+the recorded gitlink will not advance before validated paired coordinator review.
+Child durable receipt: `external/PolyStore/docs/roi_region_properties_checkpoint_20260929.md`.
+
+Fidelity limits: already-run evidence checks disconnected islands, identities,
+metadata, coordinates and int32 raster preservation. New hole/border/topology
+execution is pending. Existing polygons represent independent contours, without
+a declared hole-subtraction relationship. Even if ring coordinates and parent
+metadata survive ZIP reopen, that alone is not ZIP-to-raster/viewer equivalence.
+MaskShape is unsupported by the existing ImageJ ROI codec. Do not invent an
+equivalence algorithm. Exact masks and label TIFFs are separate evidence. 3D and
+private diagnostic fidelity remain unverified. No biology/Euler output opened.
 
 ## Essential catalog review (changed surface only)
 
@@ -150,4 +169,7 @@ Regressions: `tests/unit/test_synthetic_generator_zero_geometry.py`,
 `tests/unit/test_fragmented_roi_materialization.py`.
 
 Profile/evidence: `benchmark/fragmented_roi_profile.py`, this checkpoint document.
-No external submodule source or reserved viewer/measurement files changed.
+Paired continuation: `external/PolyStore/src/polystore/roi.py`,
+`external/PolyStore/tests/test_roi_region_properties.py`,
+`external/PolyStore/docs/roi_region_properties_checkpoint_20260929.md`.
+Parent recorded gitlink is preserved. No reserved viewer/measurement/#211 files changed.

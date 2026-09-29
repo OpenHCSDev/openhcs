@@ -33,9 +33,11 @@ def fragmented_labels():
     return labels
 
 
-def _payload():
+def _payload(labels=None):
     return ObjectLabelPayload(
-        variant_data=ObjectLabelVariantData(labels=fragmented_labels()),
+        variant_data=ObjectLabelVariantData(
+            labels=fragmented_labels() if labels is None else labels
+        ),
         source_path="/synthetic/raw.tif",
         source_component_metadata={"well": "A01", "channel": 1},
         source_spatial_domain=SourceSpatialDomain(
@@ -88,23 +90,30 @@ def test_archive_fragments_keep_parent_label_and_source_geometry(tmp_path):
     assert coordinates[:, 1].max() == pytest.approx(140.5)
 
 
+@pytest.mark.parametrize("with_holes_and_borders", (False, True))
 def test_declared_raster_selection_preserves_parent_labels_without_roi_extraction(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, with_holes_and_borders
 ):
     monkeypatch.setattr(
         "polystore.roi.extract_rois_from_labeled_mask",
         lambda *args, **kwargs: pytest.fail("Unselected ROI extraction ran"),
     )
+    labels = fragmented_labels()
+    if with_holes_and_borders:
+        labels[:32, :32] = 7
+        labels[8:24, 8:24] = 0
+        labels[12:16, 12:16] = 42
+        labels[-1, -1] = 188
     filemanager = FileManager({"disk": DiskStorageBackend()})
     outputs = materialization_outputs(
         MaterializationSpec(
             ROIOptions(min_area=1), ImageFileOptions(filename_suffix=".tif")
         ),
-        _payload(),
+        _payload(labels),
         str(tmp_path / "fragmented"),
         filemanager,
         output_path_filter=lambda path: path.suffix == ".tif",
     )
     assert len(outputs) == 1
     filemanager.save(outputs[0].content, outputs[0].path, "disk")
-    np.testing.assert_array_equal(tifffile.imread(outputs[0].path), fragmented_labels())
+    np.testing.assert_array_equal(tifffile.imread(outputs[0].path), labels)
