@@ -585,3 +585,26 @@ def test_non_spatial_display_and_unsupported_source_rank_fail_readonly():
         NativeImageMeasurement(np.ones((2, 3, 4)), (0, 0), lambda p: p)
     with pytest.raises(TypeError, match="real numeric"):
         NativeImageMeasurement(np.ones((3, 4), dtype=complex), (0, 0), lambda p: p)
+
+
+def test_live_journey_fixture_uses_real_persisted_known_source_planes(tmp_path):
+    import importlib.util
+    from pathlib import Path
+    from openhcs.core.image_file_serialization import ImageFileFormat
+
+    script = (
+        Path(__file__).resolve().parents[1]
+        / "diagnostics/check_viewer_feature_measurement_live.py"
+    )
+    spec = importlib.util.spec_from_file_location("measurement_live_fixture", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    paths = module.make_fixture(tmp_path / "fixture")
+    assert len(paths) == 2
+    gradient = ImageFileFormat.require_path(paths[0]).read(paths[0])
+    region = ImageFileFormat.require_path(paths[1]).read(paths[1])
+    assert gradient.shape == (64, 64) and gradient.dtype == np.uint16
+    np.testing.assert_array_equal(gradient[10, 10:20], np.arange(110, 120))
+    assert region[10:20, 10:20].mean() == 79.25
+    assert region[30:35, 30:35].mean() == 5
+    assert (paths[0].parent / "openhcs_metadata.json").is_file()
