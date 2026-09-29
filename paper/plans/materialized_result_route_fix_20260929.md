@@ -112,7 +112,7 @@ output. Pattern leads: IDEN-5/IDEN-6 (materialized identity versus rebuilt
 layout) and BOUND-2 (consumers bypass a richer typed runtime owner). There is
 no claim that NRA has proved these leads.
 
-- `PathPlanner._cached_results_path` in `core/pipeline/path_planner.py:2891`
+- `_cached_results_path` in `core/pipeline/path_planner.py:2891`
   preserves absolute `materialization_results_path` and resolves relative
   paths under the planned output plate root.
 - `PlateResultFileInventory.configured_output_result_directories` in
@@ -160,16 +160,71 @@ bounded native read; do not silently accept a foreign header or identity.
 ROI preview currently uses the native PolyStore archive reader (`:495`), which
 should remain the external-format owner.
 
-### Crossing requiring main's direction
+### Approved crossing and remaining coordination
 
-The listed write set excludes `agent/services/plate_streaming_service.py`, but
-its pre-resolution handler dependency is directly on the reopening path.
-Request this one-file scope extension before editing it. It is not Jason's
-viewer-orientation surface. No changes to `capabilities.py` have been made.
+Main approved `agent/services/plate_streaming_service.py` as an extension to
+this write set because its pre-resolution handler dependency is directly on
+the reopening path. This is not Jason's viewer-orientation surface. No changes
+to that service or `capabilities.py` have been made.
 Jason's supplied session ID was not registered on the available agent-comms
 bus, and this worker has no direct session-message tool. Main must provide a
 direct route or relay the proposed plate-capability import/declaration crossing
 before overlapping edits. Do not manufacture a second messaging/runtime path.
+
+Proposed capability crossing sent to main: plate declarations
+`QueryPlateFilesCapability:2067` and `StreamPlateFilesToViewerCapability:2123`,
+including their descriptions/data-exposure metadata if the request changes.
+The existing plate DTO import block at line 95 already imports both request
+types; no additional import or viewer declaration change is proposed. Main
+subsequently reported Jason terminal, with no competing scan. His native-only
+diagnosis is separate evidence, not this worker's managed/plugin/MCP proof.
+
+### Conditional scan recovery checkpoint
+
+Audited Python remains identical to initial HEAD; current documentation-only
+head is `e9c767a572b51d10faeb5bafc5840b39492cc0d7`. NRA remains at
+`52fe8b4666a20583f0ddf8ed3b7a9e89857e4809`. A bounded declaration-only import
+of NRA confirmed 79 registered detectors and zero AST-retaining context
+detectors. CLI `JsonPayloadSections.compact_analysis_compatible` and
+`analyze_compact_roots_with_cache` therefore permit a complete compact scan
+for this detector roster; this eligibility check is not a completed scan.
+
+Main authorised one global scan under a conditional 2048 MiB RSS envelope,
+only after at least 11 GiB available and memory PSI full avg10 <=1% hold for
+10 seconds. Stop conditions are available memory below 8 GiB, PSI above 1%
+for 10 seconds, RSS above 2048 MiB, or the initial 165-second shell shard.
+The ordinary 768 MiB test/Qt increment limit is unchanged.
+
+The guarded launch attempt at 2026-09-29T03:58:54Z exited 78 before starting
+NRA: 10343272 KiB available, PSI full avg10 0.00. Its exact receipt is
+`/tmp/openhcs-pr153.LeLQct/scan-recovery-agent.guard`. No scan process or live
+scan handle remains. The owned `guarded-scan.sh` retains the full production
+context and worker counts above, with a 160-second internal budget and
+165-second shell guard. The next proposed cache-populating profile is
+`summary`, which omits graph/recipe presentation work but retains the complete
+detector analysis and raw findings. It does not replace required
+`--json --raw-findings --json-payload full` evidence. A subsequent full export
+must authenticate identical source/configuration identity and disclose any
+source-index/observation/raw-record omission. No partial scan permits Python
+implementation or resuming Jason as though the common audit were complete.
+
+Additional source-checked authority limits:
+
+- `StepExecutionObservation:44` already declares materialized address/location
+  receipts, but `finalize_function_step_outputs:128` returns `None` and
+  `worker_execution.py:1000` discards `step.process`'s return. Progress locations
+  are regenerated from plans/records, not propagated from successful writers.
+  An annotation is not a genuine success receipt.
+- `OpenHCSMetadataWriter.OutputTarget.runtime_artifact_projection_paths:878`
+  projects only image paths through `ImageFileFormat.is_image_path`. Its
+  existing source-projection metadata is not currently a CSV/ROI identity
+  authority; do not present its image projection as proof for result files.
+- Pinned PolyStore `roi.py:581` reconstructs every non-polyline ImageJ archive
+  shape as `PolygonShape`. `PointImageJROIShapeConverter:547` writes one point
+  without explicitly setting `ROI_TYPE.POINT`. The existing dependency owner
+  needs native verification and a separately approved dependency change if
+  exact point-kind reopening fails. No local duplicate decoder or submodule
+  gitlink change has been made. This is not a rerun of Jason's diagnosis.
 
 ### New-case experiments, guards and completion gates
 
