@@ -84,7 +84,12 @@ not prevent review of clear supported misses.
 Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
 Change one semantic operation or parameter group, then recheck failure and
-regression-control crops against raw. Reconcile persisted labels/ROIs,
+regression-control crops against raw. Also revisit the preselected distributed
+bright/dim and centre/edge witnesses: a local repair cannot pass if it adds
+misses, merges or background elsewhere. For uneven illumination or denoising,
+inspect the correction field or residual and processed pixels before downstream
+labels; an independently auto-stretched display can conceal the regression.
+Reconcile persisted labels/ROIs,
 measurements and physical units before widening the run or quoting a count.
 Retain witness paths, state/coordinates, channels/windows, pipeline/result
 identity, observed differences and decision in the authorised trial log.
