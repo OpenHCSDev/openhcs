@@ -63,6 +63,7 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.constants import AllComponents
+from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
@@ -1119,9 +1120,23 @@ def _build_nd_points(
 
             coordinates = shape_payload.coordinates
             metadata = shape_payload.metadata
+            fractional_z = ROIFractionalZ.decode(metadata.metadata)
+            z_axis_index = None
+            if fractional_z is not None:
+                try:
+                    z_axis_index = axis_projection.projected_axis_components.index(
+                        AllComponents.Z_INDEX.value
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "Fractional-Z point ROI requires a projected z_index axis."
+                    ) from exc
 
             for coord in coordinates:
-                nd_coord = prepend_dims + list(coord)
+                point_dims = prepend_dims.copy()
+                if z_axis_index is not None and fractional_z is not None:
+                    point_dims[z_axis_index] = fractional_z.value
+                nd_coord = point_dims + list(coord)
                 all_points_nd.append(nd_coord)
 
                 all_properties["label"].append(

@@ -1,6 +1,7 @@
 import json
 from functools import partial
 from multiprocessing.shared_memory import SharedMemory
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -10,6 +11,7 @@ from polystore.filemanager import FileManager
 from polystore.disk import DiskStorageBackend
 from polystore.memory import MemoryStorageBackend
 from polystore.roi import PointShape, load_rois_from_zip
+from polystore.roi_converters import NapariROIConverter
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
     StreamingBatchMessageBuilder,
@@ -53,6 +55,7 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -804,6 +807,24 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
     assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
     assert ROIArchiveSourceMetadata.decode(rois).source_path == "/source/image.ome.tif"
+    viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    projection = ViewerLayerAxisProjection(
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [0, 1, 2, 3]},
+        routed_component_values={"z_index": [0, 1, 2, 3]},
+        axis_offsets=(0,),
+    )
+    points, properties = viewer_server._build_nd_points(
+        [
+            SimpleNamespace(
+                data=NapariROIConverter.rois_to_shapes(rois),
+                address=SimpleNamespace(components={"z_index": 2}),
+            )
+        ],
+        projection,
+    )
+    assert points.tolist() == [[2.375, 1.25, 3.5]]
+    assert properties["label"] == [7]
 
 
 @pytest.mark.unit

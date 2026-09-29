@@ -1,8 +1,8 @@
 # Typed 3-D point result: implementation boundary
 
-Status: measurement payload retention implemented in this draft. The point
-writer, native 3-D projection, installed entrypoint, and biological result are
-not yet implemented or claimed.
+Status: measurement payload retention, typed point writer, native ROI ZIP
+round-trip and exact-Z Napari projection implemented in this draft. Synthetic
+source tests pass; installed entrypoint and biological result are not claimed.
 
 Base: OpenHCSDev/openhcs `9644febe2785aace85bbc8bd1d2ce062525c56d2`.
 Issue: OpenHCSDev/openhcs#134. Integration owner: blind-analysis coordinator.
@@ -24,15 +24,17 @@ Coordinate the worker/export crossing with open PR #157; do not edit its
   `MaterializationSpec` already admits multiple writer options for the same
   artifact; a separate hand-built file bundle is not required.
 - The existing ROI writer extracts image-label contours, not measurement
-  coordinates. `ROIArchiveSourceMetadata` stores an existing
+  coordinates. `PointROIOptions` owns the Z/Y/X measurement-feature roles;
+  its writer uses the existing ROI ZIP backend. `ROIArchiveSourceMetadata` stores an existing
   `ImagePayloadMetadata` declaration in the native archive sidecar; it is not
   a second source schema (`openhcs/core/roi_source_metadata.py:15`).
 - OpenHCS pins PolyStore `e430c331ad931edc92dfe9d4fcd0d837a3cfeea8`.
   Its native `PointShape(y, x)` codec preserves fractional XY, but has no Z
   member. Standard ImageJ native Z is a discrete plane. OpenHCS's Napari
   `_build_nd_points` prepends route component indices to 2-D coordinates
-  (`openhcs/runtime/napari_viewer_server.py:1089`); this cannot represent
-  fractional centre Z by itself.
+  (`openhcs/runtime/napari_viewer_server.py:1089`); this draft replaces the
+  projected Z coordinate with typed `ROIFractionalZ` when present and rejects
+  a fractional-Z ROI if no Z axis is projected.
 - Frozen H002 hand-wrote an ImageJ POINT ZIP with rounded Z and no source
   sidecar. It remains AMBIGUOUS and must not be rewritten or rerun as a repair.
 
