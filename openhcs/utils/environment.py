@@ -48,7 +48,10 @@ class OpenHCSProcessEnvironment:
     def child_process_environment_keys(cls) -> tuple[str, ...]:
         """Return mode selectors required for semantic parity in child processes."""
 
-        from polystore.imagej_distribution import FijiArchiveDistribution
+        from polystore.imagej_distribution import (
+            FijiArchiveDistribution,
+            ImageJArchiveDownloadPolicy,
+        )
 
         return (
             cls.cpu_only_key,
@@ -56,6 +59,7 @@ class OpenHCSProcessEnvironment:
             cls.numba_cache_key,
             cls.use_threading_key,
             FijiArchiveDistribution.cache_root_environment_key,
+            ImageJArchiveDownloadPolicy.allow_download_environment_key,
         )
 
     @staticmethod
