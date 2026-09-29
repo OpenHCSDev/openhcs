@@ -194,6 +194,32 @@ class ImageQaEvidenceRule(Enum):
         "reject a black, empty, stale, or mismatched capture when its active route, "
         "component values, or routed payload identity do not match the intended evidence"
     )
+    SPATIAL_PREPROCESSING_REGRESSION = (
+        "choose distributed development witnesses before tuning, spanning observed "
+        "bright/dim background, centre/edge and sparse/dense regions. Uneven signal "
+        "requires a nuisance-model check, not a threshold fitted to one crop: "
+        "distinguish additive background, multiplicative shading and real biology. "
+        "Review raw, correction field or denoising residual, processed image and "
+        "downstream result at the same coordinates across those regions. Reject "
+        "local gains accompanied by remote misses, merges, erased faint structures "
+        "or unsupported background; a prettier or more uniform image is not acceptance"
+    )
+    DEVELOPMENT_REPAIR_CONTINUATION = (
+        "a rejected development candidate is a preserved comparison checkpoint, not "
+        "a terminal analysis or accepted recipe. Select the next discriminating "
+        "repair from observed raw/intermediate failures, rerun under the existing "
+        "authorization and resource budget, and review a regression control. Stop "
+        "only at the declared budget or a concrete unresolved information, contract, "
+        "permission, or resource boundary; keep reference answers sealed"
+    )
+    AUTONOMY_INTERVENTION_PROVENANCE = (
+        "retain human biological hints, parameter corrections and per-candidate "
+        "coaching as interventions. Assisted development is not an uncoached "
+        "autonomous evaluation. For a fresh blind evaluation freeze the harness "
+        "and skill first, provide the task brief and authorized images without "
+        "worked answers or prior trial conclusions, and include failures and "
+        "abstentions in the evaluation rather than reporting selected successes"
+    )
     SPARSE_DIAGNOSTIC_LOCALIZATION = (
         "for a sparse diagnostic mask, use its viewer-reported exact nonzero bounds "
         "and bounded example coordinates to navigate to evidence before judging a "

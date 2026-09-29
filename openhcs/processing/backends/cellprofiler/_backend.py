@@ -24,6 +24,7 @@ class CellProfilerBackendProvider(str, Enum):
 
     NATIVE = "native"
     NUMBA = "numba"
+    CPP = "cpp"
     CENTROSOME = "centrosome"
     OPENCV = "opencv"
     LEGACY_FAST = "legacy_fast"

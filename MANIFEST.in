@@ -1,4 +1,5 @@
 include scripts/build_mcp_knowledge_assets.py
 include scripts/smoke_installed_mcp.py
+include scripts/smoke_native_granularity_wheel.py
 prune openhcs/omero/plugin/build
 prune openhcs/omero/plugin/omero_openhcs.egg-info

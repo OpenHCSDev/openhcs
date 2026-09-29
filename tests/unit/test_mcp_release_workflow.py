@@ -133,15 +133,41 @@ def test_tag_workflow_publishes_registry_last_after_exact_pypi_signal():
         )
         assert installer_checkout["with"]["submodules"] == "recursive"
 
+    native_wheels = workflow["jobs"]["build-native-wheels"]
+    assert native_wheels["needs"] == "verify-release-commit"
+    assert native_wheels["strategy"]["matrix"]["os"] == [
+        "ubuntu-latest",
+        "windows-latest",
+        "macos-latest",
+    ]
+    native_steps = native_wheels["steps"]
+    native_checkout = next(
+        step for step in native_steps if _uses_action(step, "actions/checkout")
+    )
+    assert native_checkout["with"]["ref"] == (
+        "${{ needs.verify-release-commit.outputs.release_sha }}"
+    )
+    native_build = next(
+        step
+        for step in native_steps
+        if step.get("name") == "Build and smoke-test stable-ABI wheels"
+    )
+    assert native_build["env"]["CIBW_BUILD"] == "cp311-*"
+    assert (
+        "smoke_native_granularity_wheel.py" in native_build["env"]["CIBW_TEST_COMMAND"]
+    )
+
     build_job = workflow["jobs"]["build-and-publish"]
     assert build_job["needs"] == [
         "verify-release-commit",
         "build-windows-installer",
         "build-macos-installer",
+        "build-native-wheels",
     ]
     build_condition = build_job["if"]
     assert "always()" in build_condition
     assert "needs.verify-release-commit.result == 'success'" in build_condition
+    assert "needs.build-native-wheels.result == 'success'" in build_condition
     assert "github.event_name == 'push'" in build_condition
     assert "needs.build-windows-installer.result == 'success'" in build_condition
     assert "needs.build-macos-installer.result == 'success'" in build_condition
