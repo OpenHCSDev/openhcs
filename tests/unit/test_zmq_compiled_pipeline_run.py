@@ -37,7 +37,8 @@ class FakeExecutionClient:
         self.execution_submission = submission
         return {"status": "accepted", "execution_id": "execute-1"}
 
-    def wait_for_completion(self, execution_id):
+    def wait_for_completion(self, execution_id, poll_interval=0.5):
+        assert poll_interval == 0.05
         self.events.append(f"wait:{execution_id}")
         return {
             "status": (
@@ -99,8 +100,8 @@ def test_compiled_pipeline_run_uses_one_document_and_source_owned_phases():
 
 def test_compiled_pipeline_run_owns_completion_result_projection():
     class ClientWithResults(FakeExecutionClient):
-        def wait_for_completion(self, execution_id):
-            response = super().wait_for_completion(execution_id)
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
+            response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
                 response["results"] = {"output_plate_root": "/output/plate"}
             return response
@@ -113,8 +114,8 @@ def test_compiled_pipeline_run_owns_completion_result_projection():
 
 def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
     class ClientWithLegacyResults(FakeExecutionClient):
-        def wait_for_completion(self, execution_id):
-            response = super().wait_for_completion(execution_id)
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
+            response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
                 response["results_summary"] = {"output_plate_root": "/legacy/plate"}
             return response

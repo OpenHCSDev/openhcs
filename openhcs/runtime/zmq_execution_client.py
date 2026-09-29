@@ -83,6 +83,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
+
 
 ZMQScalar: TypeAlias = str | int | float | bool | None
 ZMQValue: TypeAlias = ZMQScalar | Mapping[str, "ZMQValue"] | Sequence["ZMQValue"]
@@ -332,7 +334,10 @@ def run_compiled_pipeline(
         "OpenHCS ZMQ compile submission"
     )
     with phase_scope(ZMQPipelineRunPhase.WAIT_COMPILE):
-        compile_wait_response = client.wait_for_completion(compile_artifact_id)
+        compile_wait_response = client.wait_for_completion(
+            compile_artifact_id,
+            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+        )
     ExecutionWaitResult.from_wire(compile_wait_response).require_complete(
         "OpenHCS ZMQ compilation failed"
     )
@@ -350,7 +355,10 @@ def run_compiled_pipeline(
         "OpenHCS ZMQ execution submission"
     )
     with phase_scope(ZMQPipelineRunPhase.WAIT_EXECUTION):
-        completion_response = client.wait_for_completion(execution_id)
+        completion_response = client.wait_for_completion(
+            execution_id,
+            poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
+        )
         completion_observed_at = time.time()
     ExecutionWaitResult.from_wire(completion_response).require_complete(
         "OpenHCS ZMQ execution failed"
