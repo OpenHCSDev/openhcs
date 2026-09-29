@@ -142,6 +142,7 @@ class ViewerControlField(str, Enum):
     CURRENT_STEP = "current_step"
     AXIS_LABELS = "axis_labels"
     NATIVE_VIEWPORT = "native_viewport"
+    NATIVE_DIMENSIONS = "native_dimensions"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
     PROCESS_LAUNCH = "process_launch"

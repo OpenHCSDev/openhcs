@@ -531,13 +531,13 @@ def test_result_element_coordinate_authority_derives_native_slice_indices() -> N
     assert ViewerResultElementCoordinateAuthority.axis_indices(
         coordinates=coordinates,
         axis_labels=("channel", "z", "y", "x"),
-        displayed_axis_count=2,
+        displayed_axis_indices=(2, 3),
     ) == {"channel": 2, "z": 3}
     assert (
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=(4, 5),
             axis_labels=("y", "x"),
-            displayed_axis_count=2,
+            displayed_axis_indices=(0, 1),
         )
         == {}
     )
@@ -548,7 +548,7 @@ def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> N
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=((2, 3, 4, 4), (2, 4, 4, 6), (2, 3, 6, 6)),
             axis_labels=("channel", "z", "y", "x"),
-            displayed_axis_count=2,
+            displayed_axis_indices=(2, 3),
         )
 
 

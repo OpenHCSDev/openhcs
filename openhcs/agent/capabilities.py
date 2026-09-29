@@ -3058,7 +3058,11 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
     description = (
         "Sets a viewer layer visible or selected, moves zero-based route-local "
         "axis indices, and can select one zero-based data_index on a native "
-        "feature-bearing result layer. The result reports feature_row_count and "
+        "feature-bearing result layer. display_axes selects an ordered semantic "
+        "spatial pair (y/x, z_index/x or z_index/y) for native orthogonal review; "
+        "hide planar Shapes before cross-section changes. The returned "
+        "native_dimensions reports actual orientation, world position and canvas. "
+        "The result reports feature_row_count and "
         "selected_data_indices so agents can verify the visible overlay and "
         "Napari feature-table selection are linked. "
         f"{ViewerNavigationControlOptions.DATA_INDEX_SEMANTICS}."

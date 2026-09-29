@@ -17,6 +17,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 
+from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.runtime_image_values import (
@@ -1257,6 +1258,35 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
                 "Napari projected axis index is outside the route projection: "
                 f"{projected_axis_index}."
             ) from error
+
+    @property
+    def spatial_axis_labels(self) -> tuple[str, ...]:
+        """Spatial review axes, excluding acquisition selectors and payload bands."""
+        return tuple(
+            axis
+            for axis in (AllComponents.Z_INDEX.value, "y", "x")
+            if axis in self.axis_labels
+        )
+
+    def viewer_dimension_indices(self, viewer_ndim: int) -> tuple[int, ...]:
+        """Map aligned layer dimensions into Napari's right-aligned viewer space."""
+        offset = viewer_ndim - len(self.axis_labels)
+        if offset < 0:
+            raise ValueError("Route dimension rank exceeds native viewer rank.")
+        return tuple(range(offset, viewer_ndim))
+
+    def display_order(
+        self, display_axes: tuple[str, str], current_order: tuple[int, ...]
+    ) -> tuple[int, ...]:
+        """Admit a semantic spatial pair and retain all other native axis ordering."""
+        if any(axis not in self.spatial_axis_labels for axis in display_axes):
+            raise ValueError(
+                f"Route {self.route_key!r} display_axes must select spatial axes "
+                f"from {self.spatial_axis_labels!r}, got {display_axes!r}."
+            )
+        dimensions = self.viewer_dimension_indices(len(current_order))
+        pair = tuple(dimensions[self.axis_labels.index(axis)] for axis in display_axes)
+        return tuple(axis for axis in current_order if axis not in pair) + pair
 
     def axis_offset(self, display_axis_index: int) -> int:
         """Return a route offset in shared display-axis coordinates."""
