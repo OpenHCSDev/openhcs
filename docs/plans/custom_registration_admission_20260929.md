@@ -2,7 +2,10 @@
 
 Implementation owner: Lovelace; integration/live scheduling owner: coordinator.
 Source tree: `/home/ts/wt/openhcs-custom-function-admission-20260929`.
-Base: current `openhcsdev/main` 6c2bc4671, integrated normally.
+Initial base: `openhcsdev/main` 6c2bc4671. Subsequent normal integration of
+main250fd1ecf (#234) is merge5899d6323; recorded PolyStore1209068 is checked out
+only in this worker's isolated submodule. Implementation commits625e82fce and
+4ffc2b202 precede that merge. No frozen installed source is edited.
 
 ## Verified boundary and checkpoint
 
@@ -47,7 +50,7 @@ field exclusion. `git diff --check` and new-test Ruff checks pass. Whole touched
 source Ruff is not claimed clean: existing unrelated findings remain.
 
 Follow-up evidence: **94 tests passed, two plugin-disabled configuration warnings,
-10.17 seconds, peak RSS 322984 KiB**. This runs the new admission file, existing
+10.41 seconds, peak RSS 323352 KiB**. This runs the new admission file, existing
 custom-function lifecycle and function-catalog ZMQ suites, and three affected
 MCP/CLI regressions. It adds native ordinary/ancestor/file-symlink denial with
 unchanged registry membership and sentinel bytes, PID-incarnation rejection,
@@ -76,6 +79,63 @@ Owned disposable fixtures:
 `/home/ts/.cache/agent-scratch/openhcs-registration-230-20260929/pytest`.
 No MCP/JVM/GUI handle was started. Tests are source evidence, not installed or
 live acceptance, and the frozen installed 17/228 tree remains untouched.
+
+Following #234 integration, isolated source environments explicitly pin
+`POLYSTORE_IMAGEJ_CACHE_ROOT=/home/ts/.cache/polystore/imagej` and
+`POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false` before imports. This is not a request
+to download, copy or launch a bundle; no native runtime is started by these
+admission tests.
+
+At merge5899d6323, with recorded PolyStore1209068 and the explicit cache policy,
+the post-integration check runs only the22 admission cases plus the real native
+control-router destination case: **23 passed, 6.18 seconds, peak287876 KiB**.
+OpenHCS and PolyStore import paths resolve inside this isolated tree. AST parsing
+of all15 changed Python source/test files passes; this is a focused source check,
+not a full NRA scan or a global proof.
+
+Source commands used the shared Python executable, explicit worktree/submodule
+PYTHONPATH, `OPENHCS_CPU_ONLY=true`, `PYTHONDONTWRITEBYTECODE=1`, and
+`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. Import OpenHCS before `pytest.main`; pass
+`--noconftest --import-mode=importlib -p no:cacheprovider -o addopts= -q --tb=short`
+and a basetemp below the owned scratch directory. The94-test selectors were:
+
+```text
+tests/unit/agent/test_custom_registration_admission.py
+tests/unit/test_custom_function_lifecycle.py
+tests/unit/test_function_catalog_zmq.py
+tests/unit/agent/test_mcp_server.py::test_mcp_register_custom_function_delegates_to_function_catalog_service
+tests/unit/agent/test_mcp_server.py::test_mcp_dev_client_function_commands_project_tool_arguments
+tests/unit/agent/test_mcp_server.py::test_mcp_dev_client_register_custom_function_renders_next_steps
+```
+
+All lightweight check handles are terminal; this worker has never acquired a
+heavy runtime slot for230. No optional hosted CI is blocking the checkpoint.
+
+## Changed paths
+
+Production:
+
+- `openhcs/agent/capabilities.py`
+- `openhcs/agent/dto/functions.py`
+- `openhcs/agent/services/endpoint_function_catalog_service.py`
+- `openhcs/agent/services/function_catalog_service.py`
+- `openhcs/core/xdg_paths.py`
+- `openhcs/mcp/context.py`
+- `openhcs/mcp/dev_client_commands/knowledge_pipeline.py`
+- `openhcs/processing/custom_functions/manager.py`
+- `openhcs/runtime/zmq_control.py`
+- `openhcs/runtime/zmq_execution_client.py`
+
+Tests:
+
+- `tests/unit/agent/test_custom_registration_admission.py`
+- `tests/unit/agent/test_mcp_server.py`
+- `tests/unit/test_custom_function_lifecycle.py`
+- `tests/unit/test_function_catalog_zmq.py`
+- `tests/unit/test_function_step_transport.py` (fixture projection only; module
+  collection blocked as recorded above)
+
+Receipt/body: `docs/plans/custom_registration_admission_20260929.md`.
 
 ## Actual pattern review (focused source, not a full NRA proof)
 
