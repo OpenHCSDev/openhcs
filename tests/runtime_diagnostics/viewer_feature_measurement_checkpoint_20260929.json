@@ -1,0 +1,45 @@
+{
+  "owner": "viewer-feature-measurement implementation agent",
+  "branch": "feat/viewer-feature-measurement-20260929",
+  "base": "de23449a42f89a9aaa13218090ef3fb8c26d46a1",
+  "guide_merge": "e6b26458b (normal merge, fast-forward)",
+  "issue": "https://github.com/OpenHCSDev/openhcs/issues/221",
+  "guide_pr": "https://github.com/OpenHCSDev/openhcs/pull/223",
+  "source_validation": {
+    "interpreter": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "import_root": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929",
+    "command": "python -m pytest --noconftest -p no:pytestqt -q tests/unit/test_viewer_feature_measurement.py tests/unit/test_native_viewer_presentation.py tests/unit/test_viewer_protocol.py",
+    "native_threads": 1,
+    "processes": 1,
+    "timeout_seconds": 60,
+    "passed": 94,
+    "elapsed_seconds": 9.03,
+    "live_viewer_or_mcp_started": false
+  },
+  "nra": {
+    "context": "full worktree, focused owner paths",
+    "status": "incomplete; contextual_global_prepare:closed_parameter_conveyor budget20 exceeded; outer165s timeout",
+    "proof_claim": "none; incomplete scan is not a clean audit",
+    "manual_owner_review": "existing registered NapariControlMessageAction/MountedRoute family, viewer_controls records, service DTO/capabilities and automatic MCP projection; no second registry or kind dispatch"
+  },
+  "repairs": [
+    "Additional unfiltered legacy streaming shard aborted when a mocked entrypoint constructed a real orthogonal QWidget without a real QApplication (exit134); retained failure log. No real viewer or MCP was launched.",
+    "Protocol enum was initially placed in the field enum; collection failure fixed in the application message enum.",
+    "profile_line constant mode with NaN cval polluted valid edge samples; corrected to cval0 after whole-footprint admission, with explicit convention.",
+    "Measurement DTO alias VerticesYX was absent from its declaration module; serialization boundary repaired and covered.",
+    "Resource guard returns2 for swap-only warning; bounded source checks admit only an explicitly checked swap-only warning with RAM>=8GiB, not arbitrary guard failures."
+  ],
+  "pending_acceptance": [
+    "Focused intensity selector regressions:8passed/1failed (expected legacy error wording differs from promoted selector wording); implementation agent owns reproducer, no production edit under the fresh source-review assignment.",
+    "Parent-released isolated live runtime slot; no live MCP/viewer/JVM until assigned.",
+    "Source-pinned installed-interpreter real synthetic fixture streaming, actual MCP measurements and author-opened bitmap captures.",
+    "Parent integration/lifecycle review; no lifecycle changes in this feature checkpoint.",
+    "Fresh installed user-entrypoint acceptance after integration, without changing frozen biological harness."
+  ],
+  "owned_scratch": {
+    "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_feature_measurement",
+    "purpose": "bounded source-test logs, incomplete NRA receipt and disposable cache",
+    "policy": "retain logs/receipts; dispose only owned cache after source checks; no large builds or bootstraps"
+  },
+  "frozen_scientific_output": "untouched; no biological strategy or tuning advice in this assignment"
+}

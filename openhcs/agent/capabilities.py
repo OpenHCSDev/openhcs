@@ -162,6 +162,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
+    ViewerWindowPolylineMeasurementRequest,
+    ViewerWindowPolylineMeasurementResult,
+    ViewerWindowRegionMeasurementRequest,
+    ViewerWindowRegionMeasurementResult,
     ViewerEndpointDiscoveryResult,
     ViewerWindowCloseRequest,
     ViewerWindowImageIntensityRequest,
@@ -2966,6 +2970,59 @@ class GetViewerWindowPayloadsCapability(ViewerWindowCliConnectionCapability):
     request_invocation = AgentViewerWindowRequestServiceInvocation(
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.window_payloads(request),
+    )
+
+
+class MeasureViewerPolylineCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_polyline"
+    kind = CapabilityKind.TOOL
+    title = "Measure native viewer polyline and intensity profile"
+    description = (
+        "Read-only bounded source-native (y,x) ruler/polyline with exact route and route-local axis_indices. "
+        "Returns data/pixel length versus chord, transformed world geometry and endpoint-inclusive raw intensity "
+        "profile. line_width uses a centred perpendicular band reduced by mean; interpolation_order0 nearest/1 bilinear. "
+        "Requires one scalar2D original plane; rejects ambiguous/sparse-padding/OOB geometry before interpolation. "
+        "Does not alter pixels, contrast, layers, axes or camera; world scale/units are not verified physical calibration."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_profile",
+    )
+    input_contract = ViewerWindowPolylineMeasurementRequest
+    output_contract = ViewerWindowPolylineMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_polyline(request),
+    )
+
+
+class MeasureViewerRegionCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_region"
+    kind = CapabilityKind.TOOL
+    title = "Measure independent native region and background support"
+    description = (
+        "Read-only bounded independent simple polygon on one exact scalar2D original image route/axis coordinate. "
+        "Returns continuous polygon and raster pixel-centre area/extent/roundness, actual transformed world geometry, "
+        "raw intensity statistics and optional separately authored non-overlapping background polygon. "
+        "Support is raw value strictly greater than support_threshold, or background mean + background_sigma*population std. "
+        "This region is NOT a biological mask; world scale1 is not proof of micrometres. "
+        "Rejects nonfinite, ambiguous, invalid axes, padding/OOB or pixel/work-budget excess before allocating masks."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_statistics",
+    )
+    input_contract = ViewerWindowRegionMeasurementRequest
+    output_contract = ViewerWindowRegionMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_region(request),
     )
 
 

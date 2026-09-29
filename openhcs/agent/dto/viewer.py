@@ -15,6 +15,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureSpec,
 )
 from python_introspect import dataclass_from_mapping
+from pydantic import StrictFloat, StrictInt
 from zmqruntime.viewer_protocol import (
     ViewerImageIntensityControlOptions,
     ViewerNativeImageIntensityPresentation,
@@ -40,6 +41,11 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_controls import (
+    ViewerMeasurementCoordinates,
+    ViewerPolylineMeasurement,
+    ViewerRegionMeasurement,
+    ViewerPolylineControlOptions,
+    ViewerRegionControlOptions,
     ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
@@ -498,6 +504,86 @@ class ViewerWindowIntensityWindowRequest(ViewerWindowControlRequest):
             }
         )
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowPolylineMeasurementRequest(ViewerWindowControlRequest):
+    measurement: ViewerPolylineControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        route_key: str,
+        vertices_yx: list[tuple[StrictFloat, StrictFloat]],
+        axis_indices: dict[str, StrictInt],
+        line_width: StrictInt = 1,
+        interpolation_order: StrictInt = 1,
+        max_samples: StrictInt = 4096,
+        max_pixels: StrictInt = 262144,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        ViewerPolylineControlOptions.validate_vertices(vertices_yx, 2)
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            measurement=ViewerPolylineControlOptions(
+                route_key=route_key,
+                vertices_yx=tuple(tuple(v) for v in vertices_yx),
+                axis_indices=dict(axis_indices),
+                line_width=line_width,
+                interpolation_order=interpolation_order,
+                max_samples=max_samples,
+                max_pixels=max_pixels,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.measurement)}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRegionMeasurementRequest(ViewerWindowControlRequest):
+    measurement: ViewerRegionControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        route_key: str,
+        vertices_yx: list[tuple[StrictFloat, StrictFloat]],
+        axis_indices: dict[str, StrictInt],
+        background_vertices_yx: list[tuple[StrictFloat, StrictFloat]] | None = None,
+        support_threshold: StrictFloat | None = None,
+        background_sigma: StrictFloat = 2.0,
+        max_pixels: StrictInt = 262144,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        ViewerRegionControlOptions.validate_vertices(vertices_yx, 3)
+        if background_vertices_yx is not None:
+            ViewerRegionControlOptions.validate_vertices(background_vertices_yx, 3)
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            measurement=ViewerRegionControlOptions(
+                route_key=route_key,
+                vertices_yx=tuple(tuple(v) for v in vertices_yx),
+                axis_indices=dict(axis_indices),
+                background_vertices_yx=(
+                    tuple(tuple(v) for v in background_vertices_yx)
+                    if background_vertices_yx is not None
+                    else None
+                ),
+                support_threshold=support_threshold,
+                background_sigma=background_sigma,
+                max_pixels=max_pixels,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.measurement)}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1048,6 +1134,30 @@ class ViewerWindowPayloadResult(
     layer_count: int = 0
     layers: tuple[ViewerWindowLayerPayloads, ...] = ()
     response: JsonObject = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowPolylineMeasurementResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    registry_key: ClassVar[str] = "polyline_measurement"
+    observed: bool
+    measurement: ViewerPolylineMeasurement | None = None
+    coordinates: ViewerMeasurementCoordinates | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowRegionMeasurementResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    registry_key: ClassVar[str] = "region_measurement"
+    observed: bool
+    measurement: ViewerRegionMeasurement | None = None
+    coordinates: ViewerMeasurementCoordinates | None = None
 
 
 @dataclass(frozen=True, slots=True)

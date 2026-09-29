@@ -151,6 +151,39 @@ def test_cpu_only_inventory_resolves_memory_decorator_import_aliases() -> None:
     )
 
 
+def test_cpu_only_inventory_rejects_compiled_extension_source() -> None:
+    """A native implementation has no Python memory decorators to admit."""
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_declares_allowed_memory_type,
+    )
+
+    assert not _module_declares_allowed_memory_type(
+        "openhcs.processing.backends.cellprofiler._granularity_reconstruct",
+        frozenset({"numpy"}),
+    )
+
+
+def test_cpu_only_inventory_honors_python_source_encoding(
+    tmp_path, monkeypatch
+) -> None:
+    """The module loader owns decoding, including Python coding declarations."""
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_declares_allowed_memory_type,
+    )
+
+    (tmp_path / "encoded_probe.py").write_bytes(
+        "# coding: latin-1\n"
+        "# caf\u00e9\n"
+        "from openhcs.core.memory import numpy\n"
+        "@numpy\ndef process(image):\n    return image\n".encode("latin-1")
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+
+    assert _module_declares_allowed_memory_type("encoded_probe", frozenset({"numpy"}))
+
+
 def test_cpu_only_decorator_resolution_honors_plain_dotted_imports() -> None:
     """Python's top-level binding for a dotted import remains resolvable."""
 
