@@ -2073,7 +2073,10 @@ class QueryPlateFilesCapability(PlatePathCapability):
         "Read-only query of image/result file records exposed "
         "by a local plate inventory. Returns virtual image names, source "
         "paths, result artifact paths, and metadata from the same inventory "
-        "API used by the Image Browser."
+        "API used by the Image Browser. For retained outputs outside the standard "
+        "plate layout, pass result_directory with kind='result'. This inspects "
+        "persisted files and bounded native previews without microscope detection "
+        "or inferred acquisition identity; it does not attest writer success."
     )
     service = "plate_inspection"
     data_exposure = (
@@ -2129,8 +2132,13 @@ class StreamPlateFilesToViewerCapability(PlatePathCapability):
         "Resolves image or ROI result records by virtual path, source path, "
         "result path, basename, or bounded inventory query, then streams them "
         "to a managed viewer through the same core service used by the Image Browser."
+        " Set result_directory to reopen retained native results independently of "
+        "their output location; plate_path supplies the original source context. "
+        "ROI reopening requires persisted source metadata, not filename guesses."
     )
     service = "plate_streaming"
+    mutating = True
+    side_effects = ("launches_or_updates_managed_viewer",)
     data_exposure = (
         "local_plate_path",
         "plate_virtual_image_path",

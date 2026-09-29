@@ -62,6 +62,14 @@ class FakeInspectionService:
         self.inventory_kinds.append(kind)
         return self.inventory, ()
 
+    def resolve_readable_path(self, path):
+        self.resolve_requests.append(path)
+        return Path(path)
+
+    def result_directory_inventory(self, path):
+        assert path == self.inventory.plate_path
+        return self.inventory
+
 
 class FakeViewer:
     port = 5565
@@ -617,8 +625,74 @@ def test_plate_streaming_service_uses_context_plate_for_output_roi_stream(monkey
     assert inspection_service.inventory_contexts[0].plate_path == Path("/plate_openhcs")
     assert inspection_service.inventory_kinds == [None]
     assert captured == {
-        "stream_plate_path": Path("/plate_openhcs"),
+        "stream_plate_path": Path("/plate"),
         "roi_filenames": (roi_full_path,),
         "component_metadata_by_path": {},
     }
     assert result.status_messages == ("streamed output rois",)
+
+
+def test_explicit_result_route_keeps_source_context_and_requires_native_binding(
+    monkeypatch,
+):
+    path = "/retained/misleading_A01_w2.roi.zip"
+    inventory = PlateFileInventory(
+        plate_path=Path("/retained"),
+        image_records=(),
+        result_records=(
+            PlateResultFileRecord(
+                relative_path="misleading_A01_w2.roi.zip",
+                full_path=path,
+                file_format=FileFormat.ROI,
+                metadata={},
+            ),
+        ),
+    )
+    inspection = FakeInspectionService(inventory)
+    captured = {}
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: FakeViewer(),
+    )
+
+    def capture(self, request):
+        captured["source"] = self.source.plate_path
+        captured["request"] = request
+
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingService.stream_rois",
+        capture,
+    )
+    request = PlateFileStreamRequest.from_fields(
+        plate_path="/actual_source",
+        result_directory="/retained",
+        kind="result",
+        file_paths=["misleading_A01_w2.roi.zip"],
+    )
+    assert request.as_tool_arguments()["result_directory"] == "/retained"
+    result = plate_streaming_service(inspection).stream_files(request)
+    assert result.errors == ()
+    assert inspection.inventory_contexts == []
+    assert captured["source"] == Path("/actual_source")
+    assert captured["request"].require_source_metadata is True
+    assert captured["request"].roi_filenames == (path,)
+
+
+def test_explicit_result_route_rejects_acquisition_selection_before_launch(monkeypatch):
+    import pytest
+
+    inspection = FakeInspectionService(PlateFileInventory(Path("/retained"), (), ()))
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: pytest.fail("Invalid selection must not launch a viewer"),
+    )
+    result = plate_streaming_service(inspection).stream_files(
+        PlateFileStreamRequest.from_fields(
+            plate_path="/actual_source",
+            result_directory="/retained",
+            kind="result",
+            well="A01",
+        )
+    )
+    assert result.errors
+    assert "no acquisition-component filter" in result.errors[0].message

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.roi import ROI, PointShape
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -30,10 +31,14 @@ from openhcs.core.config import (
     StreamingConfig,
     get_all_streaming_ports,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+)
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import SourceArtifactProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -316,6 +321,67 @@ def test_stream_images_uses_resolved_config_backend_not_viewer_name(
         "invocation_key": None,
         "artifact_kind": None,
     }
+
+
+@pytest.mark.parametrize(
+    "config", (FijiStreamingConfig(enabled=True), NapariStreamingConfig(enabled=True))
+)
+@pytest.mark.parametrize(
+    "spacing",
+    (
+        SourceVoxelSpacing(),
+        SourceVoxelSpacing((2.0, 0.4, 0.7)),
+        SourceVoxelSpacing((1.0, 2.0), SourceVoxelSpacingUnit.RELATIVE),
+    ),
+)
+def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing(
+    config,
+    spacing,
+) -> None:
+    pixels = np.arange(20, dtype=np.uint16).reshape(4, 5)
+
+    class CalibratedFileManager(FakeFileManager):
+        def load(self, path, read_backend):
+            return ImagePayloadMetadata(source_voxel_spacing=spacing).payload_with(
+                pixels
+            )
+
+    class CalibratedMetadataHandler(FakeMetadataHandler):
+        def get_pixel_size(self, plate_path):
+            if spacing.has_values:
+                raise AssertionError("Native calibration must not query plate defaults")
+            return super().get_pixel_size(plate_path)
+
+    filemanager = CalibratedFileManager()
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(
+                parse_filename=lambda _name: filename_parse_result()
+            ),
+            metadata_handler=CalibratedMetadataHandler(),
+        ),
+        plate_path=Path("/plate"),
+    )
+    result = service.stream_images(
+        ImageStreamingRequest(
+            viewer=FakeViewer(),
+            config=config,
+            status_callback=lambda _message: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=("A01/img.tif",),
+            read_backend="disk",
+        )
+    )
+    assert result.streamed_count == 1
+    data, _paths, _backend, metadata = filemanager.saved_batches[0]
+    expected = spacing if spacing.has_values else SourceVoxelSpacing((1.3556, 1.3556))
+    np.testing.assert_array_equal(image_payload_data(data[0]), pixels)
+    stream_request = metadata[ViewerStreamKwarg.STREAM_REQUEST.value]
+    wire_metadata = ImagePayloadMetadata.from_viewer_image_metadata(
+        stream_request.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
+    )
+    assert wire_metadata.source_voxel_spacing == expected
 
 
 def test_manual_image_projection_identity_separates_independent_selections() -> None:
@@ -676,7 +742,7 @@ def test_stream_rois_supplies_per_path_component_metadata_from_artifact_name(
     )
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -731,7 +797,7 @@ def test_stream_rois_supplies_per_path_component_metadata_from_artifact_name(
 def test_stream_rois_uses_explicit_component_metadata(monkeypatch) -> None:
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -786,10 +852,108 @@ def test_stream_rois_uses_explicit_component_metadata(monkeypatch) -> None:
     assert image_metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
 
 
+@pytest.mark.parametrize("config_type", [FijiStreamingConfig, NapariStreamingConfig])
+def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
+    tmp_path, config_type, monkeypatch
+):
+    from polystore.disk import DiskStorageBackend
+
+    paths = []
+    metadata_items = []
+    for channel, spacing in [(3, (0.65, 0.65)), (4, (2.0, 0.8, 0.8))]:
+        metadata = ImagePayloadMetadata(
+            source_path=f"/actual/source/channel-{channel}.tif",
+            source_component_metadata={
+                "well": "B02",
+                "site": 1,
+                "channel": channel,
+                "z_index": 7,
+                "timepoint": 1,
+            },
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(10, 20), source_shape_yx=(100, 200)
+            ),
+            source_voxel_spacing=SourceVoxelSpacing(spacing),
+        )
+        path = tmp_path / f"misleading_A01_w{channel}.roi.zip"
+        DiskStorageBackend().save(
+            ROIArchiveSourceMetadata.bind(
+                [ROI([PointShape(32.25, 40.5)], {"label": channel})], metadata
+            ),
+            path,
+        )
+        paths.append(str(path))
+        metadata_items.append(metadata)
+    filemanager = FakeFileManager()
+    metadata_handler = FakeMetadataHandler()
+    monkeypatch.setattr(
+        metadata_handler,
+        "get_pixel_size",
+        lambda _path: pytest.fail("Native explicit spacing must not be replaced"),
+    )
+    handler = SimpleNamespace(
+        parser=SimpleNamespace(
+            parse_filename=lambda _filename: pytest.fail(
+                "Native metadata must not use a filename guess"
+            )
+        ),
+        metadata_handler=metadata_handler,
+    )
+    result = StreamingService(filemanager, handler, Path("/actual/source")).stream_rois(
+        RoiStreamingRequest(
+            viewer=FakeViewer(),
+            config=config_type(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: pytest.fail(error),
+            roi_filenames=tuple(paths),
+            require_source_metadata=True,
+        )
+    )
+    assert result.streamed_paths == tuple(paths)
+    assert len(filemanager.saved_batches) == 2
+    for (data, batch_paths, _backend, kwargs), expected in zip(
+        filemanager.saved_batches, metadata_items, strict=True
+    ):
+        stream = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+        metadata = ImagePayloadMetadata.from_viewer_image_metadata(
+            stream.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
+        )
+        assert metadata.source_voxel_spacing == expected.source_voxel_spacing
+        assert metadata.source_spatial_domain == expected.source_spatial_domain
+        assert (
+            stream.source.metadata.metadata_by_path[batch_paths[0]]
+            == expected.source_component_metadata
+        )
+        assert data[0][0].metadata == {
+            "label": expected.source_component_metadata["channel"]
+        }
+        assert data[0][0].shapes == [PointShape(32.25, 40.5)]
+
+
+def test_explicit_native_reopening_rejects_an_external_roi_without_source(tmp_path):
+    from polystore.disk import DiskStorageBackend
+
+    path = tmp_path / "A01_s001_w1_z001_t001.roi.zip"
+    DiskStorageBackend().save([ROI([PointShape(1, 2)], {"label": 1})], path)
+    filemanager = FakeFileManager()
+    with pytest.raises(ValueError, match="Native ROI source metadata is required"):
+        StreamingService(filemanager, SimpleNamespace(), tmp_path).stream_rois(
+            RoiStreamingRequest(
+                viewer=FakeViewer(),
+                config=NapariStreamingConfig(enabled=True),
+                status_callback=lambda _status: None,
+                error_callback=lambda error: pytest.fail(error),
+                roi_filenames=(str(path),),
+                require_source_metadata=True,
+            )
+        )
+    assert filemanager.saved_batches == []
+
+
 def test_stream_rois_preserves_per_artifact_producer_identities(monkeypatch) -> None:
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda _path: [object()],
+        lambda _path: [ROI(shapes=[PointShape(1, 2)])],
     )
     filemanager = FakeFileManager()
     config = FijiStreamingConfig(enabled=True)
@@ -845,7 +1009,11 @@ def test_stream_rois_keeps_producer_identity_aligned_when_archive_is_empty(
     )
     monkeypatch.setattr(
         "polystore.roi.load_rois_from_zip",
-        lambda path: [] if str(path).endswith("A01_empty.roi.zip") else [object()],
+        lambda path: (
+            []
+            if str(path).endswith("A01_empty.roi.zip")
+            else [ROI(shapes=[PointShape(1, 2)])]
+        ),
     )
     filemanager = FakeFileManager()
     producer_identities = tuple(

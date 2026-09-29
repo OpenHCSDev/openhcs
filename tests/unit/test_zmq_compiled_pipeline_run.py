@@ -166,6 +166,7 @@ def test_auxiliary_observation_request_is_shared_by_client_and_server():
     assert execution.config_params == {
         "unrelated": "kept",
         "runtime_observation_export_path": str(path),
+        "runtime_observation_export_scope": "values",
     }
     assert (
         ZMQAuxiliaryExecutionParams.from_transport(
