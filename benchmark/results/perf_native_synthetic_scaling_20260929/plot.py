@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parent
 def _native_seconds(case: str, wells: int) -> float:
     report = json.loads((ROOT / f"{case}_{wells}w_summary.json").read_text())
     assert report["case"] == case and report["wells"] == wells
+    assert report["native_jobs"] == (1 if wells == 1 else 4)
+    assert report["total_image_sets"] == 2 * wells
     (timing,) = (row for row in report["timing"] if row["repetition"] == 0)
     return float(timing["invocation_through_completion_makespan_seconds"])
 
