@@ -15,7 +15,7 @@ from openhcs.core.runtime_tabular_values import (
 
 
 class ObjectMeasurementColumnarRows(ColumnarRows, ABC):
-    """Columnar object measurement rows with row-object iteration compatibility."""
+    """Object measurement columns spanning their declared label domain."""
 
     slice_index: int | None
 
@@ -26,6 +26,17 @@ class ObjectMeasurementColumnarRows(ColumnarRows, ABC):
 
     def __len__(self) -> int:
         return self.row_count()
+
+
+class WideObjectMeasurementColumnarRows(ObjectMeasurementColumnarRows, ABC):
+    """One object row with a named column for each measured feature."""
+
+    def __iter__(self):
+        yield from self.iter_row_mappings()
+
+
+class LongObjectMeasurementColumnarRows(ObjectMeasurementColumnarRows, ABC):
+    """One object/feature/value row per measured feature."""
 
     def __iter__(self):
         row_type = (
