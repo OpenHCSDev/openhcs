@@ -36,9 +36,19 @@ and the strict `native-probe` early-rejection path. Because setuptools differs,
 that strict probe correctly returned failure before Java startup.
 
 The full Java lifecycle receipts above belong to the earlier source hashes,
-not the nominal-command replacement. Further JVM verification is deferred while
-Euler owns H003/shared validation priority. No new JVM/GUI/heavy test was started
+not the nominal-command replacement. Further JVM verification is deferred until
+the coordinator hands off the serialized slot; Confucius currently owns it.
+No new JVM/GUI/heavy test was started
 after the resource checkpoint. There is no current-version live readiness claim.
+
+The independent review of `038b5a3ec` identified a real MI membership defect:
+discovery counted inheritance paths, registering a diamond command twice and
+constructing a duplicate stage after its pins were consumed. The shared traversal
+now visits each class once in deterministic first-encounter depth-first order.
+Two real diamond regressions fail on the old traversal and pass on the new one;
+the full focused suite passes 53 tests in 0.36 s. Actual Python 3.9.25 exercises
+MI parser/main dispatch and stage construction without native imports. See the
+ownership receipt for pattern IDs, red/green evidence and scope limitations.
 
 The live host reported 12.5–12.9 GiB available RAM at the validation guards.
 Resource checks warned about already-used swap; headroom checks passed. The
@@ -89,7 +99,7 @@ or a fresh dependency closure succeeds.
 ## Outstanding acceptance
 
 Owner approval has now been granted for the bounded fresh environment, after
-Euler releases shared validation: no more than 4 GiB owned disposable output,
+the coordinator's explicit shared-slot handoff: no more than 4 GiB owned disposable output,
 only the two declared native builds, and no JDK/interpreter download. Earlier
 coordinator messages did not grant it; the newer owner instruction does. See the
 [authorized run plan](cellprofiler_headless_fresh_acceptance_20260929.md). Leave

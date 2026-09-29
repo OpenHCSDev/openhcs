@@ -103,7 +103,70 @@ actual Python 3.9 `python-identity`/strict `native-probe` entrypoints passed.
 
 Earlier source-hashed receipts prove real Java/Pipeline/shutdown in the existing
 oracle, with setuptools 69.5.1 drift. They do not certify the nominal-command
-revision. Its next full native lifecycle check waits for Euler to release shared
-validation. Fresh creation is now owner-authorized within the 4 GiB owned-output
+revision. Its next full native lifecycle check waits for the coordinator's explicit
+slot handoff; Confucius owns the current heavy validation slot and the installed
+package/skill is frozen. Fresh creation is owner-authorized within the 4 GiB owned-output
 budget; it does not require another approval request. #138 stays
 open; no merge/install/current-version live-readiness claim is made.
+
+## MI identity correction from independent review
+
+Review: https://github.com/OpenHCSDev/openhcs/pull/207#issuecomment-5897134579.
+Reviewed head: `038b5a3ece46ec6898e988be382db4aa0f026258`. Current main
+`283b21275553c54261cf9aeedb7374c113d07f2b` was fetched and merged normally as
+`3d387981b86d0bd011b220ed185fe292bbb129c6` before this correction.
+
+The earlier focused AST guard was not sufficient to prove declaration identity:
+it reports zero for the reviewed head even though the real diamond extension
+fails. This is a MEMB-1 membership projection defect, with IDEN-6's wrong-identity
+concern: inheritance paths were treated as members rather than class declarations.
+Both `Command.parser()` and `install_stages()` consumed that same projection.
+
+The actual script reproduced two occurrences of a concrete command inherited
+through two abstract roles. Parser creation raised `conflicting subparser:
+combined`. The equivalent stage was constructed twice, with pin counts `[1, 0]`.
+Both new diamond regression tests failed before the traversal correction
+(2 failed, 51 deselected, 0.25 s).
+
+`concrete_descendants()` now owns a traversal-local visited-class set and an
+explicit depth-first stack. Reversing subclass insertion when pushing retains
+the previous first-encounter declaration order. Every class, including abstract
+parents, is visited once; only concrete declarations are yielded. The set is
+discarded after traversal, not a registration store or a hand-maintained family
+roster. No MI restriction, caller-side deduplication, command/stage dispatcher,
+or parallel traversal remains. The old recursive path enumeration is deleted
+in place. Command behavior/options and stage selection/order/build policy remain
+on their existing owners.
+
+Executed new-case evidence:
+
+- `test_diamond_command_is_registered_once_in_declaration_order` composes two
+  abstract command roles in one concrete dataclass declaration, then exercises
+  the real parser, constructor lookup and `main` behavior. An additional sibling
+  confirms first-encounter order and repeated discovery is stable. Abstract
+  roles do not become commands.
+- `test_diamond_stage_is_constructed_once_in_declaration_order` composes two
+  abstract stage parents and verifies exactly one constructed stage with its
+  owned pin. An equal-priority sibling exercises deterministic stable sorting;
+  every real constraint pin plus both extension pins is consumed exactly once.
+- Both extensions require only their declarations, with no parser, planner or
+  roster edit. Stage policy is not moved into a central classifier.
+
+The first full-suite rerun exposed a test-fixture omission: the new executable
+command was not decorated as a dataclass, unlike the production command leaves.
+The fixture was corrected, not supported by a production fallback. The final
+focused suite passed **53 tests in 0.36 s**, with the same two unrelated disabled
+async-plugin configuration warnings. The prescribed project Python imported both
+bootstrap and audit modules from this isolated worktree; no OpenHCS import was
+needed. `PYTHONPATH` included this tree and all eight recorded external source
+directories, and `--confcutdir=tests/unit` avoided global runtime fixtures.
+
+The current focused source/AST guard still reports zero; its historical
+`cfda8f330` run reports 13 actual replaced witnesses (expected exit 1). The
+diamond behavioral checks cover the identity defect that this structural guard
+does not detect. Both changed Python files parse with Python 3.9 AST rules.
+Actual Python 3.9.25 ran `python-identity`, MI parser/main dispatch and MI stage
+construction successfully with `-I -B`, without OpenHCS, CellProfiler or
+javabridge imports. These checks do not start Java or certify native acceptance.
+No environment creation, package installation, native build, MCP, GUI, JVM,
+installed source or managed skill change occurred.

@@ -30,11 +30,17 @@ PROBE_PREFIX = "OPENHCS_NATIVE_RECEIPT="
 
 
 def concrete_descendants(owner):
-    """Project stdlib ABC declarations, without a second registration store."""
-    for member in owner.__subclasses__():
+    """Yield unique concrete declarations in first-encounter depth-first order."""
+    visited = {owner}
+    pending = list(reversed(owner.__subclasses__()))
+    while pending:
+        member = pending.pop()
+        if member in visited:
+            continue
+        visited.add(member)
         if not isabstract(member):
             yield member
-        yield from concrete_descendants(member)
+        pending.extend(reversed(member.__subclasses__()))
 
 
 def decode_json_value(annotation, value):

@@ -502,6 +502,75 @@ def test_new_stage_is_selected_from_its_declaration_without_a_classifier_edit():
     )
 
 
+def test_diamond_command_is_registered_once_in_declaration_order(capsys):
+    class ReadRole(bootstrap.Command):
+        pass
+
+    class WriteRole(bootstrap.Command):
+        pass
+
+    @dataclass(frozen=True)
+    class CombinedCommand(ReadRole, WriteRole):
+        def execute(self):
+            print("combined executed")
+            return 23
+
+    @dataclass(frozen=True)
+    class FollowingCommand(ReadRole):
+        def execute(self):
+            return 0
+
+    declarations = tuple(bootstrap.concrete_descendants(bootstrap.Command))
+    assert declarations.count(CombinedCommand) == 1
+    assert ReadRole not in declarations and WriteRole not in declarations
+    assert declarations.index(CombinedCommand) < declarations.index(FollowingCommand)
+    assert tuple(bootstrap.concrete_descendants(bootstrap.Command)) == declarations
+    name = CombinedCommand.cli_name()
+    namespace = bootstrap.Command.parser().parse_args([name])
+    assert namespace.command_type is CombinedCommand
+    assert bootstrap.main([name]) == 23
+    assert "combined executed" in capsys.readouterr().out
+
+
+def test_diamond_stage_is_constructed_once_in_declaration_order():
+    class LeftStage(bootstrap.InstallStage):
+        pass
+
+    class RightStage(bootstrap.InstallStage):
+        pass
+
+    class CombinedStage(LeftStage, RightStage):
+        order = 15
+
+        @classmethod
+        def selects(cls, pin):
+            return pin.normalized_name == "combined-package"
+
+    class FollowingStage(LeftStage):
+        order = 15
+
+        @classmethod
+        def selects(cls, pin):
+            return pin.normalized_name == "following-package"
+
+    combined_pin = bootstrap.PackagePin("combined-package", "1.0")
+    following_pin = bootstrap.PackagePin("following-package", "2.0")
+    pins = (*bootstrap.read_pins(), combined_pin, following_pin)
+    stages = bootstrap.install_stages(pins)
+    combined = [stage for stage in stages if type(stage) is CombinedStage]
+    assert len(combined) == 1
+    assert combined[0].pins == (combined_pin,)
+    following = next(stage for stage in stages if type(stage) is FollowingStage)
+    assert following.pins == (following_pin,)
+    assert stages.index(combined[0]) < stages.index(following)
+    assert tuple(type(stage) for stage in bootstrap.install_stages(pins)) == tuple(
+        type(stage) for stage in stages
+    )
+    installed = [pin for stage in stages for pin in stage.pins]
+    assert len(installed) == len(set(installed)) == len(pins)
+    assert set(installed) == set(pins)
+
+
 @pytest.mark.parametrize("command", ["create", "plan", "preflight"])
 def test_diagnostic_flag_is_not_part_of_non_diagnostic_commands(command, capsys):
     arguments = [command, "--allow-version-drift"]
