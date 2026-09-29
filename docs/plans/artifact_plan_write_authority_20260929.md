@@ -29,6 +29,11 @@ test boundary; live acceptance must also call the real MCP entrypoint with
 separate read/write roots and verify unchanged directory contents and original
 hashes. AST parsing/order and diff checks are preliminary evidence only.
 
-Focused pytest and live MCP acceptance are pending the shared validation slot
-while Euler performs H003. This is not an installed/readiness claim. Do not close
-the issue or merge on AST evidence alone.
+Focused provider-free pytest passed: four tests, 105 deselected, 2.11 seconds.
+The first attempted invocation failed to create its missing scratch parent (one
+capability test passed, three fixture-setup errors); creating that owned parent
+and rerunning the same cases passed without changing product assertions. The
+earlier lock-gated attempt returned 75 and did not start tests. These small checks
+do not start another GUI/JVM or run scientific data. Live MCP acceptance remains
+pending while Euler owns the substantial validation slot. This is not an
+installed/readiness claim; do not close the issue on source tests alone.
