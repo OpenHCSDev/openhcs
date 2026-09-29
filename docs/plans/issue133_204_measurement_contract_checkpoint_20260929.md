@@ -2,7 +2,7 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `a0263e82a1`, fetched and merged normally on 2026-09-29.
+Base: `openhcsdev/main` at `283b21275`, fetched and merged normally on 2026-09-29.
 The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
 main through normal merge `9f5d444515`. No parent/main-worktree edits, rebases,
 resets, installed-source edits, or gitlink changes.
@@ -17,10 +17,13 @@ open. This is a source-verified draft, not an installed/live-readiness claim.
   CSV materialization do not imply a measurement subject.
 - Compile and runtime resolve subjects through the original relation owners. The
   error identifies the output and explains image, object, and artifact relations.
-- The finalized callable contract delegates adapter-recorded outputs to the
-  existing runtime adapter owner (`manages_artifact_outputs`). Native returns use
-  the artifact-kind requirement. This distinction is required: CellProfiler
-  primary/secondary modules record heterogeneous measurements themselves.
+- The finalized callable contract projects its declared `artifact_output_policy`.
+  Every policy runs the artifact kind's common declaration invariants, then its
+  native-return or adapter-recorded payload obligation. The old blanket exemption
+  and `manages_artifact_outputs` field are deleted, with all callers cut over.
+  Input management remains an independent capability. CellProfiler's policy
+  requires the existing module measurement owner rather than a table-wide subject;
+  its original row policy and recording boundary still validate actual subjects.
 - CellProfiler catalog bindings project `require_parameter_name()`, not the optional
   raw `parameter_name`. The existing `select_object_sets_to_measure` selector is
   discoverable separately from the runtime-owned scalar `labels` parameter.
@@ -43,6 +46,48 @@ Using `/home/ts/code/projects/openhcs/.venv/bin/python` with this worktree and a
 eight recorded submodule `src` directories on `PYTHONPATH`; all nine imported
 package paths were verified inside this worktree. Submodules were initialized to
 their recorded gitlinks without installed-source changes.
+
+### Architectural review follow-through
+
+Review: https://github.com/OpenHCSDev/openhcs/pull/205#issuecomment-5897282604.
+The review correctly identified a consumer-owned exemption in the previous
+checkpoint. Its earlier audit claim below was too strong: skipping every kind
+hook was not an adequate expression of CP's heterogeneous table obligation.
+
+- Red witness at the pre-fix body: the new materialization-bearing output kind
+  produced **4 failed, 4 passed**, 1.65 seconds. All four adapter-recorded cases
+  silently bypassed its invariant; native-return cases rejected the declaration.
+  Contract and compile boundaries, with input management both on and off, expose
+  the same defect. Corrected declarations also compile without executing a callable.
+- `tests/unit/test_artifact_output_ownership.py` now exercises the same new kind
+  under native, generic adapter-recorded and CP-recorded policies without any
+  compiler/consumer edit for that kind. It also checks single-subject requirements,
+  common conflicting-subject rejection, CP's required module row owner, and the
+  nominal policy boundary. The real `CellProfilerInvocationContractProviderFactory`
+  derives a primary module contract with its original measurement owner and no
+  table-wide subject. Real `compile_function_pattern` admits that contract;
+  replacing only its recording owner with native returns rejects it.
+- Final output-policy file: **20 passed**. The preceding five-file run covering
+  output policy, native artifact outputs, all runtime-store regressions, catalog
+  friction and artifact identity reconstruction: **153 passed**, 4.95 seconds
+  (17 policy cases before the final three nominal-boundary cases were added).
+- `test_function_patterns.py` plus `test_function_step_execution_plan.py`:
+  **80 passed** in the 95-case run including the then-15 policy cases. Four generic
+  adapter measurement fixtures previously omitted subjects; they now declare valid
+  artifact subjects while retaining their exact component/projection assertions.
+- Three selected planner cases: **3 passed, 96 deselected**, 1.92 seconds.
+  Exact managed group lineage and main-flow preservation retain their assertions.
+- Existing `test_track_objects_record_builder_uses_nominal_image_table_ownership`:
+  **1 passed, 393 deselected**, 5.08 seconds. The actual module row builder emits
+  mixed image/object tracking rows with their declared per-row owners. This is
+  provider-free record-building evidence, not complete pipeline/live execution.
+- Existing adapter output runtime-context regression:
+  **1 passed, 91 deselected**, 1.71 seconds. The separate adapter component-output
+  chain regression also passes; no MCP/JVM/GUI process or environment was started.
+- All checks use the required interpreter, worktree and recorded submodule paths.
+  Latest guard: **11.5 GiB available RAM**, historical swap warning at 11.9 GiB.
+  These are bounded source/unit checks, not a second heavy validation slot. No
+  installed source, shared environment, skill, or frozen runtime was modified.
 
 - Initial published checkpoint: 12 catalog/identity tests and 6 focused native
   subject tests passed.
@@ -127,16 +172,16 @@ Coordinator scope-preservation witness, followed through:
 
 This is a focused source/caller and AST audit against the current archived
 refactor-audit pattern catalog, **not a complete NRA semantic/proof scan**. All
-eleven changed production files were parsed against current merged main: zero added
+eleven changed production files in the earlier runtime checkpoint were parsed against its merged main: zero added
 `match`, `isinstance`, `getattr`/`hasattr`, or 6+-term boolean-chain AST nodes.
 That guard detects listed shapes, not every possible semantic ownership defect.
 
 | Pattern IDs | Owner, projection, and new-case evidence |
 | --- | --- |
-| IMPL-1/2/3/4, MEMB-1/2 | The finalized compiler calls `ArtifactPlanKeySelector.validate_artifact_output_declarations`; each spec delegates to `spec.artifact_type.validate_output_declaration`. Only `MeasurementsArtifactType` owns the subject requirement. No kind/name roster or external type switch was added. A future output kind supplies its rule on its declaration; compile/runtime consumers need no new branch. |
+| IMPL-1/2/3/4, MEMB-1/2 | The finalized compiler calls the selector's public validation contract. `ArtifactOutputPolicy` runs every kind's common hook, then the policy dispatches to the kind's native-return or adapter-recorded obligation. `MeasurementsArtifactType` owns common relation coherence and the native subject requirement; CP declares its distinct module-row-owner obligation. The new-kind materialization rule requires one declaration and zero compiler/consumer changes, and executes under all three owners. No kind/name roster or concrete-adapter switch was added. |
 | IMPL-5/12/13, TIME-1/3 | `ArtifactSpecRelation.measurement_subject_for_output` resolves original relation-owned subjects once. The output-plan accessor, kind requirement, and native runtime all delegate; the former output-plan extraction body and runtime missing-subject body were deleted in place. The output-plan method remains a domain accessor, not an old reader or compatibility alias. |
 | IDEN-1/2/5, BOUND-2/7, MEMB-3/4 | `SettingToKeywordBinding.require_parameter_name()` owns selector identity, separately from `runtime_parameter_name`. The only production `CellProfilerArtifactBindingSummary` constructor projects that owner; its selector field is now required. No selector store, guessed names, raw-row decoder, or attribute-name probe exists in the change. The catalog regression derives every registered binding and exercises new derived-name input and explicit-name output declarations without editing the projection. |
-| IDEN-7, IMPL-10 | An initial placement incorrectly rejected heterogeneous CellProfiler records. Validation now runs after invocation-contract finalization, where the existing `runtime_adapter.manages_artifact_outputs` capability names the output owner. Native table-wide subject invariants apply only to native returned payloads, not adapter-recorded tables. Real primary/secondary compilation and execution plus native missing/corrected tests exercise both owners. |
+| IDEN-1/7, IMPL-4/10, IMPL-5/12 | Recording ownership no longer answers whether common compile invariants may run. The blanket early return and output flag were removed, not relocated; native/adapter policies have distinct kind-dispatched payload obligations. CP requires its already-declared `measurement_feature_owner`, leaving actual heterogeneous row validation with the original module row policy and `add_measurements`. Common conflicting-subject checks stay on the kind. The new-case matrix varies input management independently, and the real CP provider/admission plus mixed tracking-row builder pass. |
 | AGENT-2/3/6/7, TIME-5/9 | No second mechanism, format converter, test-only production switch, or dormant feature was added. One pre-existing cardinality fixture received a valid artifact-level subject so its original missing-return assertion remains meaningful. The paired-channel failure is retained, not hidden by weaker expectations; publication proceeds with that exact acceptance gap stated. |
 | IDEN-1/6/7, BOUND-2, MEMB-1/2/3, IMPL-5/12, TIME-1/3 | Exact compiled producer/address selection and contextual source compatibility answer different questions. `RuntimeArtifactInput` derives context membership from `edge.spec.source_context_sources()` and the referenced original source bindings, then delegates matching to the existing typed identity predicate. `RuntimeExecutionAxisScope` owns its typed-coordinate projection. No literal channel/site/z/time matching roster, new registry, global ignore flag, alternate reader, or copied predicate was added. All three constructors are migrated; two actual adapter consumers and fail-closed new cases execute. The replaced fixed-coordinate loops are gone. |
 | IDEN-7, BOUND-2, IMPL-5 | Artifact admission asks whether an already-selected producer violates any shared additional coordinate constraint, not whether unknown plane identities prove correspondence. The four failing empty/asymmetric witnesses distinguish these questions. `ComponentSet.intersection`, scope-owned `source_components`, and policy-owned `identity_components()` derive the applicable constraint domain. No copied compatibility matcher or weakened global empty-identity semantics was introduced. |
@@ -148,6 +193,15 @@ catalog DTO constructor/consumers. Structural `extract_artifact_declarations`
 still checks relation references without prematurely applying native runtime
 requirements to partially reconstructed CellProfiler contracts. Real compile
 inspection reaches the finalized validation boundary and fails before execution.
+
+Review follow-through at `dd02a00f6` plus the latest normal main merge covered all
+output-policy constructors, decorator calls, compiler hooks and four production
+recording consumers. `rg` finds no remaining `manages_artifact_outputs` use in
+production or tests; there is no compatibility alias. The nine production files
+changed for this review were AST parsed: zero added `match`, attribute-name probes
+or 6+-term boolean chains; one added `isinstance` is the nominal output-policy
+declaration boundary, tested for invalid/abstract policies. This is focused
+source/caller/new-case coverage, not complete NRA detector or native-proof coverage.
 
 Runtime caller review also covered `records`, static/dynamic `all_records`,
 `_records`, `_validate_selected_records`, `_axis_value`, `projected_values`,
@@ -179,15 +233,15 @@ duplicate-resolution removal is factoring; no pure file move is claimed.
   secondary source's channel 2 scope and rejects it. Address, axis, and producer
   identity match. Reproduce with `pytest -q
   tests/integration/test_measurement_declaration_journey.py -k paired --tb=short`
-  under the serialized validation lock when Euler releases it. Zeno is now the
+  under the serialized validation lock after coordinator handoff. Zeno is the
   active runtime-fix owner under the explicit scope extension. The focused fix is
   present and store regressions pass, but complete paired execution remains
   unverified. No `core/source_bindings.py`, `core/source_binding_workspace.py`,
   source preparation, ROI, viewer, or #211 authorization method/test was modified.
-- Scheduling: the parent owns the first released validation slot for real MCP
-  #151/#212 and its useful merge/installation checkpoint. Zeno will run the full
-  six-case headless journey only after the explicit next-slot handoff. No race for
-  fresh environments, GUI, JVM, or installed-baseline changes is authorized.
+- Scheduling: parent #151/#212 acceptance and installation are complete.
+  Confucius now owns the heavy runtime lock and frozen installation. Zeno will run
+  the full six-case headless journey only after an explicit serialized handoff.
+  No race for fresh environments, GUI, JVM, or installed-baseline changes is authorized.
 - Parent also owns the cold-inspection deletion in
   `InProcessCompileInspectionGateway`; Zeno does not edit that method or its
   catalog-initialization call. The pending continuous regression is strengthened
@@ -220,11 +274,20 @@ Draft PR: https://github.com/OpenHCSDev/openhcs/pull/205.
 - `openhcs/core/artifacts.py`
 - `openhcs/core/callable_contract.py`
 - `openhcs/core/function_patterns.py`
+- `openhcs/core/runtime_adapters.py`
 - `openhcs/core/component_group_scope.py`
 - `openhcs/core/runtime_stores.py`
 - `openhcs/core/steps/function_runtime.py`
 - `openhcs/interop/cellprofiler/runtime/adapter.py`
 - `openhcs/interop/cellprofiler/runtime/artifact_binding.py`
+- `openhcs/interop/cellprofiler/runtime/module_execution.py`
+- `openhcs/interop/cellprofiler/runtime/output_record_request.py`
+- `openhcs/interop/cellprofiler/runtime/output_recording.py`
+- `tests/unit/test_artifact_output_ownership.py`
+- `tests/unit/test_function_patterns.py`
+- `tests/unit/test_function_runtime_source_projection.py`
+- `tests/unit/test_function_step_execution_plan.py`
+- `tests/unit/test_path_planner_materialization.py`
 - `tests/unit/agent/test_mcp_cellprofiler_function_contract_friction.py`
 - `tests/unit/test_function_artifact_outputs.py`
 - `tests/unit/test_runtime_value_store.py`

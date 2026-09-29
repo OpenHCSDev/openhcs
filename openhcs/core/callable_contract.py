@@ -40,7 +40,10 @@ from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.image_payload_execution_mode import (
     ImagePayloadExecutionMode,
 )
-from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
+from openhcs.core.artifact_key_selection import (
+    ArtifactOutputPolicy,
+    ArtifactPlanKeySelector,
+)
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -1146,13 +1149,13 @@ class CallableContract(ArtifactPlanKeySelector):
                 ) from exc
         return tuple(kwargs.items())
 
-    def validate_artifact_output_declarations(self) -> None:
-        """Validate native returns, leaving adapter-recorded rows with their owner."""
-
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Project the output policy from the callable's adapter declaration."""
         adapter = self.runtime_adapter
-        if adapter is not None and adapter.manages_artifact_outputs:
-            return
-        super(CallableContract, self).validate_artifact_output_declarations()
+        if adapter is None:
+            return super(CallableContract, self).artifact_output_policy
+        return adapter.artifact_output_policy
 
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""

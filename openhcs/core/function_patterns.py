@@ -550,8 +550,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         """Return whether this invocation's adapter records selected outputs."""
         return bool(
             self.artifact_output_plans
-            and self.contract.runtime_adapter is not None
-            and self.contract.runtime_adapter.manages_artifact_outputs
+            and self.contract.artifact_output_policy.records_outputs
         )
 
     @property

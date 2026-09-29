@@ -4,16 +4,63 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import TypeVar
+from typing import ClassVar, TypeVar
 
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactPlan,
+    ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRef,
+    MeasurementsArtifactType,
 )
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
+
+
+class ArtifactOutputPolicy(ABC):
+    """Declaration-owned recording and payload obligations for output artifacts."""
+
+    records_outputs: ClassVar[bool]
+
+    @classmethod
+    def validate_output_declarations(cls, specs: ArtifactSpecCollection) -> None:
+        """Run common kind invariants before the ownership-specific obligation."""
+
+        for spec in specs.for_plan_type(ArtifactOutputPlan):
+            spec.artifact_type.validate_output_declaration(spec)
+            cls.validate_payload_declaration(spec)
+
+    @classmethod
+    @abstractmethod
+    def validate_payload_declaration(cls, spec: ArtifactSpec) -> None:
+        """Validate what this owner needs to turn the declaration into a payload."""
+
+
+class NativeReturnArtifactOutputPolicy(ArtifactOutputPolicy):
+    """Returned payloads are normalized and recorded by the native runtime."""
+
+    records_outputs = False
+
+    @classmethod
+    def validate_payload_declaration(cls, spec: ArtifactSpec) -> None:
+        spec.artifact_type.validate_native_output_declaration(spec)
+
+
+class AdapterRecordedArtifactOutputPolicy(ArtifactOutputPolicy):
+    """The declared adapter records payloads without bypassing kind invariants."""
+
+    records_outputs = True
+
+    @classmethod
+    def validate_payload_declaration(cls, spec: ArtifactSpec) -> None:
+        spec.artifact_type.validate_recorded_output_declaration(spec, cls)
+
+    @classmethod
+    def validate_measurement_subject(cls, spec: ArtifactSpec) -> None:
+        """Ordinary recorded tables have one declaration-owned subject."""
+
+        MeasurementsArtifactType.require_output_subject(spec)
 
 
 class ArtifactPlanKeySelector(ABC):
@@ -55,11 +102,16 @@ class ArtifactPlanKeySelector(ABC):
             selected.append(plan)
         return tuple(selected)
 
-    def validate_artifact_output_declarations(self) -> None:
-        """Validate output kinds when this declaration owns returned payloads."""
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Return the native output owner unless this declaration supplies another."""
 
-        for spec in self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs:
-            spec.artifact_type.validate_output_declaration(spec)
+        return NativeReturnArtifactOutputPolicy
+
+    def validate_artifact_output_declarations(self) -> None:
+        """Validate every output kind through its declared payload owner."""
+
+        self.artifact_output_policy.validate_output_declarations(self.artifact_specs)
 
     def validate_artifact_relation_refs(self, *, owner_name: str) -> None:
         self.artifact_specs.validate_registered_relation_refs(

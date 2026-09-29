@@ -23,6 +23,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
+    from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
     from openhcs.core.runtime_artifact_values import (
         RuntimeValue,
     )
@@ -144,9 +145,25 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
-        """Validate kind-owned output requirements before runtime planning."""
+        """Validate common kind invariants regardless of payload recording owner."""
 
         del spec
+
+    @classmethod
+    def validate_native_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Validate kind requirements for native returned payloads."""
+
+        del spec
+
+    @classmethod
+    def validate_recorded_output_declaration(
+        cls,
+        spec: "ArtifactSpec",
+        policy: "type[AdapterRecordedArtifactOutputPolicy]",
+    ) -> None:
+        """Validate kind requirements for declaration-owned adapter recording."""
+
+        del spec, policy
 
     @classmethod
     def normalize_group_scoped_payload(
@@ -691,7 +708,21 @@ class MeasurementsArtifactType(ArtifactType):
 
     @classmethod
     def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Explicit subject relations must agree under every recording owner."""
+
+        ArtifactSpecRelation.measurement_subject_for_output(spec)
+
+    @classmethod
+    def validate_native_output_declaration(cls, spec: "ArtifactSpec") -> None:
         cls.require_output_subject(spec)
+
+    @classmethod
+    def validate_recorded_output_declaration(
+        cls,
+        spec: "ArtifactSpec",
+        policy: "type[AdapterRecordedArtifactOutputPolicy]",
+    ) -> None:
+        policy.validate_measurement_subject(spec)
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:

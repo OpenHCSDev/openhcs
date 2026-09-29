@@ -7,6 +7,7 @@ import pytest
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
+    ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSidecarRole,
@@ -76,6 +77,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerValidationStage,
 )
 from openhcs.core.pipeline.step_snapshot import StepSnapshot
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_stores import RuntimeArtifactBatch
@@ -2322,12 +2324,12 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     blue_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(blue.ref()),),
+        relations=(GroupLineageSourceRelation(blue.ref()), ArtifactMeasurementSubjectRelation()),
     )
     green_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(green.ref()),),
+        relations=(GroupLineageSourceRelation(green.ref()), ArtifactMeasurementSubjectRelation()),
     )
 
     @artifact_inputs(blue)
@@ -2335,7 +2337,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_blue(image, *, runtime):
         del runtime
@@ -2346,7 +2348,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_green(image, *, runtime):
         del runtime
@@ -3464,7 +3466,7 @@ def test_module_special_outputs_preserve_existing_main_flow_component_scopes():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(measurement_spec)
     def measurement_only(image, *, runtime):
@@ -5340,7 +5342,7 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(measurement_spec)
     def measure(image, *, runtime):
