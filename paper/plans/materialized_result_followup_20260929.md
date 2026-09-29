@@ -35,9 +35,11 @@ shared H002 process, or biologically accept the frozen count of 28.
 
 ### Inspection checkpoint ownership decision
 
-Corpus at 86868031: plate DTO, inspection service and core plate inventory.
+Initial corpus at 86868031: plate DTO, inspection service and core plate inventory.
 NRA ModuleSyntaxIndex enumerated all 78 original ClassDefs; all 78 uniquely
-joined CompactClassFamilyIndex. Global R1/MRO/equivalence proofs remain OPEN.
+joined CompactClassFamilyIndex. The final corpus adds AgentPathPolicy and has
+82/82 unique joins (1.17 s, 68892 KiB maximum RSS). Global R1/MRO/equivalence
+proofs remain OPEN.
 This is an intentional feature extension, not a proved-equivalent DSL replay.
 
 Task authority: inspect the retained arbitrary result directory without rerun,
@@ -58,6 +60,46 @@ The plate/context path and result-file location retain separate roles.
 This checkpoint delivers file inspection only. It does not substitute for the
 remaining observed-artifact admission, schema-bearing measurement preview and
 provenance-aware image/ROI reopening in the required workflow above.
+
+### Installed checkpoint evidence at 30ea44fd
+
+- Forty focused inventory, inspection and generated MCP-schema checks passed
+  against source (5.68 s) and installed wheels (5.54 s). The installed suite
+  imports application modules from the owned venv; the source path supplies
+  test fixtures only. Its first collection attempt lacked the tests package,
+  exited before running, and is not counted as an installed pass.
+- The earlier missing-directory test expected the wrong issue code. The actual
+  AgentPathPolicy contract rejects absent readable paths before directory-type
+  checking; the assertion now checks that exact contract, not a permissive code.
+- Bounded five-module debt census: 8094 to 8201 code lines; unchanged string-key,
+  type-identity, long-chain, enum/class, broad-except and long-function counts.
+  Three additional foreign-absence probes implement the genuinely optional
+  result-directory selection and existing boundary resolution contract; no
+  parallel source identity, schema store or registry was added. Native overlay
+  found no raw shape/string dispatch/roster additions. Existing large procedures
+  and the owning service remain debt; bounded dead-module results are not valid
+  deletion claims because consumers lie outside the selected five modules.
+  Census/overlay took 3.33 s, maximum RSS 179096 KiB.
+- The owned installed resident MCP was restarted after the wheel update and
+  returned a fresh healthy handshake with 56 resources and no stale paths.
+  Its read roots add only the already-frozen H002 trial to the installed defaults;
+  the private evaluator and unrelated repositories remain outside the policy.
+- Five complete public MCP envelopes inspect the explicit H002 results directory:
+  three bounded centre CSV rows; two examples from a native Z032 ROI archive;
+  a truthful missing-sidecar omission for the historical centres.roi.zip; rejected
+  out-of-scope directory; rejected acquisition-component filtering. No filename
+  components are promoted into inventory metadata.
+- SCIENCE_SHA256SUMS checked successfully. No pipeline execution, artifact rewrite,
+  parameter tuning or held-out/reference-answer access occurred. Current H002 GUI,
+  execution worker, viewer TCP5690 and desktop Xorg remained alive. No new viewer
+  or agent fleet was started. Available RAM remains constrained; do not expand.
+
+Complete envelopes and the inspection disposition are retained under
+/home/ts/wt/openhcs-live-point-evidence-20260929/materialized-inspection-20260929.
+This proves native installed file inspection, not writer provenance, image/ROI
+reopening from an arbitrary result directory, biological acceptance or completion
+of issue #134. Ship this tested checkpoint; continue those requirements in the
+same integration-owned follow-up rather than leaving the working feature stranded.
 
 RuntimeArtifactAddress/RuntimeArtifactLocation own semantic artifact/storage
 identity. RuntimeArtifactProgressPayload currently retains addresses only.
