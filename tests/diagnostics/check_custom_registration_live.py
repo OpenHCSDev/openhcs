@@ -546,6 +546,16 @@ def run(args) -> None:
             FunctionCatalogPreparationState,
         )
         receipt["preparation_handle"] = to_jsonable(state.handle)
+        stale_handle = replace(
+            state.handle,
+            server_identity=replace(state.handle.server_identity, create_time=0),
+        )
+        call(
+            "openhcs_cancel_function_catalog_preparation",
+            to_jsonable(stale_handle),
+            error_code="mcp_tool_failed",
+        )
+        receipt["stale_preparation_cancel_rejected"] = True
         preparation_deadline = time.monotonic() + 100
         if not state.outcome.ready:
             register(error_code="function_catalog_not_ready")

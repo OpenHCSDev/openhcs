@@ -130,6 +130,10 @@ RPCs before READY and exactly two total** (initial positive plus controlled dela
 not merely one persistence marker. The complete journey is registration/discovery/
 compile/execution of an8x8 plus-three synthetic function, escaping-path sentinels,
 foreign/unsupported predispatch denials and same-handle uncertain receipt reconciliation.
+It also sends one stale-incarnation cancellation request while observing the
+owned preparation, then retains that same valid handle until READY. Pending
+valid cancellation/terminal cleanup is covered by the controlled source future
+test; it is not claimed live from a cancellation attempted after readiness.
 
 --installed-entrypoint mode requires PYTHONPATH unset, cwd outside SOURCE, actual
 OpenHCS/PolyStore imports matching the reviewed installed source, and the ordinary
