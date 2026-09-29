@@ -3,7 +3,9 @@
   "main_merge": "8b090e2e9a1a1550a01b7096c3f6cdf7d65ab2f6",
   "polystore_gitlink": "c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7",
   "prior_live_failure_preserved": "viewer_feature_measurement_live_20260929.json",
-  "acceptance": "attempt02 failed before mounting; original crop/scale plus actual mounted MCP captures still pending",
+  "acceptance": "Original failures preserved. Final source-pinned synthetic MCP/Napari journey passed at5da177ad9/c16b8fc; original crop/relative spacing, actual author-opened mounted captures, empirical geometry/intensities and unchanged pixels/presentation verified. Actual child sharedcache/downloadsfalse verified. Parent merge/install entrypoint acceptance separate.",
+  "final_receipt": "viewer_feature_measurement_live_accepted_20260929.json",
+  "new_owner": "Parent owns separate automatic shared Fiji test-bootstrap fix. No broader tests or bootstrap edits by feature owner.",
   "ownership": {
     "projection": "Original SourceProjection retained by PlateImageRecord and PlateFileRecord, consumed by existing VirtualWorkspaceSourceProjectionBuilder.ingest_source_projections. No metadata schema copy or registry.",
     "launcher": "DetachedViewerServerEntrypointSpec pins OpenHCSRuntimeImportAuthority root. OpenHCS __init__ invokes existing _source_dependencies bootstrap. Previously empty submodule directories supplied no import roots, permitting installed editable dependency resolution.",

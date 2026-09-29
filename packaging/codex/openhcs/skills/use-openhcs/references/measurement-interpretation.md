@@ -74,7 +74,8 @@ Availability is determined by the **live** capability registry, not this guide.
 These source contracts accompany [issue221](https://github.com/OpenHCSDev/openhcs/issues/221);
 their source-pinned synthetic MCP/viewer path has verified original crop and
 relative spacing, empirical values, unchanged raw pixels/presentation and
-author-opened MCP bitmaps at b5f78e34c with PolyStore c16b8fc. This is not a
+author-opened MCP bitmaps at 5da177ad9 with PolyStore c16b8fc, including actual
+child shared-cache/no-download policy verification. This is not a
 physical-calibration claim or installed readiness: parent merge/install and its
 affected-entrypoint check remain separate. Both operations are read-only and
 require a settled, scalar, non-multiscale image route in a native YX 2-D display.
@@ -106,6 +107,12 @@ crop admission is separate from strict full-window receipt replay. Initialized
 exact submodules plus the existing launcher/source bootstrap resolved the fresh
 child snapshot failure. A paired installation needs its own proof rather than
 inheriting source-pinned acceptance.
+The synthetic acceptance receipt is
+`tests/runtime_diagnostics/viewer_feature_measurement_live_accepted_20260929.json`;
+its capture states retain exact axes, routes, native transforms, camera and
+numeric windows. Boolean/outside/sparse requests fail live; a NaN dev-client
+input becomes null before schema rejection, so native nonfinite-guard proof is
+source-level rather than literal-NaN arrival through that transport.
 
 `openhcs_measure_viewer_polyline` accepts 2..64 vertices and optional
 `line_width=1` (1..31), `interpolation_order=1` (0 nearest or1 bilinear),
