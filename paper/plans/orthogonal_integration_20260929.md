@@ -63,3 +63,28 @@ readback. Preserve that distinction: ViewerModel-only results are not GUI proof.
 The original full-scan and native-only checkpoints above are historical, not
 relabelled as complete R1/equivalence or installed/MCP acceptance. Installed and
 public MCP checks are in progress, using only the owned test installation.
+
+## Installed/live acceptance checkpoint
+
+Production 18e160a912a6ce530c7921265fadefaa1205156a installed in the owned
+test environment, Napari 0.9.1/NumPy 2.5.3. 75 source/native/widget tests and
+75 installed tests passed, plus 30 viewer-service tests. The actual managed
+viewer on :90/TCP5692 streamed 18 declared synthetic TIFF planes into a settled
+7-D image. Public generated MCP navigation selected XY/XZ/YZ and the second
+channel; actual native state and three personally inspected captures confirmed
+orientation, retained selectors and logical Qt canvas geometry. Initial live
+inspection caught the empty plugin dropdown after deferred mounts; the native
+event-driven fix and late-mount regression are included and fresh captures now
+show populated/enabled controls. Nonspatial channel/X with concurrent visibility,
+selection and index changes rejects before mutation; live before/after state is
+unchanged. No frozen science or existing H002 viewer is modified.
+
+Durable full receipts: /home/ts/wt/openhcs-live-point-evidence-20260929/orthogonal-review-20260929.
+Reproducer: tests/diagnostics/create_orthogonal_viewer_fixture.py plus its HTD
+fixture. Source/native tests cover anisotropic dense Labels/Points; actual live
+MCP archive-based volumetric result review remains unverified. Planar Shapes
+cross-sections truthfully reject. Linked simultaneous panels, frozen legacy
+archive migration, full NRA/R1/equivalence and biological acceptance are NOT
+claimed. Keep issue #152 open for remaining result-review scope. This PR is
+ready to merge as the locally tested, installed and live sequential-view
+checkpoint without waiting optional hosted CI; enforced merge rules still apply.

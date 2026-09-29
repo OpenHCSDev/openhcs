@@ -1,5 +1,11 @@
 # Native orthogonal viewer review
 
+Current integration checkpoint (2026-09-29): sequential typed navigation/state
+and bundled plugin are implemented and locally/installed/live verified. See
+[the integration receipt](orthogonal_integration_20260929.md) for current owner,
+exact acceptance and remaining scope. The scan gate/native-only statements below
+are retained HISTORICAL evidence, not the current implementation disposition.
+
 Base:OpenHCSDev/openhcs main0c7b898f852a8bedc0e1bc38b93f36088d301808.
 Tracking issue:#152, native XY/XZ/YZ review through managed viewer MCP.
 This is an implementation workstream, not a completed fix.

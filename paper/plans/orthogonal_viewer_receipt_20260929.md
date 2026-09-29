@@ -1,5 +1,12 @@
 # Orthogonal managed-viewer surface receipt
 
+Current owner/integration status is in
+[orthogonal_integration_20260929.md](orthogonal_integration_20260929.md):
+sequential controls are now implemented and installed/live tested. This earlier
+investigation and its incomplete full-scan/native-only claims remain historical
+receipts, not a current claim that production is unchanged or implementation is
+blocked. No historical failure is rewritten as a complete global proof.
+
 Production-source witnesses revalidated on `feat/mcp-orthogonal-viewer-20260929`
 at `35a0b1a4ffb21e17385d1c8808113be0108c4d44`, based on main
 `0c7b898f852a8bedc0e1bc38b93f36088d301808`. Issue #152, draft PR #154.
