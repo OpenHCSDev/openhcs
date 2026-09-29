@@ -273,11 +273,53 @@ jobs:
           path: OpenHCS-macOS-Installer.dmg
           if-no-files-found: error
 
+  build-native-wheels:
+    needs: verify-release-commit
+    if: github.event_name == 'push' || inputs.publish_python_package
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verify-release-commit.outputs.release_sha }}
+          submodules: recursive
+
+      - name: Enable Linux ARM wheel builds
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up build Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Build and smoke-test stable-ABI wheels
+        env:
+          CIBW_BUILD: cp311-*
+          CIBW_SKIP: "*-musllinux*"
+          CIBW_ARCHS_LINUX: x86_64 aarch64
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_TEST_COMMAND: python {project}/scripts/smoke_native_granularity_wheel.py
+        run: |
+          python -m pip install cibuildwheel==4.2.1
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload native wheels
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: openhcs-wheels-${{ runner.os }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
   build-and-publish:
-    needs: [verify-release-commit, build-windows-installer, build-macos-installer]
+    needs: [verify-release-commit, build-windows-installer, build-macos-installer, build-native-wheels]
     if: >-
       always() &&
       needs.verify-release-commit.result == 'success' &&
+      needs.build-native-wheels.result == 'success' &&
       ((github.event_name == 'push' &&
       needs.build-windows-installer.result == 'success' &&
       needs.build-macos-installer.result == 'success') ||
@@ -320,10 +362,22 @@ jobs:
           MCP_REGISTRY_SCHEMA=$(python -c 'import json; print(json.load(open("server.json"))["$schema"])')
           check-jsonschema --no-cache --schemafile "$MCP_REGISTRY_SCHEMA" server.json
 
-      - name: Build package
+      - name: Build source distribution
         run: |
-          python -m build
-          python -m scripts.validate_wheel_deployment dist/*.whl
+          python -m build --sdist
+
+      - name: Download native wheels
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: openhcs-wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Validate native wheels
+        run: |
+          for wheel in dist/*.whl; do
+            python -m scripts.validate_wheel_deployment "$wheel"
+          done
 
       - name: Smoke-test installed desktop wheel outside checkout
         env:
@@ -334,7 +388,7 @@ jobs:
           XDG_DATA_HOME: ${{ runner.temp }}/openhcs-gui-data
         run: |
           DESKTOP_EXTRAS=$(python "$GITHUB_WORKSPACE/scripts/sync_mcp_release_metadata.py" --print-desktop-extras)
-          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')).resolve())")
+          WHEEL=$(python -c "from pathlib import Path; print(next(path.resolve() for path in Path('dist').glob('*.whl') if 'manylinux' in path.name and 'x86_64' in path.name))")
           python -m venv mcp_release_smoke
           source mcp_release_smoke/bin/activate
           pip install "${WHEEL}[${DESKTOP_EXTRAS}]"
@@ -406,7 +460,9 @@ jobs:
             --timeout-seconds 900 \
             --poll-interval-seconds 5 \
             --release-directory dist
-          python -m scripts.validate_wheel_deployment dist/*.whl
+          for wheel in dist/*.whl; do
+            python -m scripts.validate_wheel_deployment "$wheel"
+          done
           python -m twine check dist/*
 
       - name: Download desktop installers
