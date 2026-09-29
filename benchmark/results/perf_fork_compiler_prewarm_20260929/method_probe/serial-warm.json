@@ -1,0 +1,17 @@
+{
+  "mode": "serial",
+  "wall_seconds": 0.3376785730943084,
+  "preparation": [
+    {
+      "strategy": "LegacyFastNumpyShapeMeasurementBackendStrategy",
+      "seconds": 0.3068771520629525
+    },
+    {
+      "strategy": "NumbaNumpyObjectIntensityBackendStrategy",
+      "seconds": 0.030796561390161514
+    }
+  ],
+  "parent_hydration": [],
+  "cache_directory": "/tmp/openhcs-fork-prewarm-serial-zdpkp3me",
+  "calling_context": "worker thread in fresh interpreter"
+}
