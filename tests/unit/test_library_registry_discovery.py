@@ -6,14 +6,62 @@ import os
 import subprocess
 import sys
 import textwrap
+import threading
+import time
 from collections.abc import Callable
-from concurrent.futures import CancelledError
+from concurrent.futures import CancelledError, ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 import numpy as np
 import pytest
+
+
+def test_concurrent_catalog_requests_share_one_metadata_load(monkeypatch) -> None:
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+
+    metadata = {"test:example": object()}
+    load_calls: list[object] = []
+    start = threading.Barrier(3)
+    loading = threading.Event()
+    release = threading.Event()
+
+    def load_cached(_cls, _instances):
+        load_calls.append(object())
+        loading.set()
+        assert release.wait(timeout=2)
+        return metadata
+
+    monkeypatch.setattr(RegistryService, "_metadata_cache", None)
+    monkeypatch.setattr(
+        RegistryService,
+        "_available_registry_instances",
+        classmethod(lambda _cls: []),
+    )
+    monkeypatch.setattr(
+        RegistryService,
+        "_load_valid_persistent_catalog",
+        classmethod(load_cached),
+    )
+
+    def request_metadata():
+        start.wait(timeout=2)
+        return RegistryService.get_all_functions_with_metadata()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first = executor.submit(request_metadata)
+        second = executor.submit(request_metadata)
+        start.wait(timeout=2)
+        assert loading.wait(timeout=2)
+        time.sleep(0.05)
+        release.set()
+        assert first.result(timeout=2) is metadata
+        assert second.result(timeout=2) is metadata
+
+    assert len(load_calls) == 1
 
 
 def test_declared_library_submodules_are_imported_from_the_package_authority(

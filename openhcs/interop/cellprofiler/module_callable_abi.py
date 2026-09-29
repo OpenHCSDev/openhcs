@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.invocation import (
         CellProfilerImageRequest,
     )
+    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
     from openhcs.interop.cellprofiler.runtime.output_contexts import (
         CellProfilerObjectLabelOutputSourceContext,
     )
@@ -252,6 +253,14 @@ class CellProfilerModuleCallableABI:
 
         del cls, include_image_measurements
         return runtime_kwargs
+
+    @classmethod
+    def shared_object_measurement_runtime_kwargs(
+        cls, adapter: "CellProfilerRuntimeAdapter"
+    ) -> "RuntimeCallableKwargs":
+        """Project runtime-owned values shared by this module's object calls."""
+        del cls, adapter
+        return {}
 
     @classmethod
     def validate_callable_artifact_abi(

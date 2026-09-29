@@ -372,6 +372,7 @@ class MeasureObjectIntensityDistributionModule(
 ):
     module_name = "MeasureObjectIntensityDistribution"
     function_name = "measure_object_intensity_distribution"
+    zernike_backend_provider = CellProfilerBackendProvider.LEGACY_FAST
     validated = True
     confidence = 1.0
     measurement_category_prefixes = (
@@ -948,29 +949,151 @@ class RadialCenterDistanceFields:
 class RadialCenterPropagationRequest:
     """Nearest-center propagation for radial intensity-distribution geometry."""
 
+    object_labels: np.ndarray
     center_labels: np.ndarray
-    colors: np.ndarray
+    centers_i: np.ndarray
+    centers_j: np.ndarray
     propagation_backend: SecondaryPropagationBackendStrategy
 
     def fields(self) -> tuple[np.ndarray, np.ndarray]:
-        """Return center distances and propagated center labels by color mask."""
-        d_from_center = np.zeros(self.center_labels.shape, dtype=float)
-        propagated_center_labels = np.zeros(self.center_labels.shape, dtype=int)
-        max_color = int(np.max(self.colors)) if self.colors.size else 0
+        """Use exact octile paths where unobstructed; propagate obstructed labels."""
+        labels = np.ascontiguousarray(self.object_labels, dtype=np.int32)
+        (
+            d_from_center,
+            propagated_center_labels,
+            obstructed,
+            min_rows,
+            min_columns,
+            max_rows,
+            max_columns,
+        ) = _radial_unobstructed_center_fields(
+            labels,
+            np.asarray(self.centers_i, dtype=np.float64),
+            np.asarray(self.centers_j, dtype=np.float64),
+        )
         seed_labels = np.asarray(self.center_labels, dtype=np.int32)
-        for color in range(1, max_color + 1):
-            mask = self.colors == color
-            seed_mask = mask & (seed_labels > 0)
-            if not np.any(seed_mask):
+        for label in np.flatnonzero(obstructed):
+            if min_rows[label] > max_rows[label]:
                 continue
-            propagation = self.propagation_backend.propagate_zero_image_result(
-                seed_labels, mask, 1
+            row_start, row_stop = int(min_rows[label]), int(max_rows[label]) + 1
+            column_start, column_stop = (
+                int(min_columns[label]),
+                int(max_columns[label]) + 1,
             )
-            propagated_labels = propagation.labels
-            distances = propagation.distances
-            d_from_center[mask] = distances[mask]
-            propagated_center_labels[mask] = propagated_labels[mask]
+            local_labels = labels[row_start:row_stop, column_start:column_stop]
+            mask = np.ascontiguousarray(local_labels == label)
+            local_seeds = np.where(
+                mask,
+                seed_labels[row_start:row_stop, column_start:column_stop],
+                0,
+            ).astype(np.int32, copy=False)
+            propagation = self.propagation_backend.propagate_zero_image_result(
+                local_seeds, mask, 1
+            )
+            local_distances = d_from_center[
+                row_start:row_stop, column_start:column_stop
+            ]
+            local_propagated = propagated_center_labels[
+                row_start:row_stop, column_start:column_stop
+            ]
+            local_distances[mask] = propagation.distances[mask]
+            local_propagated[mask] = propagation.labels[mask]
         return (d_from_center, propagated_center_labels)
+
+
+@njit(cache=True)
+def _radial_unobstructed_center_fields(
+    labels: np.ndarray,
+    centers_i: np.ndarray,
+    centers_j: np.ndarray,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Find labels with an octile shortest path from every pixel to its seed."""
+    height, width = labels.shape
+    object_count = centers_i.size
+    distances = np.zeros((height, width), dtype=np.float64)
+    propagated = np.zeros((height, width), dtype=np.int32)
+    obstructed = np.zeros(object_count + 1, dtype=np.bool_)
+    min_rows = np.full(object_count + 1, height, dtype=np.int32)
+    min_columns = np.full(object_count + 1, width, dtype=np.int32)
+    max_rows = np.zeros(object_count + 1, dtype=np.int32)
+    max_columns = np.zeros(object_count + 1, dtype=np.int32)
+    diagonal_extra = np.sqrt(2.0) - 1.0
+    for row in range(height):
+        for column in range(width):
+            label = labels[row, column]
+            if label <= 0 or label > object_count:
+                continue
+            if row < min_rows[label]:
+                min_rows[label] = row
+            if column < min_columns[label]:
+                min_columns[label] = column
+            if row > max_rows[label]:
+                max_rows[label] = row
+            if column > max_columns[label]:
+                max_columns[label] = column
+            if not np.isfinite(centers_i[label - 1]) or not np.isfinite(
+                centers_j[label - 1]
+            ):
+                obstructed[label] = True
+                continue
+            center_row = int(centers_i[label - 1])
+            center_column = int(centers_j[label - 1])
+            if (
+                center_row < 0
+                or center_row >= height
+                or center_column < 0
+                or center_column >= width
+                or labels[center_row, center_column] != label
+            ):
+                obstructed[label] = True
+                continue
+            row_delta = center_row - row
+            column_delta = center_column - column
+            row_distance = abs(row_delta)
+            column_distance = abs(column_delta)
+            row_step = 1 if row_delta > 0 else -1 if row_delta < 0 else 0
+            column_step = 1 if column_delta > 0 else -1 if column_delta < 0 else 0
+            has_predecessor = row_distance == 0 and column_distance == 0
+            if (
+                row_distance > 0
+                and column_distance > 0
+                and labels[row + row_step, column + column_step] == label
+            ):
+                has_predecessor = True
+            if (
+                row_distance > column_distance
+                and labels[row + row_step, column] == label
+            ):
+                has_predecessor = True
+            if (
+                column_distance > row_distance
+                and labels[row, column + column_step] == label
+            ):
+                has_predecessor = True
+            if not has_predecessor:
+                obstructed[label] = True
+            if row_distance > column_distance:
+                distances[row, column] = row_distance + diagonal_extra * column_distance
+            else:
+                distances[row, column] = column_distance + diagonal_extra * row_distance
+            propagated[row, column] = label
+    return (
+        distances,
+        propagated,
+        obstructed,
+        min_rows,
+        min_columns,
+        max_rows,
+        max_columns,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1580,26 +1703,18 @@ class RadialDistributionBackendStrategy(
             center_labels[
                 centers_i_int[valid_centers], centers_j_int[valid_centers]
             ] = labels_array[centers_i_int[valid_centers], centers_j_int[valid_centers]]
-        shape_backend = self.shape_geometry_backend()
-        phase_started_at = time.perf_counter()
-        colors = shape_backend.color_labels(labels_array)
-        runtime_profiler.log(
-            "idist_center_color_labels",
-            time.perf_counter() - phase_started_at,
-            objects=object_count,
-            colors=int(np.max(colors)) if colors.size else 0,
-        )
         phase_started_at = time.perf_counter()
         d_from_center, propagated_center_labels = RadialCenterPropagationRequest(
+            object_labels=labels_array,
             center_labels=center_labels,
-            colors=colors,
+            centers_i=centers_i,
+            centers_j=centers_j,
             propagation_backend=self.center_propagation_backend(),
         ).fields()
         runtime_profiler.log(
             "idist_center_propagate",
             time.perf_counter() - phase_started_at,
             objects=object_count,
-            colors=int(np.max(colors)) if colors.size else 0,
         )
         return RadialCenterDistanceFields(
             d_from_center=d_from_center,
@@ -2273,7 +2388,9 @@ def measure_object_intensity_distribution(
     zernike_degree: int = 9,
     center_choice: CenterChoice = CenterChoice.SELF,
     radial_distribution_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    zernike_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    zernike_backend_provider: BackendProviderInput = (
+        MeasureObjectIntensityDistributionModule.zernike_backend_provider
+    ),
     slice_index: int | None = None,
     heatmap_groups: tuple[IntensityDistributionHeatmapGroup, ...] = (),
     heatmap_outputs: tuple[IntensityDistributionHeatmapRuntimeOutput, ...] = (),

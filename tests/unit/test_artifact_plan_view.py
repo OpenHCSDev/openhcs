@@ -219,7 +219,7 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
     record = ZMQCompileArtifactRecord(
         execution_id="compile-1",
         plate_id="/plates/one",
-        request_signature="request",
+        compilation_signature="request",
         debug_replay_signature="debug",
         compilation=ZMQCompilationResult(
             execution_bundle=bundle,

@@ -78,6 +78,77 @@ def test_native_radial_distribution_excludes_pixels_without_valid_center():
     assert np.all(radial_arrays.radial_cv_by_bin[:, 0] == 0.0)
 
 
+def test_radial_center_fast_path_matches_propagation_with_obstacles_and_touching_labels():
+    labels = np.zeros((36, 52), dtype=np.int32)
+    labels[2:30, 2:28] = 1
+    labels[8:25, 8:23] = 0
+    labels[13:19, 8:18] = 1
+    labels[5:29, 28:48] = 2
+    backend = NativeNumpyRadialDistributionBackendStrategy()
+    geometry = backend.label_geometry(labels)
+    center_fields = geometry.center_fields
+    unobstructed = mid._radial_unobstructed_center_fields(
+        labels, center_fields.centers_i, center_fields.centers_j
+    )
+    assert np.array_equal(np.flatnonzero(unobstructed[2]), np.array([1]))
+
+    seeds = np.zeros(labels.shape, dtype=np.int32)
+    for label in (1, 2):
+        row = int(center_fields.centers_i[label - 1])
+        column = int(center_fields.centers_j[label - 1])
+        seeds[row, column] = label
+    colors = backend.shape_geometry_backend().color_labels(labels)
+    reference_distances = np.zeros(labels.shape, dtype=np.float64)
+    reference_labels = np.zeros(labels.shape, dtype=np.int32)
+    for color in range(1, int(colors.max()) + 1):
+        mask = colors == color
+        result = backend.center_propagation_backend().propagate_zero_image_result(
+            seeds, mask, 1
+        )
+        reference_distances[mask] = result.distances[mask]
+        reference_labels[mask] = result.labels[mask]
+
+    np.testing.assert_array_equal(center_fields.center_labels, reference_labels)
+    np.testing.assert_allclose(
+        center_fields.d_from_center, reference_distances, rtol=0, atol=1e-12
+    )
+    image = np.arange(labels.size, dtype=np.float32).reshape(labels.shape) + 1
+    reference_geometry = mid.RadialLabelGeometry(
+        d_to_edge=geometry.d_to_edge,
+        center_fields=mid.RadialCenterDistanceFields(
+            d_from_center=reference_distances,
+            center_labels=reference_labels,
+            centers_i=center_fields.centers_i,
+            centers_j=center_fields.centers_j,
+        ),
+    )
+    expected = backend.measure_self_centered_with_geometry(
+        image,
+        labels,
+        reference_geometry,
+        bin_count=4,
+        wants_scaled=True,
+        maximum_radius=100,
+    )
+    actual = backend.measure_self_centered_with_geometry(
+        image,
+        labels,
+        geometry,
+        bin_count=4,
+        wants_scaled=True,
+        maximum_radius=100,
+    )
+    for field_name in (
+        "fraction_at_distance",
+        "mean_pixel_fraction",
+        "radial_cv_by_bin",
+        "object_has_pixels",
+    ):
+        np.testing.assert_array_equal(
+            getattr(actual, field_name), getattr(expected, field_name)
+        )
+
+
 def test_radial_distribution_uses_dense_extent_domain_for_missing_object_rows():
     image = np.ones((3, 3), dtype=np.float32)
     labels = np.array(
@@ -401,6 +472,46 @@ def test_measure_object_intensity_distribution_preserves_runtime_slice_axis():
     )
 
     assert set(columnar_row_values(measurements, "slice_index")) == {1}
+
+
+def test_default_intensity_zernike_rows_match_explicit_native_with_missing_objects():
+    image = np.arange(32 * 32, dtype=np.float32).reshape(32, 32) / 1024
+    labels = np.zeros(image.shape, dtype=np.int32)
+    labels[2:13, 3:15] = 1
+    labels[17:30, 19:31] = 3
+    object_labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(declared_object_count=3),
+    )
+
+    def measure(backend_provider=None):
+        kwargs = (
+            {}
+            if backend_provider is None
+            else {"zernike_backend_provider": backend_provider}
+        )
+        return measure_object_intensity_distribution(
+            source_image(image),
+            object_labels,
+            wants_zernikes=mid.ZernikeMode.MAGNITUDES_AND_PHASE,
+            zernike_degree=5,
+            **kwargs,
+        )[1]
+
+    default_rows = measure()
+    native_rows = measure(CellProfilerBackendProvider.NATIVE)
+    for field in ("object_label", "feature_name", "source_image_name", "n", "m"):
+        np.testing.assert_array_equal(
+            columnar_row_values(default_rows, field),
+            columnar_row_values(native_rows, field),
+        )
+    np.testing.assert_allclose(
+        columnar_row_values(default_rows, "result_value"),
+        columnar_row_values(native_rows, "result_value"),
+        rtol=1e-10,
+        atol=1e-12,
+        equal_nan=True,
+    )
 
 
 def test_measure_object_intensity_distribution_rejects_unprojected_label_stack():

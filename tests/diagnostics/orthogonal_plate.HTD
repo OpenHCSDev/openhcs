@@ -1,0 +1,21 @@
+"HTSInfoFile", Version 1.0
+"Description", "Synthetic orthogonal transport fixture, not biological acquisition"
+"TimePoints", 1
+"ZSeries", TRUE
+"ZSteps", 9
+"ZProjection", FALSE
+"XWells", 1
+"YWells", 1
+"WellsSelection1", TRUE
+"Sites", TRUE
+"XSites", 1
+"YSites", 1
+"SiteSelection1", TRUE
+"Waves", TRUE
+"NWavelengths", 2
+"PixelSizeUM", 0.8
+"WaveName1", "Synthetic-1"
+"WaveName2", "Synthetic-2"
+"WaveCollect1", 1
+"WaveCollect2", 1
+"EndFile"

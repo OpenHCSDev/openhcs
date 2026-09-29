@@ -1,0 +1,7 @@
+artifact_type,records,pickle_bytes,data_types
+ImageArtifactType,32,382249189,"ImageMetadataPayload,MaskedImagePayload"
+MeasurementsArtifactType,68,40925527,MeasurementTable
+ObjectLabelsArtifactType,32,1112183351,ObjectLabelSet
+RelationshipsArtifactType,16,285033,ObjectRelationship
+ObjectLineageArtifactType,8,145358,ObjectRelationship
+total,156,1540124588,

@@ -83,6 +83,25 @@ from openhcs.core.step_dependencies import (
 from openhcs.core.steps.function_step import FunctionStep
 
 
+def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
+    class Counter:
+        pass
+
+    context = ProcessingContext()
+    with pytest.raises(RuntimeError, match="active FunctionStep"):
+        context.runtime_step_value(Counter)
+
+    with context.runtime_step_scope():
+        first = context.runtime_step_value(Counter)
+        assert context.runtime_step_value(Counter) is first
+        with context.runtime_step_scope():
+            assert context.runtime_step_value(Counter) is not first
+        assert context.runtime_step_value(Counter) is first
+
+    with context.runtime_step_scope():
+        assert context.runtime_step_value(Counter) is not first
+
+
 def test_runtime_axis_scope_returns_exact_complete_plane_selection() -> None:
     scope = RuntimeExecutionAxisScope.from_raw(
         "A01",

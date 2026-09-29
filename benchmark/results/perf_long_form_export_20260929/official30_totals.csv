@@ -1,0 +1,3 @@
+variant,cases,successful_cases,compile_seconds,execute_seconds,total_seconds,source_run
+control,30,30,70.31004929542542,80.32941341400146,214.70831610122696,perf-plate-transport-full-candidate-20260929
+candidate,30,30,70.19554257392883,79.35025358200073,213.5243737725541,perf-long-form-candidate-full30-repeat-20260929

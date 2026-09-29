@@ -82,6 +82,37 @@ def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None
     )
 
 
+def test_presentation_cli_does_not_require_removed_semantic_family_coverage(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from benchmark.well_throughput_scaling import WellThroughputPresentationReport
+
+    generated = tmp_path / "generated.txt"
+    monkeypatch.setattr(
+        WellThroughputPresentationReport,
+        "generate",
+        lambda self: (generated,),
+    )
+    args = create_benchmark_argument_parser().parse_args(
+        [
+            "plot-well-throughput-presentation",
+            "--single-process-summary-csv",
+            str(tmp_path / "summary.csv"),
+            "--core-scaling-csv",
+            str(tmp_path / "core.csv"),
+            "--wells-per-core-csv",
+            str(tmp_path / "wells.csv"),
+            "--output-dir",
+            str(tmp_path / "figures"),
+        ]
+    )
+
+    assert args.cli_command.run(args) == 0
+    assert "outputs=1" in capsys.readouterr().out
+
+
 def test_measured_cli_rejects_existing_evidence_before_execution(
     tmp_path: Path,
 ) -> None:

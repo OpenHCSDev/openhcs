@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -170,6 +171,14 @@ class AgentPathPolicy:
                 f"Effective readable roots: {self.readable_roots.display()}."
             )
         return candidate
+
+    def iter_readable_files(self, directory: str | Path) -> Iterator[Path]:
+        """Yield regular files only after admitting each path, including symlinks."""
+        root = self.assert_readable(directory)
+        for path in root.rglob("*"):
+            self.assert_readable(path)
+            if path.is_file():
+                yield path
 
     def assert_writable(self, path: str | Path) -> Path:
         candidate = Path(path).expanduser().resolve(strict=False)

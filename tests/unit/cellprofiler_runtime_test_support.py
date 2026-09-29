@@ -46,6 +46,13 @@ class CellProfilerRuntimeTestContext:
     runtime_function_output_identity_cache: FunctionOutputIdentityCache = field(
         default_factory=FunctionOutputIdentityCache
     )
+    _runtime_step_values: dict[type[object], object] = field(default_factory=dict)
+
+    def runtime_step_value(self, value_type: type[Any]) -> Any:
+        """Provide one runtime-only value per type for a test step."""
+        if value_type not in self._runtime_step_values:
+            self._runtime_step_values[value_type] = value_type()
+        return self._runtime_step_values[value_type]
 
 
 def cellprofiler_runtime_input_edge_for_test(

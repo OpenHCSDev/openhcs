@@ -1,4 +1,5 @@
 import importlib
+from dataclasses import replace
 import sys
 import types
 from typing import get_type_hints
@@ -74,9 +75,11 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationCostesThresholdBatch,
+    ColocalizationCostesThresholdRequest,
     ColocalizationCostesThresholds,
     ColocalizationImagePairContext,
     ColocalizationObjectLabelContext,
+    CostesMethod,
     MeasureColocalizationModule,
     ObjectColocalizationMetricArrays,
     costes_backend,
@@ -1321,6 +1324,38 @@ def test_colocalization_threshold_batch_caches_semantic_label_context() -> None:
     first = batch.object_label_context(request, image_pair_context)
     second = batch.object_label_context(request, image_pair_context)
     assert second is first
+
+
+def test_costes_thresholds_reuse_equal_pixels_across_distinct_image_payloads() -> None:
+    image = np.stack(
+        (
+            np.array(((0.1, 0.2), (0.3, 0.4)), dtype=np.float32),
+            np.array(((0.4, 0.3), (0.2, 0.1)), dtype=np.float32),
+        )
+    )
+
+    def request_for(pixels: np.ndarray) -> ColocalizationCostesThresholdRequest:
+        return ColocalizationCostesThresholdRequest(
+            image=pixels,
+            image_data=pixels,
+            channel_1=0,
+            channel_2=1,
+            method=CostesMethod.FASTER,
+            scale_max=255,
+            backend_provider=None,
+            image_pair_context=ColocalizationImagePairContext.from_request(
+                pixels, channel_1=0, channel_2=1
+            ),
+        )
+
+    batch = ColocalizationCostesThresholdBatch()
+    first = batch.resolve(request_for(image))
+    assert batch.resolve(request_for(image.copy())) is first
+
+    changed = image.copy()
+    changed[0, 0, 0] += np.float32(0.1)
+    assert batch.resolve(request_for(changed)) is not first
+    assert batch.resolve(replace(request_for(image), scale_max=65535)) is not first
 
 
 def test_measure_colocalization_objects_batch_uses_contract_execution() -> None:
@@ -3928,6 +3963,30 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
     )
 
     assert illumination.dtype == image.dtype
+
+
+def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
+    import centrosome.cpmorphology
+
+    from openhcs.processing.backends.cellprofiler.label_geometry import (
+        _cellprofiler_convex_hull,
+    )
+
+    labels = np.zeros((91, 103), dtype=np.int32)
+    labels[3:35, 5:41] = 11
+    labels[12:20, 17:28] = 0
+    labels[40:80, 48:94] = 23
+    labels[40:80:3, 48:94:4] = 0
+    labels[85, 100] = 99
+    object_ids = np.array([11, 23, 99, 123], dtype=np.int32)
+
+    expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
+        labels, object_ids
+    )
+    actual_hull, actual_counts = _cellprofiler_convex_hull(labels, object_ids)
+
+    np.testing.assert_array_equal(actual_hull, expected_hull)
+    np.testing.assert_array_equal(actual_counts, expected_counts)
 
 
 def test_absorbed_convex_hull_transform_matches_centrosome_oracle():

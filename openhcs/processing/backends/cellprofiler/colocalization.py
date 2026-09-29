@@ -6,10 +6,11 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
 from dataclasses import dataclass, field, fields, make_dataclass, replace
 from enum import Enum
+import hashlib
 import logging
 from types import MappingProxyType
 import time
-from typing import Annotated, ClassVar, Tuple
+from typing import TYPE_CHECKING, Annotated, ClassVar, Tuple, cast
 
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
@@ -166,6 +167,9 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+
+if TYPE_CHECKING:
+    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 
 
 @dataclass(frozen=True, slots=True)
@@ -439,6 +443,21 @@ class MeasureColocalizationModule(
     measurement_scope_default = CellProfilerMeasurementTargetScope.IMAGE
     object_gate_setting = SettingNameFamily("Select an object to measure")
     ignored_settings = ("Hidden",)
+
+    @classmethod
+    def shared_object_measurement_runtime_kwargs(
+        cls, adapter: "CellProfilerRuntimeAdapter"
+    ) -> RuntimeCallableKwargs:
+        """Share exact Costes image-pair thresholds across object sets in one step."""
+        del cls
+        return cast(
+            RuntimeCallableKwargs,
+            {
+                "costes_threshold_batch": adapter.request.context.runtime_step_value(
+                    ColocalizationCostesThresholdBatch
+                )
+            },
+        )
 
     class MeasurementFeature(RuntimeMeasurementFeature):
         """Exact source-pair feature identities emitted by MeasureColocalization."""
@@ -1582,15 +1601,12 @@ class ColocalizationObjectLabelCacheKey:
 
 @dataclass(frozen=True, slots=True)
 class ColocalizationCostesThresholdCacheKey:
-    """Batch-local identity for Costes thresholds over one image pair."""
+    """Exact selected-pixel content and algorithm identity for Costes thresholds."""
 
-    image_payload_id: int
-    image_data_id: int
-    channel_1: int
-    channel_2: int
+    pair_digest: bytes
     method: CostesMethod
     scale_max: int
-    backend_provider: object
+    backend_provider: CellProfilerBackendProvider | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1890,6 +1906,14 @@ class _ObjectColocalizationRankProviderRuntimeParameter(KeywordRuntimeParameter)
     parameter_name = "rank_provider"
     annotation_type = ObjectColocalizationRankProvider
     parameter_default = _DIRECT_OBJECT_COLOCALIZATION_RANK_PROVIDER
+
+
+class _ColocalizationCostesThresholdBatchRuntimeParameter(KeywordRuntimeParameter):
+    """Step-owned Costes cache supplied by the CellProfiler module executor."""
+
+    parameter_name = "costes_threshold_batch"
+    annotation_type = RuntimeSliceInvariantValue
+    parameter_default = None
 
 
 @dataclass(slots=True)
@@ -2221,32 +2245,19 @@ def _resolve_object_costes_thresholds(
     base: ObjectColocalizationBaseStage,
     provided: ColocalizationCostesThresholds | None,
     metrics: ObjectColocalizationMetricArrays,
+    threshold_batch: ColocalizationCostesThresholdBatch | None = None,
 ) -> ColocalizationCostesThresholds | None:
     options = context.options
     if not (options.do_costes and base.full_first_pixels.size):
         return None
     if provided is not None:
         resolved = provided
-    elif options.costes_method == CostesMethod.FASTER:
-        threshold_c1, threshold_c2 = costes_backend(
-            backend_provider=options.costes_backend_provider
-        ).scaled_second_channel_costes(
-            base.full_first_pixels, base.full_second_pixels, options.scale_max
-        )
-        resolved = ColocalizationCostesThresholds.from_thresholds(
-            threshold_c1, threshold_c2
-        )
     else:
-        threshold_c1, threshold_c2 = costes_backend(
-            backend_provider=options.costes_backend_provider
-        ).linear_costes(
-            base.full_first_pixels,
-            base.full_second_pixels,
-            options.scale_max,
-            options.costes_method == CostesMethod.FAST,
-        )
-        resolved = ColocalizationCostesThresholds.from_thresholds(
-            threshold_c1, threshold_c2
+        request = ColocalizationCostesThresholdRequest.from_object_context(context)
+        resolved = (
+            threshold_batch.resolve(request)
+            if threshold_batch is not None
+            else request.thresholds()
         )
     metrics.costes_threshold_1.fill(resolved.first)
     metrics.costes_threshold_2.fill(resolved.second)
@@ -2626,6 +2637,7 @@ def _measure_colocalization_objects_core(
     *,
     costes_thresholds: ColocalizationCostesThresholds | None = None,
     rank_provider: ObjectColocalizationRankProvider = DirectObjectColocalizationRankProvider(),
+    threshold_batch: ColocalizationCostesThresholdBatch | None = None,
 ) -> Tuple[RuntimeArrayData, ObjectColocalizationColumnarMeasurements]:
     """Measure colocalization between two channels within labeled objects."""
     total_started_at = time.perf_counter()
@@ -2680,7 +2692,7 @@ def _measure_colocalization_objects_core(
     )
     phase_started_at = time.perf_counter()
     resolved_costes_thresholds = _resolve_object_costes_thresholds(
-        context, base, costes_thresholds, metrics
+        context, base, costes_thresholds, metrics, threshold_batch
     )
     runtime_profiler.log(
         "coloc_object_costes_thresholds",
@@ -2755,6 +2767,7 @@ def _measure_colocalization_objects_core(
 @runtime_bound_parameters(
     _ObjectColocalizationRankProviderRuntimeParameter,
     _ColocalizationThresholdMaskOutputsRuntimeParameter,
+    _ColocalizationCostesThresholdBatchRuntimeParameter,
 )
 def measure_colocalization_objects(
     image: np.ndarray,
@@ -2778,6 +2791,7 @@ def measure_colocalization_objects(
     threshold_mask_outputs: tuple[ColocalizationThresholdMaskRuntimeOutput, ...] = (),
     *,
     rank_provider: ObjectColocalizationRankProvider = _DIRECT_OBJECT_COLOCALIZATION_RANK_PROVIDER,
+    costes_threshold_batch: RuntimeSliceInvariantValue | None = None,
 ) -> Tuple[RuntimeArrayData | AlignedImageStack, ColumnarRows]:
     """Measure image and/or object colocalization through one declared callable.
 
@@ -2799,6 +2813,10 @@ def measure_colocalization_objects(
         measurement_scope,
         CellProfilerMeasurementTargetScope.OBJECT,
     ).measurement_scope_selection
+    if costes_threshold_batch is not None and not isinstance(
+        costes_threshold_batch, ColocalizationCostesThresholdBatch
+    ):
+        raise TypeError("Costes threshold batch must be a runtime cache instance.")
     context = _prepare_object_colocalization_context(
         image,
         labels,
@@ -2820,6 +2838,7 @@ def measure_colocalization_objects(
         context,
         costes_thresholds=costes_thresholds,
         rank_provider=rank_provider,
+        threshold_batch=costes_threshold_batch,
     )
     output = _colocalization_threshold_mask_canonical_output(
         image,
@@ -2972,15 +2991,39 @@ class ColocalizationCostesThresholdRequest:
 
     @property
     def cache_key(self) -> ColocalizationCostesThresholdCacheKey:
-        """Return the batch-local identity for this resolved source pair."""
+        """Fingerprint the exact selected pixels reused across object sets."""
+        pair = self.image_pair_context
+        if pair is None:
+            pair = ColocalizationImagePairContext.from_request(
+                self.image, channel_1=self.channel_1, channel_2=self.channel_2
+            )
+        digest = hashlib.blake2b(digest_size=32)
+        for pixels in (pair.full_first_pixels, pair.full_second_pixels):
+            array = np.ascontiguousarray(pixels)
+            digest.update(array.dtype.str.encode("ascii"))
+            digest.update(repr(array.shape).encode("ascii"))
+            digest.update(array.tobytes())
         return ColocalizationCostesThresholdCacheKey(
-            id(self.image),
-            id(self.image_data),
-            self.channel_1,
-            self.channel_2,
-            self.method,
-            self.scale_max,
-            self.backend_provider,
+            pair_digest=digest.digest(),
+            method=self.method,
+            scale_max=self.scale_max,
+            backend_provider=self.backend_provider,
+        )
+
+    @classmethod
+    def from_object_context(
+        cls, context: ObjectColocalizationRequestContext
+    ) -> "ColocalizationCostesThresholdRequest":
+        """Use the object call's already-selected full image-pair pixels."""
+        return cls(
+            image=context.image,
+            image_data=context.image_data,
+            channel_1=context.channel_1,
+            channel_2=context.channel_2,
+            method=context.options.costes_method,
+            scale_max=context.options.scale_max,
+            backend_provider=context.options.costes_backend_provider,
+            image_pair_context=context.image_pair,
         )
 
     @staticmethod
@@ -3070,8 +3113,8 @@ class ColocalizationCostesThresholdRequest:
         return ColocalizationCostesThresholds.from_thresholds(first, second)
 
 
-class ColocalizationCostesThresholdBatch:
-    """Batch-local Costes threshold cache keyed by resolved image-pair identity."""
+class ColocalizationCostesThresholdBatch(RuntimeSliceInvariantValue):
+    """Costes threshold cache scoped to one runtime FunctionStep."""
 
     def __init__(self) -> None:
         self._thresholds: dict[
@@ -3083,6 +3126,17 @@ class ColocalizationCostesThresholdBatch:
         self._label_contexts: dict[
             ColocalizationObjectLabelCacheKey, ColocalizationObjectLabelContext
         ] = {}
+
+    def resolve(
+        self, request: ColocalizationCostesThresholdRequest
+    ) -> ColocalizationCostesThresholds:
+        """Compute once for each exact pixel pair and algorithm selection."""
+        key = request.cache_key
+        thresholds = self._thresholds.get(key)
+        if thresholds is None:
+            thresholds = request.thresholds()
+            self._thresholds[key] = thresholds
+        return thresholds
 
     def image_pair_context(
         self, request: RuntimeBatchInvocationRequest
@@ -3156,11 +3210,7 @@ class ColocalizationCostesThresholdBatch:
         )
         thresholds = None
         if threshold_request is not None:
-            key = threshold_request.cache_key
-            thresholds = self._thresholds.get(key)
-            if thresholds is None:
-                thresholds = threshold_request.thresholds()
-                self._thresholds[key] = thresholds
+            thresholds = self.resolve(threshold_request)
         kwargs = {
             **request.kwargs,
             "image_pair_context": image_pair_context,

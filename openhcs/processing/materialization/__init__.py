@@ -22,11 +22,17 @@ from openhcs.processing.materialization.options import (
     ImageFileOptions,
     JsonOptions,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     SpatialGraphROIOptions,
     SWCOptions,
     TextOptions,
     TiffStackOptions,
+)
+from openhcs.processing.materialization.path_scopes import (
+    ExecutionAxisMaterializationRelativePathScope,
+    MaterializationRelativePathScope,
+    SharedMaterializationRelativePathScope,
 )
 from openhcs.processing.materialization.presets import (
     csv_dataclass_materializer,
@@ -58,6 +64,7 @@ __all__ = [
     "MaterializedFilenameIdentity",
     "CsvOptions",
     "JsonOptions",
+    "PointROIOptions",
     "ROIOptions",
     "SpatialGraphROIOptions",
     "SWCOptions",
@@ -74,4 +81,7 @@ __all__ = [
     "tiff_stack",
     "text_only",
     "tabular_field_names_from_materialization",
+    "MaterializationRelativePathScope",
+    "SharedMaterializationRelativePathScope",
+    "ExecutionAxisMaterializationRelativePathScope",
 ]

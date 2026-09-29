@@ -12,6 +12,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
+from openhcs.processing.materialization.path_scopes import (
+    MaterializationRelativePathScope,
+    SharedMaterializationRelativePathScope,
+)
+
 
 class MaterializedFilenameIdentity(str, Enum):
     """Semantic identity used to construct materialized artifact filenames."""
@@ -99,6 +105,28 @@ class ROIOptions(FileOutputOptions, SourceOptions):
         return self.roi_suffix
 
 
+@dataclass(frozen=True, kw_only=True)
+class PointROIOptions(FileOutputOptions, SourceOptions):
+    """Persist typed 3D object-location measurements as point ROIs."""
+
+    z_feature: RuntimeMeasurementFeature
+    y_feature: RuntimeMeasurementFeature
+    x_feature: RuntimeMeasurementFeature
+    filename_suffix: str = "_points.roi.zip"
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        features = (self.z_feature, self.y_feature, self.x_feature)
+        if not all(
+            isinstance(feature, RuntimeMeasurementFeature) for feature in features
+        ):
+            raise TypeError(
+                "PointROIOptions coordinates require runtime measurement features."
+            )
+        if len({feature.measurement_row_field_name for feature in features}) != 3:
+            raise ValueError("PointROIOptions coordinates require distinct row fields.")
+
+
 @dataclass(frozen=True)
 class SWCOptions(FileOutputOptions, SourceOptions):
     """SWC writer options for a rooted neuronal morphology forest."""
@@ -150,6 +178,9 @@ class ImageFileOptions(FileOutputOptions, SourceOptions):
     """One image file written through the registered image format family."""
 
     relative_path_template: str | None = None
+    relative_path_scope: MaterializationRelativePathScope = field(
+        default_factory=SharedMaterializationRelativePathScope
+    )
 
 
 @dataclass(frozen=True)

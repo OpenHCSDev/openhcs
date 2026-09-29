@@ -753,6 +753,34 @@ def test_long_form_projection_omits_structurally_missing_qualifiers() -> None:
     )
 
 
+def test_object_scoped_long_form_projection_rejects_conflicting_values() -> None:
+    rows = _ColumnOnlyMeasurementRows(
+        {
+            "slice_index": (1, 1),
+            "object_label": (7, 7),
+            "feature_name": ("intensity", "intensity"),
+            "result_value": (4.0, 5.0),
+        },
+        fields=(
+            FieldSpec("slice_index", int),
+            FieldSpec("object_label", int),
+            FieldSpec("feature_name", str),
+            FieldSpec("result_value", float),
+        ),
+    )
+    accumulator = WideMeasurementRowAccumulator(
+        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+    )
+
+    with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
+        accumulator.add(
+            rows,
+            lambda feature, _qualifiers: feature,
+            default_subject="Cells",
+            default_scope=MeasurementScope.OBJECT,
+        )
+
+
 def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -> None:
     accumulator = WideMeasurementRowAccumulator(
         DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT

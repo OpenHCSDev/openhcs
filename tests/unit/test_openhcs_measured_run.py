@@ -86,7 +86,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             )
             return {"status": "accepted", "execution_id": "execute-1"}
 
-        def wait_for_completion(self, execution_id):
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
             if execution_id == "execute-1":
                 observation_path.touch()
             return {
@@ -235,7 +235,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
                 "execution_id": f"execute-{self.run_number}",
             }
 
-        def wait_for_completion(self, execution_id):
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
             if execution_id.startswith("compile-"):
                 observer({"phase": "compile", "status": "success", "timestamp": 10.5})
             else:

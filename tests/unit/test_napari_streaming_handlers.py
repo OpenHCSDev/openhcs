@@ -5992,6 +5992,103 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert layer_kwargs["properties"] == {"label": [7], "component": [4]}
 
 
+def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    server = _FakeNapariServer()
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.layer_route_state.set_title("centres", "Centres")
+    server.viewer = _FakeViewer()
+    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
+    semantics = ViewerComponentAxisSemantics(
+        entries=_component_value_domain({"z_index": [0, 1, 2, 3]}).entries,
+        layout=ViewerComponentLayout.from_parts(
+            component_modes={"z_index": ViewerComponentMode.STACK},
+            component_order=("z_index",),
+        ),
+    )
+    item = _layer_item(
+        {"z_index": 0},
+        [
+            {
+                "type": "points",
+                "coordinates": [[1.25, 3.5]],
+                "metadata": {"label": 7, "openhcs_fractional_z": 2.375},
+            }
+        ],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
+    projection = pipeline.display_axis_projection("centres", semantics, [item])
+    assert projection.component_values == {"z_index": [0, 1, 2, 3]}
+    assert projection.routed_component_values == {"z_index": [0, 1, 2, 3]}
+    assert projection.routed_component_coordinates == ((0,),)
+    presentation = NapariAxisPresentation(
+        entries=semantics.entries,
+        layout=semantics.layout,
+        route_key="centres",
+        projection=projection,
+    )
+    napari_viewer_server.NapariPointsLayerDisplayHandler().handle(
+        napari_viewer_server.NapariLayerDisplayRequest(
+            pipeline=pipeline,
+            presentation=presentation,
+            items=[item],
+            display_config=NapariDisplayConfig(),
+        )
+    )
+    assert tuple(server.viewer.calls[-1][1][0]) == (2.375, 1.25, 3.5)
+
+
+def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    server = _FakeNapariServer()
+    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
+    semantics = ViewerComponentAxisSemantics(
+        entries=_component_value_domain({"z_index": [0, 1, 2, 3, 4]}).entries,
+        layout=ViewerComponentLayout.from_parts(
+            component_modes={"z_index": ViewerComponentMode.STACK},
+            component_order=("z_index",),
+        ),
+    )
+    item = _layer_item(
+        {"z_index": 2},
+        [
+            {
+                "type": "points",
+                "coordinates": [[1.25, 3.5]],
+                "metadata": {"openhcs_fractional_z": 1.25},
+            }
+        ],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
+    projection = pipeline.display_axis_projection("centres", semantics, [item])
+    assert projection.component_values == {"z_index": [2, 3, 4]}
+    points, _properties = napari_viewer_server._build_nd_points([item], projection)
+    assert tuple(points[0]) == (1.25, 1.25, 3.5)
+    assert projection.axis_offsets == (2,)
+
+
+def test_napari_points_layer_rejects_fractional_z_without_z_axis():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    item = _layer_item(
+        {"channel": 1},
+        [
+            {
+                "type": "points",
+                "coordinates": [[1.25, 3.5]],
+                "metadata": {"openhcs_fractional_z": 2.375},
+            }
+        ],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
+    presentation = _axis_presentation(
+        layer_key="centres",
+        projected_axis_components=("channel",),
+        component_values={"channel": [1]},
+    )
+    with pytest.raises(ValueError, match="projected z_index axis"):
+        napari_viewer_server._build_nd_points([item], presentation.projection)
+
+
 def test_native_image_intensity_command_preserves_data_and_navigation():
     module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     from napari.layers import Image

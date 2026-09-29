@@ -29,6 +29,7 @@ from openhcs.processing.materialization.core import materialization_is_empty
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +130,22 @@ class RuntimeExportObservation:
                 for plan in context.step_plans.values()
                 if plan.owns_runtime_outputs
                 for path in runtime_export_artifact_output_paths(plan, context)
+            )
+        )
+
+    @classmethod
+    def from_runtime_observations(
+        cls,
+        observations: Sequence[RuntimeExecutionObservation],
+    ) -> RuntimeExportObservation:
+        """Build exports from worker-projected paths without retaining values."""
+
+        return cls.from_output_paths(
+            tuple(
+                path
+                for observation in observations
+                for context in observation.contexts
+                for path in context.runtime_export_paths
             )
         )
 

@@ -1,0 +1,3 @@
+server_lifecycle,elapsed_seconds,exit_code,run_root
+fresh-per-observation,236.932745,0,perf-fresh-current-full30-20260929
+reused-per-sweep,133.951502,0,perf-reused-current-full30-repeat-20260929
