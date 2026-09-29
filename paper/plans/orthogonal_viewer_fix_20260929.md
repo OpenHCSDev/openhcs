@@ -46,8 +46,35 @@ dimensions. Its `update_dims_order` preserves the leading entries of CURRENT
 selection when those entries include a component such as `well`, not a general
 ndim restriction or a fixed requirement on physical data axis positions.
 
-Implementation is blocked before Python edits: complete NRA/R1 coverage has not
+Implementation is blocked before production Python edits: complete NRA/R1 coverage has not
 been obtained within the 768 MiB worker scan ceiling. The corrected-budget scan
 was stopped at 771 MiB sampled RSS; failed receipts are retained. A larger scan
 allowance requires main's direction, and heavy work also requires the host's
 available-memory and PSI gates. No scientific or existing viewer work occurred.
+
+## Supported native-only checkpoint, 2026-09-29
+
+The authorised standalone diagnostic is now
+`tests/runtime_diagnostics/orthogonal_native_7d.py`. An owned uv environment
+resolved and installed pinned Napari 0.9.1 (satisfying `>=0.7.1`) and NumPy 2.5.3
+from wheel hashes; shared installs were untouched. The unchanged six-case
+diagnostic passed 94 raw/dense-Labels sample pairs and 6 transformed Points
+checks. Final descendant-monitored repeat: 5.14 seconds, peak native RSS
+161,388 KiB, sampled aggregate plus monitor 186,116 KiB; task disk <1 GiB.
+
+The initial functional pass is retained, but its process-group monitor omitted
+the Python child and reported only 1,776 KiB. It is not real-time RSS guard
+proof. A PID/start-checked, pidfd-pinned descendant monitor was then verified
+against an owned 32 MiB child allocation before the final repeat. Exact helper
+source, hashes, failed/successful receipts and sampling limitations are recorded
+in [the surface receipt](orthogonal_viewer_receipt_20260929.md).
+
+Main also demonstrated an in-scope closure obligation: result selection uses
+the coordinate-axis prefix inferred from `ndisplay`, not the actual hidden
+axes after `dims.order` changes. XZ/YZ selection must project the actual hidden
+set through the existing typed route presentation; legal XY and truthful
+planar Shapes cross-section rejection must remain intact.
+
+No production Python, GUI, plugin or MCP implementation is complete. The
+standalone diagnostic exception does not waive the complete NRA/R1 audit gate.
+PR #154 remains draft and issue #152 remains open.
