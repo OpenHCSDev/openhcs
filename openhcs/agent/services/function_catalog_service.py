@@ -471,6 +471,20 @@ PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()
 class FunctionCatalogServiceABC(ABC):
     """Callable-catalog authority consumed by agent authoring services."""
 
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare the authoritative catalog through this service's transport."""
+
+        self.catalog(
+            compact_signatures=True,
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
+
     @abstractmethod
     def register_custom_function(
         self,
@@ -530,6 +544,20 @@ class FunctionCatalogServiceABC(ABC):
 
 class FunctionCatalogService(FunctionCatalogServiceABC):
     """Expose registered OpenHCS processing callables through stable IDs."""
+
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare kernels in the owned registry child, including cached catalogs."""
+
+        RegistryService.prepare_persistent_catalog(
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
+        super().prepare(status_callback=status_callback, cancellation=cancellation)
 
     def __init__(self) -> None:
         self._projection_metadata: dict[str, FunctionMetadata] | None = None

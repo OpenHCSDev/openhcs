@@ -326,7 +326,7 @@ def test_registry_cache_miss_is_prepared_out_of_process(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         RegistryService,
-        "_prepare_persistent_catalog",
+        "prepare_persistent_catalog",
         classmethod(
             lambda cls, *, status_callback=None, cancellation=None: prepared.append(
                 True
@@ -528,7 +528,7 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
         lambda source: OwnedProcess() if source is process else None,
     )
 
-    registry_service.RegistryService._prepare_persistent_catalog()
+    registry_service.RegistryService.prepare_persistent_catalog()
 
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
@@ -579,7 +579,7 @@ def test_registry_preparation_cancels_its_exact_owned_process(monkeypatch) -> No
     )
 
     with pytest.raises(CancelledError):
-        registry_service.RegistryService._prepare_persistent_catalog(
+        registry_service.RegistryService.prepare_persistent_catalog(
             cancellation=cancellation,
         )
 

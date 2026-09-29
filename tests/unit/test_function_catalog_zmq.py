@@ -640,14 +640,12 @@ def test_function_catalog_preparation_cancellation_reaches_catalog_owner() -> No
     started = threading.Event()
 
     class CancellableCatalog:
-        def catalog(
+        def prepare(
             self,
             *,
-            compact_signatures,
             status_callback,
             cancellation,
         ) -> None:
-            assert compact_signatures is True
             del status_callback
             started.set()
             cancellation.wait()
@@ -681,6 +679,67 @@ def test_persistent_capability_preparation_uses_registry_owner(
     FunctionCatalogPreparation.prepare_persistent_catalog()
 
     assert events == ["prepare"]
+
+
+def test_catalog_readiness_waits_for_kernel_preparation_with_cached_metadata(
+    monkeypatch,
+) -> None:
+    """Metadata availability cannot publish readiness ahead of kernel warmup."""
+
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+
+    started = threading.Event()
+    release = threading.Event()
+    events = []
+    monkeypatch.setattr(RegistryService, "_metadata_cache", {})
+
+    def prepare(*, status_callback, cancellation):
+        assert cancellation is not None
+        status_callback("Preparing declared kernels")
+        events.append("kernels")
+        started.set()
+        assert release.wait(timeout=5)
+
+    def catalog(self, *, compact_signatures, status_callback, cancellation):
+        assert compact_signatures is True
+        events.append("catalog")
+        return _catalog()
+
+    monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", prepare)
+    monkeypatch.setattr(FunctionCatalogService, "catalog", catalog)
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    future = preparation.ensure_started()
+    try:
+        assert started.wait(timeout=1)
+        assert preparation.ensure_started() is future
+        assert not future.done()
+        assert preparation.snapshot().message == "Preparing declared kernels"
+    finally:
+        release.set()
+        preparation.cancel_and_join()
+    assert future.result() is None
+    assert events == ["kernels", "catalog"]
+
+
+def test_kernel_preparation_failure_reaches_catalog_future(monkeypatch) -> None:
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+
+    def fail(**kwargs):
+        raise RuntimeError("kernel preparation failed")
+
+    monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", fail)
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    try:
+        with pytest.raises(RuntimeError, match="kernel preparation failed"):
+            preparation.wait_until_ready(observation_interval_seconds=0.01)
+    finally:
+        preparation.cancel_and_join()
 
 
 def test_endpoint_catalog_reconciles_persisted_custom_function_sources(

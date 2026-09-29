@@ -1,0 +1,23 @@
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 39%]
+........................................................................ [ 52%]
+........................................................................ [ 65%]
+........................................................................ [ 78%]
+........................................................................ [ 91%]
+..............................................                           [100%]
+=============================== warnings summary ===============================
+tests/unit/test_cellprofiler_morphology.py::test_fill_objects_modes_preserve_nominal_object_label_output[FillMode.HOLES]
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/morphology.py:848: FutureWarning: Parameter `area_threshold` is deprecated since version 0.26.0 and will be removed in 2.0.0 (or later). To avoid this warning, please use the parameter `max_size` instead. For more details, see the documentation of `remove_small_holes`. Note that the new threshold removes objects smaller than **or equal to** its value, while the previous parameter only removed smaller ones.
+    filled_mask = remove_small_holes(
+
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1420: FutureWarning: `binary_dilation` is deprecated since version 0.26 and will be removed in version 0.28. Use `skimage.morphology.dilation` instead. Note the lack of mirroring for non-symmetric footprints (see docstring notes).
+    seeds = skimage.morphology.binary_dilation(
+
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1449: RuntimeWarning: overflow encountered in scalar add
+    y_data += np.abs(np.min(y_data)) + 1
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+550 passed, 3 warnings in 17.65s

@@ -1,0 +1,14 @@
+{"phase": "existing_metadata", "seconds": 0.1823455668054521, "valid": false, "numba_cache": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2", "nbi_before": 0}
+{"status": "Starting function catalog preparation"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Preparing function catalog and declared kernel caches"}
+{"status": "Projecting function metadata for the execution endpoint"}
+{"phase": "production_catalog_warmup", "seconds": 53.52896271692589, "nbi_after": 205, "functions": 266}
