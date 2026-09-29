@@ -77,7 +77,7 @@ require a settled, scalar, non-multiscale image route in a native YX 2-D display
 Unbound stacks/RGB, ambiguous records, missing axes, sparse padding, nonfinite
 inputs/pixels and out-of-bounds geometry fail explicitly; no coordinate clamps.
 
-Both tools take `host`, `port`, optional `transport_mode`, `persistent=true`,
+Both tools take `host="localhost"`, required `port`, optional `transport_mode`,
 `timeout_ms=5000`, the exact `route_key`, **all** route-local component
 `axis_indices` (zero-based; `{}` only for a route with no component axes), and
 `vertices_yx` as source-native `[y,x]` pixel-centre pairs. Discover route-local
