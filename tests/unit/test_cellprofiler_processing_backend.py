@@ -450,6 +450,35 @@ def test_openhcs_registry_cache_invalidates_when_scanned_modules_change(
     assert "cellprofiler_identify_primary_objects" in functions
 
 
+def test_openhcs_registry_valid_cache_skips_full_module_scan(
+    tmp_path, monkeypatch
+) -> None:
+    cache_path = tmp_path / "openhcs_function_metadata.json"
+    discovery = OpenHCSRegistry()
+    discovery._cache_path = cache_path
+    discovery.MODULES_TO_SCAN = ["openhcs.processing.backends.cellprofiler"]
+    expected = discovery.load_or_discover_functions()
+
+    cached = OpenHCSRegistry()
+    cached._cache_path = cache_path
+    cached.MODULES_TO_SCAN = ["openhcs.processing.backends.cellprofiler"]
+
+    def unexpected_scan():
+        raise AssertionError("Valid OpenHCS cache imported the full module inventory")
+
+    monkeypatch.setattr(cached, "get_modules_to_scan", unexpected_scan)
+    assert cached.is_available_for_catalog()
+    actual = cached.load_or_discover_functions()
+    assert {
+        name: (metadata.import_identity, metadata.contract, metadata.get_memory_type())
+        for name, metadata in actual.items()
+    } == {
+        name: (metadata.import_identity, metadata.contract, metadata.get_memory_type())
+        for name, metadata in expected.items()
+    }
+    assert "cellprofiler_identify_primary_objects" in actual
+
+
 def test_openhcs_registry_cache_identity_includes_memory_import_policy(
     tmp_path,
     monkeypatch,

@@ -854,6 +854,9 @@ class CellProfilerModuleExecutor:
                 )
             )
         measurement_row_policy = module_type.runtime_object_measurement_row_policy()
+        shared_runtime_kwargs = module_type.shared_object_measurement_runtime_kwargs(
+            cellprofiler_runtime
+        )
         label_payload_seconds = 0.0
         label_align_seconds = 0.0
         contract_execute_seconds = 0.0
@@ -934,6 +937,7 @@ class CellProfilerModuleExecutor:
                         image=aligned_measurement_image.payload,
                         kwargs={
                             **invocation_kwargs,
+                            **shared_runtime_kwargs,
                             **_execution_mode_semantic_control_kwargs(
                                 processing_contract,
                                 execution_mode,

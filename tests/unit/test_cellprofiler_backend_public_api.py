@@ -80,6 +80,130 @@ def test_raw_callable_reference_construction_does_not_discover_other_modules() -
     assert completed.returncode == 0, completed.stderr or completed.stdout
 
 
+def test_exact_callable_contract_and_preparation_keep_other_modules_lazy() -> None:
+    script = textwrap.dedent("""
+        import importlib
+        import sys
+
+        from openhcs.core.callable_contract import (
+            CallableImportIdentity,
+            prepare_processing_callable,
+        )
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        module_name = "openhcs.processing.backends.cellprofiler.crop"
+        raw_crop = vars(importlib.import_module(module_name))["crop"]
+        prefix = "openhcs.processing.backends.cellprofiler."
+        before = {
+            name for name in sys.modules if name.startswith(prefix)
+        }
+
+        identity = CallableImportIdentity.from_callable(raw_crop)
+        owner = CellProfilerModule.for_callable_import_identity(identity)
+        assert owner is not None
+        assert owner.require_module_name() == "Crop"
+        prepare_processing_callable(raw_crop)
+
+        after = {
+            name for name in sys.modules if name.startswith(prefix)
+        }
+        assert after == before, sorted(after - before)
+        assert not CellProfilerModule.__registry__._discovered
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
+def test_experiment_measurements_use_recorded_owner_without_catalog_discovery() -> None:
+    script = textwrap.dedent("""
+        import sys
+
+        from openhcs.core.measurement_row_materialization import MeasurementProjectedColumnarRows
+        from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
+        from openhcs.core.runtime_tabular_values import FieldSpec
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.image_quality import MeasureImageQualityModule
+
+        feature = "ImageQuality_ThresholdOtsu_OrigHoechst_2W"
+        table = MeasurementTable(
+            name="MeasureImageQuality_measurements",
+            rows=MeasurementProjectedColumnarRows(
+                {feature: (0.2, 0.4)},
+                fields=(FieldSpec(feature, float, required=False),),
+            ),
+            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            measurement_feature_owner=MeasureImageQualityModule,
+        )
+        prefix = "openhcs.processing.backends.cellprofiler."
+        before = {name for name in sys.modules if name.startswith(prefix)}
+        (experiment_table,) = CellProfilerModule.derive_experiment_measurement_tables((table,))
+        after = {name for name in sys.modules if name.startswith(prefix)}
+
+        assert experiment_table.name == "MeasureImageQuality_experiment_measurements"
+        assert before == after, sorted(after - before)
+        assert not CellProfilerModule.__registry__._discovered
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
+def test_recorded_measurement_owner_lookup_keeps_other_modules_lazy() -> None:
+    script = textwrap.dedent("""
+        import sys
+
+        from openhcs.interop.cellprofiler.measurement_dialect import (
+            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            cellprofiler_lookup_dialect_for_measurement_owner,
+        )
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
+
+        prefix = "openhcs.processing.backends.cellprofiler."
+        before = {name for name in sys.modules if name.startswith(prefix)}
+        scoped = cellprofiler_lookup_dialect_for_measurement_owner(
+            MeasureObjectIntensityModule
+        )
+        lookup = scoped.feature_lookup("Intensity_MeanIntensity_DNA")
+        assert "mean_intensity_dna" in lookup.field_aliases
+        assert lookup.source_aliases == ("dna",)
+        assert cellprofiler_lookup_dialect_for_measurement_owner(None) is (
+            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+        )
+        after = {name for name in sys.modules if name.startswith(prefix)}
+        assert after == before, sorted(after - before)
+        assert not CellProfilerModule.__registry__._discovered
+
+        global_lookup = CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_lookup(
+            "Intensity_MeanIntensity_DNA"
+        )
+        assert lookup.field_aliases == global_lookup.field_aliases
+        assert lookup.source_aliases == global_lookup.source_aliases
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
 def test_submodule_import_does_not_replace_backend_callable() -> None:
     import openhcs.processing.backends.cellprofiler as cellprofiler_backend
 

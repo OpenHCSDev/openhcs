@@ -286,7 +286,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
             assert submission.compile_artifact_id == "compile-1"
             return {"status": "accepted", "execution_id": "exec-1"}
 
-        def wait_for_completion(self, execution_id):
+        def wait_for_completion(self, execution_id, poll_interval=0.5):
             self.waits.append(execution_id)
             if execution_id == "compile-1":
                 return {

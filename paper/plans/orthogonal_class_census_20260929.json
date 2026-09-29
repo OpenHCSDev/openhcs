@@ -1,0 +1,5776 @@
+{
+  "revision": "db0266493d0f73a94c5c81909b768d8b9f9579e2",
+  "classes": [
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 19,
+      "original_index": 80,
+      "name": "ViewerShapePayloadProjection",
+      "projection": "openhcs.runtime.viewer_controls.ViewerShapePayloadProjection",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 53,
+      "original_index": 256,
+      "name": "ViewerResultElementCoordinateAuthority",
+      "projection": "openhcs.runtime.viewer_controls.ViewerResultElementCoordinateAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 180,
+      "original_index": 916,
+      "name": "ViewerPayloadControlOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerPayloadControlOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 309,
+      "original_index": 1554,
+      "name": "ViewerPayloadProjectionOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerPayloadProjectionOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 342,
+      "original_index": 1652,
+      "name": "ViewerStateControlOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerStateControlOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 407,
+      "original_index": 1947,
+      "name": "ViewerIntensityWindowControlOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerIntensityWindowControlOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 466,
+      "original_index": 2215,
+      "name": "ViewerNavigationControlOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerNavigationControlOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "line": 544,
+      "original_index": 2624,
+      "name": "ViewerLayerIsolationControlOptions",
+      "projection": "openhcs.runtime.viewer_controls.ViewerLayerIsolationControlOptions",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 100,
+      "original_index": 234,
+      "name": "ViewerSettlePhase",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerSettlePhase",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 108,
+      "original_index": 253,
+      "name": "ViewerSettleField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerSettleField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 119,
+      "original_index": 284,
+      "name": "ViewerPayloadSummaryField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerPayloadSummaryField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 130,
+      "original_index": 315,
+      "name": "ViewerControlField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 150,
+      "original_index": 382,
+      "name": "OpenHCSViewerControlMessageType",
+      "projection": "openhcs.runtime.viewer_protocol.OpenHCSViewerControlMessageType",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 156,
+      "original_index": 393,
+      "name": "ViewerLayerIsolationField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLayerIsolationField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 164,
+      "original_index": 412,
+      "name": "ViewerIntensityWindowField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerIntensityWindowField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 177,
+      "original_index": 451,
+      "name": "ViewerLayerField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLayerField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 211,
+      "original_index": 574,
+      "name": "ViewerPayloadField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerPayloadField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 226,
+      "original_index": 621,
+      "name": "ViewerDescriptorField",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerDescriptorField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 234,
+      "original_index": 636,
+      "name": "ViewerTypeIdentity",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerTypeIdentity",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 240,
+      "original_index": 651,
+      "name": "ViewerPersistenceMode",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerPersistenceMode",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 264,
+      "original_index": 731,
+      "name": "ViewerControlResponse",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlResponse",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 281,
+      "original_index": 813,
+      "name": "ViewerSettleProgress",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerSettleProgress",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 388,
+      "original_index": 1305,
+      "name": "ViewerComponentValueOrdering",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerComponentValueOrdering",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 439,
+      "original_index": 1602,
+      "name": "QtPlatformName",
+      "projection": "openhcs.runtime.viewer_protocol.QtPlatformName",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 481,
+      "original_index": 1747,
+      "name": "ViewerProcessPlatform",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerProcessPlatform",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 528,
+      "original_index": 1944,
+      "name": "ViewerLaunchContextMode",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLaunchContextMode",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 537,
+      "original_index": 1961,
+      "name": "ViewerLaunchContext",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLaunchContext",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 602,
+      "original_index": 2244,
+      "name": "ViewerGraphicalSessionUnavailableError",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerGraphicalSessionUnavailableError",
+      "bases": [],
+      "declared_bases": [
+        "RuntimeError"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 615,
+      "original_index": 2286,
+      "name": "NapariLayerKind",
+      "projection": "openhcs.runtime.viewer_protocol.NapariLayerKind",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 624,
+      "original_index": 2307,
+      "name": "FijiPayloadKind",
+      "projection": "openhcs.runtime.viewer_protocol.FijiPayloadKind",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 671,
+      "original_index": 2466,
+      "name": "ViewerServerLaunchRequest",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerServerLaunchRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 682,
+      "original_index": 2512,
+      "name": "OpenHCSViewerServerABC",
+      "projection": "openhcs.runtime.viewer_protocol.OpenHCSViewerServerABC",
+      "bases": [],
+      "declared_bases": [
+        "StreamingVisualizerServer",
+        "ABC"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 693,
+      "original_index": 2537,
+      "name": "NapariViewerServerRequest",
+      "projection": "openhcs.runtime.viewer_protocol.NapariViewerServerRequest",
+      "bases": [
+        "openhcs.runtime.viewer_protocol.ViewerServerLaunchRequest"
+      ],
+      "declared_bases": [
+        "ViewerServerLaunchRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 701,
+      "original_index": 2560,
+      "name": "ViewerRuntimeEndpoint",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerRuntimeEndpoint",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 813,
+      "original_index": 2994,
+      "name": "DetachedViewerPythonExpression",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerPythonExpression",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 832,
+      "original_index": 3059,
+      "name": "DetachedViewerPythonArguments",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerPythonArguments",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 857,
+      "original_index": 3160,
+      "name": "DetachedViewerLaunchLog",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerLaunchLog",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 883,
+      "original_index": 3324,
+      "name": "DetachedViewerLaunchFailure",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerLaunchFailure",
+      "bases": [],
+      "declared_bases": [
+        "RuntimeError"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 909,
+      "original_index": 3413,
+      "name": "DetachedViewerLaunchRequest",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerLaunchRequest",
+      "bases": [
+        "openhcs.runtime.viewer_protocol.ViewerTypeIdentity"
+      ],
+      "declared_bases": [
+        "ViewerTypeIdentity"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 980,
+      "original_index": 3759,
+      "name": "DetachedViewerServerEntrypointSpec",
+      "projection": "openhcs.runtime.viewer_protocol.DetachedViewerServerEntrypointSpec",
+      "bases": [
+        "openhcs.runtime.viewer_protocol.ViewerTypeIdentity"
+      ],
+      "declared_bases": [
+        "ViewerTypeIdentity"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1077,
+      "original_index": 4104,
+      "name": "ViewerQtPlatformEnvironmentPolicy",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerQtPlatformEnvironmentPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1099,
+      "original_index": 4219,
+      "name": "ViewerQtEnvironmentPolicy",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerQtEnvironmentPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1140,
+      "original_index": 4407,
+      "name": "ViewerControlPingMode",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlPingMode",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1165,
+      "original_index": 4493,
+      "name": "ViewerLifecycleMode",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLifecycleMode",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1174,
+      "original_index": 4510,
+      "name": "ViewerLifecycleState",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerLifecycleState",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1206,
+      "original_index": 4630,
+      "name": "ViewerControlPingPolicy",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlPingPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1214,
+      "original_index": 4650,
+      "name": "ViewerControlPingRequest",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlPingRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1237,
+      "original_index": 4714,
+      "name": "ViewerControlMessageRequest",
+      "projection": "openhcs.runtime.viewer_protocol.ViewerControlMessageRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1289,
+      "original_index": 5035,
+      "name": "ManagedViewerLifecycleMixin",
+      "projection": "openhcs.runtime.viewer_protocol.ManagedViewerLifecycleMixin",
+      "bases": [],
+      "declared_bases": [
+        "VisualizerProcessManager",
+        "ExecutionVisualizerABC",
+        "ABC"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "line": 1761,
+      "original_index": 7052,
+      "name": "ChannelColormapPolicy",
+      "projection": "openhcs.runtime.viewer_protocol.ChannelColormapPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 58,
+      "original_index": 339,
+      "name": "ViewerStreamingDataTypeHandlerMeta",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerStreamingDataTypeHandlerMeta",
+      "bases": [],
+      "declared_bases": [
+        "AutoRegisterMeta"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 90,
+      "original_index": 492,
+      "name": "ViewerComponentSemanticRole",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentSemanticRole",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 96,
+      "original_index": 501,
+      "name": "ViewerStreamingDataTypeHandler",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerStreamingDataTypeHandler",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 131,
+      "original_index": 647,
+      "name": "ViewerDisplayConfigInput",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerDisplayConfigInput",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 144,
+      "original_index": 691,
+      "name": "ViewerMappingDisplayConfigInput",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerMappingDisplayConfigInput",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerDisplayConfigInput"
+      ],
+      "declared_bases": [
+        "ViewerDisplayConfigInput"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 155,
+      "original_index": 734,
+      "name": "ViewerObjectDisplayConfigInput",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerObjectDisplayConfigInput",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerDisplayConfigInput"
+      ],
+      "declared_bases": [
+        "ViewerDisplayConfigInput"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 168,
+      "original_index": 780,
+      "name": "ViewerComponentAddress",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentAddress",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 177,
+      "original_index": 796,
+      "name": "ViewerComponentAddressedItem",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentAddressedItem",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 186,
+      "original_index": 812,
+      "name": "ViewerComponentLayoutMappingParser",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentLayoutMappingParser",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 229,
+      "original_index": 968,
+      "name": "ViewerComponentLayout",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentLayout",
+      "bases": [],
+      "declared_bases": [
+        "ViewerBatchDisplayPayload"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 281,
+      "original_index": 1157,
+      "name": "ViewerComponentMetadataNormalizer",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentMetadataNormalizer",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 302,
+      "original_index": 1276,
+      "name": "ViewerComponentValueDomainEntry",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueDomainEntry",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 331,
+      "original_index": 1405,
+      "name": "ViewerComponentValueDomainPayload",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueDomainPayload",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 474,
+      "original_index": 2097,
+      "name": "ViewerComponentValueParser",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueParser",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 491,
+      "original_index": 2180,
+      "name": "ViewerComponentMetadataPayload",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentMetadataPayload",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 508,
+      "original_index": 2225,
+      "name": "ViewerBatchPayloadFields",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerBatchPayloadFields",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 624,
+      "original_index": 2817,
+      "name": "ViewerComponentValueNameStore",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueNameStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 673,
+      "original_index": 3035,
+      "name": "ViewerComponentNameMetadataStore",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentNameMetadataStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 732,
+      "original_index": 3329,
+      "name": "ViewerComponentNameMetadata",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentNameMetadata",
+      "bases": [],
+      "declared_bases": [
+        "ComponentMetadataPresentationABC"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 847,
+      "original_index": 3927,
+      "name": "ViewerComponentAxisSemantics",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentValueDomainPayload"
+      ],
+      "declared_bases": [
+        "ViewerComponentValueDomainPayload"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 887,
+      "original_index": 4095,
+      "name": "ViewerComponentAxisSemanticsAuthority",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemanticsAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 927,
+      "original_index": 4190,
+      "name": "ViewerDisplayBatchContext",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerDisplayBatchContext",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics",
+        "openhcs.runtime.viewer_component_system.ViewerComponentNameMetadata"
+      ],
+      "declared_bases": [
+        "ViewerComponentAxisSemantics",
+        "ViewerComponentNameMetadata",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 938,
+      "original_index": 4217,
+      "name": "ViewerComponentValueDomain",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueDomain",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1012,
+      "original_index": 4599,
+      "name": "ViewerComponentValueDomainView",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentValueDomainView",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1053,
+      "original_index": 4804,
+      "name": "ViewerRouteComponentValueTracker",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerRouteComponentValueTracker",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1149,
+      "original_index": 5205,
+      "name": "ViewerLayerAxisProjection",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1261,
+      "original_index": 5729,
+      "name": "ViewerLayerAxisProjectedComponent",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjectedComponent",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1271,
+      "original_index": 5767,
+      "name": "ViewerLayerAxisProjectionStep",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjectionStep",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1350,
+      "original_index": 6215,
+      "name": "ViewerLayerAxisProjectionRequest",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjectionRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1398,
+      "original_index": 6378,
+      "name": "ViewerLayerAxisProjectionRequestAuthority",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjectionRequestAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1496,
+      "original_index": 6693,
+      "name": "ViewerLayerAxisProjector",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerLayerAxisProjector",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1535,
+      "original_index": 6869,
+      "name": "ViewerComponentCoordinateAuthority",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerComponentCoordinateAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "line": 1625,
+      "original_index": 7185,
+      "name": "ViewerDimensionValueAuthority",
+      "projection": "openhcs.runtime.viewer_component_system.ViewerDimensionValueAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 58,
+      "original_index": 192,
+      "name": "VisualMetadataField",
+      "projection": "openhcs.runtime.napari_streaming_handlers.VisualMetadataField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 67,
+      "original_index": 215,
+      "name": "NapariLayerHandle",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerHandle",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 71,
+      "original_index": 220,
+      "name": "NapariHighlightEmitterABC",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariHighlightEmitterABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 83,
+      "original_index": 253,
+      "name": "NapariSelectableLayerEventsABC",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariSelectableLayerEventsABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 89,
+      "original_index": 263,
+      "name": "NapariShapesLayerHandle",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapesLayerHandle",
+      "bases": [
+        "openhcs.runtime.napari_streaming_handlers.NapariLayerHandle"
+      ],
+      "declared_bases": [
+        "NapariLayerHandle"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 117,
+      "original_index": 438,
+      "name": "NapariLayerSelectionController",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerSelectionController",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 131,
+      "original_index": 475,
+      "name": "NapariLayerCollection",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerCollection",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 145,
+      "original_index": 508,
+      "name": "NapariDimsController",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariDimsController",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 152,
+      "original_index": 530,
+      "name": "NapariViewerLayerCreator",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariViewerLayerCreator",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 199,
+      "original_index": 617,
+      "name": "NapariTimerHandle",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariTimerHandle",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 208,
+      "original_index": 630,
+      "name": "NapariPendingLayerUpdate",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariPendingLayerUpdate",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics"
+      ],
+      "declared_bases": [
+        "ViewerComponentAxisSemantics"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 239,
+      "original_index": 712,
+      "name": "NapariLayerSettlementState",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerSettlementState",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 374,
+      "original_index": 1306,
+      "name": "NapariStreamLayerAddress",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariStreamLayerAddress",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 398,
+      "original_index": 1389,
+      "name": "NapariStreamLayerItem",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariStreamLayerItem",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 408,
+      "original_index": 1424,
+      "name": "NapariImagePayloadAxisLabelPolicy",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariImagePayloadAxisLabelPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 452,
+      "original_index": 1618,
+      "name": "NapariAggregateAxisBinding",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariAggregateAxisBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 473,
+      "original_index": 1726,
+      "name": "NapariAggregateAxisBindingSet",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariAggregateAxisBindingSet",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 532,
+      "original_index": 2013,
+      "name": "NapariAggregateAxisBindingAuthority",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariAggregateAxisBindingAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 714,
+      "original_index": 2927,
+      "name": "NapariShapePlaneMetadata",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapePlaneMetadata",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 841,
+      "original_index": 3481,
+      "name": "NapariImageLayerPresentationPolicy",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariImageLayerPresentationPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 891,
+      "original_index": 3706,
+      "name": "NapariLayerSelectionSnapshot",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerSelectionSnapshot",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 898,
+      "original_index": 3729,
+      "name": "NapariLayerSelectionAuthority",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerSelectionAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 943,
+      "original_index": 3885,
+      "name": "NapariLayerUpdateAuthority",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerUpdateAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1007,
+      "original_index": 4113,
+      "name": "NapariDimensionLayerState",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariDimensionLayerState",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1088,
+      "original_index": 4542,
+      "name": "NapariAxisPresentation",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariAxisPresentation",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics"
+      ],
+      "declared_bases": [
+        "ViewerComponentAxisSemantics"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1391,
+      "original_index": 5944,
+      "name": "NapariLayerRouteStateStore",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerRouteStateStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1620,
+      "original_index": 7075,
+      "name": "NapariComponentGroupStore",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariComponentGroupStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1658,
+      "original_index": 7265,
+      "name": "NapariLayerBatchDebouncePolicy",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariLayerBatchDebouncePolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1679,
+      "original_index": 7311,
+      "name": "NapariBatchProcessorStore",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariBatchProcessorStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1706,
+      "original_index": 7424,
+      "name": "NapariShapeLabelAuthority",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapeLabelAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1747,
+      "original_index": 7626,
+      "name": "NapariShapeLabelAllocator",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapeLabelAllocator",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1772,
+      "original_index": 7735,
+      "name": "NapariShapeFeatureColumns",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapeFeatureColumns",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1808,
+      "original_index": 7953,
+      "name": "NapariShapeColorProjection",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapeColorProjection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "line": 1842,
+      "original_index": 8103,
+      "name": "NapariShapeLayerPayload",
+      "projection": "openhcs.runtime.napari_streaming_handlers.NapariShapeLayerPayload",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 198,
+      "original_index": 375,
+      "name": "NapariResultSelectionSurface",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionSurface",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 254,
+      "original_index": 668,
+      "name": "NapariWireField",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariWireField",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 263,
+      "original_index": 687,
+      "name": "PayloadMap",
+      "projection": "openhcs.runtime.napari_viewer_server.PayloadMap",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 336,
+      "original_index": 1083,
+      "name": "ShapePayload",
+      "projection": "openhcs.runtime.napari_viewer_server.ShapePayload",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 365,
+      "original_index": 1178,
+      "name": "VisualMetadata",
+      "projection": "openhcs.runtime.napari_viewer_server.VisualMetadata",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 381,
+      "original_index": 1235,
+      "name": "NapariBatchPayload",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariBatchPayload",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerDisplayBatchContext"
+      ],
+      "declared_bases": [
+        "ViewerDisplayBatchContext"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 416,
+      "original_index": 1365,
+      "name": "NapariAcceptedStreamItem",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariAcceptedStreamItem",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 424,
+      "original_index": 1382,
+      "name": "NapariAcceptedStreamBatch",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariAcceptedStreamBatch",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 445,
+      "original_index": 1463,
+      "name": "NapariAcceptedControlRequest",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariAcceptedControlRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 453,
+      "original_index": 1497,
+      "name": "NapariStreamMessageReply",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariStreamMessageReply",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 488,
+      "original_index": 1662,
+      "name": "NapariStreamLayerContext",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariStreamLayerContext",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics"
+      ],
+      "declared_bases": [
+        "ViewerComponentAxisSemantics"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 594,
+      "original_index": 2078,
+      "name": "NapariImagePayload",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariImagePayload",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariStreamLayerContext"
+      ],
+      "declared_bases": [
+        "NapariStreamLayerContext"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 680,
+      "original_index": 2485,
+      "name": "NapariImagePayloadLayoutRole",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariImagePayloadLayoutRole",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 733,
+      "original_index": 2706,
+      "name": "NapariPayloadDataLoader",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariPayloadDataLoader",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 769,
+      "original_index": 2870,
+      "name": "NapariLayerRoute",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerRoute",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerComponentAxisSemantics"
+      ],
+      "declared_bases": [
+        "ViewerComponentAxisSemantics"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 785,
+      "original_index": 2946,
+      "name": "NapariVariableSizeDisplayStrategy",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariVariableSizeDisplayStrategy",
+      "bases": [],
+      "declared_bases": [
+        "EnumKeyedStrategyMixin",
+        "ABC"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 814,
+      "original_index": 3009,
+      "name": "NapariPadToMaxDisplayStrategy",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariPadToMaxDisplayStrategy",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariVariableSizeDisplayStrategy"
+      ],
+      "declared_bases": [
+        "NapariVariableSizeDisplayStrategy"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 864,
+      "original_index": 3219,
+      "name": "NapariSeparateLayersDisplayStrategy",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariSeparateLayersDisplayStrategy",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariVariableSizeDisplayStrategy"
+      ],
+      "declared_bases": [
+        "NapariVariableSizeDisplayStrategy"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 913,
+      "original_index": 3409,
+      "name": "NapariComponentAwareDisplayCoordinator",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariComponentAwareDisplayCoordinator",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1219,
+      "original_index": 4605,
+      "name": "NapariLayerTitleAuthority",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerTitleAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1265,
+      "original_index": 4794,
+      "name": "NapariDimensionLabelRouteSource",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDimensionLabelRouteSource",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1277,
+      "original_index": 4825,
+      "name": "NapariDimensionLabelRouteResolution",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDimensionLabelRouteResolution",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1284,
+      "original_index": 4846,
+      "name": "NapariDimensionLabelStore",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDimensionLabelStore",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1369,
+      "original_index": 5178,
+      "name": "NapariDimensionLabelRouteResolver",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDimensionLabelRouteResolver",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1485,
+      "original_index": 5675,
+      "name": "NapariDimensionLabelOverlayController",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDimensionLabelOverlayController",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1624,
+      "original_index": 6329,
+      "name": "NapariLayerDisplayRequest",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerDisplayRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1653,
+      "original_index": 6446,
+      "name": "NapariLayerDisplayWork",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerDisplayWork",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1662,
+      "original_index": 6460,
+      "name": "NapariImmediateLayerDisplayWork",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariImmediateLayerDisplayWork",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariLayerDisplayWork"
+      ],
+      "declared_bases": [
+        "NapariLayerDisplayWork"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1675,
+      "original_index": 6514,
+      "name": "NapariLayerDisplayHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerDisplayHandler",
+      "bases": [
+        "openhcs.runtime.viewer_component_system.ViewerStreamingDataTypeHandler"
+      ],
+      "declared_bases": [
+        "ViewerStreamingDataTypeHandler"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1693,
+      "original_index": 6559,
+      "name": "NapariImageLayerDisplayHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariImageLayerDisplayHandler",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariLayerDisplayHandler"
+      ],
+      "declared_bases": [
+        "NapariLayerDisplayHandler"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1790,
+      "original_index": 7042,
+      "name": "NapariShapesLayerDisplayWork",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariShapesLayerDisplayWork",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariLayerDisplayWork"
+      ],
+      "declared_bases": [
+        "NapariLayerDisplayWork"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1872,
+      "original_index": 7503,
+      "name": "NapariShapesLayerDisplayHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariShapesLayerDisplayHandler",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariLayerDisplayHandler"
+      ],
+      "declared_bases": [
+        "NapariLayerDisplayHandler"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1944,
+      "original_index": 7815,
+      "name": "NapariPointsLayerDisplayHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariPointsLayerDisplayHandler",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariLayerDisplayHandler"
+      ],
+      "declared_bases": [
+        "NapariLayerDisplayHandler"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 1989,
+      "original_index": 8020,
+      "name": "NapariLayerDisplayPipeline",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerDisplayPipeline",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2371,
+      "original_index": 9586,
+      "name": "NapariMessageTypeBase",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariMessageTypeBase",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2379,
+      "original_index": 9612,
+      "name": "NapariControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariMessageTypeBase"
+      ],
+      "declared_bases": [
+        "NapariMessageTypeBase"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2423,
+      "original_index": 9797,
+      "name": "NapariShutdownControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariShutdownControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2449,
+      "original_index": 9900,
+      "name": "NapariGracefulShutdownControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariGracefulShutdownControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariShutdownControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariShutdownControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2455,
+      "original_index": 9914,
+      "name": "NapariForceShutdownControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariForceShutdownControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariShutdownControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariShutdownControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2461,
+      "original_index": 9928,
+      "name": "NapariClearStateControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariClearStateControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2486,
+      "original_index": 10009,
+      "name": "NapariProcessLaunchControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariProcessLaunchControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2516,
+      "original_index": 10127,
+      "name": "NapariSettleControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariSettleControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2606,
+      "original_index": 10458,
+      "name": "ShapeCoordinateBounds",
+      "projection": "openhcs.runtime.napari_viewer_server.ShapeCoordinateBounds",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2720,
+      "original_index": 11226,
+      "name": "NapariResultElementSelectionState",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultElementSelectionState",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2729,
+      "original_index": 11261,
+      "name": "NapariResultSelectionGroupBinding",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionGroupBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2743,
+      "original_index": 11297,
+      "name": "NapariResultSelectionGroupState",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionGroupState",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2752,
+      "original_index": 11329,
+      "name": "NapariResultSelectionGroupIndex",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionGroupIndex",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2782,
+      "original_index": 11500,
+      "name": "NapariResultSelectionGroupAuthority",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionGroupAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2870,
+      "original_index": 11938,
+      "name": "NapariResultElementSelectionAuthority",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultElementSelectionAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 2952,
+      "original_index": 12311,
+      "name": "NapariResultSelectionController",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariResultSelectionController",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 3538,
+      "original_index": 15541,
+      "name": "NapariViewerProjectionABC",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariViewerProjectionABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 3964,
+      "original_index": 17961,
+      "name": "NapariViewerStateProjection",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariViewerStateProjection",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariViewerProjectionABC"
+      ],
+      "declared_bases": [
+        "NapariViewerProjectionABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4002,
+      "original_index": 18182,
+      "name": "_NapariShapePayloadBudget",
+      "projection": "openhcs.runtime.napari_viewer_server._NapariShapePayloadBudget",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4016,
+      "original_index": 18249,
+      "name": "NapariViewerPayloadProjection",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariViewerPayloadProjection",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariViewerProjectionABC"
+      ],
+      "declared_bases": [
+        "NapariViewerProjectionABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4362,
+      "original_index": 20261,
+      "name": "NapariStateControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariStateControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4393,
+      "original_index": 20374,
+      "name": "NapariPayloadsControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariPayloadsControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4426,
+      "original_index": 20487,
+      "name": "NapariPreparedNavigation",
+      "projection": "OPEN",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4456,
+      "original_index": 20653,
+      "name": "NapariMountedRouteControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariMountedRouteControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4476,
+      "original_index": 20726,
+      "name": "NapariViewportControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariViewportControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4512,
+      "original_index": 20896,
+      "name": "NapariImageIntensityControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariImageIntensityControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariMountedRouteControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariMountedRouteControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4587,
+      "original_index": 21208,
+      "name": "NapariIntensityWindowControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariIntensityWindowControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4816,
+      "original_index": 22256,
+      "name": "NapariPreparedNavigation",
+      "projection": "OPEN",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 4846,
+      "original_index": 22422,
+      "name": "NapariNavigationControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariNavigationControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariMountedRouteControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariMountedRouteControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5102,
+      "original_index": 23566,
+      "name": "NapariLayerIsolationControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariLayerIsolationControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5200,
+      "original_index": 24008,
+      "name": "NapariScreenshotControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariScreenshotControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5259,
+      "original_index": 24267,
+      "name": "NapariUnknownControlMessageAction",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariUnknownControlMessageAction",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariControlMessageAction"
+      ],
+      "declared_bases": [
+        "NapariControlMessageAction"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5280,
+      "original_index": 24347,
+      "name": "NapariStreamMessageHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariStreamMessageHandler",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariMessageTypeBase"
+      ],
+      "declared_bases": [
+        "NapariMessageTypeBase"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5303,
+      "original_index": 24415,
+      "name": "NapariBatchStreamMessageHandler",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariBatchStreamMessageHandler",
+      "bases": [
+        "openhcs.runtime.napari_viewer_server.NapariStreamMessageHandler"
+      ],
+      "declared_bases": [
+        "NapariStreamMessageHandler"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5327,
+      "original_index": 24487,
+      "name": "NapariDataTransportPump",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariDataTransportPump",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5405,
+      "original_index": 24958,
+      "name": "NapariControlTransportPump",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariControlTransportPump",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "line": 5527,
+      "original_index": 25648,
+      "name": "NapariViewerServer",
+      "projection": "openhcs.runtime.napari_viewer_server.NapariViewerServer",
+      "bases": [
+        "openhcs.runtime.viewer_protocol.OpenHCSViewerServerABC"
+      ],
+      "declared_bases": [
+        "OpenHCSViewerServerABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 57,
+      "original_index": 64,
+      "name": "ViewerWindowDescriptor",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowDescriptor",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 77,
+      "original_index": 112,
+      "name": "ViewerWindowControlRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowControlRequest",
+      "bases": [],
+      "declared_bases": [
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 131,
+      "original_index": 504,
+      "name": "ViewerWindowCloseRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowCloseRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 164,
+      "original_index": 612,
+      "name": "ViewerWindowSnapshotRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowSnapshotRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "WindowSnapshotCaptureSpec",
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 213,
+      "original_index": 780,
+      "name": "ViewerWindowStateRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowStateRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 276,
+      "original_index": 1023,
+      "name": "ViewerWindowPayloadRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowPayloadRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 338,
+      "original_index": 1401,
+      "name": "ViewerWindowViewportRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowViewportRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 363,
+      "original_index": 1479,
+      "name": "ViewerWindowImageIntensityRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowImageIntensityRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 390,
+      "original_index": 1574,
+      "name": "ViewerWindowNavigationRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowNavigationRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 424,
+      "original_index": 1726,
+      "name": "ViewerWindowLayerIsolationRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerIsolationRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 460,
+      "original_index": 1881,
+      "name": "ViewerWindowIntensityWindowRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowIntensityWindowRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 501,
+      "original_index": 2037,
+      "name": "ViewerWindowImageSampleRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowImageSampleRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 595,
+      "original_index": 2537,
+      "name": "ViewerWindowRoiSummaryRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowRoiSummaryRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 659,
+      "original_index": 2835,
+      "name": "ViewerWindowValidationPolicy",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationPolicy",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 669,
+      "original_index": 2888,
+      "name": "ViewerWindowValidationRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationRequest",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 742,
+      "original_index": 3199,
+      "name": "ViewerWindowProbeResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowProbeResult",
+      "bases": [],
+      "declared_bases": [
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 752,
+      "original_index": 3249,
+      "name": "ViewerWindowLayerDescriptor",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerDescriptor",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 766,
+      "original_index": 3332,
+      "name": "ViewerWindowLayerState",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerState",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowLayerDescriptor"
+      ],
+      "declared_bases": [
+        "ViewerWindowLayerDescriptor"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 791,
+      "original_index": 3558,
+      "name": "ViewerWindowErrorResultFactory",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowErrorResultFactory",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 828,
+      "original_index": 3691,
+      "name": "ViewerWindowSnapshotErrorResultMixin",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowSnapshotErrorResultMixin",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowErrorResultFactory"
+      ],
+      "declared_bases": [
+        "ViewerWindowErrorResultFactory"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 860,
+      "original_index": 3777,
+      "name": "ViewerWindowObservedErrorResultMixin",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowErrorResultFactory"
+      ],
+      "declared_bases": [
+        "ViewerWindowErrorResultFactory"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 876,
+      "original_index": 3818,
+      "name": "ViewerWindowValidationErrorResultMixin",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationErrorResultMixin",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 894,
+      "original_index": 3862,
+      "name": "ViewerWindowSnapshotResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowSnapshotResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowSnapshotErrorResultMixin"
+      ],
+      "declared_bases": [
+        "WindowSnapshotCaptureSpec",
+        "ViewerWindowSnapshotErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 911,
+      "original_index": 3940,
+      "name": "ViewerWindowStateResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowStateResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1016,
+      "original_index": 4569,
+      "name": "ViewerWindowPayloadRecord",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowPayloadRecord",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1030,
+      "original_index": 4675,
+      "name": "ViewerWindowLayerPayloads",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerPayloads",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowLayerDescriptor"
+      ],
+      "declared_bases": [
+        "ViewerWindowLayerDescriptor"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1035,
+      "original_index": 4699,
+      "name": "ViewerWindowPayloadResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowPayloadResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1050,
+      "original_index": 4768,
+      "name": "ViewerWindowViewportResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowViewportResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1063,
+      "original_index": 4812,
+      "name": "ViewerWindowImageIntensityResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowImageIntensityResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1077,
+      "original_index": 4865,
+      "name": "ViewerWindowNavigationResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowNavigationResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1099,
+      "original_index": 5009,
+      "name": "ViewerWindowLayerVisibilityRecord",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerVisibilityRecord",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1107,
+      "original_index": 5040,
+      "name": "ViewerWindowLayerIsolationResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerIsolationResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowObservedErrorResultMixin"
+      ],
+      "declared_bases": [
+        "ViewerWindowObservedErrorResultMixin",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1130,
+      "original_index": 5205,
+      "name": "ViewerWindowIntensityPayloadIdentity",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowIntensityPayloadIdentity",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1140,
+      "original_index": 5259,
+      "name": "ViewerWindowIntensityWindowResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowIntensityWindowResult",
+      "bases": [],
+      "declared_bases": [
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1179,
+      "original_index": 5439,
+      "name": "ViewerWindowImageSampleResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowImageSampleResult",
+      "bases": [],
+      "declared_bases": [
+        "AgentResultEnvelope"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1203,
+      "original_index": 5650,
+      "name": "ViewerWindowRoiSummaryResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowRoiSummaryResult",
+      "bases": [],
+      "declared_bases": [
+        "AgentResultEnvelope"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1221,
+      "original_index": 5791,
+      "name": "ViewerWindowValidationCounters",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationCounters",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1235,
+      "original_index": 5849,
+      "name": "ViewerWindowLayerValidationSummary",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowLayerValidationSummary",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowValidationCounters",
+        "openhcs.agent.dto.viewer.ViewerWindowLayerDescriptor"
+      ],
+      "declared_bases": [
+        "ViewerWindowValidationCounters",
+        "ViewerWindowLayerDescriptor"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1250,
+      "original_index": 5943,
+      "name": "ViewerWindowValidationSummaryResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationSummaryResult",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowValidationErrorResultMixin",
+        "openhcs.agent.dto.viewer.ViewerWindowValidationCounters"
+      ],
+      "declared_bases": [
+        "ViewerWindowValidationErrorResultMixin",
+        "ViewerWindowValidationCounters",
+        "AgentResultEnvelope",
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1287,
+      "original_index": 6114,
+      "name": "ViewerWindowErrorContext",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowErrorContext",
+      "bases": [],
+      "declared_bases": [
+        "ExecutionConnectionProjection"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1306,
+      "original_index": 6156,
+      "name": "ViewerWindowValidationErrorContext",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowValidationErrorContext",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowErrorContext"
+      ],
+      "declared_bases": [
+        "ViewerWindowErrorContext"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1313,
+      "original_index": 6175,
+      "name": "ViewerWindowSnapshotErrorContext",
+      "projection": "openhcs.agent.dto.viewer.ViewerWindowSnapshotErrorContext",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowErrorContext"
+      ],
+      "declared_bases": [
+        "WindowSnapshotCaptureSpec",
+        "ViewerWindowErrorContext"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1352,
+      "original_index": 6285,
+      "name": "ViewerEndpointDiscoveryRequest",
+      "projection": "openhcs.agent.dto.viewer.ViewerEndpointDiscoveryRequest",
+      "bases": [],
+      "declared_bases": [
+        "AgentCliRequest"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "line": 1368,
+      "original_index": 6339,
+      "name": "ViewerEndpointDiscoveryResult",
+      "projection": "openhcs.agent.dto.viewer.ViewerEndpointDiscoveryResult",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 108,
+      "original_index": 148,
+      "name": "ViewerPayloadComponentProjection",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadComponentProjection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 196,
+      "original_index": 549,
+      "name": "ViewerLayerPayloadCoordinateSet",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerPayloadCoordinateSet",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 265,
+      "original_index": 821,
+      "name": "ViewerLayerValidationProjection",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerValidationProjection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 335,
+      "original_index": 1105,
+      "name": "ViewerLayerCoordinateCoverage",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerCoordinateCoverage",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 385,
+      "original_index": 1296,
+      "name": "ViewerWindowValidationTotals",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowValidationTotals",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowValidationCounters"
+      ],
+      "declared_bases": [
+        "ViewerWindowValidationCounters"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 425,
+      "original_index": 1474,
+      "name": "ViewerWindowValidationAuthority",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowValidationAuthority",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 653,
+      "original_index": 2442,
+      "name": "ViewerValidationWarningCode",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerValidationWarningCode",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 671,
+      "original_index": 2493,
+      "name": "ViewerValidationPolicyCarrier",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerValidationPolicyCarrier",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 678,
+      "original_index": 2508,
+      "name": "ViewerExpectedLayerCountEvidence",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerExpectedLayerCountEvidence",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 703,
+      "original_index": 2582,
+      "name": "ViewerWindowValidationWarningContext",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowValidationWarningContext",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerValidationPolicyCarrier"
+      ],
+      "declared_bases": [
+        "ViewerValidationPolicyCarrier"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 719,
+      "original_index": 2646,
+      "name": "ViewerLayerValidationWarningContext",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningContext",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerValidationPolicyCarrier"
+      ],
+      "declared_bases": [
+        "ViewerValidationPolicyCarrier"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 731,
+      "original_index": 2694,
+      "name": "ViewerValidationWarningRuleBase",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerValidationWarningRuleBase",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 754,
+      "original_index": 2794,
+      "name": "ViewerWarningCodeBase",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWarningCodeBase",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 762,
+      "original_index": 2820,
+      "name": "ViewerWindowValidationWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowValidationWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerWarningCodeBase",
+        "openhcs.agent.services.viewer_window_service.ViewerValidationWarningRuleBase"
+      ],
+      "declared_bases": [
+        "ViewerWarningCodeBase",
+        "ViewerValidationWarningRuleBase",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 771,
+      "original_index": 2836,
+      "name": "ViewerLayerValidationWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerWarningCodeBase",
+        "openhcs.agent.services.viewer_window_service.ViewerValidationWarningRuleBase"
+      ],
+      "declared_bases": [
+        "ViewerWarningCodeBase",
+        "ViewerValidationWarningRuleBase",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 780,
+      "original_index": 2852,
+      "name": "ViewerLayerCountMismatchWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerCountMismatchWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerWindowValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerWindowValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 802,
+      "original_index": 2916,
+      "name": "ViewerActiveDimensionLabelRouteMissingWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerActiveDimensionLabelRouteMissingWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerWindowValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerWindowValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 825,
+      "original_index": 2964,
+      "name": "ViewerLayerUnmountedWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerUnmountedWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 842,
+      "original_index": 3014,
+      "name": "ViewerLayerPendingUpdateWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerLayerPendingUpdateWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 859,
+      "original_index": 3066,
+      "name": "ViewerRequiredAxisLabelsMissingWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerRequiredAxisLabelsMissingWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 889,
+      "original_index": 3167,
+      "name": "ViewerRequiredComponentLabelsMissingWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerRequiredComponentLabelsMissingWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 910,
+      "original_index": 3236,
+      "name": "ViewerPayloadCountWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadCountWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 945,
+      "original_index": 3356,
+      "name": "ViewerPayloadNonzeroMetadataMissingWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadNonzeroMetadataMissingWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerPayloadCountWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerPayloadCountWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 955,
+      "original_index": 3385,
+      "name": "ViewerPayloadsZeroWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadsZeroWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerPayloadCountWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerPayloadCountWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 965,
+      "original_index": 3414,
+      "name": "ViewerCoordinateGapsWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerCoordinateGapsWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 986,
+      "original_index": 3474,
+      "name": "ViewerPayloadCoordinatesMissingWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadCoordinatesMissingWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 1007,
+      "original_index": 3534,
+      "name": "ViewerPayloadCoordinatesDuplicateWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadCoordinatesDuplicateWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 1028,
+      "original_index": 3594,
+      "name": "ViewerPayloadsWithoutCoordinatesWarningRule",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerPayloadsWithoutCoordinatesWarningRule",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerLayerValidationWarningRule"
+      ],
+      "declared_bases": [
+        "ViewerLayerValidationWarningRule"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 1049,
+      "original_index": 3654,
+      "name": "ViewerWindowGatewayABC",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowGatewayABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 1091,
+      "original_index": 3773,
+      "name": "ZMQViewerWindowGateway",
+      "projection": "openhcs.agent.services.viewer_window_service.ZMQViewerWindowGateway",
+      "bases": [
+        "openhcs.agent.services.viewer_window_service.ViewerWindowGatewayABC"
+      ],
+      "declared_bases": [
+        "ViewerWindowGatewayABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "line": 1210,
+      "original_index": 4499,
+      "name": "ViewerWindowService",
+      "projection": "openhcs.agent.services.viewer_window_service.ViewerWindowService",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 195,
+      "original_index": 202,
+      "name": "CapabilityKind",
+      "projection": "openhcs.agent.capabilities.CapabilityKind",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 201,
+      "original_index": 217,
+      "name": "CapabilityTransportSemanticsABC",
+      "projection": "openhcs.agent.capabilities.CapabilityTransportSemanticsABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 210,
+      "original_index": 234,
+      "name": "LocalStdioCapabilityTransportSemantics",
+      "projection": "openhcs.agent.capabilities.LocalStdioCapabilityTransportSemantics",
+      "bases": [
+        "openhcs.agent.capabilities.CapabilityTransportSemanticsABC"
+      ],
+      "declared_bases": [
+        "CapabilityTransportSemanticsABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 265,
+      "original_index": 321,
+      "name": "HostedHttpCapabilityTransportSemantics",
+      "projection": "openhcs.agent.capabilities.HostedHttpCapabilityTransportSemantics",
+      "bases": [
+        "openhcs.agent.capabilities.CapabilityTransportSemanticsABC"
+      ],
+      "declared_bases": [
+        "CapabilityTransportSemanticsABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 281,
+      "original_index": 350,
+      "name": "CapabilityTransport",
+      "projection": "openhcs.agent.capabilities.CapabilityTransport",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 307,
+      "original_index": 438,
+      "name": "CapabilityCliConnectionProfile",
+      "projection": "openhcs.agent.capabilities.CapabilityCliConnectionProfile",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 316,
+      "original_index": 459,
+      "name": "CapabilityWorkflowGroup",
+      "projection": "openhcs.agent.capabilities.CapabilityWorkflowGroup",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 337,
+      "original_index": 525,
+      "name": "CapabilityWorkflowStage",
+      "projection": "openhcs.agent.capabilities.CapabilityWorkflowStage",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 353,
+      "original_index": 574,
+      "name": "CapabilityTargetContext",
+      "projection": "openhcs.agent.capabilities.CapabilityTargetContext",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 375,
+      "original_index": 647,
+      "name": "CapabilityVisibility",
+      "projection": "openhcs.agent.capabilities.CapabilityVisibility",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 383,
+      "original_index": 664,
+      "name": "CapabilityRole",
+      "projection": "openhcs.agent.capabilities.CapabilityRole",
+      "bases": [],
+      "declared_bases": [
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 393,
+      "original_index": 689,
+      "name": "LocalCapabilitySurfaceProfile",
+      "projection": "openhcs.agent.capabilities.LocalCapabilitySurfaceProfile",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 445,
+      "original_index": 952,
+      "name": "NonExpertCapabilitySurfaceMixin",
+      "projection": "openhcs.agent.capabilities.NonExpertCapabilitySurfaceMixin",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 456,
+      "original_index": 999,
+      "name": "WorkflowGroupCapabilitySurfaceMixin",
+      "projection": "openhcs.agent.capabilities.WorkflowGroupCapabilitySurfaceMixin",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 467,
+      "original_index": 1043,
+      "name": "SelfContainedCapabilitySurfaceMixin",
+      "projection": "openhcs.agent.capabilities.SelfContainedCapabilitySurfaceMixin",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 474,
+      "original_index": 1070,
+      "name": "FullLocalCapabilitySurfaceProfile",
+      "projection": "openhcs.agent.capabilities.FullLocalCapabilitySurfaceProfile",
+      "bases": [
+        "openhcs.agent.capabilities.LocalCapabilitySurfaceProfile"
+      ],
+      "declared_bases": [
+        "LocalCapabilitySurfaceProfile"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 479,
+      "original_index": 1087,
+      "name": "DesktopLocalCapabilitySurfaceProfile",
+      "projection": "openhcs.agent.capabilities.DesktopLocalCapabilitySurfaceProfile",
+      "bases": [
+        "openhcs.agent.capabilities.WorkflowGroupCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.NonExpertCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.LocalCapabilitySurfaceProfile"
+      ],
+      "declared_bases": [
+        "WorkflowGroupCapabilitySurfaceMixin",
+        "NonExpertCapabilitySurfaceMixin",
+        "LocalCapabilitySurfaceProfile"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 503,
+      "original_index": 1163,
+      "name": "AuthoringLocalCapabilitySurfaceProfile",
+      "projection": "openhcs.agent.capabilities.AuthoringLocalCapabilitySurfaceProfile",
+      "bases": [
+        "openhcs.agent.capabilities.WorkflowGroupCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.NonExpertCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.LocalCapabilitySurfaceProfile"
+      ],
+      "declared_bases": [
+        "WorkflowGroupCapabilitySurfaceMixin",
+        "NonExpertCapabilitySurfaceMixin",
+        "LocalCapabilitySurfaceProfile"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 520,
+      "original_index": 1208,
+      "name": "CoreLocalCapabilitySurfaceProfile",
+      "projection": "openhcs.agent.capabilities.CoreLocalCapabilitySurfaceProfile",
+      "bases": [
+        "openhcs.agent.capabilities.SelfContainedCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.WorkflowGroupCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.NonExpertCapabilitySurfaceMixin",
+        "openhcs.agent.capabilities.LocalCapabilitySurfaceProfile"
+      ],
+      "declared_bases": [
+        "SelfContainedCapabilitySurfaceMixin",
+        "WorkflowGroupCapabilitySurfaceMixin",
+        "NonExpertCapabilitySurfaceMixin",
+        "LocalCapabilitySurfaceProfile"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 538,
+      "original_index": 1253,
+      "name": "AgentCapabilityExposition",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityExposition",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 592,
+      "original_index": 1495,
+      "name": "AgentScalarInputContract",
+      "projection": "openhcs.agent.capabilities.AgentScalarInputContract",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 638,
+      "original_index": 1728,
+      "name": "AgentCapabilityRequestInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityRequestInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 653,
+      "original_index": 1759,
+      "name": "AgentCapabilityRegistryRequestInvocation",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityRegistryRequestInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityRequestInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityRequestInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 676,
+      "original_index": 1826,
+      "name": "AgentCapabilityConnectionInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityConnectionInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 691,
+      "original_index": 1857,
+      "name": "AgentConnectionServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentConnectionServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityConnectionInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityConnectionInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 712,
+      "original_index": 1951,
+      "name": "AgentCapabilityConnectionRequestInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityConnectionRequestInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 727,
+      "original_index": 1987,
+      "name": "AgentCapabilityConnectionScalarInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityConnectionScalarInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 743,
+      "original_index": 2021,
+      "name": "AgentConnectionScalarServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentConnectionScalarServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityConnectionScalarInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityConnectionScalarInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 766,
+      "original_index": 2122,
+      "name": "AgentConnectionRequestServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentConnectionRequestServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityConnectionRequestInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityConnectionRequestInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 791,
+      "original_index": 2227,
+      "name": "AgentCapabilityNoArgumentInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityNoArgumentInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 802,
+      "original_index": 2253,
+      "name": "AgentNoArgumentFunctionInvocation",
+      "projection": "openhcs.agent.capabilities.AgentNoArgumentFunctionInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityNoArgumentInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityNoArgumentInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 815,
+      "original_index": 2313,
+      "name": "AgentCapabilityScalarInvocationABC",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityScalarInvocationABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 826,
+      "original_index": 2342,
+      "name": "AgentScalarServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentScalarServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityScalarInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityScalarInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 840,
+      "original_index": 2432,
+      "name": "AgentNoArgumentServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentNoArgumentServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityNoArgumentInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityNoArgumentInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 854,
+      "original_index": 2515,
+      "name": "AgentRequestServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentRequestServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityRequestInvocationABC"
+      ],
+      "declared_bases": [
+        "AgentCapabilityRequestInvocationABC",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 875,
+      "original_index": 2609,
+      "name": "AgentFromFieldsServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentFromFieldsServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentRequestServiceInvocation"
+      ],
+      "declared_bases": [
+        "AgentRequestServiceInvocation",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 887,
+      "original_index": 2640,
+      "name": "AgentDataclassRequestServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentDataclassRequestServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentRequestServiceInvocation"
+      ],
+      "declared_bases": [
+        "AgentRequestServiceInvocation",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 899,
+      "original_index": 2671,
+      "name": "AgentConfigPatchServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentConfigPatchServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentRequestServiceInvocation"
+      ],
+      "declared_bases": [
+        "AgentRequestServiceInvocation",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 912,
+      "original_index": 2702,
+      "name": "AgentViewerWindowRequestServiceInvocation",
+      "projection": "openhcs.agent.capabilities.AgentViewerWindowRequestServiceInvocation",
+      "bases": [
+        "openhcs.agent.capabilities.AgentRequestServiceInvocation"
+      ],
+      "declared_bases": [
+        "AgentRequestServiceInvocation",
+        "Generic"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 925,
+      "original_index": 2740,
+      "name": "AgentCapabilitySpec",
+      "projection": "openhcs.agent.capabilities.AgentCapabilitySpec",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1063,
+      "original_index": 3470,
+      "name": "AgentCapabilitySearchRequest",
+      "projection": "openhcs.agent.capabilities.AgentCapabilitySearchRequest",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1202,
+      "original_index": 4076,
+      "name": "AgentCapabilitySummary",
+      "projection": "openhcs.agent.capabilities.AgentCapabilitySummary",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1226,
+      "original_index": 4232,
+      "name": "AgentCapabilitySearchResult",
+      "projection": "openhcs.agent.capabilities.AgentCapabilitySearchResult",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1239,
+      "original_index": 4287,
+      "name": "AgentCapabilitySurfaceSelection",
+      "projection": "openhcs.agent.capabilities.AgentCapabilitySurfaceSelection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1253,
+      "original_index": 4355,
+      "name": "AgentCapabilityDeclaration",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityDeclaration",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1409,
+      "original_index": 5217,
+      "name": "HostedTransportCapabilityMixin",
+      "projection": "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1418,
+      "original_index": 5246,
+      "name": "DiscoveryCapability",
+      "projection": "openhcs.agent.capabilities.DiscoveryCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1429,
+      "original_index": 5277,
+      "name": "KnowledgeCapability",
+      "projection": "openhcs.agent.capabilities.KnowledgeCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1440,
+      "original_index": 5308,
+      "name": "ArchitectureCapability",
+      "projection": "openhcs.agent.capabilities.ArchitectureCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1451,
+      "original_index": 5330,
+      "name": "FunctionCatalogCapability",
+      "projection": "openhcs.agent.capabilities.FunctionCatalogCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1462,
+      "original_index": 5361,
+      "name": "ConfigDraftCapability",
+      "projection": "openhcs.agent.capabilities.ConfigDraftCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1473,
+      "original_index": 5392,
+      "name": "PipelineDraftCapability",
+      "projection": "openhcs.agent.capabilities.PipelineDraftCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1484,
+      "original_index": 5423,
+      "name": "PlatePathCapability",
+      "projection": "openhcs.agent.capabilities.PlatePathCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1495,
+      "original_index": 5454,
+      "name": "HeadlessExecutionCapability",
+      "projection": "openhcs.agent.capabilities.HeadlessExecutionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1506,
+      "original_index": 5485,
+      "name": "SubmittedJobCapability",
+      "projection": "openhcs.agent.capabilities.SubmittedJobCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1516,
+      "original_index": 5515,
+      "name": "UiBridgeCapability",
+      "projection": "openhcs.agent.capabilities.UiBridgeCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1527,
+      "original_index": 5546,
+      "name": "UiBridgeCliConnectionCapability",
+      "projection": "openhcs.agent.capabilities.UiBridgeCliConnectionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1533,
+      "original_index": 5558,
+      "name": "UiSelectedPlateCapability",
+      "projection": "openhcs.agent.capabilities.UiSelectedPlateCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1544,
+      "original_index": 5593,
+      "name": "UiWindowCapability",
+      "projection": "openhcs.agent.capabilities.UiWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1552,
+      "original_index": 5613,
+      "name": "UiSemanticActionCapability",
+      "projection": "openhcs.agent.capabilities.UiSemanticActionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1558,
+      "original_index": 5625,
+      "name": "UiWidgetFallbackCapability",
+      "projection": "openhcs.agent.capabilities.UiWidgetFallbackCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1567,
+      "original_index": 5650,
+      "name": "UiCodeDocumentCapability",
+      "projection": "openhcs.agent.capabilities.UiCodeDocumentCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1577,
+      "original_index": 5680,
+      "name": "UiObjectStateCapability",
+      "projection": "openhcs.agent.capabilities.UiObjectStateCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1588,
+      "original_index": 5715,
+      "name": "UiSnapshotCapability",
+      "projection": "openhcs.agent.capabilities.UiSnapshotCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiObjectStateCapability"
+      ],
+      "declared_bases": [
+        "UiObjectStateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1597,
+      "original_index": 5740,
+      "name": "ViewerWindowCliConnectionCapability",
+      "projection": "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1609,
+      "original_index": 5778,
+      "name": "RuntimeServerCliConnectionCapability",
+      "projection": "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.AgentCapabilityDeclaration"
+      ],
+      "declared_bases": [
+        "AgentCapabilityDeclaration"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1623,
+      "original_index": 5821,
+      "name": "AgentCapabilityGroup",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityGroup",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1635,
+      "original_index": 5870,
+      "name": "AgentCapabilityRegistry",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityRegistry",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1674,
+      "original_index": 6093,
+      "name": "AgentCapabilityNamespace",
+      "projection": "openhcs.agent.capabilities.AgentCapabilityNamespace",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1733,
+      "original_index": 6400,
+      "name": "CapabilitiesResourceCapability",
+      "projection": "openhcs.agent.capabilities.CapabilitiesResourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.DiscoveryCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "DiscoveryCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1750,
+      "original_index": 6445,
+      "name": "SweepViewerEndpointsCapability",
+      "projection": "openhcs.agent.capabilities.SweepViewerEndpointsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.DiscoveryCapability"
+      ],
+      "declared_bases": [
+        "DiscoveryCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1775,
+      "original_index": 6529,
+      "name": "HealthCheckCapability",
+      "projection": "openhcs.agent.capabilities.HealthCheckCapability",
+      "bases": [
+        "openhcs.agent.capabilities.DiscoveryCapability"
+      ],
+      "declared_bases": [
+        "DiscoveryCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1802,
+      "original_index": 6595,
+      "name": "ListCapabilitiesCapability",
+      "projection": "openhcs.agent.capabilities.ListCapabilitiesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.DiscoveryCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "DiscoveryCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1817,
+      "original_index": 6640,
+      "name": "SearchCapabilitiesCapability",
+      "projection": "openhcs.agent.capabilities.SearchCapabilitiesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.DiscoveryCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "DiscoveryCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1837,
+      "original_index": 6689,
+      "name": "SearchFunctionsCapability",
+      "projection": "openhcs.agent.capabilities.SearchFunctionsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.FunctionCatalogCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "FunctionCatalogCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1865,
+      "original_index": 6779,
+      "name": "DescribeFunctionCapability",
+      "projection": "openhcs.agent.capabilities.DescribeFunctionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.FunctionCatalogCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "FunctionCatalogCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1890,
+      "original_index": 6859,
+      "name": "RegisterCustomFunctionCapability",
+      "projection": "openhcs.agent.capabilities.RegisterCustomFunctionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.FunctionCatalogCapability"
+      ],
+      "declared_bases": [
+        "FunctionCatalogCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1914,
+      "original_index": 6951,
+      "name": "GetAuthoringContextCapability",
+      "projection": "openhcs.agent.capabilities.GetAuthoringContextCapability",
+      "bases": [
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1935,
+      "original_index": 7017,
+      "name": "KnowledgeResourceCapability",
+      "projection": "openhcs.agent.capabilities.KnowledgeResourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1952,
+      "original_index": 7079,
+      "name": "ListKnowledgeDocumentsCapability",
+      "projection": "openhcs.agent.capabilities.ListKnowledgeDocumentsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1970,
+      "original_index": 7145,
+      "name": "GetKnowledgeDocumentCapability",
+      "projection": "openhcs.agent.capabilities.GetKnowledgeDocumentCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 1991,
+      "original_index": 7220,
+      "name": "SearchKnowledgeCapability",
+      "projection": "openhcs.agent.capabilities.SearchKnowledgeCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.KnowledgeCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "KnowledgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2010,
+      "original_index": 7295,
+      "name": "GenerateSyntheticPlateCapability",
+      "projection": "openhcs.agent.capabilities.GenerateSyntheticPlateCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PlatePathCapability"
+      ],
+      "declared_bases": [
+        "PlatePathCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2036,
+      "original_index": 7394,
+      "name": "InspectPlatePathCapability",
+      "projection": "openhcs.agent.capabilities.InspectPlatePathCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PlatePathCapability"
+      ],
+      "declared_bases": [
+        "PlatePathCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2067,
+      "original_index": 7476,
+      "name": "QueryPlateFilesCapability",
+      "projection": "openhcs.agent.capabilities.QueryPlateFilesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PlatePathCapability"
+      ],
+      "declared_bases": [
+        "PlatePathCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2098,
+      "original_index": 7558,
+      "name": "SamplePlateImageCapability",
+      "projection": "openhcs.agent.capabilities.SamplePlateImageCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PlatePathCapability"
+      ],
+      "declared_bases": [
+        "PlatePathCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2126,
+      "original_index": 7639,
+      "name": "StreamPlateFilesToViewerCapability",
+      "projection": "openhcs.agent.capabilities.StreamPlateFilesToViewerCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PlatePathCapability"
+      ],
+      "declared_bases": [
+        "PlatePathCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2162,
+      "original_index": 7747,
+      "name": "UiInspectSelectedPlateImagesCapability",
+      "projection": "openhcs.agent.capabilities.UiInspectSelectedPlateImagesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2194,
+      "original_index": 7839,
+      "name": "UiQuerySelectedPlateFilesCapability",
+      "projection": "openhcs.agent.capabilities.UiQuerySelectedPlateFilesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2225,
+      "original_index": 7931,
+      "name": "UiSampleSelectedPlateImageCapability",
+      "projection": "openhcs.agent.capabilities.UiSampleSelectedPlateImageCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2259,
+      "original_index": 8022,
+      "name": "UiStreamSelectedPlateFilesToViewerCapability",
+      "projection": "openhcs.agent.capabilities.UiStreamSelectedPlateFilesToViewerCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2295,
+      "original_index": 8121,
+      "name": "ArchitectureTopicsResourceCapability",
+      "projection": "openhcs.agent.capabilities.ArchitectureTopicsResourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ArchitectureCapability"
+      ],
+      "declared_bases": [
+        "ArchitectureCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2310,
+      "original_index": 8175,
+      "name": "ListArchitectureTopicsCapability",
+      "projection": "openhcs.agent.capabilities.ListArchitectureTopicsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ArchitectureCapability"
+      ],
+      "declared_bases": [
+        "ArchitectureCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2324,
+      "original_index": 8233,
+      "name": "ExplainArchitectureCapability",
+      "projection": "openhcs.agent.capabilities.ExplainArchitectureCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ArchitectureCapability"
+      ],
+      "declared_bases": [
+        "ArchitectureCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2340,
+      "original_index": 8305,
+      "name": "DescribeInternalSymbolCapability",
+      "projection": "openhcs.agent.capabilities.DescribeInternalSymbolCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ArchitectureCapability"
+      ],
+      "declared_bases": [
+        "ArchitectureCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2362,
+      "original_index": 8390,
+      "name": "DescribeConfigSchemaCapability",
+      "projection": "openhcs.agent.capabilities.DescribeConfigSchemaCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HostedTransportCapabilityMixin",
+        "openhcs.agent.capabilities.ConfigDraftCapability"
+      ],
+      "declared_bases": [
+        "HostedTransportCapabilityMixin",
+        "ConfigDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2390,
+      "original_index": 8458,
+      "name": "CreateConfigCapability",
+      "projection": "openhcs.agent.capabilities.CreateConfigCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ConfigDraftCapability"
+      ],
+      "declared_bases": [
+        "ConfigDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2409,
+      "original_index": 8534,
+      "name": "ValidateConfigPatchCapability",
+      "projection": "openhcs.agent.capabilities.ValidateConfigPatchCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ConfigDraftCapability"
+      ],
+      "declared_bases": [
+        "ConfigDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2431,
+      "original_index": 8615,
+      "name": "RenderConfigSourceCapability",
+      "projection": "openhcs.agent.capabilities.RenderConfigSourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ConfigDraftCapability"
+      ],
+      "declared_bases": [
+        "ConfigDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2448,
+      "original_index": 8684,
+      "name": "CreatePipelineCapability",
+      "projection": "openhcs.agent.capabilities.CreatePipelineCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PipelineDraftCapability"
+      ],
+      "declared_bases": [
+        "PipelineDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2467,
+      "original_index": 8756,
+      "name": "AddFunctionStepCapability",
+      "projection": "openhcs.agent.capabilities.AddFunctionStepCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PipelineDraftCapability"
+      ],
+      "declared_bases": [
+        "PipelineDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2485,
+      "original_index": 8828,
+      "name": "ValidatePipelineCapability",
+      "projection": "openhcs.agent.capabilities.ValidatePipelineCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PipelineDraftCapability"
+      ],
+      "declared_bases": [
+        "PipelineDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2505,
+      "original_index": 8907,
+      "name": "RenderPipelineSourceCapability",
+      "projection": "openhcs.agent.capabilities.RenderPipelineSourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PipelineDraftCapability"
+      ],
+      "declared_bases": [
+        "PipelineDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2525,
+      "original_index": 8976,
+      "name": "CreateOrchestratorSessionCapability",
+      "projection": "openhcs.agent.capabilities.CreateOrchestratorSessionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2546,
+      "original_index": 9048,
+      "name": "CreateOrchestratorSessionFromPipelineSourceCapability",
+      "projection": "openhcs.agent.capabilities.CreateOrchestratorSessionFromPipelineSourceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2577,
+      "original_index": 9128,
+      "name": "GetOrchestratorSessionCapability",
+      "projection": "openhcs.agent.capabilities.GetOrchestratorSessionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2591,
+      "original_index": 9190,
+      "name": "InspectPipelineSourceArtifactPlanCapability",
+      "projection": "openhcs.agent.capabilities.InspectPipelineSourceArtifactPlanCapability",
+      "bases": [
+        "openhcs.agent.capabilities.PipelineDraftCapability"
+      ],
+      "declared_bases": [
+        "PipelineDraftCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2616,
+      "original_index": 9278,
+      "name": "SubmitCompileCapability",
+      "projection": "openhcs.agent.capabilities.SubmitCompileCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2642,
+      "original_index": 9367,
+      "name": "SubmitPipelineExecutionCapability",
+      "projection": "openhcs.agent.capabilities.SubmitPipelineExecutionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2676,
+      "original_index": 9471,
+      "name": "GetExecutionStatusCapability",
+      "projection": "openhcs.agent.capabilities.GetExecutionStatusCapability",
+      "bases": [
+        "openhcs.agent.capabilities.SubmittedJobCapability"
+      ],
+      "declared_bases": [
+        "SubmittedJobCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2696,
+      "original_index": 9540,
+      "name": "CancelExecutionCapability",
+      "projection": "openhcs.agent.capabilities.CancelExecutionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.HeadlessExecutionCapability"
+      ],
+      "declared_bases": [
+        "HeadlessExecutionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2723,
+      "original_index": 9639,
+      "name": "ScanRuntimeServersCapability",
+      "projection": "openhcs.agent.capabilities.ScanRuntimeServersCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2738,
+      "original_index": 9705,
+      "name": "GetRuntimeServerInfoCapability",
+      "projection": "openhcs.agent.capabilities.GetRuntimeServerInfoCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2753,
+      "original_index": 9771,
+      "name": "GetRuntimeServerExecutionStatusCapability",
+      "projection": "openhcs.agent.capabilities.GetRuntimeServerExecutionStatusCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2768,
+      "original_index": 9837,
+      "name": "InspectDebugRuntimeValuesCapability",
+      "projection": "openhcs.agent.capabilities.InspectDebugRuntimeValuesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2797,
+      "original_index": 9918,
+      "name": "SendDebugCommandCapability",
+      "projection": "openhcs.agent.capabilities.SendDebugCommandCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2824,
+      "original_index": 10007,
+      "name": "ExportDebugArtifactCapability",
+      "projection": "openhcs.agent.capabilities.ExportDebugArtifactCapability",
+      "bases": [
+        "openhcs.agent.capabilities.RuntimeServerCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "RuntimeServerCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2853,
+      "original_index": 10096,
+      "name": "ViewerSnapshotWindowCapability",
+      "projection": "openhcs.agent.capabilities.ViewerSnapshotWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2873,
+      "original_index": 10191,
+      "name": "CloseViewerWindowCapability",
+      "projection": "openhcs.agent.capabilities.CloseViewerWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2899,
+      "original_index": 10296,
+      "name": "GetViewerWindowStateCapability",
+      "projection": "openhcs.agent.capabilities.GetViewerWindowStateCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2925,
+      "original_index": 10377,
+      "name": "GetViewerWindowPayloadsCapability",
+      "projection": "openhcs.agent.capabilities.GetViewerWindowPayloadsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2953,
+      "original_index": 10458,
+      "name": "SampleViewerWindowImageCapability",
+      "projection": "openhcs.agent.capabilities.SampleViewerWindowImageCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 2980,
+      "original_index": 10538,
+      "name": "SummarizeViewerWindowRoisCapability",
+      "projection": "openhcs.agent.capabilities.SummarizeViewerWindowRoisCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3005,
+      "original_index": 10618,
+      "name": "SetViewerViewportCapability",
+      "projection": "openhcs.agent.capabilities.SetViewerViewportCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3029,
+      "original_index": 10706,
+      "name": "SetViewerImageIntensityCapability",
+      "projection": "openhcs.agent.capabilities.SetViewerImageIntensityCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3053,
+      "original_index": 10790,
+      "name": "NavigateViewerWindowCapability",
+      "projection": "openhcs.agent.capabilities.NavigateViewerWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3084,
+      "original_index": 10888,
+      "name": "IsolateViewerWindowLayersCapability",
+      "projection": "openhcs.agent.capabilities.IsolateViewerWindowLayersCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3106,
+      "original_index": 10977,
+      "name": "ApplyViewerIntensityWindowCapability",
+      "projection": "openhcs.agent.capabilities.ApplyViewerIntensityWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3134,
+      "original_index": 11066,
+      "name": "ProbeViewerWindowCapability",
+      "projection": "openhcs.agent.capabilities.ProbeViewerWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3151,
+      "original_index": 11139,
+      "name": "ValidateViewerWindowStateCapability",
+      "projection": "openhcs.agent.capabilities.ValidateViewerWindowStateCapability",
+      "bases": [
+        "openhcs.agent.capabilities.ViewerWindowCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "ViewerWindowCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3179,
+      "original_index": 11221,
+      "name": "UiListBridgesCapability",
+      "projection": "openhcs.agent.capabilities.UiListBridgesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3199,
+      "original_index": 11301,
+      "name": "UiBridgeStatusCapability",
+      "projection": "openhcs.agent.capabilities.UiBridgeStatusCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3218,
+      "original_index": 11388,
+      "name": "UiListCodeDocumentsCapability",
+      "projection": "openhcs.agent.capabilities.UiListCodeDocumentsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiCodeDocumentCapability"
+      ],
+      "declared_bases": [
+        "UiCodeDocumentCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3232,
+      "original_index": 11435,
+      "name": "UiListStateSurfacesCapability",
+      "projection": "openhcs.agent.capabilities.UiListStateSurfacesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3251,
+      "original_index": 11502,
+      "name": "UiGetStateSurfaceCapability",
+      "projection": "openhcs.agent.capabilities.UiGetStateSurfaceCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3279,
+      "original_index": 11609,
+      "name": "UiListActionsCapability",
+      "projection": "openhcs.agent.capabilities.UiListActionsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSemanticActionCapability"
+      ],
+      "declared_bases": [
+        "UiSemanticActionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3291,
+      "original_index": 11656,
+      "name": "UiInvokeActionCapability",
+      "projection": "openhcs.agent.capabilities.UiInvokeActionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSemanticActionCapability"
+      ],
+      "declared_bases": [
+        "UiSemanticActionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3317,
+      "original_index": 11755,
+      "name": "UiSelectedPlateWorkflowCapability",
+      "projection": "openhcs.agent.capabilities.UiSelectedPlateWorkflowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSelectedPlateCapability"
+      ],
+      "declared_bases": [
+        "UiSelectedPlateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3347,
+      "original_index": 11867,
+      "name": "UiListWindowsCapability",
+      "projection": "openhcs.agent.capabilities.UiListWindowsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3359,
+      "original_index": 11914,
+      "name": "UiFocusWindowCapability",
+      "projection": "openhcs.agent.capabilities.UiFocusWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3380,
+      "original_index": 12001,
+      "name": "UiNavigateWindowCapability",
+      "projection": "openhcs.agent.capabilities.UiNavigateWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3410,
+      "original_index": 12090,
+      "name": "UiCloseWindowCapability",
+      "projection": "openhcs.agent.capabilities.UiCloseWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3433,
+      "original_index": 12177,
+      "name": "UiSnapshotWindowCapability",
+      "projection": "openhcs.agent.capabilities.UiSnapshotWindowCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWindowCapability"
+      ],
+      "declared_bases": [
+        "UiWindowCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3463,
+      "original_index": 12276,
+      "name": "UiGetWidgetTreeCapability",
+      "projection": "openhcs.agent.capabilities.UiGetWidgetTreeCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWidgetFallbackCapability"
+      ],
+      "declared_bases": [
+        "UiWidgetFallbackCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3488,
+      "original_index": 12339,
+      "name": "UiInvokeWidgetActionCapability",
+      "projection": "openhcs.agent.capabilities.UiInvokeWidgetActionCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiWidgetFallbackCapability"
+      ],
+      "declared_bases": [
+        "UiWidgetFallbackCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3513,
+      "original_index": 12430,
+      "name": "UiListObjectStateScopesCapability",
+      "projection": "openhcs.agent.capabilities.UiListObjectStateScopesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiObjectStateCapability"
+      ],
+      "declared_bases": [
+        "UiObjectStateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3543,
+      "original_index": 12520,
+      "name": "UiGetObjectStateFieldsCapability",
+      "projection": "openhcs.agent.capabilities.UiGetObjectStateFieldsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiObjectStateCapability"
+      ],
+      "declared_bases": [
+        "UiObjectStateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3572,
+      "original_index": 12610,
+      "name": "UiDescribeObjectStateFieldCapability",
+      "projection": "openhcs.agent.capabilities.UiDescribeObjectStateFieldCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiObjectStateCapability"
+      ],
+      "declared_bases": [
+        "UiObjectStateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3604,
+      "original_index": 12708,
+      "name": "UiMutateObjectStateFieldCapability",
+      "projection": "openhcs.agent.capabilities.UiMutateObjectStateFieldCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiObjectStateCapability"
+      ],
+      "declared_bases": [
+        "UiObjectStateCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3638,
+      "original_index": 12817,
+      "name": "UiGetCodeDocumentCapability",
+      "projection": "openhcs.agent.capabilities.UiGetCodeDocumentCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiCodeDocumentCapability"
+      ],
+      "declared_bases": [
+        "UiCodeDocumentCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3664,
+      "original_index": 12910,
+      "name": "UiValidateCodeDocumentCapability",
+      "projection": "openhcs.agent.capabilities.UiValidateCodeDocumentCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiCodeDocumentCapability"
+      ],
+      "declared_bases": [
+        "UiCodeDocumentCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3685,
+      "original_index": 12997,
+      "name": "UiApplyCodeDocumentCapability",
+      "projection": "openhcs.agent.capabilities.UiApplyCodeDocumentCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiCodeDocumentCapability"
+      ],
+      "declared_bases": [
+        "UiCodeDocumentCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3717,
+      "original_index": 13097,
+      "name": "UiListSnapshotsCapability",
+      "projection": "openhcs.agent.capabilities.UiListSnapshotsCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSnapshotCapability"
+      ],
+      "declared_bases": [
+        "UiSnapshotCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3736,
+      "original_index": 13174,
+      "name": "UiRestoreSnapshotCapability",
+      "projection": "openhcs.agent.capabilities.UiRestoreSnapshotCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSnapshotCapability"
+      ],
+      "declared_bases": [
+        "UiSnapshotCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3760,
+      "original_index": 13262,
+      "name": "UiTimeTravelHeadCapability",
+      "projection": "openhcs.agent.capabilities.UiTimeTravelHeadCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSnapshotCapability"
+      ],
+      "declared_bases": [
+        "UiSnapshotCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3781,
+      "original_index": 13350,
+      "name": "UiListBranchesCapability",
+      "projection": "openhcs.agent.capabilities.UiListBranchesCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSnapshotCapability"
+      ],
+      "declared_bases": [
+        "UiSnapshotCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3796,
+      "original_index": 13419,
+      "name": "UiSwitchBranchCapability",
+      "projection": "openhcs.agent.capabilities.UiSwitchBranchCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiSnapshotCapability"
+      ],
+      "declared_bases": [
+        "UiSnapshotCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3819,
+      "original_index": 13507,
+      "name": "UiGetOperationStatusCapability",
+      "projection": "openhcs.agent.capabilities.UiGetOperationStatusCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 3842,
+      "original_index": 13604,
+      "name": "UiWaitForOperationReceiptCapability",
+      "projection": "openhcs.agent.capabilities.UiWaitForOperationReceiptCapability",
+      "bases": [
+        "openhcs.agent.capabilities.UiBridgeCliConnectionCapability"
+      ],
+      "declared_bases": [
+        "UiBridgeCliConnectionCapability"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 205,
+      "original_index": 445,
+      "name": "McpInvocationOutcome",
+      "projection": "openhcs.mcp.server.McpInvocationOutcome",
+      "bases": [],
+      "declared_bases": [
+        "str",
+        "Enum"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 221,
+      "original_index": 490,
+      "name": "McpSourceSnapshot",
+      "projection": "openhcs.mcp.server.McpSourceSnapshot",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 299,
+      "original_index": 883,
+      "name": "McpUiCatalogPayloadProjection",
+      "projection": "openhcs.mcp.server.McpUiCatalogPayloadProjection",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 510,
+      "original_index": 1751,
+      "name": "McpNoArgumentToolBindingABC",
+      "projection": "openhcs.mcp.server.McpNoArgumentToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 567,
+      "original_index": 1962,
+      "name": "GeneratedMcpNoArgumentToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpNoArgumentToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 610,
+      "original_index": 2110,
+      "name": "GeneratedMcpResourceBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpResourceBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 670,
+      "original_index": 2333,
+      "name": "HealthCheckMcpToolBinding",
+      "projection": "openhcs.mcp.server.HealthCheckMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpNoArgumentToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpNoArgumentToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 721,
+      "original_index": 2538,
+      "name": "McpUiConnectionToolBindingABC",
+      "projection": "openhcs.mcp.server.McpUiConnectionToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 793,
+      "original_index": 2775,
+      "name": "GeneratedMcpUiConnectionToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpUiConnectionToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 829,
+      "original_index": 2885,
+      "name": "UiListCodeDocumentsMcpToolBinding",
+      "projection": "openhcs.mcp.server.UiListCodeDocumentsMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpUiConnectionToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpUiConnectionToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 843,
+      "original_index": 2925,
+      "name": "UiListStateSurfacesMcpToolBinding",
+      "projection": "openhcs.mcp.server.UiListStateSurfacesMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpUiConnectionToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpUiConnectionToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 857,
+      "original_index": 2965,
+      "name": "UiListActionsMcpToolBinding",
+      "projection": "openhcs.mcp.server.UiListActionsMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpUiConnectionToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpUiConnectionToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 871,
+      "original_index": 3005,
+      "name": "UiListWindowsMcpToolBinding",
+      "projection": "openhcs.mcp.server.UiListWindowsMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpUiConnectionToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpUiConnectionToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 885,
+      "original_index": 3045,
+      "name": "McpUiRequestToolBindingABC",
+      "projection": "openhcs.mcp.server.McpUiRequestToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "Generic",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1031,
+      "original_index": 3648,
+      "name": "GeneratedMcpUiRequestToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpUiRequestToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1087,
+      "original_index": 3848,
+      "name": "UiGetWidgetTreeMcpToolBinding",
+      "projection": "openhcs.mcp.server.UiGetWidgetTreeMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpUiRequestToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpUiRequestToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1126,
+      "original_index": 3992,
+      "name": "McpScalarInputToolBindingABC",
+      "projection": "openhcs.mcp.server.McpScalarInputToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1203,
+      "original_index": 4279,
+      "name": "GeneratedMcpScalarInputToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpScalarInputToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1250,
+      "original_index": 4450,
+      "name": "McpUiScalarInputToolBindingABC",
+      "projection": "openhcs.mcp.server.McpUiScalarInputToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1351,
+      "original_index": 4819,
+      "name": "GeneratedMcpUiScalarInputToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpUiScalarInputToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1402,
+      "original_index": 4993,
+      "name": "McpConfigPatchToolBindingABC",
+      "projection": "openhcs.mcp.server.McpConfigPatchToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1478,
+      "original_index": 5268,
+      "name": "GeneratedMcpConfigPatchToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpConfigPatchToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1514,
+      "original_index": 5378,
+      "name": "McpFromFieldsToolBindingABC",
+      "projection": "openhcs.mcp.server.McpFromFieldsToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "Generic",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1603,
+      "original_index": 5730,
+      "name": "GeneratedMcpFromFieldsToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpFromFieldsToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1647,
+      "original_index": 5874,
+      "name": "McpDataclassRequestToolBindingABC",
+      "projection": "openhcs.mcp.server.McpDataclassRequestToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "Generic",
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1748,
+      "original_index": 6294,
+      "name": "GeneratedMcpDataclassRequestToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpDataclassRequestToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1780,
+      "original_index": 6399,
+      "name": "GeneratedMcpCapabilityRegistryRequestToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpCapabilityRegistryRequestToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 1848,
+      "original_index": 6592,
+      "name": "McpViewerRequestToolBindingABC",
+      "projection": "openhcs.mcp.server.McpViewerRequestToolBindingABC",
+      "bases": [],
+      "declared_bases": [
+        "ABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2020,
+      "original_index": 7352,
+      "name": "GeneratedMcpViewerRequestToolBinding",
+      "projection": "openhcs.mcp.server.GeneratedMcpViewerRequestToolBinding",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2103,
+      "original_index": 7648,
+      "name": "ViewerProbeMcpToolBinding",
+      "projection": "openhcs.mcp.server.ViewerProbeMcpToolBinding",
+      "bases": [
+        "openhcs.mcp.server.McpViewerRequestToolBindingABC"
+      ],
+      "declared_bases": [
+        "McpViewerRequestToolBindingABC"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2462,
+      "original_index": 8863,
+      "name": "McpToolErrorResult",
+      "projection": "openhcs.mcp.server.McpToolErrorResult",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2472,
+      "original_index": 8900,
+      "name": "McpServerStaleErrorResult",
+      "projection": "openhcs.mcp.server.McpServerStaleErrorResult",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2582,
+      "original_index": 9338,
+      "name": "McpViewerConnectionToolFields",
+      "projection": "openhcs.mcp.server.McpViewerConnectionToolFields",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2642,
+      "original_index": 9566,
+      "name": "McpViewerConnectionToolArgs",
+      "projection": "openhcs.mcp.server.McpViewerConnectionToolArgs",
+      "bases": [
+        "openhcs.agent.dto.viewer.ViewerWindowControlRequest"
+      ],
+      "declared_bases": [
+        "ViewerWindowControlRequest"
+      ],
+      "base_resolution_complete": true
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2727,
+      "original_index": 9794,
+      "name": "McpUiBridgeConnectionRequest",
+      "projection": "openhcs.mcp.server.McpUiBridgeConnectionRequest",
+      "bases": [],
+      "declared_bases": [
+        "UiBridgeConnectionRequest"
+      ],
+      "base_resolution_complete": false
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "line": 2733,
+      "original_index": 9812,
+      "name": "UiBridgeConnectionToolArgs",
+      "projection": "openhcs.mcp.server.UiBridgeConnectionToolArgs",
+      "bases": [],
+      "declared_bases": [],
+      "base_resolution_complete": true
+    }
+  ]
+}

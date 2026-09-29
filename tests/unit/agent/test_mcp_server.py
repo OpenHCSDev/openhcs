@@ -826,6 +826,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "image/result file records" in descriptions["openhcs_query_plate_files"]
     query_plate_files_properties = schemas["openhcs_query_plate_files"]["properties"]
     assert "kind" in query_plate_files_properties
+    assert "result_directory" in query_plate_files_properties
     assert "path_contains" in query_plate_files_properties
     assert "well" in query_plate_files_properties
     assert "include_previews" in query_plate_files_properties

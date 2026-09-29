@@ -75,7 +75,10 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
+    ObjectCoreMeasurementFeature,
 )
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
@@ -141,6 +144,7 @@ from openhcs.processing.materialization import (
     CsvOptions,
     FileBundleOptions,
     JsonOptions,
+    PointROIOptions,
     ROIOptions,
     TextOptions,
     csv_only,
@@ -1056,7 +1060,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
         context,
     )
 
-    assert [(tuple(data), path) for data, path in materialized] == [
+    assert [(data.row_mappings(), path) for data, path in materialized] == [
         (({"object_id": 1, "area": 42},), "/analysis/measurements_1.roi.zip")
     ]
 
@@ -1113,8 +1117,73 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
     assert spec.outputs[0].filename_suffix == "_details.csv"
-    assert tuple(data) == ({"object_id": 1, "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"object_id": 1, "area": 42},)
     assert path == "/analysis/A01_measurements_step7.roi.zip"
+
+
+def test_runtime_artifact_plan_materializes_3d_point_measurements():
+    features = ObjectCoreMeasurementFeature
+    output_plan = ArtifactOutputPlan(
+        name="nuclei_centres",
+        path="/memory/A01_nuclei_centres_step7.pkl",
+        artifact_type=MeasurementsArtifactType,
+        materialization=MaterializationSpec(
+            PointROIOptions(
+                z_feature=features.CENTER_Z,
+                y_feature=features.CENTER_Y,
+                x_feature=features.CENTER_X,
+            )
+        ),
+        variable_components=(AllComponents.Z_INDEX,),
+    )
+    source_path = "/input/A01/image.ome.tif"
+    table = MeasurementTable(
+        name=output_plan.name,
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=(source_path,) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    context = _context(FileManagerStub())
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(output_plan, table, axis_id="A01"),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(output_plan, variable_components=(VariableComponents.Z_INDEX,))
+
+    [materialization] = runtime_artifact_materializations(plan, context)
+    [result] = materialization.outputs(plan, context)
+
+    assert result.path == "/analysis/A01_nuclei_centres_step7_points.roi.zip"
+    assert len(result.content) == 1
+    assert result.content[0].metadata["object_label"] == 7
+    assert result.content[0].metadata["response"] == 4.75
+    assert ROIFractionalZ.decode(result.content[0].metadata) == ROIFractionalZ(2.375)
+    assert ROIArchiveSourceMetadata.decode(result.content).source_path == source_path
 
 
 def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
@@ -1184,6 +1253,9 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
 
     [materialization] = runtime_artifact_materializations(plan, context)
 
+    assert isinstance(materialization.data, MeasurementTable)
+    assert materialization.data.subject == table.subject
+    assert len(materialization.data.source_image_provenance_planes.planes) == 4
     assert str(materialization.base_path) == ("/analysis/A01_cell_counts_step7.roi.zip")
     assert tuple(output.path for output in materialization.outputs(plan, context)) == (
         "/analysis/A01_cell_counts_step7_details.csv",
@@ -2179,7 +2251,8 @@ def test_materialize_tabular_artifact_does_not_build_viewer_stream_kwargs(
 
     spec, data, path, backends, backend_kwargs = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
-    assert tuple(data) == ({"object_id": 1, "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"object_id": 1, "area": 42},)
     assert path == "/analysis/A01_measurements_step7.roi.zip"
     assert backends == ["disk"]
     assert dict(backend_kwargs["disk"]) == {}
@@ -2243,7 +2316,8 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
     assert len(materialized) == 1
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
-    assert tuple(data) == ({"site": "1", "area": 42},)
+    assert isinstance(data, MeasurementTable)
+    assert data.row_mappings() == ({"site": "1", "area": 42},)
     assert path == "/analysis/A01_w1_measurements_step7.roi.zip"
 
 
@@ -2523,7 +2597,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
         "/analysis/A01_s001_w5_z001_t001_measurements_step7.roi.zip",
         "/analysis/A01_s002_w5_z001_t001_measurements_step7.roi.zip",
     ]
-    assert [tuple(data) for _spec, data, _path in materialized] == [
+    assert [data.row_mappings() for _spec, data, _path in materialized] == [
         ({"site": "1", "object_id": 1, "area": 42},),
         ({"site": "2", "object_id": 2, "area": 84},),
     ]

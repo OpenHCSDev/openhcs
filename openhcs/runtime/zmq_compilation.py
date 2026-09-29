@@ -75,7 +75,7 @@ class ZMQCompilationRequest:
     orchestrator: "PipelineOrchestrator"
     wells: list[str]
     compile_artifact_id: str | None
-    request_signature: str
+    compilation_signature: str
     debug_replay_signature: str
     retain_compile_artifact: bool
     compiled_artifacts: MutableMapping[str, "ZMQCompileArtifactRecord"]
@@ -91,8 +91,6 @@ class ZMQCompilationRequest:
 
     def reuse_artifact(self) -> ZMQCompilationResult:
         artifact = self.compiled_artifacts.get(self.compile_artifact_id)
-        if artifact is not None and not self.retain_compile_artifact:
-            artifact = self.compiled_artifacts.pop(self.compile_artifact_id)
         if artifact is None:
             raise ValueError(
                 f"Missing compile artifact '{self.compile_artifact_id}'. "
@@ -101,7 +99,7 @@ class ZMQCompilationRequest:
         expected_signature = (
             self.debug_replay_signature
             if self.retain_compile_artifact
-            else self.request_signature
+            else self.compilation_signature
         )
         artifact_signature = artifact.signature_for_retain_policy(
             self.retain_compile_artifact
@@ -133,6 +131,8 @@ class ZMQCompilationRequest:
         }
         compiled_axis_ids = list(execution_bundle.axis_ids)
         compiled_step_names = extract_compiled_step_names(compiled_contexts)
+        if not self.retain_compile_artifact:
+            self.compiled_artifacts.pop(self.compile_artifact_id)
         self.progress_emitter.artifact_init_started(
             compiled_axis_ids=compiled_axis_ids,
             worker_assignments=worker_assignments,
@@ -221,7 +221,7 @@ class ZMQCompileArtifactRecord:
 
     execution_id: str
     plate_id: str
-    request_signature: str
+    compilation_signature: str
     debug_replay_signature: str
     compilation: ZMQCompilationResult
     created_at: float = field(default_factory=time.time)
@@ -229,4 +229,4 @@ class ZMQCompileArtifactRecord:
     def signature_for_retain_policy(self, retain_compile_artifact: bool) -> str:
         if retain_compile_artifact:
             return self.debug_replay_signature
-        return self.request_signature
+        return self.compilation_signature

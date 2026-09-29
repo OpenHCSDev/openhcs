@@ -17,6 +17,10 @@ The benchmark manifest loader materializes missing acquisition-enabled roots
 before resolving case paths. Set `OPENHCS_BENCHMARK_AUTO_ACQUIRE=0` to disable
 this and require pre-existing files.
 
+Relative named roots are resolved against the benchmark command's working
+directory when the manifest is loaded. The resulting absolute paths remain
+stable when execution continues in worker or tool subprocesses.
+
 Build or refresh registry-backed datasets directly with:
 
 ```bash
@@ -94,6 +98,39 @@ overrides it. `--well-count` and `--worker-count` select an explicit cross-produ
 instead of presets. A non-empty output directory is refused; use `--resume` to
 continue its ordinary-route `well_throughput.csv`. Failed observations remain in
 that CSV and make the command exit non-zero.
+
+Use `--reuse-execution-server` to keep one client-owned execution server across
+the selected observations. Its `server_lifecycle` column is `reused-per-sweep`,
+and each `total_seconds` measures the observation after the server is ready.
+Startup and shutdown are excluded from those per-observation totals; use the
+default `fresh-per-observation` lifecycle to include them for each observation.
+Both totals begin after the input workspace is prepared. The reused-server
+option cannot be combined with `--max-memory-mb`, whose guard may kill the
+shared server before later observations.
+The two lifecycles have distinct resume hashes and cannot be mixed in figures.
+
+To populate the CellProfiler-relative timing and speedup columns, first produce a
+fresh native comparison summary with `openhcs-benchmark run`, then pass it to the
+throughput command:
+
+```bash
+openhcs-benchmark run-well-throughput \
+  --manifest benchmark/manifests/official30_portable_axis1.json \
+  --native-summary-csv /tmp/openhcs_cp30_run/summary.csv \
+  --output-dir /tmp/openhcs_well_throughput
+```
+
+Every selected case must have a usable native execution time in the summary.
+The resolved baselines and the executable Python sources under `benchmark`,
+`openhcs`, and the editable `external` packages participate in the resume input
+hash. Rows measured against a different native summary or implementation are not
+reused.
+
+`ExampleIlluminationCorrection_Example1_AllMethod` intentionally sends all 72
+selected files from its single synthetic source well to CellProfiler because
+the upstream pipeline calculates illumination over `All images`. Its 1,800 s
+native timeout includes headroom over a measured 945.82 s CellProfiler 4.2.8.1
+run on the reference six-core development host.
 
 Each successful observation retains a measured-run receipt and submitted
 pipeline/configuration sources under

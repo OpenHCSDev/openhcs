@@ -52,6 +52,7 @@ from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     observed_materialized_artifact_locations_by_address,
+    observed_runtime_export_artifact_output_paths,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -796,22 +797,40 @@ def _execute_axis_with_sequential_combinations(
                 lane_context,
                 cancellation=cancellation,
             )
+            observed_records = runtime_store.observed_values_after(
+                execution_observation_cursor
+            )
+            runtime_export_paths = tuple(
+                dict.fromkeys(
+                    path
+                    for step_plan in frozen_context.step_plans.values()
+                    if step_plan.owns_runtime_outputs
+                    for path in observed_runtime_export_artifact_output_paths(
+                        step_plan,
+                        frozen_context,
+                        observed_records,
+                    )
+                )
+            )
         finally:
             # This cache is context-local even when lanes share a process.
             # Runtime observations remain owned by the value store below.
             frozen_context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
-        if runtime_observation_mode.collects_records:
+        retained_records = runtime_observation_mode.retain_records(
+            observed_records,
+            frozen_context,
+        )
+        if retained_records or runtime_export_paths:
             runtime_observations.append(
                 RuntimeContextObservation(
                     context_key=context_key,
-                    records=runtime_store.observed_values_after(
-                        execution_observation_cursor
-                    ),
+                    records=retained_records,
+                    runtime_export_paths=runtime_export_paths,
                 )
             )
-        elif runtime_observation_mode.releases_worker_records:
+        if runtime_observation_mode.releases_worker_records:
             frozen_context.runtime_value_store.clear()
 
         if not result.is_success():

@@ -23,6 +23,15 @@ different plates disagree, stream raw from the result's declared source and
 recheck. Reject black, wrong-channel, stale or misplaced captures; an invisible
 overlay is not evidence that the detector found nothing.
 
+For feature-bearing 3-D point results, check the persisted point coordinates
+against the viewer's native point geometry, declared Z domain, and selected
+feature row. Select a point by its data index through MCP and verify that the
+same row and exact Z coordinate remain attached. A result-only Points layer
+may have a native slice range determined solely by its points, so a displayed
+integer Z label or `current_step` alone does not establish the point's Z or
+its alignment with raw planes. Confirm that alignment in the combined view;
+record any disagreement rather than treating a visible point as a QA pass.
+
 ## Choose a distributed, multiscale sample
 
 Inspect the whole field for illumination, tissue, focus and density variation.

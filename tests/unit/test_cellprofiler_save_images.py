@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import inspect
+from pathlib import PurePosixPath
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -20,6 +22,7 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,
@@ -77,9 +80,11 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.processing.materialization import (
+    ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,
     MaterializedFilenameIdentity,
+    WriteMode,
     materialize,
 )
 from polystore.filemanager import FileManager
@@ -662,6 +667,98 @@ def test_save_images_projects_sequential_numbers_from_materialization_order() ->
             ),
             np.full((3, 4), item, dtype=np.uint8),
         )
+
+
+def test_save_images_isolates_declared_relative_paths_for_multi_axis_execution() -> (
+    None
+):
+    module = _module(
+        **{
+            "Select the image to save": "ImageToSave",
+            "Select method for constructing file names": "Sequential numbers",
+            "Enter single file name": "CroppedFlyImage",
+            "Number of digits": "4",
+            "Append a suffix to the image file name?": "Yes",
+            "Text to append to the image name": "RGB",
+            "Saved file format": "tiff",
+            "Overwrite existing files without warning?": "No",
+        }
+    )
+    contract = _contract(module)
+    materialization = contract.artifact_outputs[0].materialization
+    assert isinstance(materialization, MaterializationSpec)
+    options = _image_file_options(contract)
+    assert isinstance(
+        options.relative_path_scope,
+        ExecutionAxisMaterializationRelativePathScope,
+    )
+    assert materialization.write_mode is WriteMode.ERROR
+
+    context = ProcessingContext(axis_id="A01")
+    context.execution_runtime = SimpleNamespace(execution_axis_values=("A01", "A02"))
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+    primary_path = materialize(
+        materialization,
+        RuntimeSliceAlignedValues(
+            tuple(
+                ImagePayloadMetadata().payload_with(
+                    np.full((3, 4), item, dtype=np.uint8),
+                    None,
+                )
+                for item in (1, 2, 3)
+            )
+        ),
+        "/analysis/SaveImages.pkl",
+        filemanager,
+        ("memory",),
+        context=context,
+    )
+
+    assert primary_path == "/analysis/A01/CroppedFlyImage0001RGB.tiff"
+    for item in (1, 2, 3):
+        np.testing.assert_array_equal(
+            filemanager.load(
+                f"/analysis/A01/CroppedFlyImage{item:04d}RGB.tiff",
+                "memory",
+            ),
+            np.full((3, 4), item, dtype=np.uint8),
+        )
+
+
+def test_save_images_keeps_declared_relative_paths_for_single_axis_execution() -> None:
+    scope = ExecutionAxisMaterializationRelativePathScope()
+    context = ProcessingContext(axis_id="A01")
+    context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
+
+    assert scope.project(PurePosixPath("exports/Saved.tiff"), context) == (
+        PurePosixPath("exports/Saved.tiff")
+    )
+
+
+def test_save_images_overwrite_setting_owns_materialization_write_mode() -> None:
+    overwrite_contract = _contract(
+        _module(
+            **{
+                "Select the image to save": "ImageToSave",
+                "Overwrite existing files without warning?": "Yes",
+            }
+        )
+    )
+    refuse_contract = _contract(
+        _module(
+            **{
+                "Select the image to save": "ImageToSave",
+                "Overwrite existing files without warning?": "No",
+            }
+        )
+    )
+
+    assert overwrite_contract.artifact_outputs[0].materialization.write_mode is (
+        WriteMode.OVERWRITE
+    )
+    assert refuse_contract.artifact_outputs[0].materialization.write_mode is (
+        WriteMode.ERROR
+    )
 
 
 def test_save_images_from_image_filename_uses_source_identity_and_suffix() -> None:
