@@ -103,12 +103,15 @@ def test_planes_preserve_exact_source_coordinates_and_owned_variants(executed):
         assert diagnostics.seed_markers.data is markers
         assert diagnostics.declump_response.mask is source.mask
     else:
+        assert diagnostics.declump_response.data.dtype == np.float32
         assert np.isnan(diagnostics.declump_response.data).all()
         assert not diagnostics.seed_markers.data.any()
         assert not diagnostics.seed_maxima.data.any()
         assert not diagnostics.declump_response.mask.any()
         assert not diagnostics.seed_maxima.mask.any()
         assert not diagnostics.seed_markers.mask.any()
+        assert diagnostics.declump_response.mask is diagnostics.seed_maxima.mask
+        assert diagnostics.seed_maxima.mask is diagnostics.seed_markers.mask
 
 
 def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects():

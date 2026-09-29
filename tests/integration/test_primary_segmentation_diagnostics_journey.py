@@ -18,7 +18,7 @@ def _field(empty=False):
     return np.zeros_like(image) if empty else image
 
 
-@pytest.mark.parametrize("mode", ["empty", "disabled", "intensity", "shape"])
+@pytest.mark.parametrize("mode", ["empty", "disabled", "watershed-disabled", "intensity", "shape"])
 def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     from openhcs.core.config import DtypeConfig
     from openhcs.core.runtime_image_values import image_payload_data
@@ -36,7 +36,9 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     original, measurements, objects, *planes = func(
         image, min_diameter=2, max_diameter=20,
         exclude_size=False, exclude_border_objects=False,
-        unclump_method=method, watershed_method=WatershedMethod.INTENSITY,
+        unclump_method=method,
+        watershed_method=(WatershedMethod.NONE if mode == "watershed-disabled"
+                          else WatershedMethod.INTENSITY),
         threshold_method=CellProfilerThresholdMethod.MANUAL, manual_threshold=0.2,
         threshold_smoothing_scale=0.0, fill_holes=FillHolesOption.NEVER,
         automatic_smoothing=False, smoothing_filter_size=1,
@@ -49,7 +51,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     np.testing.assert_array_equal(diagnostics.unedited_objects.data, objects.unedited_labels)
     np.testing.assert_array_equal(diagnostics.small_removed_objects.data, objects.small_removed_labels)
     assert measurements.row_count > 0
-    if mode in ("empty", "disabled"):
+    if mode in ("empty", "disabled", "watershed-disabled"):
         assert not diagnostics.declump_response.mask.any()
         assert np.isnan(diagnostics.declump_response.data).all()
         assert not diagnostics.seed_markers.data.any()

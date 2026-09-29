@@ -108,7 +108,7 @@ class UnexecutedDeclumpingEvidence(DeclumpingEvidence):
         shape = source.validity_mask.shape
         invalid = np.zeros(shape, dtype=bool)
         return (
-            source.plane(np.full(shape, np.nan), validity_mask=invalid),
+            source.plane(np.full(shape, np.nan, dtype=np.float32), validity_mask=invalid),
             source.plane(np.zeros(shape, dtype=bool), validity_mask=invalid),
             source.plane(np.zeros(shape, dtype=np.int32), validity_mask=invalid),
         )

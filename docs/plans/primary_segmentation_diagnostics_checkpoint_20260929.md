@@ -35,11 +35,13 @@ Evidence is bounded to seven planes per IPO plane. Only threshold support and
 initial components are snapshotted to protect their pre-transform stage identity.
 Executed response/seed arrays and payload variant arrays are referenced, not
 rerun or cloned. Source validity is decoded once and shared across stages;
-unexecuted stages share one invalid mask. No input or private benchmark was read.
+unexecuted stages share one invalid mask and use float32 NaN response pixels,
+halving the absent response allocation compared with NumPy's default float64.
+No input or private benchmark was read.
 
 ## Actual focused checks
 
-Nine lightweight tests passed in 1.79 seconds, using the prescribed project
+Nine lightweight tests passed in 1.76 seconds, using the prescribed project
 Python 3.12 environment, this worktree and all eight recorded submodule source
 directories on `PYTHONPATH`, with `OPENHCS_CPU_ONLY=true`, thread limits of one,
 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` and:
@@ -49,7 +51,13 @@ python -B -m pytest -q --confcutdir=tests/unit tests/unit/test_primary_object_di
 ```
 
 Two unrelated pytest async-config warnings remain because plugins are disabled.
-Verified import paths are under this worktree and its recorded submodules.
+Verified import paths are under this worktree and its recorded submodules,
+including all eight dependency modules. This explicit source authority matters:
+the shared environment's default imports now resolve to the clean installed
+harness, not this feature tree. Latest remote main
+`283b21275553c54261cf9aeedb7374c113d07f2b` was merged normally into this branch
+as `e6b2addc8c9e626d045742ef7d2f18c8b29e2b4a`; its installed package/skill remains
+frozen and unchanged.
 The first test iterations exposed incorrect fixture assumptions about source
 spatial-domain construction and the payload's count owner; those fixtures now
 use `SourceSpatialDomain` and `objects.domain.declared_object_count` directly.
@@ -88,29 +96,37 @@ Do not install or change the running baseline.
 
 `tests/integration/test_primary_segmentation_diagnostics_journey.py` is prepared
 but NOT run. It covers real registered IPO on a small synthetic close-pair/faint
-field (empty, disabled, intensity and shape declumping), then source-document
+field (empty, unclumping disabled, watershed disabled, intensity and shape
+declumping), then source-document
 roundtrip, normal compiled execution, secondary binding and persisted review
 through the existing runtime/filemanager. Native parity, these real journeys,
 fresh MCP discovery, persisted MCP result review and isolated-display same-coordinate
 raw/intermediate/final viewer inspection remain required. Passing metadata tests
 does not prove them or biological QA.
 
-Parent takes the first released slot for #151/#212. Wait for the parent's explicit
-handoff, then acquire `/home/ts/wt/openhcs-issue-batch-20260929/validation.lock`
+Parent's #151/#212 acceptance is merged and installed. Confucius owns the current
+heavy slot using that frozen harness. Wait for the parent's explicit handoff,
+then acquire `/home/ts/wt/openhcs-issue-batch-20260929/validation.lock`
 nonblocking, run the resource guard and retain at least 8 GiB RAM. Use a single
 worker and owned disposable test output under
 `/home/ts/.cache/agent-scratch/openhcs-primary-diagnostics-20260929`, retain receipts,
 then clean disposable output. Do not poll the lock or start a GUI without display
 allocation.
 
-Core artifact/runtime/adapter files owned by Zeno are unchanged. This bus has no
-verified Zeno route, and the parent cannot relay; obtain a direct route before any
-shared-file changes or manual adapter-fixture migration. One existing hand-written
-IPO executor fixture still declares only the previous two artifact slots; it must
-derive the new diagnostics before its native suite is run. Normal compiled contracts
-already use the module hook.
+Core artifact/runtime/adapter implementation files owned by Zeno are unchanged.
+The IPO-specific fixture in `tests/unit/test_cellprofiler_runtime_adapter.py`
+previously declared only the old measurement/object slots. PR #205 and Zeno's
+worktree had no conflicting edits to that file at the scope check. The fixture
+now derives appended diagnostic specs from `PrimaryObjectDiagnosticPlanes`,
+preserving its original main/label/persistence assertions and adapter bindings.
+This fixture migration is source-only; its native test has NOT run. Normal
+compiled contracts already use the module hook. Any future shared implementation
+change still requires direct coordination with Zeno; no comms route is required
+for independent source work.
 
-Independent draft PR #207 / issue #138 remains at its published polymorphism
-checkpoint, with 51 provider-free tests and prior existing-environment lifecycle
-evidence. Its authorized bounded fresh bootstrap creation/native validation is
+Independent draft PR #207 / issue #138 now includes the independent MI discovery
+correction at `bd164a94f0a42b90b45d7f8e43d09314d5fcaccf`, with 53 provider-free
+tests and actual Python3.9 standalone diamond-command/stage evidence. Its prior
+existing-environment lifecycle receipts do not certify that current revision.
+Authorized bounded fresh bootstrap creation/native validation is
 still pending the explicit serialized slot. It is not abandoned or closed.
