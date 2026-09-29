@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from functools import singledispatch
 import logging
 import os
-import importlib
 import time
 from collections.abc import Sequence as SequenceABC
 from dataclasses import dataclass, field, replace
@@ -43,7 +42,6 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
-    CallableProjection,
     CallableRuntimeCacheKey,
     prepare_processing_callable,
 )
@@ -1712,22 +1710,13 @@ def prepare_compiled_context_callables(
                 groups.append(group)
                 prepared_invocation_count += len(group.invocations)
                 prepared_group_keys.add(prepare_key)
-    module_names = dict.fromkeys(
-        projection.module_name
+    from openhcs.core.processing_preparation import PreparationCacheBatch
+
+    PreparationCacheBatch.from_callables(
+        invocation.contract.resolve_canonical_raw_callable()
         for group in groups
         for invocation in group.invocations
-        for projection in (
-            CallableProjection.from_callable(
-                invocation.contract.resolve_canonical_raw_callable()
-            ),
-        )
-        if projection.module_name is not None
-    )
-    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
-
-    AutoRegisterRegistryPreparation.prepare_module_caches_in_children(
-        importlib.import_module(name) for name in module_names
-    )
+    ).populate_child_caches()
     for group in groups:
         # Parent preparation loads child-produced machine code and owns every
         # process-local hook/cache that execution workers inherit.

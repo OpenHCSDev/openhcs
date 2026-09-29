@@ -7,15 +7,13 @@ compiler has one source of truth for memory and artifact declarations.
 from __future__ import annotations
 
 import dataclasses
-import importlib
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from enum import Enum
-from functools import lru_cache, wraps
+from functools import wraps
 from pathlib import Path
-from threading import Lock
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -66,8 +64,6 @@ if TYPE_CHECKING:
 
 CallableNamespace = Mapping[str, Any]
 _EnumT = TypeVar("_EnumT", bound=Enum)
-_prepared_callable_keys: set[tuple[str, str, Hashable]] = set()
-_prepared_callable_lock = Lock()
 
 CallableRuntimeCacheKey = int
 
@@ -1667,80 +1663,24 @@ def preserves_primary_image_carrier(func: Any) -> Any:
 
 
 def prepare_processing_callable(func: Any) -> None:
-    """Run an optional callable preparation hook before timed data processing."""
-    projection = CallableProjection.from_callable(func)
-    if projection.module_name is not None:
-        prepare_module_autoregister_families(projection.module_name)
-        _prepare_processing_module(projection.module_name)
+    """Prepare declarations through their shared process-local operation contract."""
+    from openhcs.core.processing_preparation import CallablePreparation
 
-    prepare = projection.namespace.get(FunctionContractAttribute.processing_prepare)
-    if prepare is None:
-        return
-    if not callable(prepare):
-        raise TypeError(
-            f"{projection.name!r}.{FunctionContractAttribute.processing_prepare} must be "
-            f"callable, got {type(prepare).__name__}."
-        )
-    if projection.module_name is None:
-        module_label = "<unknown>"
-    else:
-        module_label = projection.module_name
-    prepare_key = (
-        "callable",
-        f"{module_label}.{projection.name}",
-        _prepare_callable_identity(prepare),
-    )
-    with _prepared_callable_lock:
-        if prepare_key in _prepared_callable_keys:
-            return
-    prepare()
-    with _prepared_callable_lock:
-        _prepared_callable_keys.add(prepare_key)
+    CallablePreparation.from_callable(func).prepare()
 
 
 def reset_processing_callable_preparation_cache() -> None:
     """Clear process-local preparation caches for deterministic tests and tooling."""
-    with _prepared_callable_lock:
-        _prepared_callable_keys.clear()
-    prepare_module_autoregister_families.cache_clear()
-    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+    from openhcs.core.processing_preparation import PreparationOperation
 
-    AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+    PreparationOperation.reset()
 
 
-def _prepare_callable_identity(prepare: Callable[..., Any]) -> tuple[str, str]:
-    """Return a stable identity for process-local prepare-hook caching."""
-    return str(prepare.__module__), str(prepare.__qualname__)
-
-
-def _prepare_processing_module(module_name: str) -> None:
-    """Run an optional module-level preparation hook exactly once."""
-    module = importlib.import_module(module_name)
-    prepare = vars(module).get(FunctionContractAttribute.processing_prepare)
-    if prepare is None:
-        return
-    if not callable(prepare):
-        raise TypeError(
-            f"Module {module_name!r}.{FunctionContractAttribute.processing_prepare} "
-            "must be callable, "
-            f"got {type(prepare).__name__}."
-        )
-    prepare_key = ("module", module_name, id(prepare))
-    with _prepared_callable_lock:
-        if prepare_key in _prepared_callable_keys:
-            return
-    prepare()
-    with _prepared_callable_lock:
-        _prepared_callable_keys.add(prepare_key)
-
-
-@lru_cache(maxsize=None)
 def prepare_module_autoregister_families(module_name: str) -> None:
-    """Prepare AutoRegisterMeta families imported by a callable module."""
-    module = importlib.import_module(module_name)
-    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+    """Prepare the module's declared registry obligation once in this process."""
+    from openhcs.core.processing_preparation import ModuleRegistryPreparation
 
-    AutoRegisterRegistryPreparation.prepare_module_registered_families((module,))
+    ModuleRegistryPreparation(module_name).prepare()
 
 
 def _is_function_reference(func: Any) -> bool:
