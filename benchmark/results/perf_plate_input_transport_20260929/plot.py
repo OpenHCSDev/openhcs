@@ -102,13 +102,13 @@ def plot_multiwell() -> None:
     axes[0].set_xticks(
         positions,
         tuple(
-            f"{label}\nCP projection: {speedup:.1f}×"
+            f"{label}\nCP cold projection: {speedup:.1f}×"
             for label, speedup in zip(labels, native_speedups, strict=True)
         ),
     )
     axes[0].legend(frameon=False)
     fig.suptitle(
-        "16 wells, four fork workers; native CP is a 16× one-sample projection"
+        "16 wells, four fork workers; native CP is a 16× cold-launch projection"
     )
     fig.tight_layout()
     fig.savefig(ROOT / "multiwell_execution_and_transfer.png", dpi=170)
