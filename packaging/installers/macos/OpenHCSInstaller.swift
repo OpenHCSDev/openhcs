@@ -99,7 +99,7 @@ private final class InstallerController: NSObject, NSApplicationDelegate,
     )
     private let connectAgentsCheckbox = NSButton(
         checkboxWithTitle:
-            "Connect OpenHCS to ChatGPT, Codex, and local AI agent apps",
+            "Connect AI agent apps and install OpenHCS analysis skills",
         target: nil,
         action: nil
     )

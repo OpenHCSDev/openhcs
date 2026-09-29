@@ -6,8 +6,10 @@ This module defines the ProcessingContext class, which maintains state during pi
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar, cast
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
@@ -39,6 +41,8 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.axis_filter import StepAxisFilterMap
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+
+_RuntimeStepValue = TypeVar("_RuntimeStepValue")
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,6 +130,7 @@ class ProcessingContext:
         self.runtime_function_output_identity_cache = FunctionOutputIdentityCache()
         self.runtime_pattern_discovery_cache = RuntimePatternDiscoveryCache()
         self.runtime_source_binding_context_cache = RuntimeSourceBindingContextCache()
+        self._runtime_step_values: dict[type[object], object] | None = None
         self.runtime_source_workspace_projection_cache = (
             VirtualWorkspaceSourceProjectionCache()
         )
@@ -174,6 +179,29 @@ class ProcessingContext:
     def release_execution_image_cache(self) -> None:
         """Release image reuse storage without discarding runtime observations."""
         self.runtime_image_stack_cache.clear()
+
+    @contextmanager
+    def runtime_step_scope(self) -> Iterator[None]:
+        """Own runtime-only values for exactly one FunctionStep invocation."""
+        previous = self._runtime_step_values
+        self._runtime_step_values = {}
+        try:
+            yield
+        finally:
+            self._runtime_step_values = previous
+
+    def runtime_step_value(
+        self, value_type: type[_RuntimeStepValue]
+    ) -> _RuntimeStepValue:
+        """Resolve one declared runtime value shared within the active step."""
+        values = self._runtime_step_values
+        if values is None:
+            raise RuntimeError("Runtime step values require an active FunctionStep.")
+        value = values.get(value_type)
+        if value is None:
+            value = value_type()
+            values[value_type] = value
+        return cast(_RuntimeStepValue, value)
 
     def install_debug_event_sink(self, debug_event_sink: DebugEventSink) -> None:
         """Install the debug sink selected for this execution context."""

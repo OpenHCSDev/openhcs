@@ -19,6 +19,7 @@ from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from itertools import product
+from math import ceil
 from numbers import Integral
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Generic, Sequence, TypeAlias, TypeVar, cast
@@ -63,6 +64,8 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.constants import AllComponents
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
@@ -125,7 +128,9 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandlerMeta,
 )
 from openhcs.runtime.viewer_controls import (
+    ViewerFractionalZPointCoordinateAuthority,
     ViewerIntensityWindowControlOptions,
+    ViewerNativeDimensions,
     ViewerResultElementCoordinateAuthority,
 )
 from openhcs.runtime.viewer_protocol import (
@@ -1101,6 +1106,7 @@ def _build_nd_points(
     """
     all_points_nd = []
     all_properties = {"label": [], "component": []}
+    point_metadata: list[Mapping[str, NapariWireValue]] = []
 
     for item in layer_items:
         points_data = item.data
@@ -1118,9 +1124,23 @@ def _build_nd_points(
 
             coordinates = shape_payload.coordinates
             metadata = shape_payload.metadata
+            fractional_z = ROIFractionalZ.decode(metadata.metadata)
+            z_axis_index = None
+            if fractional_z is not None:
+                try:
+                    z_axis_index = axis_projection.projected_axis_components.index(
+                        AllComponents.Z_INDEX.value
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "Fractional-Z point ROI requires a projected z_index axis."
+                    ) from exc
 
             for coord in coordinates:
-                nd_coord = prepend_dims + list(coord)
+                point_dims = prepend_dims.copy()
+                if z_axis_index is not None and fractional_z is not None:
+                    point_dims[z_axis_index] += fractional_z.value
+                nd_coord = point_dims + list(coord)
                 all_points_nd.append(nd_coord)
 
                 all_properties["label"].append(
@@ -1129,6 +1149,26 @@ def _build_nd_points(
                 all_properties["component"].append(
                     metadata.value(VisualMetadataField.COMPONENT, 0)
                 )
+                point_metadata.append(metadata.metadata)
+
+    excluded = {
+        "label",
+        "component",
+        ROIFractionalZ.FIELD,
+        ROIArchiveSourceMetadata.FIELD,
+    }
+    feature_fields = {
+        key
+        for values in point_metadata
+        for key, value in values.items()
+        if key not in excluded and isinstance(value, (str, int, float, bool))
+    }
+    for field in sorted(feature_fields):
+        if all(
+            field in values and isinstance(values[field], (str, int, float, bool))
+            for values in point_metadata
+        ):
+            all_properties[field] = [values[field] for values in point_metadata]
 
     points_array = np.empty((0, 2 + len(axis_projection.projected_axis_components)))
     if all_points_nd:
@@ -1680,6 +1720,14 @@ class NapariLayerDisplayHandler(
 
     title_suffix: ClassVar[str] = ""
 
+    def geometric_component_values(
+        self,
+        items: Sequence[NapariStreamLayerItem],
+        component_axis_semantics: ViewerComponentAxisSemantics,
+    ) -> ComponentValues:
+        """Return component values occupied by geometry beyond item anchors."""
+        return {}
+
     def display_work(
         self,
         request: NapariLayerDisplayRequest,
@@ -1947,6 +1995,55 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.POINTS
     title_suffix: ClassVar[str] = "points"
 
+    def geometric_component_values(
+        self,
+        items: Sequence[NapariStreamLayerItem],
+        component_axis_semantics: ViewerComponentAxisSemantics,
+    ) -> ComponentValues:
+        """Keep the declared Z span containing fractional-Z points navigable."""
+        z_component = AllComponents.Z_INDEX.value
+        coordinates = tuple(
+            (item, fractional_z)
+            for item in items
+            for shape in item.data
+            if (payload := ShapePayload(shape)).shape_type == "points"
+            if (fractional_z := ROIFractionalZ.decode(payload.metadata.metadata))
+            is not None
+        )
+        if not coordinates:
+            return {}
+        if z_component not in component_axis_semantics.layout.components_for_mode(
+            ViewerComponentMode.STACK
+        ):
+            raise ValueError(
+                "Fractional-Z point ROI requires a projected z_index axis."
+            )
+        domain = component_axis_semantics.required_component_values((z_component,))[
+            z_component
+        ]
+        occupied: set[ComponentValue] = set()
+        for item, fractional_z in coordinates:
+            anchor = ViewerComponentCoordinateAuthority.required_value(
+                item.address.components,
+                z_component,
+                context="Napari fractional-Z point",
+            )
+            try:
+                start = domain.index(anchor)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Fractional-Z point anchor {anchor!r} is absent from the "
+                    f"declared Z domain {domain!r}."
+                ) from exc
+            stop = start + ceil(fractional_z.value)
+            if stop >= len(domain):
+                raise ValueError(
+                    f"Fractional-Z point {fractional_z.value!r} exceeds the "
+                    f"declared Z domain from anchor {anchor!r}."
+                )
+            occupied.update(domain[start : stop + 1])
+        return {z_component: [value for value in domain if value in occupied]}
+
     def handle(self, request: NapariLayerDisplayRequest) -> None:
         pipeline = request.pipeline
         presentation = request.presentation
@@ -2020,6 +2117,11 @@ class NapariLayerDisplayPipeline:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 
+        data_type = layer_items[0].address.stream_layer_data_type
+        geometric_component_values = NapariLayerDisplayHandler.for_data_type(
+            data_type
+        ).geometric_component_values(layer_items, component_axis_semantics)
+
         projection_request = (
             ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
                 route_key=layer_key,
@@ -2027,6 +2129,7 @@ class NapariLayerDisplayPipeline:
                 layer_items=layer_items,
                 route_value_tracker=self.server.component_values,
                 aggregate_component_values=aggregate_axis_bindings.component_values,
+                geometric_component_values=geometric_component_values,
             )
         )
         return self.axis_projector.project(projection_request)
@@ -3970,12 +4073,37 @@ class NapariViewerStateProjection(NapariViewerProjectionABC[ViewerStateControlOp
     def _route_key_filter(self) -> str | None:
         return self.request.route_key
 
+    @staticmethod
+    def native_dimensions(viewer) -> ViewerNativeDimensions:
+        """Read live Dims/camera/canvas, including changes made by the user."""
+        dims = viewer.dims
+        return ViewerNativeDimensions(
+            order=tuple(int(axis) for axis in dims.order),
+            ndisplay=int(dims.ndisplay),
+            displayed_axes=tuple(
+                str(dims.axis_labels[axis]) for axis in dims.displayed
+            ),
+            point=tuple(float(value) for value in dims.point),
+            camera_angles=tuple(float(angle) for angle in viewer.camera.angles),
+            canvas_size=(
+                (
+                    int(viewer.window.qt_viewer.canvas.native.width()),
+                    int(viewer.window.qt_viewer.canvas.native.height()),
+                )
+                if isinstance(viewer, napari.Viewer)
+                else None
+            ),
+        )
+
     def to_wire_mapping(self) -> dict[str, NapariWireValue]:
         route_keys = self.route_keys()
         layers = tuple(self.layer_state_for(route_key) for route_key in route_keys)
         wire_mapping = self.wire_envelope(response_type="state_ack", layers=layers)
         wire_mapping.update(
             {
+                ViewerControlField.NATIVE_DIMENSIONS.value: self.native_dimensions(
+                    self.viewer
+                ).to_wire_mapping(),
                 ViewerControlField.ACTIVE_DIMENSION_LABEL_ROUTE.value: (
                     self.server.layer_route_state.active_dimension_label_route
                 ),
@@ -4422,37 +4550,6 @@ class NapariPayloadsControlMessageAction(NapariControlMessageAction):
         ).to_wire_mapping()
 
 
-@dataclass(frozen=True, slots=True)
-class NapariPreparedNavigation:
-    """Validated Napari navigation ready for mutation in one Qt turn."""
-
-    layer: NapariLayerHandle
-    request: ViewerNavigationControlOptions
-    viewer_step: tuple[int, ...] | None
-
-    def changes_viewer_state(self, server: "NapariViewerServer") -> bool:
-        viewer = server.viewer
-        if viewer is None:
-            raise RuntimeError("Napari viewer is not available.")
-        return (
-            (
-                self.request.visible is not None
-                and bool(self.layer.visible) != self.request.visible
-            )
-            or (
-                self.request.selected is not None
-                and (viewer.layers.selection.active is self.layer)
-                != self.request.selected
-            )
-            or (
-                self.viewer_step is not None
-                and tuple(int(step) for step in viewer.dims.current_step)
-                != self.viewer_step
-            )
-            or self.request.data_index is not None
-        )
-
-
 class NapariMountedRouteControlMessageAction(NapariControlMessageAction):
     """Shared exact mounted-route boundary for routed native commands."""
 
@@ -4819,6 +4916,7 @@ class NapariPreparedNavigation:
     layer: NapariLayerHandle
     request: ViewerNavigationControlOptions
     viewer_step: tuple[int, ...] | None
+    viewer_order: tuple[int, ...] | None = None
 
     def changes_viewer_state(self, server: "NapariViewerServer") -> bool:
         viewer = server.viewer
@@ -4838,6 +4936,13 @@ class NapariPreparedNavigation:
                 self.viewer_step is not None
                 and tuple(int(step) for step in viewer.dims.current_step)
                 != self.viewer_step
+            )
+            or (
+                self.viewer_order is not None
+                and (
+                    tuple(viewer.dims.order) != self.viewer_order
+                    or viewer.dims.ndisplay != 2
+                )
             )
             or self.request.data_index is not None
         )
@@ -4900,6 +5005,22 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
         request: ViewerNavigationControlOptions,
     ) -> NapariPreparedNavigation:
         layer = self._mounted_layer(server, request.route_key)
+        viewer_order = None
+        if request.display_axes is not None:
+            dimension_state = server.layer_route_state.dimension_state_for(
+                request.route_key
+            )
+            presentation = dimension_state.presentation
+            if presentation is None:
+                raise ValueError(
+                    "Orthogonal review requires a mounted semantic route presentation."
+                )
+            viewer_order = presentation.display_order(
+                request.display_axes, tuple(server.viewer.dims.order)
+            )
+            self._require_display_compatibility(
+                server, layer, request, viewer_order[-2:]
+            )
         if request.data_index is not None:
             NapariResultElementSelectionAuthority.require_data_index(
                 layer,
@@ -4923,6 +5044,11 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
                 layer,
                 request.route_key,
                 request.data_index,
+                displayed_axis_indices=(
+                    tuple(server.viewer.dims.displayed)
+                    if viewer_order is None
+                    else viewer_order[-2:]
+                ),
             )
             conflicts = {
                 axis_name: (result_index, request.axis_indices[axis_name])
@@ -4946,7 +5072,64 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             layer=layer,
             request=request,
             viewer_step=viewer_step,
+            viewer_order=viewer_order,
         )
+
+    @staticmethod
+    def _require_display_compatibility(
+        server: "NapariViewerServer",
+        target: NapariLayerHandle,
+        request: ViewerNavigationControlOptions,
+        displayed: tuple[int, ...],
+    ) -> None:
+        """Validate the resulting visible graph before mutating any member."""
+        for layer in server.viewer.layers:
+            visible = (
+                request.visible
+                if layer is target and request.visible is not None
+                else layer.visible
+            )
+            if not visible:
+                continue
+            if isinstance(layer, napari.layers.Shapes) and set(displayed) != {
+                server.viewer.dims.ndim - 2,
+                server.viewer.dims.ndim - 1,
+            }:
+                raise ValueError(
+                    "Visible planar Shapes do not provide volumetric cross-sections; "
+                    "hide planar ROI layers before orthogonal review or use XY."
+                )
+            route_key = server.layer_route_state.route_for_layer(layer)
+            if route_key is None:
+                raise ValueError(
+                    "Orthogonal review requires semantic presentations for every visible layer."
+                )
+            presentation = server.layer_route_state.dimension_state_for(
+                route_key
+            ).presentation
+            if presentation is None:
+                raise ValueError(
+                    f"Visible route {route_key!r} has no semantic axis presentation."
+                )
+            dimensions = presentation.viewer_dimension_indices(server.viewer.dims.ndim)
+            spatial_dimensions = {
+                dimensions[presentation.axis_labels.index(axis)]
+                for axis in presentation.spatial_axis_labels
+            }
+            if not set(displayed).issubset(spatial_dimensions):
+                raise ValueError(
+                    f"Visible route {route_key!r} does not share the requested spatial dimensions."
+                )
+            if (
+                tuple(
+                    presentation.axis_labels[dimensions.index(axis)]
+                    for axis in displayed
+                )
+                != request.display_axes
+            ):
+                raise ValueError(
+                    f"Visible route {route_key!r} has incompatible spatial axis semantics."
+                )
 
     def apply(
         self,
@@ -4970,6 +5153,9 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
     ) -> None:
         layer = prepared.layer
         request = prepared.request
+        if prepared.viewer_order is not None:
+            server.viewer.dims.ndisplay = 2
+            server.viewer.dims.order = prepared.viewer_order
         if request.visible is not None:
             layer.visible = request.visible
         if prepared.viewer_step is not None:
@@ -4997,6 +5183,8 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
         layer: NapariLayerHandle,
         route_key: str,
         data_index: int,
+        *,
+        displayed_axis_indices: tuple[int, ...] | None = None,
     ) -> dict[str, int]:
         """Derive one result element's route-local slice from native geometry."""
 
@@ -5011,10 +5199,28 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             raise ValueError(
                 f"Viewer data_index {data_index} has no native layer geometry."
             ) from exc
-        return ViewerResultElementCoordinateAuthority.axis_indices(
+        presentation = dimension_state.presentation
+        if presentation is None:
+            raise ValueError("Result selection requires a semantic route presentation.")
+        dimensions = presentation.viewer_dimension_indices(server.viewer.dims.ndim)
+        displayed = (
+            tuple(server.viewer.dims.displayed)
+            if displayed_axis_indices is None
+            else displayed_axis_indices
+        )
+        coordinate_authority = (
+            ViewerFractionalZPointCoordinateAuthority
+            if isinstance(layer, napari.layers.Points)
+            else ViewerResultElementCoordinateAuthority
+        )
+        return coordinate_authority.axis_indices(
             coordinates=cast(Sequence[object], coordinates),
             axis_labels=dimension_state.axis_labels,
-            displayed_axis_count=int(server.viewer.dims.ndisplay),
+            displayed_axis_indices=tuple(
+                local_axis
+                for local_axis, viewer_axis in enumerate(dimensions)
+                if viewer_axis in displayed
+            ),
         )
 
     def axis_step(
@@ -5033,6 +5239,12 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             )
         current_step = [int(step) for step in server.viewer.dims.current_step]
         local_shape = NapariViewerStateProjection.layer_data_shape(layer)
+        presentation = dimension_state.presentation
+        if presentation is None:
+            raise ValueError(
+                f"Route {request.route_key!r} has no axis presentation for semantic navigation."
+            )
+        dimensions = presentation.viewer_dimension_indices(len(current_step))
         for axis_name, local_axis_index in request.axis_indices.items():
             axis_position = self._axis_position(
                 axis_labels,
@@ -5051,14 +5263,8 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
                 axis_position,
                 local_axis_index,
             )
-            presentation = dimension_state.presentation
-            if presentation is None:
-                raise ValueError(
-                    f"Route {request.route_key!r} has no axis presentation "
-                    "for semantic navigation."
-                )
             viewer_axis_origins = server.layer_route_state.axis_origins_for(axis_labels)
-            current_step[axis_position] = presentation.viewer_step(
+            current_step[dimensions[axis_position]] = presentation.viewer_step(
                 local_axis_index,
                 axis_position,
                 viewer_axis_origin=viewer_axis_origins[axis_position],
@@ -5253,6 +5459,9 @@ class NapariScreenshotControlMessageAction(NapariControlMessageAction):
             ViewerControlField.WIDTH.value: snapshot.width,
             ViewerControlField.HEIGHT.value: snapshot.height,
             ViewerControlField.SNAPSHOT.value: snapshot.capture,
+            ViewerControlField.NATIVE_DIMENSIONS.value: NapariViewerStateProjection.native_dimensions(
+                server.viewer
+            ).to_wire_mapping(),
         }
 
 
@@ -5931,6 +6140,12 @@ def run_napari_viewer_process(
         # Create napari viewer in this process (main thread)
         viewer = napari.Viewer(title=viewer_title, show=True)
         server.viewer = viewer
+        from openhcs.runtime.napari_orthogonal_widget import OpenHCSOrthogonalWidget
+
+        orthogonal_widget = OpenHCSOrthogonalWidget(server)
+        viewer.window.add_dock_widget(
+            orthogonal_widget, name="OpenHCS Spatial Planes", area="right"
+        )
         result_selection_surface = server.require_result_selection_surface()
         _apply_default_window_layout(viewer, result_selection_surface.dock)
         server.result_selection_toolbar = _install_result_selection_toolbar(

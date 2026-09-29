@@ -473,9 +473,13 @@ class CellProfilerModule(
                 "CellProfiler callable ownership requires CallableImportIdentity, "
                 f"got {type(identity).__name__}."
             )
+        # Resolve the exact import module before reading its registered
+        # declarations. This avoids discovering unrelated backend modules.
+        importlib.import_module(identity.module_name)
+        registered_modules = tuple(dict.values(cls.__registry__))
         matches = tuple(
             module_type
-            for module_type in cls.__registry__.values()
+            for module_type in registered_modules
             if module_type.__module__ == identity.module_name
             and identity.function_name in module_type.declared_function_names()
         )

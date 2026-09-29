@@ -85,7 +85,7 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
 
 
 def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> None:
-    """The launcher does not claim readiness before capabilities and sockets start."""
+    """The endpoint becomes ready before on-demand catalog preparation."""
 
     events: list[str] = []
 
@@ -115,7 +115,7 @@ def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> 
         server_runner=serve_forever,
     )
 
-    assert events == ["construct", "prepare_runtime", "start", "ready", "serve"]
+    assert events == ["construct", "start", "ready", "serve"]
 
 
 def test_execution_server_launcher_projects_endpoint_overrides_into_config(

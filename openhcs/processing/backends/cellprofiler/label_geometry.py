@@ -306,14 +306,21 @@ def _cellprofiler_convex_hull(
             continue
         y_values = point_y[start:stop]
         x_values = point_x[start:stop]
-        columns = np.unique(x_values)
-        candidates: list[tuple[int, int]] = []
-        for column in columns:
-            rows = y_values[x_values == column]
-            candidates.append((int(np.min(rows)), int(column)))
-        for column in columns[::-1]:
-            rows = y_values[x_values == column]
-            candidates.append((int(np.max(rows)), int(column)))
+        first_column = int(np.min(x_values))
+        relative_columns = x_values - first_column
+        column_count = int(np.max(relative_columns)) + 1
+        row_minimum = np.full(column_count, np.iinfo(np.int64).max, dtype=np.int64)
+        row_maximum = np.full(column_count, np.iinfo(np.int64).min, dtype=np.int64)
+        np.minimum.at(row_minimum, relative_columns, y_values)
+        np.maximum.at(row_maximum, relative_columns, y_values)
+        columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
+        candidates = [
+            (int(row_minimum[column]), int(column + first_column)) for column in columns
+        ]
+        candidates.extend(
+            (int(row_maximum[column]), int(column + first_column))
+            for column in columns[::-1]
+        )
 
         vertices: list[tuple[int, int]] = []
         for candidate in candidates:
@@ -352,7 +359,7 @@ def _grouped_minimum_positions(
     requested = index_array.ravel().copy()
     found = (requested >= 0) & (requested <= max_label)
     requested[~found] = max_label + 1
-    order = _numpy_124_scalar_argsort(value_array.ravel())
+    order = _numpy124_aquicksort_indices(value_array.ravel())
     sorted_labels = label_array.ravel()[order]
     sorted_positions = np.arange(value_array.size, dtype=int)[order]
     minimum_positions = np.zeros(max_label + 2, dtype=int)
@@ -360,74 +367,151 @@ def _grouped_minimum_positions(
     return minimum_positions[requested].reshape(index_array.shape)
 
 
-def _numpy_124_scalar_argsort(values: np.ndarray) -> np.ndarray:
-    """Return the NumPy 1.24 scalar quicksort permutation for float data."""
-    order = np.arange(values.size, dtype=int)
-    if order.size <= 1:
-        return order
+@njit(cache=True)
+def _numpy124_msb_numba(value: int) -> int:
+    depth_limit = 0
+    while value >> 1:
+        value >>= 1
+        depth_limit += 1
+    return depth_limit
 
-    stack: list[tuple[int, int, int]] = []
-    left = 0
-    right = int(order.size - 1)
-    depth = (int(order.size).bit_length() - 1) * 2
-    while True:
-        if depth < 0:
-            suborder = order[left : right + 1]
-            order[left : right + 1] = suborder[
-                np.argsort(values[suborder], kind="heapsort")
-            ]
-            if not stack:
-                break
-            left, right, depth = stack.pop()
-            continue
 
-        while (right - left) > 15:
-            middle = left + ((right - left) >> 1)
-            if values[order[middle]] < values[order[left]]:
-                order[middle], order[left] = order[left], order[middle]
-            if values[order[right]] < values[order[middle]]:
-                order[right], order[middle] = order[middle], order[right]
-            if values[order[middle]] < values[order[left]]:
-                order[middle], order[left] = order[left], order[middle]
-            pivot = values[order[middle]]
-            lower = left
-            upper = right - 1
-            order[middle], order[upper] = order[upper], order[middle]
-            while True:
-                lower += 1
-                while values[order[lower]] < pivot:
-                    lower += 1
-                upper -= 1
-                while pivot < values[order[upper]]:
-                    upper -= 1
-                if lower >= upper:
-                    break
-                order[lower], order[upper] = order[upper], order[lower]
-            pivot_index = right - 1
-            order[lower], order[pivot_index] = order[pivot_index], order[lower]
-            if (lower - left) < (right - lower):
-                stack.append((lower + 1, right, depth - 1))
-                right = lower - 1
+@njit(cache=True)
+def _numpy124_aheapsort_indices_numba(
+    values: np.ndarray, indices: np.ndarray, start: int, count: int
+) -> None:
+    n = count
+    level = n >> 1
+    while level > 0:
+        temporary = indices[start + level - 1]
+        parent = level
+        child = level << 1
+        while child <= n:
+            if (
+                child < n
+                and values[indices[start + child - 1]] < values[indices[start + child]]
+            ):
+                child += 1
+            if values[temporary] < values[indices[start + child - 1]]:
+                indices[start + parent - 1] = indices[start + child - 1]
+                parent = child
+                child += child
             else:
-                stack.append((left, lower - 1, depth - 1))
-                left = lower + 1
-            depth -= 1
+                break
+        indices[start + parent - 1] = temporary
+        level -= 1
+    while n > 1:
+        temporary = indices[start + n - 1]
+        indices[start + n - 1] = indices[start]
+        n -= 1
+        parent = 1
+        child = 2
+        while child <= n:
+            if (
+                child < n
+                and values[indices[start + child - 1]] < values[indices[start + child]]
+            ):
+                child += 1
+            if values[temporary] < values[indices[start + child - 1]]:
+                indices[start + parent - 1] = indices[start + child - 1]
+                parent = child
+                child += child
+            else:
+                break
+        indices[start + parent - 1] = temporary
 
-        for lower in range(left + 1, right + 1):
-            value_index = int(order[lower])
-            pivot = values[value_index]
-            upper = lower
-            previous = lower - 1
-            while upper > left and pivot < values[order[previous]]:
-                order[upper] = order[previous]
-                upper -= 1
+
+@njit(cache=True)
+def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
+    count = values.size
+    indices = np.arange(count, dtype=np.int64)
+    if count < 2:
+        return indices
+    stack_left = np.empty(128, dtype=np.int64)
+    stack_right = np.empty(128, dtype=np.int64)
+    stack_depth = np.empty(128, dtype=np.int64)
+    stack_size = 0
+    left = 0
+    right = count - 1
+    current_depth = _numpy124_msb_numba(count) * 2
+    while True:
+        if current_depth < 0:
+            _numpy124_aheapsort_indices_numba(values, indices, left, right - left + 1)
+            if stack_size == 0:
+                break
+            stack_size -= 1
+            left = stack_left[stack_size]
+            right = stack_right[stack_size]
+            current_depth = stack_depth[stack_size]
+            continue
+        while right - left > 15:
+            middle = left + (right - left >> 1)
+            if values[indices[middle]] < values[indices[left]]:
+                indices[middle], indices[left] = (indices[left], indices[middle])
+            if values[indices[right]] < values[indices[middle]]:
+                indices[right], indices[middle] = (indices[middle], indices[right])
+            if values[indices[middle]] < values[indices[left]]:
+                indices[middle], indices[left] = (indices[left], indices[middle])
+            pivot_value = values[indices[middle]]
+            scan_left = left
+            scan_right = right - 1
+            indices[middle], indices[scan_right] = (
+                indices[scan_right],
+                indices[middle],
+            )
+            while True:
+                scan_left += 1
+                while values[indices[scan_left]] < pivot_value:
+                    scan_left += 1
+                scan_right -= 1
+                while pivot_value < values[indices[scan_right]]:
+                    scan_right -= 1
+                if scan_left >= scan_right:
+                    break
+                indices[scan_left], indices[scan_right] = (
+                    indices[scan_right],
+                    indices[scan_left],
+                )
+            pivot_slot = right - 1
+            indices[scan_left], indices[pivot_slot] = (
+                indices[pivot_slot],
+                indices[scan_left],
+            )
+            if scan_left - left < right - scan_left:
+                stack_left[stack_size] = scan_left + 1
+                stack_right[stack_size] = right
+                stack_size += 1
+                right = scan_left - 1
+            else:
+                stack_left[stack_size] = left
+                stack_right[stack_size] = scan_left - 1
+                stack_size += 1
+                left = scan_left + 1
+            current_depth -= 1
+            stack_depth[stack_size - 1] = current_depth
+        insertion_index = left + 1
+        while insertion_index <= right:
+            current_index = indices[insertion_index]
+            current_value = values[current_index]
+            target = insertion_index
+            previous = insertion_index - 1
+            while target > left and current_value < values[indices[previous]]:
+                indices[target] = indices[previous]
+                target -= 1
                 previous -= 1
-            order[upper] = value_index
-
-        if not stack:
+            indices[target] = current_index
+            insertion_index += 1
+        if stack_size == 0:
             break
-        left, right, depth = stack.pop()
-    return order
+        stack_size -= 1
+        left = stack_left[stack_size]
+        right = stack_right[stack_size]
+        current_depth = stack_depth[stack_size]
+    return indices
+
+
+def _numpy124_aquicksort_indices(values: np.ndarray) -> np.ndarray:
+    return _numpy124_aquicksort_indices_numba(np.asarray(values))
 
 
 @njit(cache=True)

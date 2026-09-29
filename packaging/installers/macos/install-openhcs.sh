@@ -270,7 +270,7 @@ fi
 report_progress 'Preparing Applications and Desktop shortcuts…'
 export OPENHCS_UV_EXECUTABLE="$uv_executable"
 run_cancellable "$environment_python" -I -m openhcs.desktop_deployment_cli \
-    --installation-pointer="$current_environment" --json
+    --installation-pointer="$current_environment" --skip-skill-sync --json
 install_succeeded=true
 write_installer_state launcher-path "$launcher_app"
 
@@ -287,6 +287,7 @@ if [[ "$register_mcp_clients" == 1 ]]; then
             --args-json '["mcp"]' \
             --register codex \
             --register-detected \
+            --sync-skills \
             --json >"$agent_registration_candidate"; then
             registration_status=0
         else

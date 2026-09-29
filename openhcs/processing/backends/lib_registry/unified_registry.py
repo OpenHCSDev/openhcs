@@ -1944,7 +1944,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         """Load only a valid persistent catalog, without runtime discovery."""
 
         self._ensure_library_warmed()
-        self.get_modules_to_scan()
+        self._prepare_cached_function_inventory()
         discovery_signature = self.get_discovery_signature()
         if (
             self._function_metadata_cache is not None
@@ -1955,6 +1955,11 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         if cached_functions is None:
             return None
         return self._remember_function_metadata(cached_functions)
+
+    def _prepare_cached_function_inventory(self) -> None:
+        """Prepare the module declaration used to validate cached functions."""
+
+        self.get_modules_to_scan()
 
     def _remember_function_metadata(
         self,

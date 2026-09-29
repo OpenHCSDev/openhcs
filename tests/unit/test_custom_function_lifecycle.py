@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import concurrent.futures
+import inspect
+import pickle
 import threading
 from types import SimpleNamespace
 
@@ -24,6 +26,285 @@ from openhcs.processing.custom_functions.validation import ValidationError
 
 def _source(name: str, expression: str = "image") -> str:
     return f"@numpy\ndef {name}(image):\n    return {expression}\n"
+
+
+def _measurement_source(name: str) -> str:
+    return f"""from dataclasses import dataclass
+from openhcs.core.artifacts import (
+    ArtifactSpec, MainFlowStackOutputSpec, ImageArtifactType, MeasurementsArtifactType,
+)
+from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.runtime_measurements import (
+    RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
+)
+
+class ProbeFeature(RuntimeMeasurementFeature):
+    COUNT = "count"
+
+class ProbeFeatureOwner(RuntimeMeasurementFeatureOwner):
+    @classmethod
+    def owns_measurement_feature_name(cls, feature_name):
+        return any(feature.feature_name == feature_name for feature in ProbeFeature)
+
+    @classmethod
+    def owns_primary_measurement_feature_name(cls, feature_name):
+        return cls.owns_measurement_feature_name(feature_name)
+
+@dataclass(frozen=True)
+class ProbeRow:
+    count: int
+
+@numpy
+@artifact_outputs(
+    MainFlowStackOutputSpec.output("ProbeImage", ImageArtifactType),
+    ArtifactSpec.output(
+        "ProbeRows", MeasurementsArtifactType,
+        measurement_feature_owner=ProbeFeatureOwner,
+    ),
+)
+def {name}(image):
+    return image, DataclassMeasurementColumnarRows((ProbeRow(1),), row_type=ProbeRow)
+"""
+
+
+def test_compiled_inspection_preserves_custom_helper_identity_and_source_isolation(
+    isolated_custom_runtime,
+) -> None:
+    from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
+    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.function_patterns import (
+        DEFAULT_GROUP_KEY,
+        CompiledFunctionInvocation,
+        FunctionInvocationKey,
+    )
+
+    manager = CustomFunctionManager()
+    inspections = []
+    owners = []
+    for name in ("helper_identity_first", "helper_identity_second"):
+        [function] = manager.register_from_code(_measurement_source(name))
+        contract = CallableContract.from_callable(function)
+        _image_spec, spec = contract.artifact_outputs
+        owners.append(spec.measurement_feature_owner)
+        inspections.append(
+            CompiledArtifactInvocationInspection.from_invocation(
+                CompiledFunctionInvocation(
+                    key=FunctionInvocationKey(name, DEFAULT_GROUP_KEY, 0),
+                    contract=contract,
+                    artifact_output_plans=tuple(
+                        ArtifactOutputPlan(
+                            name=output.name,
+                            path=f"/memory/{name}/{output.name}.pkl",
+                            artifact_type=output.artifact_type,
+                            relations=output.relations,
+                        )
+                        for output in contract.artifact_outputs
+                    ),
+                )
+            )
+        )
+
+    assert owners[0] is not owners[1]
+    restored = pickle.loads(pickle.dumps(tuple(inspections)))
+    for original, received, owner in zip(inspections, restored, owners, strict=True):
+        assert received == original
+        assert received.output_specs[1].measurement_feature_owner is owner
+        assert owner.owns_primary_measurement_feature_name("count")
+        assert not owner.owns_measurement_feature_name("unknown")
+
+
+@pytest.mark.parametrize("operation", ("reconcile", "unchanged-update"))
+def test_unchanged_source_lifecycle_preserves_measurement_owner(
+    isolated_custom_runtime,
+    monkeypatch,
+    operation,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract
+
+    manager = CustomFunctionManager()
+    [registered] = manager.register_from_code(_measurement_source("helper_reconcile"))
+    _image_spec, before = CallableContract.from_callable(registered).artifact_outputs
+
+    def reject_reexecution(self, code):
+        raise AssertionError("Unchanged published source must not execute again")
+
+    monkeypatch.setattr(CustomFunctionManager, "_prepare_source", reject_reexecution)
+
+    if operation == "reconcile":
+        assert manager.load_all_custom_functions() == 1
+    else:
+        assert (
+            manager.update_custom_function(
+                "helper_reconcile", _measurement_source("helper_reconcile")
+            )
+            == "helper_reconcile"
+        )
+    reconciled = CustomFunctionRuntimeRegistry.metadata_by_name()[
+        "helper_reconcile"
+    ].func
+    _image_spec, after = CallableContract.from_callable(reconciled).artifact_outputs
+    assert reconciled is registered
+    assert after.measurement_feature_owner is before.measurement_feature_owner
+    assert manager.load_all_custom_functions() == 1
+
+
+def test_reconciliation_replaces_helper_owner_only_when_source_changes(
+    isolated_custom_runtime,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract
+
+    manager = CustomFunctionManager()
+    name = "helper_source_change"
+    code = _measurement_source(name)
+    [registered] = manager.register_from_code(code)
+    _image_spec, before = CallableContract.from_callable(registered).artifact_outputs
+    (isolated_custom_runtime / f"{name}.py").write_text(
+        code.replace('COUNT = "count"', 'SIZE = "size"').replace(
+            "count: int", "size: int"
+        ),
+        encoding="utf-8",
+    )
+
+    assert manager.load_all_custom_functions() == 1
+    reconciled = CustomFunctionRuntimeRegistry.metadata_by_name()[name].func
+    _image_spec, after = CallableContract.from_callable(reconciled).artifact_outputs
+    assert reconciled is not registered
+    assert after.measurement_feature_owner is not before.measurement_feature_owner
+    assert after.measurement_feature_owner.owns_measurement_feature_name("size")
+    assert not after.measurement_feature_owner.owns_measurement_feature_name("count")
+
+
+@pytest.mark.parametrize("operation", ("reconcile", "unchanged-update", "reload"))
+def test_publication_preserves_owner_recreated_while_prepared_source_waits(
+    isolated_custom_runtime,
+    monkeypatch,
+    operation,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract
+
+    manager = CustomFunctionManager()
+    name = "recreated_source_publication_probe"
+    code = _measurement_source(name)
+    [original] = manager.register_from_code(code)
+    selected = threading.Event()
+    release = threading.Event()
+    prepare = CustomFunctionRuntimeRegistry.prepare_source_once
+
+    def wait_after_selection(cls, source, factory):
+        metadata = prepare(source, factory)
+        selected.set()
+        assert release.wait(timeout=5)
+        return metadata
+
+    monkeypatch.setattr(
+        CustomFunctionRuntimeRegistry,
+        "prepare_source_once",
+        classmethod(wait_after_selection),
+    )
+
+    def pending_publication():
+        if operation == "reconcile":
+            return manager.load_all_custom_functions()
+        if operation == "unchanged-update":
+            return manager.update_custom_function(name, code)
+        return manager.load_custom_function(name)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(pending_publication)
+        try:
+            assert selected.wait(timeout=5)
+            assert manager.delete_custom_function(name)
+            [current] = manager.register_from_code(code)
+            assert current is not original
+            owner = (
+                CallableContract.from_callable(current)
+                .artifact_outputs[1]
+                .measurement_feature_owner
+            )
+            payload = pickle.dumps(owner)
+        finally:
+            release.set()
+        assert future.result(timeout=5) == (
+            name if operation == "unchanged-update" else 1
+        )
+
+    assert vars(custom_functions)[name] is current
+    assert CustomFunctionRuntimeRegistry.metadata_by_name()[name].func is current
+    assert (
+        CallableContract.from_callable(current)
+        .artifact_outputs[1]
+        .measurement_feature_owner
+        is owner
+    )
+    assert pickle.loads(payload) is owner
+
+
+@pytest.mark.parametrize("operation", ("recreate", "replace", "delete"))
+def test_pending_resolution_rejects_retired_source_without_poisoning_current_owner(
+    isolated_custom_runtime,
+    monkeypatch,
+    operation,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        OpenHCSRegistry,
+    )
+
+    monkeypatch.setattr(RegistryService, "_metadata_cache", None)
+    monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
+    manager = CustomFunctionManager()
+    name = "pending_resolution_source_probe"
+    code = _measurement_source(name)
+    [original] = manager.register_from_code(code)
+    reference = FunctionReferenceTransportAuthority.function_reference(original)
+    selected = threading.Event()
+    release = threading.Event()
+    reconstruct = OpenHCSRegistry.reconstruct_cached_callable
+
+    def pause_reconstruction(self, declared, contract):
+        result = reconstruct(self, declared, contract)
+        if declared is original:
+            selected.set()
+            assert release.wait(timeout=5)
+        return result
+
+    monkeypatch.setattr(
+        OpenHCSRegistry,
+        "reconstruct_cached_callable",
+        pause_reconstruction,
+    )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(reference.resolve)
+        try:
+            assert selected.wait(timeout=5)
+            if operation == "replace":
+                manager.update_custom_function(
+                    name, code.replace("ProbeRow(1)", "ProbeRow(2)")
+                )
+                current = vars(custom_functions)[name]
+            else:
+                assert manager.delete_custom_function(name)
+                if operation == "recreate":
+                    [current] = manager.register_from_code(code)
+                else:
+                    current = None
+        finally:
+            release.set()
+        with pytest.raises(RuntimeError, match="changed"):
+            future.result(timeout=5)
+
+    if current is None:
+        with pytest.raises(RuntimeError):
+            reference.resolve()
+    else:
+        fresh = FunctionReferenceTransportAuthority.function_reference(current)
+        resolved = fresh.resolve()
+        expected = CallableContract.from_callable(current).artifact_outputs[1]
+        actual = CallableContract.from_callable(resolved).artifact_outputs[1]
+        assert actual.measurement_feature_owner is expected.measurement_feature_owner
+        assert resolved is fresh.resolve()
 
 
 @pytest.fixture
@@ -526,3 +807,84 @@ def test_compiled_custom_reference_rejects_changed_source_revision(
         FunctionReferenceTransportAuthority.function_reference(current).resolve()
         is current
     )
+
+
+@pytest.mark.parametrize("mutation", ("changed", "deleted"))
+def test_warm_reference_and_helper_reject_source_edits_outside_manager(
+    isolated_custom_runtime,
+    mutation,
+) -> None:
+    manager = CustomFunctionManager()
+    name = "outside_manager_revision_probe"
+    code = _measurement_source(name)
+    [function] = manager.register_from_code(code)
+    reference = FunctionReferenceTransportAuthority.function_reference(function)
+    assert reference.resolve() is reference.resolve()
+    owner = reference.metadata.artifact_outputs[1].measurement_feature_owner
+    owner_payload = pickle.dumps(owner)
+    assert pickle.loads(owner_payload) is owner
+
+    source_path = isolated_custom_runtime / f"{name}.py"
+    if mutation == "changed":
+        source_path.write_text(code + "\n# An external editor changed this revision.\n")
+    else:
+        source_path.unlink()
+
+    with pytest.raises(RuntimeError, match="recompile"):
+        reference.resolve()
+    with pytest.raises(RuntimeError, match="recompile"):
+        pickle.loads(owner_payload)
+    # CPython's producer wraps a failed global lookup in PicklingError; the
+    # consumer propagates the namespace's actual stale-revision rejection.
+    with pytest.raises(pickle.PicklingError):
+        pickle.dumps(owner)
+
+
+@pytest.mark.parametrize("persist", (False, True))
+def test_nested_helpers_and_functions_keep_identity_without_imported_type_mutation(
+    isolated_custom_runtime,
+    persist,
+) -> None:
+    from pathlib import Path
+
+    code = """from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+
+def helper_value(value):
+    return value * 2
+
+class source:
+    @dataclass(frozen=True)
+    class Row:
+        value: int
+
+    class Kind(Enum):
+        VALUE = "local"
+
+@numpy
+def nested_helper_transport_probe(image):
+    return image
+"""
+    [function] = CustomFunctionManager().register_from_code(code, persist=persist)
+    namespace = inspect.unwrap(function).__globals__
+    helper = namespace["helper_value"]
+    nested = namespace["source"]
+    original = (helper, nested, nested.Row, nested.Row(3), nested.Kind.VALUE)
+    restored = pickle.loads(pickle.dumps(original))
+    assert restored[0] is helper and restored[0](4) == 8
+    assert restored[1] is nested
+    assert restored[2] is nested.Row and type(restored[3]) is nested.Row
+    assert restored[3] == nested.Row(3)
+    assert restored[4] is nested.Kind.VALUE
+    assert namespace["Path"] is Path
+    assert Path.__module__ == "pathlib" and Path.__qualname__ == "Path"
+    reference = FunctionReferenceTransportAuthority.function_reference(function)
+    assert reference.resolve() is reference.resolve()
+    assert (
+        isolated_custom_runtime / "nested_helper_transport_probe.py"
+    ).exists() is persist
+
+    CustomFunctionRuntimeRegistry.clear()
+    with pytest.raises((RuntimeError, pickle.PicklingError)):
+        pickle.dumps(helper)

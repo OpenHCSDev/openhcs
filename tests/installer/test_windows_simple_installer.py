@@ -392,7 +392,7 @@ def test_windows_wizard_owns_liveness_failure_and_optional_launch_ui() -> None:
     assert '$openLogButton.Text = "Open log"' in source
     assert '$launchCheck.Text = "Launch $($Contract.ProductName) after setup"' in source
     assert "$launchCheck.Checked = $true" in source
-    assert '"Connect OpenHCS to ChatGPT, Codex, and local AI agent apps"' in source
+    assert '"Connect AI agent apps and install OpenHCS analysis skills"' in source
     assert "$agentConnectionCheck.Checked = $true" in source
     assert "Get-DesktopShortcutPath $Contract" in source
     assert "Start-Process -FilePath (Get-DesktopShortcutPath $Contract)" in source
@@ -460,10 +460,15 @@ def test_windows_installer_registers_agent_clients_through_stable_launcher() -> 
     assert '"--launcher-argument={0}" -f $launcherArgument' in source
     assert "-FilePath $registrationExecutable" in source
     assert '-Description "Connect OpenHCS to local agent clients"' in source
+    assert "-AllowedExitCodes @(0, 1)" in source
+    assert "[int[]]$AllowedExitCodes = @(0)" in source
+    assert "$exitCode -notin $AllowedExitCodes" in source
     assert "-CaptureOutput" in source
     assert '"--args-json" $launcherArguments' not in source
     assert '"--register", "codex"' in source
     assert '"--register-detected"' in source
+    assert '"--sync-skills"' in source
+    assert '"--skip-skill-sync"' in source
     assert '"--json"' in source
     assert '"mcp"' in source
     assert "OPENHCS_UV_EXECUTABLE" in source

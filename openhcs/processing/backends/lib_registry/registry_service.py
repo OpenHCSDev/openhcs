@@ -64,31 +64,34 @@ class RegistryService:
         cancellation: OperationCancellation | None = None,
     ) -> Dict[str, FunctionMetadata]:
         """Get unified metadata for all functions from all registries."""
-        if cls._metadata_cache is not None:
-            logger.debug(
-                f"🎯 REGISTRY SERVICE: Using cached metadata ({len(cls._metadata_cache)} functions)"
-            )
-            return cls._metadata_cache
+        with cls._registry_inventory_lock:
+            if cls._metadata_cache is not None:
+                logger.debug(
+                    f"🎯 REGISTRY SERVICE: Using cached metadata ({len(cls._metadata_cache)} functions)"
+                )
+                return cls._metadata_cache
 
-        emit_status = status_callback or logger.debug
-        emit_status("Loading cached function catalog")
-        registry_instances = cls._available_registry_instances()
-        cached_functions = cls._load_valid_persistent_catalog(registry_instances)
-        if cached_functions is None:
-            cls._prepare_persistent_catalog(
-                status_callback=emit_status,
-                cancellation=cancellation,
-            )
-            emit_status("Loading the prepared function catalog")
+            emit_status = status_callback or logger.debug
+            emit_status("Loading cached function catalog")
+            registry_instances = cls._available_registry_instances()
             cached_functions = cls._load_valid_persistent_catalog(registry_instances)
-        if cached_functions is None:
-            raise RuntimeError(
-                "Function registry preparation completed without producing a valid "
-                "persistent catalog."
-            )
-        cls._metadata_cache = cached_functions
-        emit_status(f"Function catalog ready ({len(cached_functions)} functions)")
-        return cached_functions
+            if cached_functions is None:
+                cls._prepare_persistent_catalog(
+                    status_callback=emit_status,
+                    cancellation=cancellation,
+                )
+                emit_status("Loading the prepared function catalog")
+                cached_functions = cls._load_valid_persistent_catalog(
+                    registry_instances
+                )
+            if cached_functions is None:
+                raise RuntimeError(
+                    "Function registry preparation completed without producing a valid "
+                    "persistent catalog."
+                )
+            cls._metadata_cache = cached_functions
+            emit_status(f"Function catalog ready ({len(cached_functions)} functions)")
+            return cached_functions
 
     @classmethod
     def cached_metadata_snapshot(cls) -> Dict[str, FunctionMetadata]:
@@ -354,7 +357,7 @@ class RegistryService:
         with cls._registry_inventory_lock:
             cached = cls._resolved_reference_callables.get(cache_key)
             if cached is not None:
-                return cached.func
+                return reference.require_current_declaration(cached.func)
             catalog_metadata = (
                 None
                 if cls._metadata_cache is None
@@ -412,6 +415,7 @@ class RegistryService:
             resolved = registry.reconstruct_cached_callable(declared, contract)
 
         with cls._registry_inventory_lock:
+            resolved = reference.require_current_declaration(resolved)
             cls._resolved_reference_callables[cache_key] = ResolvedRegistryFunction(
                 reference, resolved
             )

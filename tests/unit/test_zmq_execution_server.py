@@ -1,6 +1,7 @@
+import sys
 from pathlib import Path
 from queue import SimpleQueue
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from objectstate import get_current_global_config
@@ -17,6 +18,8 @@ from openhcs.core.config import (
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
+    RuntimeContextObservation,
+    RuntimeExecutionObservation,
     RuntimeObservationMode,
 )
 from openhcs.core.progress import (
@@ -95,6 +98,16 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
             RuntimeObservationMode.MERGE_INTO_PARENT,
         ),
         (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            None,
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+        ),
+        (
+            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            "/tmp/runtime-observation.pkl",
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+        (
             RuntimeObservationMode.MERGE_INTO_PARENT,
             None,
             RuntimeObservationMode.MERGE_INTO_PARENT,
@@ -112,7 +125,10 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
         else None
     )
     execution_bundle = SimpleNamespace(
-        requires_parent_runtime_observation=compiled_mode.collects_records
+        requires_parent_runtime_observation=compiled_mode.collects_records,
+        requires_full_parent_runtime_observation=(
+            compiled_mode is RuntimeObservationMode.MERGE_INTO_PARENT
+        ),
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
@@ -123,7 +139,10 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
         runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
         runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
     )
-    execution_bundle = SimpleNamespace(requires_parent_runtime_observation=False)
+    execution_bundle = SimpleNamespace(
+        requires_parent_runtime_observation=False,
+        requires_full_parent_runtime_observation=False,
+    )
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)
@@ -160,7 +179,10 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         ),
     )
     compilation = SimpleNamespace(
-        execution_bundle=SimpleNamespace(runtime_contexts={}),
+        execution_bundle=SimpleNamespace(
+            runtime_contexts={},
+            requires_parent_runtime_observation=False,
+        ),
         output_plate=SimpleNamespace(output_plate_root=tmp_path),
     )
     monkeypatch.setattr(
@@ -168,17 +190,33 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         lambda contexts, root: (root,),
     )
 
+    declared_output = tmp_path / "exports" / "Saved.tiff"
+    declared_output.parent.mkdir()
+    declared_output.write_bytes(b"image evidence")
     server._export_runtime_observation(
         request_context=request_context,
         compilation=compilation,
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={
+            "A01": ExecutionResult.success(
+                "A01",
+                runtime_observation=RuntimeExecutionObservation(
+                    contexts=(
+                        RuntimeContextObservation(
+                            "context",
+                            (),
+                            runtime_export_paths=(declared_output,),
+                        ),
+                    )
+                ),
+            )
+        },
     )
 
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
     assert export.successful_axis_count == 1
     assert export.execution_id == record.execution_id
     assert export.exports is not None
-    assert export.exports.output_files == ()
+    assert export.exports.output_files == (declared_output,)
     assert record.get_extra("runtime_observation_export_path") == str(export_path)
     assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 
@@ -188,7 +226,11 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
 ) -> None:
     import openhcs.processing.func_registry as func_registry_module
 
-    monkeypatch.setattr(func_registry_module, "_registry_initialized", True)
+    monkeypatch.setattr(
+        func_registry_module,
+        "initialize_registry",
+        lambda: pytest.fail("Direct-import pipeline initialized the full registry"),
+    )
     monkeypatch.setattr(
         ZMQExecutionServer,
         "_cleanup_compiled_artifacts",
@@ -224,6 +266,59 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
     assert isinstance(context.configs.global_pipeline, GlobalPipelineConfig)
     assert isinstance(context.pipeline_config, PipelineConfig)
     assert context.compile_artifact_id == "compile-1"
+
+
+def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
+    monkeypatch,
+) -> None:
+    import openhcs
+    import openhcs.processing.func_registry as func_registry_module
+
+    initialized: list[str] = []
+
+    def initialize_registry() -> None:
+        initialized.append("registry")
+        package = ModuleType("openhcs.codex_virtual")
+        package.__path__ = []
+        module = ModuleType("openhcs.codex_virtual.filters")
+        module.noop = lambda value: value
+        package.filters = module
+        monkeypatch.setitem(sys.modules, package.__name__, package)
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        monkeypatch.setattr(openhcs, "codex_virtual", package, raising=False)
+
+    monkeypatch.setattr(
+        func_registry_module, "initialize_registry", initialize_registry
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer, "_cleanup_compiled_artifacts", lambda self: None
+    )
+    monkeypatch.setattr(
+        ZMQExecutionServer,
+        "_execute_with_orchestrator",
+        lambda self, context: context,
+    )
+    request_payload = ZMQExecutionRequestPayload(
+        identity=ZMQExecutionIdentity(plate_id="/tmp/plate"),
+        pipeline_code=(
+            "from openhcs.codex_virtual.filters import noop\n"
+            "from openhcs.core.config import PipelineConfig\n"
+            "pipeline_config = PipelineConfig()\n"
+            "pipeline_steps = []\n"
+        ),
+        config_transport=ZMQExecutionConfigTransport(
+            config_code=(
+                "from openhcs.core.config import GlobalPipelineConfig\n"
+                "config = GlobalPipelineConfig()\n"
+            ),
+        ),
+        compile_control=ZMQExecutionCompileControl(),
+    )
+
+    context = ZMQExecutionServer()._execute_pipeline("exec-1", request_payload)
+
+    assert initialized == ["registry"]
+    assert context.pipeline_steps == []
 
 
 def test_zmq_server_forwards_parent_execution_progress_without_worker_claim() -> None:

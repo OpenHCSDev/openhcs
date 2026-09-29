@@ -519,11 +519,15 @@ def test_summary_speedup_target_uses_execution_time_only(
         repetition=1,
     )
 
+    assert observation.native_cellprofiler.total_metric_seconds == 60.0
+    assert observation.openhcs.total_metric_seconds == 25.0
+    assert observation.openhcs.phase_seconds["COMPARE_EQUIVALENCE"] == 15.0
+
     write_summary_csv(tmp_path / "summary.csv", (observation,))
     summary_row = _csv_rows(tmp_path / "summary.csv")[0]
 
     assert summary_row["median_speedup"] == "6.0"
-    assert summary_row["median_total_phase_speedup"] == "1.525"
+    assert summary_row["median_total_phase_speedup"] == "2.4"
     assert summary_row["meets_execution_speedup_target"] == "True"
     assert summary_row["meets_total_phase_speedup_target"] == "False"
     assert summary_row["meets_speedup_target"] == "True"

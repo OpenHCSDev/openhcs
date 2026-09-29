@@ -112,6 +112,19 @@ The larger, source-backed current corpus is
 CellProfiler importer. Request source sections with ``max_chars=50000``; many
 complete recipes are larger than the default bounded response.
 
+Treat these as first-class validated benchmark examples, not arbitrary runnable
+snippets. For a matching case, inspect its native CellProfiler reference,
+converted OpenHCS declarations, input/channel assumptions, settings, and the
+available case-specific parity evidence. Parity validates the compared outputs
+within that benchmark's source and measurement scope. It does not establish
+biological acceptance for a new assay: review its raw pixels and output overlay
+at matched coordinates, then preserve that new validation and any failures
+before promoting an adapted recipe. The portable acceptance boundary and
+required parity receipts are described in
+:doc:`../architecture/measurement_equivalence_system` and
+``benchmark/manifests/README.md``; do not infer a particular case passed from
+its presence in the recipe catalogue alone.
+
 Other scripts under the benchmark and preset-pipeline trees can still be useful
 migration or backend evidence. They are not current API
 examples unless a current test explicitly validates their imports and public

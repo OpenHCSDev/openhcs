@@ -363,6 +363,7 @@ openhcs = [
     "omero/plugin/omero_openhcs/templates/**/*.html",
     "agent/resources/knowledge/**/*.md",
     "agent/resources/knowledge/**/*.rst",
+    "agent/resources/knowledge/**/.codex-plugin/*.json",
 ]
 
 # GPU Dependencies Version Notes:

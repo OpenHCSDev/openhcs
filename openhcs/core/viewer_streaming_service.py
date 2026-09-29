@@ -30,13 +30,18 @@ from zmqruntime.config import ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireMapping
 
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.core.source_image_provenance import SourceImageIdentity
+from openhcs.core.source_image_provenance import (
+    SourceComponentMetadata,
+    SourceImageIdentity,
+)
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -129,6 +134,7 @@ class RoiStreamingRequest(ViewerStreamingContext):
         default_factory=dict
     )
     producer: ViewerStreamProducer | None = None
+    require_source_metadata: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -322,14 +328,24 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             filemanager=self.filemanager,
         ).projection_or_empty()
 
-    def roi_image_metadata(self) -> ImagePayloadMetadata:
-        """Return plate-owned physical calibration for ROI pixel coordinates."""
+    def plate_image_metadata(self) -> ImagePayloadMetadata:
+        """Return acquisition-owned calibration for source-pixel coordinates."""
         pixel_size = float(
             self.microscope_handler.metadata_handler.get_pixel_size(self.plate_path)
         )
         return ImagePayloadMetadata(
             source_voxel_spacing=SourceVoxelSpacing((pixel_size, pixel_size))
         )
+
+    def calibrated_metadata(
+        self, metadata: ImagePayloadMetadata | None
+    ) -> ImagePayloadMetadata:
+        """Fill absent spacing from the acquisition without replacing native facts."""
+        if metadata is None:
+            return self.plate_image_metadata()
+        if metadata.source_voxel_spacing.has_values:
+            return metadata
+        return metadata.with_source_spatial_context_from(self.plate_image_metadata())
 
     def load_image(
         self,
@@ -347,7 +363,20 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         source_path = source_projection.resolved_source_path_for(
             lookup, self.filemanager
         )
-        image = self.filemanager.load(source_path, backend)
+        source_address = (
+            source_path
+            if source_ref is None
+            else str(
+                self.filemanager.resolve_address(
+                    source_ref.backend_address,
+                    backend,
+                    base_path=Path(self.plate_path),
+                )
+            )
+        )
+        image = self.filemanager.load(source_address, backend)
+        if source_ref is not None:
+            image = source_ref.project_source_axes(image)
         image = source_projection.project_unbound_payload(lookup, image)
         metadata = ImagePayloadSourceMetadataContext(
             source_identity=SourceImageIdentity(
@@ -356,8 +385,9 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             ),
             read_backend=backend,
             filemanager=self.filemanager,
-            source_address=source_path,
+            source_address=source_address,
         ).metadata(image)
+        metadata = self.calibrated_metadata(metadata)
         return metadata.payload_with(
             image_payload_data(image), image_payload_mask(image)
         )
@@ -649,7 +679,13 @@ class StreamingService:
                     source_projection=source_projection,
                     component_metadata=all_metadata_by_path[filename],
                 )
-                if request.source_projection is not None:
+                lookup = VirtualWorkspacePathLookup.from_paths(
+                    filename, str(Path(self.source.plate_path) / filename)
+                )
+                if (
+                    request.source_projection is not None
+                    and source_projection.source_projection_for(lookup) is not None
+                ):
                     self.source.require_projected_image_window(
                         filename, image_data, source_projection
                     )
@@ -764,6 +800,8 @@ class StreamingService:
         data_list: list = []
         paths: list[str] = []
         loaded_indices: list[int] = []
+        archive_metadata: list[ImagePayloadMetadata | None] = []
+        point_domains: dict[str, tuple[SourceComponentMetadata, ...]] = {}
 
         for i, filename in enumerate(request.roi_filenames, 1):
             file_path = Path(self.source.plate_path) / filename
@@ -772,7 +810,21 @@ class StreamingService:
                 logger.warning(f"No ROIs found in {file_path.name}")
                 continue
 
-            data_list.append(rois)
+            metadata = ROIArchiveSourceMetadata.decode(rois)
+            if request.require_source_metadata and (
+                metadata is None
+                or not metadata.source_provenance.represented_source_identities
+            ):
+                raise ValueError(
+                    f"Native ROI source metadata is required to reopen {file_path}; "
+                    "artifact filenames do not establish source identity."
+                )
+            archive_metadata.append(metadata)
+            if metadata is not None:
+                point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
+                if point_domain is not None:
+                    point_domains[filename] = point_domain
+            data_list.append(ROIArchiveSourceMetadata.geometry(rois))
             paths.append(filename)
             loaded_indices.append(i - 1)
 
@@ -807,9 +859,16 @@ class StreamingService:
             self.source,
             self.transport_config,
         )
+        external_paths = [
+            path
+            for path, metadata in zip(paths, archive_metadata, strict=True)
+            if metadata is None
+        ]
         if request.component_metadata_by_path:
             missing_metadata = tuple(
-                path for path in paths if path not in request.component_metadata_by_path
+                path
+                for path in external_paths
+                if path not in request.component_metadata_by_path
             )
             if missing_metadata:
                 raise ValueError(
@@ -817,12 +876,31 @@ class StreamingService:
                     f"metadata was missing for {missing_metadata!r}."
                 )
             metadata_by_path = {
-                path: dict(request.component_metadata_by_path[path]) for path in paths
+                path: dict(request.component_metadata_by_path[path])
+                for path in external_paths
             }
         else:
-            metadata_by_path = self.source.roi_component_metadata_by_path(paths)
+            metadata_by_path = self.source.roi_component_metadata_by_path(
+                external_paths
+            )
+        metadata_by_path.update(
+            (
+                path,
+                dict(
+                    metadata.source_provenance.scalar_source_identity.component_metadata
+                    or {}
+                ),
+            )
+            for path, metadata in zip(paths, archive_metadata, strict=True)
+            if metadata is not None
+        )
+        metadata_by_path.update(
+            (path, dict(domain[0])) for path, domain in point_domains.items()
+        )
         source_metadata_items = StreamSourceComponentMetadataItems.from_values(
-            metadata_by_path[path] for path in paths
+            component_metadata
+            for path in paths
+            for component_metadata in point_domains.get(path, (metadata_by_path[path],))
         )
         message_authority = StreamComponentMessageExtraAuthority.from_viewer_surface(
             viewer_surface,
@@ -834,31 +912,35 @@ class StreamingService:
                 "selected_rois",
             )
         )
-        stream_backend_kwargs = message_authority.viewer_backend_kwargs(
-            producer=producer.for_indices(
-                loaded_indices,
-                total,
-            ),
-            source_metadata=message_authority.path_mapped_source_metadata(
-                metadata_by_path
-            ),
-        ).with_item_fields(
-            StreamImagePayloadMetadataProjector.item_fields(
-                self.source.roi_image_metadata(),
-                message_authority.layout.component_order,
-            )
-        )
-
         message = f"Streaming {len(paths)} ROI file(s) to {display_name}..."
         messages.append(message)
         request.status_callback(message)
 
-        self.source.filemanager.save_batch(
-            data_list,
-            paths,
-            backend_enum.value,
-            **stream_backend_kwargs.to_kwargs(),
-        )
+        payload_metadata = [
+            self.source.calibrated_metadata(metadata) for metadata in archive_metadata
+        ]
+        component_order = message_authority.layout.component_order
+        for indices in StreamImagePayloadMetadataProjector.partition_indices(
+            payload_metadata, component_order
+        ):
+            item_fields = StreamImagePayloadMetadataProjector.item_fields(
+                payload_metadata[indices[0]], component_order
+            )
+            stream_backend_kwargs = message_authority.viewer_backend_kwargs(
+                producer=producer.for_indices(
+                    tuple(loaded_indices[index] for index in indices), total
+                ),
+                source_metadata=message_authority.path_mapped_source_metadata(
+                    {paths[index]: metadata_by_path[paths[index]] for index in indices},
+                    item_fields=item_fields,
+                ),
+            ).with_item_fields(item_fields)
+            self.source.filemanager.save_batch(
+                [data_list[index] for index in indices],
+                [paths[index] for index in indices],
+                backend_enum.value,
+                **stream_backend_kwargs.to_kwargs(),
+            )
 
         self._require_viewer_settled(request)
         message = (

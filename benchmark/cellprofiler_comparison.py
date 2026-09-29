@@ -465,7 +465,7 @@ class CellProfilerComparisonCase:
 
 @dataclass(frozen=True, slots=True)
 class ToolExecutionSummary:
-    """Execution and phase timing summary for one tool run."""
+    """Tool timing with validation retained in phases, outside the runtime total."""
 
     tool: str
     success: bool

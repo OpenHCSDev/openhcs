@@ -8,11 +8,15 @@ following OpenHCS standards for explicit contracts and type safety.
 import copyreg
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from types import MappingProxyType
-from typing import Mapping, Optional
+from typing import TYPE_CHECKING, Mapping, Optional
 
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_stores import StoredRuntimeValue
+
+if TYPE_CHECKING:
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
 
 
 class RuntimeExecutionTransportSerialization:
@@ -56,6 +60,7 @@ class RuntimeContextObservation:
 
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
+    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -76,11 +81,12 @@ class RuntimeObservationMode(Enum):
     """Controls whether worker runtime records are returned to the parent."""
 
     MERGE_INTO_PARENT = "merge_into_parent"
+    MERGE_PLATE_INPUTS = "merge_plate_inputs"
     OMIT = "omit"
 
     @property
     def collects_records(self) -> bool:
-        return self is RuntimeObservationMode.MERGE_INTO_PARENT
+        return self is not RuntimeObservationMode.OMIT
 
     @property
     def releases_worker_records(self) -> bool:
@@ -92,13 +98,47 @@ class RuntimeObservationMode(Enum):
 
         return cls.MERGE_INTO_PARENT if required else cls.OMIT
 
+    @classmethod
+    def for_compiled_bundle(
+        cls, bundle: "CompiledExecutionBundle"
+    ) -> "RuntimeObservationMode":
+        """Retain only plate inputs unless another parent consumer needs all records."""
+
+        if bundle.requires_full_parent_runtime_observation:
+            return cls.MERGE_INTO_PARENT
+        if bundle.requires_parent_runtime_observation:
+            return cls.MERGE_PLATE_INPUTS
+        return cls.OMIT
+
     def including_parent_requirement(
         self,
         required: bool,
     ) -> "RuntimeObservationMode":
         """Return this mode strengthened by an additional retention requirement."""
 
-        return type(self).from_parent_requirement(self.collects_records or required)
+        return type(self).MERGE_INTO_PARENT if required else self
+
+    def retain_records(
+        self,
+        records: tuple[StoredRuntimeValue, ...],
+        context: ProcessingContext,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        """Keep records consumed by the selected parent-side execution route."""
+
+        if self is RuntimeObservationMode.OMIT:
+            return ()
+        if self is RuntimeObservationMode.MERGE_INTO_PARENT:
+            return records
+        required_types = {
+            spec.artifact_type
+            for plan in context.step_plans.values()
+            if plan.execution_scope.requires_parent_runtime_observation
+            for invocation in plan.compiled_function_pattern.default_group.invocations
+            for spec in invocation.contract.artifact_inputs
+        }
+        return tuple(
+            record for record in records if record.key.artifact_type in required_types
+        )
 
 
 @dataclass(frozen=True)

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from math import isfinite
+from math import floor, isfinite
 from numbers import Real
 from typing import ClassVar, Self, TypeAlias, TypeVar
 
 from zmqruntime.viewer_protocol import ViewerWireField
+
+from openhcs.constants import AllComponents
 
 ViewerScalar: TypeAlias = str | int | float | bool | None
 ViewerPayloadAxisIndices: TypeAlias = tuple[int, ...] | dict[str, int]
@@ -59,17 +61,19 @@ class ViewerResultElementCoordinateAuthority:
         *,
         coordinates: Iterable[object],
         axis_labels: Sequence[str],
-        displayed_axis_count: int,
+        displayed_axis_indices: Sequence[int],
     ) -> dict[str, int]:
         """Return exact route-local indices for every non-displayed axis."""
 
-        if isinstance(displayed_axis_count, bool) or not isinstance(
-            displayed_axis_count,
-            int,
+        displayed = tuple(displayed_axis_indices)
+        if any(
+            isinstance(axis, bool) or not isinstance(axis, int) for axis in displayed
         ):
-            raise TypeError("Viewer displayed_axis_count must be an integer.")
-        if displayed_axis_count <= 0:
-            raise ValueError("Viewer displayed_axis_count must be positive.")
+            raise TypeError("Viewer displayed_axis_indices must contain integers.")
+        if not displayed or len(set(displayed)) != len(displayed):
+            raise ValueError(
+                "Viewer displayed_axis_indices must be nonempty and unique."
+            )
 
         labels = tuple(axis_labels)
         if any(not isinstance(label, str) or not label for label in labels):
@@ -88,20 +92,19 @@ class ViewerResultElementCoordinateAuthority:
                 "Viewer result element coordinate width must match its axis labels: "
                 f"{coordinate_width} != {len(labels)}."
             )
-        if displayed_axis_count > coordinate_width:
+        if any(axis < 0 or axis >= coordinate_width for axis in displayed):
             raise ValueError(
-                "Viewer displayed_axis_count exceeds the result element coordinate "
-                f"width: {displayed_axis_count} > {coordinate_width}."
+                "Viewer displayed_axis_indices are outside the result coordinate width."
             )
 
-        slice_axis_count = coordinate_width - displayed_axis_count
         return {
             labels[axis_position]: cls._slice_index(
                 rows,
                 axis_position=axis_position,
                 axis_label=labels[axis_position],
             )
-            for axis_position in range(slice_axis_count)
+            for axis_position in range(coordinate_width)
+            if axis_position not in displayed
         }
 
     @classmethod
@@ -147,7 +150,7 @@ class ViewerResultElementCoordinateAuthority:
         axis_label: str,
     ) -> int:
         coordinates = tuple(
-            cls._integral_coordinate(
+            cls._slice_coordinate(
                 row[axis_position],
                 axis_label=axis_label,
             )
@@ -161,7 +164,7 @@ class ViewerResultElementCoordinateAuthority:
         return coordinates[0]
 
     @staticmethod
-    def _integral_coordinate(value: object, *, axis_label: str) -> int:
+    def _slice_coordinate(value: object, *, axis_label: str) -> int:
         if isinstance(value, bool) or not isinstance(value, Real):
             raise TypeError(
                 f"Viewer result element coordinate for axis {axis_label!r} "
@@ -174,6 +177,38 @@ class ViewerResultElementCoordinateAuthority:
                 f"must identify one integral slice, got {value!r}."
             )
         return int(numeric_value)
+
+
+class ViewerFractionalZPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
+    """Navigate to the nearest Z slice without rounding stored point geometry."""
+
+    @staticmethod
+    def _slice_coordinate(value: object, *, axis_label: str) -> int:
+        if axis_label != AllComponents.Z_INDEX.value:
+            return ViewerResultElementCoordinateAuthority._slice_coordinate(
+                value, axis_label=axis_label
+            )
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError("Viewer point Z coordinate must be numeric.")
+        numeric_value = float(value)
+        if not isfinite(numeric_value):
+            raise ValueError("Viewer point Z coordinate must be finite.")
+        return floor(numeric_value + 0.5)
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerNativeDimensions:
+    """Actual native readback; canvas_size is logical Qt (width, height)."""
+
+    order: tuple[int, ...]
+    ndisplay: int
+    displayed_axes: tuple[str, ...]
+    point: tuple[float, ...]
+    camera_angles: tuple[float, float, float]
+    canvas_size: tuple[int, int] | None
+
+    def to_wire_mapping(self) -> dict[str, object]:
+        return asdict(self)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -476,8 +511,22 @@ class ViewerNavigationControlOptions:
     visible: bool | None = None
     selected: bool | None = None
     data_index: int | None = None
+    display_axes: tuple[str, str] | None = None
 
     def __post_init__(self) -> None:
+        if self.display_axes is not None:
+            if isinstance(self.display_axes, (str, bytes)):
+                raise TypeError("Viewer display_axes must be a pair of axis names.")
+            axes = tuple(self.display_axes)
+            if len(axes) != 2 or any(
+                not isinstance(axis, str) or not axis for axis in axes
+            ):
+                raise ValueError(
+                    "Viewer display_axes requires two nonempty axis names."
+                )
+            if axes[0] == axes[1]:
+                raise ValueError("Viewer display_axes must select distinct axes.")
+            object.__setattr__(self, "display_axes", axes)
         if not isinstance(self.route_key, str) or not self.route_key:
             raise ValueError("Viewer navigation route_key must be a non-empty string.")
         if not isinstance(self.axis_indices, Mapping):
@@ -530,6 +579,7 @@ class ViewerNavigationControlOptions:
         visible: bool | None = None,
         selected: bool | None = None,
         data_index: int | None = None,
+        display_axes: tuple[str, str] | None = None,
     ) -> Self:
         return cls(
             route_key=route_key,
@@ -537,6 +587,7 @@ class ViewerNavigationControlOptions:
             visible=visible,
             selected=selected,
             data_index=data_index,
+            display_axes=display_axes,
         )
 
 

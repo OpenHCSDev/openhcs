@@ -87,6 +87,7 @@ from openhcs.processing.materialization.options import (
     ImageFileOptions,
     JsonOptions,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     SourceOptions,
     SpatialGraphROIOptions,
@@ -2225,6 +2226,14 @@ def json_payload_mapping(value: dict) -> dict:
     return {key: JsonPayloadAuthority.jsonable(item) for key, item in value.items()}
 
 
+@json_payload_value.register(ColumnarRows)
+def json_payload_columnar_rows(value: ColumnarRows) -> list[dict]:
+    return [
+        {key: JsonPayloadAuthority.jsonable(item) for key, item in row.items()}
+        for row in value.iter_row_mappings()
+    ]
+
+
 @json_payload_value.register(list)
 def json_payload_list(value: list) -> list:
     return [JsonPayloadAuthority.jsonable(item) for item in value]
@@ -2947,6 +2956,7 @@ def _write_roi_zip(
     ctx: MaterializationContext,
 ) -> list[Output]:
     from polystore.roi import extract_rois_from_labeled_mask
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
     request = ROIMaterializationTargetRequest.from_context(data, options, ctx)
     materialization_input = request.materialization_input
@@ -3022,15 +3032,14 @@ def _write_roi_zip(
                         source_component_metadata=source_identity.component_metadata,
                     ).with_missing_from(item_metadata.source_provenance)
                 )
+            item_metadata = item_metadata.replace_fields(
+                source_spatial_domain=source_domain_authority.domain_for_target(target)
+            )
             outs.append(
                 Output(
                     path=target.archive.path,
-                    content=target_rois,
-                    metadata=item_metadata.replace_fields(
-                        source_spatial_domain=(
-                            source_domain_authority.domain_for_target(target)
-                        ),
-                    ),
+                    content=ROIArchiveSourceMetadata.bind(target_rois, item_metadata),
+                    metadata=item_metadata,
                 )
             )
 
@@ -3174,6 +3183,100 @@ def _write_spatial_graph_swc(
         TextOutput(
             path=ctx.paths(options).primary_output_path(options),
             content=content,
+        )
+    ]
+
+
+@writer_for(PointROIOptions, MaterializationFormat.ROI_ZIP)
+def _write_point_roi_zip(
+    data: MaterializationValue,
+    options: PointROIOptions,
+    ctx: MaterializationContext,
+) -> list[Output]:
+    """Write 3D measurement centres through the native ROI ZIP backend."""
+    from math import isfinite
+    from polystore.roi import PointShape, ROI
+    from openhcs.core.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.runtime_measurements import MeasurementTable
+
+    payload = MaterializationInput.from_value(data, options).data
+    if not isinstance(payload, MeasurementTable):
+        raise TypeError("PointROIOptions requires a MeasurementTable payload.")
+    id_field = payload.subject.object_id_field
+    if id_field is None:
+        raise ValueError("PointROIOptions requires an object-measurement subject.")
+    features = (options.z_feature, options.y_feature, options.x_feature)
+    if payload.measurement_feature_owner is not None:
+        foreign = [
+            feature.value
+            for feature in features
+            if not payload.measurement_feature_owner.owns_measurement_feature_name(
+                feature.value
+            )
+        ]
+        if foreign:
+            raise ValueError(
+                f"Point coordinate features are not owned by the table: {foreign!r}."
+            )
+    coordinate_fields = tuple(
+        feature.measurement_row_field_name for feature in features
+    )
+    missing = {id_field, *coordinate_fields} - {field.name for field in payload.fields}
+    if missing:
+        raise ValueError(f"Point measurement fields are missing: {sorted(missing)!r}.")
+    provenance = payload.source_provenance.with_common_scalar_identity_from_planes()
+    source_planes = provenance.source_image_provenance_planes
+    if provenance.source_path is None and (
+        not source_planes.has_values
+        or any(path is None for path in source_planes.paths)
+    ):
+        raise ValueError(
+            "Point ROI ZIP requires a source-image path or exact paths for every "
+            "source plane."
+        )
+    rois: list[ROI] = []
+    seen_labels: set[int] = set()
+    for row in payload.iter_row_mappings():
+        label = row[id_field]
+        if (
+            isinstance(label, bool)
+            or not isinstance(label, (int, np.integer))
+            or label <= 0
+        ):
+            raise ValueError("Point ROI object labels must be positive integers.")
+        if int(label) in seen_labels:
+            raise ValueError(f"Duplicate point ROI object label: {label!r}.")
+        seen_labels.add(int(label))
+        coordinates: list[float] = []
+        for field_name in coordinate_fields:
+            value = row[field_name]
+            if isinstance(value, bool) or not isinstance(
+                value, (int, float, np.number)
+            ):
+                raise ValueError(f"Point coordinate {field_name!r} must be numeric.")
+            coordinate = float(value)
+            if not isfinite(coordinate):
+                raise ValueError(f"Point coordinate {field_name!r} must be finite.")
+            coordinates.append(coordinate)
+        z, y, x = coordinates
+        rois.append(
+            ROIFractionalZ(z).bind(
+                ROI(
+                    shapes=[PointShape(y=y, x=x)],
+                    metadata={**row, "label": int(label)},
+                )
+            )
+        )
+    if not rois:
+        raise ValueError("Point ROI ZIP requires at least one measured object.")
+    metadata = ImagePayloadMetadata(source_provenance=provenance)
+    ROIFractionalZ.source_component_domain(rois, metadata)
+    return [
+        Output(
+            path=ctx.paths(options).primary_output_path(options),
+            content=ROIArchiveSourceMetadata.bind(rois, metadata),
+            metadata=metadata,
         )
     ]
 

@@ -43,6 +43,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
+    ViewerNativeDimensions,
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
     ViewerShapePayloadProjection,
@@ -401,6 +402,7 @@ class ViewerWindowNavigationRequest(ViewerWindowControlRequest):
         visible: bool | None = True,
         selected: bool | None = True,
         data_index: int | None = None,
+        display_axes: tuple[str, str] | None = None,
     ) -> Self:
         return cls(
             connection=connection,
@@ -411,6 +413,7 @@ class ViewerWindowNavigationRequest(ViewerWindowControlRequest):
                 visible=visible,
                 selected=selected,
                 data_index=data_index,
+                display_axes=display_axes,
             ),
         )
 
@@ -926,6 +929,7 @@ class ViewerWindowStateResult(
     component_group_count: int = 0
     component_item_count: int = 0
     native_viewport: ViewerNativeViewportPresentation | None = None
+    native_dimensions: ViewerNativeDimensions | None = None
     response: JsonObject = field(default_factory=dict)
 
     @classmethod
@@ -1092,6 +1096,7 @@ class ViewerWindowNavigationResult(
     active_dimension_label_route: str | None = None
     current_step: tuple[int, ...] = ()
     axis_labels: tuple[str, ...] = ()
+    native_dimensions: ViewerNativeDimensions | None = None
     available_layers: tuple["ViewerWindowLayerVisibilityRecord", ...] = ()
 
 

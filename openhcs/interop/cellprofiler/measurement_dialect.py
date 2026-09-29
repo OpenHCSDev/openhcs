@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from enum import Enum
 from functools import lru_cache
 from types import MappingProxyType
@@ -109,6 +110,37 @@ CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT = RuntimeMeasurementLookupDialect(
     source_qualified_feature_families_provider=CellProfilerModule.source_qualified_measurement_feature_family_parts,
     object_domain_policy=CellProfilerMeasurementObjectDomainPolicy(),
 )
+
+
+@lru_cache(maxsize=None)
+def cellprofiler_lookup_dialect_for_measurement_owner(
+    owner: type[CellProfilerModule] | None,
+) -> RuntimeMeasurementLookupDialect:
+    """Project the global lookup dialect through one recorded table owner."""
+    owner_name = getattr(owner, "module_name", None)
+    if (
+        not isinstance(owner_name, str)
+        or dict.get(CellProfilerModule.__registry__, owner_name) is not owner
+    ):
+        return CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+    return replace(
+        CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        category_prefixes=owner.measurement_category_prefixes,
+        category_prefixes_provider=None,
+        feature_part_aliases={
+            **CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_part_aliases,
+            **owner.declared_measurement_feature_part_rewrites(),
+        },
+        feature_part_aliases_provider=None,
+        alternative_feature_part_aliases=owner.measurement_feature_part_aliases,
+        alternative_feature_part_aliases_provider=None,
+        source_qualified_feature_families=(
+            owner.declared_source_qualified_measurement_feature_family_parts()
+        ),
+        source_qualified_feature_families_provider=None,
+    )
+
+
 CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
     category_prefixes_provider=CellProfilerModule.measurement_category_prefix_declarations,
     primary_category_prefixes_provider=(

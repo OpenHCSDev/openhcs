@@ -1,13 +1,17 @@
 import json
 from functools import partial
 from multiprocessing.shared_memory import SharedMemory
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 from polystore.base import DataSink
 from polystore.fiji_stream import FijiStreamingBackend
 from polystore.filemanager import FileManager
+from polystore.disk import DiskStorageBackend
 from polystore.memory import MemoryStorageBackend
+from polystore.roi import PointShape, load_rois_from_zip
+from polystore.roi_converters import NapariROIConverter
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
     StreamingBatchMessageBuilder,
@@ -43,6 +47,15 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+    ObjectCoreMeasurementFeature,
+)
+from openhcs.core.roi_point_metadata import ROIFractionalZ
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -63,6 +76,7 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
@@ -80,6 +94,7 @@ from openhcs.processing.materialization import (
     JsonOptions,
     MaterializationSpec,
     MaterializedFilenameIdentity,
+    PointROIOptions,
     ROIOptions,
     TiffStackOptions,
     csv_only,
@@ -702,6 +717,177 @@ def test_csv_materialization_preserves_declared_fields_for_empty_rows() -> None:
 
     assert out == "/tmp/A01_measurements_details.csv"
     assert fm.load(out, "memory").splitlines()[0] == "object_label,area"
+
+
+@pytest.mark.unit
+def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            ({"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5},),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("z", float),
+                FieldSpec("y", float),
+                FieldSpec("x", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    fm = FileManager({"memory": MemoryStorageBackend()})
+
+    materialize(
+        MaterializationSpec(
+            CsvOptions(filename_suffix=".csv"),
+            JsonOptions(filename_suffix=".json"),
+        ),
+        data=table,
+        path="/tmp/centres",
+        filemanager=fm,
+        backends=["memory"],
+        backend_kwargs={},
+    )
+
+    assert fm.load("/tmp/centres.csv", "memory").splitlines() == [
+        "object_label,z,y,x",
+        "7,2.375,1.25,3.5",
+    ]
+    assert json.loads(fm.load("/tmp/centres.json", "memory")) == [
+        {"object_label": 7, "z": 2.375, "y": 1.25, "x": 3.5}
+    ]
+    assert table.source_path == "/source/image.ome.tif"
+    assert table.subject.object_id_field == "object_label"
+
+
+@pytest.mark.unit
+def test_point_roi_materialization_native_reopen_preserves_fractional_z(
+    tmp_path,
+) -> None:
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            (
+                {
+                    "object_label": 7,
+                    "center_z": 2.375,
+                    "center_y": 1.25,
+                    "center_x": 3.5,
+                    "response": 4.75,
+                },
+            ),
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("center_z", float),
+                FieldSpec("center_y", float),
+                FieldSpec("center_x", float),
+                FieldSpec("response", float),
+            ),
+        ),
+        source_path="/source/image.ome.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/image.ome.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    archive = materialize(
+        MaterializationSpec(
+            PointROIOptions(
+                z_feature=feature.CENTER_Z,
+                y_feature=feature.CENTER_Y,
+                x_feature=feature.CENTER_X,
+            )
+        ),
+        data=table,
+        path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert archive == str(tmp_path / "centres_points.roi.zip")
+    assert len(rois) == 1
+    assert rois[0].metadata["label"] == 7
+    assert rois[0].metadata["object_label"] == 7
+    assert rois[0].metadata["response"] == 4.75
+    assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
+    assert ROIArchiveSourceMetadata.decode(rois).source_path == "/source/image.ome.tif"
+    viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    projection = ViewerLayerAxisProjection(
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [0, 1, 2, 3]},
+        routed_component_values={"z_index": [0, 1, 2, 3]},
+        axis_offsets=(0,),
+    )
+    points, properties = viewer_server._build_nd_points(
+        [
+            SimpleNamespace(
+                data=NapariROIConverter.rois_to_shapes(rois),
+                address=SimpleNamespace(components={"z_index": 2}),
+            )
+        ],
+        projection,
+    )
+    assert points.tolist() == [[2.375, 1.25, 3.5]]
+    assert properties["label"] == [7]
+    assert properties["object_label"] == [7]
+    assert properties["response"] == [4.75]
+    from napari.layers import Points
+
+    native_layer = Points(points, properties=properties)
+    assert native_layer.features.loc[0, "response"] == 4.75
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("source_path", "rows", "error"),
+    [
+        (None, ((7, 2.375, 1.25, 3.5),), "source-image path"),
+        ("/source/image.ome.tif", ((7, float("nan"), 1.25, 3.5),), "finite"),
+        ("/source/image.ome.tif", (), "at least one"),
+    ],
+)
+def test_point_roi_materialization_rejects_unreopenable_results(
+    tmp_path, source_path, rows, error
+) -> None:
+    fields = (
+        FieldSpec("object_label", int),
+        FieldSpec("center_z", float),
+        FieldSpec("center_y", float),
+        FieldSpec("center_x", float),
+    )
+    table = MeasurementTable(
+        name="centres",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            tuple(dict(zip((field.name for field in fields), row)) for row in rows),
+            fields=fields,
+        ),
+        source_path=source_path,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
+    )
+    feature = ObjectCoreMeasurementFeature
+    with pytest.raises(ValueError, match=error):
+        materialize(
+            MaterializationSpec(
+                PointROIOptions(
+                    z_feature=feature.CENTER_Z,
+                    y_feature=feature.CENTER_Y,
+                    x_feature=feature.CENTER_X,
+                )
+            ),
+            data=table,
+            path=str(tmp_path / "invalid"),
+            filemanager=FileManager({"disk": DiskStorageBackend()}),
+            backends=["disk"],
+            backend_kwargs={},
+        )
+    assert not (tmp_path / "invalid_points.roi.zip").exists()
 
 
 @pytest.mark.unit

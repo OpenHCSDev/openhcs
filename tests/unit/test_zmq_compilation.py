@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import time
+from dataclasses import replace
+
+import pytest
 
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -165,7 +168,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         "artifact-1": ZMQCompileArtifactRecord(
             execution_id="compile-1",
             plate_id="/tmp/plate",
-            request_signature="signature",
+            compilation_signature="signature",
             debug_replay_signature="debug-signature",
             compilation=compilation,
         )
@@ -178,7 +181,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         orchestrator=None,
         wells=["A01"],
         compile_artifact_id="artifact-1",
-        request_signature="signature",
+        compilation_signature="signature",
         debug_replay_signature="debug-signature",
         retain_compile_artifact=False,
         compiled_artifacts=artifacts,
@@ -189,6 +192,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
 
     result = request.reuse_artifact()
 
+    assert artifacts == {}
     assert result.execution_bundle is bundle
     assert progress_emitter.artifact_init_events == [
         {
@@ -217,7 +221,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
         orchestrator=orchestrator,
         wells=["A01"],
         compile_artifact_id=None,
-        request_signature="signature",
+        compilation_signature="signature",
         debug_replay_signature="debug-signature",
         retain_compile_artifact=False,
         compiled_artifacts={},
@@ -254,3 +258,71 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
         }
     ]
     assert progress_emitter.axis_compile_success_events == ["A01"]
+
+
+@pytest.mark.parametrize("retain", (False, True))
+@pytest.mark.parametrize("invalid", ("signature", "plate", "contexts"))
+def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=(),
+        runtime_contexts={"A01": _compiled_context("A01")},
+        transport_contexts={},
+        worker_assignments={"worker_0": ["A01"]},
+        runtime_environment=_runtime_environment(),
+    )
+    artifact = ZMQCompileArtifactRecord(
+        execution_id="compile-1",
+        plate_id="/plate",
+        compilation_signature="signature",
+        debug_replay_signature="debug-signature",
+        compilation=ZMQCompilationResult(
+            execution_bundle=bundle, compiled_axis_ids=["A01"]
+        ),
+    )
+    if invalid == "signature":
+        artifact = replace(
+            artifact, compilation_signature="wrong", debug_replay_signature="wrong"
+        )
+    elif invalid == "plate":
+        artifact = replace(artifact, plate_id="/another-plate")
+    else:
+        artifact = replace(
+            artifact,
+            compilation=replace(
+                artifact.compilation,
+                execution_bundle=replace(bundle, runtime_contexts={}),
+            ),
+        )
+    artifacts = {"artifact-1": artifact}
+    emitter = _ProgressEmitter()
+    request = ZMQCompilationRequest(
+        execution_id="execute-1",
+        plate_id="/plate",
+        pipeline_steps=[],
+        orchestrator=None,
+        wells=["A01"],
+        compile_artifact_id="artifact-1",
+        compilation_signature="signature",
+        debug_replay_signature="debug-signature",
+        retain_compile_artifact=retain,
+        compiled_artifacts=artifacts,
+        progress_emitter=emitter,
+        compiler_progress_queue=None,
+        debug_execution_policy=None,
+    )
+    with pytest.raises(ValueError):
+        request.reuse_artifact()
+    assert artifacts == {"artifact-1": artifact}
+    assert emitter.artifact_init_events == []
+
+    valid = replace(
+        artifact,
+        plate_id="/plate",
+        compilation_signature="signature",
+        debug_replay_signature="debug-signature",
+        compilation=replace(artifact.compilation, execution_bundle=bundle),
+    )
+    artifacts["artifact-1"] = valid
+    result = request.reuse_artifact()
+    assert result.execution_bundle is bundle
+    assert artifacts == ({"artifact-1": valid} if retain else {})

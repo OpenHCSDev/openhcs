@@ -57,6 +57,12 @@ class AutoRegisterRegistryPreparation:
             if not isinstance(module, ModuleType):
                 continue
             for candidate in cls.module_registry_families(module):
+                # Counting an unrelated lazy registry would discover its whole
+                # package even though this path has no preparation hook to run.
+                if prepare_families and not issubclass(
+                    candidate, CompilerPreparedAutoRegisterFamily
+                ):
+                    continue
                 registry = candidate.__registry__
                 registry_id = id(registry)
                 if registry_id in prepared_registry_ids:
