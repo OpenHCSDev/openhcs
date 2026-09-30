@@ -56,6 +56,11 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source_bindings import (
+    ComponentSelector,
+    NamedSourceBinding,
+    SourceBindingsConfig,
+)
 from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
@@ -560,6 +565,108 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
     )
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
         {"image_number": "1", "object_label": "1", "Area": "4.0"},
+    )
+
+
+def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> None:
+    """A biological address is not a declaration to stack every addressed axis."""
+    bindings = SourceBindingsConfig(
+        bindings=tuple(
+            NamedSourceBinding(
+                alias=alias,
+                component_identity=tuple(
+                    ComponentSelector(component, value)
+                    for component, value in (
+                        (AllComponents.WELL, "A01"),
+                        (AllComponents.SITE, "1"),
+                        (AllComponents.CHANNEL, channel),
+                        (AllComponents.Z_INDEX, "1"),
+                        (AllComponents.TIMEPOINT, "1"),
+                    )
+                ),
+            )
+            for alias, channel in (("DNA", "1"), ("Actin", "2"))
+        )
+    )
+    policy = SourceImageSetIdentityPolicy.from_source_bindings(
+        bindings,
+        group_component=AllComponents.CHANNEL,
+    )
+    records = []
+    # Two independent fields, each with two cells. Local slice/object IDs repeat
+    # intentionally: provenance, not runtime row position, owns field identity.
+    for site in ("1", "2"):
+        for channel, features in (
+            ("1", {"Parent_Nuclei": 1, "Location_Center_X": 1.5}),
+            ("2", {"AreaShape_Area": 4.0}),
+        ):
+            provenance = SourceImageProvenancePlanes.from_components(
+                paths=(f"/synthetic/A01-field{site}-plane{channel}.tif",),
+                component_metadata=(
+                    {
+                        "well": "A01",
+                        "site": site,
+                        "channel": channel,
+                        "z_index": "1",
+                        "timepoint": "1",
+                    },
+                ),
+            )
+            records.append(
+                _measurement_record(
+                    f"field{site}_plane{channel}",
+                    axis_id="A01",
+                    subject=MeasurementSubject(
+                        MeasurementScope.OBJECT, "Cells", "object_number"
+                    ),
+                    rows=tuple(
+                        {"slice_index": 0, "object_number": number, **features}
+                        for number in (1, 2)
+                    ),
+                    source_image_provenance_planes=provenance,
+                    group_component=AllComponents.CHANNEL,
+                    group_key=channel,
+                    variable_components=(AllComponents.SITE,),
+                )
+            )
+        records.append(
+            _measurement_record(
+                f"field{site}_counts",
+                axis_id="A01",
+                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+                rows=({"slice_index": 0, "Count_Cells": 2},),
+                source_image_provenance_planes=provenance,
+                group_component=AllComponents.CHANNEL,
+                group_key="2",
+                variable_components=(AllComponents.SITE,),
+            )
+        )
+    batch = RuntimeArtifactBatch(
+        input_specs=tuple(
+            ArtifactSpec.input(record.key.name, MeasurementsArtifactType)
+            for record in records
+        ),
+        records_by_axis={"A01": tuple(records)},
+        source_image_set_identity_policy=policy,
+    )
+
+    bundle = export_to_spreadsheet(add_filename_prefix=False, artifact_batch=batch)
+
+    cells = tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"])))
+    assert cells == tuple(
+        {
+            "image_number": image_number,
+            "object_label": object_number,
+            "Parent_Nuclei": "1",
+            "Location_Center_X": "1.5",
+            "AreaShape_Area": "4.0",
+        }
+        for image_number in ("1", "2")
+        for object_number in ("1", "2")
+    )
+    assert tuple(csv.DictReader(io.StringIO(bundle["Image.csv"]))) == (
+        {"image_number": "1", "Count_Cells": "2"},
+        {"image_number": "2", "Count_Cells": "2"},
     )
 
 
