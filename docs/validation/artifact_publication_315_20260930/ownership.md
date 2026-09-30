@@ -40,6 +40,14 @@ passthrough contracts. Delete the corresponding late-admission/context gap in
 place. No concrete-function classifier, inferred filenames, permissive fallback,
 new store, compatibility path, or PR206/217 file edit.
 
+The first checkpoint added five lines to `PatternGroupRuntime`; the original
+ratchet correctly reported GodClassExcess +5. The factored version puts producer
+context resolution on `CompiledFunctionGroup`, which already owns named,
+implicit replacement and retained-flow semantics. The original consumer body
+is deleted and delegates to that owner; this is not a helper/class relocation
+to evade the metric. Its existing output-plan projection remains authoritative.
+AGENT-4/AGENT-6 apply to the rejected runtime-class growth.
+
 ## Tests and new-case experiment
 
 First qualify tiny synthetic root admission and object-to-image checkpoint

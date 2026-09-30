@@ -2893,12 +2893,16 @@ def _cached_results_path(
         )
     )
     results_path = (output_plate_root / results_path).resolve()
-    if not results_path.is_relative_to(output_plate_root.resolve()):
+    try:
+        relative_results = results_path.relative_to(output_plate_root.resolve())
+    except ValueError as error:
         raise ValueError(
             "materialization_results_path must be inside the output plate root "
             f"{output_plate_root}; got {results_path}."
-        )
-    return str(results_path)
+        ) from error
+    # Preserve the compiled plate spelling, including a symlinked ancestor:
+    # persistence projects addresses relative to that same lexical authority.
+    return str(output_plate_root / relative_results)
 
 
 @lru_cache(maxsize=131072)
