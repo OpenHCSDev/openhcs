@@ -948,7 +948,6 @@ class NapariComponentAwareDisplayCoordinator:
         )
         self._log_route(route)
         group = self._group_for(server, route.route_key)
-        self._clear_group_for_replace(server, route.route_key, group)
         self._upsert_item(
             data=routed_data,
             route=route,
@@ -963,6 +962,7 @@ class NapariComponentAwareDisplayCoordinator:
             route.route_key,
             route.item_address.stream_layer_data_type,
             route,
+            group,
         )
 
     @staticmethod
@@ -1038,23 +1038,13 @@ class NapariComponentAwareDisplayCoordinator:
         server: "NapariViewerServer",
         layer_key: str,
     ) -> list[NapariStreamLayerItem]:
-        return server.component_groups.items_for(layer_key)
-
-    @staticmethod
-    def _clear_group_for_replace(
-        server: "NapariViewerServer",
-        layer_key: str,
-        group: list[NapariStreamLayerItem],
-    ) -> None:
-        if server.replace_layers and group:
-            logger.info(
-                "🔬 NAPARI PROCESS: replace_layers=True, clearing %d existing items "
-                "from layer '%s'",
-                len(group),
-                layer_key,
-            )
-            group.clear()
-            server.component_values.purge(layer_key)
+        """Stage intake on its pending generation, never overwrite mounted facts."""
+        if server.replace_layers:
+            return []
+        pending = server.layer_route_state.pending_update_for(layer_key)
+        if pending is not None:
+            return list(pending.items)
+        return list(server.component_groups.existing_items_for(layer_key) or ())
 
     def _upsert_item(
         self,
@@ -1344,6 +1334,8 @@ class NapariDimensionLabelStore:
     def apply(
         self,
         presentation: NapariAxisPresentation,
+        *,
+        display_config: NapariDisplayConfig | None = None,
     ) -> tuple[str, ...] | None:
         self._validate_payload_axis_labels(presentation.payload_axis_labels)
         axis_projection = presentation.projection
@@ -1352,6 +1344,10 @@ class NapariDimensionLabelStore:
         scalar_labels = self.server.component_name_metadata.scalar_labels(
             axis_projection.scalar_component_values
         )
+        if display_config is None:
+            display_config = self.server.layer_route_state.dimension_state_for(
+                presentation.route_key
+            ).display_config
         if not axis_projection.projected_axis_components:
             self.server.layer_route_state.set_dimension_state(
                 presentation.route_key,
@@ -1359,6 +1355,7 @@ class NapariDimensionLabelStore:
                     labels={},
                     scalar_labels=scalar_labels,
                     presentation=presentation,
+                    display_config=display_config,
                 ),
             )
             return axis_labels
@@ -1378,6 +1375,7 @@ class NapariDimensionLabelStore:
                 ),
                 scalar_labels=scalar_labels,
                 presentation=presentation,
+                display_config=display_config,
             ),
         )
         return axis_labels
@@ -1693,7 +1691,7 @@ class NapariLayerDisplayRequest:
         """Create or replace the concrete Napari layer for this display request."""
         route_key = self.presentation.route_key
         layer_route_state = self.pipeline.server.layer_route_state
-        return _NAPARI_LAYER_UPDATES.create_or_update(
+        layer = _NAPARI_LAYER_UPDATES.create_or_update(
             layer_kind=layer_kind,
             viewer=self.pipeline.server.viewer,
             layers=layer_route_state.layers,
@@ -1702,6 +1700,35 @@ class NapariLayerDisplayRequest:
             data=data,
             layer_kwargs=layer_kwargs,
         )
+        self.publish()
+        return layer
+
+    def mount_layer(self, layer: NapariLayerHandle) -> None:
+        """Publish only a complete native candidate through the route owner."""
+        server = self.pipeline.server
+        _NAPARI_LAYER_UPDATES.mount(
+            viewer=server.viewer,
+            layers=server.layer_route_state.layers,
+            route_key=self.presentation.route_key,
+            layer=layer,
+        )
+        self.publish()
+
+    def publish(self) -> None:
+        """Move accepted items and their declared domain to mounted ownership."""
+        route_key = self.presentation.route_key
+        self.pipeline.server.component_groups.groups[route_key] = self.items
+        self.pipeline.display_axis_projection(
+            route_key,
+            self.presentation.axis_projection_semantics(),
+            self.items,
+            self.presentation.aggregate_axis_bindings,
+        )
+        self.pipeline.dimension_label_store.apply(
+            self.presentation,
+            display_config=self.display_config,
+        )
+        self.pipeline.reconcile_mounted_axis_projections(updated_route_key=route_key)
 
 
 class NapariLayerDisplayWork(ABC):
@@ -1795,7 +1822,8 @@ class NapariImageLayerDisplayHandler(NapariLayerDisplayHandler):
             payload_axis_labels=payload_axis_labels,
         )
         translate = presentation.translate(payload_axis_labels)
-        axis_labels = pipeline.dimension_label_store.apply(presentation)
+        request = replace(request, presentation=presentation)
+        axis_labels = presentation.axis_labels
 
         layer_kwargs = NapariImageLayerPresentationPolicy.layer_kwargs(
             layer_items[0].data,
@@ -1871,6 +1899,8 @@ class NapariShapesLayerDisplayWork(NapariLayerDisplayWork):
             self.next_member_index : next_member_index
         ]
         if self.layer is None:
+            from napari.layers import Shapes
+
             layer_kwargs = dict(self.common_layer_kwargs)
             layer_kwargs.update(
                 {
@@ -1882,10 +1912,12 @@ class NapariShapesLayerDisplayWork(NapariLayerDisplayWork):
             )
             self.layer = cast(
                 NapariShapesLayerHandle,
-                self.request.create_or_update_layer(
-                    layer_kind=NapariLayerKind.SHAPES,
-                    data=chunk.data,
-                    layer_kwargs=layer_kwargs,
+                Shapes(
+                    chunk.data,
+                    name=self.request.pipeline.server.layer_route_state.title_for(
+                        self.request.presentation.route_key
+                    ),
+                    **layer_kwargs,
                 ),
             )
         else:
@@ -1917,6 +1949,7 @@ class NapariShapesLayerDisplayWork(NapariLayerDisplayWork):
         if self.layer.face_color_mode != "cycle":
             self.layer.face_color_mode = "cycle"
         route_key = self.request.presentation.route_key
+        self.request.mount_layer(self.layer)
         self.request.pipeline.server.bind_result_selection_layer(self.layer)
         self.request.pipeline.dimension_label_overlay.setup_for_layer(route_key)
         self.layer.visible = True
@@ -1965,7 +1998,7 @@ class NapariShapesLayerDisplayHandler(NapariLayerDisplayHandler):
             max_vertex_count=self.MAX_VERTICES_PER_WORK_UNIT,
         )
 
-        axis_labels = pipeline.dimension_label_store.apply(presentation)
+        axis_labels = presentation.axis_labels
         if axis_labels is not None:
             logger.info(
                 "🔬 NAPARI PROCESS: ROI route %s carries layer-local axis_labels=%s",
@@ -2072,7 +2105,7 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
             presentation.projection,
         )
         points_data = presentation.align_coordinates(points_data)
-        axis_labels = pipeline.dimension_label_store.apply(presentation)
+        axis_labels = presentation.axis_labels
 
         layer_kwargs = {
             "properties": properties,
@@ -2126,6 +2159,9 @@ class NapariLayerDisplayPipeline:
         component_axis_semantics: ViewerComponentAxisSemantics,
         layer_items: list[NapariStreamLayerItem],
         aggregate_axis_bindings: NapariAggregateAxisBindingSet | None = None,
+        *,
+        publish: bool = True,
+        viewer_component_values: ComponentValues | None = None,
     ) -> ViewerLayerAxisProjection:
         """Return route-local coordinates projected into the viewer axis domain."""
         if aggregate_axis_bindings is None:
@@ -2144,6 +2180,8 @@ class NapariLayerDisplayPipeline:
                 route_value_tracker=self.server.component_values,
                 aggregate_component_values=aggregate_axis_bindings.component_values,
                 geometric_component_values=geometric_component_values,
+                publish=publish,
+                viewer_component_values=viewer_component_values,
             )
         )
         return self.axis_projector.project(projection_request)
@@ -2151,7 +2189,10 @@ class NapariLayerDisplayPipeline:
     def reconcile_mounted_axis_projections(
         self,
         *,
-        updated_route_key: str,
+        updated_route_key: str | None = None,
+        viewer_component_values: ComponentValues | None = None,
+        apply: bool = True,
+        rematerialize: bool = False,
     ) -> None:
         """Align mounted routes with the viewer-wide semantic coordinate domain.
 
@@ -2182,18 +2223,34 @@ class NapariLayerDisplayPipeline:
                 axis_projection_semantics,
                 items,
                 aggregate_axis_bindings,
+                publish=apply,
+                viewer_component_values=viewer_component_values,
             )
             presentation = replace(state.presentation, projection=projection)
             if (
                 presentation.aligned_component_shape()
                 != state.presentation.aligned_component_shape()
             ):
+                if rematerialize:
+                    NapariLayerDisplayHandler.for_data_type(
+                        items[0].address.stream_layer_data_type
+                    ).handle(
+                        NapariLayerDisplayRequest(
+                            pipeline=self,
+                            items=items,
+                            presentation=presentation,
+                            display_config=state.display_config,
+                        )
+                    )
+                    continue
                 raise ValueError(
                     "Napari shared semantic axis expansion requires route "
                     f"{route_key!r} to be rematerialized; old component shape="
                     f"{state.presentation.aligned_component_shape()!r}, new="
                     f"{presentation.aligned_component_shape()!r}."
                 )
+            if not apply:
+                continue
             layer = self.server.layer_route_state.layer(route_key)
             layer.translate = presentation.translate(presentation.payload_axis_labels)
             self.dimension_label_store.apply(presentation)
@@ -2203,6 +2260,7 @@ class NapariLayerDisplayPipeline:
         layer_key: str,
         data_type: StreamingDataType,
         layer_route: NapariLayerRoute,
+        items: list[NapariStreamLayerItem],
     ) -> None:
         if self.server.layer_route_state.cancel_pending_update(layer_key):
             logger.debug(f"🔬 NAPARI PROCESS: Cancelled pending update for {layer_key}")
@@ -2215,6 +2273,7 @@ class NapariLayerDisplayPipeline:
             data_type=data_type,
             semantics=layer_route,
             display_config=layer_route.display_config,
+            items=items,
         )
         timer.timeout.connect(
             lambda: self.execute_scheduled_layer_update(layer_key, update)
@@ -2297,35 +2356,12 @@ class NapariLayerDisplayPipeline:
         layer_axis_projection_semantics: NapariPendingLayerUpdate,
     ) -> NapariLayerDisplayWork:
         try:
-            layer_items = self.server.component_groups.existing_items_for(layer_key)
-            if layer_items is None:
-                logger.warning(
-                    f"🔬 NAPARI PROCESS: No items found for {layer_key}, skipping update"
-                )
-                return NapariImmediateLayerDisplayWork(lambda: None)
+            layer_items = layer_axis_projection_semantics.items
             if not layer_items:
                 logger.warning(
                     f"🔬 NAPARI PROCESS: Empty item group for {layer_key}, skipping update"
                 )
                 return NapariImmediateLayerDisplayWork(lambda: None)
-
-            component_values = {
-                component: sorted(
-                    {
-                        item.address.components[component]
-                        for item in layer_items
-                        if component in item.address.components
-                    },
-                    key=ViewerComponentValueOrdering.key,
-                )
-                for component in layer_axis_projection_semantics.component_order
-            }
-            logger.info(
-                "🔬 NAPARI PROCESS: layer_key='%s' has %d items with components=%s",
-                layer_key,
-                len(layer_items),
-                component_values,
-            )
 
             batch_processor = self.server.batch_processors.get_or_create(
                 layer_key=layer_key,
@@ -2451,14 +2487,24 @@ class NapariLayerDisplayPipeline:
             items,
             display_payload,
         )
+        preview_values = self.server.component_values.shared_values_for(
+            ViewerObjectDisplayConfigInput(display_payload.display_config)
+            .layout()
+            .components_for_mode(ViewerComponentMode.STACK),
+            replacement_route=layer_key,
+            additional_component_values=display_payload.component_values(),
+        )
+        self.reconcile_mounted_axis_projections(
+            updated_route_key=layer_key,
+            viewer_component_values=preview_values,
+            apply=False,
+        )
         axis_projection = self.display_axis_projection(
             layer_key,
             display_payload,
             items,
             aggregate_axis_bindings,
-        )
-        self.reconcile_mounted_axis_projections(
-            updated_route_key=layer_key,
+            publish=False,
         )
         work = NapariLayerDisplayHandler.for_data_type(data_type).display_work(
             NapariLayerDisplayRequest(
@@ -6100,11 +6146,15 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         if self.viewer is not None:
             _NAPARI_COMPONENT_DISPLAY_COORDINATOR._reconcile_deleted_layers(self)
         retained_routes = frozenset(self.layer_route_state.layers)
-        for route_key in tuple(self.component_groups):
+        for route_key in tuple(
+            self.layer_route_state.layer_titles.keys()
+            | self.component_groups.groups.keys()
+        ):
             if route_key not in retained_routes:
                 self.component_groups.purge(route_key)
                 self.layer_route_state.purge_route(route_key)
         self.component_values.retain_routes(retained_routes)
+        self.display_pipeline.reconcile_mounted_axis_projections(rematerialize=True)
         if not retained_routes:
             self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
