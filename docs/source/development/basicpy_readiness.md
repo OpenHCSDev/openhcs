@@ -1,7 +1,13 @@
 # BaSiCPy readiness checkpoint (#213)
 
-Status: draft **source integration**, not installed, import- or fit-validated.
-Backend/dependency owner: Linnaeus. Parent PR151 owns recipes/policy. Memory/
+Current parent checkpoint: real BaSiCPy Python3.14 fits and paired OpenHCS
+Python3.12 CPU fits, dtype behavior and field provenance checks passed. See the
+canonical [2026-09-30 receipt](../../../validation/basicpy_parent_numeric_20260930/checkpoint.rst).
+No install, compiled/MCP execution or biological acceptance is claimed.
+
+The remaining text records the historical 2026-09-29 source-only checkpoint;
+its pending checks and owners must not be read as today's runtime state.
+Original backend/dependency owner: Linnaeus. Parent PR151 owns recipes/policy. Memory/
 session PR208 remains independently pending actual live acceptance. Its two
 independent authority findings are corrected/published in `d69d65adb`; no memory
 MCP measurement or installed-history readiness is inferred from that source fix.

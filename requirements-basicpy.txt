@@ -1,7 +1,7 @@
 # Reviewed JAX prototype, paired draft https://github.com/OpenHCSDev/BaSiCPy/pull/1
 # Do not replace with PyPI 2.x: it owns a different PyTorch API.
-# Source checkpoint; import/fit/compiled MCP acceptance remains pending.
-BaSiCPy @ git+https://github.com/OpenHCSDev/BaSiCPy.git@29f0a327d2069324f13d0c6fa0809a5c7566a6d4
+# CPU source import/fit validated; installed/compiled MCP acceptance remains pending.
+BaSiCPy @ git+https://github.com/OpenHCSDev/BaSiCPy.git@855af6b10c87e832cb6a6594fb288c28d74f46e5
 # Typed native direct-call default, stacked on reviewed retained-history fix.
 # https://github.com/OpenHCSDev/ArrayBridge/pull/2 (depends on PR1)
-arraybridge @ git+https://github.com/OpenHCSDev/ArrayBridge.git@7f94d27925348f0cf0e4cc200692a4214c3722b2
+arraybridge @ git+https://github.com/OpenHCSDev/ArrayBridge.git@d6d92a716b91f0148dc2c04f9e744bddb7e32ed4
