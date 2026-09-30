@@ -473,7 +473,7 @@ def codex_lazy_import_probe(image):
         encoding="utf-8",
     )
     vars(custom_functions).pop(func_name, None)
-    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name: storage_dir)
+    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir)
 
     namespace: dict[str, object] = {}
     try:

@@ -1576,6 +1576,15 @@ class NumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     prefer_fast = False
 
 
+class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendStrategy):
+    """Centrosome provider using the absorbed CellProfiler reference semantics."""
+
+    memory_type = MemoryType.NUMPY
+    backend_provider = CellProfilerBackendProvider.CENTROSOME
+    backend_key = CellProfilerBackendAuthority.backend_key(memory_type, backend_provider)
+    is_default_backend = False
+
+
 class NumbaNumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory legacy watershed backend with required Numba acceleration."""
 
@@ -2313,6 +2322,7 @@ def _legacy_watershed_raveled_numba(
 
 __all__ = public_names_from_objects(
     CellProfiler4DistanceMarkerBackendStrategy,
+    CentrosomeNumpyLegacyWatershedBackendStrategy,
     LegacyWatershedBackendStrategy,
     MahotasCellProfiler4DistanceMarkerBackendStrategy,
     NumbaCellProfiler4DistanceMarkerBackendStrategy,

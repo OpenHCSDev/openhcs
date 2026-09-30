@@ -17,6 +17,9 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
 )
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerKernelCachePreparationMixin,
+)
 
 
 class CellProfilerBackendProvider(str, Enum):
@@ -277,7 +280,9 @@ class CellProfilerBackendAuthority:
         )
 
 
-class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
+class CellProfilerBackendStrategyMixin(
+    CellProfilerKernelCachePreparationMixin, CompilerPreparedAutoRegisterFamily
+):
     """Mixin for backend strategies keyed by OpenHCS memory type and provider.
 
     Concrete strategy families keep their own AutoRegisterMeta registry; this
@@ -292,6 +297,16 @@ class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
         DEFAULT_CELLPROFILER_BACKEND_PROVIDER
     )
     is_default_backend: ClassVar[bool] = False
+
+    @classmethod
+    def requires_persistent_kernel_cache(cls) -> bool:
+        """Require cache preparation only for declared compiler-backed providers."""
+        if cls is CellProfilerBackendStrategyMixin:
+            return False
+        return any(
+            strategy.requires_explicit_prepare_backend()
+            for strategy in cls.__registry__.values()
+        )
 
     @classmethod
     def prepare_registered_family(cls) -> None:

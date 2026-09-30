@@ -71,6 +71,14 @@ identities and exact command described in
 
 ## Run a measured well-throughput sweep
 
+Run timed sweeps separately from repository-wide AST audits, test suites, other
+benchmarks and compilation work. Keep code, dependencies and kernel-cache state
+matched for alternating comparisons, record host/process resource samples, and
+retain individual repetitions. Source edits can invalidate Numba disk caches;
+record any explicit family warmup separately from ordinary execution and total.
+A single observation with concurrent development work cannot establish a
+performance regression; see [the measured audit-interference investigation](../results/perf_scaling_rise_investigation_20260929/README.md).
+
 First check the modes, cases and missing sources without acquiring data or
 starting an execution server:
 

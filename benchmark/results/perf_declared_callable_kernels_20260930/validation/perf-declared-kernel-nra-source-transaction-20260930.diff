@@ -1,0 +1,537 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_backend.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_backend.py
+@@ -7,7 +7,6 @@
+ from dataclasses import dataclass
+ from enum import Enum
+ from functools import lru_cache
+-from pathlib import Path
+ from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
+ 
+ from metaclass_registry import AutoRegisterMeta
+@@ -18,7 +17,9 @@
+     CompilerPreparedAutoRegisterFamily,
+ )
+ from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
+-from openhcs.utils.environment import OpenHCSProcessEnvironment
++from openhcs.processing.backends.cellprofiler._preparation import (
++    CellProfilerKernelCachePreparationMixin,
++)
+ 
+ 
+ class CellProfilerBackendProvider(str, Enum):
+@@ -279,7 +280,9 @@
+         )
+ 
+ 
+-class CellProfilerBackendStrategyMixin(CompilerPreparedAutoRegisterFamily):
++class CellProfilerBackendStrategyMixin(
++    CellProfilerKernelCachePreparationMixin, CompilerPreparedAutoRegisterFamily
++):
+     """Mixin for backend strategies keyed by OpenHCS memory type and provider.
+ 
+     Concrete strategy families keep their own AutoRegisterMeta registry; this
+@@ -300,20 +303,12 @@
+         """Compile an empty persistent Numba cache under CPU-only execution."""
+         if cls is CellProfilerBackendStrategyMixin:
+             return False
+-        if not OpenHCSProcessEnvironment.cpu_only_mode():
+-            return False
+         if not any(
+             strategy.requires_explicit_prepare_backend()
+             for strategy in cls.__registry__.values()
+         ):
+             return False
+-        from numba import config as numba_config
+-
+-        cache_directory = numba_config.CACHE_DIR
+-        return (
+-            bool(cache_directory)
+-            and next(Path(cache_directory).rglob("*.nbi"), None) is None
+-        )
++        return super().can_prepare_in_child()
+ 
+     @classmethod
+     def prepare_registered_family(cls) -> None:
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
+@@ -0,0 +1,53 @@
++"""Declared persistent kernel work shared by registry and callable preparation."""
++
++from __future__ import annotations
++
++from collections.abc import Hashable
++from pathlib import Path
++from typing import ClassVar
++
++from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
++from openhcs.core.processing_preparation import PreparationOperation
++from openhcs.utils.environment import OpenHCSProcessEnvironment
++
++
++class CellProfilerKernelCachePreparationMixin:
++    """Admit persistent Numba work only for an empty explicit CPU cache."""
++
++    @classmethod
++    def can_prepare_in_child(cls) -> bool:
++        if not OpenHCSProcessEnvironment.cpu_only_mode():
++            return False
++        from numba import config as numba_config
++
++        cache_directory = numba_config.CACHE_DIR
++        return (
++            bool(cache_directory)
++            and next(Path(cache_directory).rglob("*.nbi"), None) is None
++        )
++
++
++class CellProfilerCallableKernelPreparation(
++    CellProfilerKernelCachePreparationMixin,
++    PreparationOperation,
++    CompilerPreparedAutoRegisterFamily,
++):
++    """Own pure kernel work; concrete declarations own independent registries.
++
++    This abstract protocol has no registry. AutoRegisterMeta creates one on
++    each direct concrete declaration, deriving child work from the existing
++    module registry discovery without inspecting callable or module hooks.
++    Parent registry and callable preparation share successful readiness.
++    """
++
++    __registry_key__ = "__name__"
++    __registry__: ClassVar[dict[str, type[CellProfilerCallableKernelPreparation]]]
++
++    @property
++    def identity(self) -> Hashable:
++        return type(self)
++
++    @classmethod
++    def prepare_registered_family(cls) -> None:
++        for declaration in cls.__registry__.values():
++            declaration().prepare()
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/grid.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/grid.py
+@@ -10,6 +10,9 @@
+ from typing import TYPE_CHECKING, Annotated, Any, ClassVar
+ 
+ import numpy as np
++from openhcs.processing.backends.cellprofiler._preparation import (
++    CellProfilerCallableKernelPreparation,
++)
+ from metaclass_registry import AutoRegisterMeta
+ from numba import njit
+ 
+@@ -1554,37 +1557,47 @@
+     ).execute()
+ 
+ 
++class IdentifyObjectsInGridKernelPreparation(
++    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
++):
++    """Own the persistent kernel cache work for identify_objects_in_grid."""
++
++    def execute(self) -> None:
++        """Compile grid-label kernels before timed execution."""
++        image = np.zeros((64, 64), dtype=np.float32)
++        grid = SpatialGrid(
++            name="Grid",
++            rows=4,
++            columns=4,
++            x_spacing=16.0,
++            y_spacing=16.0,
++            x_origin=8.0,
++            y_origin=8.0,
++        )
++        guide_labels = np.zeros((64, 64), dtype=np.int32)
++        guide_labels[8:18, 8:18] = 1
++        guide_labels[24:34, 24:34] = 2
++        guide_payload = SourceImageObjectLabelBuildRequest(
++            image=image,
++            labels=guide_labels,
++            declared_object_count=2,
++            declared_object_ids=(1, 2),
++        ).payload()
++        identify_objects_in_grid.__wrapped__(
++            image,
++            topology_inputs=(grid,),
++            shape_choice=ShapeChoice.RECTANGLE,
++        )
++        identify_objects_in_grid.__wrapped__(
++            image,
++            topology_inputs=(grid, guide_payload),
++            shape_choice=ShapeChoice.NATURAL,
++        )
++
++
+ def prepare_identify_objects_in_grid() -> None:
+-    """Compile grid-label kernels before timed execution."""
+-    image = np.zeros((64, 64), dtype=np.float32)
+-    grid = SpatialGrid(
+-        name="Grid",
+-        rows=4,
+-        columns=4,
+-        x_spacing=16.0,
+-        y_spacing=16.0,
+-        x_origin=8.0,
+-        y_origin=8.0,
+-    )
+-    guide_labels = np.zeros((64, 64), dtype=np.int32)
+-    guide_labels[8:18, 8:18] = 1
+-    guide_labels[24:34, 24:34] = 2
+-    guide_payload = SourceImageObjectLabelBuildRequest(
+-        image=image,
+-        labels=guide_labels,
+-        declared_object_count=2,
+-        declared_object_ids=(1, 2),
+-    ).payload()
+-    identify_objects_in_grid.__wrapped__(
+-        image,
+-        topology_inputs=(grid,),
+-        shape_choice=ShapeChoice.RECTANGLE,
+-    )
+-    identify_objects_in_grid.__wrapped__(
+-        image,
+-        topology_inputs=(grid, guide_payload),
+-        shape_choice=ShapeChoice.NATURAL,
+-    )
++    """Prepare the kernels through their declared registry obligation."""
++    IdentifyObjectsInGridKernelPreparation().prepare()
+ 
+ 
+ identify_objects_in_grid.__openhcs_prepare__ = prepare_identify_objects_in_grid
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/morphology.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/morphology.py
+@@ -11,6 +11,9 @@
+ from enum import Enum
+ from typing import TYPE_CHECKING
+ import numpy as np
++from openhcs.processing.backends.cellprofiler._preparation import (
++    CellProfilerCallableKernelPreparation,
++)
+ from openhcs.core.artifacts import (
+     ImageArtifactType,
+     ArtifactSpecCollection,
+@@ -4953,18 +4956,28 @@
+     return result
+ 
+ 
++class ExpandOrShrinkObjectsKernelPreparation(
++    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
++):
++    """Own the persistent kernel cache work for expand_or_shrink_objects."""
++
++    def execute(self) -> None:
++        """Compile kernels used by common object expansion/shrink modes."""
++        labels = np.zeros((16, 16), dtype=np.int32)
++        labels[2:5, 3:7] = 1
++        labels[8:12, 9:14] = 2
++        points = np.zeros_like(labels)
++        points[3, 5] = 1
++        points[10, 12] = 2
++        for strategy_type in ExpandShrinkOperationStrategy.__registry__.values():
++            strategy = strategy_type()
++            for fixture in (labels, points):
++                strategy.apply(fixture, iterations=2, fill_holes=False)
++
++
+ def prepare_expand_or_shrink_objects() -> None:
+-    """Compile kernels used by common object expansion/shrink modes."""
+-    labels = np.zeros((16, 16), dtype=np.int32)
+-    labels[2:5, 3:7] = 1
+-    labels[8:12, 9:14] = 2
+-    points = np.zeros_like(labels)
+-    points[3, 5] = 1
+-    points[10, 12] = 2
+-    for strategy_type in ExpandShrinkOperationStrategy.__registry__.values():
+-        strategy = strategy_type()
+-        for fixture in (labels, points):
+-            strategy.apply(fixture, iterations=2, fill_holes=False)
++    """Prepare the kernels through their declared registry obligation."""
++    ExpandOrShrinkObjectsKernelPreparation().prepare()
+ 
+ 
+ @numpy_decorator(contract=ProcessingContract.PURE_2D)
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/primary_objects.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/primary_objects.py
+@@ -2,6 +2,10 @@
+ 
+ import logging
+ import numpy as np
++from metaclass_registry import AutoRegisterMeta
++from openhcs.processing.backends.cellprofiler._preparation import (
++    CellProfilerCallableKernelPreparation,
++)
+ import time
+ from typing import TYPE_CHECKING, Tuple
+ from enum import Enum
+@@ -735,98 +739,103 @@
+         )
+ 
+ 
+-def _prepare_identify_primary_objects() -> None:
+-    """Compile Numba/backend kernels used by IdentifyPrimaryObjects."""
+-    labels = np.array(
+-        [[0, 1, 1, 0], [0, 1, 1, 2], [3, 3, 2, 2], [0, 0, 2, 2]], dtype=np.int32
+-    )
+-    areas = np.bincount(labels.ravel())
+-    filter_labels_by_area_numba(
+-        np.ascontiguousarray(labels), np.ascontiguousarray(areas), 2.0, 4.0
+-    )
+-    filter_labels_by_diameter_range(labels, 2.0, 4.0)
+-    filter_physical_border_objects_numba(labels, True, True, True, True)
+-    stacked_labels = np.stack((labels, labels), axis=0)
+-    stacked_areas = np.bincount(stacked_labels.ravel())
+-    filter_labels_by_area_numba(
+-        np.ascontiguousarray(stacked_labels),
+-        np.ascontiguousarray(stacked_areas),
+-        2.0,
+-        4.0,
+-    )
+-    filter_labels_by_diameter_range(stacked_labels, 2.0, 4.0)
+-    image = np.zeros((96, 96), dtype=np.float32)
+-    yy, xx = np.ogrid[:96, :96]
+-    image[(yy - 32) ** 2 + (xx - 32) ** 2 <= 12 * 12] = 0.8
+-    image[(yy - 56) ** 2 + (xx - 56) ** 2 <= 12 * 12] = 0.75
+-    binary = image > np.float32(0.5)
+-    cellprofiler_threshold_diagnostics(
+-        image,
+-        binary,
+-        final_threshold=0.5,
+-        original_threshold=0.5,
+-    )
+-    cellprofiler_threshold_diagnostics(
+-        image,
+-        binary,
+-        final_threshold=0.5,
+-        original_threshold=0.5,
+-    )
+-    rectangular_mask = np.zeros_like(binary, dtype=bool)
+-    rectangular_mask[16:80, 16:80] = True
+-    cellprofiler_threshold_diagnostics(
+-        image,
+-        binary,
+-        final_threshold=0.5,
+-        original_threshold=0.5,
+-        mask=rectangular_mask,
+-    )
+-    cellprofiler_threshold_diagnostics(
+-        image,
+-        binary,
+-        final_threshold=0.5,
+-        original_threshold=0.5,
+-        mask=rectangular_mask,
+-    )
+-    identify_primary_objects.__wrapped__(
+-        image,
+-        min_diameter=10,
+-        max_diameter=45,
+-        unclump_method=UnclumpMethod.SHAPE,
+-        watershed_method=WatershedMethod.SHAPE,
+-        low_res_maxima=True,
+-        use_advanced_settings=True,
+-        threshold_method=CellProfilerThresholdMethod.MINIMUM_CROSS_ENTROPY,
+-    )
+-    identify_primary_objects.__wrapped__(
+-        image,
+-        min_diameter=3,
+-        max_diameter=15,
+-        unclump_method=UnclumpMethod.INTENSITY,
+-        watershed_method=WatershedMethod.INTENSITY,
+-        low_res_maxima=True,
+-        use_advanced_settings=True,
+-        threshold_method=CellProfilerThresholdMethod.OTSU,
+-        otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
+-        assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
+-        threshold_smoothing_scale=1.3488,
+-    )
+-    identify_primary_objects.__wrapped__(
+-        image,
+-        min_diameter=3,
+-        max_diameter=15,
+-        unclump_method=UnclumpMethod.INTENSITY,
+-        watershed_method=WatershedMethod.INTENSITY,
+-        low_res_maxima=True,
+-        use_advanced_settings=True,
+-        threshold_method=CellProfilerThresholdMethod.OTSU,
+-        otsu_class_count=CellProfilerOtsuMethod.TWO_CLASS,
+-        assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
+-        threshold_smoothing_scale=1.3488,
+-    )
+-
+-
+-identify_primary_objects.__openhcs_prepare__ = _prepare_identify_primary_objects
++class IdentifyPrimaryObjectsKernelPreparation(
++    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
++):
++    """Own the persistent kernel cache work for identify_primary_objects."""
++
++    def execute(self) -> None:
++        """Compile Numba/backend kernels used by IdentifyPrimaryObjects."""
++        labels = np.array(
++            [[0, 1, 1, 0], [0, 1, 1, 2], [3, 3, 2, 2], [0, 0, 2, 2]], dtype=np.int32
++        )
++        areas = np.bincount(labels.ravel())
++        filter_labels_by_area_numba(
++            np.ascontiguousarray(labels), np.ascontiguousarray(areas), 2.0, 4.0
++        )
++        filter_labels_by_diameter_range(labels, 2.0, 4.0)
++        filter_physical_border_objects_numba(labels, True, True, True, True)
++        stacked_labels = np.stack((labels, labels), axis=0)
++        stacked_areas = np.bincount(stacked_labels.ravel())
++        filter_labels_by_area_numba(
++            np.ascontiguousarray(stacked_labels),
++            np.ascontiguousarray(stacked_areas),
++            2.0,
++            4.0,
++        )
++        filter_labels_by_diameter_range(stacked_labels, 2.0, 4.0)
++        image = np.zeros((96, 96), dtype=np.float32)
++        yy, xx = np.ogrid[:96, :96]
++        image[(yy - 32) ** 2 + (xx - 32) ** 2 <= 12 * 12] = 0.8
++        image[(yy - 56) ** 2 + (xx - 56) ** 2 <= 12 * 12] = 0.75
++        binary = image > np.float32(0.5)
++        cellprofiler_threshold_diagnostics(
++            image,
++            binary,
++            final_threshold=0.5,
++            original_threshold=0.5,
++        )
++        cellprofiler_threshold_diagnostics(
++            image,
++            binary,
++            final_threshold=0.5,
++            original_threshold=0.5,
++        )
++        rectangular_mask = np.zeros_like(binary, dtype=bool)
++        rectangular_mask[16:80, 16:80] = True
++        cellprofiler_threshold_diagnostics(
++            image,
++            binary,
++            final_threshold=0.5,
++            original_threshold=0.5,
++            mask=rectangular_mask,
++        )
++        cellprofiler_threshold_diagnostics(
++            image,
++            binary,
++            final_threshold=0.5,
++            original_threshold=0.5,
++            mask=rectangular_mask,
++        )
++        identify_primary_objects.__wrapped__(
++            image,
++            min_diameter=10,
++            max_diameter=45,
++            unclump_method=UnclumpMethod.SHAPE,
++            watershed_method=WatershedMethod.SHAPE,
++            low_res_maxima=True,
++            use_advanced_settings=True,
++            threshold_method=CellProfilerThresholdMethod.MINIMUM_CROSS_ENTROPY,
++        )
++        identify_primary_objects.__wrapped__(
++            image,
++            min_diameter=3,
++            max_diameter=15,
++            unclump_method=UnclumpMethod.INTENSITY,
++            watershed_method=WatershedMethod.INTENSITY,
++            low_res_maxima=True,
++            use_advanced_settings=True,
++            threshold_method=CellProfilerThresholdMethod.OTSU,
++            otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
++            assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
++            threshold_smoothing_scale=1.3488,
++        )
++        identify_primary_objects.__wrapped__(
++            image,
++            min_diameter=3,
++            max_diameter=15,
++            unclump_method=UnclumpMethod.INTENSITY,
++            watershed_method=WatershedMethod.INTENSITY,
++            low_res_maxima=True,
++            use_advanced_settings=True,
++            threshold_method=CellProfilerThresholdMethod.OTSU,
++            otsu_class_count=CellProfilerOtsuMethod.TWO_CLASS,
++            assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
++            threshold_smoothing_scale=1.3488,
++        )
++
++
++identify_primary_objects.__openhcs_prepare__ = IdentifyPrimaryObjectsKernelPreparation().prepare
+ __all__ = public_names_from_objects(
+     ExcessObjectHandling,
+     FillHolesOption,
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
+@@ -423,6 +423,9 @@
+ import time
+ from types import MappingProxyType
+ import numpy as np
++from openhcs.processing.backends.cellprofiler._preparation import (
++    CellProfilerCallableKernelPreparation,
++)
+ from metaclass_registry import AutoRegisterMeta
+ from numba import njit
+ from openhcs.constants.constants import MemoryType
+@@ -1224,32 +1227,37 @@
+     return (image, measurement_rows)
+ 
+ 
+-def prepare_measure_object_size_shape() -> None:
+-    """Compile AreaShape paths before benchmark execution."""
+-    image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
+-    labels = np.zeros((32, 32), dtype=np.int32)
+-    labels[8:24, 8:24] = 1
+-    measure_object_size_shape.__wrapped__(
+-        image,
+-        ObjectLabelPayload(
+-            variant_data=ObjectLabelVariantData(labels=labels),
+-            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+-        ),
+-    )
+-    image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape((8, 16, 16))
+-    labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
+-    labels_3d[1:4, 3:9, 3:9] = 1
+-    labels_3d[4:7, 7:14, 7:14] = 2
+-    measure_object_size_shape.__wrapped__(
+-        image_3d,
+-        ObjectLabelPayload(
+-            variant_data=ObjectLabelVariantData(labels=labels_3d),
+-            domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+-        ),
+-    )
+-
+-
+-measure_object_size_shape.__openhcs_prepare__ = prepare_measure_object_size_shape
++class ObjectSizeShapeKernelPreparation(
++    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
++):
++    """Own the persistent kernel cache work for measure_object_size_shape."""
++
++    def execute(self) -> None:
++        """Compile AreaShape paths before benchmark execution."""
++        image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
++        labels = np.zeros((32, 32), dtype=np.int32)
++        labels[8:24, 8:24] = 1
++        measure_object_size_shape.__wrapped__(
++            image,
++            ObjectLabelPayload(
++                variant_data=ObjectLabelVariantData(labels=labels),
++                domain=ObjectLabelDomain(declared_object_ids=(1,)),
++            ),
++        )
++        image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape((8, 16, 16))
++        labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
++        labels_3d[1:4, 3:9, 3:9] = 1
++        labels_3d[4:7, 7:14, 7:14] = 2
++        measure_object_size_shape.__wrapped__(
++            image_3d,
++            ObjectLabelPayload(
++                variant_data=ObjectLabelVariantData(labels=labels_3d),
++                domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
++            ),
++        )
++
++
++measure_object_size_shape.__openhcs_prepare__ = ObjectSizeShapeKernelPreparation().prepare
+ 
+ 
+ @dataclass(frozen=True, slots=True)

@@ -1,0 +1,29 @@
+{
+  "source_merge": "2b50065d1",
+  "main_merge": "8b090e2e9a1a1550a01b7096c3f6cdf7d65ab2f6",
+  "polystore_gitlink": "c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7",
+  "prior_live_failure_preserved": "viewer_feature_measurement_live_20260929.json",
+  "acceptance": "Original failures preserved. Final source-pinned synthetic MCP/Napari journey passed at5da177ad9/c16b8fc; original crop/relative spacing, actual author-opened mounted captures, empirical geometry/intensities and unchanged pixels/presentation verified. Actual child sharedcache/downloadsfalse verified. Parent merge/install entrypoint acceptance separate.",
+  "final_receipt": "viewer_feature_measurement_live_accepted_20260929.json",
+  "new_owner": "Parent owns separate automatic shared Fiji test-bootstrap fix. No broader tests or bootstrap edits by feature owner.",
+  "ownership": {
+    "projection": "Original SourceProjection retained by PlateImageRecord and PlateFileRecord, consumed by existing VirtualWorkspaceSourceProjectionBuilder.ingest_source_projections. No metadata schema copy or registry.",
+    "launcher": "DetachedViewerServerEntrypointSpec pins OpenHCSRuntimeImportAuthority root. OpenHCS __init__ invokes existing _source_dependencies bootstrap. Previously empty submodule directories supplied no import roots, permitting installed editable dependency resolution.",
+    "shared_file": "napari_viewer_server.py diagnostic provenance at process entrypoint and core/viewer_streaming_service.py request-window validation only; PR159 lifecycle unchanged. Ordinary ImageStreamingRequest validates bounded native crop; FullWindowImageStreamingRequest preserves strict historical receipt full-window guard. Existing source_receipt boundary chooses nominal request once.",
+    "patterns": ["MEMB-5", "IMPL-12", "BOUND-1"],
+    "global_nra": "Previous scan incomplete; no clean/global proof. Parent package overlay is separate syntax evidence."
+  },
+  "source_tests": {
+    "focused": "96 passed in7.18s, real persisted fixture inventory->viewer loading asserts original crop/domain/spacing and exact nominal object retention",
+    "selector": "9 passed,131 deselected in2.86s; original error contract restored",
+    "broader_plate_service": "timeout124 at60s; not a pass; entered OME/ROI materialization with ImageJ download default enabled. First fixture test initially failed because test used .values rather than .values_zyx; corrected then focused shard passed.",
+    "existing_inventory_subset_downloads_disabled": "2 passed/1 failed/13deselected in2.84s. Mock-ref and ordinary TIFF projection pass; OME fails microscope detection with archive acquisition explicitly forbidden. Preserved boundary, not a regression pass or JVM acceptance.",
+    "crop_request_receipt_shard": "112 passed/1failed in8.93s. New persisted crop request admitted and strict full-window leaf still rejects crop. Existing test_native_persisted_aggregate_source_projection_preserves_order fails calibrated_metadata because its SimpleNamespace microscope fixture omits metadata_handler. No production workaround or weakened assertion."
+  },
+  "technical_interventions": [
+    "git submodule update --init --recursive --no-fetch --jobs1 cloned repository object stores; exact gitlinks verified, not claimed local-only reuse. Approximately14MiB object stores plus12MiB owned submodule sources. No installs/bundles.",
+    "Broader source shard omitted POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false and staged614465536bytes partial archive under owned cache. Process ended attimeout; no JVM/test process remains. This violates requested no-download preparation boundary; not hidden or counted as acceptance. Explicit policy added to subsequent tests/driver.",
+    "Owned cache647MiB disposed after process exit using exact validated cache directory; source/receipts/failed synthetic journal preserved. Cache is not recoverable; no source deleted.",
+    "Parent review removed observational bootstrap reactivation from provenance logging: only actual module files and existing RuntimeImportAuthority are observed."
+  ]
+}

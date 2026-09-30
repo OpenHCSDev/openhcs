@@ -1,0 +1,68 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "automatic_recovery_on_reconnect": false,
+          "errors": [],
+          "installation_pointer_available": null,
+          "installation_pointer_changed_since_import": false,
+          "installation_pointer_path": null,
+          "missing_packaged_resource_paths": [],
+          "openhcs_version": "0.8.6",
+          "packaged_resource_count": 56,
+          "packaged_resources_ready": true,
+          "reconnect_owner": null,
+          "reconnect_required": false,
+          "recovery_reason": "current",
+          "restart_command": [],
+          "restart_command_is_stable": false,
+          "restart_hint": null,
+          "restart_required": false,
+          "retry_after_reconnect": false,
+          "schema_version": "openhcs.agent.v1",
+          "server_current_mtime_ns": 1790772771376925738,
+          "server_import_mtime_ns": 1790772771376925738,
+          "server_process_id": 3244873,
+          "server_source_changed_since_import": false,
+          "server_source_path": "/home/ts/wt/openhcs-viewer-live-20260930/openhcs/mcp/server.py",
+          "service": "openhcs.mcp",
+          "stale_source_paths": [],
+          "started_at_unix": 1790774184.4063082,
+          "status": "ok",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_health_check"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [
+    {
+      "causes": [
+        {
+          "exception_type": "JSONDecodeError",
+          "message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+        }
+      ],
+      "code": "mcp_transport_failed",
+      "exception_type": "JSONDecodeError",
+      "hint": "The fresh OpenHCS MCP subprocess did not complete the requested stdio exchange. The dev client captures a bounded server stderr tail on transport failures so startup tracebacks remain visible without noisy successful calls.",
+      "message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+      "phase": "call_tool",
+      "server_stderr_tail": null
+    }
+  ],
+  "results": [],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

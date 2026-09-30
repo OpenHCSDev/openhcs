@@ -1,0 +1,72 @@
+name: Refactor Guardrails
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structural-ratchet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Install tool launcher (runner only)
+        run: python -m pip install uv
+      - name: Run the packaged ratchet, not a copied detector
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          base="$BASE"
+          if [ -z "$base" ]; then base=$(git rev-parse HEAD^); fi
+          for root in openhcs scripts benchmark; do
+            uvx --python 3.14 --from git+https://github.com/OpenHCSDev/agent-comms@3b03785f45df2ef5dc62ba6aed99294192ecbb01 \
+              agent-comms-ratchet --root "$root" --base "$base" --head "$HEAD"
+          done
+
+  nra-r1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install tool launcher (runner only)
+        run: python -m pip install uv
+      - name: Verify the policy consumer and actual workflow shells
+        run: |
+          uv run --no-project --python 3.12 --with pytest --with pyyaml \
+            --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
+            python -m pytest --noconftest -o addopts='' .github/tests/test_refactor_guardrails.py -q
+      - name: Compare changed-file R1 evidence through NRA declarations
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          base="$BASE"
+          if [ -z "$base" ]; then base=$(git rev-parse HEAD^); fi
+          uv run --no-project --python 3.12 \
+            --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
+            python -m scripts.check_refactor_r1 --base "$base" --head "$HEAD" \
+            --scratch-root "$RUNNER_TEMP/openhcs-r1" --budget-seconds 160

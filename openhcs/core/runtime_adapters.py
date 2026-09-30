@@ -10,6 +10,10 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from python_introspect import add_parameter_exclusions
 
 from openhcs.constants.constants import Backend, VariableComponents
+from openhcs.core.artifact_key_selection import (
+    ArtifactOutputPolicy,
+    NativeReturnArtifactOutputPolicy,
+)
 from openhcs.core.aligned_image_payload import (
     ImagePayloadExecutionMode,
     stack_image_payloads,
@@ -60,6 +64,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.steps.function_runtime import FunctionRuntimeScope
+    from openhcs.core.runtime_stores import RuntimeArtifactInput
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -254,6 +259,22 @@ class RuntimeAdapterRequest:
                 "different runtime authorities."
             )
         return first
+
+    def runtime_artifact_input(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        *,
+        backend: str,
+    ) -> "RuntimeArtifactInput":
+        """Bind an exact compiled input to this request's declared source context."""
+        from openhcs.core.runtime_stores import RuntimeArtifactInput
+
+        return RuntimeArtifactInput(
+            edge_plan=edge,
+            axis_scope=self.axis_scope,
+            backend=backend,
+            source_binding_plan=self.source_binding_plan,
+        )
 
     def source_artifact_payload(self, ref: ArtifactSpecRef) -> object:
         """Resolve one source-bound artifact through workspace matching and VFS."""
@@ -454,7 +475,7 @@ class RuntimeAdapterSpec:
     parameter_name: str
     factory: RuntimeAdapterFactory
     manages_artifact_inputs: bool = False
-    manages_artifact_outputs: bool = False
+    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy
     runtime_callable_factory: RuntimeCallableFactory | None = None
 
     def __post_init__(self) -> None:
@@ -462,6 +483,15 @@ class RuntimeAdapterSpec:
             raise ValueError("RuntimeAdapterSpec.parameter_name cannot be empty.")
         if not callable(self.factory):
             raise TypeError("RuntimeAdapterSpec.factory must be callable.")
+        if (
+            not isinstance(self.artifact_output_policy, type)
+            or not issubclass(self.artifact_output_policy, ArtifactOutputPolicy)
+            or inspect.isabstract(self.artifact_output_policy)
+        ):
+            raise TypeError(
+                "RuntimeAdapterSpec.artifact_output_policy requires a concrete "
+                "ArtifactOutputPolicy declaration."
+            )
         if self.runtime_callable_factory is not None and not callable(
             self.runtime_callable_factory
         ):
@@ -500,7 +530,7 @@ def runtime_adapter(
     factory: RuntimeAdapterFactory,
     *,
     manages_artifact_inputs: bool = False,
-    manages_artifact_outputs: bool = False,
+    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy,
     runtime_callable_factory: RuntimeCallableFactory | None = None,
 ) -> Callable[[_F], _F]:
     """Declare that a callable needs an invocation-scoped runtime adapter."""
@@ -508,7 +538,7 @@ def runtime_adapter(
         parameter_name=parameter_name,
         factory=factory,
         manages_artifact_inputs=manages_artifact_inputs,
-        manages_artifact_outputs=manages_artifact_outputs,
+        artifact_output_policy=artifact_output_policy,
         runtime_callable_factory=runtime_callable_factory,
     )
 

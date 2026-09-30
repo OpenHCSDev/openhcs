@@ -914,20 +914,14 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
             and self.parsed_components_match_metadata(parsed, component_metadata)
         )
 
-    @staticmethod
-    def path_parse_extensions(metadata: ImagePayloadMetadata) -> tuple[str, ...]:
+    def path_parse_extensions(self, metadata: ImagePayloadMetadata) -> tuple[str, ...]:
         source_identity = metadata.source_provenance.scalar_source_identity
-        component_metadata = source_identity.component_metadata
-        if component_metadata is not None and "extension" in component_metadata:
-            return (str(component_metadata["extension"]),)
-
-        source_path = source_identity.path
-        if source_path is None:
-            return ()
-        suffixes = "".join(Path(source_path).suffixes)
-        if not suffixes:
-            return ()
-        return (suffixes,)
+        extension = source_identity.filename_extension
+        if extension is None:
+            extension = source_identity.with_parsed_path_components(
+                self.parser
+            ).filename_extension
+        return () if extension is None else (extension,)
 
     @staticmethod
     def parsed_components_match_metadata(

@@ -1,4 +1,9 @@
 import numpy as np
+import pytest
+
+from openhcs.processing.backends.cellprofiler._granularity_native import (
+    sample_order_one_grid,
+)
 
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
@@ -8,6 +13,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     GRANULARITY_IMAGE_SERIES_CACHE,
     GRANULARITY_SPECTRUM_LENGTH,
     GranularityImageSeriesRequest,
+    GranularitySamplingGrid,
     GranularitySpectrumDescriptor,
     GranularitySpectrumDescriptorDeclaration,
     MeasureGranularityModule,
@@ -23,6 +29,162 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     measure_granularity_objects,
 )
 from openhcs.core.config import DtypeConfig
+
+
+@pytest.mark.parametrize(
+    "dtype",
+    [
+        np.bool_,
+        np.int8,
+        np.uint8,
+        np.int16,
+        np.uint16,
+        np.int32,
+        np.uint32,
+        np.int64,
+        np.uint64,
+        np.float32,
+        np.float64,
+    ],
+)
+@pytest.mark.parametrize("shape", [(1, 1), (1, 7), (7, 1), (6, 8)])
+@pytest.mark.parametrize("scales", [(0.5, 0.25), (1.0, 1.0), (1.3, -0.25)])
+def test_owned_granularity_grid_matches_scipy_dtypes_and_constant_borders(
+    dtype, shape, scales
+):
+    from scipy.ndimage import map_coordinates
+
+    image = (np.arange(np.prod(shape)).reshape(shape) % 17).astype(dtype)
+    grid = GranularitySamplingGrid((5.25, 8.5))
+    rows, columns = np.mgrid[0:5.25, 0:8.5].astype(float)
+    rows *= scales[0]
+    columns *= scales[1]
+    expected = map_coordinates(image, (rows, columns), order=1)
+    actual = grid.sample_pixels(image, coordinate_scales=scales)
+    np.testing.assert_array_equal(actual, expected)
+    assert actual.dtype == expected.dtype
+
+
+@pytest.mark.parametrize("dtype", [np.int64, np.uint64])
+@pytest.mark.parametrize("scales", [(1.0, 1.0), (0.5, 0.5), (0.1, 0.2)])
+def test_owned_granularity_grid_preserves_native_64bit_cast_extrema(dtype, scales):
+    from scipy.ndimage import map_coordinates
+
+    limits = np.iinfo(dtype)
+    image = np.array([[limits.min, limits.max], [limits.max, limits.min]], dtype=dtype)
+    rows, columns = np.mgrid[:4, :4].astype(float)
+    expected = map_coordinates(image, (rows * scales[0], columns * scales[1]), order=1)
+    actual = GranularitySamplingGrid((4, 4)).sample_pixels(
+        image, coordinate_scales=scales
+    )
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64, np.complex64, np.complex128])
+@pytest.mark.parametrize("layout", ["strided", "readonly", "non_native_endian"])
+def test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts(
+    dtype, layout
+):
+    from scipy.ndimage import map_coordinates
+
+    image = np.arange(48, dtype=np.float64).reshape(6, 8).astype(dtype)
+    image[2, 2] = np.nan
+    image[3, 3] = np.inf
+    if np.issubdtype(dtype, np.complexfloating):
+        image.imag[:] = np.arange(48, dtype=np.float64).reshape(image.shape)
+        image.imag[1, 1] = np.nan
+        image.imag[4, 4] = np.inf
+    if layout == "strided":
+        image = image[:, ::2]
+    elif layout == "readonly":
+        image.setflags(write=False)
+    else:
+        image = image.astype(image.dtype.newbyteorder(">"))
+    before = image.tobytes()
+    rows, columns = np.mgrid[:7, :9].astype(float)
+    expected = map_coordinates(image, (rows * 0.75, columns * 0.5), order=1)
+    actual = GranularitySamplingGrid((7, 9)).sample_pixels(
+        image, coordinate_scales=(0.75, 0.5)
+    )
+    if np.iscomplexobj(image):
+        np.testing.assert_array_equal(actual.real, expected.real)
+        np.testing.assert_array_equal(actual.imag, expected.imag)
+    else:
+        np.testing.assert_array_equal(actual, expected)
+    assert actual.dtype == expected.dtype
+    assert image.tobytes() == before
+
+
+def test_owned_granularity_grid_uses_logical_extents_for_endpoint_scales():
+    from scipy.ndimage import map_coordinates
+
+    original = GranularitySamplingGrid((9, 11))
+    source = original.subsampled(0.5)
+    assert source.logical_shape == (4.5, 5.5)
+    assert source.array_shape == (5, 6)
+    image = np.arange(30, dtype=np.float64).reshape(source.array_shape)
+    rows, columns = np.mgrid[:9, :11].astype(float)
+    expected = map_coordinates(image, (rows * (3.5 / 8), columns * (4.5 / 10)), order=1)
+    np.testing.assert_array_equal(original.sample_grid(image, source), expected)
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("axis", [0, 1])
+@pytest.mark.parametrize("value", [np.nan, np.inf])
+def test_owned_granularity_grid_preserves_zero_weight_mirrored_edge_values(
+    dtype, axis, value
+):
+    from scipy.ndimage import map_coordinates
+
+    image = np.ones((4, 5), dtype=dtype)
+    if axis == 0:
+        image[-2, :] = value
+    else:
+        image[:, -2] = value
+    coordinates = np.mgrid[:4, :5].astype(float)
+    expected = map_coordinates(image, coordinates, order=1)
+    actual = GranularitySamplingGrid(tuple(image.shape)).sample_pixels(
+        image, coordinate_scales=(1.0, 1.0)
+    )
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "invalid,expected_error",
+    [
+        ("image_rank", ValueError),
+        ("output_rank", ValueError),
+        ("format", ValueError),
+        ("readonly", ValueError),
+        ("strided", ValueError),
+        ("unsupported_dtype", RuntimeError),
+    ],
+)
+def test_native_granularity_sampling_releases_buffers_on_failure(
+    invalid, expected_error
+):
+    import sys
+
+    image = np.ones((4, 4), dtype=np.float32)
+    output = np.zeros_like(image)
+    if invalid == "image_rank":
+        image = image.ravel()
+    elif invalid == "output_rank":
+        output = output.ravel()
+    elif invalid == "format":
+        output = output.astype(np.float64)
+    elif invalid == "readonly":
+        output.setflags(write=False)
+    elif invalid == "strided":
+        image = image[:, ::2]
+    else:
+        image = image.astype(np.float16)
+        output = output.astype(np.float16)
+    references = (sys.getrefcount(image), sys.getrefcount(output))
+    for _ in range(3):
+        with pytest.raises(expected_error):
+            sample_order_one_grid(image, output, 0.5, 0.5)
+        assert references == (sys.getrefcount(image), sys.getrefcount(output))
 
 
 def test_measure_granularity_declares_one_indexed_spectrum_feature_authority():
@@ -203,8 +365,8 @@ def test_measure_granularity_objects_uses_order_one_coordinate_sampling_after_su
     current_means = scipy.ndimage.mean(image, labels, object_ids)
     start_means = np.maximum(current_means, np.finfo(float).eps)
     rec = series.reconstructions[0]
-    row_scale = float(series.new_shape[0] - 1) / float(labels.shape[0] - 1)
-    col_scale = float(series.new_shape[1] - 1) / float(labels.shape[1] - 1)
+    row_scale = float(series.grid.logical_shape[0] - 1) / float(labels.shape[0] - 1)
+    col_scale = float(series.grid.logical_shape[1] - 1) / float(labels.shape[1] - 1)
     ri, rj = np.mgrid[0 : labels.shape[0], 0 : labels.shape[1]].astype(np.float64)
     ri *= row_scale
     rj *= col_scale

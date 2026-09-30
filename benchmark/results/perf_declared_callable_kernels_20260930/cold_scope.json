@@ -1,0 +1,45 @@
+{
+  "control_source": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+  "candidate_source": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+  "source_files": {
+    "openhcs/processing/backends/cellprofiler/_backend.py": {
+      "control": "0584d9cfde1bdc2103223ae191aafdc87d392ee01f63759369b55e3c0f6b4fc3",
+      "candidate": "192628f103c054713126f3cb71b8061b401c539643aa6526a303bf0e19905d62"
+    },
+    "openhcs/processing/backends/cellprofiler/_preparation.py": {
+      "control": null,
+      "candidate": "916c79eae5b2ba33266feac611521b352435a0e917e47eecbfe9af27ddf78bba"
+    },
+    "openhcs/processing/backends/cellprofiler/grid.py": {
+      "control": "b7ceb3cfe6a6bf0f0861278f3598d60b20d8145ca719a42d4f036a4d50a6edc9",
+      "candidate": "01b4fca478344f5f1f3fa548c7a0749b8349c1733a99627856c5c9117bdbd8c2"
+    },
+    "openhcs/processing/backends/cellprofiler/morphology.py": {
+      "control": "5f216e9058f4a1d8adc2f4810eb880029df7537d2211e7b39f8c38d8dada807d",
+      "candidate": "f5164e90016a6714f32631ceb33188e442f76e1632e55779aa2b9bec3dd91612"
+    },
+    "openhcs/processing/backends/cellprofiler/primary_objects.py": {
+      "control": "6710b507fcdead2954e8a1038c91e2a99572d67b6d4ded8a7d41100fb229aa29",
+      "candidate": "7513ab3daa6383e35718bb23d29ea3ab1a73a84fe64f8a2ce199ba0351583971"
+    },
+    "openhcs/processing/backends/cellprofiler/shape.py": {
+      "control": "63bf24edd78504569f40693e16252b2661bc0589c27624413daae9bc794b8914",
+      "candidate": "f533d4fb0ba16d4bbd63fafbf780b1671232c41708e6828f69ee0ef12f3493af"
+    },
+    "openhcs/core/callable_contract.py": {
+      "control": "a4a99923a2cc7a42fd0ba291185c147930b8fb1fd11f90de360d0e3affc3f691",
+      "candidate": "bf59a55063f221d8352af6b1e187eb6c130a6f9d6f7a0c2a9a75b83dcfbab256"
+    },
+    "openhcs/core/processing_preparation.py": {
+      "control": "00cba18268d137d212f81f731c62a49f359ec7c38a18d436337776f6e81201be",
+      "candidate": "9504dcb96224ea75b6999ba07f3cf3f1cb1dafe56fc5076bebdd7cdd69b90614"
+    }
+  },
+  "scope": "cold: independent initially empty cache with no outside preparation; warm: full public RegistryService preparation recorded separately and excluded from ordinary total; no overlapping audits/tests/builds/other benchmarks",
+  "order": "control/candidate/candidate/control",
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1"
+  }
+}

@@ -88,11 +88,12 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )
 from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
+    LongObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.processing.backends.cellprofiler._granularity_reconstruct import (
+from openhcs.processing.backends.cellprofiler._granularity_native import (
     reconstruct_f32 as _reconstruct_f32,
+    sample_order_one_grid as _sample_order_one_grid,
 )
 
 GRANULARITY_SPECTRUM_LENGTH = 16
@@ -460,7 +461,7 @@ def object_granularity_measurement_value_fields() -> tuple[str, ...]:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectGranularityMeasurementRows(ObjectMeasurementColumnarRows):
+class ObjectGranularityMeasurementRows(LongObjectMeasurementColumnarRows):
     """Columnar object granularity rows over the emitted label-id domain."""
 
     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(
@@ -518,11 +519,94 @@ class ObjectGranularityMeasurementRows(ObjectMeasurementColumnarRows):
 
 
 @dataclass(frozen=True, slots=True)
+class GranularitySamplingGrid:
+    """CP logical extent, physical samples and coordinate-grid policy."""
+
+    logical_shape: tuple[float, float]
+
+    def __post_init__(self) -> None:
+        if len(self.logical_shape) != 2 or not all(
+            np.isfinite(value) for value in self.logical_shape
+        ):
+            raise ValueError("Granularity logical grids require two finite dimensions.")
+        object.__setattr__(
+            self, "logical_shape", tuple(float(value) for value in self.logical_shape)
+        )
+
+    @property
+    def array_shape(self) -> tuple[int, int]:
+        return tuple(max(0, int(np.ceil(value))) for value in self.logical_shape)
+
+    def subsampled(self, factor: float) -> "GranularitySamplingGrid":
+        return type(self)(tuple(value * float(factor) for value in self.logical_shape))
+
+    def coordinate_scales_from(
+        self, source: "GranularitySamplingGrid"
+    ) -> tuple[float, float]:
+        return tuple(
+            (source_size - 1.0) / (target_size - 1.0) if target_size > 1.0 else 0.0
+            for source_size, target_size in zip(
+                source.logical_shape, self.logical_shape, strict=True
+            )
+        )
+
+    def sample_pixels(
+        self, image: np.ndarray, *, coordinate_scales: tuple[float, float]
+    ) -> np.ndarray:
+        """Sample origin-scaled coordinates without materializing coordinate planes."""
+        image_array = np.asarray(image)
+        if image_array.ndim != 2:
+            raise ValueError("Granularity sampling requires a 2-D image.")
+        dtype = image_array.dtype.newbyteorder("=")
+        output = np.empty(self.array_shape, dtype=dtype)
+        if np.iscomplexobj(image_array):
+            output.real = self.sample_pixels(
+                image_array.real, coordinate_scales=coordinate_scales
+            )
+            output.imag = self.sample_pixels(
+                image_array.imag, coordinate_scales=coordinate_scales
+            )
+        else:
+            _sample_order_one_grid(
+                np.ascontiguousarray(image_array, dtype=dtype),
+                output,
+                float(coordinate_scales[0]),
+                float(coordinate_scales[1]),
+            )
+        return output
+
+    def sample_positions(
+        self,
+        image: np.ndarray,
+        source: "GranularitySamplingGrid",
+        rows: np.ndarray,
+        columns: np.ndarray,
+    ) -> np.ndarray:
+        """Sample supplied physical positions through the same logical grid policy."""
+        from scipy import ndimage as ndi
+
+        scales = self.coordinate_scales_from(source)
+        coordinates = (
+            np.asarray(rows, dtype=np.float64) * scales[0],
+            np.asarray(columns, dtype=np.float64) * scales[1],
+        )
+        return ndi.map_coordinates(image, coordinates, order=1)
+
+    def sample_grid(
+        self, image: np.ndarray, source: "GranularitySamplingGrid"
+    ) -> np.ndarray:
+        """Sample another logical grid with CP endpoint coordinate scales."""
+        return self.sample_pixels(
+            image, coordinate_scales=self.coordinate_scales_from(source)
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class GranularityImageSeries:
     """Background-corrected image and reconstruction series."""
 
     pixels: np.ndarray
-    new_shape: np.ndarray
+    grid: GranularitySamplingGrid
     reconstructions: tuple[np.ndarray, ...]
 
 
@@ -651,7 +735,7 @@ class GranularityImageSeriesRequest:
                 self.log_profile("granularity_series_cache_hit", 0.0)
                 return entry
         phase_started_at = time.perf_counter()
-        pixels, new_shape = background_corrected_pixels(
+        pixels, grid = background_corrected_pixels(
             image_array,
             self.subsample_size,
             self.background_subsample_size,
@@ -672,7 +756,7 @@ class GranularityImageSeriesRequest:
             reconstructions=len(reconstructions),
         )
         series = GranularityImageSeries(
-            pixels=pixels, new_shape=new_shape, reconstructions=reconstructions
+            pixels=pixels, grid=grid, reconstructions=reconstructions
         )
         with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
             GRANULARITY_IMAGE_SERIES_CACHE[key] = series
@@ -1357,38 +1441,36 @@ def background_corrected_pixels(
     subsample_size: float,
     background_subsample_size: float,
     element_radius: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return CP-style background-subtracted granularity pixels."""
+) -> tuple[np.ndarray, GranularitySamplingGrid]:
+    """Return background-subtracted pixels and their owned CP sampling grid."""
     from skimage import morphology
 
     image = np.asarray(image)
-    orig_shape = image.shape
+    original_grid = GranularitySamplingGrid(tuple(image.shape))
     if subsample_size < 1:
-        new_shape = np.asarray(orig_shape, dtype=np.float64) * float(subsample_size)
-        pixels = resample_from_cp_grid(image, new_shape, 1.0 / float(subsample_size))
+        grid = original_grid.subsampled(subsample_size)
+        scale = 1.0 / float(subsample_size)
+        pixels = grid.sample_pixels(image, coordinate_scales=(scale, scale))
     else:
         pixels = image.copy()
-        new_shape = np.asarray(orig_shape, dtype=np.float64)
+        grid = original_grid
     if background_subsample_size < 1:
-        back_shape = new_shape * float(background_subsample_size)
-        back_pixels = resample_from_cp_grid(
-            pixels, back_shape, 1.0 / float(background_subsample_size)
+        background_grid = grid.subsampled(background_subsample_size)
+        scale = 1.0 / float(background_subsample_size)
+        back_pixels = background_grid.sample_pixels(
+            pixels, coordinate_scales=(scale, scale)
         )
     else:
         back_pixels = pixels.copy()
-        back_shape = new_shape
+        background_grid = grid
     footprint = morphology.disk(int(element_radius), dtype=np.uint8)
-    back_pixels_mask = np.zeros_like(back_pixels)
-    back_pixels_mask[...] = back_pixels
-    back_pixels = granularity_grey_erosion(back_pixels_mask, footprint)
-    back_pixels_mask = np.zeros_like(back_pixels)
-    back_pixels_mask[...] = back_pixels
-    back_pixels = granularity_grey_dilation(back_pixels_mask, footprint)
+    back_pixels = granularity_grey_erosion(back_pixels, footprint)
+    back_pixels = granularity_grey_dilation(back_pixels, footprint)
     if background_subsample_size < 1:
-        back_pixels = resample_between_cp_grids(back_pixels, back_shape, new_shape)
+        back_pixels = grid.sample_grid(back_pixels, background_grid)
     pixels = pixels - back_pixels
     pixels[pixels < 0] = 0
-    return (pixels, new_shape)
+    return pixels, grid
 
 
 def granularity_grey_erosion(image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
@@ -1413,6 +1495,7 @@ def granularity_grey_dilation(image: np.ndarray, footprint: np.ndarray) -> np.nd
 class GranularityLabelPixels:
     """Foreground label pixels used to compute object granularity means."""
 
+    grid: GranularitySamplingGrid
     object_ids: np.ndarray
     flat_offsets: np.ndarray
     row_offsets: np.ndarray
@@ -1428,9 +1511,10 @@ class GranularityLabelPixels:
     ) -> "GranularityLabelPixels":
         label_array = np.asarray(labels, dtype=np.int32)
         object_ids = np.asarray(object_ids, dtype=np.int32)
+        grid = GranularitySamplingGrid(tuple(label_array.shape))
         if object_ids.size == 0:
             empty = np.empty(0, dtype=np.int64)
-            return cls(object_ids, empty, empty, empty, empty, empty)
+            return cls(grid, object_ids, empty, empty, empty, empty, empty)
         label_to_index = np.full(int(object_ids.max()) + 1, -1, dtype=np.int64)
         label_to_index[object_ids] = np.arange(object_ids.size, dtype=np.int64)
         flat_labels = label_array.ravel()
@@ -1453,6 +1537,7 @@ class GranularityLabelPixels:
             minlength=int(object_ids.size),
         ).astype(np.float64, copy=False)
         return cls(
+            grid=grid,
             object_ids=object_ids,
             flat_offsets=flat_offsets,
             row_offsets=row_offsets,
@@ -1473,11 +1558,10 @@ class GranularityLabelPixels:
     def means_from_resampled_image(
         self,
         image: np.ndarray,
-        logical_shape: np.ndarray,
-        original_shape: tuple[int, int],
+        source_grid: GranularitySamplingGrid,
     ) -> np.ndarray:
         """Return per-object means after CP coordinate-grid resampling."""
-        sampled_values = self.resampled_values(image, logical_shape, original_shape)
+        sampled_values = self.resampled_values(image, source_grid)
         return _granularity_label_values_means(
             sampled_values,
             self.object_indexes,
@@ -1487,24 +1571,11 @@ class GranularityLabelPixels:
     def resampled_values(
         self,
         image: np.ndarray,
-        logical_shape: np.ndarray,
-        original_shape: tuple[int, int],
+        source_grid: GranularitySamplingGrid,
     ) -> np.ndarray:
-        from scipy import ndimage as ndi
-
-        row_coords = self.row_offsets.astype(np.float64)
-        column_coords = self.column_offsets.astype(np.float64)
-        row_coords *= (
-            float(logical_shape[0] - 1) / float(original_shape[0] - 1)
-            if original_shape[0] > 1
-            else 0.0
+        return self.grid.sample_positions(
+            image, source_grid, self.row_offsets, self.column_offsets
         )
-        column_coords *= (
-            float(logical_shape[1] - 1) / float(original_shape[1] - 1)
-            if original_shape[1] > 1
-            else 0.0
-        )
-        return ndi.map_coordinates(image, (row_coords, column_coords), order=1)
 
 
 @njit(cache=True)
@@ -1564,8 +1635,6 @@ def object_granularity_values(
             "and one same-shaped 2-D object-label plane; got "
             f"image shape {image.shape!r} and labels shape {labels.shape!r}."
         )
-    orig_shape = image.shape
-    new_shape = series.new_shape
     label_pixels = GranularityLabelPixels.from_labels(labels, object_range)
     current_means = label_pixels.means_from_image(image)
     start_means = np.maximum(current_means, np.finfo(float).eps)
@@ -1575,8 +1644,7 @@ def object_granularity_values(
         if subsample_size < 1:
             new_means = label_pixels.means_from_resampled_image(
                 rec,
-                new_shape,
-                orig_shape,
+                series.grid,
             )
         else:
             new_means = label_pixels.means_from_image(rec)
@@ -1584,70 +1652,6 @@ def object_granularity_values(
         gs_per_object[:, gs_idx] = gs_values
         current_means = new_means
     return gs_per_object
-
-
-def resample_to_original_shape_cp(
-    image: np.ndarray,
-    logical_shape: np.ndarray,
-    original_shape: tuple[int, int],
-) -> np.ndarray:
-    """Restore a CP-resampled image to the original grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : original_shape[0], 0 : original_shape[1]
-    ].astype(float)
-    row_coords *= (
-        float(logical_shape[0] - 1) / float(original_shape[0] - 1)
-        if original_shape[0] > 1
-        else 0.0
-    )
-    col_coords *= (
-        float(logical_shape[1] - 1) / float(original_shape[1] - 1)
-        if original_shape[1] > 1
-        else 0.0
-    )
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
-
-
-def resample_from_cp_grid(
-    image: np.ndarray,
-    logical_shape: np.ndarray,
-    coordinate_scale: float,
-) -> np.ndarray:
-    """Sample an image with CellProfiler's ``numpy.mgrid`` coordinate grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : logical_shape[0], 0 : logical_shape[1]
-    ].astype(float)
-    row_coords *= float(coordinate_scale)
-    col_coords *= float(coordinate_scale)
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
-
-
-def resample_between_cp_grids(
-    image: np.ndarray,
-    source_logical_shape: np.ndarray,
-    target_logical_shape: np.ndarray,
-) -> np.ndarray:
-    """Sample one CP logical grid onto another CP logical grid."""
-    from scipy import ndimage as ndi
-
-    row_coords, col_coords = np.mgrid[
-        0 : target_logical_shape[0], 0 : target_logical_shape[1]
-    ].astype(float)
-    row_coords *= (
-        float(source_logical_shape[0] - 1) / float(target_logical_shape[0] - 1)
-        if target_logical_shape[0] > 1
-        else 0.0
-    )
-    col_coords *= (
-        float(source_logical_shape[1] - 1) / float(target_logical_shape[1] - 1)
-        if target_logical_shape[1] > 1
-        else 0.0
-    )
-    return ndi.map_coordinates(image, (row_coords, col_coords), order=1)
 
 
 @numpy(contract=ProcessingContract.PURE_2D)
@@ -1817,6 +1821,7 @@ __all__ = [
     "GRANULARITY_IMAGE_SERIES_CACHE",
     "GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES",
     "GRANULARITY_SPECTRUM_LENGTH",
+    "GranularitySamplingGrid",
     "GranularityImageSeries",
     "GranularityImageSeriesRequest",
     "GranularityMeasurement",

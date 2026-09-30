@@ -1,0 +1,30 @@
+[
+  {
+    "path": "openhcs/processing/backends/cellprofiler/texture.py",
+    "baseline": {
+      "I001": 1,
+      "UP037": 5,
+      "UP034": 2,
+      "PLR1730": 5,
+      "PLE0605": 1
+    },
+    "candidate": {
+      "I001": 1,
+      "UP037": 5,
+      "UP034": 2,
+      "PLR1730": 5,
+      "PLE0605": 1
+    }
+  },
+  {
+    "path": "tests/unit/test_cellprofiler_library_loading.py",
+    "baseline": {
+      "I001": 19,
+      "UP034": 3
+    },
+    "candidate": {
+      "I001": 19,
+      "UP034": 3
+    }
+  }
+]

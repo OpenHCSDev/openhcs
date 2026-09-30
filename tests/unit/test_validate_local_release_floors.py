@@ -95,7 +95,7 @@ def test_dynamic_hatch_version_path_is_the_candidate_authority(tmp_path):
     assert floors.validate(tmp_path) == ()
 
 
-def test_setup_py_only_projects_build_command_hooks():
+def test_setup_py_only_projects_build_hooks_and_native_extensions():
     setup_path = floors.REPO_ROOT / "setup.py"
     module = ast.parse(setup_path.read_text(encoding="utf-8"), filename=str(setup_path))
     setup_calls = tuple(
@@ -107,7 +107,10 @@ def test_setup_py_only_projects_build_command_hooks():
     )
 
     assert len(setup_calls) == 1
-    assert {keyword.arg for keyword in setup_calls[0].keywords} == {"cmdclass"}
+    assert {keyword.arg for keyword in setup_calls[0].keywords} == {
+        "cmdclass",
+        "ext_modules",
+    }
     obsolete_dependency_selectors = {
         "PYPI_DEPENDENCIES",
         "get_local_external_dependencies",

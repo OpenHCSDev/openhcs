@@ -1,0 +1,37 @@
+[
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.0025302250869572163,
+    "saved": "request_1.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.1799431419931352,
+    "saved": "request_2.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.147697142791003,
+    "saved": "request_3.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.18998617585748434,
+    "saved": "request_4.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.1301938877440989,
+    "saved": "request_5.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.241713706869632,
+    "saved": "request_6.pkl"
+  },
+  {
+    "boundary": "radial_measure",
+    "seconds": 0.36023247614502907,
+    "saved": "request_7.pkl"
+  }
+]

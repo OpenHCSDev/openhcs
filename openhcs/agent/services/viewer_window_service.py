@@ -37,6 +37,10 @@ from openhcs.agent.dto.common import (
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
+    ViewerWindowPolylineMeasurementRequest,
+    ViewerWindowPolylineMeasurementResult,
+    ViewerWindowRegionMeasurementRequest,
+    ViewerWindowRegionMeasurementResult,
     ViewerWindowCloseRequest,
     ViewerWindowControlRequest,
     ViewerWindowDescriptor,
@@ -83,6 +87,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentValueParser,
     ViewerLayerAxisProjection,
 )
+from openhcs.runtime.viewer_protocol import OpenHCSViewerControlMessageType
 from openhcs.runtime.viewer_protocol import (
     ViewerControlField,
     ViewerControlMessageRequest,
@@ -100,6 +105,16 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 OptionalViewerFieldT = TypeVar("OptionalViewerFieldT")
 ValidationWarningContextT = TypeVar("ValidationWarningContextT")
+MeasurementRequestT = TypeVar(
+    "MeasurementRequestT",
+    ViewerWindowPolylineMeasurementRequest,
+    ViewerWindowRegionMeasurementRequest,
+)
+MeasurementResultT = TypeVar(
+    "MeasurementResultT",
+    ViewerWindowPolylineMeasurementResult,
+    ViewerWindowRegionMeasurementResult,
+)
 
 
 ComponentIndex = tuple[int, ...]
@@ -1083,6 +1098,16 @@ class ViewerWindowGatewayABC(ABC):
     def close_window(self, request: ViewerWindowCloseRequest) -> EndpointShutdownResult:
         """Close the exact viewer endpoint and prove process termination."""
 
+    def measure_polyline(
+        self, request: ViewerWindowPolylineMeasurementRequest
+    ) -> JsonObject:
+        raise NotImplementedError
+
+    def measure_region(
+        self, request: ViewerWindowRegionMeasurementRequest
+    ) -> JsonObject:
+        raise NotImplementedError
+
     def apply_intensity_window(
         self,
         request: ViewerWindowIntensityWindowRequest,
@@ -1174,6 +1199,28 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
         }
         return self._send_control_message(request, message)
+
+    def measure_polyline(
+        self, request: ViewerWindowPolylineMeasurementRequest
+    ) -> JsonObject:
+        return self._send_control_message(
+            request,
+            {
+                ViewerControlResponseField.TYPE.value: OpenHCSViewerControlMessageType.MEASURE_POLYLINE.value,
+                ViewerControlResponseField.PAYLOAD.value: request.measurement,
+            },
+        )
+
+    def measure_region(
+        self, request: ViewerWindowRegionMeasurementRequest
+    ) -> JsonObject:
+        return self._send_control_message(
+            request,
+            {
+                ViewerControlResponseField.TYPE.value: OpenHCSViewerControlMessageType.MEASURE_REGION.value,
+                ViewerControlResponseField.PAYLOAD.value: request.measurement,
+            },
+        )
 
     def _send_control_message(
         self,
@@ -1605,6 +1652,60 @@ class ViewerWindowService:
                 error=AgentError.from_exception(
                     "viewer_layer_isolation_response_invalid",
                     exc,
+                ),
+            )
+
+    def measure_polyline(
+        self, request: ViewerWindowPolylineMeasurementRequest
+    ) -> ViewerWindowPolylineMeasurementResult:
+        return self._feature_measurement(
+            request,
+            self._gateway.measure_polyline,
+            ViewerWindowPolylineMeasurementResult,
+        )
+
+    def measure_region(
+        self, request: ViewerWindowRegionMeasurementRequest
+    ) -> ViewerWindowRegionMeasurementResult:
+        return self._feature_measurement(
+            request, self._gateway.measure_region, ViewerWindowRegionMeasurementResult
+        )
+
+    def _feature_measurement(
+        self,
+        request: MeasurementRequestT,
+        send: Callable[[MeasurementRequestT], Mapping[str, object]],
+        result_type: type[MeasurementResultT],
+    ) -> MeasurementResultT:
+        """Decode the declared DTO once; do not reconstruct pixel/geometry records."""
+        try:
+            response = send(request)
+            if response[ViewerControlResponseField.STATUS.value] != self.SUCCESS_STATUS:
+                raise ValueError(response[ViewerControlResponseField.MESSAGE.value])
+            result = dataclass_from_mapping(
+                result_type,
+                {
+                    "schema_version": SCHEMA_VERSION,
+                    "connection": request.connection,
+                    "observed": True,
+                    "measurement": response["measurement"],
+                    "coordinates": response["coordinates"],
+                },
+            )
+            if (
+                result.coordinates.route_key != request.measurement.route_key
+                or result.coordinates.axis_indices
+                != dict(request.measurement.axis_indices)
+            ):
+                raise ValueError("Measurement response route/axis identity mismatch.")
+            if result.measurement.vertices_yx != request.measurement.vertices_yx:
+                raise ValueError("Measurement response native coordinate mismatch.")
+            return result
+        except Exception as error:
+            return result_type.from_error(
+                connection=request.connection,
+                error=AgentError.from_exception(
+                    "viewer_feature_measurement_failed", error
                 ),
             )
 

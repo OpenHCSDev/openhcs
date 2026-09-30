@@ -1,0 +1,18 @@
+[
+  {
+    "wells": 1,
+    "native_jobs": 1,
+    "openhcs_execution_seconds": 18.504889249801636,
+    "openhcs_total_seconds": 24.527146397158504,
+    "native_warm_invocation_seconds": 65.92385272402316,
+    "execution_ratio": 3.562509985015438
+  },
+  {
+    "wells": 16,
+    "native_jobs": 4,
+    "openhcs_execution_seconds": 100.07364988327026,
+    "openhcs_total_seconds": 113.51268391218036,
+    "native_warm_invocation_seconds": 364.23009847523645,
+    "execution_ratio": 3.639620408569972
+  }
+]

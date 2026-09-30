@@ -2,6 +2,10 @@
 
 import logging
 import numpy as np
+from metaclass_registry import AutoRegisterMeta
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerCallableKernelPreparation,
+)
 import time
 from typing import TYPE_CHECKING
 from enum import Enum
@@ -791,98 +795,105 @@ class IdentifyPrimaryObjectsModule(
         )
 
 
-def _prepare_identify_primary_objects() -> None:
-    """Compile Numba/backend kernels used by IdentifyPrimaryObjects."""
-    labels = np.array(
-        [[0, 1, 1, 0], [0, 1, 1, 2], [3, 3, 2, 2], [0, 0, 2, 2]], dtype=np.int32
-    )
-    areas = np.bincount(labels.ravel())
-    filter_labels_by_area_numba(
-        np.ascontiguousarray(labels), np.ascontiguousarray(areas), 2.0, 4.0
-    )
-    filter_labels_by_diameter_range(labels, 2.0, 4.0)
-    filter_physical_border_objects_numba(labels, True, True, True, True)
-    stacked_labels = np.stack((labels, labels), axis=0)
-    stacked_areas = np.bincount(stacked_labels.ravel())
-    filter_labels_by_area_numba(
-        np.ascontiguousarray(stacked_labels),
-        np.ascontiguousarray(stacked_areas),
-        2.0,
-        4.0,
-    )
-    filter_labels_by_diameter_range(stacked_labels, 2.0, 4.0)
-    image = np.zeros((96, 96), dtype=np.float32)
-    yy, xx = np.ogrid[:96, :96]
-    image[(yy - 32) ** 2 + (xx - 32) ** 2 <= 12 * 12] = 0.8
-    image[(yy - 56) ** 2 + (xx - 56) ** 2 <= 12 * 12] = 0.75
-    binary = image > np.float32(0.5)
-    cellprofiler_threshold_diagnostics(
-        image,
-        binary,
-        final_threshold=0.5,
-        original_threshold=0.5,
-    )
-    cellprofiler_threshold_diagnostics(
-        image,
-        binary,
-        final_threshold=0.5,
-        original_threshold=0.5,
-    )
-    rectangular_mask = np.zeros_like(binary, dtype=bool)
-    rectangular_mask[16:80, 16:80] = True
-    cellprofiler_threshold_diagnostics(
-        image,
-        binary,
-        final_threshold=0.5,
-        original_threshold=0.5,
-        mask=rectangular_mask,
-    )
-    cellprofiler_threshold_diagnostics(
-        image,
-        binary,
-        final_threshold=0.5,
-        original_threshold=0.5,
-        mask=rectangular_mask,
-    )
-    identify_primary_objects.__wrapped__(
-        image,
-        min_diameter=10,
-        max_diameter=45,
-        unclump_method=UnclumpMethod.SHAPE,
-        watershed_method=WatershedMethod.SHAPE,
-        low_res_maxima=True,
-        use_advanced_settings=True,
-        threshold_method=CellProfilerThresholdMethod.MINIMUM_CROSS_ENTROPY,
-    )
-    identify_primary_objects.__wrapped__(
-        image,
-        min_diameter=3,
-        max_diameter=15,
-        unclump_method=UnclumpMethod.INTENSITY,
-        watershed_method=WatershedMethod.INTENSITY,
-        low_res_maxima=True,
-        use_advanced_settings=True,
-        threshold_method=CellProfilerThresholdMethod.OTSU,
-        otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
-        assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
-        threshold_smoothing_scale=1.3488,
-    )
-    identify_primary_objects.__wrapped__(
-        image,
-        min_diameter=3,
-        max_diameter=15,
-        unclump_method=UnclumpMethod.INTENSITY,
-        watershed_method=WatershedMethod.INTENSITY,
-        low_res_maxima=True,
-        use_advanced_settings=True,
-        threshold_method=CellProfilerThresholdMethod.OTSU,
-        otsu_class_count=CellProfilerOtsuMethod.TWO_CLASS,
-        assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
-        threshold_smoothing_scale=1.3488,
-    )
+class IdentifyPrimaryObjectsKernelPreparation(
+    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Own the persistent kernel cache work for identify_primary_objects."""
+
+    def execute(self) -> None:
+        """Compile Numba/backend kernels used by IdentifyPrimaryObjects."""
+        labels = np.array(
+            [[0, 1, 1, 0], [0, 1, 1, 2], [3, 3, 2, 2], [0, 0, 2, 2]], dtype=np.int32
+        )
+        areas = np.bincount(labels.ravel())
+        filter_labels_by_area_numba(
+            np.ascontiguousarray(labels), np.ascontiguousarray(areas), 2.0, 4.0
+        )
+        filter_labels_by_diameter_range(labels, 2.0, 4.0)
+        filter_physical_border_objects_numba(labels, True, True, True, True)
+        stacked_labels = np.stack((labels, labels), axis=0)
+        stacked_areas = np.bincount(stacked_labels.ravel())
+        filter_labels_by_area_numba(
+            np.ascontiguousarray(stacked_labels),
+            np.ascontiguousarray(stacked_areas),
+            2.0,
+            4.0,
+        )
+        filter_labels_by_diameter_range(stacked_labels, 2.0, 4.0)
+        image = np.zeros((96, 96), dtype=np.float32)
+        yy, xx = np.ogrid[:96, :96]
+        image[(yy - 32) ** 2 + (xx - 32) ** 2 <= 12 * 12] = 0.8
+        image[(yy - 56) ** 2 + (xx - 56) ** 2 <= 12 * 12] = 0.75
+        binary = image > np.float32(0.5)
+        cellprofiler_threshold_diagnostics(
+            image,
+            binary,
+            final_threshold=0.5,
+            original_threshold=0.5,
+        )
+        cellprofiler_threshold_diagnostics(
+            image,
+            binary,
+            final_threshold=0.5,
+            original_threshold=0.5,
+        )
+        rectangular_mask = np.zeros_like(binary, dtype=bool)
+        rectangular_mask[16:80, 16:80] = True
+        cellprofiler_threshold_diagnostics(
+            image,
+            binary,
+            final_threshold=0.5,
+            original_threshold=0.5,
+            mask=rectangular_mask,
+        )
+        cellprofiler_threshold_diagnostics(
+            image,
+            binary,
+            final_threshold=0.5,
+            original_threshold=0.5,
+            mask=rectangular_mask,
+        )
+        identify_primary_objects.__wrapped__(
+            image,
+            min_diameter=10,
+            max_diameter=45,
+            unclump_method=UnclumpMethod.SHAPE,
+            watershed_method=WatershedMethod.SHAPE,
+            low_res_maxima=True,
+            use_advanced_settings=True,
+            threshold_method=CellProfilerThresholdMethod.MINIMUM_CROSS_ENTROPY,
+        )
+        identify_primary_objects.__wrapped__(
+            image,
+            min_diameter=3,
+            max_diameter=15,
+            unclump_method=UnclumpMethod.INTENSITY,
+            watershed_method=WatershedMethod.INTENSITY,
+            low_res_maxima=True,
+            use_advanced_settings=True,
+            threshold_method=CellProfilerThresholdMethod.OTSU,
+            otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
+            assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
+            threshold_smoothing_scale=1.3488,
+        )
+        identify_primary_objects.__wrapped__(
+            image,
+            min_diameter=3,
+            max_diameter=15,
+            unclump_method=UnclumpMethod.INTENSITY,
+            watershed_method=WatershedMethod.INTENSITY,
+            low_res_maxima=True,
+            use_advanced_settings=True,
+            threshold_method=CellProfilerThresholdMethod.OTSU,
+            otsu_class_count=CellProfilerOtsuMethod.TWO_CLASS,
+            assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
+            threshold_smoothing_scale=1.3488,
+        )
 
 
-identify_primary_objects.__openhcs_prepare__ = _prepare_identify_primary_objects
+identify_primary_objects.__openhcs_prepare__ = (
+    IdentifyPrimaryObjectsKernelPreparation().execute
+)
 __all__ = public_names_from_objects(
     ExcessObjectHandling,
     FillHolesOption,
