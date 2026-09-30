@@ -1,0 +1,37 @@
+changed between 32d070c261d9bcfeb2354b70203f79a71d15ce40..HEAD (touched files, after minus before)
+
+change in counts (32d070c261d9bcfeb2354b70203f79a71d15ce40..HEAD): read these first when code was deleted as well as added
+  type_identity_check           +0
+  long_boolean_chain            +0
+  boolean_chain_terms           +0
+  codec_subclass                +0
+  foreign_absence_probe         +0
+  string_dispatch               +0
+  type_switch                   +0
+  string_dispatch_arms          +0
+  type_switch_arms              +0
+  string_key_subscript          +0
+  literal_key_get               +0
+  string_equality               +0
+  none_identity                 +3
+  isinstance_call               +0
+  attribute_by_name             +0
+  getattr_default               +0
+  broad_except                  +0
+  json_loads                    +0
+  long_function                 +0
+  class_definition              +7
+  abstract_base                 +0
+  enum_class                    +0
+  code lines                  +231
+
+(densities omitted: under 500 net code lines, a ratio of changes to net lines is meaningless)
+
+Top 12 files by weighted debt (type_identity_check x3, long_boolean_chain x5, boolean_chain_terms x1, codec_subclass x3, foreign_absence_probe x1, string_dispatch x5, type_switch x5, string_dispatch_arms x1, type_switch_arms x1, string_key_subscript x1, literal_key_get x1, string_equality x1, none_identity x1, isinstance_call x1, attribute_by_name x3, getattr_default x3, broad_except x2):
+       2  openhcs/runtime/zmq_execution_client.py  (code lines +48)
+       1  openhcs/agent/services/runtime_server_service.py  (code lines +106)
+       0  openhcs/agent/capabilities.py  (code lines +37)
+       0  openhcs/agent/dto/execution.py  (code lines +33)
+       0  openhcs/agent/services/llm_context_service.py  (code lines +7)
+       0  openhcs/core/xdg_paths.py  (code lines +0)
+       0  openhcs/mcp/context.py  (code lines +0)

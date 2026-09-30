@@ -130,3 +130,25 @@ was closed in its own module, not bypassed in reflection.
 Latest actual guard /home20.4GiB RAM11.0GiB; historical swap13.3GiB is the only
 warning. No native/MCP validation or installed mutation. Remaining live gates
 above still apply; source pair-reservation tests are not cross-process live proof.
+
+## Focused structural census
+
+Executed current skill `debt_census.py` on the committed OpenHCS production diff
+from current main32d070c26 tobe47d9f63, and the paired ZMQ production diff from
+0f9e840a9 tob7f6f5d22. Zero growth in string/type dispatch and arms, codec
+subclasses, raw string-key subscripts, getattr/default probes, and foreign
+absence probes in both scoped diffs. This is a candidate screen, not a global
+NRA ownership proof. Native diff adds one JSON decode at the existing transport
+startup-lock boundary, one broad catch that preserves the exact spawned child
+as uncertainty (never absence/kill/retry), and one long canonical exclusive
+startup method. Those are inspected owner decisions, not silently reported as
+zero debt. OpenHCS adds231 code lines, native114; ordinary optional-plan/socket/
+heartbeat checks add three None predicates in each scope, no string dispatch.
+Captures: `source-census.{txt,json}`, `dependency-census.{txt,json}`.
+
+Frozen dependency pins for parent review:
+ZMQRuntime `b7f6f5d22f44a24878314192d4d32963b8423c04` (draft9),
+metaclass-registry `448cdf07e0a0b513a9c9a8f67e896f601da11771` (draft1).
+Parent can release the finite native journey after blind freeze. No live worker
+handle was started; all source-test commands are terminal. Owned fixture scratch
+was1.8MiB and is disposable after retaining these receipts.

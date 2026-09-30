@@ -17,11 +17,16 @@ peak280400KiB. Initial62-pass checkpoint receipts retained.
 Verified source imports and focused nested handle/path/foreign/uncertainty/native
 readiness/declaration projection plus unchanged complete QA/context bounds.
 No native/MCP/GUI/JVM was launched. No installed/live/performance proof claimed.
-Receipt and actual pattern review: [runtime_bootstrap_20260930.md](runtime_bootstrap_20260930.md).
+Receipt, actual pattern review and focused census:
+[runtime_bootstrap_20260930.md](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930.md).
 
 Source hardening includes both-address pre-bind reservations, post-spawn
 uncertainty handles, expired-deadline no-spawn, real offline CLI projection and
 authoring/core exposure. Normally integrated current main32d070c26.
+Exact dependency pins: ZMQb7f6f5d22 and metaclass-registry448cdf07.
+Scoped candidate census: no string/type dispatch/arms, raw-key, codec or foreign
+absence-probe growth. Native reservation JSON decode/uncertainty catch/long
+startup method are reviewed leads, not a global clean claim.
 
 Remaining: paired review, cross-process native endpoint-pair/uncertainty evidence,
 released serial slot for full synthetic startup -> prep -> registration ->
