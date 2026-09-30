@@ -42,7 +42,6 @@ from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -348,11 +347,10 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
 
     def plate_image_metadata(self) -> ImagePayloadMetadata:
         """Return acquisition-owned calibration for source-pixel coordinates."""
-        pixel_size = float(
-            self.microscope_handler.metadata_handler.get_pixel_size(self.plate_path)
-        )
         return ImagePayloadMetadata(
-            source_voxel_spacing=SourceVoxelSpacing((pixel_size, pixel_size))
+            source_voxel_spacing=self.microscope_handler.metadata_handler.source_voxel_spacing(
+                self.plate_path
+            )
         )
 
     def calibrated_metadata(
