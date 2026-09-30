@@ -1,0 +1,4 @@
+{
+  "status": "timing evidence rejected",
+  "reason": "Saved-input replay runs launched while structural audits were running and both CPU5 replay processes could overlap. Exact saved-output parity remains valid; timings must not be promoted. Original observations retained; rerun sequentially after all checks are terminal."
+}

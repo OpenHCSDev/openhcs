@@ -1,0 +1,215 @@
+{
+  "base": "c2d82ba23cedf00fe5652c2d1b4af0a6623fe6f6",
+  "authorization": "User explicitly requests removal/migration of all optimization work at incorrect abstraction layers, generic platform infrastructure and nominal ownership.",
+  "census": {
+    "source_revision": "eea9c52633c0d45e35d240e224118d87412ee823",
+    "module_count": 702,
+    "original_class_count": 5121,
+    "projected_count": 5109
+  },
+  "census_transition": "Git proves every censused OpenHCS/setup.py source unchanged between eea9c526 and current c2d82ba; updated dependency pins admitted separately by fresh full R1 context.",
+  "OPEN": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2618,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2696,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3064,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "domain": "Correlated aligned-output fanout and immutable lexical source path derivation.",
+  "dominant_term": "Fresh public installed runtime output projection/unstacking 1.94s profiled, 2820 scalar projections; stack calls across measured phases approximately 0.06s. Prototype on three actual output bundles halves scalar fanout work with exact outputs.",
+  "maximum_payoff": "About 0.2\u20130.3s per 19-bundle well for duplicate pass alone; structural dependency of larger metadata projection improvement. Path consolidation is task-authorized ownership cleanup, not an asserted material speedup.",
+  "audit": [
+    {
+      "path": "openhcs/core/processing_preparation.py",
+      "owner": "PreparationOperation / CallablePreparation / PreparationCacheBatch",
+      "decision": "Keep generic nominal declared preparation orchestration; workers derive operations from declarations, no numerical function-name roster."
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/registry_service.py",
+      "owner": "RegistryService",
+      "decision": "Keep shared catalog preparation and callable resolution; endpoint prepares catalog and declared kernels before readiness."
+    },
+    {
+      "path": "openhcs/core/steps/function_runtime.py",
+      "owner": "FunctionInvocationCallableResolver / existing runtime stack cache",
+      "decision": "Keep generic invocation-contract resolution and execution-local stack lifecycle; move correlated output fanout to alignment declaration owner."
+    },
+    {
+      "path": "openhcs/core/image_file_serialization.py",
+      "owner": "ImageFileFormat / ImageFileSourceMetadata / ImageFileRevision",
+      "decision": "Shared format header facts belong here; successful immutable result cache uses standard bounded LRU, no pixels or per-function cases."
+    },
+    {
+      "path": "openhcs/core/source_binding_selection.py",
+      "owner": "SourceIdentityResolutionContext / SourceBindingMatchedImageSet",
+      "decision": "Keep correlated query-local membership authority; move pure duplicated pathlib/name/absolute parsing to source_path_identity."
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "owner": "StepOutputManifestStore",
+      "decision": "Keep manifest-token producer index; move pure lexical name/POSIX/relative path memoization to source_path_identity."
+    },
+    {
+      "path": "openhcs/core/steps/function_output_identity.py",
+      "owner": "FunctionOutputIdentityCache",
+      "decision": "Keep context/parser/provenance identity semantics; move duplicate path-name memoization."
+    },
+    {
+      "path": "openhcs/processing/materialization/core.py",
+      "owner": "Materialization path declarations",
+      "decision": "Keep writer/configuration-specific naming; move pure parent/stem path reuse."
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/colocalization.py",
+      "owner": "ColocalizationCostesThresholdBatch / existing RuntimeBatchProgram",
+      "decision": "Retain numerical pixel-pair/rank/label keys as intrinsic mathematical behavior; generic runtime orchestration already consumes nominal batch declarations, no Costes-special cache remains on ProcessingContext."
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler",
+      "owner": "Concrete algorithm/provider families",
+      "decision": "Keep numerical kernels/provider-specific operation declarations; generic preparation infrastructure derives their execution."
+    }
+  ],
+  "required_pairs": [
+    "AlignedImageStack owns one correlated scalar-output/context projection algorithm, inherited unchanged by ImageOutputBundle.",
+    "Generic runtime and scalar source-context consumers derive views from the aligned owner.",
+    "Existing source_path_identity owns parsed immutable pathlib.Path reuse; filename/stem/parent/absolute/POSIX views derive from Path.",
+    "Relative/join derivations preserve exact native lexical behavior and errors."
+  ],
+  "forbidden_pairs": [
+    "Processing-function switches or pipeline-name cache optimizations.",
+    "Independent output/context traversals that reconstruct payloads just to count them.",
+    "Duplicate per-module pure lexical path caches.",
+    "Persistent cached mutable payload metadata or pixels."
+  ],
+  "proof_limits": [
+    "Authored exact source transaction checks syntax and revisions, not automatic native equivalence.",
+    "No complete global semantic invocation proof; preserve unprojected OPEN rows.",
+    "Numerical/invalidation/parity/performance gates remain executed obligations."
+  ]
+}

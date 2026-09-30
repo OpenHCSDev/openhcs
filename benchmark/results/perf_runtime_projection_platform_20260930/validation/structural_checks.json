@@ -1,0 +1,28 @@
+{
+  "r0": {
+    "base_revision": "d1c6ab72ca252ea93656eeaaf84d34b81abd8317",
+    "head_revision": "c20b56b411778bdf3bf2909cae280f20e55f9977",
+    "paths": [
+      "openhcs/core/aligned_image_payload.py",
+      "openhcs/core/source_binding_selection.py",
+      "openhcs/core/source_path_identity.py",
+      "openhcs/core/source_workspace_projection.py",
+      "openhcs/core/steps/function_output_identity.py",
+      "openhcs/core/steps/function_output_manifest.py",
+      "openhcs/core/steps/function_runtime.py",
+      "openhcs/processing/materialization/core.py"
+    ]
+  },
+  "r0_metric_count": 5175,
+  "r0_increases": {},
+  "census_top_level_keys": [
+    "source_revision",
+    "module_count",
+    "original_class_count",
+    "projected_count",
+    "classes"
+  ],
+  "census_receipt_sha256": "dc5c4cec4c638ec629cdd0f716ac9198380792730ddccbf8ea2caff47fadbcbb",
+  "coverage": "702 modules; 5121 original ClassDefs, 5109 projected, 12 original OPEN rows retained in the full RUNS census and ownership receipt.",
+  "proof_limits": "Authored revision/syntax-checked migrations; R0 and configured R1 structural checks. These are not automatic native invocation or whole-program equivalence proofs."
+}

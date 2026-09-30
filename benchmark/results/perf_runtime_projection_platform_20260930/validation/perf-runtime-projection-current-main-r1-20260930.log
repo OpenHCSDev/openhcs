@@ -1,0 +1,31 @@
+R1 d1c6ab72ca252ea93656eeaaf84d34b81abd8317: NRA cache=miss, projections=3030, prepare=50.868s, analysis=3.141s
+R1 c20b56b411778bdf3bf2909cae280f20e55f9977: NRA cache=miss, projections=3030, prepare=51.397s, analysis=3.103s
+{
+  "base": "d1c6ab72ca252ea93656eeaaf84d34b81abd8317",
+  "head": "c20b56b411778bdf3bf2909cae280f20e55f9977",
+  "changed": [
+    "openhcs/core/aligned_image_payload.py",
+    "openhcs/core/source_binding_selection.py",
+    "openhcs/core/source_path_identity.py",
+    "openhcs/core/source_workspace_projection.py",
+    "openhcs/core/steps/function_output_identity.py",
+    "openhcs/core/steps/function_output_manifest.py",
+    "openhcs/core/steps/function_runtime.py",
+    "openhcs/processing/materialization/core.py"
+  ],
+  "before": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/source_binding_selection.py",
+      "count": 1
+    }
+  ],
+  "after": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/source_binding_selection.py",
+      "count": 1
+    }
+  ],
+  "increased": []
+}
