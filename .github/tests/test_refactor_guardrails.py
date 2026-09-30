@@ -9,7 +9,14 @@ from pathlib import Path
 import pytest
 import yaml
 
-from scripts.check_refactor_r1 import compare, git, scan_counts
+from scripts.check_refactor_r1 import (
+    R1EmptyReportScope,
+    SourceRevision,
+    compare,
+    git,
+    json_report_object,
+    scan_counts,
+)
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -126,6 +133,77 @@ def test_no_changed_python_is_explicit_empty_scope_without_dependency_start(
     result = compare(repository, base, head, tmp_path / "not-created")
     assert result.changed == ()
     assert not result.increased
+    assert not (tmp_path / "not-created").exists()
+
+
+@pytest.mark.parametrize("path", ["openhcs/read.py", "openhcs/[read]\t*.py"])
+def test_deleted_source_scope_is_unmeasured_and_never_parsed(
+    repository, tmp_path, monkeypatch, path
+):
+    # Invalid deleted source is no longer a report target, not a zero baseline.
+    base = commit(repository, path, "def broken(:\n")
+    git(repository, "rm", "--", path)
+    head = commit(repository, "docs/note.md", "remove unused source")
+
+    def unexpected_snapshot(*args, **kwargs):
+        pytest.fail("Empty head report scope must not materialize/parse context")
+
+    monkeypatch.setattr(SourceRevision, "materialize", unexpected_snapshot)
+    scratch = tmp_path / "not-created"
+    result = compare(repository, base, head, scratch, budget_seconds=0)
+    assert isinstance(result, R1EmptyReportScope)
+    assert result.changed == (path,)
+    assert not result.increased
+    payload = json_report_object(result)
+    assert payload["reason"] == "no_surviving_changed_python"
+    assert "before" not in payload and "after" not in payload
+    assert not scratch.exists()
+
+    # The real CLI must also return a scoped result without invoking the scanner.
+    command = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.check_refactor_r1",
+            "--base",
+            base,
+            "--head",
+            head,
+            "--scratch-root",
+            str(scratch),
+            "--budget-seconds",
+            "0",
+        ],
+        cwd=repository,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert command.returncode == 0, command.stderr
+    assert json.loads(command.stdout)["reason"] == result.reason
+    assert not scratch.exists()
+
+
+@pytest.mark.parametrize("destination", ["openhcs/moved.py", "openhcs/[moved]\t*.py"])
+def test_moved_surviving_source_is_scanned_as_a_new_report_target(
+    repository, tmp_path, destination
+):
+    base = commit(repository, "openhcs/original.py", RAW)
+    git(repository, "rm", "openhcs/original.py")
+    head = commit(repository, destination, RAW)
+    result = compare(repository, base, head, tmp_path / "scratch")
+    assert [(item.file, item.count) for item in result.increased] == [(destination, 1)]
+    assert [(item.file, item.count) for item in result.before] == [
+        ("openhcs/original.py", 1)
+    ]
+
+
+def test_empty_scope_rejects_an_uninitialized_repository_child(repository, tmp_path):
+    base = git(repository, "rev-parse", "HEAD").decode().strip()
+    child = repository / "external" / "not-initialized"
+    child.mkdir(parents=True)
+    with pytest.raises(RuntimeError, match="not initialized"):
+        compare(child, base, base, tmp_path / "not-created")
     assert not (tmp_path / "not-created").exists()
 
 
