@@ -92,13 +92,13 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
         assert flow is not None and flow.backend == 'disk'
         output_dir = Path(flow.output_dir)
         saved = tuple(item for item in projections(Path(flow.plate_root))
-                      if (Path(flow.plate_root)/item.ref.path).is_relative_to(output_dir))
+                      if (Path(flow.plate_root)/item.ref.backend_address).is_relative_to(output_dir))
         assert len(saved) == len(indices), (output_dir, saved)
         assert {item.address for item in saved} == {native[index].address for index in indices}
         saved_images = []
         for projection in saved:
             [source] = [index for index in indices if native[index].address == projection.address]
-            path = Path(flow.plate_root)/projection.ref.path
+            path = Path(flow.plate_root)/projection.ref.backend_address
             np.testing.assert_array_equal(ImageFileFormat.require_path(path).read(path), pixels[source])
             assert projection.image_metadata is not None
             assert addresses(projection.image_metadata) == (source_addresses[source],)

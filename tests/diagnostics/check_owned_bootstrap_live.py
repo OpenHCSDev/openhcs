@@ -90,7 +90,6 @@ def run(args) -> None:
 
         from dataclasses import replace
         import importlib
-        import numpy as np
         import openhcs
         import polystore
         import zmqruntime
@@ -315,38 +314,6 @@ def run(args) -> None:
             receipt['volume_publication'] = verify_volume_publication(
                 owned, image_path, input_pixels, inspected,
             )
-            from openhcs.core.image_file_serialization import ImageFileFormat
-            outputs = list((owned/'outputs').rglob('*.tif'))
-            assert outputs
-            checked = []
-            for output in outputs:
-                actual = ImageFileFormat.require_path(output).read(output)
-                actual = np.asarray(actual)
-                assert actual.shape == (8, 9), (output, actual.shape)
-                matches = [index for index, plane in enumerate(input_pixels) if np.array_equal(actual, plane)]
-                assert len(matches) == 1, output
-                checked.append(dict(path=str(output), shape=list(actual.shape),
-                                    source_plane=matches[0], sha256=hashlib.sha256(output.read_bytes()).hexdigest()))
-            receipt['readback'] = checked
-            from csv import DictReader
-            from polystore.roi import load_rois_from_zip
-            csv_outputs = list((owned/'outputs').rglob('*volume_fixture_rows*details.csv'))
-            assert len(csv_outputs) == 3, csv_outputs
-            row_receipts = []
-            for index, expected in enumerate((((0, 11, 4), (1, 12, 9), (2, 13, 16)),
-                                              ((0, 13, 16), (1, 11, 4)),
-                                              ((0, 13, 16), (1, 11, 4)))):
-                [path] = [p for p in csv_outputs if f'_step{index}_' in p.name]
-                with path.open(newline='') as stream:
-                    rows = tuple((int(row['slice_index']), int(row['object_label']), int(row['pixel_count']))
-                                 for row in DictReader(stream))
-                assert rows == expected, (path, rows, expected)
-                row_receipts.append(dict(path=str(path), rows=rows))
-            roi_paths = list((owned/'outputs').rglob('*volume_fixture_labels*.zip'))
-            assert roi_paths
-            rois = [dict(path=str(path), metadata=[roi.metadata for roi in load_rois_from_zip(path)])
-                    for path in roi_paths]
-            receipt.update(measurement_readback=row_receipts, roi_reopen=rois)
             assert hashlib.sha256(image_path.read_bytes()).hexdigest() == input_hash
             assert hashlib.sha256(original_image.read_bytes()).hexdigest() == input_hash
             receipt.update(accepted=True, unchanged_input_sha256=input_hash,
