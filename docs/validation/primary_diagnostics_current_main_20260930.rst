@@ -167,3 +167,31 @@ component_values().items accessor. The original failed XML is retained. Final
 expanded run:98PASS18.82s. Directory existence/type admission is now owned by
 AnalysisResultDirectory, rather than growing OpenHCSMetadataHandler. Its focused
 guard and corrected installed viewer acceptance remain pending.
+
+Installed live result
+---------------------
+
+Directory owner suite7PASS2.86s and explicit absent/file/directory guard3PASS1.92s.
+Original packaged ratchet againstmain616 at2ae8f0b95:PASS5154 metrics, no positive
+deltas, OpenHCSMetadataHandler excess reduced8. Original failed screen retained.
+
+Actual installed MCP at2ae8f0b95, ordinary editable imports with PYTHONPATH unset,
+successfully reopened raw, threshold-support TIFF selected as result, and the
+primary ROI archive on isolated:91/5992. Parent personally opened raw-only,
+result-only, combined and diagnostic-only PNGs. All have nativecanvas953x470,
+XY orientation, point[0,0,0,0,0,15,19]; camera center[0,15.5,19.5],zoom11.1625,
+unit native scale and zero translation. Raw contrast approximately[0,.862224],
+gamma1, stage[0,1]. Two ROI polygons align with bright/dim synthetic support;
+the binary diagnostic shows their two foreground components. Technical
+reopening/visibility/alignment PASS, not biological segmentation acceptance.
+Full terminal inputs/responses, exact PNG hashes and evidence are retained in
+the parent ledger's primary-diagnostics-viewer-binding-20260930/ACCEPTANCE.rst.
+Explicit MCP close succeeded and the shell terminated normallyexit0.
+
+New main7b169084 SaveImages binding fix is normally integrated atd556afb8 in
+the isolated source tree. No dependency gitlink changes or competing patch.
+Latest-main combined suite171PASS22.22s, including the real compiled persistence
+journey, inventory/streaming/metadata families and the updated function artifact
+binding suite. Original packaged ratchet against7b169084:PASS5155 metrics, zero
+positive deltas. Installed activation of this integrated source remains next;
+the live result above specifically identifies2ae8, not unexecuted later code.
