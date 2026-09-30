@@ -12,6 +12,17 @@ exclusive startup/process identity, and [metaclass-registry1](https://github.com
 non-creating cache path projection at448cdf0. Exact gitlinks are committed.
 Parent remains integration/install/live owner; frozen source/skill/runtime untouched.
 
+**Current paired-pin checkpoint:** based on normally integrated main65, PR256
+now records exact published nativePR9 **2b3d821f1394b7a172f6276fe7e302f33d69be96**
+(implementation4434b11, includes mergedACK3374), plus ArrayBridge409. Pin/source
+test commitbd070a329: **181 current-pair source casesPASS5.44s**, zero skips/
+deselections; process6.24s/263292KiB/exit0. No new production edit or native run.
+The earlier recorded28d9ed6 mismatch is resolved; parent installed native0f9
+remains untouched. Ready for parent source integration review, not live activation.
+Dirac shared TransportEndpoint acknowledgement remains unverified; valid-volume
+and installed/native acceptance still pending, resource helper WARNING/exit2.
+[Exact pair, current tests, catalog owner review and gates](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/paired-pin-handoff.md).
+
 Earlier source evidence: **136 passed, 2 actual MCP cases deselected, 10.64s, exit0**,
 whole process14.18s/432464KiB RSS. Dependency rollback/close shard:45 passed,
 0.40s, process3.68s/362564KiB RSS. Earlier123-pass and fixture failures retained.
@@ -25,7 +36,8 @@ Receipt, actual pattern review and focused census:
 Source hardening includes both-address pre-bind reservations, post-spawn
 uncertainty handles, expired-deadline no-spawn, real offline CLI projection and
 authoring/core exposure. Normally integrated main94070f5f4 before native dispatch.
-Exact dependency pins: ZMQ28d9ed6a0121ebb524ae37fd97de5355308bda7f and metaclass-registry448cdf07.
+Earlier dependency pins: ZMQ28d9ed6a0121ebb524ae37fd97de5355308bda7f and metaclass-registry448cdf07;
+current reviewed native pin2b3d821 is recorded in the handoff above.
 Earlier startup scoped census: no string/type dispatch/arms, raw-key, codec or foreign
 absence-probe growth. Native reservation JSON decode/uncertainty catch/long
 startup method are reviewed leads, not a global clean claim. Close continuation
@@ -216,7 +228,8 @@ does not authorize another native allocation, and no attempt04 has started.
 
 Remaining: #257 successful full execution/publication and actual strict readback,
 additional cross-process uncertainty shard, Dirac shared-surface acknowledgement,
-reviewed paired pin, then parent installed entrypoint acceptance. Prior failed
+then parent reviewed merge/install and installed entrypoint acceptance. The paired
+pin mismatch is now resolved. Prior failed
 god-class receipts remain; both original structural comparisons now pass at the
 documented exact sources/baselines, without a global NRA claim. References #251
 and #257; **not Closes** pending actual acceptance. Parent owns integration/live.
