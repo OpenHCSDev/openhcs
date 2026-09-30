@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from napari.components import Camera, Dims
 from napari.layers.shapes._shapes_constants import ShapeType
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
@@ -713,7 +714,8 @@ def test_napari_viewer_state_projection_filters_and_bounds_layer_details():
     )
 
     viewer = _FakeViewer()
-    viewer.dims.axis_labels = ("site", "y", "x")
+    viewer.dims = Dims(ndim=3, axis_labels=("site", "y", "x"))
+    viewer.camera = Camera()
     projection = napari_viewer_server.NapariViewerStateProjection(
         server=server,
         viewer=viewer,
@@ -727,6 +729,9 @@ def test_napari_viewer_state_projection_filters_and_bounds_layer_details():
 
     state = projection.to_wire_mapping()
 
+    assert state["native_dimensions"]["order"] == (0, 1, 2)
+    assert state["native_dimensions"]["displayed_axes"] == ("y", "x")
+    assert state["native_dimensions"]["canvas_size"] is None
     assert state["layer_count"] == 1
     layer = state["layers"][0]
     assert layer["route_key"] == "payload-route"
@@ -744,7 +749,8 @@ def test_napari_viewer_state_projection_filters_and_bounds_layer_details():
 def test_napari_state_control_message_honors_state_request_payload():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     viewer = _FakeViewer()
-    viewer.dims.axis_labels = ("site", "y", "x")
+    viewer.dims = Dims(ndim=3, axis_labels=("site", "y", "x"))
+    viewer.camera = Camera()
     layer = type(
         "Layer",
         (),
@@ -2384,6 +2390,12 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
     viewer = _FakeViewer()
+    viewer.dims = Dims(
+        ndim=4,
+        range=((0, 3, 1), (0, 1, 1), (0, 19, 1), (0, 19, 1)),
+        current_step=(3, 0, 0, 0),
+    )
+    viewer.camera = Camera()
     layer = type(
         "Layer",
         (),
@@ -2446,6 +2458,8 @@ def test_napari_navigation_visibility_change_preserves_selected_label_route():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
     viewer = _FakeViewer()
+    viewer.dims = Dims(ndim=3, range=((0, 1, 1), (0, 19, 1), (0, 19, 1)))
+    viewer.camera = Camera()
     selected_layer = type(
         "Layer",
         (),
@@ -6113,7 +6127,13 @@ def test_native_image_intensity_command_preserves_data_and_navigation():
     )
 
     viewer = _FakeViewer()
-    viewer.dims.axis_labels = ("a", "b", "y", "x")
+    viewer.dims = Dims(
+        ndim=4,
+        axis_labels=("a", "b", "y", "x"),
+        range=((0, 3, 1), (0, 1, 1), (0, 3, 1), (0, 7, 1)),
+        current_step=(3, 0, 0, 0),
+    )
+    viewer.camera = Camera()
     pixels = np.arange(32, dtype=np.uint16).reshape(4, 8)
     layer = Image(
         pixels, scale=(0.65, 0.65), translate=(2, 3), contrast_limits=(0, 100)
