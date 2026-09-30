@@ -1,6 +1,7 @@
 """The matched pilot preserves interpreter and output evidence identities."""
 
 import hashlib
+import json
 from pathlib import Path
 from subprocess import CompletedProcess
 
@@ -85,16 +86,22 @@ def test_native_worker_receives_an_owned_temporary_root(
 
     def fake_run(command: tuple[str, ...], **kwargs: object) -> CompletedProcess[str]:
         invocation.update(kwargs)
-        return CompletedProcess(command, 0, stdout="{}\n", stderr="")
+        request = json.loads(Path(command[-1]).read_text())
+        Path(request["report_path"]).write_text("{}")
+        kwargs["stdout"].write("native stdout is diagnostic text\n")
+        kwargs["stderr"].write("native stderr evidence\n")
+        return CompletedProcess(command, 0)
 
     monkeypatch.setattr(matched_batch.subprocess, "run", fake_run)
     evidence_prefix = tmp_path / "native"
+    request_path = tmp_path / "request.json"
+    request_path.write_text("{}")
 
     assert (
         _invoke_native_worker(
             native_python=Path("native-python"),
             worker_script=Path("worker.py"),
-            request_path=Path("request.json"),
+            request_path=request_path,
             evidence_prefix=evidence_prefix,
             project_root=tmp_path,
             repetitions=1,
@@ -103,6 +110,14 @@ def test_native_worker_receives_an_owned_temporary_root(
     )
     temporary_root = tmp_path / "native_tmp"
     assert temporary_root.is_dir()
+    assert "capture_output" not in invocation
+    assert json.loads(request_path.read_text())["report_path"] == str(
+        tmp_path / "native_report.json"
+    )
+    assert (
+        tmp_path / "native_stdout.log"
+    ).read_text() == "native stdout is diagnostic text\n"
+    assert (tmp_path / "native_stderr.log").read_text() == "native stderr evidence\n"
     native_environment = invocation["env"]
     assert isinstance(native_environment, dict)
     assert native_environment["TMPDIR"] == str(temporary_root)

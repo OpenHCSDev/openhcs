@@ -119,10 +119,9 @@ The dataclass owns the row schema, including the empty-row case.
 
    from openhcs.core.memory import numpy
    from openhcs.core.artifacts import (
-       ArtifactSpec, ImageArtifactType, MainFlowStackOutputSpec,
+       ImageArtifactType, MainFlowStackOutputSpec,
        MeasurementsArtifactType,
        ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
-       SourceStackLineageSourceRelation,
    )
    from openhcs.core.measurement_row_materialization import (
        DataclassMeasurementColumnarRows,
@@ -160,21 +159,17 @@ The dataclass owns the row schema, including the empty-row case.
    FIXTURE_IMAGE = MainFlowStackOutputSpec.output(
        "fixture_image", ImageArtifactType,
    )
-   FIXTURE_LABELS = ArtifactSpec.output(
+   FIXTURE_LABELS = MainFlowStackOutputSpec.output(
        "fixture_labels", ObjectLabelsArtifactType,
-       relations=(
-           SourceStackLineageSourceRelation(source=FIXTURE_IMAGE.ref()),
-       ),
        materialization=MaterializationSpec(ROIOptions(min_area=0)),
    )
-   FIXTURE_ROWS = ArtifactSpec.output(
+   FIXTURE_ROWS = MainFlowStackOutputSpec.output(
        "fixture_object_rows", MeasurementsArtifactType,
        measurement_feature_owner=FixtureFeatureOwner,
        relations=(
            ObjectMeasurementSubjectRelation(
                source=FIXTURE_LABELS.ref(), id_field="object_label",
            ),
-           SourceStackLineageSourceRelation(source=FIXTURE_IMAGE.ref()),
        ),
        materialization=MaterializationSpec(CsvOptions()),
    )
@@ -199,12 +194,14 @@ The dataclass owns the row schema, including the empty-row case.
        )
 
 ``ObjectMeasurementSubjectRelation`` binds each row's ``object_label`` to the
-exact labels output. ``SourceStackLineageSourceRelation`` preserves source
-context and plane alignment; it is not an object-subject relation.
+exact labels output. ``MainFlowStackOutputSpec`` binds each output's source
+context, group scope and plane alignment to the invocation's compiled image
+input. It works for labels and rows as well as images; their artifact types
+still determine their return positions and materialisation. An output image
+reference is not an input-qualified group-scope source.
 ``MaterializationSourceIdentityRelation`` is supported for image targets, not
 labels or measurements, and is therefore not attached to those outputs here.
-``MainFlowStackOutputSpec`` additionally binds the image output to the compiled
-current image input. ``PURE_2D`` asks the runtime to dispatch planes independently;
+``PURE_2D`` asks the runtime to dispatch planes independently;
 the runtime projects the local ``slice_index=0`` rows onto the assembled stack's
 plane axis. It does not create volumetric object identities.
 
@@ -245,9 +242,12 @@ normal plate compilation/execution supplies image-source and runtime context.
 
 For ordinary module authoring, import ``inspect_label_fixture`` from the module
 where you saved it. For MCP custom registration, submit the complete declaration
-block as ``source_code`` to ``openhcs_custom_function_register``; use the returned
-``functions`` metadata (including ``function_id`` and ``import_path``) rather
-than inventing a module path. Custom
+block as ``source_code`` to the discovered ``openhcs_register_custom_function``
+capability. Follow the ``openhcs_custom_function_workflow`` guide for explicit
+endpoint, intended storage, preparation and uncertainty handling. Retain the
+registration receipt, then describe the deliberately authored public function
+identifier to verify its ``function_id``, ``import_path`` and artifact contract
+rather than assuming registration returns a function catalogue. Custom
 callables are projected under ``openhcs.processing.custom_functions``. A local
 helper class defined in that submitted source is not thereby a separately
 importable symbol of that package. Keep the complete source together; do not add

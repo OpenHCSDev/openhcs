@@ -751,26 +751,32 @@ class OpenHCSMetadataWriter:
         ) -> None:
             """Project the target's current storage state into plate metadata."""
 
-            from openhcs.microscopes.openhcs import OpenHCSMetadataGenerator
-
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
-            OpenHCSMetadataGenerator(context.filemanager).create_metadata(
-                context,
-                str(self.output_dir),
-                self.backend,
-                is_main=self.is_main,
-                plate_root=self.plate_root,
-                sub_dir=self.sub_dir,
-                results_dir=self.results_dir,
-            )
+            if context.metadata_cache is None:
+                raise ValueError("Produced metadata requires declared component labels.")
             structured_metadata = self.produced_projection_metadata(
                 context, produced_plan
             )
-            AtomicMetadataWriter().merge_source_projection_metadata(
+            parser_context = FunctionOutputParserContext.from_processing_context(context)
+            saved_image_paths = tuple(
+                str(Path(path).relative_to(self.plate_root))
+                for path in context.filemanager.list_image_files(
+                    str(self.output_dir), self.backend
+                )
+            )
+            AtomicMetadataWriter().publish_source_projection_metadata(
                 METADATA_CONFIG.metadata_path(self.plate_root),
                 self.sub_dir,
                 structured_metadata,
+                serializer=SourceProjectionMetadataSerializer(parser_context.parser),
+                saved_image_paths=saved_image_paths,
+                microscope_handler_name=parser_context.microscope_type,
+                source_filename_parser_name=parser_context.parser_name,
+                component_labels=context.metadata_cache,
+                backend=self.backend,
+                is_main=self.is_main,
+                results_dir=(Path(self.results_dir).name if self.results_dir else None),
             )
 
         def produced_projection_metadata(
@@ -812,11 +818,6 @@ class OpenHCSMetadataWriter:
             for record, payload in zip(records, payloads, strict=True):
                 destination = record.path_under(self.output_dir)
                 virtual_path = str(Path(destination).relative_to(self.plate_root))
-                parsed = parser_context.parser.parse_filename(Path(destination).name)
-                if parsed is None:
-                    raise ValueError(
-                        f"Produced image has no declared filename address: {destination}."
-                    )
                 metadata = self.persisted_image_metadata(
                     context,
                     destination=destination,
@@ -828,7 +829,7 @@ class OpenHCSMetadataWriter:
                 metadata.source_voxel_spacing.merge_into(
                     source_metadata, path=destination
                 )
-                address = OpenHCSPlaneAddress(parsed.components.items())
+                address = record.filename_address
                 if address not in declared_addresses:
                     declared_addresses.add(address)
                     projection_paths.append(

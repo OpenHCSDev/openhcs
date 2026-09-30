@@ -43,6 +43,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -2453,7 +2454,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(first_spec)
     def record_first_labels(image, *, runtime):
@@ -2463,7 +2464,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(second_spec)
     def record_second_labels(image, *, runtime):
@@ -3229,7 +3230,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(outline_spec, first_labels_spec, second_labels_spec)
     def record_mixed_outputs(image, *, runtime):

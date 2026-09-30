@@ -153,6 +153,8 @@ class OpenHCSViewerControlMessageType(str, Enum):
     """OpenHCS-owned viewer control messages beyond the transport protocol."""
 
     PROCESS_LAUNCH = "process_launch"
+    MEASURE_POLYLINE = "measure_polyline"
+    MEASURE_REGION = "measure_region"
 
 
 class ViewerLayerIsolationField(str, Enum):

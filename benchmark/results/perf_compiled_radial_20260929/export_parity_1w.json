@@ -1,0 +1,16 @@
+[
+  {
+    "repetition": 1,
+    "csv_rows": 1801,
+    "different_numeric_cells": 5624,
+    "maximum_absolute_difference": 2.220446049250313e-16,
+    "all_non_numeric_cells_exact": true
+  },
+  {
+    "repetition": 2,
+    "csv_rows": 1801,
+    "different_numeric_cells": 5624,
+    "maximum_absolute_difference": 2.220446049250313e-16,
+    "all_non_numeric_cells_exact": true
+  }
+]

@@ -239,12 +239,11 @@ class VirtualWorkspaceSourceProjection:
         """Carry one nominal source projection into runtime payload provenance."""
         projection = self.require_source_projection_for(lookup)
         source_metadata = self.source_metadata_for(lookup)
-        return self._project_payload_source_metadata(
-            payload,
+        return VirtualWorkspaceImagePayloadProjection(
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
             persisted_metadata=projection.image_metadata,
-        )
+        ).apply(payload)
 
     def project_unbound_payload(
         self,
@@ -263,59 +262,13 @@ class VirtualWorkspaceSourceProjection:
                 SOURCE_BINDING_ALIAS_METADATA_FIELD,
             )
         )
-        return self._project_payload_source_metadata(
-            payload,
+        return VirtualWorkspaceImagePayloadProjection(
             source_metadata=source_metadata,
             source_alias=source_alias,
             persisted_metadata=(
                 None if projection is None else projection.image_metadata
             ),
-        )
-
-    @staticmethod
-    def _project_payload_source_metadata(
-        payload: RuntimeArrayData,
-        *,
-        source_metadata: SourceMetadataMapping | None,
-        source_alias: str | None,
-        persisted_metadata: ImagePayloadMetadata | None = None,
-    ) -> RuntimeArrayData:
-        """Apply component metadata and source-name provenance to one payload."""
-
-        if source_metadata is not None:
-            source_metadata = MappingProxyType(
-                {
-                    field: value
-                    for field, value in source_metadata.items()
-                    if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
-                }
-            )
-        current_metadata = image_payload_metadata(payload)
-        metadata = (
-            current_metadata
-            if persisted_metadata is None
-            else persisted_metadata.with_source_spatial_context_from(
-                current_metadata
-            ).with_missing_intensity_from(current_metadata)
-        )
-        metadata = metadata.replace_fields(
-            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
-                current_metadata.source_spatial_domain,
-                image_shape_yx=current_metadata.spatial_shape_yx(
-                    image_payload_data(payload)
-                ),
-            )
-        )
-        if source_metadata is not None and persisted_metadata is None:
-            metadata = metadata.with_source_component_metadata(source_metadata)
-        if source_alias is not None:
-            metadata = metadata.with_source_provenance(
-                metadata.source_provenance.with_source_image_names((source_alias,))
-            )
-        return metadata.payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
-        )
+        ).apply(payload)
 
     def source_metadata_for(
         self,
@@ -548,6 +501,62 @@ class VirtualWorkspaceSourceProjection:
         if self.workspace_root is not None:
             return _cached_join_workspace_path(str(self.workspace_root), virtual_path)
         return virtual_path
+
+
+@dataclass(frozen=True, slots=True)
+class VirtualWorkspaceImagePayloadProjection:
+    """Join persisted semantics to loaded native headers for one workspace image."""
+
+    source_metadata: SourceMetadataMapping | None = None
+    source_alias: str | None = None
+    persisted_metadata: ImagePayloadMetadata | None = None
+
+    def metadata(self, loaded: ImagePayloadMetadata) -> ImagePayloadMetadata:
+        """Preserve semantic omissions, but not an empty header's lost identity."""
+        if self.persisted_metadata is None:
+            return loaded
+        metadata = self.persisted_metadata.with_source_spatial_context_from(
+            loaded
+        ).with_missing_intensity_from(loaded)
+        provenance = metadata.source_provenance
+        if not (
+            provenance.source_identity.addressable
+            or provenance.source_image_provenance_planes.has_values
+        ):
+            metadata = metadata.with_source_context_from(loaded)
+        return metadata
+
+    def apply(self, payload: RuntimeArrayData) -> RuntimeArrayData:
+        """Apply declared component metadata and source aliases to one payload."""
+        source_metadata = self.source_metadata
+        if source_metadata is not None:
+            source_metadata = MappingProxyType(
+                {
+                    field: value
+                    for field, value in source_metadata.items()
+                    if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
+                }
+            )
+        current_metadata = image_payload_metadata(payload)
+        metadata = self.metadata(current_metadata)
+        metadata = metadata.replace_fields(
+            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
+                current_metadata.source_spatial_domain,
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    image_payload_data(payload)
+                ),
+            )
+        )
+        if source_metadata is not None and self.persisted_metadata is None:
+            metadata = metadata.with_source_component_metadata(source_metadata)
+        if self.source_alias is not None:
+            metadata = metadata.with_source_provenance(
+                metadata.source_provenance.with_source_image_names((self.source_alias,))
+            )
+        return metadata.payload_with(
+            image_payload_data(payload),
+            image_payload_mask(payload),
+        )
 
 
 @lru_cache(maxsize=65536)

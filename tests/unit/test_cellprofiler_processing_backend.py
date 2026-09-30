@@ -969,7 +969,7 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
     )
     assert type(
         RadialDistributionBackendStrategy.for_memory_type(MemoryType.NUMPY)
-    ) is (NativeNumpyRadialDistributionBackendStrategy)
+    ) is (NumbaNumpyRadialDistributionBackendStrategy)
     assert (
         type(
             RadialDistributionBackendStrategy.for_memory_type(

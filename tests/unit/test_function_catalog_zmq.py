@@ -4,17 +4,23 @@ import ast
 import inspect
 import textwrap
 import threading
+import time
 from concurrent.futures import CancelledError, Future
+from contextlib import contextmanager
 from dataclasses import replace
 
 import pytest
-from zmqruntime import OperationCancellation
+from zmqruntime import OperationCancellation, OperationDeadline
 from zmqruntime.client import EndpointConnectionPolicy
 from zmqruntime.execution import ExecutionServer
+from zmqruntime.messages import ProcessIdentity
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationControlResponse,
+    CustomFunctionRegistrationDestinationControlResponse,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogControlPayload,
@@ -22,7 +28,12 @@ from openhcs.agent.dto.functions import (
     FunctionCatalogControlRequestABC,
     FunctionCatalogControlResponse,
     FunctionCatalogEntry,
+    FunctionCatalogPreparationCancelRequest,
     FunctionCatalogPreparationControlResponse,
+    FunctionCatalogPreparationOutcome,
+    FunctionCatalogPreparationStartRequest,
+    FunctionCatalogPreparationStateControlResponse,
+    FunctionCatalogPreparationStatusRequest,
     FunctionDetail,
     FunctionDetailControlRequest,
     FunctionDetailControlResponse,
@@ -36,6 +47,7 @@ from openhcs.agent.dto.functions import (
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.core.callable_contract import CallableImportIdentity
 from openhcs.core.function_reference import ImportableFunctionReference
+from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 from openhcs.runtime.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
@@ -93,6 +105,7 @@ def test_local_mcp_context_uses_persisted_desktop_execution_endpoint(
     context = create_agent_context()
 
     assert isinstance(context.function_catalog, ZMQFunctionCatalogService)
+    assert context.function_catalog is context.endpoint_function_catalog
     assert context.function_catalog._config_provider() == endpoint_config
     context.function_catalog.close()
 
@@ -103,6 +116,94 @@ def test_hosted_mcp_context_keeps_self_contained_catalog() -> None:
     context = create_hosted_agent_context()
 
     assert isinstance(context.function_catalog, FunctionCatalogService)
+
+
+@pytest.mark.parametrize("construction", ("default_factory", "raw", "injected"))
+def test_real_mcp_context_composes_typed_preparation_and_catalog_authority(
+    monkeypatch, construction
+) -> None:
+    import asyncio
+    import json
+
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        EndpointFunctionCatalogServiceABC,
+        ZMQFunctionCatalogService,
+    )
+    from openhcs.mcp.context import OpenHCSAgentContext, create_agent_context
+    from openhcs.mcp.server import build_server
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+    from openhcs.serialization.json import to_jsonable
+
+    connection = ExecutionConnectionSpec(port=22319)
+    endpoint = replace(OPENHCS_ZMQ_CONFIG, default_port=connection.port)
+    monkeypatch.setattr(
+        "openhcs.pyqt_gui.config.load_cached_ui_execution_endpoint_sync",
+        lambda: endpoint,
+    )
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    preparation._future = Future()
+    native = ZMQControlRequestContext(
+        compiled_artifacts={},
+        function_catalog_preparation=preparation,
+    )
+    observed = []
+
+    class Client:
+        def function_catalog_preparation(self, request, *, operation_deadline=None):
+            observed.append(request)
+            response = ZMQControlMessageRouter.handle(
+                FunctionCatalogControlPayload.from_request(request).to_dict(),
+                native,
+            )
+            return FunctionCatalogPreparationStateControlResponse.from_control_response(
+                response
+            ).value
+
+        def disconnect(self):
+            pass
+
+    monkeypatch.setattr(
+        ZMQFunctionCatalogService, "_new_client", lambda self, config: Client()
+    )
+    factories = {
+        "default_factory": create_agent_context,
+        "raw": OpenHCSAgentContext,
+        "injected": lambda: OpenHCSAgentContext(
+            endpoint_function_catalog=ZMQFunctionCatalogService(lambda: endpoint),
+        ),
+    }
+    context = factories[construction]()
+    assert isinstance(
+        context.endpoint_function_catalog, EndpointFunctionCatalogServiceABC
+    )
+    assert context.function_catalog is context.endpoint_function_catalog
+
+    async def invoke():
+        built = build_server(context)
+        started = await built.call_tool(
+            "openhcs_start_function_catalog_preparation",
+            {"port": connection.port},
+        )
+        content = started[0] if isinstance(started, tuple) else started.content
+        payload = json.loads(content[0].text)
+        assert not payload["errors"]
+        assert payload["outcome"] == "pending"
+        arguments = to_jsonable(preparation.start(connection).handle)
+        for tool in (
+            "openhcs_get_function_catalog_preparation_status",
+            "openhcs_cancel_function_catalog_preparation",
+        ):
+            response = await built.call_tool(tool, arguments)
+            content = response[0] if isinstance(response, tuple) else response.content
+            assert not json.loads(content[0].text)["errors"]
+
+    try:
+        asyncio.run(invoke())
+        assert len(observed) == 3
+        assert preparation._thread is None
+        assert preparation._cancellation.requested()
+    finally:
+        context.endpoint_function_catalog.close()
 
 
 def test_gui_application_setup_does_not_initialize_execution_catalog() -> None:
@@ -154,32 +255,19 @@ def _detail(entry: FunctionCatalogEntry | None = None) -> FunctionDetail:
     )
 
 
-class _StaticFunctionCatalogPreparation:
-    def __init__(self, future: Future[None]) -> None:
-        self.future = future
-
-    def ensure_started(self) -> Future[None]:
-        return self.future
-
-    def snapshot(self) -> EndpointStartupStatus:
-        return EndpointStartupStatus(
-            sequence=1,
-            phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
-            message="Discovering functions",
-            timestamp=1.0,
-        )
-
-
 def _context(
     preparation_future: Future[None] | None = None,
 ) -> ZMQControlRequestContext:
     ready = preparation_future or Future()
     if preparation_future is None:
         ready.set_result(None)
+    catalog = FunctionCatalogService()
+    preparation = FunctionCatalogPreparation(catalog)
+    preparation._future = ready
     return ZMQControlRequestContext(
         compiled_artifacts={},
-        function_catalog=FunctionCatalogService(),
-        function_catalog_preparation=_StaticFunctionCatalogPreparation(ready),
+        function_catalog=catalog,
+        function_catalog_preparation=preparation,
     )
 
 
@@ -358,6 +446,163 @@ def test_catalog_client_cancellation_prevents_another_poll(monkeypatch) -> None:
         )
 
 
+@pytest.mark.parametrize("response_kind", ("ready", "pending", "timeout"))
+def test_registration_client_sends_mutation_once_even_if_pending_or_uncertain(
+    monkeypatch,
+    response_kind,
+) -> None:
+    client = ZMQExecutionClient(port=22319, persistent=True)
+    monkeypatch.setattr(client, "is_connected", lambda: True)
+    observed = []
+    result = CustomFunctionRegistrationResult(schema_version="openhcs.agent.v1")
+
+    def send(payload, *, timeout_ms):
+        assert 0 < timeout_ms <= 5000
+        observed.append(payload)
+        if response_kind == "timeout":
+            raise TimeoutError("postdispatch observation")
+        if response_kind == "pending":
+            return FunctionCatalogPreparationControlResponse(
+                status=EndpointStartupStatus(
+                    phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
+                    message="Preparing",
+                    sequence=1,
+                    timestamp=1.0,
+                ),
+            ).to_control_response()
+        return CustomFunctionRegistrationControlResponse(
+            value=result
+        ).to_control_response()
+
+    monkeypatch.setattr(client, "_send_control_request", send)
+    monkeypatch.setattr(
+        client,
+        "_send_function_catalog_control_request",
+        lambda _payload: pytest.fail("Mutation cannot use the preparation poll loop"),
+    )
+    request = CustomFunctionRegistrationRequest(
+        source_code="not evaluated", persist=False
+    )
+    if response_kind == "ready":
+        assert client.register_custom_function(request) is result
+    else:
+        with pytest.raises(
+            TimeoutError if response_kind == "timeout" else RuntimeError
+        ):
+            client.register_custom_function(request)
+    assert observed == [FunctionCatalogControlPayload.from_request(request).to_dict()]
+
+
+@pytest.mark.parametrize("operation", ("destination", "register"))
+@pytest.mark.parametrize("endpoint_state", ("absent", "unresponsive"))
+@pytest.mark.parametrize("explicit_deadline", (False, True))
+def test_registration_attach_only_preserves_missing_or_unresponsive_endpoint(
+    monkeypatch,
+    operation,
+    endpoint_state,
+    explicit_deadline,
+):
+    """Exercise native attach-only, not a parallel fake connection lifecycle."""
+    from zmqruntime.config import TransportMode
+
+    client = ZMQExecutionClient(port=22319, transport_mode=TransportMode.TCP)
+    effects, attach_timeouts = [], []
+
+    def forbidden(effect):
+        def fail(*_args, **_kwargs):
+            effects.append(effect)
+            pytest.fail(f"Registration must not {effect}")
+
+        return fail
+
+    @contextmanager
+    def unlocked(*_args, **_kwargs):
+        yield True
+
+    def unresponsive(timeout):
+        attach_timeouts.append(timeout)
+        return False
+
+    monkeypatch.setattr("zmqruntime.client.endpoint_startup_lock", unlocked)
+    monkeypatch.setattr(
+        client, "_is_port_in_use", lambda port: endpoint_state == "unresponsive"
+    )
+    monkeypatch.setattr(client, "_attach_existing_endpoint", unresponsive)
+    monkeypatch.setattr(client, "connect", forbidden("enter implicit startup"))
+    monkeypatch.setattr(client, "_spawn_server_process", forbidden("start a process"))
+    monkeypatch.setattr(client, "_kill_processes_on_port", forbidden("kill a process"))
+    monkeypatch.setattr(
+        client, "_send_control_request", forbidden("send a control/source request")
+    )
+    deadline = (
+        OperationDeadline.after_milliseconds(500, operation="controlled attach-only")
+        if explicit_deadline
+        else None
+    )
+    calls = {
+        "destination": lambda: client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(
+                function_name="boundary_probe"
+            ),
+            operation_deadline=deadline,
+        ),
+        "register": lambda: client.register_custom_function(
+            CustomFunctionRegistrationRequest(
+                source_code="never evaluated", persist=False
+            ),
+            operation_deadline=deadline,
+        ),
+    }
+    with pytest.raises(RuntimeError, match="existing execution endpoint"):
+        calls[operation]()
+    assert effects == []
+    if endpoint_state == "absent":
+        assert attach_timeouts == []
+    else:
+        assert len(attach_timeouts) == 1
+        assert 0 < attach_timeouts[0] <= (0.5 if explicit_deadline else 1.0)
+    assert not client.is_connected()
+
+
+@pytest.mark.parametrize("operation", ("destination", "register"))
+def test_registration_expired_deadline_prevents_attachment_and_send(
+    monkeypatch, operation
+):
+    client = ZMQExecutionClient(port=22319)
+    monkeypatch.setattr(
+        client, "connect", lambda **kwargs: pytest.fail("No implicit startup")
+    )
+    monkeypatch.setattr(
+        client,
+        "connect_existing",
+        lambda **kwargs: pytest.fail("Expired before attachment"),
+    )
+    monkeypatch.setattr(
+        client,
+        "_send_control_request",
+        lambda **kwargs: pytest.fail("Expired before dispatch"),
+    )
+    deadline = OperationDeadline(
+        operation="already expired", timeout_ms=1, expires_at=0
+    )
+    calls = {
+        "destination": lambda: client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(
+                function_name="boundary_probe"
+            ),
+            operation_deadline=deadline,
+        ),
+        "register": lambda: client.register_custom_function(
+            CustomFunctionRegistrationRequest(
+                source_code="never evaluated", persist=False
+            ),
+            operation_deadline=deadline,
+        ),
+    }
+    with pytest.raises(TimeoutError, match="already expired"):
+        calls[operation]()
+
+
 def test_catalog_client_applies_request_cancellation_to_endpoint_startup(
     monkeypatch,
 ) -> None:
@@ -503,7 +748,9 @@ def test_zmq_router_registers_custom_source_through_catalog_owner(
     monkeypatch,
 ) -> None:
     request = CustomFunctionRegistrationRequest(
-        source_code="@numpy\ndef sample(image):\n    return image\n"
+        source_code="@numpy\ndef sample(image):\n    return image\n",
+        connection=ExecutionConnectionSpec(port=22319),
+        server_identity=ProcessIdentity.current(),
     )
     result = CustomFunctionRegistrationResult(
         schema_version="openhcs.agent.v1",
@@ -528,6 +775,137 @@ def test_zmq_router_registers_custom_source_through_catalog_owner(
         is result
     )
     assert observed_requests == [request]
+
+
+def test_native_registration_destination_bypasses_catalog_preparation(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    from zmqruntime.messages import ProcessIdentity
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "absent"))
+    context = _context(Future())
+
+    def reject_preparation():
+        raise AssertionError(
+            "Destination admission cannot prepare the function catalog"
+        )
+
+    monkeypatch.setattr(
+        context.function_catalog_preparation, "ensure_started", reject_preparation
+    )
+    response = ZMQControlMessageRouter.handle(
+        FunctionCatalogControlPayload.from_request(
+            CustomFunctionRegistrationDestinationRequest(function_name="boundary_probe")
+        ).to_dict(),
+        context,
+    )
+    destination = (
+        CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+            response
+        ).destination
+    )
+    assert destination.server_identity == ProcessIdentity.current()
+    assert destination.source_file_path == str(
+        tmp_path / "absent" / "openhcs" / "custom_functions" / "boundary_probe.py"
+    )
+    assert not (tmp_path / "absent").exists()
+
+
+def test_native_preparation_start_status_cancel_are_responsive_and_incarnation_owned():
+    entered = threading.Event()
+
+    class ControlledCatalog:
+        def prepare(self, *, status_callback, cancellation):
+            status_callback("Controlled preparation remains pending")
+            entered.set()
+            assert cancellation.wait(2)
+            raise CancelledError()
+
+    preparation = FunctionCatalogPreparation(ControlledCatalog())
+    context = ZMQControlRequestContext(
+        compiled_artifacts={}, function_catalog_preparation=preparation
+    )
+
+    def dispatch(request):
+        started = time.monotonic()
+        response = ZMQControlMessageRouter.handle(
+            FunctionCatalogControlPayload.from_request(request).to_dict(), context
+        )
+        assert time.monotonic() - started < 0.5
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
+
+    try:
+        connection = ExecutionConnectionSpec(port=22319)
+        state = dispatch(FunctionCatalogPreparationStartRequest(connection))
+        assert state.outcome is FunctionCatalogPreparationOutcome.PENDING
+        assert entered.wait(1)
+        future, thread = preparation._future, preparation._thread
+        assert (
+            dispatch(FunctionCatalogPreparationStartRequest(connection)).handle
+            == state.handle
+        )
+        assert preparation._future is future and preparation._thread is thread
+        assert (
+            dispatch(FunctionCatalogPreparationStatusRequest(state.handle)).outcome
+            is FunctionCatalogPreparationOutcome.PENDING
+        )
+        stale = replace(
+            state.handle,
+            server_identity=replace(state.handle.server_identity, create_time=0),
+        )
+        with pytest.raises(RuntimeError, match="owner changed"):
+            preparation.cancel_preparation(stale)
+        assert not preparation._cancellation.requested()
+        cancelled = dispatch(FunctionCatalogPreparationCancelRequest(state.handle))
+        assert cancelled.outcome in (
+            FunctionCatalogPreparationOutcome.CANCELLING,
+            FunctionCatalogPreparationOutcome.CANCELLED,
+        )
+        preparation.cancel_and_join()
+        assert (
+            dispatch(FunctionCatalogPreparationStatusRequest(state.handle)).outcome
+            is FunctionCatalogPreparationOutcome.CANCELLED
+        )
+        assert preparation._future is future and not thread.is_alive()
+    finally:
+        preparation.cancel_and_join()
+
+
+def test_native_registration_does_not_start_or_wait_for_cold_preparation(monkeypatch):
+    context = ZMQControlRequestContext(
+        compiled_artifacts={},
+        function_catalog=FunctionCatalogService(),
+        function_catalog_preparation=FunctionCatalogPreparation(
+            FunctionCatalogService()
+        ),
+    )
+    monkeypatch.setattr(
+        context.function_catalog_preparation,
+        "ensure_started",
+        lambda: pytest.fail("Mutation cannot initiate warmup"),
+    )
+    monkeypatch.setattr(
+        context.function_catalog,
+        "register_custom_function",
+        lambda _request: pytest.fail("Cold mutation must reject before evaluation"),
+    )
+    request = CustomFunctionRegistrationRequest(
+        source_code="never evaluated",
+        persist=False,
+        connection=ExecutionConnectionSpec(port=22319),
+        server_identity=ProcessIdentity.current(),
+    )
+    response = ZMQControlMessageRouter.handle(
+        FunctionCatalogControlPayload.from_request(request).to_dict(), context
+    )
+    assert (
+        response["status"] == "error"
+        and "No source was dispatched" in response["error"]
+    )
+    assert context.function_catalog_preparation._future is None
 
 
 def test_zmq_router_delegates_search_to_catalog_owner(monkeypatch) -> None:
@@ -640,14 +1018,12 @@ def test_function_catalog_preparation_cancellation_reaches_catalog_owner() -> No
     started = threading.Event()
 
     class CancellableCatalog:
-        def catalog(
+        def prepare(
             self,
             *,
-            compact_signatures,
             status_callback,
             cancellation,
         ) -> None:
-            assert compact_signatures is True
             del status_callback
             started.set()
             cancellation.wait()
@@ -681,6 +1057,67 @@ def test_persistent_capability_preparation_uses_registry_owner(
     FunctionCatalogPreparation.prepare_persistent_catalog()
 
     assert events == ["prepare"]
+
+
+def test_catalog_readiness_waits_for_kernel_preparation_with_cached_metadata(
+    monkeypatch,
+) -> None:
+    """Metadata availability cannot publish readiness ahead of kernel warmup."""
+
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+
+    started = threading.Event()
+    release = threading.Event()
+    events = []
+    monkeypatch.setattr(RegistryService, "_metadata_cache", {})
+
+    def prepare(*, status_callback, cancellation):
+        assert cancellation is not None
+        status_callback("Preparing declared kernels")
+        events.append("kernels")
+        started.set()
+        assert release.wait(timeout=5)
+
+    def catalog(self, *, compact_signatures, status_callback, cancellation):
+        assert compact_signatures is True
+        events.append("catalog")
+        return _catalog()
+
+    monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", prepare)
+    monkeypatch.setattr(FunctionCatalogService, "catalog", catalog)
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    future = preparation.ensure_started()
+    try:
+        assert started.wait(timeout=1)
+        assert preparation.ensure_started() is future
+        assert not future.done()
+        assert preparation.snapshot().message == "Preparing declared kernels"
+    finally:
+        release.set()
+        preparation.cancel_and_join()
+    assert future.result() is None
+    assert events == ["kernels", "catalog"]
+
+
+def test_kernel_preparation_failure_reaches_catalog_future(monkeypatch) -> None:
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+    from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+
+    def fail(**kwargs):
+        raise RuntimeError("kernel preparation failed")
+
+    monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", fail)
+    preparation = FunctionCatalogPreparation(FunctionCatalogService())
+    try:
+        with pytest.raises(RuntimeError, match="kernel preparation failed"):
+            preparation.wait_until_ready(observation_interval_seconds=0.01)
+    finally:
+        preparation.cancel_and_join()
 
 
 def test_endpoint_catalog_reconciles_persisted_custom_function_sources(

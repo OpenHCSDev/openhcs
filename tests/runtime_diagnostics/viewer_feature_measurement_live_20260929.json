@@ -1,0 +1,40 @@
+{
+  "acceptance": "abstain: live measurement numerics/readonly behavior passed on observed mounted planes; original calibration/crop provenance and render QA failed",
+  "source_sha": "c662202df85f1df26dda73209c27f66db9faeecc",
+  "integrated_main": "213439a04ec7e47694cb0aec2127a0e9ca2790c2",
+  "source_root": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929",
+  "installed_python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "openhcs_version": "0.8.6",
+  "installed_polystore": "0.2.19; editable pth points to /home/ts/wt/openhcs-imagej-cache-progress-20260929/external/PolyStore/src; not modified or inspected as another agent worktree",
+  "installed_paired_versions": {"zmqruntime": "0.2.24", "pyqt_reactive": "0.3.24"},
+  "dependency_commit_provenance_gap": "Historical installed PolyStore commit SHA was not captured: version/editable path were observed, not a complete dependency source pin. Parent-reported new installed bf9aae462 OpenHCS228/c16b8fc PolyStore17 pair is NOT claimed tested by this earlier journey.",
+  "lock": "one successful flock -n -E75 on /home/ts/wt/openhcs-issue-batch-20260929/validation.lock; freeze saved before owned shutdown",
+  "resources": {"startup_ram_gib": 14.1, "startup_home_free_gib": 21.3, "trial_ram_gib": 13.3, "full_memory_psi_avg10_percent": 0.14, "warning": "swap only"},
+  "owned_handles": {"flock_pid": 1589996, "driver_pid": 1590006, "mcp_pid": 1590171, "viewer_pid": 1590204, "resource_tracker_pid": 1590527, "display": ":88", "vnc_port": 5988, "viewer_port": 5792, "transport": "tcp"},
+  "runtime_source_proof": "first MCP health server_source_path matches this worktree; final health same PID/source, version0.8.6, no stale sources/reconnect/restart required",
+  "latency_seconds": {"first_health": 0.0107, "stream_launch": 7.1568, "initial_state": 0.2304, "initial_payloads": 0.0521},
+  "technical_interventions": [
+    "Ordinary per-command timeout10 throughout; no raised timeout and no uncertain dispatch/replay.",
+    "Automated journey assertion expected physical TIFF paths but live stream uses virtual paths; stopped and inspected same persistent handle, no duplicate launch.",
+    "Continued manually through supported dev-client commands on same MCP, using observed native origin0/scale1 for numerical proof only, not acceptance of original declared crop/calibration."
+  ],
+  "fixture": "one field; two64x64 uint16 source planes, channel1/Z1 gradient10*y+x and channel2/Z2 foreground80 with one5 pixel/background5; deliberately sparse channel/Z cross product",
+  "profile": {"native_vertices_yx": [[10,10],[10,19],[19,19]], "data_length_pixels": 18, "data_chord_pixels": 12.727922061357855, "observed_world_length": 18, "samples": [110,111,112,113,114,115,116,117,118,119,129,139,149,159,169,179,189,199,209]},
+  "region": {"native_foreground_vertices_yx": [[10,10],[10,19],[19,19],[19,10]], "native_background_vertices_yx": [[30,30],[30,34],[34,34],[34,30]], "continuous_area_pixels_squared": 81, "raster_area_pixels": 100, "mean_raw": 79.25, "total_raw": 7925, "background_mean_raw": 5, "support_threshold_raw": 5, "support_count": 99, "support_fraction": 0.99},
+  "fail_closed_live": ["boolean line_width", "NaN attempt normalized to null by dev-client then rejected by MCP StrictFloat schema (not a live native finite-guard proof)", "outside source geometry", "unrepresented channel0/Z1 sparse plane", "boolean channel axis index"],
+  "unchanged_live": ["exact100-pixel gradient samples before/after", "exact100-pixel foreground samples before/after region measurement", "all mounted layer/provenance state", "native transform", "contrast/gamma", "camera", "native dimensions/axes/current step", "source TIFF byte hashes"],
+  "intentional_presentation_change": "After readonly proof, supported MCP navigation selected channel2/Z2 for second render attempt; not included in unchanged-presentation claim.",
+  "gaps": [
+    {"owner": "measurement implementation agent for reproducer; parent integration owner for repair authority", "defect": "MCP plate inventory stream loses SourcePlaneProjection image_metadata", "reproducer": "fixture metadata declares origin(7,11), shape(80,100), relative spacing(2,3); live payloads report origin(0,0), shape(64,64), spacing(1,1) micrometers", "trace": "PlateStreamingService._inventory_source_projection copies source refs/metadata but not declaration-owned SourcePlaneProjection image metadata", "acceptance": "same real MCP stream must retain crop domain/relative anisotropy; native path length18, transformed45, world region area486"},
+    {"owner": "parent paired-source integration owner; measurement agent owns retained reproducer", "defect": "MCP snapshot DTO unpickle imports missing installed polystore.source_tile_geometry in viewer", "reproducer": "both gradient/region openhcs_viewer_snapshot_window returned viewer_window_snapshot_failed; detached log traceback retained", "acceptance": "supported MCP capture succeeds on paired installed source; author opens actual generated bitmaps"},
+    {"owner": "measurement implementation agent", "defect": "legacy intensity-window selector error wording regression", "reproducer": "provider-free -k intensity_window:8passed/1failed; require a route with semantic axis projection wording changed", "acceptance": "parent-authorized repair then existing shard passes; no production edit under fresh review scope"}
+  ],
+  "author_opened_bitmaps": false,
+  "final_source_checks": {"passed": 95, "elapsed_seconds": 6.86, "scope": "feature + native presentation + viewer protocol, source-only, one process/native threads1; not installed readiness"},
+  "owned_shutdown": {"MCP_close_viewer": "succeeded=true, endpoint_terminated=true", "client_closed": true, "all_recorded_owned_pids_absent": true, "lock_released": true, "final_journal_sha256": "5a48397e728429cb10b991b8be9568493aa4d6296e0ba21291ea8adf9e6e13c2", "automated_cleanup_gap_disposition": "Driver had not reached its heartbeat-identity admission; author independently verified actual child PID and closed it via supported MCP, then closed same client. No uncertainty remains."},
+  "bitmap_abstention_reason": "MCP capture contract failed; no X/console/VNC screenshot workaround used",
+  "durable_journal": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_01/journey.json",
+  "sha256_before_owned_shutdown": {"journey.json": "96a60ec0d5b521a0e8accb3757c9cf596f03d60b54ebf1f6dfad31f7de14cb10", "plate/openhcs_metadata.json": "733c5b89207f89ec7e3ef514f7223bf563a4deeb28536207f2a754552b3402d5", "mcp-stderr.txt": "131ad3e71e97c4ba6ce71a690edcab259d8db9c26fc094278db27e04aeef6bbc", "napari_detached_port_5792.log": "ff17da25bbca52dea2d77bc951881b4f615584c57cf3ceb36ff79b2b0b3913e9"},
+  "source_tiff_sha256": {"synthetic-channel1.tif": "45f5be72728c5275acd1130aeb4c6ce7a127905826cbd4407523cccc48fff760", "synthetic-channel2.tif": "5fcac25545d0559049895eb580dbc240b93f9c57e820556e7b52fc6b8c1d9678"},
+  "frozen_biological_harness": "untouched; no biological data, expected results, prior trials, execution worker, JVM, downloads, installs or source patches used in live acceptance"
+}

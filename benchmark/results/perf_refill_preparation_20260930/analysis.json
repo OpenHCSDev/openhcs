@@ -1,0 +1,331 @@
+{
+  "source_commit": "82303175b33426c811f3ee9a35155342849e01f0",
+  "base_commit": "c50f42c46",
+  "cold": {
+    "control": {
+      "observations": 2,
+      "cli_process_wall_seconds": 55.24591960851103,
+      "ordinary": {
+        "compile_seconds": 35.5247962474823,
+        "execute_seconds": 12.619141221046448,
+        "total_seconds": 51.11725838156417
+      }
+    },
+    "candidate": {
+      "observations": 2,
+      "cli_process_wall_seconds": 48.436684924410656,
+      "ordinary": {
+        "compile_seconds": 28.744927287101746,
+        "execute_seconds": 12.557080864906311,
+        "total_seconds": 44.27006964990869
+      }
+    }
+  },
+  "warm": {
+    "1w": {
+      "control": {
+        "observations": 2,
+        "means": {
+          "compile": 3.1807262897491455,
+          "execution": 12.673181891441345,
+          "total": 18.677643494913355,
+          "warming_seconds": 7.251978698885068
+        },
+        "step_sums": {
+          "DefineGrid": 0.04336822032928467,
+          "IdentifyObjectsInGrid": 0.2736845016479492,
+          "MeasureObjectIntensity": 1.2548414468765259,
+          "FilterObjects": 0.7345613241195679,
+          "MaskImage": 0.03194260597229004,
+          "Smooth": 0.13536322116851807,
+          "EnhanceEdges": 0.042455196380615234,
+          "Closing": 0.47315311431884766,
+          "IdentifyPrimaryObjects": 0.7926555871963501,
+          "MeasureObjectSizeShape": 0.5263829231262207,
+          "ExpandOrShrinkObjects": 0.4497290849685669,
+          "RelateObjects": 0.044113993644714355,
+          "OverlayOutlines": 0.21098411083221436,
+          "MeasureGranularity": 3.138059377670288,
+          "MeasureTexture": 0.7617471218109131,
+          "MeasureObjectIntensityDistribution": 1.8545851707458496,
+          "ExportToSpreadsheet": 1.4735652208328247
+        },
+        "no_new_numba_cache_indexes": true,
+        "historical_other_excluding_granularity_export": 7.629567623138428
+      },
+      "candidate": {
+        "observations": 2,
+        "means": {
+          "compile": 3.2052160501480103,
+          "execution": 12.836116433143616,
+          "total": 18.88419411284849,
+          "warming_seconds": 2.6937703234143555
+        },
+        "step_sums": {
+          "DefineGrid": 0.04427695274353027,
+          "IdentifyObjectsInGrid": 0.27891087532043457,
+          "MeasureObjectIntensity": 1.246889352798462,
+          "FilterObjects": 0.7329379320144653,
+          "MaskImage": 0.03296208381652832,
+          "Smooth": 0.13340020179748535,
+          "EnhanceEdges": 0.04170107841491699,
+          "Closing": 0.47261524200439453,
+          "IdentifyPrimaryObjects": 0.7889991998672485,
+          "MeasureObjectSizeShape": 0.5302176475524902,
+          "ExpandOrShrinkObjects": 0.45764267444610596,
+          "RelateObjects": 0.044440507888793945,
+          "OverlayOutlines": 0.21112394332885742,
+          "MeasureGranularity": 3.2144775390625,
+          "MeasureTexture": 0.7649445533752441,
+          "MeasureObjectIntensityDistribution": 1.9527788162231445,
+          "ExportToSpreadsheet": 1.4622037410736084
+        },
+        "no_new_numba_cache_indexes": true,
+        "historical_other_excluding_granularity_export": 7.733841061592102
+      },
+      "native_analysis_over_candidate_execution": 5.135809811897747
+    },
+    "16w": {
+      "control": {
+        "observations": 1,
+        "means": {
+          "compile": 10.173659563064575,
+          "execution": 84.76483750343323,
+          "total": 98.27025787392631,
+          "warming_seconds": 2.6707289163023233
+        },
+        "step_sums": {
+          "DefineGrid": 1.011535882949829,
+          "IdentifyObjectsInGrid": 12.037770986557007,
+          "MeasureObjectIntensity": 27.26673460006714,
+          "FilterObjects": 29.68741798400879,
+          "MaskImage": 1.300316572189331,
+          "Smooth": 5.367945671081543,
+          "EnhanceEdges": 1.5551586151123047,
+          "Closing": 9.349547624588013,
+          "IdentifyPrimaryObjects": 27.49340534210205,
+          "MeasureObjectSizeShape": 11.071085929870605,
+          "ExpandOrShrinkObjects": 24.18196725845337,
+          "RelateObjects": 1.1329762935638428,
+          "OverlayOutlines": 12.116969347000122,
+          "MeasureGranularity": 22.390114545822144,
+          "MeasureTexture": 14.68848180770874,
+          "MeasureObjectIntensityDistribution": 17.194661378860474,
+          "ExportToSpreadsheet": 24.333537101745605
+        },
+        "no_new_numba_cache_indexes": true,
+        "historical_other_excluding_granularity_export": 195.45597529411316
+      },
+      "candidate": {
+        "observations": 1,
+        "means": {
+          "compile": 10.152817487716675,
+          "execution": 79.34864449501038,
+          "total": 92.4418307710439,
+          "warming_seconds": 3.524950842373073
+        },
+        "step_sums": {
+          "DefineGrid": 1.0314819812774658,
+          "IdentifyObjectsInGrid": 10.362483501434326,
+          "MeasureObjectIntensity": 26.499837398529053,
+          "FilterObjects": 26.726076364517212,
+          "MaskImage": 0.8538084030151367,
+          "Smooth": 5.6224281787872314,
+          "EnhanceEdges": 1.541924238204956,
+          "Closing": 9.41837477684021,
+          "IdentifyPrimaryObjects": 27.440136432647705,
+          "MeasureObjectSizeShape": 10.258827924728394,
+          "ExpandOrShrinkObjects": 18.30987000465393,
+          "RelateObjects": 1.1440598964691162,
+          "OverlayOutlines": 9.205392360687256,
+          "MeasureGranularity": 22.109193801879883,
+          "MeasureTexture": 13.777893543243408,
+          "MeasureObjectIntensityDistribution": 17.077154636383057,
+          "ExportToSpreadsheet": 24.354455947875977
+        },
+        "no_new_numba_cache_indexes": true,
+        "historical_other_excluding_granularity_export": 179.26974964141846
+      },
+      "native_analysis_over_candidate_execution": 4.590249786786258
+    }
+  },
+  "exports": [
+    {
+      "name": "warm_1w_control_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm_1w_control_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm_1w_candidate_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm_1w_candidate_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm_16w_control_1",
+      "mode": "16w",
+      "sha256": "da017d79eaeeae997ee5e385cb8aafae08a40a8d907eb7d3c77640c64537d566",
+      "byte_identical": true
+    },
+    {
+      "name": "warm_16w_candidate_1",
+      "mode": "16w",
+      "sha256": "da017d79eaeeae997ee5e385cb8aafae08a40a8d907eb7d3c77640c64537d566",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_control_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_control_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_candidate_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_candidate_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "installed_cold",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    }
+  ],
+  "scope": "True cold has separate empty caches and no outside preparation; warm ordinary totals exclude separately recorded public preparation. All timing is isolated from tests/builds/audits.",
+  "installed_cold_journey": {
+    "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+    "mode_name": "1w_1t",
+    "worker_count": "1",
+    "well_count": "1",
+    "compile_seconds": "28.736645221710205",
+    "prepare_seconds": "0.0",
+    "execute_seconds": "12.27185320854187",
+    "total_seconds": "43.94420693209395",
+    "wells_per_second": "0.08148728500956531",
+    "successful_wells": "1",
+    "native_single_sample_execution_seconds": "",
+    "projected_native_execution_seconds": "",
+    "projected_execution_speedup": "",
+    "peak_memory_mb": "2401.21484375",
+    "status": "success",
+    "memory_limit_mb": "",
+    "error_message": "",
+    "execution_route": "ordinary-zmq-outcomes-v1",
+    "server_lifecycle": "fresh-per-observation",
+    "run_input_sha256": "f7a5d1527d68a01b15fb16a5fb525b41db401cc7f4268b25687091ffe5fd396c"
+  },
+  "export_rows": {
+    "1w": 1801,
+    "16w": 28801
+  },
+  "ratchets": {
+    "openhcs": {
+      "paths": [
+        "openhcs/core/processing_preparation.py"
+      ],
+      "increased": {},
+      "changed_path_delta": {
+        "StringDispatch:openhcs/core/processing_preparation.py": 0,
+        "TypeSwitch:openhcs/core/processing_preparation.py": 0,
+        "StringDispatchArms:openhcs/core/processing_preparation.py": 0,
+        "TypeSwitchArms:openhcs/core/processing_preparation.py": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::PreparationOperation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::RegistryFamilyPreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::ModuleRegistryPreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::DeclaredHookPreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::ModuleHookPreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::CallableHookPreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::CallablePreparation": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::PreparationCacheWorker": 0,
+        "GodClassExcess:openhcs/core/processing_preparation.py::PreparationCacheBatch": 0,
+        "BooleanChainTerms:openhcs/core/processing_preparation.py": 0,
+        "ForeignAbsenceProbe:openhcs/core/processing_preparation.py": 0,
+        "CodecSubclass:openhcs/core/processing_preparation.py": 0
+      },
+      "full_receipt": "validation/ratchet_openhcs_full.json.gz"
+    },
+    "scripts": {
+      "paths": [],
+      "increased": {},
+      "changed_path_delta": {},
+      "full_receipt": "validation/ratchet_scripts_full.json.gz"
+    },
+    "benchmark": {
+      "paths": [],
+      "increased": {},
+      "changed_path_delta": {},
+      "full_receipt": "validation/ratchet_benchmark_full.json.gz"
+    }
+  },
+  "census": {
+    "before": {
+      "source_revision": "c50f42c46",
+      "module_count": 698,
+      "original_class_count": 5080,
+      "projected_count": 5068
+    },
+    "after": {
+      "source_revision": "82303175b",
+      "module_count": 698,
+      "original_class_count": 5080,
+      "projected_count": 5068
+    }
+  },
+  "wheel_sha256": "2461662a9ff9fb58ab6be3d4d4329fc1aa262e7228310b1e3236236b330c3724",
+  "wheel_extensions": [
+    "openhcs/core/_tabular_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+  ],
+  "native_reference": {
+    "analysis_seconds": {
+      "1w": 65.9238527240009,
+      "16w": 364.230098475
+    },
+    "source_runs": [
+      "perf-native-tabular-native-imaging-1w1j-20260929",
+      "perf-native-tabular-native-imaging-16w4j-20260929"
+    ],
+    "rerun_for_this_patch": false,
+    "scope": "Earlier physical CP4.2.8.1/JDK11 warmed analysis with CSV close; interpreter/JVM startup, full warmup and shutdown excluded. Original 16w controller exit remains unobserved; saved workers/readback retained. Synthetic repeated wells are not biological scaling evidence."
+  },
+  "integration": {
+    "source_commit": "e16c0be41e386d5a37a10c5e7c54f49817e5e9ee",
+    "main_commit": "7d0ce5e68",
+    "preparation_source_unchanged": true,
+    "post_sync_tests": {
+      "passed": 24,
+      "seconds": 9.24
+    },
+    "post_sync_r1": {
+      "before": [],
+      "after": [],
+      "increased": []
+    }
+  }
+}

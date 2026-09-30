@@ -55,6 +55,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionBuilder,
 )
 from openhcs.core.viewer_streaming_service import (
+    FullWindowImageStreamingRequest,
     ImageStreamingRequest,
     RoiStreamingRequest,
     StreamingService,
@@ -228,11 +229,13 @@ class PlateStreamingService:
             if request.result_directory is not None:
                 read_backend = Backend.DISK.value
             if request.source_receipt is None:
+                image_request_type = ImageStreamingRequest
                 source_projection = self._inventory_source_projection(
                     resolved_records, stream_context
                 )
                 producer = None
             else:
+                image_request_type = FullWindowImageStreamingRequest
                 source_projection, producer = self._receipt_source_projection(
                     request, resolved_records, stream_context
                 )
@@ -252,7 +255,7 @@ class PlateStreamingService:
             status_messages: list[str] = []
             if image_paths:
                 streaming_service.stream_images(
-                    ImageStreamingRequest(
+                    image_request_type(
                         viewer=viewer,
                         config=config,
                         status_callback=status_messages.append,
@@ -335,6 +338,7 @@ class PlateStreamingService:
     ) -> VirtualWorkspaceSourceProjection | None:
         """Carry inventory-owned physical image identities into viewer loading."""
         builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        projections = {}
         for record in records:
             image_path = record.streamable_image_path
             if image_path is None or record.source_ref is None:
@@ -342,6 +346,11 @@ class PlateStreamingService:
             builder.record_workspace_source_path(image_path, record.source_ref)
             if record.metadata:
                 builder.record_source_metadata(image_path, record.metadata)
+            if record.source_projection is not None:
+                projections[image_path] = record.source_projection
+        builder.ingest_source_projections(
+            VirtualWorkspaceSourceProjectionEntries(projections)
+        )
         return builder.projection() if builder.workspace_source_refs else None
 
     def _receipt_source_projection(

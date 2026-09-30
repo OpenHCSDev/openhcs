@@ -1,0 +1,45 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "automatic_recovery_on_reconnect": false,
+          "errors": [],
+          "installation_pointer_available": null,
+          "installation_pointer_changed_since_import": false,
+          "installation_pointer_path": null,
+          "missing_packaged_resource_paths": [],
+          "openhcs_version": "0.8.6",
+          "packaged_resource_count": 56,
+          "packaged_resources_ready": true,
+          "reconnect_owner": null,
+          "reconnect_required": false,
+          "recovery_reason": "current",
+          "restart_command": [],
+          "restart_command_is_stable": false,
+          "restart_hint": null,
+          "restart_required": false,
+          "retry_after_reconnect": false,
+          "schema_version": "openhcs.agent.v1",
+          "server_current_mtime_ns": 1790621723552943921,
+          "server_import_mtime_ns": 1790621723552943921,
+          "server_process_id": 1412761,
+          "server_source_changed_since_import": false,
+          "server_source_path": "/home/ts/code/projects/openhcs/openhcs/mcp/server.py",
+          "service": "openhcs.mcp",
+          "stale_source_paths": [],
+          "started_at_unix": 1790719298.8357024,
+          "status": "ok",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_health_check"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}

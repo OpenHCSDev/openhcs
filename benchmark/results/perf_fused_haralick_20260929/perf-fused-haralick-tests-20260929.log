@@ -1,0 +1,482 @@
+.F.F.F.................................................................. [ 33%]
+........................................................................ [ 67%]
+.....................................................................    [100%]
+=================================== FAILURES ===================================
+______ test_fused_haralick_matches_reference_across_distributions[2-True] ______
+
+ignore_zeros = True, gray_levels = 2
+
+    @pytest.mark.parametrize("ignore_zeros", (False, True))
+    @pytest.mark.parametrize("gray_levels", (2, 16, 256))
+    def test_fused_haralick_matches_reference_across_distributions(
+        ignore_zeros, gray_levels
+    ):
+        native = NativeNumpyHaralickTextureBackendStrategy()
+        fused = NumbaNumpyHaralickTextureBackendStrategy()
+        rng = np.random.default_rng(7123)
+        images = (
+            np.full((9, 11), gray_levels - 1, dtype=np.uint8),
+            (np.indices((9, 11)).sum(axis=0) % 2 * (gray_levels - 1)).astype(np.uint8),
+            rng.integers(0, gray_levels, size=(9, 11), dtype=np.uint8),
+            rng.integers(0, gray_levels, size=(18, 22), dtype=np.uint8)[::2, ::2],
+        )
+        for image in images:
+            for scale in (1, 2, 3):
+>               expected = native.haralick_features(
+                    image, scale=scale, ignore_zeros=ignore_zeros
+                )
+
+tests/unit/test_haralick_feature_arithmetic.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/cellprofiler/texture.py:342: in haralick_features
+    mahotas_features.haralick(
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:141: in haralick
+    return haralick_features(all_cmatrices(),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmats = <generator object haralick.<locals>.all_cmatrices at 0x7f9cff05a680>
+ignore_zeros = True, preserve_haralick_bug = False, compute_14th_feature = False
+return_mean = False, return_mean_ptp = False, use_x_minus_y_variance = False
+
+    def haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        ):
+        '''
+        features = haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        )
+    
+        Computes Haralick features for the given cooccurrence matrices.
+    
+        This function is not usually necessary, as you can call ``haralick`` with
+        an image to obtain features for that image. Use only if you know what you
+        are doing.
+    
+        Notes
+        -----
+        Haralick's paper has a typo in one of the equations. This function
+        implements the correct feature unless `preserve_haralick_bug` is True. The
+        only reason why you'd want the buggy behaviour is if you want to match
+        another implementation.
+    
+        References
+        ----------
+    
+        Cite the following reference for these features::
+    
+            @article{Haralick1973,
+                author = {Haralick, Robert M. and Dinstein, Its'hak and Shanmugam, K.},
+                journal = {Ieee Transactions On Systems Man And Cybernetics},
+                number = {6},
+                pages = {610--621},
+                publisher = {IEEE},
+                title = {Textural features for image classification},
+                url = {https://ieeexplore.ieee.org/lpdocs/epic03/wrapper.htm?arnumber=4309314},
+                volume = {3},
+                year = {1973}
+            }
+    
+    
+        Parameters
+        ----------
+        cmats : sequence of ndarrays
+            This should be a sequence of ndarrays, all square and all of the same
+            shape.
+        ignore_zeros : bool, optional
+            Whether to ignore zero pixels (default: False).
+    
+        Other Parameters
+        ----------------
+        preserve_haralick_bug : bool, optional
+            whether to replicate Haralick's typo (default: False).
+            You probably want to always set this to ``False`` unless you want to
+            replicate someone else's wrong implementation.
+        compute_14th_feature : bool, optional
+            whether to compute & return the 14-th feature
+        return_mean : bool, optional
+            When set, the function returns the mean across all the directions
+            (default: False).
+        return_mean_ptp : bool, optional
+            When set, the function returns the mean and ptp (point-to-point, i.e.,
+            difference between max() and min()) across all the directions (default:
+            False).
+        use_x_minus_y_variance : bool, optional
+            Feature 10 (index 9) has two interpretations, as the variance of |x-y|
+            or as the variance of P(|x-y|). In order to achieve compatibility with
+            other software and previous versions of mahotas, mahotas defaults to
+            using ``VAR[P(|x-y|)]``; if this argument is True, then it uses
+            ``VAR[|x-y|]`` (default: False)
+    
+        Returns
+        -------
+        feats : ndarray of np.double
+            Shape ``(n_directions, n_features)``: ``(4, 13)`` or ``(4, 14)`` if
+            `f` is 2D, ``(13, 13)`` or ``(13, 14)`` if it is 3D. ``n_features``
+            is 13 by default, or 14 when ``compute_14th_feature`` is set. If
+            either ``return_mean`` or ``return_mean_ptp`` is set, a 1-D array
+            of length ``n_features`` (or ``2 * n_features``) is returned.
+    
+        See Also
+        --------
+        haralick : function
+            compute Haralick features for an image
+        '''
+        if return_mean and return_mean_ptp:
+            raise ValueError("mahotas.haralick_features: Cannot set both `return_mean` and `return_mean_ptp`")
+        features = []
+        for cmat in cmats:
+            feats = np.zeros(13 + bool(compute_14th_feature), np.double)
+            if ignore_zeros:
+                cmat[0] = 0
+                cmat[:,0] = 0
+            T = cmat.sum()
+            if not T:
+>               raise ValueError('mahotas.haralick_features: the input is empty. Cannot compute features!\n' +
+                                    'This can happen if you are using `ignore_zeros`' )
+E               ValueError: mahotas.haralick_features: the input is empty. Cannot compute features!
+E               This can happen if you are using `ignore_zeros`
+
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:253: ValueError
+_____ test_fused_haralick_matches_reference_across_distributions[16-True] ______
+
+ignore_zeros = True, gray_levels = 16
+
+    @pytest.mark.parametrize("ignore_zeros", (False, True))
+    @pytest.mark.parametrize("gray_levels", (2, 16, 256))
+    def test_fused_haralick_matches_reference_across_distributions(
+        ignore_zeros, gray_levels
+    ):
+        native = NativeNumpyHaralickTextureBackendStrategy()
+        fused = NumbaNumpyHaralickTextureBackendStrategy()
+        rng = np.random.default_rng(7123)
+        images = (
+            np.full((9, 11), gray_levels - 1, dtype=np.uint8),
+            (np.indices((9, 11)).sum(axis=0) % 2 * (gray_levels - 1)).astype(np.uint8),
+            rng.integers(0, gray_levels, size=(9, 11), dtype=np.uint8),
+            rng.integers(0, gray_levels, size=(18, 22), dtype=np.uint8)[::2, ::2],
+        )
+        for image in images:
+            for scale in (1, 2, 3):
+>               expected = native.haralick_features(
+                    image, scale=scale, ignore_zeros=ignore_zeros
+                )
+
+tests/unit/test_haralick_feature_arithmetic.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/cellprofiler/texture.py:342: in haralick_features
+    mahotas_features.haralick(
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:141: in haralick
+    return haralick_features(all_cmatrices(),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmats = <generator object haralick.<locals>.all_cmatrices at 0x7f9cfd7ba8a0>
+ignore_zeros = True, preserve_haralick_bug = False, compute_14th_feature = False
+return_mean = False, return_mean_ptp = False, use_x_minus_y_variance = False
+
+    def haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        ):
+        '''
+        features = haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        )
+    
+        Computes Haralick features for the given cooccurrence matrices.
+    
+        This function is not usually necessary, as you can call ``haralick`` with
+        an image to obtain features for that image. Use only if you know what you
+        are doing.
+    
+        Notes
+        -----
+        Haralick's paper has a typo in one of the equations. This function
+        implements the correct feature unless `preserve_haralick_bug` is True. The
+        only reason why you'd want the buggy behaviour is if you want to match
+        another implementation.
+    
+        References
+        ----------
+    
+        Cite the following reference for these features::
+    
+            @article{Haralick1973,
+                author = {Haralick, Robert M. and Dinstein, Its'hak and Shanmugam, K.},
+                journal = {Ieee Transactions On Systems Man And Cybernetics},
+                number = {6},
+                pages = {610--621},
+                publisher = {IEEE},
+                title = {Textural features for image classification},
+                url = {https://ieeexplore.ieee.org/lpdocs/epic03/wrapper.htm?arnumber=4309314},
+                volume = {3},
+                year = {1973}
+            }
+    
+    
+        Parameters
+        ----------
+        cmats : sequence of ndarrays
+            This should be a sequence of ndarrays, all square and all of the same
+            shape.
+        ignore_zeros : bool, optional
+            Whether to ignore zero pixels (default: False).
+    
+        Other Parameters
+        ----------------
+        preserve_haralick_bug : bool, optional
+            whether to replicate Haralick's typo (default: False).
+            You probably want to always set this to ``False`` unless you want to
+            replicate someone else's wrong implementation.
+        compute_14th_feature : bool, optional
+            whether to compute & return the 14-th feature
+        return_mean : bool, optional
+            When set, the function returns the mean across all the directions
+            (default: False).
+        return_mean_ptp : bool, optional
+            When set, the function returns the mean and ptp (point-to-point, i.e.,
+            difference between max() and min()) across all the directions (default:
+            False).
+        use_x_minus_y_variance : bool, optional
+            Feature 10 (index 9) has two interpretations, as the variance of |x-y|
+            or as the variance of P(|x-y|). In order to achieve compatibility with
+            other software and previous versions of mahotas, mahotas defaults to
+            using ``VAR[P(|x-y|)]``; if this argument is True, then it uses
+            ``VAR[|x-y|]`` (default: False)
+    
+        Returns
+        -------
+        feats : ndarray of np.double
+            Shape ``(n_directions, n_features)``: ``(4, 13)`` or ``(4, 14)`` if
+            `f` is 2D, ``(13, 13)`` or ``(13, 14)`` if it is 3D. ``n_features``
+            is 13 by default, or 14 when ``compute_14th_feature`` is set. If
+            either ``return_mean`` or ``return_mean_ptp`` is set, a 1-D array
+            of length ``n_features`` (or ``2 * n_features``) is returned.
+    
+        See Also
+        --------
+        haralick : function
+            compute Haralick features for an image
+        '''
+        if return_mean and return_mean_ptp:
+            raise ValueError("mahotas.haralick_features: Cannot set both `return_mean` and `return_mean_ptp`")
+        features = []
+        for cmat in cmats:
+            feats = np.zeros(13 + bool(compute_14th_feature), np.double)
+            if ignore_zeros:
+                cmat[0] = 0
+                cmat[:,0] = 0
+            T = cmat.sum()
+            if not T:
+>               raise ValueError('mahotas.haralick_features: the input is empty. Cannot compute features!\n' +
+                                    'This can happen if you are using `ignore_zeros`' )
+E               ValueError: mahotas.haralick_features: the input is empty. Cannot compute features!
+E               This can happen if you are using `ignore_zeros`
+
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:253: ValueError
+_____ test_fused_haralick_matches_reference_across_distributions[256-True] _____
+
+ignore_zeros = True, gray_levels = 256
+
+    @pytest.mark.parametrize("ignore_zeros", (False, True))
+    @pytest.mark.parametrize("gray_levels", (2, 16, 256))
+    def test_fused_haralick_matches_reference_across_distributions(
+        ignore_zeros, gray_levels
+    ):
+        native = NativeNumpyHaralickTextureBackendStrategy()
+        fused = NumbaNumpyHaralickTextureBackendStrategy()
+        rng = np.random.default_rng(7123)
+        images = (
+            np.full((9, 11), gray_levels - 1, dtype=np.uint8),
+            (np.indices((9, 11)).sum(axis=0) % 2 * (gray_levels - 1)).astype(np.uint8),
+            rng.integers(0, gray_levels, size=(9, 11), dtype=np.uint8),
+            rng.integers(0, gray_levels, size=(18, 22), dtype=np.uint8)[::2, ::2],
+        )
+        for image in images:
+            for scale in (1, 2, 3):
+>               expected = native.haralick_features(
+                    image, scale=scale, ignore_zeros=ignore_zeros
+                )
+
+tests/unit/test_haralick_feature_arithmetic.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/cellprofiler/texture.py:342: in haralick_features
+    mahotas_features.haralick(
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:141: in haralick
+    return haralick_features(all_cmatrices(),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmats = <generator object haralick.<locals>.all_cmatrices at 0x7f9cff059f10>
+ignore_zeros = True, preserve_haralick_bug = False, compute_14th_feature = False
+return_mean = False, return_mean_ptp = False, use_x_minus_y_variance = False
+
+    def haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        ):
+        '''
+        features = haralick_features(cmats,
+                        ignore_zeros=False,
+                        preserve_haralick_bug=False,
+                        compute_14th_feature=False,
+                        return_mean=False,
+                        return_mean_ptp=False,
+                        use_x_minus_y_variance=False,
+                        )
+    
+        Computes Haralick features for the given cooccurrence matrices.
+    
+        This function is not usually necessary, as you can call ``haralick`` with
+        an image to obtain features for that image. Use only if you know what you
+        are doing.
+    
+        Notes
+        -----
+        Haralick's paper has a typo in one of the equations. This function
+        implements the correct feature unless `preserve_haralick_bug` is True. The
+        only reason why you'd want the buggy behaviour is if you want to match
+        another implementation.
+    
+        References
+        ----------
+    
+        Cite the following reference for these features::
+    
+            @article{Haralick1973,
+                author = {Haralick, Robert M. and Dinstein, Its'hak and Shanmugam, K.},
+                journal = {Ieee Transactions On Systems Man And Cybernetics},
+                number = {6},
+                pages = {610--621},
+                publisher = {IEEE},
+                title = {Textural features for image classification},
+                url = {https://ieeexplore.ieee.org/lpdocs/epic03/wrapper.htm?arnumber=4309314},
+                volume = {3},
+                year = {1973}
+            }
+    
+    
+        Parameters
+        ----------
+        cmats : sequence of ndarrays
+            This should be a sequence of ndarrays, all square and all of the same
+            shape.
+        ignore_zeros : bool, optional
+            Whether to ignore zero pixels (default: False).
+    
+        Other Parameters
+        ----------------
+        preserve_haralick_bug : bool, optional
+            whether to replicate Haralick's typo (default: False).
+            You probably want to always set this to ``False`` unless you want to
+            replicate someone else's wrong implementation.
+        compute_14th_feature : bool, optional
+            whether to compute & return the 14-th feature
+        return_mean : bool, optional
+            When set, the function returns the mean across all the directions
+            (default: False).
+        return_mean_ptp : bool, optional
+            When set, the function returns the mean and ptp (point-to-point, i.e.,
+            difference between max() and min()) across all the directions (default:
+            False).
+        use_x_minus_y_variance : bool, optional
+            Feature 10 (index 9) has two interpretations, as the variance of |x-y|
+            or as the variance of P(|x-y|). In order to achieve compatibility with
+            other software and previous versions of mahotas, mahotas defaults to
+            using ``VAR[P(|x-y|)]``; if this argument is True, then it uses
+            ``VAR[|x-y|]`` (default: False)
+    
+        Returns
+        -------
+        feats : ndarray of np.double
+            Shape ``(n_directions, n_features)``: ``(4, 13)`` or ``(4, 14)`` if
+            `f` is 2D, ``(13, 13)`` or ``(13, 14)`` if it is 3D. ``n_features``
+            is 13 by default, or 14 when ``compute_14th_feature`` is set. If
+            either ``return_mean`` or ``return_mean_ptp`` is set, a 1-D array
+            of length ``n_features`` (or ``2 * n_features``) is returned.
+    
+        See Also
+        --------
+        haralick : function
+            compute Haralick features for an image
+        '''
+        if return_mean and return_mean_ptp:
+            raise ValueError("mahotas.haralick_features: Cannot set both `return_mean` and `return_mean_ptp`")
+        features = []
+        for cmat in cmats:
+            feats = np.zeros(13 + bool(compute_14th_feature), np.double)
+            if ignore_zeros:
+                cmat[0] = 0
+                cmat[:,0] = 0
+            T = cmat.sum()
+            if not T:
+>               raise ValueError('mahotas.haralick_features: the input is empty. Cannot compute features!\n' +
+                                    'This can happen if you are using `ignore_zeros`' )
+E               ValueError: mahotas.haralick_features: the input is empty. Cannot compute features!
+E               This can happen if you are using `ignore_zeros`
+
+../openhcs/.venv/lib/python3.12/site-packages/mahotas/features/texture.py:253: ValueError
+=============================== warnings summary ===============================
+tests/unit/test_cellprofiler_library_loading.py::test_absorbed_watershed_accepts_grayscale_volumes
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:965: FutureWarning: `binary_dilation` is deprecated since version 0.26 and will be removed in version 0.28. Use `skimage.morphology.dilation` instead. Note the lack of mirroring for non-symmetric footprints (see docstring notes).
+    seeds = binary_dilation(seeds, parameters.structuring_element)
+
+tests/unit/test_cellprofiler_library_loading.py::test_object_texture_crop_backend_matches_regionprops_intensity_images
+  /home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_library_loading.py:2701: FutureWarning: `RegionProperties.intensity_image` is deprecated starting in version 0.26 and will be removed in version 2.0. Use `RegionProperties.image_intensity` instead. 
+    np.testing.assert_array_equal(intensity_crop, prop.intensity_image)
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: divide by zero encountered in log
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: invalid value encountered in multiply
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:218: RuntimeWarning: invalid value encountered in divide
+    mean = (cs[j] - cs[i]) / diff
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:219: RuntimeWarning: invalid value encountered in divide
+    mean2 = (cs2[j] - cs2[i]) / diff
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: invalid value encountered in log
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_local_focus_matches_grid_semantics
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/scipy/ndimage/_measurements.py:810: RuntimeWarning: invalid value encountered in divide
+    return sum / np.asanyarray(count).astype(np.float64)
+
+tests/unit/test_cellprofiler_library_loading.py::test_correct_illumination_median_smoothing_hybrid_matches_rank_reference
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/filters/rank/generic.py:332: UserWarning: Bad rank filter performance is expected due to a large number of bins (49152), equivalent to an approximate bitdepth of 15.6.
+    image, footprint, out, mask, n_bins = _preprocess_input(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_haralick_feature_arithmetic.py::test_fused_haralick_matches_reference_across_distributions[2-True]
+FAILED tests/unit/test_haralick_feature_arithmetic.py::test_fused_haralick_matches_reference_across_distributions[16-True]
+FAILED tests/unit/test_haralick_feature_arithmetic.py::test_fused_haralick_matches_reference_across_distributions[256-True]
+3 failed, 210 passed, 9 warnings in 10.28s

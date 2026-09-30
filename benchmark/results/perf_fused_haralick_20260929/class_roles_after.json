@@ -1,0 +1,467 @@
+{
+  "source_revision": "5976f8547-plus-haralick-fusion",
+  "module_count": 699,
+  "original_class_count": 5075,
+  "projected_count": 5063,
+  "classes": [
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 24,
+      "name": "CellProfilerBackendProvider",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendProvider",
+      "bases": [
+        "str",
+        "Enum"
+      ],
+      "resolved_bases": [],
+      "base_resolution_complete": false,
+      "methods": [
+        "requires_compiler_prewarm"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 53,
+      "name": "CellProfilerBackendRegistrySnapshot",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendRegistrySnapshot",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "for_family",
+        "registry",
+        "available_backend_providers"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 84,
+      "name": "CellProfilerBackendProviderSelection",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendProviderSelection",
+      "bases": [
+        "RuntimeSliceInvariantValue",
+        "ABC"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.runtime_plane_projection.RuntimeSliceInvariantValue"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "backend_class",
+        "provider_or",
+        "semantic_identity",
+        "identity_fields"
+      ],
+      "abstract_methods": [
+        "backend_class",
+        "provider_or"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": [
+        "AutoRegisterMeta"
+      ]
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 127,
+      "name": "DefaultCellProfilerBackendProviderSelection",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.DefaultCellProfilerBackendProviderSelection",
+      "bases": [
+        "CellProfilerBackendProviderSelection"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendProviderSelection"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "backend_class",
+        "provider_or"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 165,
+      "name": "ExplicitCellProfilerBackendProviderSelection",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.ExplicitCellProfilerBackendProviderSelection",
+      "bases": [
+        "CellProfilerBackendProviderSelection"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendProviderSelection"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "backend_class",
+        "provider_or",
+        "identity_fields"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 214,
+      "name": "CellProfilerBackendAuthority",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendAuthority",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "memory_type",
+        "provider",
+        "provider_selection",
+        "selection_identity",
+        "backend_key"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 282,
+      "name": "CellProfilerBackendStrategyMixin",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendStrategyMixin",
+      "bases": [
+        "CompilerPreparedAutoRegisterFamily"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.callable_contract.CompilerPreparedAutoRegisterFamily"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "can_prepare_in_child",
+        "prepare_registered_family",
+        "prepare_backend",
+        "requires_explicit_prepare_backend",
+        "for_memory_type",
+        "for_callable",
+        "available_backend_providers",
+        "_resolve_backend_class"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 83,
+      "name": "MeasureTextureObjectMeasurementRowPolicy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.MeasureTextureObjectMeasurementRowPolicy",
+      "bases": [
+        "DeclaredDomainCompactMeasuredObjectMeasurementRowPolicy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.interop.cellprofiler.runtime.object_measurement_row_policies.DeclaredDomainCompactMeasuredObjectMeasurementRowPolicy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "row_identity_axis_fields"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 121,
+      "name": "MeasureTextureModule",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.MeasureTextureModule",
+      "bases": [
+        "LabelsObjectInputPolicy",
+        "MeasureTextureObjectMeasurementRowPolicy",
+        "PerObjectMeasurementExecutionModule",
+        "ScopedMeasurementModule",
+        "SourceQualifiedWideMeasurementRowsModule"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.interop.cellprofiler.runtime.object_input_policies.LabelsObjectInputPolicy",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.MeasureTextureObjectMeasurementRowPolicy",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.interop.cellprofiler.module_artifact_declarations.PerObjectMeasurementExecutionModule",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.interop.cellprofiler.module_artifact_declarations.ScopedMeasurementModule",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.interop.cellprofiler.module_artifact_declarations.SourceQualifiedWideMeasurementRowsModule"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "haralick_feature_prefixes",
+        "bind_settings"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 150,
+      "name": "MeasurementFeature",
+      "lexical_scope": [
+        "MeasureTextureModule"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.MeasureTextureModule.MeasurementFeature",
+      "bases": [
+        "RuntimeMeasurementFeature"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.runtime_measurements.RuntimeMeasurementFeature"
+      ],
+      "base_resolution_complete": true,
+      "methods": [],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 226,
+      "name": "ObjectTextureCropBackendStrategy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.ObjectTextureCropBackendStrategy",
+      "bases": [
+        "CellProfilerBackendStrategyMixin",
+        "ABC"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendStrategyMixin"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "object_intensity_crops"
+      ],
+      "abstract_methods": [
+        "object_intensity_crops"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": [
+        "AutoRegisterMeta"
+      ]
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 241,
+      "name": "HaralickTextureBackendStrategy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.HaralickTextureBackendStrategy",
+      "bases": [
+        "CellProfilerBackendStrategyMixin",
+        "ABC"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendStrategyMixin"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "haralick_features"
+      ],
+      "abstract_methods": [
+        "haralick_features"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": [
+        "AutoRegisterMeta"
+      ]
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 256,
+      "name": "NumbaNumpyObjectTextureCropBackendStrategy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.NumbaNumpyObjectTextureCropBackendStrategy",
+      "bases": [
+        "ObjectTextureCropBackendStrategy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.ObjectTextureCropBackendStrategy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "prepare_backend",
+        "object_intensity_crops"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 297,
+      "name": "NumbaNumpyHaralickTextureBackendStrategy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.NumbaNumpyHaralickTextureBackendStrategy",
+      "bases": [
+        "HaralickTextureBackendStrategy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.HaralickTextureBackendStrategy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "prepare_backend",
+        "haralick_features"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 327,
+      "name": "NativeNumpyHaralickTextureBackendStrategy",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.NativeNumpyHaralickTextureBackendStrategy",
+      "bases": [
+        "HaralickTextureBackendStrategy"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.HaralickTextureBackendStrategy"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "haralick_features"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 360,
+      "name": "CellProfilerTexturePixelDataRequest",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.CellProfilerTexturePixelDataRequest",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "pixel_data"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 393,
+      "name": "HaralickFeatureMatrixRequest",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.HaralickFeatureMatrixRequest",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "feature_matrix"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 445,
+      "name": "TextureMeasurementAxis",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.TextureMeasurementAxis",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "object_key"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/texture.py",
+      "line": 464,
+      "name": "HaralickFeatureVector",
+      "lexical_scope": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler.texture.HaralickFeatureVector",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_matrix",
+        "zeros"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    }
+  ]
+}

@@ -1,0 +1,420 @@
+{
+  "accepted": false,
+  "source_sha": "77cfa43360b21470160dcfad52125d5613bfb5cb",
+  "display": ":88",
+  "viewer_port": 5792,
+  "resources": {
+    "free_gib": {
+      "/": 8.6,
+      "/dev/shm": 15.5,
+      "/home": 21.3,
+      "/tmp": 9.6
+    },
+    "level": "warning",
+    "ram_available_gib": 13.6,
+    "reasons": [
+      "swap used 11.1 GiB"
+    ],
+    "swap_used_gib": 11.1
+  },
+  "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.03 total=65858651\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=63768419\n",
+  "author_opened_bitmaps": false,
+  "calls": [
+    {
+      "tool": "openhcs_health_check",
+      "arguments": {},
+      "started": 1790719573.4788108,
+      "status": "returned",
+      "response": {
+        "server": {
+          "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+          "module": "openhcs.mcp"
+        },
+        "errors": [],
+        "results": [
+          {
+            "tool": "openhcs_health_check",
+            "mcp_error": false,
+            "payloads": [
+              {
+                "schema_version": "openhcs.agent.v1",
+                "errors": [],
+                "warnings": [],
+                "status": "ok",
+                "started_at_unix": 1790719572.725209,
+                "service": "openhcs.mcp",
+                "openhcs_version": "0.8.6",
+                "packaged_resources_ready": true,
+                "packaged_resource_count": 56,
+                "missing_packaged_resource_paths": [],
+                "server_process_id": 1643137,
+                "server_source_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/openhcs/mcp/server.py",
+                "server_import_mtime_ns": 1790715774207490800,
+                "server_current_mtime_ns": 1790715774207490800,
+                "server_source_changed_since_import": false,
+                "stale_source_paths": [],
+                "recovery_reason": "current",
+                "installation_pointer_path": null,
+                "installation_pointer_changed_since_import": false,
+                "installation_pointer_available": null,
+                "restart_required": false,
+                "restart_command": [],
+                "restart_command_is_stable": false,
+                "reconnect_required": false,
+                "reconnect_owner": null,
+                "retry_after_reconnect": false,
+                "automatic_recovery_on_reconnect": false,
+                "restart_hint": null
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_seconds": 0.010835886001586914
+    },
+    {
+      "tool": "openhcs_get_authoring_context",
+      "arguments": {
+        "kind": "first_use"
+      },
+      "started": 1790719573.490174,
+      "status": "returned",
+      "response": {
+        "server": {
+          "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+          "module": "openhcs.mcp"
+        },
+        "errors": [],
+        "results": [
+          {
+            "tool": "openhcs_get_authoring_context",
+            "mcp_error": false,
+            "payloads": [
+              {
+                "schema_version": "openhcs.agent.v1",
+                "kind": "first_use",
+                "content": "=== CHOOSE AN OPENHCS WORKFLOW ===\nUse this context when you are starting or resuming work and need to choose the OpenHCS state owner or next workflow.\n\n=== CORE MODEL IN ONE PASS ===\n- OpenHCS is a typed compiler/runtime for high-content microscopy. It projects microscope data into a storage-independent virtual workspace, compiles PipelineConfig plus ordered FunctionStep declarations, resolves multidimensional grouping and artifact contracts, executes through typed runtime values, and validates results through plate and viewer evidence.\n- Choose the state owner before choosing file formats or tools. If the user asks to open, show, continue, or edit work in the desktop, the UI-owned route always takes precedence over folder inspection or a headless session.\n\n=== CHOOSE ONE TASK ROUTE ===\nRequest exactly one matching context with openhcs_get_authoring_context; deepen into another only when the workflow reaches that boundary. Reuse this router after a handoff or a change of task; first_use is not a one-time setup step.\n- kind=\"ui_visible_workflow\" — Work in the running desktop UI: the user asks to open, show, continue, or edit work in the visible OpenHCS desktop.\n- kind=\"domain_expert_assisted_setup\" — Set up a workflow from biological intent: a domain expert describes the experiment and expected result but wants the agent to handle OpenHCS mechanics.\n- kind=\"folder_onboarding\" — Inspect and onboard image data: the task starts from a local plate, image folder, or rich image container and does not require visible UI ownership.\n- kind=\"pipeline\" — Author or revise a typed pipeline: the sources are understood and the next task is choosing functions, axes, grouping, configuration, or artifact contracts.\n- kind=\"image_analysis_workflow\" — Design and validate an image-analysis workflow: an analysis needs multisite assembly, registration, normalisation, mosaic quality control, segmentation review, or image-result provenance.\n- kind=\"custom_function\" — Author a custom processing function: the required operation is not already in the function registry or needs a typed custom artifact contract.\n- kind=\"headless_execution\" — Compile and execute headlessly: a reviewed pipeline should run without becoming selected or editable in the desktop UI.\n- kind=\"debugging\" — Diagnose compiled and runtime behavior: a compile, execution, step output, runtime value, or artifact must be inspected at its owning boundary.\n- kind=\"viewer_review\" — Validate results in a managed viewer: execution produced images, labels, or ROIs that need bounded visual and structured validation.\n- kind=\"objectstate_editing\" — Inspect or edit typed UI state: one exact UI-backed field, inheritance value, snapshot, or branch must be inspected or changed.\n- kind=\"cellprofiler_translation\" — Translate or validate a CellProfiler workflow: the intent begins with a .cppipe, CellProfiler module vocabulary, or an exact parity claim.\n\n=== SAFE FIRST ACTION ===\n- Start read-only. Query the active surface through openhcs_search_capabilities with task-relevant workflow, target, or text filters; its registry-owned metadata is the authority for what this server exposes. Use openhcs_list_capabilities only when the complete selected surface is required.\n- Guides describe workflows across capability profiles. Confirm a named tool is exposed before calling it. Desktop actions are discovered separately through openhcs_ui_list_actions; an empty capability search does not establish that a running window lacks the action.\n- Before operating a live desktop workflow, call openhcs_ui_list_windows and resolve visible modal top-level windows first. Inspect each dialog through openhcs_ui_get_widget_tree and invoke its declared button through openhcs_ui_invoke_widget_action; acknowledge completed operations, cancel unsolicited update/restart prompts, and never use desktop-coordinate automation or leave a blocking dialog hidden behind the analysis viewer.\n- Request the matching task context before mutation. Do not read every knowledge document, enumerate every function, invent config fields, or load full-resolution image data up front.\n- When continuing an analysis, read and reuse its existing pipeline and configuration. Adapt only the required source/layout choices, preserve earlier outputs in a separate destination, and record unavailable acquisitions as missing rather than zero measurements. Validate a representative bounded run before expanding.\n- If returned guidance is truncated, retrieve the same context with a sufficient max_chars before acting on an incomplete workflow.\n- Before any write or execution, show the exact target and intended change, refresh revision/request tokens, obtain approval, validate, and compile before running.\n\n=== DEEPEN ONLY WHEN NEEDED ===\nRetrieve one relevant source-backed target with openhcs_get_knowledge_document; use its returned section ids to narrow further instead of loading every document.\n- openhcs_architecture_quick_start — OpenHCS architecture quick start: Front-door OpenHCS architecture and MCP route covering the public PipelineConfig plus FunctionStep model, ObjectState resolution, function patterns, axes and grouping, typed artifacts, CellProfiler translation, generic source bindings, compilation, runtime values, examples, and safe operation."
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_seconds": 1.2784221172332764
+    },
+    {
+      "tool": "openhcs_stream_plate_files_to_viewer",
+      "arguments": {
+        "port": 5792,
+        "transport_mode": "tcp",
+        "host": "localhost",
+        "plate_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate",
+        "file_paths": [
+          "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif",
+          "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif"
+        ],
+        "fresh_viewer": false,
+        "viewer_config_key": "napari_streaming_config",
+        "limit": 2
+      },
+      "started": 1790719574.76931,
+      "status": "returned",
+      "response": {
+        "server": {
+          "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+          "module": "openhcs.mcp"
+        },
+        "errors": [],
+        "results": [
+          {
+            "tool": "openhcs_stream_plate_files_to_viewer",
+            "mcp_error": false,
+            "payloads": [
+              {
+                "schema_version": "openhcs.agent.v1",
+                "errors": [
+                  {
+                    "code": "plate_file_stream_failed",
+                    "message": "Loaded image window conflicts with its explicit source binding.",
+                    "hint": null,
+                    "exception_type": "ValueError",
+                    "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate"
+                  }
+                ],
+                "warnings": [],
+                "plate_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate",
+                "requested_microscope_type": "auto",
+                "detected_microscope_type": "openhcsdata",
+                "handler_class": "OpenHCSMicroscopeHandler",
+                "parser_class": "SourceSchemaFilenameParser",
+                "viewer_config_key": "napari_streaming_config",
+                "viewer_type": "napari",
+                "connection": {
+                  "host": "localhost",
+                  "port": 5792,
+                  "transport_mode": "tcp",
+                  "persistent": true
+                },
+                "requested_paths": [
+                  "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif",
+                  "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif"
+                ],
+                "resolved_records": [],
+                "streamed_image_paths": [],
+                "streamed_roi_paths": [],
+                "skipped_records": [],
+                "status_messages": []
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_seconds": 7.1050615310668945
+    }
+  ],
+  "uncertain_dispatch": null,
+  "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "source_root": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929",
+  "driver_pid": 1643051,
+  "lock_owner_pid": 1643041,
+  "parent_imports": {
+    "openhcs": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/external/PolyStore/src/polystore/__init__.py"
+  },
+  "submodules": [
+    " b0004daf3223326ac78689ba7b2e68abc18ae298 external/ObjectState (v1.1.8)",
+    " c16b8fc99a07f17e92e5fbf46f312d73cc9c46d7 external/PolyStore (v0.2.19-8-gc16b8fc)",
+    " fddd9857bcd21468d20bc8547a769e0c6c9f1906 external/arraybridge (v0.3.4)",
+    " ca0a87e873f929b311a87a4d60cd3bfba315dbcf external/metaclass-registry (v0.2.1)",
+    " 792b03413331fdf107e369c924c257a2f0b16126 external/pycodify (v0.1.3)",
+    " a51c3d965f8ffdefe95a2b4b37347a85341d483a external/pyqt-reactive (v0.3.24)",
+    " 4e8f8bde5f750d9a50eacac80acd3806123addd8 external/python-introspect (v0.1.14-1-g4e8f8bd)",
+    " 1d3b32f4fcead23d5d2079c975eb2ae7646a1478 external/zmqruntime (v0.2.24)"
+  ],
+  "data_url": "tcp://localhost:5792",
+  "control_url": "tcp://localhost:6792",
+  "source_hashes_before": {
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif": "45f5be72728c5275acd1130aeb4c6ce7a127905826cbd4407523cccc48fff760",
+    "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif": "5fcac25545d0559049895eb580dbc240b93f9c57e820556e7b52fc6b8c1d9678"
+  },
+  "mcp_pid": 1643137,
+  "failure": {
+    "type": "AssertionError",
+    "message": "('openhcs_stream_plate_files_to_viewer', {'schema_version': 'openhcs.agent.v1', 'errors': [{'code': 'plate_file_stream_failed', 'message': 'Loaded image window conflicts with its explicit source binding.', 'hint': None, 'exception_type': 'ValueError', 'path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate'}], 'warnings': [], 'plate_path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate', 'requested_microscope_type': 'auto', 'detected_microscope_type': 'openhcsdata', 'handler_class': 'OpenHCSMicroscopeHandler', 'parser_class': 'SourceSchemaFilenameParser', 'viewer_config_key': 'napari_streaming_config', 'viewer_type': 'napari', 'connection': {'host': 'localhost', 'port': 5792, 'transport_mode': 'tcp', 'persistent': True}, 'requested_paths': ['/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif', '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif'], 'resolved_records': [], 'streamed_image_paths': [], 'streamed_roi_paths': [], 'skipped_records': [], 'status_messages': []}, {'tool': 'openhcs_stream_plate_files_to_viewer', 'mcp_error': False, 'payloads': [{'schema_version': 'openhcs.agent.v1', 'errors': [{'code': 'plate_file_stream_failed', 'message': 'Loaded image window conflicts with its explicit source binding.', 'hint': None, 'exception_type': 'ValueError', 'path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate'}], 'warnings': [], 'plate_path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate', 'requested_microscope_type': 'auto', 'detected_microscope_type': 'openhcsdata', 'handler_class': 'OpenHCSMicroscopeHandler', 'parser_class': 'SourceSchemaFilenameParser', 'viewer_config_key': 'napari_streaming_config', 'viewer_type': 'napari', 'connection': {'host': 'localhost', 'port': 5792, 'transport_mode': 'tcp', 'persistent': True}, 'requested_paths': ['/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif', '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif'], 'resolved_records': [], 'streamed_image_paths': [], 'streamed_roi_paths': [], 'skipped_records': [], 'status_messages': []}]})",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ts/wt/openhcs-viewer-feature-measurement-20260929/tests/diagnostics/check_viewer_feature_measurement_live.py\", line 275, in main\n    streamed = call(\n               ^^^^^\n  File \"/home/ts/wt/openhcs-viewer-feature-measurement-20260929/tests/diagnostics/check_viewer_feature_measurement_live.py\", line 260, in call\n    assert failed == expect_error, (name, payload, result)\n           ^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ('openhcs_stream_plate_files_to_viewer', {'schema_version': 'openhcs.agent.v1', 'errors': [{'code': 'plate_file_stream_failed', 'message': 'Loaded image window conflicts with its explicit source binding.', 'hint': None, 'exception_type': 'ValueError', 'path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate'}], 'warnings': [], 'plate_path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate', 'requested_microscope_type': 'auto', 'detected_microscope_type': 'openhcsdata', 'handler_class': 'OpenHCSMicroscopeHandler', 'parser_class': 'SourceSchemaFilenameParser', 'viewer_config_key': 'napari_streaming_config', 'viewer_type': 'napari', 'connection': {'host': 'localhost', 'port': 5792, 'transport_mode': 'tcp', 'persistent': True}, 'requested_paths': ['/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif', '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif'], 'resolved_records': [], 'streamed_image_paths': [], 'streamed_roi_paths': [], 'skipped_records': [], 'status_messages': []}, {'tool': 'openhcs_stream_plate_files_to_viewer', 'mcp_error': False, 'payloads': [{'schema_version': 'openhcs.agent.v1', 'errors': [{'code': 'plate_file_stream_failed', 'message': 'Loaded image window conflicts with its explicit source binding.', 'hint': None, 'exception_type': 'ValueError', 'path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate'}], 'warnings': [], 'plate_path': '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate', 'requested_microscope_type': 'auto', 'detected_microscope_type': 'openhcsdata', 'handler_class': 'OpenHCSMicroscopeHandler', 'parser_class': 'SourceSchemaFilenameParser', 'viewer_config_key': 'napari_streaming_config', 'viewer_type': 'napari', 'connection': {'host': 'localhost', 'port': 5792, 'transport_mode': 'tcp', 'persistent': True}, 'requested_paths': ['/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel1.tif', '/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/plate/synthetic-channel2.tif'], 'resolved_records': [], 'streamed_image_paths': [], 'streamed_roi_paths': [], 'skipped_records': [], 'status_messages': []}]})\n"
+  },
+  "same_handle_inspections": [
+    {
+      "server": {
+        "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+        "module": "openhcs.mcp"
+      },
+      "errors": [],
+      "results": [
+        {
+          "tool": "openhcs_get_viewer_window_state",
+          "mcp_error": false,
+          "payloads": [
+            {
+              "connection": {
+                "host": "localhost",
+                "port": 5792,
+                "transport_mode": "tcp",
+                "persistent": true
+              },
+              "schema_version": "openhcs.agent.v1",
+              "errors": [],
+              "warnings": [],
+              "observed": true,
+              "viewer": {
+                "viewer_type": "napari",
+                "title": "OpenHCS Napari Visualization"
+              },
+              "layer_count": 0,
+              "layers": [],
+              "active_dimension_label_route": null,
+              "viewer_ndim": 2,
+              "current_step": [
+                0,
+                0
+              ],
+              "axis_labels": [
+                "0",
+                "1"
+              ],
+              "component_group_count": 0,
+              "component_item_count": 0,
+              "native_viewport": {
+                "center": [
+                  0,
+                  0,
+                  0
+                ],
+                "zoom": 1
+              },
+              "native_dimensions": {
+                "order": [
+                  0,
+                  1
+                ],
+                "ndisplay": 2,
+                "displayed_axes": [
+                  "0",
+                  "1"
+                ],
+                "point": [
+                  0,
+                  0
+                ],
+                "camera_angles": [
+                  0,
+                  0,
+                  90
+                ],
+                "canvas_size": [
+                  800,
+                  600
+                ]
+              },
+              "response": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "server": {
+        "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+        "module": "openhcs.mcp"
+      },
+      "errors": [],
+      "results": [
+        {
+          "tool": "openhcs_viewer_snapshot_window",
+          "mcp_error": false,
+          "payloads": [
+            {
+              "connection": {
+                "host": "localhost",
+                "port": 5792,
+                "transport_mode": "tcp",
+                "persistent": true
+              },
+              "schema_version": "openhcs.agent.v1",
+              "errors": [],
+              "warnings": [],
+              "output_dir_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture",
+              "capture_scope": "widget",
+              "frame_condition": "immediate",
+              "observation_timeout_s": 5,
+              "captured": true,
+              "resource": {
+                "uri": "file:///home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture/20260929T220655823264Z_napari_5792_OpenHCS_Napari_Visualization.png",
+                "title": "OpenHCS Napari Visualization",
+                "mime_type": "image/png",
+                "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture/20260929T220655823264Z_napari_5792_OpenHCS_Napari_Visualization.png",
+                "size_bytes": 81227,
+                "sha256": "9aa3055d30c461193bdb8708f9a03241ca2371cee854bdb37789f30c32e62e8c"
+              },
+              "viewer": {
+                "viewer_type": "napari",
+                "title": "OpenHCS Napari Visualization"
+              },
+              "width": 1440,
+              "height": 950,
+              "response": {
+                "type": "screenshot_ack",
+                "status": "success",
+                "viewer": {
+                  "type": "napari",
+                  "title": "OpenHCS Napari Visualization"
+                },
+                "resource": {
+                  "uri": "file:///home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture/20260929T220655823264Z_napari_5792_OpenHCS_Napari_Visualization.png",
+                  "title": "OpenHCS Napari Visualization",
+                  "mime_type": "image/png",
+                  "path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture/20260929T220655823264Z_napari_5792_OpenHCS_Napari_Visualization.png",
+                  "size_bytes": 81227,
+                  "sha256": "9aa3055d30c461193bdb8708f9a03241ca2371cee854bdb37789f30c32e62e8c"
+                },
+                "width": 1440,
+                "height": 950,
+                "snapshot": {
+                  "connection": {
+                    "host": "localhost",
+                    "port": 5792,
+                    "transport_mode": "tcp",
+                    "persistent": true
+                  },
+                  "timeout_ms": 5000,
+                  "include_response": true,
+                  "output_dir_path": "/home/ts/wt/openhcs-viewer-feature-measurement-20260929/.pytest_cache/viewer_measurement_live_20260929_02/empty-capture",
+                  "capture_scope": "widget",
+                  "frame_condition": "immediate",
+                  "observation_timeout_s": 5
+                },
+                "native_dimensions": {
+                  "order": [
+                    0,
+                    1
+                  ],
+                  "ndisplay": 2,
+                  "displayed_axes": [
+                    "0",
+                    "1"
+                  ],
+                  "point": [
+                    0,
+                    0
+                  ],
+                  "camera_angles": [
+                    0,
+                    0,
+                    90
+                  ],
+                  "canvas_size": [
+                    800,
+                    600
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "server": {
+        "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+        "module": "openhcs.mcp"
+      },
+      "errors": [],
+      "results": [
+        {
+          "tool": "openhcs_close_viewer_window",
+          "mcp_error": false,
+          "payloads": [
+            {
+              "succeeded": true,
+              "endpoint_terminated": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "uncertain_disposition": "Operator requested close-owned; evidence frozen, never replayed.",
+  "cleanup_gap": "No proved viewer identity or uncertain dispatch; preserve for explicit disposition, no replay/foreign cleanup.",
+  "client_closed": true,
+  "author_opened_empty_bitmap": true,
+  "cleanup_resolution": {
+    "native_close_confirmed": true,
+    "owned_pids_absent": [
+      1643041,
+      1643051,
+      1643137,
+      1643341
+    ],
+    "lock_released": true,
+    "unknown_dispatch": false
+  }
+}

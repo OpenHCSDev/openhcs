@@ -1,0 +1,78 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 226, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 214, in main
+    result = compare(
+             ^^^^^^^^
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 203, in compare
+    results.append(scan_counts(snapshot, roots, changed))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 107, in scan_counts
+    result = analyze_compact_roots_with_cache(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 2292, in analyze_compact_roots_with_cache
+    build_results = worker_plan.map(
+                    ^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 288, in map
+    return [function(item) for item in items]
+            ^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 1265, in build_compact_projection_shard
+    full_batch = collect_family_batch(module, family)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 2282, in collect_family_batch
+    for item in COLLECTED_ITEM_PROJECTION.flatten(family.collect(parsed_module))
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/class_index.py", line 3908, in collect
+    return cls._collect(parsed_module, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/class_index.py", line 3989, in _collect
+    syntax_facets = _compact_class_syntax_facets(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/class_index.py", line 5327, in _compact_class_syntax_facets
+    syntax_index = module_syntax_index(parsed_module.module)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 3024, in module_syntax_index
+    return ModuleSyntaxIndex.build(module)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 2996, in build
+    children = tuple(ast.iter_child_nodes(node))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/ast.py", line 269, in iter_child_nodes
+    def iter_child_nodes(node):
+    
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/deadline.py", line 91, in deadline_handler
+    raise error
+nominal_refactor_advisor.deadline.ScanDeadlineExceeded: scan deadline exceeded during parse_python_module: 160.000s/160.000s
+Command exited with non-zero status 1
+	Command being timed: "timeout 165s /home/ts/code/projects/openhcs/.venv/bin/python -m scripts.check_refactor_r1 --base openhcsdev/main --head HEAD --scratch-root /home/ts/.cache/agent-scratch/openhcs-r0-r1-accepted-20260930 --budget-seconds 160"
+	User time (seconds): 158.83
+	System time (seconds): 2.46
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:41.74
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 409600
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 216010
+	Voluntary context switches: 3715
+	Involuntary context switches: 653
+	Swaps: 0
+	File system inputs: 48
+	File system outputs: 104064
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

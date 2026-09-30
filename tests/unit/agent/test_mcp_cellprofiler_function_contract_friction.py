@@ -12,6 +12,13 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
 )
 from openhcs.processing.backends.cellprofiler.skeleton import measure_object_skeleton
+from openhcs.processing.backends.cellprofiler.intensity import (
+    MeasureObjectIntensityModule,
+    measure_object_intensity,
+)
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
+from openhcs.core.artifacts import ObjectLabelsArtifactType
 
 
 @dataclass(frozen=True)
@@ -156,3 +163,64 @@ def test_function_detail_classifies_normalized_artifact_fed_parameter(monkeypatc
     assert "do not pass this as a function kwarg" in (
         parameters["seed_labels"].description or ""
     )
+
+
+def test_catalog_exposes_declared_exact_object_selector_and_authoring_guidance(
+    monkeypatch,
+):
+    catalog = _catalog(
+        monkeypatch,
+        "openhcs:cellprofiler_measure_object_intensity",
+        measure_object_intensity,
+    )
+    detail = catalog.get("openhcs:cellprofiler_measure_object_intensity")
+    contract = detail.runtime_contract
+    assert contract is not None
+    assert contract.cellprofiler_module is not None
+    (selector,) = (
+        binding
+        for binding in contract.cellprofiler_module.artifact_bindings
+        if binding.runtime_parameter_name == "labels"
+    )
+    owner = MeasureObjectIntensityModule.object_measurement_binding
+    assert owner.parameter_name is None
+    assert selector.parameter_name == owner.require_parameter_name()
+    assert selector.parameter_name == "select_object_sets_to_measure"
+    assert selector.repeated is True
+    assert contract.source_binding_rule is not None
+    assert "one-element tuple selects one producer" in contract.source_binding_rule
+    assert "do not pass labels" in contract.source_binding_rule
+    parameters = {parameter.name: parameter for parameter in detail.parameters}
+    assert parameters["labels"].supplied_by is FunctionParameterSource.ARTIFACT_INPUT
+
+
+def test_catalog_projects_registered_and_new_binding_declarations_without_a_roster():
+    from openhcs.agent.services.function_catalog_service import (
+        _cellprofiler_artifact_binding_summary,
+    )
+
+    registered = tuple(
+        binding
+        for module in CellProfilerModule.__registry__.values()
+        for binding in module.declared_artifact_bindings()
+    )
+    assert registered
+    new_bindings = (
+        SettingToKeywordBinding.input(
+            "Select future object cohort",
+            ObjectLabelsArtifactType,
+            runtime_parameter_name="labels",
+            repeated=True,
+        ),
+        SettingToKeywordBinding.output(
+            "Name future object cohort",
+            ObjectLabelsArtifactType,
+            parameter_name="exact_future_output",
+        ),
+    )
+    for binding in (*registered, *new_bindings):
+        summary = _cellprofiler_artifact_binding_summary(binding)
+        assert summary.parameter_name == binding.require_parameter_name()
+        assert summary.runtime_parameter_name == binding.runtime_parameter_name
+        assert summary.repeated is binding.repeated
+        assert summary.kind == binding.require_artifact_type().require_value()

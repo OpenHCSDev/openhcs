@@ -23,6 +23,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
+    from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
     from openhcs.core.runtime_artifact_values import (
         RuntimeValue,
     )
@@ -141,6 +142,28 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     def diagnostic_label(cls) -> str:
         """Return the stable artifact type label used in diagnostics."""
         return f"<{cls.__name__}: {cls.require_value()!r}>"
+
+    @classmethod
+    def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Validate common kind invariants regardless of payload recording owner."""
+
+        del spec
+
+    @classmethod
+    def validate_native_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Validate kind requirements for native returned payloads."""
+
+        del spec
+
+    @classmethod
+    def validate_recorded_output_declaration(
+        cls,
+        spec: "ArtifactSpec",
+        policy: "type[AdapterRecordedArtifactOutputPolicy]",
+    ) -> None:
+        """Validate kind requirements for declaration-owned adapter recording."""
+
+        del spec, policy
 
     @classmethod
     def normalize_group_scoped_payload(
@@ -663,6 +686,43 @@ class MeasurementsArtifactType(ArtifactType):
 
     value = "measurements"
     payload_shape = ArtifactPayloadShape.TABLE
+
+    @classmethod
+    def require_output_subject(
+        cls,
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject":
+        """Require the same declared subject at compile and runtime boundaries."""
+
+        subject = ArtifactSpecRelation.measurement_subject_for_output(output)
+        if subject is None:
+            raise ValueError(
+                f"Measurement output {output.ref()!r} has no declared "
+                "measurement subject relation. Add ImageMeasurementSubjectRelation "
+                "with the exact declared image ref for image-level rows, "
+                "ObjectMeasurementSubjectRelation with the exact object-label ref "
+                "for object-level rows, or ArtifactMeasurementSubjectRelation() "
+                "for artifact-level rows to ArtifactSpec.output(..., relations=(...,))."
+            )
+        return subject
+
+    @classmethod
+    def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        """Explicit subject relations must agree under every recording owner."""
+
+        ArtifactSpecRelation.measurement_subject_for_output(spec)
+
+    @classmethod
+    def validate_native_output_declaration(cls, spec: "ArtifactSpec") -> None:
+        cls.require_output_subject(spec)
+
+    @classmethod
+    def validate_recorded_output_declaration(
+        cls,
+        spec: "ArtifactSpec",
+        policy: "type[AdapterRecordedArtifactOutputPolicy]",
+    ) -> None:
+        policy.validate_measurement_subject(spec)
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:
@@ -1210,6 +1270,27 @@ class ArtifactSpecRelation(ABC, metaclass=AutoRegisterMeta):
 
         return None
 
+    @staticmethod
+    def measurement_subject_for_output(
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject | None":
+        """Resolve the sole subject from an output's original relation owners."""
+
+        subjects = tuple(
+            dict.fromkeys(
+                subject
+                for relation in output.relations
+                for subject in (relation.measurement_subject(),)
+                if subject is not None
+            )
+        )
+        if len(subjects) > 1:
+            raise ValueError(
+                f"Artifact output {output.ref()!r} declares multiple measurement "
+                f"subjects: {subjects!r}."
+            )
+        return subjects[0] if subjects else None
+
     def object_subject_binding(self) -> ObjectArtifactSubjectBinding | None:
         """Return the target-local identity bound to one object subject."""
 
@@ -1595,6 +1676,16 @@ class ArtifactSpec:
                 "artifact input/output declaration."
             )
         return self.plan_type
+
+    def require_measurement_feature_owner(self) -> type[RuntimeMeasurementFeatureOwner]:
+        """Require the declared row owner without inferring one from consumers."""
+        if self.measurement_feature_owner is None:
+            raise ValueError(
+                f"Measurement output {self.ref()!r} requires its declared "
+                "measurement_feature_owner. Finalize the callable contract "
+                "before compiling heterogeneous rows."
+            )
+        return self.measurement_feature_owner
 
     def ref(self) -> ArtifactSpecRef:
         """Return the scope-free identity for this declaration."""
@@ -2731,20 +2822,7 @@ class ArtifactOutputPlan(ArtifactPlan):
     def measurement_subject(self) -> "MeasurementSubject | None":
         """Return the sole measurement subject declared by this output."""
 
-        subjects = tuple(
-            dict.fromkeys(
-                subject
-                for relation in self.relations
-                for subject in (relation.measurement_subject(),)
-                if subject is not None
-            )
-        )
-        if len(subjects) > 1:
-            raise ValueError(
-                f"Artifact output {self.ref()!r} declares multiple measurement "
-                f"subjects: {subjects!r}."
-            )
-        return subjects[0] if subjects else None
+        return ArtifactSpecRelation.measurement_subject_for_output(self)
 
     def object_subject_binding(self) -> ObjectArtifactSubjectBinding | None:
         """Return the sole object-subject binding declared by this output."""

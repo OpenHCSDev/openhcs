@@ -94,6 +94,35 @@ class ImageStreamingRequest(ViewerStreamingContext):
     source_projection: VirtualWorkspaceSourceProjection | None = None
     producer: ViewerStreamProducer | None = None
 
+    def require_image_window(
+        self,
+        source: ViewerStreamingSource,
+        filename: str,
+        image,
+        projection: VirtualWorkspaceSourceProjection,
+    ) -> None:
+        """Admit the original source window, including a declared bounded crop."""
+        image_payload_metadata(image).source_spatial_domain.require_image_window(
+            image_payload_data(image).shape[-2:]
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FullWindowImageStreamingRequest(ImageStreamingRequest):
+    """Receipt replay additionally requires its exact full native plane window."""
+
+    def require_image_window(
+        self,
+        source: ViewerStreamingSource,
+        filename: str,
+        image,
+        projection: VirtualWorkspaceSourceProjection,
+    ) -> None:
+        super(FullWindowImageStreamingRequest, self).require_image_window(
+            source, filename, image, projection
+        )
+        source.require_projected_image_window(filename, image, projection)
+
 
 @dataclass(frozen=True, slots=True)
 class ManualImageStreamProjectionIdentity:
@@ -666,16 +695,9 @@ class StreamingService:
                     source_projection=source_projection,
                     component_metadata=all_metadata_by_path[filename],
                 )
-                lookup = VirtualWorkspacePathLookup.from_paths(
-                    filename, str(Path(self.source.plate_path) / filename)
+                request.require_image_window(
+                    self.source, filename, image_data, source_projection
                 )
-                if (
-                    request.source_projection is not None
-                    and source_projection.source_projection_for(lookup) is not None
-                ):
-                    self.source.require_projected_image_window(
-                        filename, image_data, source_projection
-                    )
                 image_data_list.append(image_data)
                 file_paths.append(filename)
 

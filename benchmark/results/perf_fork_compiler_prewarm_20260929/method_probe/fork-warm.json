@@ -1,0 +1,26 @@
+{
+  "mode": "fork",
+  "wall_seconds": 0.7044545821845531,
+  "preparation": [
+    {
+      "strategy": "NumbaNumpyObjectIntensityBackendStrategy",
+      "seconds": 0.28713953495025635
+    },
+    {
+      "strategy": "LegacyFastNumpyShapeMeasurementBackendStrategy",
+      "seconds": 0.34454617695882916
+    }
+  ],
+  "parent_hydration": [
+    {
+      "strategy": "LegacyFastNumpyShapeMeasurementBackendStrategy",
+      "seconds": 0.31344901910051703
+    },
+    {
+      "strategy": "NumbaNumpyObjectIntensityBackendStrategy",
+      "seconds": 0.030919163022190332
+    }
+  ],
+  "cache_directory": "/tmp/openhcs-fork-prewarm-fork-2i13ze23",
+  "calling_context": "worker thread in fresh interpreter"
+}
