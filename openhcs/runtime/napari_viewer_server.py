@@ -1719,11 +1719,14 @@ class NapariLayerDisplayRequest:
         route_key = self.presentation.route_key
         self.pipeline.server.component_groups.groups[route_key] = self.items
         self.pipeline.display_axis_projection(
-            route_key, self.presentation.axis_projection_semantics(), self.items,
+            route_key,
+            self.presentation.axis_projection_semantics(),
+            self.items,
             self.presentation.aggregate_axis_bindings,
         )
         self.pipeline.dimension_label_store.apply(
-            self.presentation, display_config=self.display_config,
+            self.presentation,
+            display_config=self.display_config,
         )
         self.pipeline.reconcile_mounted_axis_projections(updated_route_key=route_key)
 
@@ -2231,10 +2234,14 @@ class NapariLayerDisplayPipeline:
                 if rematerialize:
                     NapariLayerDisplayHandler.for_data_type(
                         items[0].address.stream_layer_data_type
-                    ).handle(NapariLayerDisplayRequest(
-                        pipeline=self, items=items, presentation=presentation,
-                        display_config=state.display_config,
-                    ))
+                    ).handle(
+                        NapariLayerDisplayRequest(
+                            pipeline=self,
+                            items=items,
+                            presentation=presentation,
+                            display_config=state.display_config,
+                        )
+                    )
                     continue
                 raise ValueError(
                     "Napari shared semantic axis expansion requires route "
@@ -2481,14 +2488,15 @@ class NapariLayerDisplayPipeline:
             display_payload,
         )
         preview_values = self.server.component_values.shared_values_for(
-            ViewerObjectDisplayConfigInput(display_payload.display_config).layout().components_for_mode(
-                ViewerComponentMode.STACK
-            ),
+            ViewerObjectDisplayConfigInput(display_payload.display_config)
+            .layout()
+            .components_for_mode(ViewerComponentMode.STACK),
             replacement_route=layer_key,
             additional_component_values=display_payload.component_values(),
         )
         self.reconcile_mounted_axis_projections(
-            updated_route_key=layer_key, viewer_component_values=preview_values,
+            updated_route_key=layer_key,
+            viewer_component_values=preview_values,
             apply=False,
         )
         axis_projection = self.display_axis_projection(
@@ -6139,7 +6147,8 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             _NAPARI_COMPONENT_DISPLAY_COORDINATOR._reconcile_deleted_layers(self)
         retained_routes = frozenset(self.layer_route_state.layers)
         for route_key in tuple(
-            self.layer_route_state.layer_titles.keys() | self.component_groups.groups.keys()
+            self.layer_route_state.layer_titles.keys()
+            | self.component_groups.groups.keys()
         ):
             if route_key not in retained_routes:
                 self.component_groups.purge(route_key)

@@ -46,9 +46,11 @@ from openhcs.runtime.napari_viewer_server import (
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentNameMetadata,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
+    ViewerRouteComponentValueTracker,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
@@ -216,12 +218,13 @@ def test_conflicting_route_calibration_fails_closed():
 
 def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip():
     from openhcs.runtime.napari_streaming_handlers import (
-        NapariImagePayloadAxisLabelPolicy,
         NapariLayerRouteStateStore,
+        NapariComponentGroupStore,
     )
     from openhcs.runtime.napari_viewer_server import (
         NapariImageLayerDisplayHandler,
         NapariLayerDisplayRequest,
+        NapariLayerDisplayPipeline,
         NapariPointsLayerDisplayHandler,
         NapariShapesLayerDisplayHandler,
     )
@@ -231,14 +234,12 @@ def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip()
     server = SimpleNamespace(
         viewer=viewer,
         layer_route_state=routes,
+        component_groups=NapariComponentGroupStore(),
+        component_values=ViewerRouteComponentValueTracker(),
+        component_name_metadata=ViewerComponentNameMetadata.empty(),
         bind_result_selection_layer=lambda layer: None,
     )
-    pipeline = SimpleNamespace(
-        server=server,
-        payload_axis_policy=NapariImagePayloadAxisLabelPolicy(),
-        dimension_label_store=SimpleNamespace(apply=lambda value: None),
-        dimension_label_overlay=SimpleNamespace(setup_for_layer=lambda route: None),
-    )
+    pipeline = NapariLayerDisplayPipeline(server)
     metadata = ImagePayloadMetadata(
         source_voxel_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
         source_spatial_domain=SourceSpatialDomain((0, 0), (4, 5)),

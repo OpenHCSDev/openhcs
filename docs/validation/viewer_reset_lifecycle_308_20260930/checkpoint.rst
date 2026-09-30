@@ -67,3 +67,52 @@ test migration and original packaged ratchet/R1 evidence remain in progress.
 The full application/installed/MCP journey is deliberately not claimed.
 Live dependency remains Russell terminal release of validation.lock, then
 parent-owned affected acceptance; Refs #308, not a closure claim.
+
+Final source checkpoint
+-----------------------
+
+Eight native Qt/model transitions passed: queued image replacement with both
+replace policies, initial partial Shapes cancellation, Shapes replacement
+cancellation, full Shapes completion/publication, shared-axis translation
+prune, interior-axis extent prune/rematerialization, deleted queued route
+non-resurrection. Settled item-list identity and physical scale survive reset;
+prune rematerialization preserves the original display policy and native layer
+selection through the existing native mount owner. No extra classifier/store.
+
+Focused owner shards passed: image/clear7, native mount/shared-axis7,
+coordinator/debounce/settlement9, Shapes/Points/mount/chunks5, native4097-member
+Shapes1 (three work units, full features/colors). These counts overlap and do
+not imply a full-suite pass. Largest successful shard463428KiB, below512MiB.
+The former fake Shapes-chunk implementation is deleted from the test; its
+behavioral assertions now exercise a real unmounted native candidate, exact
+chunk sizes, feature/color completion, registration before binding and reveal.
+
+Full owner-file attempts are not passes: the unsharded run exceeded512MiB;
+the later Qt-enabled run exited nonzero in pre-existing entrypoint/window tests
+after73 test indicators, maximum526752KiB. No more broad UI runs were attempted.
+Native-presentation test collection is independently blocked by the absent
+openhcs.core._tabular_native compiled extension. No build, install, native
+server, GL canvas or download was used to work around it. Its direct-handler
+fixture now supplies the actual display pipeline required by publication.
+
+Full R1/NRA dependency context is not certified: recorded arraybridge object
+409b1e0831f815fa9ef91d4ecc04989f9fbb89c5 is absent from the frozen tree's
+shared Git object store. The source bootstrap uses only the four required
+initialized own dependencies cloned with shared/read-only object references:
+PolyStore dc341739, metaclass-registry448cdf07, zmqruntime9e11f6f,
+pyqt-reactive3437d1c6. No other submodule or other worktree was modified.
+Parent must supply the recorded dependency context for its full R1 gate.
+
+Original structural ratchet source is authenticated from Git archive of CI pin
+3b03785f45df2ef5dc62ba6aed99294192ecbb01; no detector definitions are altered.
+Python3.12 cannot load that original package because InputDocument is an
+unevaluated-forward annotation under its Python3.14 semantics. The original
+guard therefore uses the already-present Python3.14.2, separate from all
+Python3.12 source tests. First measurement at0b56212d7:5140 actual metrics;
+sole positive StringSubscript+2. Both witnesses were unnecessary quotes on
+future-deferred NapariPendingLayerUpdate item annotations, now removed.
+Original before/after metrics and resource reports are retained.
+
+No installed/live readiness claim. Parent owns affected MCP acceptance after
+Russell releases validation.lock, plus its full R1/source environment gate.
+Draft PR309 remains Refs #308 and must not close it before that acceptance.

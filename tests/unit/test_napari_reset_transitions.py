@@ -10,7 +10,11 @@ from polystore.streaming_constants import StreamingDataType
 from qtpy.QtCore import QEventLoop, QTimer
 from qtpy.QtWidgets import QApplication
 
-from openhcs.core.config import NapariDimensionMode, NapariDisplayConfig, NapariVariableSizeHandling
+from openhcs.core.config import (
+    NapariDimensionMode,
+    NapariDisplayConfig,
+    NapariVariableSizeHandling,
+)
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.napari_streaming_handlers import (
@@ -62,8 +66,16 @@ def receiver():
     app.processEvents()
 
 
-def enqueue(server, data, *, well="A01", producer="image", data_type=StreamingDataType.IMAGE,
-            spacing=0.65, domain=None):
+def enqueue(
+    server,
+    data,
+    *,
+    well="A01",
+    producer="image",
+    data_type=StreamingDataType.IMAGE,
+    spacing=0.65,
+    domain=None,
+):
     config = NapariDisplayConfig(
         well_mode=NapariDimensionMode.STACK,
         site_mode=NapariDimensionMode.LAYER,
@@ -73,7 +85,12 @@ def enqueue(server, data, *, well="A01", producer="image", data_type=StreamingDa
         variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
     )
     semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
-        ViewerMappingDisplayConfigInput({"component_modes": config.component_modes(), "component_order": config.COMPONENT_ORDER}),
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": config.component_modes(),
+                "component_order": config.COMPONENT_ORDER,
+            }
+        ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             {"well": domain or [well]}, context="synthetic transition"
         ),
@@ -82,17 +99,30 @@ def enqueue(server, data, *, well="A01", producer="image", data_type=StreamingDa
         entries=semantics.entries,
         layout=semantics.layout,
         producer=StreamProducerIdentity.pipeline_output(
-            output_kind="main", output_key=producer, projection_key=producer,
-            step_name=producer, pipeline_position=0,
+            output_kind="main",
+            output_key=producer,
+            projection_key=producer,
+            step_name=producer,
+            pipeline_position=0,
         ),
-        address=NapariStreamLayerAddress({"well": well, "site": 1, "channel": 1, "z_index": 1, "timepoint": 1}, f"{well}.tif", data_type),
-        image_metadata=ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing((spacing, spacing))),
+        address=NapariStreamLayerAddress(
+            {"well": well, "site": 1, "channel": 1, "z_index": 1, "timepoint": 1},
+            f"{well}.tif",
+            data_type,
+        ),
+        image_metadata=ImagePayloadMetadata(
+            source_voxel_spacing=SourceVoxelSpacing((spacing, spacing))
+        ),
         plane_component_domain=ViewerComponentValueDomainPayload(()),
         display_config=config,
     )
-    NapariComponentAwareDisplayCoordinator().display(data=data, stream_layer_context=context, server=server)
+    NapariComponentAwareDisplayCoordinator().display(
+        data=data, stream_layer_context=context, server=server
+    )
     route = context.layer_route(
-        payload_layout_role=NapariImagePayloadLayoutRole.for_stream_layer_context(context),
+        payload_layout_role=NapariImagePayloadLayoutRole.for_stream_layer_context(
+            context
+        ),
         layer_route_state=server.layer_route_state,
     ).route_key
     return route, server.layer_route_state.pending_update_for(route)
@@ -121,7 +151,9 @@ def advance_in_qt(server, route, update, after=lambda: None):
 
 
 @pytest.mark.parametrize("replace_layers", [False, True])
-def test_clear_before_replacement_keeps_settled_pixels_inventory_and_calibration(receiver, replace_layers):
+def test_clear_before_replacement_keeps_settled_pixels_inventory_and_calibration(
+    receiver, replace_layers
+):
     receiver.replace_layers = replace_layers
     a = np.full((2, 2), 3, dtype=np.uint16)
     route, update = enqueue(receiver, a)
@@ -129,7 +161,12 @@ def test_clear_before_replacement_keeps_settled_pixels_inventory_and_calibration
     native_a = receiver.layer_route_state.layer(route)
     items_a = receiver.component_groups.existing_items_for(route)
     domain_a = receiver.component_values.domain_for(route, ["well"])
-    route_b, pending_b = enqueue(receiver, np.full((2, 2), 9, dtype=np.uint16), spacing=1.25, domain=["A01", "A14"])
+    route_b, pending_b = enqueue(
+        receiver,
+        np.full((2, 2), 9, dtype=np.uint16),
+        spacing=1.25,
+        domain=["A01", "A14"],
+    )
     assert route_b == route
     receiver.clear_accumulated_stream_state()
     assert receiver.layer_route_state.layer(route) is native_a
@@ -145,16 +182,32 @@ def test_clear_before_replacement_keeps_settled_pixels_inventory_and_calibration
     assert not receiver.layer_route_state.layer_pending_updates
 
 
-def test_clear_between_replacement_shapes_chunks_preserves_settled_native_layer(receiver, monkeypatch):
+def test_clear_between_replacement_shapes_chunks_preserves_settled_native_layer(
+    receiver, monkeypatch
+):
     monkeypatch.setattr(NapariShapesLayerDisplayHandler, "MAX_SHAPES_PER_WORK_UNIT", 1)
-    a = [{"type": "polygon", "coordinates": [[0, 0], [0, 1], [1, 1]], "metadata": {"label": 1}}]
-    route, update_a = enqueue(receiver, a, producer="roi", data_type=StreamingDataType.SHAPES)
+    a = [
+        {
+            "type": "polygon",
+            "coordinates": [[0, 0], [0, 1], [1, 1]],
+            "metadata": {"label": 1},
+        }
+    ]
+    route, update_a = enqueue(
+        receiver, a, producer="roi", data_type=StreamingDataType.SHAPES
+    )
     advance_in_qt(receiver, route, update_a)
     native_a = receiver.layer_route_state.layer(route)
     items_a = receiver.component_groups.existing_items_for(route)
     domain_a = receiver.component_values.domain_for(route, ["well"])
-    route_b, update_b = enqueue(receiver, a * 3, producer="roi", data_type=StreamingDataType.SHAPES,
-                              spacing=1.25, domain=["A01", "A14"])
+    route_b, update_b = enqueue(
+        receiver,
+        a * 3,
+        producer="roi",
+        data_type=StreamingDataType.SHAPES,
+        spacing=1.25,
+        domain=["A01", "A14"],
+    )
     assert route_b == route
     advance_in_qt(receiver, route, update_b, receiver.clear_accumulated_stream_state)
     assert receiver.layer_route_state.layer(route) is native_a
@@ -167,11 +220,24 @@ def test_clear_between_replacement_shapes_chunks_preserves_settled_native_layer(
     assert receiver.layer_route_state.layer(route) is native_a
 
 
-def test_completed_shapes_publish_full_inventory_and_declared_domain(receiver, monkeypatch):
+def test_completed_shapes_publish_full_inventory_and_declared_domain(
+    receiver, monkeypatch
+):
     monkeypatch.setattr(NapariShapesLayerDisplayHandler, "MAX_SHAPES_PER_WORK_UNIT", 1)
-    shapes = [{"type": "polygon", "coordinates": [[0, 0], [0, 1], [1, 1]], "metadata": {"label": 1}}] * 3
-    route, update = enqueue(receiver, shapes, producer="roi", data_type=StreamingDataType.SHAPES,
-                            domain=["A01", "A02"])
+    shapes = [
+        {
+            "type": "polygon",
+            "coordinates": [[0, 0], [0, 1], [1, 1]],
+            "metadata": {"label": 1},
+        }
+    ] * 3
+    route, update = enqueue(
+        receiver,
+        shapes,
+        producer="roi",
+        data_type=StreamingDataType.SHAPES,
+        domain=["A01", "A02"],
+    )
     advance_in_qt(receiver, route, update)
     assert not receiver.viewer.layers
     assert not receiver.component_values.domains
@@ -183,16 +249,26 @@ def test_completed_shapes_publish_full_inventory_and_declared_domain(receiver, m
     assert receiver.component_groups.existing_items_for(route)[0].data is shapes
     receiver.clear_accumulated_stream_state()
     assert receiver.layer_route_state.layer(route) is layer
-    assert receiver.component_values.shared_values_for(["well"]) == {"well": ["A01", "A02"]}
+    assert receiver.component_values.shared_values_for(["well"]) == {
+        "well": ["A01", "A02"]
+    }
 
 
-def test_clear_between_shapes_chunks_does_not_retain_partial_native_payload(receiver, monkeypatch):
+def test_clear_between_shapes_chunks_does_not_retain_partial_native_payload(
+    receiver, monkeypatch
+):
     monkeypatch.setattr(NapariShapesLayerDisplayHandler, "MAX_SHAPES_PER_WORK_UNIT", 1)
     shapes = [
-        {"type": "polygon", "coordinates": [[0, 0], [0, 1], [1, 1]], "metadata": {"label": index}}
+        {
+            "type": "polygon",
+            "coordinates": [[0, 0], [0, 1], [1, 1]],
+            "metadata": {"label": index},
+        }
         for index in range(1, 4)
     ]
-    route, update = enqueue(receiver, shapes, producer="roi", data_type=StreamingDataType.SHAPES)
+    route, update = enqueue(
+        receiver, shapes, producer="roi", data_type=StreamingDataType.SHAPES
+    )
     advance_in_qt(receiver, route, update, receiver.clear_accumulated_stream_state)
     assert not receiver.viewer.layers
     assert not receiver.layer_route_state.layers
@@ -218,3 +294,60 @@ def test_native_deletion_then_clear_reprojects_surviving_shared_axis(receiver):
     assert presentation.axis_offset(0) == 0
     assert receiver.viewer.layers.selection.active is native_b
     assert tuple(native_b.scale[-2:]) == (0.65, 0.65)
+
+
+def test_pruning_interior_shared_value_rematerializes_from_settled_items(receiver):
+    middle, update = enqueue(
+        receiver, np.full((2, 2), 2), well="A02", producer="middle"
+    )
+    advance_in_qt(receiver, middle, update)
+    left = np.full((2, 2), 1)
+    right = np.full((2, 2), 3)
+    sparse, _ = enqueue(
+        receiver, left, well="A01", producer="sparse", domain=["A01", "A03"]
+    )
+    same_route, update = enqueue(
+        receiver, right, well="A03", producer="sparse", domain=["A01", "A03"]
+    )
+    assert same_route == sparse
+    advance_in_qt(receiver, sparse, update)
+    old_native = receiver.layer_route_state.layer(sparse)
+    original_items = receiver.component_groups.existing_items_for(sparse)
+    original_policy = receiver.layer_route_state.dimension_state_for(
+        sparse
+    ).display_config
+    assert old_native.data.shape == (3, 2, 2)
+    receiver.viewer.layers.selection.active = old_native
+    receiver.viewer.layers.remove(receiver.layer_route_state.layer(middle))
+    receiver.clear_accumulated_stream_state()
+    native = receiver.layer_route_state.layer(sparse)
+    assert native is not old_native and old_native not in receiver.viewer.layers
+    assert receiver.component_groups.existing_items_for(sparse) is original_items
+    assert native.data.shape == (2, 2, 2)
+    np.testing.assert_array_equal(native.data[0], left)
+    np.testing.assert_array_equal(native.data[1], right)
+    assert receiver.viewer.layers.selection.active is native
+    assert tuple(native.scale[-2:]) == (0.65, 0.65)
+    assert (
+        receiver.layer_route_state.dimension_state_for(sparse).display_config
+        is original_policy
+    )
+    assert receiver.component_values.shared_values_for(["well"]) == {
+        "well": ["A01", "A03"]
+    }
+    receiver.clear_accumulated_stream_state()
+    assert receiver.layer_route_state.layer(sparse) is native
+
+
+def test_native_deletion_with_queued_replacement_clear_cannot_resurrect_route(receiver):
+    route, update_a = enqueue(receiver, np.ones((2, 2)))
+    advance_in_qt(receiver, route, update_a)
+    _, update_b = enqueue(receiver, np.full((2, 2), 9))
+    receiver.viewer.layers.remove(receiver.layer_route_state.layer(route))
+    receiver.clear_accumulated_stream_state()
+    advance_in_qt(receiver, route, update_b)
+    assert not receiver.viewer.layers
+    assert not receiver.layer_route_state.layers
+    assert not receiver.layer_route_state.layer_titles
+    assert not receiver.component_groups.groups
+    assert not receiver.component_values.domains

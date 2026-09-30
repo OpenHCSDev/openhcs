@@ -1144,7 +1144,8 @@ class ViewerRouteComponentValueTracker:
         """
 
         domains = tuple(
-            domain for key, domain in self.domains.items()
+            domain
+            for key, domain in self.domains.items()
             if key[0] != replacement_route
         )
         if replacement_domain is not None:
@@ -1155,7 +1156,8 @@ class ViewerRouteComponentValueTracker:
                     value
                     for domain in domains
                     for value in domain.coordinate_values(component)
-                } | set((additional_component_values or {}).get(component, ())),
+                }
+                | set((additional_component_values or {}).get(component, ())),
                 key=ViewerComponentValueOrdering.key,
             )
             for component in axis_components
@@ -1432,7 +1434,8 @@ class ViewerLayerAxisProjectionRequestAuthority:
         )
         domain = (
             route_value_tracker.domain_for(route_key, axis_components)
-            if publish else ViewerComponentValueDomain.for_axes(axis_components)
+            if publish
+            else ViewerComponentValueDomain.for_axes(axis_components)
         )
         domain.replace_observed(layer_items)
         if aggregate_component_values:

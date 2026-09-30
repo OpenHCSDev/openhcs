@@ -157,6 +157,10 @@ class NapariViewerLayerCreator(ABC):
     dims: NapariDimsController
 
     @abstractmethod
+    def add_layer(self, layer: NapariLayerHandle) -> NapariLayerHandle:
+        """Mount an already materialized native layer."""
+
+    @abstractmethod
     def add_image(
         self,
         data: LayerData,
@@ -212,7 +216,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
     timer: NapariTimerHandle
     data_type: StreamingDataType
     display_config: NapariDisplayConfig
-    items: list["NapariStreamLayerItem"] = field(default_factory=list)
+    items: list[NapariStreamLayerItem] = field(default_factory=list)
 
     @classmethod
     def from_semantics(
@@ -222,7 +226,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         data_type: StreamingDataType,
         semantics: ViewerComponentAxisSemantics,
         display_config: NapariDisplayConfig,
-        items: list["NapariStreamLayerItem"] | None = None,
+        items: list[NapariStreamLayerItem] | None = None,
     ) -> "NapariPendingLayerUpdate":
         return cls(
             entries=semantics.entries,
@@ -969,7 +973,10 @@ class NapariLayerUpdateAuthority:
             layer_kwargs,
         )
         self.mount(
-            viewer=viewer, layers=layers, route_key=route_key, layer=new_layer,
+            viewer=viewer,
+            layers=layers,
+            route_key=route_key,
+            layer=new_layer,
             selection=selection,
         )
         NAPARI_LAYER_CREATED_LOGGERS[layer_kind](layer_kind, layer_name, data)

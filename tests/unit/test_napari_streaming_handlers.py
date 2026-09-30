@@ -846,12 +846,26 @@ class _FakeViewer:
 
     def add_layer(self, layer):
         self.layers.append(layer)
-        self.calls.append(("shapes", layer.data, layer.name, {
-            "translate": tuple(layer.translate),
-            "axis_labels": tuple(layer.axis_labels),
-            "scale": tuple(layer.scale),
-            "units": tuple(str(unit) for unit in layer.units),
-        }))
+        self.calls.append(
+            (
+                "shapes",
+                layer.data,
+                layer.name,
+                {
+                    "translate": tuple(layer.translate),
+                    "axis_labels": tuple(layer.axis_labels),
+                    "scale": tuple(layer.scale),
+                    "units": tuple(str(unit) for unit in layer.units),
+                    "shape_type": list(layer.shape_type),
+                    "features": layer.features.to_dict(orient="list"),
+                    "ndim": layer.ndim,
+                    "edge_color": "label",
+                    "face_color": "label",
+                    "edge_color_cycle": layer.edge_color_cycle,
+                    "face_color_cycle": layer.face_color_cycle,
+                },
+            )
+        )
 
     def _add_layer(self, layer_type, data, name, kwargs):
         layer_attributes = {"name": name, "data": data, "kwargs": kwargs}
@@ -3126,6 +3140,9 @@ def test_napari_display_pipeline_registers_recreated_shapes_before_selection_res
             self.layers.append(layer)
             return layer
 
+        def add_layer(self, layer):
+            self.layers.append(layer)
+
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.layer_route_state.set_title(route_key, "ROIs")
@@ -4432,7 +4449,7 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
     assert server.component_values.shared_values_for(["channel"]) == {"channel": []}
 
 
-def test_napari_component_display_coordinator_clears_replaced_route_domain():
+def test_napari_component_display_coordinator_stages_replacement_without_clearing_mounted_domain():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
     class _FakeServer:
@@ -4453,14 +4470,12 @@ def test_napari_component_display_coordinator_clears_replaced_route_domain():
         {"channel": [1]},
     )
 
-    napari_viewer_server.NapariComponentAwareDisplayCoordinator._clear_group_for_replace(
-        server,
-        route_key,
-        group,
+    staged = napari_viewer_server.NapariComponentAwareDisplayCoordinator._group_for(
+        server, route_key
     )
-
-    assert group == []
-    assert server.component_values.shared_values_for(["channel"]) == {"channel": []}
+    assert staged == []
+    assert len(group) == 1
+    assert server.component_values.shared_values_for(["channel"]) == {"channel": [1]}
 
 
 def test_napari_component_display_coordinator_splits_declared_image_layouts():
@@ -4475,8 +4490,11 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
             layer_key,
             data_type,
             component_axis_semantics,
+            items,
         ):
-            self.scheduled.append((layer_key, data_type, component_axis_semantics))
+            self.scheduled.append(
+                (layer_key, data_type, component_axis_semantics, items)
+            )
 
     class _FakeServer:
         def __init__(self):
@@ -4534,9 +4552,12 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
             server=server,
         )
 
-    assert len(server.component_groups) == 2
+    assert not server.component_groups.groups
     assert len({layer_key for layer_key, *_ in server.display_pipeline.scheduled}) == 2
-    assert any("color_stack" in layer_key for layer_key in server.component_groups)
+    assert any(
+        "color_stack" in layer_key
+        for layer_key, *_ in server.display_pipeline.scheduled
+    )
     assert sorted(server.layer_route_state.layer_titles.values()) == [
         "5. OverlayOutlines",
         "5. OverlayOutlines RGB stack",
@@ -4555,8 +4576,11 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
             layer_key,
             data_type,
             component_axis_semantics,
+            items,
         ):
-            self.scheduled.append((layer_key, data_type, component_axis_semantics))
+            self.scheduled.append(
+                (layer_key, data_type, component_axis_semantics, items)
+            )
 
     class _FakeServer:
         def __init__(self):
@@ -4608,9 +4632,9 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
         server=server,
     )
 
-    route_key = next(iter(server.component_groups))
+    route_key, _, _, items = server.display_pipeline.scheduled[-1]
     assert route_key.endswith("_color_stack")
-    assert tuple(server.component_groups.items_for(route_key)[0].data.shape) == (
+    assert tuple(items[0].data.shape) == (
         1,
         16,
         16,
@@ -4625,17 +4649,29 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
     class _FakeDisplayPipeline:
-        def __init__(self):
-            self.scheduled = []
 
-        def schedule_layer_update(self, layer_key, data_type, route):
-            self.scheduled.append((layer_key, data_type, route))
+        def __init__(self, server):
+            self.scheduled = []
+            self.server = server
+
+        def schedule_layer_update(self, layer_key, data_type, route, items):
+            self.scheduled.append((layer_key, data_type, route, items))
+            self.server.layer_route_state.set_pending_update(
+                layer_key,
+                NapariPendingLayerUpdate.from_semantics(
+                    timer=_FakeTimer(),
+                    data_type=data_type,
+                    semantics=route,
+                    display_config=route.display_config,
+                    items=items,
+                ),
+            )
 
     class _FakeServer:
         def __init__(self):
             self.viewer = _FakeViewer()
             self.layer_route_state = NapariLayerRouteStateStore.empty()
-            self.display_pipeline = _FakeDisplayPipeline()
+            self.display_pipeline = _FakeDisplayPipeline(self)
             self.component_groups = NapariComponentGroupStore()
             self.replace_layers = False
 
@@ -4685,13 +4721,15 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
             variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
         )
     )
-    assert len(padded_server.component_groups) == 1
+    assert len(padded_server.layer_route_state.layer_pending_updates) == 1
     padded_route = padded_server.display_pipeline.scheduled[-1][2]
     padded_items = (
         napari_viewer_server.NapariVariableSizeDisplayStrategy.for_enum_member(
             padded_route.display_config.variable_size_handling
         ).materialize_layer_items(
-            list(padded_server.component_groups.items_for(padded_route.route_key)),
+            padded_server.layer_route_state.pending_update_for(
+                padded_route.route_key
+            ).items,
             route_key=padded_route.route_key,
         )
     )
@@ -4705,15 +4743,15 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
             variable_size_handling=NapariVariableSizeHandling.SEPARATE_LAYERS,
         )
     )
-    assert len(separate_server.component_groups) == 2
+    assert len(separate_server.layer_route_state.layer_pending_updates) == 2
     assert {
         route.layout.components_for_mode("layer")
-        for _, _, route in separate_server.display_pipeline.scheduled
+        for _, _, route, _ in separate_server.display_pipeline.scheduled
     } == {("well",)}
     assert sorted(
         item.data.shape
-        for route_items in separate_server.component_groups.groups.values()
-        for item in route_items
+        for update in separate_server.layer_route_state.layer_pending_updates.values()
+        for item in update.items
     ) == [(4, 6), (7, 9)]
     assert sorted(separate_server.layer_route_state.layer_titles.values()) == [
         "2. Variable Size well A01",
@@ -4859,11 +4897,18 @@ def test_napari_settle_rejects_recorded_layer_update_failure():
     server.batch_processors = BatchProcessors(FailingProcessor())
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
 
+    update = NapariPendingLayerUpdate.from_semantics(
+        timer=_FakeTimer(),
+        data_type=StreamingDataType.IMAGE,
+        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        display_config=NapariDisplayConfig(),
+        items=server.component_groups.items_for(route_key),
+    )
     with pytest.raises(ValueError, match="invalid payload axis"):
         pipeline.execute_layer_update(
             route_key,
             StreamingDataType.IMAGE,
-            ViewerComponentAxisSemanticsAuthority.empty(),
+            update,
         )
     failed_progress = pipeline.settlement_progress()
     assert failed_progress.phase is ViewerSettlePhase.FAILED
@@ -4876,7 +4921,7 @@ def test_napari_settle_rejects_recorded_layer_update_failure():
     pipeline.execute_layer_update(
         route_key,
         StreamingDataType.IMAGE,
-        ViewerComponentAxisSemanticsAuthority.empty(),
+        update,
     )
 
     server.layer_route_state.reset_settlement()
@@ -4918,6 +4963,7 @@ def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
                 data_type=StreamingDataType.IMAGE,
                 semantics=ViewerComponentAxisSemanticsAuthority.empty(),
                 display_config=NapariDisplayConfig(),
+                items=server.component_groups.items_for(route_key),
             ),
         )
 
@@ -4994,6 +5040,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
         data_type=StreamingDataType.IMAGE,
         semantics=ViewerComponentAxisSemanticsAuthority.empty(),
         display_config=NapariDisplayConfig(),
+        items=server.component_groups.items_for(route_key),
     )
     server.layer_route_state.set_pending_update(route_key, update)
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
@@ -5051,6 +5098,7 @@ def test_napari_scheduled_update_retains_failure_without_escaping_qt_callback():
         data_type=StreamingDataType.IMAGE,
         semantics=ViewerComponentAxisSemanticsAuthority.empty(),
         display_config=NapariDisplayConfig(),
+        items=server.component_groups.items_for(route_key),
     )
     server.layer_route_state.set_pending_update(route_key, update)
     pipeline.execute_scheduled_layer_update(route_key, update)
@@ -5849,58 +5897,18 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
     assert layer_kwargs["edge_color"] == "label"
     assert len(layer_kwargs["edge_color_cycle"]) == 1
     assert layer_kwargs["face_color"] == "label"
-    assert layer_kwargs["face_color_cycle"] == layer_kwargs["edge_color_cycle"]
+    np.testing.assert_array_equal(
+        layer_kwargs["face_color_cycle"], layer_kwargs["edge_color_cycle"]
+    )
     assert layer_kwargs["axis_labels"] == ("channel", "site", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0, 0.0)
 
 
 def test_napari_shapes_display_work_appends_bounded_chunks(monkeypatch):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    from napari.components import ViewerModel
+
     events = []
-
-    class FakeShapesLayer:
-        def __init__(self, data, name, kwargs):
-            self.name = name
-            self.data = list(data)
-            self._features = kwargs["features"]
-            self._visible = kwargs["visible"]
-            self.edge_color = kwargs["edge_color"]
-            self.face_color = kwargs["face_color"]
-            self.edge_color_mode = "cycle"
-            self.face_color_mode = "cycle"
-            self.edge_color_cycle = kwargs["edge_color_cycle"]
-            self.face_color_cycle = kwargs["face_color_cycle"]
-            self.add_calls = []
-            events.append(("visible", self._visible))
-
-        @property
-        def features(self):
-            return self._features
-
-        @features.setter
-        def features(self, features):
-            self._features = features
-            events.append(("features", features))
-
-        @property
-        def visible(self):
-            return self._visible
-
-        @visible.setter
-        def visible(self, visible):
-            self._visible = visible
-            events.append(("visible", visible))
-
-        def add(self, data, **kwargs):
-            self.data.extend(data)
-            self.add_calls.append((list(data), kwargs))
-
-    class ChunkViewer(_FakeViewer):
-        def add_shapes(self, data, *, name, **kwargs):
-            layer = FakeShapesLayer(data, name, kwargs)
-            self.layers.append(layer)
-            self.calls.append(("shapes", data, name, kwargs))
-            return layer
 
     monkeypatch.setattr(
         napari_viewer_server.NapariShapesLayerDisplayHandler,
@@ -5910,8 +5918,15 @@ def test_napari_shapes_display_work_appends_bounded_chunks(monkeypatch):
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.layer_route_state.set_title("objects", "Objects")
-    server.viewer = ChunkViewer()
-    server.bind_result_selection_layer = lambda layer: events.append(("bind", layer))
+    server.viewer = ViewerModel()
+    server.bind_result_selection_layer = lambda layer: events.append(
+        (
+            len(layer.data),
+            len(layer.features),
+            layer.visible,
+            server.layer_route_state.layer("objects") is layer,
+        )
+    )
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
     shapes = [
         {
@@ -5940,34 +5955,23 @@ def test_napari_shapes_display_work_appends_bounded_chunks(monkeypatch):
     )
 
     assert not work.advance()
-    layer = server.viewer.layers[-1]
+    layer = work.layer
     assert len(layer.data) == 2
     assert layer.visible is False
+    assert not server.viewer.layers
+    assert not server.layer_route_state.layers
     assert not work.advance()
     assert len(layer.data) == 4
+    assert not server.viewer.layers
     assert work.advance()
 
-    assert len(server.viewer.calls) == 1
-    assert [len(data) for data, _kwargs in layer.add_calls] == [2, 1]
-    assert (
-        layer.add_calls[0][1]["edge_color"] == work.color_projection.member_colors[2:4]
-    )
-    assert (
-        layer.add_calls[1][1]["edge_color"] == work.color_projection.member_colors[4:]
-    )
+    assert list(server.viewer.layers) == [layer]
+    np.testing.assert_allclose(layer.edge_color, work.color_projection.member_colors)
     assert len(layer.data) == 5
-    assert layer.features["label"] == [1, 2, 1, 2, 1]
-    assert layer.edge_color == "label"
-    assert layer.face_color == "label"
+    assert layer.features["label"].tolist() == [1, 2, 1, 2, 1]
+    assert layer.edge_color_mode == layer.face_color_mode == "cycle"
     assert layer.visible is True
-    final_features_event = next(
-        index
-        for index, event in enumerate(events)
-        if event == ("features", work.payload.features)
-    )
-    bind_event = next(index for index, event in enumerate(events) if event[0] == "bind")
-    reveal_event = events.index(("visible", True))
-    assert final_features_event < bind_event < reveal_event
+    assert events == [(5, 5, False, True)]
 
 
 def test_napari_shapes_display_work_batches_thousands_with_native_features():
