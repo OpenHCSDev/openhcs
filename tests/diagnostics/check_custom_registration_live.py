@@ -292,6 +292,11 @@ def run(args) -> None:
     store = CustomFunctionManager.default_storage_directory()
     from zmqruntime.messages import ExecutionStatus
 
+    from openhcs.agent.capabilities import (
+        AgentCapabilitySearchResult,
+        agent_capabilities,
+    )
+    from openhcs.agent.dto.authoring import AuthoringContext
     from openhcs.agent.dto.execution import (
         ExecutionJobRef,
         ExecutionJobStatus,
@@ -305,6 +310,7 @@ def run(args) -> None:
         FunctionCatalogPreparationState,
         FunctionDetail,
     )
+    from openhcs.agent.dto.knowledge import KnowledgeBaseDocument
 
     servers = []
     handles = []
@@ -492,7 +498,34 @@ def run(args) -> None:
         )
         receipt["mcp_pid"] = health["server_process_id"]
         receipt["mcp_launch_environment"] = client.server_spec.environment()
-        call("openhcs_get_authoring_context", {"kind": "first_use"})
+        for kind in ("first_use", "pipeline"):
+            context = call(
+                agent_capabilities.get_authoring_context.name,
+                {"kind": kind},
+                AuthoringContext,
+            )
+            assert (
+                agent_capabilities.start_function_catalog_preparation.name
+                in context.content
+            )
+        guide = call(
+            agent_capabilities.get_knowledge_document.name,
+            {"document_id": "openhcs_custom_function_workflow"},
+            KnowledgeBaseDocument,
+        )
+        assert not guide.truncated
+        assert (
+            agent_capabilities.start_function_catalog_preparation.name in guide.content
+        )
+        discovery = call(
+            agent_capabilities.search_capabilities.name,
+            {"query": "catalog preparation", "limit": 10},
+            AgentCapabilitySearchResult,
+        )
+        assert agent_capabilities.start_function_catalog_preparation.name in {
+            capability.name for capability in discovery.capabilities
+        }
+        receipt["readiness_guidance_reachable"] = True
         call("openhcs_get_authoring_context", {"kind": "custom_function"})
         call("openhcs_search_capabilities", {"query": "custom function", "limit": 5})
         call(

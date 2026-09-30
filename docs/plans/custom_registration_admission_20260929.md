@@ -3,8 +3,9 @@
 Implementation owner: Lovelace. Integration/install owner: coordinator.
 Draft PR233: https://github.com/OpenHCSDev/openhcs/pull/233
 Source: /home/ts/wt/openhcs-custom-function-admission-20260929.
-This checkpoint follows normal main238 integration f5dbebb27 (main01d1a8c55c);
-recorded PolyStore1209068 is unchanged. No installed tree is edited.
+This checkpoint normally integrates main240/3032958ac at d33128916, following
+main238 integration f5dbebb27 (main01d1a8c55c). Recorded PolyStore1209068 is
+unchanged. No installed tree is edited.
 
 Latest source follow-up after4c6fbac0a: destination proof and source dispatch
 now use existing connect_existing, never attach-or-start/replacement. Each
@@ -61,7 +62,29 @@ controlled-launch Manager destination lookup, start/status/cancel handle fields,
 READY-only mutation and precise postdispatch uncertainty. The knowledge manifest
 summary/tags track this; document digests remain derived, not duplicated.
 
+Bundled SKILL.md and first_use/pipeline now point to that same existing responsive
+preparation procedure before first cold function search. One nominal context
+section shares the existing first-use/pipeline facets; capability names derive
+from declarations. No duplicated guide, inventory or biological hints. Actual
+default-context/generated MCP read-only calls reach the full canonical guide and
+typed preparation capability without any endpoint-client creation. Ten source
+checks pass8.20s, peak308356KiB; skill validator passes. Two existing whole-context
+bound checks remain failing on unchanged image_analysis_workflow (17387chars),
+also17387 with this section excluded; they are explicitly excluded from the
+focused passing shard. This is not all-context readiness or installed proof.
+Receipt: tests/runtime_diagnostics/registration_onboarding_20260929/.
+
 ## Actual evidence (source, not installed acceptance)
+
+After normal main240 integration,16 focused attach-only/deadline, real context
+composition and single-send cases pass5.53s (process6.41s,peak293380KiB,exit0).
+Both existing abi3 extensions built through setup.py build_ext --inplace
+--parallel1 with owned temporary objects/lib:2.55s,peak146140KiB,exit0.
+Imports prove source _granularity_reconstruct (45440bytes) and _tabular_native
+(210808bytes), plus reviewed OpenHCS/PolyStore paths. No installation/dependency
+download/JVM. Durable receipts:
+tests/runtime_diagnostics/registration_main240_tests_20260929/ and
+tests/runtime_diagnostics/registration_main240_build_20260929/.
 
 Current focused provider-free shard: **47 passed, 25 deselected, 7.32 seconds**;
 process elapsed8.13s, peak305992KiB, exit0. Existing shared Python, explicit reviewed
@@ -144,6 +167,9 @@ or global proof. Actual catalog witnesses:
 - MEMB-2/MEMB-3: control/capability membership derives from existing declarations;
   each new request leaf owns its operation/strategy. A new case extends that family,
   not an action switch or hand-maintained catalogue.
+  The shared onboarding section similarly uses existing nominal context facets;
+  first-use/pipeline reachability tests exercise registry-derived rendering and
+  typed capability discovery, not duplicated string-kind membership.
 - IDEN-8: one handle and destination token reuse ProcessIdentity; changing creation
   time while retaining PID rejects before cancellation/evaluation.
 - BOUND-1/BOUND-2/BOUND-6: existing typed request/response codecs decode at control/
@@ -174,10 +200,11 @@ McpDevServerSpec. It is implemented but not live-proved. Source mode is explicit
 labelled source_live_not_installed. Parent owns final merge/install and installed
 acceptance; no frozen installation changes are authorised here.
 
-Parent cleared disk headroom; latest actual guard /home20.2GiB,RAM13.1GiB warns
-only about historical swap. Attempt02 and the57-case source follow-up are
+Latest actual guard /home19.8GiB,RAM13.1GiB warns about disk plus historical swap.
+No new native journey starts while that non-swap warning remains. Attempt02,
+the57-case source follow-up, main240 build/shard and onboarding source checks are
 terminal and released the lock. Next is the authorised finite cold source-live
-journey on a fresh guard/nonblocking lock, then parent review/merge and
+journey after a fresh passing non-swap guard/nonblocking lock, then parent review/merge and
 installation of this same frozen tree (no extra checkout). No optional hosted
 CI wait or installed readiness claim.
 

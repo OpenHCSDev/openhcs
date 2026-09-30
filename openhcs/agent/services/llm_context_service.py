@@ -111,6 +111,26 @@ def render_authoring_context_sections(
     return (header, *sections, deepening)
 
 
+class CatalogPreparationReadinessSection(
+    AuthoringContextSection, FirstUseWorkflowContext, PipelineAuthoringRulesContext
+):
+    """One readiness entrypoint shared by first-use and pipeline contexts."""
+
+    section_id = "catalog_preparation_readiness"
+
+    @classmethod
+    def render(cls, service: AgentAuthoringContextService) -> str:
+        del service
+        return f"""=== COLD LOCAL CATALOGUE READINESS ===
+Before first cold {agent_capabilities.search_functions.name}, discover "catalog preparation"
+with {agent_capabilities.search_capabilities.name}. If exposed, follow
+`openhcs_custom_function_workflow` / "Register on the intended process owner":
+{agent_capabilities.start_function_catalog_preparation.name} on the intended existing endpoint,
+then observe that exact handle until READY. Keep cold warming separate from
+10-second tool observations; a timeout does not authorise restart/replay or
+mutation. If not exposed, report the surface boundary rather than guess a route."""
+
+
 class PipelineSystemModelSection(
     AuthoringContextSection,
     PipelineSystemModelContext,

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from pathlib import Path
+
+import pytest
+from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.authoring_contexts import (
     AuthoringContextDeclaration,
@@ -10,12 +15,17 @@ from openhcs.agent.authoring_contexts import (
     UiVisibleWorkflowAuthoringContext,
     ViewerReviewAuthoringContext,
 )
-from openhcs.agent.capabilities import CapabilityTransport, agent_capabilities
-from openhcs.agent.dto.authoring import AuthoringContextRequest
+from openhcs.agent.capabilities import (
+    AgentCapabilitySearchResult,
+    CapabilityTransport,
+    agent_capabilities,
+)
+from openhcs.agent.dto.authoring import AuthoringContext, AuthoringContextRequest
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.config import ConfigFieldSchema, ConfigSchema
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseCatalog,
+    KnowledgeBaseDocument,
     KnowledgeBaseDocumentSummary,
     KnowledgeBaseDocumentTarget,
 )
@@ -151,6 +161,70 @@ def test_actual_source_backed_guides_fit_the_public_default_bound() -> None:
         bounded = service.get_bounded_authoring_context(request)
         assert len(complete.content) <= request.max_chars
         assert bounded.content == complete.content
+
+
+@pytest.mark.parametrize("kind", ("first_use", "pipeline"))
+def test_actual_mcp_onboarding_reaches_responsive_preparation_without_endpoint_contact(
+    monkeypatch, kind: str
+) -> None:
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        ZMQFunctionCatalogService,
+    )
+    from openhcs.mcp.context import create_agent_context
+    from openhcs.mcp.server import build_server
+
+    def reject_endpoint_contact(*_args, **_kwargs):
+        raise AssertionError(
+            "guide/capability discovery must not contact a catalogue endpoint"
+        )
+
+    monkeypatch.setattr(
+        ZMQFunctionCatalogService, "_new_client", reject_endpoint_contact
+    )
+    context = create_agent_context()
+
+    async def invoke():
+        built = build_server(context)
+
+        async def read(capability, arguments, result_type):
+            response = await built.call_tool(capability.name, arguments)
+            content = response[0] if isinstance(response, tuple) else response.content
+            payload = json.loads(content[0].text)
+            assert not payload.get("errors")
+            return dataclass_from_mapping(result_type, payload)
+
+        onboarding = await read(
+            agent_capabilities.get_authoring_context,
+            {"kind": kind},
+            AuthoringContext,
+        )
+        assert (
+            agent_capabilities.start_function_catalog_preparation.name
+            in onboarding.content
+        )
+        guide = await read(
+            agent_capabilities.get_knowledge_document,
+            {"document_id": "openhcs_custom_function_workflow"},
+            KnowledgeBaseDocument,
+        )
+        assert guide.document.document_id == "openhcs_custom_function_workflow"
+        assert not guide.truncated
+        assert (
+            agent_capabilities.start_function_catalog_preparation.name in guide.content
+        )
+        discovery = await read(
+            agent_capabilities.search_capabilities,
+            {"query": "catalog preparation", "limit": 10},
+            AgentCapabilitySearchResult,
+        )
+        assert agent_capabilities.start_function_catalog_preparation.name in {
+            capability.name for capability in discovery.capabilities
+        }
+
+    try:
+        asyncio.run(invoke())
+    finally:
+        context.endpoint_function_catalog.close()
 
 
 def test_first_use_projects_new_routes_from_the_nominal_registry() -> None:
