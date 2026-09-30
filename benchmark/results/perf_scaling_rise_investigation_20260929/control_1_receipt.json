@@ -1,0 +1,833 @@
+{
+  "compile_artifact_id": "6d323fae-4ae6-42a2-8499-6c45b2472ba6",
+  "completed_at_epoch_seconds": 1790732149.19752,
+  "endpoint_provenance": {
+    "client_openhcs_file": "/home/ts/code/projects/openhcs-compile-perf/openhcs/__init__.py",
+    "client_openhcs_version": "0.8.6",
+    "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "endpoint_application_identifier": "openhcs",
+    "endpoint_create_time_epoch_seconds": 1790732040.6,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1790732040698234.log",
+    "endpoint_openhcs_version": "0.8.6",
+    "endpoint_pid": 2544095,
+    "endpoint_port": 7777
+  },
+  "execution_id": "80a7b0c3-fbcc-4a70-a800-53c422c2c226",
+  "execution_plate_id": "/home/ts/code/projects/openhcs-benchmark-runs/perf-rise-control-16w-r1-20260929/ExampleImagingFlowCytometryObjectsInGrid/wells_16/workers_4/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace",
+  "expected_axis_count": 16,
+  "global_config_source_sha256": "80a34af100ced928482f27c647571274798d2748e66ed1d244f70ebe5d573097",
+  "observation_export_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-rise-control-16w-r1-20260929/ExampleImagingFlowCytometryObjectsInGrid/wells_16/workers_4/ordinary_run_evidence/ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526/runtime_outcomes.pkl.gz",
+  "observation_export_scope": "outcomes",
+  "observation_export_sha256": "2ac364dea23f585f772bac26c72f435eb8cdc21a8a522a60080dd4e9eeedf0f3",
+  "observed_axis_count": 16,
+  "output_roots": [
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-rise-control-16w-r1-20260929/ExampleImagingFlowCytometryObjectsInGrid/wells_16/workers_4/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput"
+  ],
+  "phase_timings": [
+    {
+      "cached": false,
+      "phase": "SUBMIT_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 0.14186563715338707,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "WAIT_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 10.13262473931536,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "SUBMIT_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 0.13134678406640887,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "WAIT_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 96.58091255836189,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "SERVER_COMPILATION_JOB",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 10.13158655166626,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "SERVER_PIPELINE_JOB",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 96.52717113494873,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "COMPILE_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 9.472845792770386,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "EXECUTE_OPENHCS",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 67.43117380142212,
+      "tool": "OpenHCS"
+    },
+    {
+      "cached": false,
+      "phase": "VALIDATE_RUNTIME",
+      "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+      "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+      "seconds": 8.201412856578827e-05,
+      "tool": "OpenHCS"
+    }
+  ],
+  "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
+  "pipeline_source_sha256": "916bbc59edea39ecb9702b9b401e3ee74962c4b22d41fab278d6f90ed8b72942",
+  "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images",
+  "results_summary_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-rise-control-16w-r1-20260929/ExampleImagingFlowCytometryObjectsInGrid/wells_16/workers_4/ordinary_run_evidence/ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526/zmq_results_summary.json",
+  "results_summary_sha256": "638efeb6141e41933e96fe51690c1c0d42de156fc72bb6248e7fc6dff7e9ac15",
+  "run_id": "ExampleImagingFlowCytometryObjectsInGrid-16w_4c-1790732040673961526",
+  "schema_version": "openhcs.benchmark.measured-pipeline.v2",
+  "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+  "server_environment": {
+    "installed_distributions": [
+      {
+        "name": "abi3audit",
+        "version": "0.0.26"
+      },
+      {
+        "name": "abi3info",
+        "version": "2026.9.25"
+      },
+      {
+        "name": "aiobotocore",
+        "version": "3.9.1"
+      },
+      {
+        "name": "aiohappyeyeballs",
+        "version": "2.7.1"
+      },
+      {
+        "name": "aiohttp",
+        "version": "3.14.3"
+      },
+      {
+        "name": "aioitertools",
+        "version": "0.13.0"
+      },
+      {
+        "name": "aiosignal",
+        "version": "1.4.0"
+      },
+      {
+        "name": "annotated-types",
+        "version": "0.8.0"
+      },
+      {
+        "name": "anyio",
+        "version": "4.15.1"
+      },
+      {
+        "name": "array-api-compat",
+        "version": "1.15.0"
+      },
+      {
+        "name": "arraybridge",
+        "version": "0.3.4"
+      },
+      {
+        "name": "ast_serialize",
+        "version": "0.11.2"
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0"
+      },
+      {
+        "name": "black",
+        "version": "26.5.1"
+      },
+      {
+        "name": "botocore",
+        "version": "1.43.75"
+      },
+      {
+        "name": "cattrs",
+        "version": "26.2.1"
+      },
+      {
+        "name": "centrosome",
+        "version": "1.3.4"
+      },
+      {
+        "name": "certifi",
+        "version": "2026.7.22"
+      },
+      {
+        "name": "cffi",
+        "version": "2.1.1"
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.5.1"
+      },
+      {
+        "name": "cjdk",
+        "version": "0.5.0"
+      },
+      {
+        "name": "click",
+        "version": "8.5.0"
+      },
+      {
+        "name": "cloudpickle",
+        "version": "3.1.2"
+      },
+      {
+        "name": "colorama",
+        "version": "0.4.6"
+      },
+      {
+        "name": "contourpy",
+        "version": "1.4.0"
+      },
+      {
+        "name": "coverage",
+        "version": "7.16.2"
+      },
+      {
+        "name": "cryptography",
+        "version": "50.0.1"
+      },
+      {
+        "name": "cycler",
+        "version": "0.12.1"
+      },
+      {
+        "name": "dask",
+        "version": "2026.8.0"
+      },
+      {
+        "name": "defusedxml",
+        "version": "0.7.1"
+      },
+      {
+        "name": "Deprecated",
+        "version": "3.0.0"
+      },
+      {
+        "name": "deprecation",
+        "version": "2.1.0"
+      },
+      {
+        "name": "dill",
+        "version": "0.4.1"
+      },
+      {
+        "name": "distinctipy",
+        "version": "1.3.4"
+      },
+      {
+        "name": "docstring_parser",
+        "version": "0.18.0"
+      },
+      {
+        "name": "docutils",
+        "version": "0.23"
+      },
+      {
+        "name": "donfig",
+        "version": "0.8.1.post1"
+      },
+      {
+        "name": "et_xmlfile",
+        "version": "2.0.0"
+      },
+      {
+        "name": "execnet",
+        "version": "2.1.2"
+      },
+      {
+        "name": "fonttools",
+        "version": "4.66.1"
+      },
+      {
+        "name": "frozenlist",
+        "version": "1.8.0"
+      },
+      {
+        "name": "fsspec",
+        "version": "2026.9.0"
+      },
+      {
+        "name": "genbadge",
+        "version": "1.1.3"
+      },
+      {
+        "name": "google-crc32c",
+        "version": "1.9.0"
+      },
+      {
+        "name": "GPUtil",
+        "version": "1.4.0"
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0"
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9"
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1"
+      },
+      {
+        "name": "httpx-sse",
+        "version": "0.4.3"
+      },
+      {
+        "name": "idna",
+        "version": "3.20"
+      },
+      {
+        "name": "imagecodecs",
+        "version": "2026.8.16"
+      },
+      {
+        "name": "ImageIO",
+        "version": "2.38.0"
+      },
+      {
+        "name": "imglyb",
+        "version": "2.1.0"
+      },
+      {
+        "name": "iniconfig",
+        "version": "2.3.0"
+      },
+      {
+        "name": "jgo",
+        "version": "3.1.0"
+      },
+      {
+        "name": "jmespath",
+        "version": "1.1.0"
+      },
+      {
+        "name": "joblib",
+        "version": "1.6.0"
+      },
+      {
+        "name": "jpype1",
+        "version": "1.7.1"
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.26.0"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1"
+      },
+      {
+        "name": "kaitaistruct",
+        "version": "0.11"
+      },
+      {
+        "name": "kiwisolver",
+        "version": "1.5.1"
+      },
+      {
+        "name": "labeling",
+        "version": "0.1.15"
+      },
+      {
+        "name": "lazy-loader",
+        "version": "0.6"
+      },
+      {
+        "name": "librt",
+        "version": "0.16.0"
+      },
+      {
+        "name": "llvmlite",
+        "version": "0.49.0"
+      },
+      {
+        "name": "locket",
+        "version": "1.0.0"
+      },
+      {
+        "name": "magicgui",
+        "version": "0.10.2"
+      },
+      {
+        "name": "mahotas",
+        "version": "1.4.19"
+      },
+      {
+        "name": "markdown-it-py",
+        "version": "4.2.0"
+      },
+      {
+        "name": "matplotlib",
+        "version": "3.11.2"
+      },
+      {
+        "name": "mcp",
+        "version": "1.30.0"
+      },
+      {
+        "name": "mdurl",
+        "version": "0.1.2"
+      },
+      {
+        "name": "metaclass-registry",
+        "version": "0.2.1"
+      },
+      {
+        "name": "msgspec",
+        "version": "0.22.0"
+      },
+      {
+        "name": "Multi-Template-Matching",
+        "version": "2.0.1"
+      },
+      {
+        "name": "multidict",
+        "version": "6.9.1"
+      },
+      {
+        "name": "mypy",
+        "version": "2.3.1"
+      },
+      {
+        "name": "mypy_extensions",
+        "version": "1.1.0"
+      },
+      {
+        "name": "narwhals",
+        "version": "2.26.0"
+      },
+      {
+        "name": "networkx",
+        "version": "3.7"
+      },
+      {
+        "name": "numba",
+        "version": "0.67.0"
+      },
+      {
+        "name": "numcodecs",
+        "version": "0.17.0"
+      },
+      {
+        "name": "numpy",
+        "version": "2.5.3"
+      },
+      {
+        "name": "objectstate",
+        "version": "1.1.8"
+      },
+      {
+        "name": "ome-zarr",
+        "version": "0.19.2"
+      },
+      {
+        "name": "ome-zarr-models",
+        "version": "1.8.1"
+      },
+      {
+        "name": "opencv-python-headless",
+        "version": "5.0.0.93"
+      },
+      {
+        "name": "openhcs",
+        "version": "0.8.6"
+      },
+      {
+        "name": "openpyxl",
+        "version": "3.1.5"
+      },
+      {
+        "name": "packaging",
+        "version": "26.3"
+      },
+      {
+        "name": "pandas",
+        "version": "3.0.6"
+      },
+      {
+        "name": "partd",
+        "version": "1.4.2"
+      },
+      {
+        "name": "pathspec",
+        "version": "1.1.1"
+      },
+      {
+        "name": "pefile",
+        "version": "2024.8.26"
+      },
+      {
+        "name": "pillow",
+        "version": "11.3.0"
+      },
+      {
+        "name": "pip",
+        "version": "26.2.1"
+      },
+      {
+        "name": "platformdirs",
+        "version": "4.12.2"
+      },
+      {
+        "name": "pluggy",
+        "version": "1.6.0"
+      },
+      {
+        "name": "polystore",
+        "version": "0.2.19"
+      },
+      {
+        "name": "portalocker",
+        "version": "4.4.0"
+      },
+      {
+        "name": "progressbar2",
+        "version": "4.6.0"
+      },
+      {
+        "name": "propcache",
+        "version": "0.5.4"
+      },
+      {
+        "name": "psutil",
+        "version": "7.2.2"
+      },
+      {
+        "name": "psygnal",
+        "version": "0.16.1"
+      },
+      {
+        "name": "pycodify",
+        "version": "0.1.3"
+      },
+      {
+        "name": "pyconify",
+        "version": "0.2.1"
+      },
+      {
+        "name": "pycparser",
+        "version": "3.0"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.12.5"
+      },
+      {
+        "name": "pydantic-settings",
+        "version": "2.15.0"
+      },
+      {
+        "name": "pydantic-zarr",
+        "version": "0.10.0"
+      },
+      {
+        "name": "pydantic_core",
+        "version": "2.41.5"
+      },
+      {
+        "name": "pyelftools",
+        "version": "0.33"
+      },
+      {
+        "name": "Pygments",
+        "version": "2.21.0"
+      },
+      {
+        "name": "pyimagej",
+        "version": "1.7.0"
+      },
+      {
+        "name": "PyJWT",
+        "version": "2.15.1"
+      },
+      {
+        "name": "PyOpenGL",
+        "version": "3.1.10"
+      },
+      {
+        "name": "pyparsing",
+        "version": "3.3.3"
+      },
+      {
+        "name": "pyqt-reactive",
+        "version": "0.3.24"
+      },
+      {
+        "name": "PyQt6",
+        "version": "6.11.0"
+      },
+      {
+        "name": "PyQt6-QScintilla",
+        "version": "2.14.1"
+      },
+      {
+        "name": "PyQt6-Qt6",
+        "version": "6.11.2"
+      },
+      {
+        "name": "PyQt6_sip",
+        "version": "13.12.0"
+      },
+      {
+        "name": "pyqtgraph",
+        "version": "0.14.0"
+      },
+      {
+        "name": "pytest",
+        "version": "9.1.1"
+      },
+      {
+        "name": "pytest-asyncio",
+        "version": "1.4.0"
+      },
+      {
+        "name": "pytest-cov",
+        "version": "7.1.0"
+      },
+      {
+        "name": "pytest-qt",
+        "version": "4.5.0"
+      },
+      {
+        "name": "pytest-xdist",
+        "version": "3.8.0"
+      },
+      {
+        "name": "python-dateutil",
+        "version": "2.9.0.post0"
+      },
+      {
+        "name": "python-dotenv",
+        "version": "1.2.3"
+      },
+      {
+        "name": "python-introspect",
+        "version": "0.1.14"
+      },
+      {
+        "name": "python-multipart",
+        "version": "0.0.32"
+      },
+      {
+        "name": "python-utils",
+        "version": "4.0.1"
+      },
+      {
+        "name": "pytokens",
+        "version": "0.4.1"
+      },
+      {
+        "name": "PyWavelets",
+        "version": "1.10.0"
+      },
+      {
+        "name": "PyYAML",
+        "version": "6.0.3"
+      },
+      {
+        "name": "pyzmq",
+        "version": "27.2.0"
+      },
+      {
+        "name": "QtPy",
+        "version": "2.4.3"
+      },
+      {
+        "name": "rangehttpserver",
+        "version": "1.4.0"
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0"
+      },
+      {
+        "name": "requests",
+        "version": "2.34.2"
+      },
+      {
+        "name": "requests-cache",
+        "version": "1.1.1"
+      },
+      {
+        "name": "rich",
+        "version": "13.6.0"
+      },
+      {
+        "name": "roifile",
+        "version": "2026.9.22"
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.6.3"
+      },
+      {
+        "name": "ruff",
+        "version": "0.16.9"
+      },
+      {
+        "name": "s3fs",
+        "version": "2026.9.0"
+      },
+      {
+        "name": "scikit-image",
+        "version": "0.26.0"
+      },
+      {
+        "name": "scikit-learn",
+        "version": "1.9.1"
+      },
+      {
+        "name": "scipy",
+        "version": "1.18.1"
+      },
+      {
+        "name": "scyjava",
+        "version": "1.12.5"
+      },
+      {
+        "name": "semver",
+        "version": "3.1.0"
+      },
+      {
+        "name": "setuptools",
+        "version": "84.0.0"
+      },
+      {
+        "name": "six",
+        "version": "1.17.0"
+      },
+      {
+        "name": "skan",
+        "version": "0.13.1"
+      },
+      {
+        "name": "sse-starlette",
+        "version": "3.5.0"
+      },
+      {
+        "name": "starlette",
+        "version": "1.7.0"
+      },
+      {
+        "name": "superqt",
+        "version": "0.8.2"
+      },
+      {
+        "name": "threadpoolctl",
+        "version": "3.7.0"
+      },
+      {
+        "name": "tifffile",
+        "version": "2026.9.20"
+      },
+      {
+        "name": "tomli_w",
+        "version": "1.2.0"
+      },
+      {
+        "name": "tomlkit",
+        "version": "0.15.1"
+      },
+      {
+        "name": "toolz",
+        "version": "1.1.0"
+      },
+      {
+        "name": "tqdm",
+        "version": "4.70.1"
+      },
+      {
+        "name": "transformnd",
+        "version": "0.7.2"
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.4"
+      },
+      {
+        "name": "typing_extensions",
+        "version": "4.16.0"
+      },
+      {
+        "name": "url-normalize",
+        "version": "3.0.1"
+      },
+      {
+        "name": "urllib3",
+        "version": "2.8.0"
+      },
+      {
+        "name": "uvicorn",
+        "version": "0.54.0"
+      },
+      {
+        "name": "watchdog",
+        "version": "6.0.0"
+      },
+      {
+        "name": "wcag-contrast-ratio",
+        "version": "0.9"
+      },
+      {
+        "name": "wrapt",
+        "version": "2.5.0"
+      },
+      {
+        "name": "xarray",
+        "version": "2026.7.0"
+      },
+      {
+        "name": "xlsxwriter",
+        "version": "3.2.9"
+      },
+      {
+        "name": "yarl",
+        "version": "1.25.1"
+      },
+      {
+        "name": "zarr",
+        "version": "3.4.0"
+      },
+      {
+        "name": "zmqruntime",
+        "version": "0.2.24"
+      }
+    ],
+    "machine": "x86_64",
+    "python_executable": "/home/ts/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/bin/python3.12",
+    "python_implementation": "CPython",
+    "python_version": "3.12.14",
+    "sys_platform": "linux"
+  }
+}

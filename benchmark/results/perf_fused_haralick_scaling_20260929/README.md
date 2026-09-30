@@ -1,5 +1,7 @@
 # Fresh ImagingFlow scaling relative to native CellProfiler
 
+**Superseded for performance attribution:** the 16-well OpenHCS point below overlapped two full AST audits. See [the controlled investigation and corrected figure](../perf_scaling_rise_investigation_20260929/README.md). These historical observations remain intact.
+
 All points are newly measured on September 29; no single-well multiplication or historical native estimate is used. Native CP is 4.2.8.1 / Python 3.9.25, one native thread per process, one process at one well and four independent processes at 16 wells. OpenHCS is main 87b992c38 including fused texture and native tabular export, latest main ZMQRuntime pin 0f9e840a9 / Python 3.12.14; one-well execution is inline, 16 wells use four fork workers, one native thread each.
 
 | Wells | OpenHCS execution | OpenHCS total | Native warm invocation | Native/OpenHCS execution |
