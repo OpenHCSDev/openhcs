@@ -21,3 +21,5 @@ The initial three production runs show median texture step 1.579s -> .704s. Full
 ![Measured warm phases](measured_phases.png)
 
 Global class census: 699 modules, 5,075 original classes, 5,063 projected and 12 explicitly unprojected OPEN, before and after. No new class authority is introduced.
+
+Before merge, integrated main 86a99f33c and its ZMQRuntime commit 0f9e840a9 into both worktrees, reinstalled the shared editable dependency and passed pip check. 330 combined library/arithmetic/orchestrator/profiling tests passed against that dependency. Performance observations above were taken at main 5976f8547 with the preceding dependency pin; this newer annotation correction is covered by integration tests rather than relabeling old observations.
