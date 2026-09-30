@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleImagingFlowCytometryObjectsInGrid,1,1,worker_0,1,1790757859.7375727,1790757870.4394312,10.701858520507812
