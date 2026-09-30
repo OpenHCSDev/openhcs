@@ -249,3 +249,17 @@ local-incarnation/wire/ack/endpoint observations and one isinstance at the raw
 shutdown identity decode boundary. These are reviewed leads, not a global clean
 claim; unknown identity/liveness is preserved rather than filled by fallback.
 Capture: close-dependency-census.{txt,json}. Live acceptance remains gated.
+
+Matching OpenHCS production checkpoint published at03d0e4f36. Focused main-source
+census5a16451e4..03d0e4f36 likewise has zero growth in all measured candidate
+categories, including None checks; adds68 code lines and3 declarations (typed
+close request/result/capability). Capture: close-source-census.{txt,json}.
+The real OpenHCS ZMQExecutionServer's non-application control fallthrough is
+`super().handle_control_message(message)`, so the inherited native execution
+shutdown admission owner is the actual production route, not a test-only helper.
+No source/global/live proof is inferred from that source trace.
+
+All source test/git publication handles are terminal.4.4MiB owned fixture scratch
+is disposable after preserving these captures; no scientific/UNKNOWN content.
+The source-only checkpoint is ready for parent review. Parent still owns
+integration/install/original5993 disposition; Zeno owns the next serial slot.
