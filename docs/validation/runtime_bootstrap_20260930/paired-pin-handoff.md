@@ -126,3 +126,37 @@ Broader archive owner unknown; TransportEndpoint crossing acknowledgement still
 unverified. Parent owns PR159 regression isolation/integration/live review.
 Own current pair is ready for parent source integration review; valid-volume
 native/installed bootstrap acceptance remains pending authorized resource slot.
+
+## Merged OpenHCS viewer159 source seam
+
+Normally integrated current main5a56ee5d5619d92708d80d0138cb68eec7415b24
+at8bf3e2e0c27e13f9d1f3c6abdf390750d1853f81. Sole conflict was the native gitlink:
+main records2c68a114 while this branch records67d41b6. Direct native ancestry
+checks prove67d41b6 contains BOTH2c68a114 and native main2aa6d21c. Native merge
+of2c68 returned Already up to date; source/test diff2aa->2c68 is empty. Resolving
+to67d41b6 therefore retains the existing reviewed viewer dependency plus bootstrap,
+not a source-equivalence shortcut or dropped foreign owner change. Initial Git
+recursive submodule error is preserved as merge evidence, not a product failure.
+No bootstrap production file changed, no viewer owner edit by this worker.
+
+Fresh source path verification resolves all nine packages inside this own tree
+with explicit root+eight src directories. Existing shared Python3.12 -B/thread1,
+downloadfalse/shared Fiji,30s shell bound, the same187-case source seam:
+**187 passed,0 skips/deselections,5.46s; process6.29s/259448KiB/exit0**.
+viewer-merged-source-tests.xml and viewer-merged-source-resources.txt retained.
+Native source unchanged, so188-metric ratchet retains its exact earlier proof
+without another run or changed baseline claim. This is not all viewer/core/Fiji
+tests, full ZIP/NRA coverage or installed/native bootstrap acceptance.
+
+Resource helper WARNING/exit2: swap14.4GiB/RAM17.1GiB/home20.2GiB. No native/
+MCP/JVM/GUI, heavy fleet, install, ABI copy or existing process restart. After
+terminal source tests and empty lsof removed only2.3MiB rebuildable
+viewer-merged-pytest; new XML/resources and original attempts retained.
+Parent's fresh-main installed viewer proof remains separate, not borrowed.
+
+Parent issue283 parse_json_object/persistent-session test/RST claim is disjoint:
+this PR does not edit dev_client_core.py or those tests. The diagnostic is only
+a normal McpDevClient consumer; no parser/renderer/bootstrap owner migration
+introduced. Parent owns parser correction/integration/installed freeze. No
+scientific inputs or frozen failures inspected. S1 remains blocked and full
+S1-S8 ZIP scope incomplete; no unknown attempt replay or fourth native run.

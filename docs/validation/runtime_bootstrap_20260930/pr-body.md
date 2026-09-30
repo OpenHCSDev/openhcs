@@ -12,10 +12,11 @@ exclusive startup/process identity, and [metaclass-registry1](https://github.com
 non-creating cache path projection at448cdf0. Exact gitlinks are committed.
 Parent remains integration/install/live owner; frozen source/skill/runtime untouched.
 
-**Current paired-pin checkpoint:** normally integrated OpenHCS maincad1ed2bd and
+**Current paired-pin checkpoint:** normally integrated OpenHCS main5a56ee5d5
+(merged viewer159) at8bf3e2e0c; native67d41b6 contains recorded viewer2c68 and
 native main2aa6d21c (viewer7, includes ACK3374). Records published nativePR9
-**67d41b6**, production84b93a0, plus ArrayBridge409. Tests at source260e5941b:
-**187 source casesPASS5.51s**, zero skips/deselections; process6.41s/265012KiB/exit0.
+**67d41b6**, production84b93a0, plus ArrayBridge409. Tests at source8bf3e2e0c:
+**187 source casesPASS5.46s**, zero skips/deselections; process6.29s/259448KiB/exit0.
 Includes original181 plus6 merged viewer-state controls. One corrected own stale
 docstring: reservation publisher accepts provisional invoker OR child; no behavior
 change. Native ratchet currentmain2aa->84b **PASS188 metrics/no positive deltas**,
