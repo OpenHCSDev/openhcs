@@ -1,0 +1,95 @@
+..FF..FF..FF                                                             [100%]
+=================================== FAILURES ===================================
+_ test_ordinary_connect_preserves_both_pending_address_owners[True-True-False] _
+external/zmqruntime/tests/test_owned_startup.py:156: in test_ordinary_connect_preserves_both_pending_address_owners
+    assert client.connect(timeout=0.01) is False
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: A pending child is not replaceable
+_ test_ordinary_connect_preserves_both_pending_address_owners[True-True-True] __
+external/zmqruntime/tests/test_owned_startup.py:156: in test_ordinary_connect_preserves_both_pending_address_owners
+    assert client.connect(timeout=0.01) is False
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: A pending child is not replaceable
+_ test_ordinary_connect_preserves_both_pending_address_owners[None-True-False] _
+external/zmqruntime/tests/test_owned_startup.py:156: in test_ordinary_connect_preserves_both_pending_address_owners
+    assert client.connect(timeout=0.01) is False
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: A pending child is not replaceable
+_ test_ordinary_connect_preserves_both_pending_address_owners[None-True-True] __
+external/zmqruntime/tests/test_owned_startup.py:156: in test_ordinary_connect_preserves_both_pending_address_owners
+    assert client.connect(timeout=0.01) is False
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: A pending child is not replaceable
+_ test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[False] _
+external/zmqruntime/tests/test_owned_startup.py:202: in test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation
+    client.connect(timeout=0.01)
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: Unknown reservation is not replaceable
+_ test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[True] _
+external/zmqruntime/tests/test_owned_startup.py:202: in test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation
+    client.connect(timeout=0.01)
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: in _execute_mock_call
+    raise effect
+E   AssertionError: Unknown reservation is not replaceable
+- generated xml file: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/reserved-child-takeover/before-corrected-tests.xml -
+=========================== short test summary info ============================
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[True-True-False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[True-True-True]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[None-True-False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[None-True-True]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[True]
+6 failed, 6 passed, 22 deselected in 0.99s

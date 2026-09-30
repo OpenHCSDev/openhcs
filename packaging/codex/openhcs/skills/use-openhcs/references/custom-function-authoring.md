@@ -98,6 +98,37 @@ the outcome; they are not write admission or a Python sandbox.
 
 Prepare the catalogue on the intended endpoint **before submitting source**:
 
+If that isolated endpoint does not exist, first discover "owned runtime" with
+the capability-search tool and inspect the reflected startup request. Use
+`openhcs_start_owned_runtime` with an explicit local port/connection. Its native
+launch plan resolves data/log/store/registry-cache and transport-write paths in
+the MCP launch environment; all must be admitted before spawn. Output-only
+roots require those launch destinations to be under the authorised roots too.
+It returns the exact child incarnation and launch artifacts, not catalogue
+readiness. Retain the complete handle and use `openhcs_observe_owned_runtime`
+until `ready=true`, then follow the preparation procedure below. The returned
+`launch_plan.storage_dir` is the native caller-intended store for registration.
+Occupied or reserved endpoints reject without attach, kill, or replacement.
+If startup observation expires, preserve its original inputs and any returned
+handle; observe that same owner, never replay startup or assume no process.
+Bootstrap does not authorise source registration or scientific execution.
+
+To dispose of a runtime you bootstrapped, discover the reflected
+`openhcs_close_owned_runtime` request and pass that original complete `handle`.
+`mode="force"` requests endpoint termination once, then uses the canonical
+PID-plus-creation-time process owner to close within the existing control
+budget. Both native startup reservations must still prove that child; a
+caller-supplied PID alone is not permission to close another runtime.
+`mode="graceful"` clears workers but deliberately keeps the server alive.
+Retain `outcome.request_attempted` and `outcome.acknowledged` separately from
+`outcome.endpoint_terminated` and `outcome.process_exited`: lost listeners or
+an acknowledgement do not prove process exit. FORCE cleanup is complete only
+when the exact child has `process_exited=true`. For an unresolved close or a
+missing receipt, preserve original inputs and observe the same handle through
+`openhcs_observe_owned_runtime`; do not replay shutdown or bootstrap. If the
+reservation or incarnation proof is unavailable, report that boundary for
+operator disposition rather than guessing a process or killing port owners.
+
 1. Call `openhcs_start_function_catalog_preparation` with the same explicit
    `port`, `host`, `transport_mode` and `persistent` connection fields. It starts
    or coalesces the endpoint's existing catalogue/kernel preparation future,

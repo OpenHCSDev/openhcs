@@ -1,0 +1,2453 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "automatic_recovery_on_reconnect": false,
+          "errors": [],
+          "installation_pointer_available": null,
+          "installation_pointer_changed_since_import": false,
+          "installation_pointer_path": null,
+          "missing_packaged_resource_paths": [],
+          "openhcs_version": "0.8.7",
+          "packaged_resource_count": 56,
+          "packaged_resources_ready": true,
+          "reconnect_owner": null,
+          "reconnect_required": false,
+          "recovery_reason": "current",
+          "restart_command": [],
+          "restart_command_is_stable": false,
+          "restart_hint": null,
+          "restart_required": false,
+          "retry_after_reconnect": false,
+          "schema_version": "openhcs.agent.v1",
+          "server_current_mtime_ns": 1790796246783713734,
+          "server_import_mtime_ns": 1790796246783713734,
+          "server_process_id": 3889216,
+          "server_source_changed_since_import": false,
+          "server_source_path": "/home/ts/wt/openhcs-ack-runtime-parent-20260930/openhcs/mcp/server.py",
+          "service": "openhcs.mcp",
+          "stale_source_paths": [],
+          "started_at_unix": 1790798213.9744768,
+          "status": "ok",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_health_check"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capabilities": [
+            {
+              "data_exposure": [],
+              "description": "Explicitly spawn once at an empty local execution pair after native write admission. Returns the exact child handle promptly, without catalogue warming or adopting/replacing any endpoint. Never replay an uncertain startup.",
+              "input_type": "RuntimeBootstrapStartRequest",
+              "kind": "tool",
+              "name": "openhcs_start_owned_runtime",
+              "output_type": "RuntimeBootstrapState",
+              "read_only": false,
+              "required_extras": [],
+              "requires_network": false,
+              "role": "primary",
+              "runtime_requirements": [],
+              "security_requirements": [],
+              "side_effects": [
+                "spawns_owned_execution_runtime",
+                "writes_native_startup_artifacts"
+              ],
+              "target_context": "runtime_server",
+              "title": "Start owned execution runtime",
+              "visibility": "standard",
+              "workflow_group": "function_authoring",
+              "workflow_stage": "control"
+            },
+            {
+              "data_exposure": [],
+              "description": "Read startup activity and readiness of the exact spawned child handle. No spawn, replacement, catalogue warming, or mutation. Preserve pending/uncertain handles.",
+              "input_type": "RuntimeBootstrapObserveRequest",
+              "kind": "tool",
+              "name": "openhcs_observe_owned_runtime",
+              "output_type": "RuntimeBootstrapState",
+              "read_only": true,
+              "required_extras": [],
+              "requires_network": false,
+              "role": "primary",
+              "runtime_requirements": [],
+              "security_requirements": [],
+              "side_effects": [],
+              "target_context": "runtime_server",
+              "title": "Observe owned runtime startup",
+              "visibility": "standard",
+              "workflow_group": "function_authoring",
+              "workflow_stage": "status"
+            },
+            {
+              "data_exposure": [],
+              "description": "Close only the retained bootstrap child proven by both native endpoint reservations. FORCE sends at most one shutdown request and closes through the exact process owner within the existing budget; listener disappearance is not process exit. GRACEFUL clears workers but keeps the server. Retain unresolved handles and observe without replay.",
+              "input_type": "RuntimeBootstrapCloseRequest",
+              "kind": "tool",
+              "name": "openhcs_close_owned_runtime",
+              "output_type": "RuntimeBootstrapCloseResult",
+              "read_only": false,
+              "required_extras": [],
+              "requires_network": false,
+              "role": "primary",
+              "runtime_requirements": [],
+              "security_requirements": [],
+              "side_effects": [
+                "requests_owned_runtime_shutdown",
+                "terminates_exact_owned_process"
+              ],
+              "target_context": "runtime_server",
+              "title": "Close exact owned execution runtime",
+              "visibility": "standard",
+              "workflow_group": "function_authoring",
+              "workflow_stage": "control"
+            }
+          ],
+          "matched_count": 3,
+          "next_offset": null,
+          "query": {
+            "has_side_effects": null,
+            "kind": null,
+            "limit": 6,
+            "offset": 0,
+            "role": null,
+            "side_effect_contains": null,
+            "target_context": null,
+            "text": "owned runtime",
+            "visibility": null,
+            "workflow_group": null,
+            "workflow_stage": null
+          },
+          "returned_count": 3,
+          "schema_version": "openhcs.agent.v1",
+          "surface_profile": "full"
+        }
+      ],
+      "tool": "openhcs_search_capabilities"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "persistent": true,
+              "port": 5992,
+              "transport_mode": "tcp"
+            },
+            "launch_plan": {
+              "log_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.log",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/cache/metaclass-registry",
+              "runtime_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/custom_functions",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/tcp/5992.startup.lock",
+                "/home/ts/.openhcs/tcp/6992.startup.lock"
+              ]
+            },
+            "process_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            }
+          },
+          "process_alive": true,
+          "progress": {
+            "message": "Native child spawned; retain this exact handle",
+            "phase": "starting_process",
+            "sequence": 0,
+            "timestamp": 0.0
+          },
+          "ready": false,
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_start_owned_runtime"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "persistent": true,
+              "port": 5992,
+              "transport_mode": "tcp"
+            },
+            "launch_plan": {
+              "log_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.log",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/cache/metaclass-registry",
+              "runtime_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/custom_functions",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/tcp/5992.startup.lock",
+                "/home/ts/.openhcs/tcp/6992.startup.lock"
+              ]
+            },
+            "process_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            }
+          },
+          "process_alive": true,
+          "progress": {
+            "message": "Prepared kernel cache worker 3891726",
+            "phase": "preparing_capabilities",
+            "sequence": 30,
+            "timestamp": 1790798313.0820131
+          },
+          "ready": false,
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_observe_owned_runtime"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "detected_microscope_type": "imagexpress",
+          "errors": [],
+          "grid_size": [
+            1,
+            1
+          ],
+          "handler_class": "ImageXpressHandler",
+          "image_count": 1,
+          "include_all_components": true,
+          "metadata_file_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/synthetic.HTD",
+          "num_cells": 4,
+          "output_dir": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+          "overlap_percent": 10,
+          "requested_format": "ImageXpress",
+          "sampled_image_files": [
+            "TimePoint_1/A01_s001_w1_z001_t001.tif"
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "shared_cell_fraction": 0.95,
+          "stage_error_px": 2,
+          "tile_size": [
+            96,
+            96
+          ],
+          "truncated_image_count": 0,
+          "warnings": [],
+          "wavelengths": 1,
+          "wells": [
+            "A01"
+          ],
+          "z_stack_levels": 1
+        }
+      ],
+      "tool": "openhcs_generate_synthetic_plate"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "persistent": true,
+              "port": 5992,
+              "transport_mode": "tcp"
+            },
+            "launch_plan": {
+              "log_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.log",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/cache/metaclass-registry",
+              "runtime_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/custom_functions",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/tcp/5992.startup.lock",
+                "/home/ts/.openhcs/tcp/6992.startup.lock"
+              ]
+            },
+            "process_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            }
+          },
+          "process_alive": true,
+          "progress": {
+            "message": "Exact execution child accepts controls",
+            "phase": "connected",
+            "sequence": 0,
+            "timestamp": 0.0
+          },
+          "ready": true,
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_observe_owned_runtime"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "persistent": true,
+              "port": 5992,
+              "transport_mode": "tcp"
+            },
+            "server_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            }
+          },
+          "outcome": "ready",
+          "progress": {
+            "message": "Function catalog ready",
+            "phase": "connected",
+            "sequence": 303,
+            "timestamp": 1790798339.609178
+          },
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_start_function_catalog_preparation"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5592,
+            "transport_mode": "tcp"
+          },
+          "detected_microscope_type": "imagexpress",
+          "errors": [],
+          "handler_class": "ImageXpressHandler",
+          "parser_class": "ImageXpressFilenameParser",
+          "plate_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+          "requested_microscope_type": "imagexpress",
+          "requested_paths": [
+            "TimePoint_1/A01_s001_w1_z001_t001.tif"
+          ],
+          "resolved_records": [
+            {
+              "file_format": null,
+              "full_path": null,
+              "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/TimePoint_1/A01_s001_w1_z001_t001.tif",
+              "key": "TimePoint_1/A01_s001_w1_z001_t001.tif",
+              "kind": "image",
+              "metadata": {
+                "channel": 1,
+                "extension": ".tif",
+                "filename": "TimePoint_1/A01_s001_w1_z001_t001.tif",
+                "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/TimePoint_1/A01_s001_w1_z001_t001.tif",
+                "modified": "2026-09-30T15:59:15",
+                "site": 1,
+                "size": "18.2 KB",
+                "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/TimePoint_1/A01_s001_w1_z001_t001.tif",
+                "timepoint": 1,
+                "type": "Image",
+                "virtual_path": "TimePoint_1/A01_s001_w1_z001_t001.tif",
+                "well": "A01",
+                "z_index": 1
+              },
+              "preview": null,
+              "relative_path": null,
+              "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/TimePoint_1/A01_s001_w1_z001_t001.tif",
+              "virtual_path": "TimePoint_1/A01_s001_w1_z001_t001.tif"
+            }
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "skipped_records": [],
+          "status_messages": [
+            "Loading chunk 1/1 (1 images)...",
+            "Streamed 1 images to Napari"
+          ],
+          "streamed_image_paths": [
+            "TimePoint_1/A01_s001_w1_z001_t001.tif"
+          ],
+          "streamed_roi_paths": [],
+          "viewer_config_key": "napari_streaming_config",
+          "viewer_type": "napari",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_stream_plate_files_to_viewer"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "items": [
+            {
+              "backend_tags": [
+                "skimage"
+              ],
+              "function_id": "skimage:filters.gaussian",
+              "import_path": "skimage._shared.filters.gaussian",
+              "library": "skimage",
+              "module": "skimage._shared.filters",
+              "name": "gaussian",
+              "signature": "gaussian(sigma, mode, cval, preserve_range, ...)",
+              "summary": "Multi-dimensional Gaussian filter."
+            },
+            {
+              "backend_tags": [
+                "openhcs",
+                "processors",
+                "numpy_processor"
+              ],
+              "function_id": "openhcs:processors_numpy_processor_gaussian_blur",
+              "import_path": "openhcs.processing.backends.processors.numpy_processor.gaussian_blur",
+              "library": "openhcs",
+              "module": "openhcs.processing.backends.processors.numpy_processor",
+              "name": "gaussian_blur",
+              "signature": "gaussian_blur(sigma=1.0, *, enabled=True) -> numpy.ndarray",
+              "summary": "Apply Gaussian blur to reduce noise in image stack."
+            },
+            {
+              "backend_tags": [
+                "openhcs",
+                "cellprofiler"
+              ],
+              "function_id": "openhcs:cellprofiler_gaussian_filter",
+              "import_path": "openhcs.processing.backends.cellprofiler.gaussian_filter.gaussian_filter",
+              "library": "openhcs",
+              "module": "openhcs.processing.backends.cellprofiler.gaussian_filter",
+              "name": "gaussian_filter",
+              "signature": "gaussian_filter(sigma=1.0, *, enabled=True) -> numpy.ndarray",
+              "summary": "Apply CellProfiler-compatible Gaussian smoothing to an image."
+            }
+          ],
+          "library": null,
+          "limit": 3,
+          "query": "gaussian",
+          "revision": "028ea78c406fea332c3c451eb09b1522785ad100e535774a7e42f53b6b8d41ac",
+          "schema_version": "openhcs.agent.v1",
+          "total": 33
+        }
+      ],
+      "tool": "openhcs_search_functions"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "doc": "Apply Gaussian blur to reduce noise in image stack.\n\nArgs:\n    sigma: Standard deviation for Gaussian kernel (higher = more blur)\n\nReturns:\n    Blurred 3D NumPy array of shape (Z, Y, X)\n\n\nAdditional Parameters\n---------------------\n    slice_by_slice : bool, optional\n        Added by the numpy memory decorator. Process 3D arrays slice-by-slice.\n        Defaults to False. Prevents cross-slice contamination when enabled.",
+          "doc_chars": 422,
+          "doc_truncated": false,
+          "entry": {
+            "backend_tags": [
+              "openhcs",
+              "processors",
+              "numpy_processor"
+            ],
+            "function_id": "openhcs:processors_numpy_processor_gaussian_blur",
+            "import_path": "openhcs.processing.backends.processors.numpy_processor.gaussian_blur",
+            "library": "openhcs",
+            "module": "openhcs.processing.backends.processors.numpy_processor",
+            "name": "gaussian_blur",
+            "signature": "gaussian_blur(sigma=1.0, *, enabled=True) -> numpy.ndarray",
+            "summary": "Apply Gaussian blur to reduce noise in image stack."
+          },
+          "max_doc_chars": 2000,
+          "parameters": [
+            {
+              "annotation": "ndarray",
+              "default_repr": null,
+              "description": "Supplied by OpenHCS from the FunctionStep input image payload; do not pass this as a function kwarg.",
+              "enum_import_path": null,
+              "enum_members": [],
+              "enum_values": [],
+              "name": "stack",
+              "required": false,
+              "supplied_by": "runtime_primary_input"
+            },
+            {
+              "annotation": "float",
+              "default_repr": "1.0",
+              "description": "Standard deviation for Gaussian kernel (higher = more blur)",
+              "enum_import_path": null,
+              "enum_members": [],
+              "enum_values": [],
+              "name": "sigma",
+              "required": false,
+              "supplied_by": "agent"
+            },
+            {
+              "annotation": "bool",
+              "default_repr": "False",
+              "description": "bool, optional\nAdded by the numpy memory decorator. Process 3D arrays slice-by-slice.\nDefaults to False. Prevents cross-slice contamination when enabled. Supplied by OpenHCS runtime execution infrastructure; do not pass this as a function kwarg.",
+              "enum_import_path": null,
+              "enum_members": [],
+              "enum_values": [],
+              "name": "slice_by_slice",
+              "required": false,
+              "supplied_by": "runtime_parameter"
+            },
+            {
+              "annotation": "LazyDtypeConfig",
+              "default_repr": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)",
+              "description": "Supplied by OpenHCS runtime execution infrastructure; do not pass this as a function kwarg.",
+              "enum_import_path": null,
+              "enum_members": [],
+              "enum_values": [],
+              "name": "dtype_config",
+              "required": false,
+              "supplied_by": "runtime_parameter"
+            },
+            {
+              "annotation": "bool",
+              "default_repr": "True",
+              "description": "Run this callable or configuration when enabled; skip it when disabled.",
+              "enum_import_path": null,
+              "enum_members": [],
+              "enum_values": [],
+              "name": "enabled",
+              "required": false,
+              "supplied_by": "agent"
+            }
+          ],
+          "runtime_contract": {
+            "artifact_inputs": [],
+            "artifact_outputs": [],
+            "callable_kind": "regular",
+            "cellprofiler_module": null,
+            "declared_processing_contract": "FLEXIBLE",
+            "materialization_rule": null,
+            "measurement_rule": null,
+            "pattern_compatibility_rule": "Regular OpenHCS callables may participate in standard FunctionStep callable, tuple, list, or dict patterns subject to compiler validation. Dictionary keys are normalized group identities selected by group_by, may intentionally cover only a subset of available component values, and omit groups that should not be invoked; compilation rejects keys absent from the available component domain.",
+            "processing_contract": "FLEXIBLE",
+            "required_variable_components": [],
+            "runtime_bound_parameters": [
+              "slice_by_slice"
+            ],
+            "source_binding_rule": null
+          },
+          "schema_version": "openhcs.agent.v1"
+        }
+      ],
+      "tool": "openhcs_describe_function"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "active_dimension_label_route": "origin_manual_kind_manual_projection_selected_images_4df6e51495cb681a8242e94ff7489e142cb9a26cfc0c232af2d7810441493d2b",
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "component_group_count": 1,
+          "component_item_count": 1,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5592,
+            "transport_mode": "tcp"
+          },
+          "current_step": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            47,
+            47
+          ],
+          "errors": [],
+          "layer_count": 1,
+          "layers": [
+            {
+              "axis_component_values": {},
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                96,
+                96
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {},
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  441.0,
+                  26053.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  0.65,
+                  0.65
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "manual",
+                  "output_key": "selected_images",
+                  "output_kind": "manual",
+                  "pipeline_position": null,
+                  "projection_key": "selected_images_4df6e51495cb681a8242e94ff7489e142cb9a26cfc0c232af2d7810441493d2b",
+                  "step_name": null,
+                  "step_scope_id": null
+                }
+              ],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_4df6e51495cb681a8242e94ff7489e142cb9a26cfc0c232af2d7810441493d2b",
+              "routed_component_coordinates": [
+                []
+              ],
+              "routed_component_values": {},
+              "scalar_labels": [
+                "Site 1",
+                "Ch 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": true,
+              "selected_data_indices": [],
+              "stack_axes": [],
+              "title": "selected_images",
+              "visible": true
+            }
+          ],
+          "native_dimensions": {
+            "camera_angles": [
+              0.0,
+              0.0,
+              90.0
+            ],
+            "canvas_size": [
+              962,
+              464
+            ],
+            "displayed_axes": [
+              "y",
+              "x"
+            ],
+            "ndisplay": 2,
+            "order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "point": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              30.55,
+              30.55
+            ]
+          },
+          "native_viewport": {
+            "center": [
+              0.0,
+              30.875,
+              30.875
+            ],
+            "zoom": 7.064102564102564
+          },
+          "observed": true,
+          "response": {},
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "viewer_ndim": 7,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_get_viewer_window_state"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "authoring_path": "ConfigPatch.values",
+          "config_type": "PipelineConfig",
+          "fields": [
+            {
+              "authoring_value_path": [
+                "napari_streaming_config"
+              ],
+              "declaring_type": "openhcs.core.config.GlobalPipelineConfig",
+              "default_origin": "default_factory",
+              "default_repr": "openhcs.core.config.LazyNapariStreamingConfig()",
+              "description": "Per-step Napari transport, scope filter, lifetime, and display policy.",
+              "enum_values": [],
+              "inheritable": false,
+              "lazy": true,
+              "nested_schema_path": "napari_streaming_config",
+              "path": "napari_streaming_config",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "openhcs.core.config.LazyNapariStreamingConfig",
+              "ui_hidden": false,
+              "value_type_repr": "openhcs.core.config.NapariStreamingConfig"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "well_filter"
+              ],
+              "declaring_type": "openhcs.core.config.WellFilterConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "None",
+              "description": "Well selection matched against the plate's ordered available wells.\n\n    Use a list for exact IDs; a string for one ID, comma-separated IDs,\n    ``row:A``, ``col:01-06``, or an inclusive ``A01:A12`` range; or a\n    non-negative integer for the first N available wells. ``None`` bypasses\n    filtering. Zero matches no wells, so include mode selects none and exclude\n    mode selects all.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.well_filter",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Union[typing.List[str], str, int, NoneType]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Union[typing.List[str], str, int, NoneType]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "well_filter_mode"
+              ],
+              "declaring_type": "openhcs.core.config.WellFilterConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "WellFilterMode.INCLUDE",
+              "description": "Apply ``well_filter`` as the wells to include or the wells to exclude.\n\n    Include mode rejects unknown explicit wells. Exclude mode ignores unknown\n    explicit wells and preserves every unmatched available well.",
+              "enum_values": [
+                "include",
+                "exclude"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.well_filter_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.WellFilterMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.WellFilterMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "colormap"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "'gray'",
+              "description": "Name of a colormap registered in the installed Napari viewer. Napari validates this extensible registry name when displaying the layer.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.colormap",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[str]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[str]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "variable_size_handling"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariVariableSizeHandling.PAD_TO_MAX",
+              "description": "How Napari handles streamed images with different spatial dimensions: preserve each shape in separate layers or pad smaller images to the largest shape before stacking.",
+              "enum_values": [
+                "separate_layers",
+                "pad_to_max"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.variable_size_handling",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariVariableSizeHandling]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariVariableSizeHandling]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "site_mode"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariDimensionMode.STACK",
+              "description": "Whether site values are stacked or use separate layers.",
+              "enum_values": [
+                "layer",
+                "stack"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.site_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "channel_mode"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariDimensionMode.STACK",
+              "description": "Whether channel values are stacked or use separate layers.",
+              "enum_values": [
+                "layer",
+                "stack"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.channel_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "z_index_mode"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariDimensionMode.STACK",
+              "description": "Whether z-index values are stacked or use separate layers.",
+              "enum_values": [
+                "layer",
+                "stack"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.z_index_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "timepoint_mode"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariDimensionMode.STACK",
+              "description": "Whether timepoint values are stacked or use separate layers.",
+              "enum_values": [
+                "layer",
+                "stack"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.timepoint_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "well_mode"
+              ],
+              "declaring_type": "openhcs.core.config.NapariDisplayConfig",
+              "default_origin": "inherited_default",
+              "default_repr": "NapariDimensionMode.STACK",
+              "description": "Whether well values are stacked or use separate layers.",
+              "enum_values": [
+                "layer",
+                "stack"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.well_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[openhcs.core.config.NapariDimensionMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "enabled"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "False",
+              "description": "Emit this step's eligible outputs to the configured viewer when enabled.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.enabled",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[bool]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[bool]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "persistent"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "True",
+              "description": "Keep the managed viewer open after the pipeline stops sending data.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.persistent",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[bool]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[bool]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "host"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "'localhost'",
+              "description": "Viewer host used by the selected transport.\n\n    Use ``localhost`` for a viewer on this machine. A remote host requires TCP;\n    IPC transports remain local regardless of this value.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.host",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[str]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[str]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "listen_host"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "'127.0.0.1'",
+              "description": "Interface for a locally launched viewer's TCP data and control sockets.\n\n    The default keeps managed viewers local. Set an explicit interface or\n    ``*`` to permit remote clients. This does not change the connection host\n    above, rebind an externally owned viewer, or affect IPC transport.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.listen_host",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[str]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[str]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "transport_mode"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "TransportMode.IPC",
+              "description": "Transport used for viewer data and control messages.\n\n    The platform default is TCP on Windows and IPC on Unix-like systems. Choose\n    TCP for remote viewers; IPC is local-only.",
+              "enum_values": [
+                "tcp",
+                "ipc"
+              ],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.transport_mode",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[zmqruntime.config.TransportMode]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[zmqruntime.config.TransportMode]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "scope_accent_color"
+              ],
+              "declaring_type": "openhcs.core.config.StreamingDefaults",
+              "default_origin": "inherited_default",
+              "default_repr": "None",
+              "description": "Exact owner-projected scope accent used to frame a managed viewer.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.scope_accent_color",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[str]",
+              "ui_hidden": true,
+              "value_type_repr": "typing.Optional[str]"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "port"
+              ],
+              "declaring_type": "openhcs.core.config.NapariStreamingConfig",
+              "default_origin": "field_default",
+              "default_repr": "5555",
+              "description": "Napari viewer transport port; choose a free local port when streaming is enabled.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.port",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "builtins.int",
+              "ui_hidden": false,
+              "value_type_repr": "builtins.int"
+            },
+            {
+              "authoring_value_path": [
+                "napari_streaming_config",
+                "font_dpi"
+              ],
+              "declaring_type": "openhcs.core.config.NapariStreamingConfig",
+              "default_origin": "field_default",
+              "default_repr": "None",
+              "description": "Font DPI for the detached Napari interface.\n\n    ``None`` preserves the graphical session's declared DPI. Set an explicit\n    value when the X11 logical DPI does not match the desired Napari interface\n    scale. The value is applied before Qt constructs the viewer and therefore\n    requires the managed viewer process to restart.",
+              "enum_values": [],
+              "inheritable": true,
+              "lazy": false,
+              "nested_schema_path": null,
+              "path": "napari_streaming_config.font_dpi",
+              "registry_values": [],
+              "required": false,
+              "type_repr": "typing.Optional[int]",
+              "ui_hidden": false,
+              "value_type_repr": "typing.Optional[int]"
+            }
+          ],
+          "path_prefix": "napari_streaming_config",
+          "registries": [
+            {
+              "owner_type": "openhcs.core.config.StreamingConfig",
+              "registered_types": [
+                {
+                  "key": "fiji_streaming_config",
+                  "type_repr": "openhcs.core.config.LazyFijiStreamingConfig"
+                },
+                {
+                  "key": "napari_streaming_config",
+                  "type_repr": "openhcs.core.config.LazyNapariStreamingConfig"
+                }
+              ]
+            }
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "types": [
+            {
+              "base_types": [
+                "python_introspect.validation.AnnotatedDataclassValidationMixin"
+              ],
+              "description": "Root configuration object for an OpenHCS pipeline session.\nThis object is intended to be instantiated at application startup and treated as immutable.",
+              "type_repr": "openhcs.core.config.GlobalPipelineConfig"
+            },
+            {
+              "base_types": [
+                "polystore.streaming.viewer_transport.ViewerDisplayConfigABC",
+                "python_introspect.validation.AnnotatedDataclassValidationMixin"
+              ],
+              "description": "Map streamed OpenHCS dimensions and intensity data onto Napari layers.",
+              "type_repr": "openhcs.core.config.NapariDisplayConfig"
+            },
+            {
+              "base_types": [
+                "python_introspect.validation.AnnotatedDataclassValidationMixin"
+              ],
+              "description": "Base execution-domain filter inherited by specialized well policies.\n\nAt pipeline scope this constrains which wells compile and execute. Nominal\nsubclasses reuse the same selection for their own narrower behavior, such\nas main-flow persistence, step checkpoints, or viewer emission.",
+              "type_repr": "openhcs.core.config.WellFilterConfig"
+            },
+            {
+              "base_types": [
+                "python_introspect.enableable.Enableable",
+                "openhcs.core.config.StepWellFilterConfig"
+              ],
+              "description": "Default configuration for streaming to visualizers.\n\nAn unset viewer well filter inherits broader well scope. A viewer override\ncan narrow emission, but it cannot undo loading or processing already chosen\nby the pipeline execution-domain filter.\n\nThe 'persistent' field is conditionally shown in list item previews via\nalways_viewable_fields. Since this config is Enableable, the persistent field\nwill only appear when enabled=True. This means disabled streaming configs won't\nclutter the preview with persistence info, but enabled ones will show whether\nthe viewer persists after pipeline completion.",
+              "type_repr": "openhcs.core.config.StreamingDefaults"
+            },
+            {
+              "base_types": [
+                "openhcs.core.streaming_config_factory.StreamingConfigBehaviorMixin",
+                "openhcs.core.config.StreamingConfig",
+                "openhcs.core.config.NapariDisplayConfig"
+              ],
+              "description": "Per-step Napari transport, scope filter, lifetime, and display policy.",
+              "type_repr": "openhcs.core.config.NapariStreamingConfig"
+            }
+          ]
+        }
+      ],
+      "tool": "openhcs_describe_config_schema"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "axes": [
+            "A01"
+          ],
+          "axis_count": 1,
+          "axis_filter": [],
+          "errors": [],
+          "plate_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+          "progress_event_count": 1,
+          "schema_version": "openhcs.agent.v1",
+          "source_workspace": {
+            "axis_file_counts": {
+              "A01": 1
+            },
+            "file_count": 1,
+            "files": [
+              {
+                "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/A01_s001_w1_z001_t001.tif",
+                "source_metadata": {
+                  "channel": 1,
+                  "extension": ".tif",
+                  "site": 1,
+                  "timepoint": 1,
+                  "well": "A01",
+                  "z_index": 1
+                },
+                "source_path": "TimePoint_1/A01_s001_w1_z001_t001.tif",
+                "virtual_path": "A01_s001_w1_z001_t001.tif"
+              }
+            ],
+            "truncated_file_count": 0
+          },
+          "step_count": 1,
+          "steps": [
+            {
+              "artifact_inputs": [],
+              "artifact_outputs": [],
+              "axis_id": "A01",
+              "execution_groups": [
+                null
+              ],
+              "main_flow_axis_persistence_enabled": true,
+              "main_flow_materialization": {
+                "analysis_results_dir": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints_results",
+                "backend": "disk",
+                "output_dir": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints",
+                "plate_root": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs",
+                "sub_dir": "checkpoints"
+              },
+              "output_dir": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images",
+              "step_index": 0,
+              "step_name": "AckRuntimeGaussian",
+              "truncated_artifact_input_count": 0,
+              "truncated_artifact_output_count": 0,
+              "viewer_streaming": [
+                {
+                  "backend": "napari_stream",
+                  "config_key": "napari_streaming_config",
+                  "effective_config": {
+                    "channel_mode": "stack",
+                    "colormap": "gray",
+                    "enabled": true,
+                    "font_dpi": null,
+                    "host": "127.0.0.1",
+                    "listen_host": "127.0.0.1",
+                    "persistent": true,
+                    "port": 5592,
+                    "scope_accent_color": null,
+                    "site_mode": "stack",
+                    "timepoint_mode": "stack",
+                    "transport_mode": "tcp",
+                    "variable_size_handling": "pad_to_max",
+                    "well_filter": null,
+                    "well_filter_mode": "include",
+                    "well_mode": "stack",
+                    "z_index_mode": "stack"
+                  },
+                  "viewer_type": "napari"
+                }
+              ]
+            }
+          ],
+          "truncated_axis_count": 0,
+          "truncated_step_count": 0,
+          "warnings": [
+            {
+              "code": "compile_inspection_initialized_workspace",
+              "hint": "Raw microscope layouts can require virtual workspace metadata before compilation or execution. Run openhcs_inspect_plate_path first to preview whether workspace preparation is required.",
+              "message": "Compile inspection initialized OpenHCS workspace metadata at /home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic/openhcs_metadata.json."
+            }
+          ],
+          "worker_assignments": {
+            "worker_0": [
+              "A01"
+            ]
+          }
+        }
+      ],
+      "tool": "openhcs_inspect_pipeline_source_artifact_plan"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "schema_version": "openhcs.agent.v1",
+          "session_id": "session-1",
+          "uri": "openhcs://execution/sessions/session-1"
+        }
+      ],
+      "tool": "openhcs_create_orchestrator_session_from_pipeline_source"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "job_id": "job-1",
+          "kind": "compile",
+          "schema_version": "openhcs.agent.v1",
+          "server_execution_id": "e39a5469-308a-4bf5-b3be-06ea55594e4f",
+          "session_id": "session-1",
+          "status": "accepted",
+          "uri": "openhcs://execution/jobs/job-1"
+        }
+      ],
+      "tool": "openhcs_submit_compile"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [
+            {
+              "code": "mcp_tool_failed",
+              "exception_type": "ValueError",
+              "hint": "The MCP server caught this exception at the tool boundary.",
+              "message": "'canvas' is not a valid WindowSnapshotCaptureScope",
+              "path": null
+            }
+          ],
+          "ok": false,
+          "schema_version": "openhcs.agent.v1",
+          "tool": "openhcs_viewer_snapshot_window"
+        }
+      ],
+      "tool": "openhcs_viewer_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "job_id": "job-1",
+          "kind": "compile",
+          "progress": {
+            "event": {
+              "axis_id": "A01",
+              "completed": 1,
+              "execution_id": "e39a5469-308a-4bf5-b3be-06ea55594e4f",
+              "percent": 100.0,
+              "phase": "compile",
+              "pid": 3890586,
+              "plate_id": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+              "status": "success",
+              "step_name": "compilation",
+              "timestamp": 1790798840.2629313,
+              "total": 1
+            },
+            "sequence": 6
+          },
+          "response": {
+            "execution": {
+              "client_address": null,
+              "compile_only": true,
+              "end_time": 1790798840.2632222,
+              "error": null,
+              "execution_id": "e39a5469-308a-4bf5-b3be-06ea55594e4f",
+              "plate_id": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+              "results_summary": {
+                "auto_add_output_plate_to_plate_manager": false,
+                "output_plate_root": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs",
+                "well_count": 1,
+                "wells": [
+                  "A01"
+                ]
+              },
+              "start_time": 1790798836.85495,
+              "status": "complete"
+            },
+            "status": "ok"
+          },
+          "schema_version": "openhcs.agent.v1",
+          "server_execution_id": "e39a5469-308a-4bf5-b3be-06ea55594e4f",
+          "session_id": "session-1",
+          "status": "complete",
+          "uri": "openhcs://execution/jobs/job-1",
+          "warnings": [
+            {
+              "code": "headless_execution_did_not_update_plate_manager",
+              "hint": "For user-visible work in an open UI, load plate_paths and pipeline_data through the plate_manager.orchestrator_config code document, then run init/compile/run with openhcs_ui_selected_plate_workflow.",
+              "message": "This direct execution session completed without adding the output plate to the running UI PlateManager."
+            }
+          ]
+        }
+      ],
+      "tool": "openhcs_get_execution_status"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "widget",
+          "captured": true,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5592,
+            "transport_mode": "tcp"
+          },
+          "errors": [],
+          "frame_condition": "immediate",
+          "height": 944,
+          "observation_timeout_s": 5.0,
+          "output_dir_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture/20260930T200752669566Z_napari_5592_OpenHCS_Napari_Visualization.png",
+            "sha256": "e3c17fb1223f9ef04d52a98563dec092757aec731bfccaeaeb64aefbf17872fb",
+            "size_bytes": 88457,
+            "title": "OpenHCS Napari Visualization",
+            "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture/20260930T200752669566Z_napari_5592_OpenHCS_Napari_Visualization.png"
+          },
+          "response": {
+            "height": 944,
+            "native_dimensions": {
+              "camera_angles": [
+                0.0,
+                0.0,
+                90.0
+              ],
+              "canvas_size": [
+                962,
+                464
+              ],
+              "displayed_axes": [
+                "y",
+                "x"
+              ],
+              "ndisplay": 2,
+              "order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ],
+              "point": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                30.55,
+                30.55
+              ]
+            },
+            "resource": {
+              "mime_type": "image/png",
+              "path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture/20260930T200752669566Z_napari_5592_OpenHCS_Napari_Visualization.png",
+              "sha256": "e3c17fb1223f9ef04d52a98563dec092757aec731bfccaeaeb64aefbf17872fb",
+              "size_bytes": 88457,
+              "title": "OpenHCS Napari Visualization",
+              "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture/20260930T200752669566Z_napari_5592_OpenHCS_Napari_Visualization.png"
+            },
+            "snapshot": {
+              "capture_scope": "widget",
+              "connection": {
+                "host": "127.0.0.1",
+                "persistent": true,
+                "port": 5592,
+                "transport_mode": "tcp"
+              },
+              "frame_condition": "immediate",
+              "include_response": true,
+              "observation_timeout_s": 5.0,
+              "output_dir_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/raw-capture",
+              "timeout_ms": 5000
+            },
+            "status": "success",
+            "type": "screenshot_ack",
+            "viewer": {
+              "title": "OpenHCS Napari Visualization",
+              "type": "napari"
+            },
+            "width": 1440
+          },
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "warnings": [],
+          "width": 1440
+        }
+      ],
+      "tool": "openhcs_viewer_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "job_id": "job-2",
+          "kind": "execute",
+          "schema_version": "openhcs.agent.v1",
+          "server_execution_id": "ee69d54e-9d28-49da-a227-5db0efecd65d",
+          "session_id": "session-1",
+          "status": "accepted",
+          "uri": "openhcs://execution/jobs/job-2"
+        }
+      ],
+      "tool": "openhcs_submit_pipeline_execution"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "job_id": "job-2",
+          "kind": "execute",
+          "progress": {
+            "event": {
+              "axis_id": "",
+              "completed": 1,
+              "execution_id": "ee69d54e-9d28-49da-a227-5db0efecd65d",
+              "percent": 100.0,
+              "phase": "success",
+              "pid": 3890586,
+              "plate_id": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+              "status": "success",
+              "step_name": "pipeline",
+              "timestamp": 1790798891.2464979,
+              "total": 1,
+              "total_wells": [
+                "A01"
+              ],
+              "worker_assignments": {
+                "worker_0": [
+                  "A01"
+                ]
+              }
+            },
+            "sequence": 17
+          },
+          "response": {
+            "execution": {
+              "client_address": null,
+              "compile_only": false,
+              "end_time": 1790798891.2472074,
+              "error": null,
+              "execution_id": "ee69d54e-9d28-49da-a227-5db0efecd65d",
+              "plate_id": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic",
+              "results_summary": {
+                "auto_add_output_plate_to_plate_manager": false,
+                "output_plate_root": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs",
+                "well_count": 1,
+                "wells": [
+                  "A01"
+                ]
+              },
+              "start_time": 1790798890.3394468,
+              "status": "complete"
+            },
+            "status": "ok"
+          },
+          "schema_version": "openhcs.agent.v1",
+          "server_execution_id": "ee69d54e-9d28-49da-a227-5db0efecd65d",
+          "session_id": "session-1",
+          "status": "complete",
+          "uri": "openhcs://execution/jobs/job-2",
+          "warnings": [
+            {
+              "code": "headless_execution_did_not_update_plate_manager",
+              "hint": "For user-visible work in an open UI, load plate_paths and pipeline_data through the plate_manager.orchestrator_config code document, then run init/compile/run with openhcs_ui_selected_plate_workflow.",
+              "message": "This direct execution session completed without adding the output plate to the running UI PlateManager."
+            }
+          ]
+        }
+      ],
+      "tool": "openhcs_get_execution_status"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "active_dimension_label_route": "origin_pipeline_kind_main_projection_main_step_0_scope__home_ts_wt_openhcs-issue-batch-20260929_ack-runtime-parent-20260930_synthetic::pipeline::submission_7f017c78b240::step_0_name_AckRuntimeGaussian",
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ],
+          "component_group_count": 1,
+          "component_item_count": 1,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5592,
+            "transport_mode": "tcp"
+          },
+          "current_step": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            47,
+            47
+          ],
+          "errors": [],
+          "layer_count": 2,
+          "layers": [
+            {
+              "axis_component_values": {},
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [],
+              "component_value_count": 0,
+              "component_values": [],
+              "component_values_truncated": false,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                96,
+                96
+              ],
+              "data_types": [],
+              "feature_row_count": 0,
+              "item_count": 0,
+              "labels": {},
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  441.0,
+                  26053.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  0.65,
+                  0.65
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": false,
+              "payload_summary_count": 0,
+              "pending_update": false,
+              "producer_identities": [],
+              "route_key": "origin_manual_kind_manual_projection_selected_images_4df6e51495cb681a8242e94ff7489e142cb9a26cfc0c232af2d7810441493d2b",
+              "routed_component_coordinates": [
+                []
+              ],
+              "routed_component_values": {},
+              "scalar_labels": [
+                "Site 1",
+                "Ch 1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": true,
+              "selected_data_indices": [],
+              "stack_axes": [],
+              "title": "selected_images",
+              "visible": true
+            },
+            {
+              "axis_component_values": {},
+              "axis_labels": [
+                "site",
+                "channel",
+                "z_index",
+                "timepoint",
+                "well",
+                "y",
+                "x"
+              ],
+              "axis_offsets": [],
+              "component_value_count": 1,
+              "component_values": [],
+              "component_values_truncated": true,
+              "data_shape": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                96,
+                96
+              ],
+              "data_types": [
+                "image"
+              ],
+              "feature_row_count": 0,
+              "item_count": 1,
+              "labels": {},
+              "mounted": true,
+              "native_intensity": {
+                "contrast_limits": [
+                  688.0,
+                  25787.0
+                ],
+                "gamma": 1.0
+              },
+              "native_transform": {
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "translate": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              "payload_summaries": [],
+              "payload_summaries_truncated": true,
+              "payload_summary_count": 1,
+              "pending_update": false,
+              "producer_identities": [
+                {
+                  "artifact_kind": null,
+                  "invocation_key": null,
+                  "origin": "pipeline",
+                  "output_key": "main",
+                  "output_kind": "main",
+                  "pipeline_position": 0,
+                  "projection_key": "main",
+                  "step_name": "AckRuntimeGaussian",
+                  "step_scope_id": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/synthetic::pipeline::submission_7f017c78b240::step_0"
+                }
+              ],
+              "route_key": "origin_pipeline_kind_main_projection_main_step_0_scope__home_ts_wt_openhcs-issue-batch-20260929_ack-runtime-parent-20260930_synthetic::pipeline::submission_7f017c78b240::step_0_name_AckRuntimeGaussian",
+              "routed_component_coordinates": [
+                []
+              ],
+              "routed_component_values": {},
+              "scalar_labels": [
+                "Site 1",
+                "Ch1: W1",
+                "Z 1",
+                "T 1",
+                "Well A01"
+              ],
+              "selected": false,
+              "selected_data_indices": [],
+              "stack_axes": [],
+              "title": "1. AckRuntimeGaussian",
+              "visible": true
+            }
+          ],
+          "native_dimensions": {
+            "camera_angles": [
+              0.0,
+              0.0,
+              90.0
+            ],
+            "canvas_size": [
+              962,
+              464
+            ],
+            "displayed_axes": [
+              "y",
+              "x"
+            ],
+            "ndisplay": 2,
+            "order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "point": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              30.55,
+              30.55
+            ]
+          },
+          "native_viewport": {
+            "center": [
+              0.0,
+              30.875,
+              30.875
+            ],
+            "zoom": 7.064102564102564
+          },
+          "observed": true,
+          "response": {},
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "viewer_ndim": 7,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_get_viewer_window_state"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "detected_microscope_type": "openhcsdata",
+          "errors": [],
+          "handler_class": "OpenHCSMicroscopeHandler",
+          "limit": 4,
+          "offset": 0,
+          "parser_class": "ImageXpressFilenameParser",
+          "plate_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs",
+          "records": [
+            {
+              "file_format": null,
+              "full_path": null,
+              "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints/A01_s001_w1_z001_t001.tif",
+              "key": "checkpoints/A01_s001_w1_z001_t001.tif",
+              "kind": "image",
+              "metadata": {
+                "channel": 1,
+                "extension": ".tif",
+                "filename": "checkpoints/A01_s001_w1_z001_t001.tif",
+                "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints/A01_s001_w1_z001_t001.tif",
+                "modified": "2026-09-30T16:08:10",
+                "site": 1,
+                "size": "18.2 KB",
+                "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints/A01_s001_w1_z001_t001.tif",
+                "timepoint": 1,
+                "type": "Image",
+                "virtual_path": "checkpoints/A01_s001_w1_z001_t001.tif",
+                "well": "A01",
+                "z_index": 1
+              },
+              "preview": null,
+              "relative_path": null,
+              "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/checkpoints/A01_s001_w1_z001_t001.tif",
+              "virtual_path": "checkpoints/A01_s001_w1_z001_t001.tif"
+            },
+            {
+              "file_format": null,
+              "full_path": null,
+              "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+              "key": "images/A01_s001_w1_z001_t001.tif",
+              "kind": "image",
+              "metadata": {
+                "channel": 1,
+                "extension": ".tif",
+                "filename": "images/A01_s001_w1_z001_t001.tif",
+                "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+                "modified": "2026-09-30T16:08:10",
+                "site": 1,
+                "size": "18.2 KB",
+                "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+                "timepoint": 1,
+                "type": "Image",
+                "virtual_path": "images/A01_s001_w1_z001_t001.tif",
+                "well": "A01",
+                "z_index": 1
+              },
+              "preview": null,
+              "relative_path": null,
+              "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+              "virtual_path": "images/A01_s001_w1_z001_t001.tif"
+            }
+          ],
+          "requested_microscope_type": "auto",
+          "result_directory": null,
+          "returned_count": 2,
+          "schema_version": "openhcs.agent.v1",
+          "total_count": 2,
+          "truncated_count": 0,
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_query_plate_files"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "downsample_yx": [
+            1.0,
+            1.0
+          ],
+          "dtype": "uint16",
+          "errors": [],
+          "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+          "maximum": 25787,
+          "mean": 1077.3095703125,
+          "minimum": 688,
+          "plate_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs",
+          "requested_image_path": "images/A01_s001_w1_z001_t001.tif",
+          "requested_resolution_index": null,
+          "resolution_count": 1,
+          "resolution_shape": [
+            96,
+            96
+          ],
+          "sample_included": true,
+          "sample_omitted_reason": null,
+          "sample_origin_yx": [
+            0,
+            0
+          ],
+          "sample_shape": [
+            8,
+            8
+          ],
+          "sample_values": [
+            [
+              776,
+              811,
+              825,
+              809,
+              796,
+              803,
+              815,
+              809
+            ],
+            [
+              799,
+              830,
+              841,
+              832,
+              828,
+              832,
+              833,
+              804
+            ],
+            [
+              817,
+              828,
+              826,
+              828,
+              834,
+              838,
+              838,
+              803
+            ],
+            [
+              839,
+              821,
+              804,
+              812,
+              823,
+              823,
+              821,
+              808
+            ],
+            [
+              856,
+              826,
+              805,
+              803,
+              798,
+              793,
+              808,
+              833
+            ],
+            [
+              845,
+              814,
+              794,
+              787,
+              776,
+              781,
+              815,
+              850
+            ],
+            [
+              783,
+              760,
+              747,
+              750,
+              758,
+              790,
+              827,
+              845
+            ],
+            [
+              747,
+              726,
+              726,
+              736,
+              746,
+              779,
+              804,
+              823
+            ]
+          ],
+          "schema_version": "openhcs.agent.v1",
+          "selected_resolution_index": 0,
+          "shape": [
+            96,
+            96
+          ],
+          "source_metadata": {
+            "channel": 1,
+            "extension": ".tif",
+            "filename": "images/A01_s001_w1_z001_t001.tif",
+            "full_virtual_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+            "modified": "2026-09-30T16:08:10",
+            "site": 1,
+            "size": "18.2 KB",
+            "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+            "timepoint": 1,
+            "type": "Image",
+            "virtual_path": "images/A01_s001_w1_z001_t001.tif",
+            "well": "A01",
+            "z_index": 1
+          },
+          "source_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/outputs/synthetic_openhcs/images/A01_s001_w1_z001_t001.tif",
+          "statistics_scope": "source_resolution",
+          "virtual_path": "images/A01_s001_w1_z001_t001.tif",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_sample_plate_image"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "widget",
+          "captured": true,
+          "connection": {
+            "host": "127.0.0.1",
+            "persistent": true,
+            "port": 5592,
+            "transport_mode": "tcp"
+          },
+          "errors": [],
+          "frame_condition": "immediate",
+          "height": 944,
+          "observation_timeout_s": 5.0,
+          "output_dir_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture/20260930T201135297437Z_napari_5592_OpenHCS_Napari_Visualization.png",
+            "sha256": "ff7bad8f43e9787350625bfac3788c67b89da65c48a1eb1de92dc88a6891d53c",
+            "size_bytes": 94544,
+            "title": "OpenHCS Napari Visualization",
+            "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture/20260930T201135297437Z_napari_5592_OpenHCS_Napari_Visualization.png"
+          },
+          "response": {
+            "height": 944,
+            "native_dimensions": {
+              "camera_angles": [
+                0.0,
+                0.0,
+                90.0
+              ],
+              "canvas_size": [
+                962,
+                464
+              ],
+              "displayed_axes": [
+                "y",
+                "x"
+              ],
+              "ndisplay": 2,
+              "order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ],
+              "point": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                30.55,
+                30.55
+              ]
+            },
+            "resource": {
+              "mime_type": "image/png",
+              "path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture/20260930T201135297437Z_napari_5592_OpenHCS_Napari_Visualization.png",
+              "sha256": "ff7bad8f43e9787350625bfac3788c67b89da65c48a1eb1de92dc88a6891d53c",
+              "size_bytes": 94544,
+              "title": "OpenHCS Napari Visualization",
+              "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture/20260930T201135297437Z_napari_5592_OpenHCS_Napari_Visualization.png"
+            },
+            "snapshot": {
+              "capture_scope": "widget",
+              "connection": {
+                "host": "127.0.0.1",
+                "persistent": true,
+                "port": 5592,
+                "transport_mode": "tcp"
+              },
+              "frame_condition": "immediate",
+              "include_response": true,
+              "observation_timeout_s": 5.0,
+              "output_dir_path": "/home/ts/wt/openhcs-issue-batch-20260929/ack-runtime-parent-20260930/post-execution-capture",
+              "timeout_ms": 5000
+            },
+            "status": "success",
+            "type": "screenshot_ack",
+            "viewer": {
+              "title": "OpenHCS Napari Visualization",
+              "type": "napari"
+            },
+            "width": 1440
+          },
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "warnings": [],
+          "width": 1440
+        }
+      ],
+      "tool": "openhcs_viewer_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "acknowledged": true,
+          "endpoint_terminated": true,
+          "process_exited": true,
+          "process_identity": {
+            "create_time": 1790798521.51,
+            "pid": 3897920
+          },
+          "request_attempted": true,
+          "succeeded": true
+        }
+      ],
+      "tool": "openhcs_close_viewer_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "errors": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "persistent": true,
+              "port": 5992,
+              "transport_mode": "tcp"
+            },
+            "launch_plan": {
+              "log_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.log",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/cache/metaclass-registry",
+              "runtime_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/logs/openhcs_zmq_server_port_5992_1790798256585660574.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/ack-runtime-parent-20260930/data/openhcs/custom_functions",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/tcp/5992.startup.lock",
+                "/home/ts/.openhcs/tcp/6992.startup.lock"
+              ]
+            },
+            "process_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            }
+          },
+          "outcome": {
+            "acknowledged": true,
+            "endpoint_terminated": true,
+            "process_exited": true,
+            "process_identity": {
+              "create_time": 1790798255.79,
+              "pid": 3890586
+            },
+            "request_attempted": true,
+            "succeeded": true
+          },
+          "schema_version": "openhcs.agent.v1",
+          "warnings": []
+        }
+      ],
+      "tool": "openhcs_close_owned_runtime"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
