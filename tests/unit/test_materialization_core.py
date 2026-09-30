@@ -34,6 +34,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import TransportMode
+from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
@@ -131,7 +132,7 @@ def _memory_materialize(spec, data, path, filemanager):
     )
 
 
-def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels():
+def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels(viewer_ack_return_route):
     labels = np.zeros((2, 8, 9), dtype=np.int32)
     labels[0, 2:4, 3:5] = 70001
     labels[1, 6, 7] = 2
@@ -202,6 +203,7 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
         batch = StreamingBatchMessageBuilder.build(
             backend,
             StreamingBatchMessageRequest(
+                return_route=viewer_ack_return_route,
                 data_list=[output.content],
                 file_paths=[output.path],
                 stream_request=request,
@@ -370,6 +372,16 @@ class _TestViewerMetadataHandler(ViewerMetadataHandlerABC):
 class _TestViewerMicroscopeHandler(ViewerMicroscopeHandlerABC):
     parser = _TestViewerFilenameParser()
     metadata_handler = _TestViewerMetadataHandler()
+
+
+@pytest.fixture
+def viewer_ack_return_route():
+    """Nominal producer route for message construction without a live listener."""
+    return AckReturnRoute(
+        url="tcp://127.0.0.1:8111",
+        incarnation="00000000-0000-0000-0000-000000000001",
+        owner=ProcessIdentity.current(),
+    )
 
 
 def _viewer_stream_backend_kwargs():
@@ -1538,7 +1550,7 @@ def test_roi_materialization_preserves_payload_scoped_volume_in_one_archive() ->
 
 
 @pytest.mark.unit
-def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance() -> None:
+def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_ack_return_route) -> None:
     fm = _RecordingFileManager()
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=_two_plane_roi_labels()),
@@ -1588,6 +1600,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance() -> No
     streamed_item = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[roi_content],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1668,7 +1681,9 @@ def test_roi_streaming_preserves_singleton_projected_source_metadata() -> None:
 
 
 @pytest.mark.unit
-def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> None:
+def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
+    viewer_ack_return_route,
+) -> None:
     fm = _RecordingFileManager()
     labels = np.zeros((1, 8, 8), dtype=np.int32)
     labels[0, 2:6, 3:7] = 1
@@ -1718,6 +1733,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
     streamed_item = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[roi_content],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1732,7 +1748,9 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
 
 
 @pytest.mark.unit
-def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
+def test_generic_object_labels_feed_napari_and_fiji_roi_transports(
+    viewer_ack_return_route,
+) -> None:
     fm = FileManager({"memory": MemoryStorageBackend()})
     labels = np.zeros((8, 8), dtype=np.int32)
     labels[2:6, 3:7] = 1
@@ -1753,6 +1771,7 @@ def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
     napari_items = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[rois],
             file_paths=[roi_path],
             stream_request=stream_request,
@@ -1766,6 +1785,7 @@ def test_generic_object_labels_feed_napari_and_fiji_roi_transports() -> None:
     fiji_items = StreamingBatchMessageBuilder.build(
         fiji_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[rois],
             file_paths=[roi_path],
             stream_request=stream_request,
