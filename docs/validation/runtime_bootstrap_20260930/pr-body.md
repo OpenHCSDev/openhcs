@@ -87,8 +87,11 @@ Actual exposed MCP bootstrap0.052s, responsive typed catalogue preparation
 real BioFormats artifact-plan inspection6.568s, and successful compile6.840s.
 Execution4084d670-c3fd-420b-9405-1da41462ed15 FAILED at reduced VolumeFixture1:
 two derived image names against three runtime provenance planes. Full step0
-and its partial files are retained; readback checker was not reached. Parent
-owns the concrete #257 metadata contextualization repair, not this branch.
+and its partial files are retained; readback checker was not reached. Subsequent
+source tracing corrected the initial diagnosis: that fixture promised complete
+MainFlowStackOutputSpec lineage while reducing the stack. This is NOT yet evidence
+of a runtime product defect. Parent merged test-only PR272 using existing explicit
+projection declarations; no production count/provenance guard weakened.
 No input fallback or source-bearing request replay.
 
 Supported exact-owned close0.587s proved process exit, not just lost listeners.
@@ -97,8 +100,15 @@ Original driver/MCP/native PIDs are absent;5964/6964 vacant; shared lock release
 No installed-source/skill mutation. Wildcard ACK7555 remains an independent
 configuration boundary; no foreign owner contacted and no collision fix claim.
 
-Remaining: #257 successful full execution/publication, checker full CSV-address
-and primary+named-image inventory closure, full reorder/singleton controls,
+Normally integrated main642821c before any new dispatch. Diagnostic preparation
+now passes17 focused tests/1.49s: original manager accepts each single-declaration
+source, exact primary+named-image inventory and all five CSV coordinates guarded.
+Planned distinct12-step native workflow covers full/reordered/reduced/singleton,
+first/chained inspectors, two registrations once each after READY. No acceptance
+claimed before execution; original failures remain untouched.
+[Preparation and review](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/projection-attempt03-preparation.md).
+
+Remaining: #257 successful full execution/publication and actual strict readback,
 additional cross-process uncertainty shard, then parent installed entrypoint
 acceptance. Prior god-class ratchet remainder is NOT waived. References #251
 and #257; **not Closes** pending actual acceptance. Parent owns integration/live.

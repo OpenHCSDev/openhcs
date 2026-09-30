@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,31 @@ import traceback
 SOURCE = Path(__file__).resolve().parents[2]
 PYTHON = Path('/home/ts/code/projects/openhcs/.venv/bin/python')
 LOCK = Path('/home/ts/wt/openhcs-issue-batch-20260929/validation.lock')
+
+
+def fixture_registration_sources():
+    """Project each explicitly named fixture declaration through Python's owner.
+
+    Keep the merged fixture authoritative. Imported helpers keep their original
+    identities; each registered source declares exactly one processing function.
+    """
+    from tests.diagnostics import volume_projection_fixture as fixture
+
+    dependencies = (
+        (fixture.select_volume_fixture_planes_v2,
+         'ArrayPayload, numpy, ProcessingContract, artifact_outputs, SELECTED_VOLUME, '
+         'SelectedPlaneImageOutput, np, image_payload_data'),
+        (fixture.inspect_volume_fixture_v2,
+         'ArrayPayload, numpy, ProcessingContract, artifact_outputs, VOLUME_IMAGE, '
+         'VOLUME_LABELS, VOLUME_ROWS, np, image_payload_data, image_payload_metadata, '
+         'DataclassMeasurementColumnarRows, VolumeProjectionFixtureRow'),
+    )
+    return tuple(
+        (function.__name__,
+         f'from tests.diagnostics.volume_projection_fixture import ({imports})\n\n'
+         + inspect.getsource(function))
+        for function, imports in dependencies
+    )
 
 
 def guard() -> dict:
@@ -135,7 +161,7 @@ def run(args) -> None:
         lock_paths = launch_plan.transport_write_paths
         assert all(not path.exists() for path in lock_paths), 'Preserve existing reservations'
         fixture_root = Path('/home/ts/wt/openhcs-issue-batch-20260929/issue257-synthetic-ome-inputs-20260930')
-        fixture_source = fixture_root.parent / 'issue257_volume_fixture.py'
+        fixture_source = SOURCE / 'tests/diagnostics/volume_projection_fixture.py'
         os.environ['OPENHCS_AGENT_READ_ROOTS'] = os.pathsep.join((str(SOURCE), str(fixture_root), *(str(p) for p in lock_paths)))
         os.environ['OPENHCS_AGENT_WRITE_ROOTS'] = os.pathsep.join((str(owned), *(str(p) for p in lock_paths)))
         assert save_ui_config_sync(UIConfig(zmq=config))
@@ -163,13 +189,24 @@ def run(args) -> None:
         input_hash = hashlib.sha256(image_path.read_bytes()).hexdigest()
         assert input_hash == '5fc4e6baa8015be4b5ca09356575a2083ed70834f1ff447353e6c116fec248bb'
         assert image_path.read_bytes() == original_image.read_bytes()
-        probe_code = fixture_source.read_text()
-        assert hashlib.sha256(probe_code.encode()).hexdigest() == '3ec3a9c02fc1cf4998fcb9487dc15cb904faec0fa98a9664b7bc799a1703f9c8'
+        fixture_hash = hashlib.sha256(fixture_source.read_bytes()).hexdigest()
+        assert fixture_hash == '9b737ed5e669c6f2325cc4af9ebb0b39b706121478149315474f464e3cc30c80'
+        registration_sources = fixture_registration_sources()
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+        manager = CustomFunctionManager(create_storage=False)
+        for name, code in registration_sources:
+            prepared_source = manager._prepare_source(code)
+            assert prepared_source.original_name == name
+            (root/f'{name}.py').write_text(code)
         receipt['fixture'] = dict(source=str(fixture_source), input=str(image_path),
                                  original_input=str(original_image),
                                  input_sha256=input_hash, byte_identical_copy=True,
-                                 plane_selections=[[], [2, 0], []],
-                                 omitted_controls=['full three-plane reorder', 'singleton'])
+                                 source_sha256=fixture_hash,
+                                 plane_selections=[[], [2, 0, 1], [0, 1], [1]],
+                                 expected_source_planes=[[0, 1, 2], [2, 0, 1], [2, 0], [0]],
+                                 registration_source_hashes={name: hashlib.sha256(code.encode()).hexdigest()
+                                                             for name, code in registration_sources},
+                                 omitted_controls=[])
 
         class SourceSpec(McpDevServerSpec):
             mcp_environment_keys = (*McpDevServerSpec.mcp_environment_keys,
@@ -259,35 +296,45 @@ def run(args) -> None:
                                 to_jsonable(preparation_handle), FunctionCatalogPreparationState)
                 assert prepared.handle == preparation_handle
             receipt['preparation_seconds'] = time.monotonic()-prepare_started
-            registered = call('openhcs_register_custom_function', dict(
-                source_code=probe_code, function_name='inspect_volume_fixture',
-                storage_dir=str(original_handle.launch_plan.storage_dir), persist=True,
-                port=args.port, host='127.0.0.1', transport_mode='tcp',
-            ), CustomFunctionRegistrationResult)
-            assert registered.server_identity == original_handle.process_identity
-            persisted = Path(registered.source_file_paths[0])
-            assert persisted.read_text() == probe_code
-            page = call('openhcs_search_functions', dict(query='inspect_volume_fixture', limit=5),
-                        FunctionCatalogPage)
-            assert registered.functions[0].function_id in {entry.function_id for entry in page.items}
+            receipt['registrations'] = []
+            for name, code in registration_sources:
+                registered = call('openhcs_register_custom_function', dict(
+                    source_code=code, function_name=name,
+                    storage_dir=str(original_handle.launch_plan.storage_dir), persist=True,
+                    port=args.port, host='127.0.0.1', transport_mode='tcp',
+                ), CustomFunctionRegistrationResult)
+                assert registered.registered_count == 1
+                assert registered.server_identity == original_handle.process_identity
+                [persisted] = registered.source_file_paths
+                assert Path(persisted).read_text() == code
+                receipt['registrations'].append(to_jsonable(registered))
+                page = call('openhcs_search_functions', dict(query=name, limit=5), FunctionCatalogPage)
+                assert registered.functions[0].function_id in {entry.function_id for entry in page.items}
+                save()
             from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
                                              LazyVFSConfig, MaterializationBackend,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
             from openhcs.constants import Microscope, VariableComponents
             from openhcs.core.pipeline_document import PipelineDocumentAuthority
             from openhcs.core.steps.function_step import FunctionStep
-            from openhcs.processing.custom_functions import inspect_volume_fixture
+            from openhcs.processing.custom_functions import (
+                select_volume_fixture_planes_v2, inspect_volume_fixture_v2,
+            )
+            steps = []
+            for case, indices in enumerate(((), (2, 0, 1), (0, 1), (1,))):
+                for phase, function in enumerate((select_volume_fixture_planes_v2,
+                                                  inspect_volume_fixture_v2, inspect_volume_fixture_v2)):
+                    steps.append(FunctionStep(
+                        func=((function, dict(plane_indices=indices)) if phase == 0 else function),
+                        name=f'ProjectionCase{case}Step{phase}',
+                        processing_config=LazyProcessingConfig(variable_components=[VariableComponents.Z_INDEX]),
+                        step_materialization_config=LazyStepMaterializationConfig(enabled=True)))
             document = PipelineDocumentAuthority.from_values(
                 pipeline_config=PipelineConfig(num_workers=1, use_threading=True,
                     microscope=Microscope.BIOFORMATS,
                     path_planning_config=LazyPathPlanningConfig(global_output_folder=owned/'outputs'),
                     vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK)),
-                pipeline_steps=[FunctionStep(
-                    func=(inspect_volume_fixture, dict(plane_indices=indices)),
-                    name=f'VolumeFixture{index}',
-                    processing_config=LazyProcessingConfig(variable_components=[VariableComponents.Z_INDEX]),
-                    step_materialization_config=LazyStepMaterializationConfig(enabled=True))
-                    for index, indices in enumerate(((), (2, 0), ()))],
+                pipeline_steps=steps,
             )
             source = PipelineDocumentAuthority.render(document)
             (root/'pipeline.py').write_text(source)
@@ -295,7 +342,7 @@ def run(args) -> None:
             inspected = call('openhcs_inspect_pipeline_source_artifact_plan',
                  dict(plate_path=str(image_path.parent), pipeline_source=source), ArtifactPlanInspection)
             receipt['artifact_plan'] = to_jsonable(inspected)
-            assert inspected.step_count == 3 and inspected.axis_count == 1
+            assert inspected.step_count == 12 and inspected.axis_count == 1
             session = call('openhcs_create_orchestrator_session_from_pipeline_source',
                            dict(plate_path=str(image_path.parent), pipeline_source=source,
                                 port=args.port, host='127.0.0.1', transport_mode='tcp'),
@@ -317,7 +364,8 @@ def run(args) -> None:
             assert hashlib.sha256(image_path.read_bytes()).hexdigest() == input_hash
             assert hashlib.sha256(original_image.read_bytes()).hexdigest() == input_hash
             receipt.update(accepted=True, unchanged_input_sha256=input_hash,
-                           registration_mcp_calls=1, no_mutation_replay=True)
+                           registration_mcp_calls=len(registration_sources),
+                           registrations_per_declaration=1, no_mutation_replay=True)
             save()
         except BaseException as error:
             receipt['failure'] = dict(type=type(error).__name__, message=str(error),
