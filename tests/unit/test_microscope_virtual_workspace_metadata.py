@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -9,6 +10,8 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
@@ -58,6 +61,45 @@ def test_virtual_workspace_metadata_records_parser_owned_axis_values(
     assert projection.pipeline_start_files(axis_id="R02C03") == (
         str(tmp_path / virtual_b),
     )
+
+
+@pytest.mark.parametrize(
+    "spacing",
+    [
+        SourceVoxelSpacing((0.65, 0.65)),
+        SourceVoxelSpacing((0.65, 0.8)),
+        SourceVoxelSpacing((1.0, 2.0), SourceVoxelSpacingUnit.RELATIVE),
+    ],
+)
+def test_acquisition_spacing_declaration_serves_publication_and_manual_viewer(
+    spacing,
+    tmp_path,
+    monkeypatch,
+):
+    handler = OperaPhenixHandler(SimpleNamespace())
+    monkeypatch.setattr(
+        handler.metadata_handler, "get_grid_dimensions", lambda _path: (1, 1)
+    )
+    monkeypatch.setattr(handler.metadata_handler, "get_pixel_size", lambda _path: 1.0)
+    monkeypatch.setattr(
+        handler.metadata_handler, "source_voxel_spacing", lambda _path: spacing
+    )
+    virtual_path = "Images/r01c01f001p001-ch1sk1fk1fl1.tiff"
+    handler.save_virtual_workspace_metadata(
+        tmp_path,
+        {virtual_path: SourcePixelRef("disk", "Images/source.tiff")},
+    )
+    document = json.loads((tmp_path / "openhcs_metadata.json").read_text())
+    values = document[FIELDS.SUBDIRECTORIES]["Images"][FIELDS.SOURCE_METADATA][
+        virtual_path
+    ]
+    assert SourceVoxelSpacing.from_source_metadata(values) == spacing
+    source = ViewerStreamingSource(
+        microscope_handler=handler,
+        plate_path=tmp_path,
+        filemanager=SimpleNamespace(),
+    )
+    assert source.plate_image_metadata().source_voxel_spacing == spacing
 
 
 def _ingest_records(records: list[dict]) -> None:
