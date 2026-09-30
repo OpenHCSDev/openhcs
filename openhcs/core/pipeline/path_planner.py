@@ -2885,8 +2885,6 @@ def _cached_results_path(
 ) -> str:
     """Return the artifact results path for one normalized path config."""
     results_path = Path(materialization_results_path)
-    if results_path.is_absolute():
-        return str(results_path)
     output_plate_root = Path(
         _cached_output_plate_root(
             plate_path,
@@ -2894,7 +2892,13 @@ def _cached_results_path(
             output_dir_suffix,
         )
     )
-    return str(output_plate_root / results_path)
+    results_path = (output_plate_root / results_path).resolve()
+    if not results_path.is_relative_to(output_plate_root.resolve()):
+        raise ValueError(
+            "materialization_results_path must be inside the output plate root "
+            f"{output_plate_root}; got {results_path}."
+        )
+    return str(results_path)
 
 
 @lru_cache(maxsize=131072)

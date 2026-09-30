@@ -3252,6 +3252,11 @@ class PatternGroupRuntime:
             if output_plan.ref() in declared_refs
         )
         if not refs:
+            if (
+                self.request.compiled_group.resulting_implicit_main_flow_invocation()
+                is not None
+            ):
+                return AlignedImageSliceContext.anonymous_main_flow()
             return None
         if len(refs) != 1:
             raise ValueError(
