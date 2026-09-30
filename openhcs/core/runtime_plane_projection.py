@@ -348,6 +348,26 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
             )
         return self.plane_index
 
+    def require_complete_axis(self, *, value_name: str) -> Self:
+        """Require that this declaration preserves every input plane."""
+
+        if self.plane_index is not None:
+            raise ValueError(f"{value_name} requires a complete input stack projection.")
+        return self
+
+    @classmethod
+    def require_complete_projection(
+        cls,
+        projection: RuntimePlaneAxisValueProjection | None,
+        *,
+        value_name: str,
+    ) -> RuntimePlaneAxisValueProjection:
+        """Admit an optional invocation projection as a complete input axis."""
+
+        if projection is None:
+            raise ValueError(f"{value_name} requires a complete input stack projection.")
+        return projection.require_complete_axis(value_name=value_name)
+
     def dense_shape_carries_axis(self, shape: Sequence[int]) -> bool:
         """Return whether a dense shape carries this declared leading axis."""
 

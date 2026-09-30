@@ -4,7 +4,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
 
-from openhcs.constants.constants import AllComponents, VariableComponents
+from openhcs.constants.constants import VariableComponents
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import image_payload_metadata
@@ -27,7 +27,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     observation_count: int
 
     def __post_init__(self) -> None:
-        if type(self.observation_count) is not int or self.observation_count < 2:
+        if self.observation_count < 2:
             raise ValueError("A fitted field requires multiple observations.")
         if self.data.ndim not in (2, 3):
             raise ValueError("A fitted field requires a spatial image or volume.")
@@ -35,20 +35,9 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     @classmethod
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
-        metadata = image_payload_metadata(source)
-        if not metadata.has_values:
-            # Direct array callers declare N themselves; no source identity to infer.
-            return
-        axes = tuple(
-            AllComponents.from_value(name)
-            for name in metadata.retained_plane_component_values()
+        image_payload_metadata(source).require_independent_observation_axis(
+            cls.observation_axis, value_name="BaSiC"
         )
-        declared_axis = AllComponents.from_value(cls.observation_axis.value)
-        if axes != (declared_axis,):
-            raise ValueError(
-                f"BaSiC requires independent {cls.observation_axis.name} observations "
-                "with every other source component fixed."
-            )
 
     def with_data(self, data: RuntimeArrayData) -> "FittedIlluminationFieldOutput":
         return replace(self, data=data)
@@ -58,8 +47,9 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
         source: RuntimeArrayData,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> RuntimeArrayData:
-        if projection is None or projection.plane_index is not None:
-            raise ValueError("A fitted field requires the complete observation stack.")
+        projection = RuntimePlaneAxisValueProjection.require_complete_projection(
+            projection, value_name="A fitted field"
+        )
         if projection.axis_size != self.observation_count:
             raise ValueError("Fitted field observation count differs from its source.")
         if source.shape != (self.observation_count, *self.data.shape):

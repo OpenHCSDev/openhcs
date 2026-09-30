@@ -24,7 +24,7 @@ from zmqruntime.viewer_protocol import (
 from openhcs.serialization.json import to_jsonable
 from collections.abc import Mapping
 
-from openhcs.constants.constants import AllComponents
+from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
@@ -184,31 +184,22 @@ class ImagePayloadMetadata(
             tuple(AllComponents)
         )
 
-    @classmethod
-    def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
-        """Restore all declared metadata fields through their canonical codecs."""
-        decoded = dict(values)
-        if "source_provenance" in decoded:
-            decoded["source_provenance"] = SourceImageProvenance.from_mapping(
-                decoded["source_provenance"]
-            )
-        return dataclass_from_mapping(cls, decoded)
+    def require_independent_observation_axis(
+        self, axis: VariableComponents, *, value_name: str
+    ) -> None:
+        """Admit one source-coordinate ensemble without inventing raw-array identity."""
 
-    def retained_plane_component_values(
-        self,
-    ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
-        """Derive varying source coordinates of the retained nominal plane axis.
-
-        Source provenance can also describe contributors after a projection.
-        Only a retained plane-axis declaration makes those coordinates a pixel
-        axis; artifact storage/grouping axes do not declare that image domain.
-        """
-
-        if self.plane_axis is None:
-            return {}
-        return self.source_provenance.varying_plane_component_values(
-            tuple(AllComponents)
+        if not self.has_values:
+            return
+        retained_axes = tuple(
+            AllComponents.from_value(name)
+            for name in self.retained_plane_component_values()
         )
+        if retained_axes != (AllComponents.from_value(axis.value),):
+            raise ValueError(
+                f"{value_name} requires independent {axis.name} observations "
+                "with every other source component fixed."
+            )
 
     @classmethod
     def for_array(

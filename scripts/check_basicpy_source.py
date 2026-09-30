@@ -129,7 +129,22 @@ class BasicPySourceTests(unittest.TestCase):
         self.assertIn(
             "image_payload_metadata(source).collapse_leading_plane_axis", calls
         )
-        self.assertIn("metadata.retained_plane_component_values", calls)
+        self.assertIn("image_payload_metadata(source).require_independent_observation_axis", calls)
+        metadata_tree = ast.parse((ROOT / "openhcs/core/runtime_image_values.py").read_text())
+        metadata_owner = next(
+            node for node in metadata_tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "ImagePayloadMetadata"
+        )
+        metadata_calls = {
+            ast.unparse(node.func) for node in ast.walk(metadata_owner)
+            if isinstance(node, ast.Call)
+        }
+        declared_method_names = [
+            node.name for node in metadata_owner.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]
+        self.assertEqual(len(declared_method_names), len(set(declared_method_names)))
+        self.assertIn("self.retained_plane_component_values", metadata_calls)
         self.assertFalse(any(call.endswith((".repeat", ".tile")) for call in calls))
         decorator = next(
             node

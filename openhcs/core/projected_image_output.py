@@ -52,10 +52,9 @@ class SelectedPlaneImageOutput(SourceProjectedImageOutput):
         source: RuntimeArrayData,
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> RuntimeArrayData:
-        if projection is None or projection.plane_index is not None:
-            raise ValueError(
-                "Selecting source planes requires a complete input stack projection."
-            )
+        projection = RuntimePlaneAxisValueProjection.require_complete_projection(
+            projection, value_name="Selecting source planes"
+        )
         if any(index >= projection.axis_size for index in self.source_indices):
             raise ValueError("Selected source plane is outside the input stack.")
         source_metadata = image_payload_metadata(source)

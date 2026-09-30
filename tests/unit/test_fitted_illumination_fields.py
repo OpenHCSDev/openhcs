@@ -101,7 +101,7 @@ def test_z_only_stack_is_not_an_observation_ensemble():
 )
 def test_field_rejects_one_plane_as_aggregate_source(projection):
     field = FittedIlluminationFieldOutput(np.ones((8, 9), dtype=np.float32), 3)
-    with pytest.raises(ValueError, match="complete observation stack"):
+    with pytest.raises(ValueError, match="complete input stack projection"):
         field.resolve_source_context(cross_site_source(), projection)
 
 
