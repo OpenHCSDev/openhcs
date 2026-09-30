@@ -82,10 +82,47 @@ data was opened. All inputs are generated inside the test.
 Remaining acceptance
 --------------------
 
-The source journey is a shippable review checkpoint, not proof of independent
-CellProfiler oracle parity, compiled-kernel parity, fresh installed callable
-readiness, real compile/execute or biological acceptance. Those remain open on
-issue226/PR227 and must not be represented as completed. Hosted CI is not the
-reason to defer those checks. Resource guard is critical at swap 16.3 GiB;
-no new heavy/native or blind allocation is admitted. Original H001 failure,
-H003 frozen result and held-out/reference boundaries remain unchanged.
+Independent reference primitive parity is now checked separately by
+``tests/diagnostics/check_centrosome_watershed_reference.py`` and its real
+Python 3.9 reference worker. Existing environment is
+``/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python`` with actual
+CellProfiler 4.2.8.1, scikit-image 0.18.3 and NumPy 1.24.4. CellProfiler's
+installed identifyprimaryobjects.py lines1395-1412 use negative seed markers
+and skimage.segmentation.watershed with a 3-by-3 footprint. That original file's
+SHA256 is ``b7389cae9e9fa63d2a0b3b1de6210b210298e2c965360a6622b249b7bcbfea7f``.
+No CellProfiler GUI/JVM or biological data is imported by the worker.
+
+Eight independent exact-array cases pass, process6.11 seconds, exit0,
+20-second shell bound and five-second bound on each tiny oracle child. Cases
+cover signed markers, masked 7-by-9 planes with scalar and full3-by-3
+connectivity, masked 3-by-5-by-7 volumes, and positive/negative tied-priority
+FIFO cases. All468 output pixels, dtype and zero outside mask are checked;
+input image/markers/mask remain identical. The source-only original algorithm
+and the actual older compiled skimage watershed are independent implementations.
+This is primitive parity for the changed provider, not a whole CellProfiler
+pipeline, module-setting/export parity or whole Official30 corpus claim.
+
+Initial reference commands failed first at missing explicit shared-extension
+loading, then at NumPy1.24 array.tofile on nonseekable stdout. The real oracle
+kernel had executed in the latter; its result could not be transported. The
+worker now serializes the same non-pickle NPY format to BytesIO before writing
+the pipe. Captured stderr is surfaced, not suppressed; no expected array or
+production implementation was changed to turn those harness errors into passes.
+Six cases then passed5.18 seconds; the final eight-case form adds the primary
+caller's exact full3-by-3 connectivity and retains all previous witnesses.
+
+Original packaged structural ratchet is authenticated against commit
+``3b03785`` by identical SHA256
+``e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562``.
+At committed integration head ``68b0ff3e7`` vs main ``c50f42c``, its original
+CLI passes for openhcs:5086 projected metrics, no positive or nonzero deltas.
+The original policy exit is retained through pipefail; output is filtered only
+after measurement. Tests/diagnostic/receipt additions do not change that
+production write set. This is not a full all-detector NRA ownership proof.
+
+Compiled-kernel/whole-pipeline parity, fresh installed callable readiness,
+real compile/execute and biological acceptance remain open on issue226 and
+must not be represented as completed. Hosted CI is not the reason to defer
+them. Resource guard is critical at swap16.3GiB; no new heavy/native or blind
+allocation is admitted. Original H001 failure, H003 frozen result and
+held-out/reference boundaries remain unchanged.
