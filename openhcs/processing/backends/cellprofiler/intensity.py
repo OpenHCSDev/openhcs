@@ -337,9 +337,7 @@ from openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba i
     ObjectIntensityArrays,
     ObjectIntensityFeatureValues,
     ObjectIntensityForegroundIndex,
-    _object_intensity_quantiles,
-    _object_intensity_quantiles_3d_batch_numba,
-    _object_intensity_quantiles_3d_sparse_batch_numba,
+    ObjectIntensityPixelGroups,
     _object_intensity_scan_3d_batch_numba,
     _object_intensity_scan_3d_sparse_batch_numba,
     _object_intensity_scan_numba,
@@ -1184,13 +1182,12 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
         arrays = _object_intensity_scan_numba(
             image_array, labels.relabeled_labels, object_labels, labels.label_to_index
         )
-        lower, median, upper, mad = _object_intensity_quantiles(
+        lower, median, upper, mad = ObjectIntensityPixelGroups.from_dense_2d(
             image_array,
             labels.relabeled_labels,
-            object_labels,
             labels.label_to_index,
             arrays[0].astype(np.int64, copy=False),
-        )
+        ).quantiles()
         return (
             ObjectIntensityArrays(
                 object_labels=object_labels.astype(np.int32, copy=False),
@@ -1267,13 +1264,12 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
                 voxels=image_arrays[0].size,
             )
             quantile_started_at = time.perf_counter()
-            quantile_result = _object_intensity_quantiles_3d_batch_numba(
+            quantile_result = ObjectIntensityPixelGroups.from_dense_3d_batch(
                 image_batch,
                 label_array,
                 labels.label_to_index,
                 scan_result[0].astype(np.int64, copy=False),
-                1.0 / 3.0,
-            )
+            ).quantiles(1.0 / 3.0)
             RuntimeProfileLogger.log(
                 logger,
                 "object_intensity_quantiles_3d_batch",
@@ -1346,15 +1342,14 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
             foreground_voxels=foreground_index.voxel_count,
         )
         quantile_started_at = time.perf_counter()
-        quantile_result = _object_intensity_quantiles_3d_sparse_batch_numba(
+        quantile_result = ObjectIntensityPixelGroups.from_sparse_3d_batch(
             image_batch,
             foreground_index.z_indices,
             foreground_index.y_indices,
             foreground_index.x_indices,
             foreground_index.object_indexes,
             scan_result[0].astype(np.int64, copy=False),
-            1.0 / 3.0,
-        )
+        ).quantiles(1.0 / 3.0)
         RuntimeProfileLogger.log(
             logger,
             "object_intensity_quantiles_3d_sparse_batch",

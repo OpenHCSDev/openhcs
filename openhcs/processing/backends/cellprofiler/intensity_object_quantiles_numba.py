@@ -10,6 +10,8 @@ from typing import Generic, TypeAlias, TypeVar
 import numpy as np
 from numba import njit
 
+from openhcs.processing.backends.cellprofiler._intensity_native import grouped_quantiles
+
 ObjectIntensity3DScanResult: TypeAlias = tuple[np.ndarray, ...]
 ObjectIntensity3DQuantileResult: TypeAlias = tuple[
     np.ndarray,
@@ -277,47 +279,88 @@ class ObjectIntensityForegroundIndex:
         return float(self.voxel_count) / float(volume)
 
 
-def _object_intensity_quantiles(
-    image: np.ndarray,
-    labels: np.ndarray,
-    object_labels: np.ndarray,
-    label_to_index: np.ndarray,
-    counts: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    return _object_intensity_quantiles_grouped_numba(
-        image,
-        labels,
-        label_to_index,
-        counts.astype(np.int64, copy=False),
-    )
+@dataclass(frozen=True, slots=True)
+class ObjectIntensityPixelGroups:
+    """Finite samples grouped in their declared image/object measurement order."""
+
+    values: np.ndarray
+    offsets: np.ndarray
+    measurement_shape: tuple[int, ...]
+
+    @classmethod
+    def from_dense_2d(
+        cls,
+        image: np.ndarray,
+        labels: np.ndarray,
+        label_to_index: np.ndarray,
+        counts: np.ndarray,
+    ) -> "ObjectIntensityPixelGroups":
+        values, offsets = _collect_object_intensity_dense_2d_numba(
+            image, labels, label_to_index, counts
+        )
+        return cls(values, offsets, counts.shape)
+
+    @classmethod
+    def from_dense_3d_batch(
+        cls,
+        images: np.ndarray,
+        labels: np.ndarray,
+        label_to_index: np.ndarray,
+        counts: np.ndarray,
+    ) -> "ObjectIntensityPixelGroups":
+        values, offsets = _collect_object_intensity_dense_3d_numba(
+            images, labels, label_to_index, counts
+        )
+        return cls(values, offsets, counts.shape)
+
+    @classmethod
+    def from_sparse_3d_batch(
+        cls,
+        images: np.ndarray,
+        z_indices: np.ndarray,
+        y_indices: np.ndarray,
+        x_indices: np.ndarray,
+        object_indexes: np.ndarray,
+        counts: np.ndarray,
+    ) -> "ObjectIntensityPixelGroups":
+        values, offsets = _collect_object_intensity_sparse_3d_numba(
+            images, z_indices, y_indices, x_indices, object_indexes, counts
+        )
+        return cls(values, offsets, counts.shape)
+
+    def quantiles(self, mad_fraction: float = 0.5) -> ObjectIntensity3DQuantileResult:
+        """Project CP quartiles/MAD without mutating retained grouped samples."""
+        outputs = tuple(
+            np.empty(self.offsets.size - 1, dtype=np.float64) for _ in range(4)
+        )
+        grouped_quantiles(self.values.copy(), self.offsets, *outputs, mad_fraction)
+        return tuple(column.reshape(self.measurement_shape) for column in outputs)
 
 
 @njit(cache=True)
-def _object_intensity_quantiles_grouped_numba(
+def _object_intensity_group_buffers_numba(
+    counts: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Derive one contiguous sample domain from image-major object counts."""
+    flat_counts = counts.ravel()
+    offsets = np.empty(flat_counts.size + 1, dtype=np.int64)
+    offsets[0] = 0
+    for index in range(flat_counts.size):
+        offsets[index + 1] = offsets[index] + int(flat_counts[index])
+    return np.empty(offsets[-1], dtype=np.float64), offsets, offsets.copy()
+
+
+@njit(cache=True)
+def _collect_object_intensity_dense_2d_numba(
     image: np.ndarray,
     labels: np.ndarray,
     label_to_index: np.ndarray,
     counts: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    object_count = counts.size
-    lower = np.zeros(object_count, dtype=np.float64)
-    median = np.zeros(object_count, dtype=np.float64)
-    upper = np.zeros(object_count, dtype=np.float64)
-    mad = np.zeros(object_count, dtype=np.float64)
-
-    total_count = 0
-    for index in range(object_count):
-        total_count += int(counts[index])
-    if total_count <= 0:
-        return lower, median, upper, mad
-
-    offsets = np.empty(object_count + 1, dtype=np.int64)
-    offsets[0] = 0
-    for index in range(object_count):
-        offsets[index + 1] = offsets[index] + int(counts[index])
-
-    write_offsets = offsets[:-1].copy()
-    values = np.empty(total_count, dtype=np.float64)
+) -> tuple[np.ndarray, np.ndarray]:
+    """Collect finite 2-D samples with their original object ordinal."""
+    values, offsets, cursor = _object_intensity_group_buffers_numba(counts)
+    if values.size == 0:
+        return values, offsets
     height, width = image.shape
     for y in range(height):
         for x in range(width):
@@ -330,223 +373,9 @@ def _object_intensity_quantiles_grouped_numba(
             value = float(image[y, x])
             if not np.isfinite(value):
                 continue
-            offset = write_offsets[index]
-            values[offset] = value
-            write_offsets[index] = offset + 1
-
-    for index in range(object_count):
-        start = int(offsets[index])
-        count = int(counts[index])
-        if count <= 0:
-            continue
-        group = values[start : start + count]
-        (
-            lower[index],
-            median[index],
-            upper[index],
-        ) = _quartiles_from_dense_group_partition(group)
-        mad[index] = _median_absolute_deviation_from_dense_group_partition(
-            group,
-            median[index],
-            0.5,
-        )
-
-    return lower, median, upper, mad
-
-
-@njit(cache=True)
-def _quantile_from_dense_group_partition(
-    values: np.ndarray,
-    fraction: float,
-) -> float:
-    count = values.size
-    if count <= 0:
-        return 0.0
-    ranks = np.empty(2, dtype=np.int64)
-    low, qfraction = _write_quantile_rank_pair(count, fraction, ranks, 0)
-    partitioned = np.partition(values, ranks)
-    return _quantile_from_partitioned_rank_pair(partitioned, low, qfraction)
-
-
-@njit(cache=True)
-def _quartiles_from_dense_group_partition(
-    values: np.ndarray,
-) -> tuple[float, float, float]:
-    count = values.size
-    if count <= 0:
-        return 0.0, 0.0, 0.0
-    ranks = np.empty(6, dtype=np.int64)
-    lower_low, lower_fraction = _write_quantile_rank_pair(count, 0.25, ranks, 0)
-    median_low, median_fraction = _write_quantile_rank_pair(count, 0.5, ranks, 2)
-    upper_low, upper_fraction = _write_quantile_rank_pair(count, 0.75, ranks, 4)
-    partitioned = np.partition(values, ranks)
-    return (
-        _quantile_from_partitioned_rank_pair(
-            partitioned,
-            lower_low,
-            lower_fraction,
-        ),
-        _quantile_from_partitioned_rank_pair(
-            partitioned,
-            median_low,
-            median_fraction,
-        ),
-        _quantile_from_partitioned_rank_pair(
-            partitioned,
-            upper_low,
-            upper_fraction,
-        ),
-    )
-
-
-@njit(cache=True)
-def _median_absolute_deviation_from_dense_group_partition(
-    values: np.ndarray,
-    median: float,
-    fraction: float,
-) -> float:
-    deviations = np.empty(values.size, dtype=np.float64)
-    for index in range(values.size):
-        deviations[index] = abs(float(values[index]) - median)
-    return _quantile_from_dense_group_partition(deviations, fraction)
-
-
-@njit(cache=True)
-def _write_quantile_rank_pair(
-    count: int,
-    fraction: float,
-    ranks: np.ndarray,
-    offset: int,
-) -> tuple[int, float]:
-    qindex = count * fraction
-    low = int(qindex)
-    qfraction = qindex - low
-    last = count - 1
-    if low >= last:
-        ranks[offset] = last
-        ranks[offset + 1] = last
-        return low, 0.0
-    ranks[offset] = low
-    ranks[offset + 1] = low + 1
-    return low, qfraction
-
-
-@njit(cache=True)
-def _quantile_from_partitioned_rank_pair(
-    partitioned: np.ndarray,
-    low: int,
-    qfraction: float,
-) -> float:
-    last = partitioned.size - 1
-    if low >= last:
-        return float(partitioned[last])
-    low_value = float(partitioned[low])
-    high_value = float(partitioned[low + 1])
-    return low_value * (1.0 - qfraction) + high_value * qfraction
-
-
-@njit(cache=True)
-def _quantile_from_dense_sorted_group(
-    sorted_values: np.ndarray,
-    fraction: float,
-) -> float:
-    count = sorted_values.size
-    if count <= 0:
-        return 0.0
-    qindex = count * fraction
-    low = int(qindex)
-    qfraction = qindex - low
-    last = count - 1
-    if low < last:
-        return (
-            sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
-        )
-    return sorted_values[last]
-
-
-@njit(cache=True)
-def _group_starts_numba(
-    sorted_labels: np.ndarray,
-    label_to_index: np.ndarray,
-    starts: np.ndarray,
-) -> None:
-    for offset in range(sorted_labels.size):
-        label = sorted_labels[offset]
-        if label < 0 or label >= label_to_index.size:
-            continue
-        index = label_to_index[label]
-        if index >= 0 and starts[index] < 0:
-            starts[index] = offset
-
-
-@njit(cache=True)
-def _quartiles_from_sorted_numba(
-    sorted_values: np.ndarray,
-    starts: np.ndarray,
-    counts: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    object_count = counts.size
-    lower = np.zeros(object_count, dtype=np.float64)
-    median = np.zeros(object_count, dtype=np.float64)
-    upper = np.zeros(object_count, dtype=np.float64)
-    for index in range(object_count):
-        lower[index] = _quantile_from_sorted_group(
-            sorted_values,
-            starts[index],
-            counts[index],
-            0.25,
-        )
-        median[index] = _quantile_from_sorted_group(
-            sorted_values,
-            starts[index],
-            counts[index],
-            0.5,
-        )
-        upper[index] = _quantile_from_sorted_group(
-            sorted_values,
-            starts[index],
-            counts[index],
-            0.75,
-        )
-    return lower, median, upper
-
-
-@njit(cache=True)
-def _median_from_sorted_numba(
-    sorted_values: np.ndarray,
-    starts: np.ndarray,
-    counts: np.ndarray,
-) -> np.ndarray:
-    object_count = counts.size
-    output = np.zeros(object_count, dtype=np.float64)
-    for index in range(object_count):
-        output[index] = _quantile_from_sorted_group(
-            sorted_values,
-            starts[index],
-            counts[index],
-            0.5,
-        )
-    return output
-
-
-@njit(cache=True)
-def _quantile_from_sorted_group(
-    sorted_values: np.ndarray,
-    start: int,
-    count: int,
-    fraction: float,
-) -> float:
-    if count <= 0:
-        return 0.0
-    qindex = start + count * fraction
-    low = int(qindex)
-    qfraction = qindex - low
-    last = start + count - 1
-    if low < last:
-        return (
-            sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
-        )
-    return sorted_values[last]
+            values[cursor[index]] = value
+            cursor[index] += 1
+    return values, offsets
 
 
 @njit(cache=True)
@@ -737,37 +566,18 @@ def _object_intensity_std_2d_numba(
 
 
 @njit(cache=True)
-def _object_intensity_quantiles_3d_batch_numba(
+def _collect_object_intensity_dense_3d_numba(
     images: np.ndarray,
     labels: np.ndarray,
     label_to_index: np.ndarray,
     counts: np.ndarray,
-    mad_fraction: float,
-) -> ObjectIntensity3DQuantileResult:
+) -> tuple[np.ndarray, np.ndarray]:
+    """Collect image-major finite samples from a dense 3-D label domain."""
+    values, offsets, cursor = _object_intensity_group_buffers_numba(counts)
+    if values.size == 0:
+        return values, offsets
     image_count, z_size, y_size, x_size = images.shape
     object_count = counts.shape[1]
-    lower = np.zeros((image_count, object_count), dtype=np.float64)
-    median = np.zeros((image_count, object_count), dtype=np.float64)
-    upper = np.zeros((image_count, object_count), dtype=np.float64)
-    mad = np.zeros((image_count, object_count), dtype=np.float64)
-
-    total_count = 0
-    for image_index in range(image_count):
-        for object_index in range(object_count):
-            total_count += int(counts[image_index, object_index])
-    if total_count <= 0:
-        return lower, median, upper, mad
-
-    offsets = np.empty((image_count, object_count + 1), dtype=np.int64)
-    cursor = 0
-    for image_index in range(image_count):
-        offsets[image_index, 0] = cursor
-        for object_index in range(object_count):
-            cursor += int(counts[image_index, object_index])
-            offsets[image_index, object_index + 1] = cursor
-
-    write_offsets = offsets[:, :-1].copy()
-    values = np.empty(total_count, dtype=np.float64)
     for z_index in range(z_size):
         for y_index in range(y_size):
             for x_index in range(x_size):
@@ -781,31 +591,10 @@ def _object_intensity_quantiles_3d_batch_numba(
                     value = float(images[image_index, z_index, y_index, x_index])
                     if not np.isfinite(value):
                         continue
-                    offset = write_offsets[image_index, object_index]
-                    values[offset] = value
-                    write_offsets[image_index, object_index] = offset + 1
-
-    for image_index in range(image_count):
-        for object_index in range(object_count):
-            start = int(offsets[image_index, object_index])
-            count = int(counts[image_index, object_index])
-            if count <= 0:
-                continue
-            group = values[start : start + count]
-            (
-                lower[image_index, object_index],
-                median[image_index, object_index],
-                upper[image_index, object_index],
-            ) = _quartiles_from_dense_group_partition(group)
-            mad[image_index, object_index] = (
-                _median_absolute_deviation_from_dense_group_partition(
-                    group,
-                    median[image_index, object_index],
-                    mad_fraction,
-                )
-            )
-
-    return lower, median, upper, mad
+                    group = image_index * object_count + object_index
+                    values[cursor[group]] = value
+                    cursor[group] += 1
+    return values, offsets
 
 
 @njit(cache=True)
@@ -1364,39 +1153,20 @@ def _object_intensity_scan_3d_sparse_batch_numba(
 
 
 @njit(cache=True)
-def _object_intensity_quantiles_3d_sparse_batch_numba(
+def _collect_object_intensity_sparse_3d_numba(
     images: np.ndarray,
     z_indices: np.ndarray,
     y_indices: np.ndarray,
     x_indices: np.ndarray,
     object_indexes: np.ndarray,
     counts: np.ndarray,
-    mad_fraction: float,
-) -> ObjectIntensity3DQuantileResult:
+) -> tuple[np.ndarray, np.ndarray]:
+    """Collect the same image/object domain from declared foreground voxels."""
+    values, offsets, cursor = _object_intensity_group_buffers_numba(counts)
+    if values.size == 0:
+        return values, offsets
     image_count = images.shape[0]
     object_count = counts.shape[1]
-    lower = np.zeros((image_count, object_count), dtype=np.float64)
-    median = np.zeros((image_count, object_count), dtype=np.float64)
-    upper = np.zeros((image_count, object_count), dtype=np.float64)
-    mad = np.zeros((image_count, object_count), dtype=np.float64)
-
-    total_count = 0
-    for image_index in range(image_count):
-        for object_index in range(object_count):
-            total_count += int(counts[image_index, object_index])
-    if total_count <= 0:
-        return lower, median, upper, mad
-
-    offsets = np.empty((image_count, object_count + 1), dtype=np.int64)
-    cursor = 0
-    for image_index in range(image_count):
-        offsets[image_index, 0] = cursor
-        for object_index in range(object_count):
-            cursor += int(counts[image_index, object_index])
-            offsets[image_index, object_index + 1] = cursor
-
-    write_offsets = offsets[:, :-1].copy()
-    values = np.empty(total_count, dtype=np.float64)
     for foreground_index in range(object_indexes.size):
         object_index = int(object_indexes[foreground_index])
         z_index = int(z_indices[foreground_index])
@@ -1406,28 +1176,7 @@ def _object_intensity_quantiles_3d_sparse_batch_numba(
             value = float(images[image_index, z_index, y_index, x_index])
             if not np.isfinite(value):
                 continue
-            offset = write_offsets[image_index, object_index]
-            values[offset] = value
-            write_offsets[image_index, object_index] = offset + 1
-
-    for image_index in range(image_count):
-        for object_index in range(object_count):
-            start = int(offsets[image_index, object_index])
-            count = int(counts[image_index, object_index])
-            if count <= 0:
-                continue
-            group = values[start : start + count]
-            (
-                lower[image_index, object_index],
-                median[image_index, object_index],
-                upper[image_index, object_index],
-            ) = _quartiles_from_dense_group_partition(group)
-            mad[image_index, object_index] = (
-                _median_absolute_deviation_from_dense_group_partition(
-                    group,
-                    median[image_index, object_index],
-                    mad_fraction,
-                )
-            )
-
-    return lower, median, upper, mad
+            group = image_index * object_count + object_index
+            values[cursor[group]] = value
+            cursor[group] += 1
+    return values, offsets

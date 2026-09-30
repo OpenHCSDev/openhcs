@@ -69,7 +69,13 @@ class OpenHCSNativeExtension(Extension, ABC):
             language="c++",
             define_macros=[("Py_LIMITED_API", "0x030B0000")],
             py_limited_api=True,
-            extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
+            include_dirs=["openhcs/core"],
+            depends=["openhcs/core/native_array_buffer.hpp"],
+            extra_compile_args=(
+                ["/O2", "/fp:strict"]
+                if os.name == "nt"
+                else ["-O3", "-ffp-contract=off"]
+            ),
         )
 
     @classmethod
@@ -82,6 +88,12 @@ class GranularityNativeExtension(OpenHCSNativeExtension):
     @property
     def qualified_module_name(self) -> str:
         return "openhcs.processing.backends.cellprofiler._granularity_native"
+
+
+class IntensityNativeExtension(OpenHCSNativeExtension):
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._intensity_native"
 
 
 class TabularNativeExtension(OpenHCSNativeExtension):
