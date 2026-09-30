@@ -16,6 +16,8 @@ def test_process_environment_owns_inherited_mode_selectors() -> None:
         OpenHCSProcessEnvironment.headless_key,
         OpenHCSProcessEnvironment.numba_cache_key,
         OpenHCSProcessEnvironment.use_threading_key,
+        OpenHCSProcessEnvironment.worker_profile_directory_key,
+        OpenHCSProcessEnvironment.numba_sys_monitoring_key,
         FijiArchiveDistribution.cache_root_environment_key,
         ImageJArchiveDownloadPolicy.allow_download_environment_key,
     )

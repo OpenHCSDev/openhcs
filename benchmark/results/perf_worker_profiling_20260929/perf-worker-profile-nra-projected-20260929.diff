@@ -1,0 +1,153 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/__init__.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/__init__.py
+@@ -19,6 +19,7 @@
+ # Configure polystore defaults for OpenHCS integration
+ os.environ.setdefault("POLYSTORE_METADATA_FILENAME", "openhcs_metadata.json")
+ OpenHCSProcessEnvironment.project_dependency_gpu_import_policy()
++OpenHCSProcessEnvironment.project_numba_worker_profiling_policy()
+ 
+ ensure_source_checkout_external_paths()
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/orchestrator/worker_profiling.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/orchestrator/worker_profiling.py
+@@ -3,14 +3,16 @@
+ from __future__ import annotations
+ 
+ import cProfile
+-import os
++import sys
++import threading
++from collections.abc import Callable
+ from abc import ABC, abstractmethod
+ from contextlib import contextmanager, nullcontext
+ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Iterator
+ 
+-WORKER_PROFILE_DIR_ENV = "OPENHCS_WORKER_PROFILE_DIR"
++from openhcs.utils.environment import OpenHCSProcessEnvironment
+ 
+ 
+ class WorkerProfilingPolicy(ABC):
+@@ -55,10 +57,12 @@
+ 
+     @classmethod
+     def from_environment(cls) -> WorkerProfilingPolicy:
+-        profile_dir = os.environ.get(WORKER_PROFILE_DIR_ENV)
+-        if not profile_dir:
++        profile_dir = OpenHCSProcessEnvironment.worker_profile_directory()
++        if profile_dir is None:
+             return DisabledWorkerProfilingPolicy()
+-        return cls(Path(profile_dir))
++        if hasattr(sys, "monitoring"):
++            return MonitoringCProfileWorkerProfilingPolicy(profile_dir)
++        return cls(profile_dir)
+ 
+     @contextmanager
+     def profile(
+@@ -73,6 +77,7 @@
+         profiler = cProfile.Profile()
+         profiler.enable()
+         try:
++            self.configure_profile_event_scope()
+             yield
+         finally:
+             profiler.disable()
+@@ -87,6 +92,9 @@
+                     )
+                 )
+             )
++
++    def configure_profile_event_scope(self) -> None:
++        """Use the standard thread-local profiler on pre-monitoring runtimes."""
+ 
+     def profile_filename(
+         self,
+@@ -106,3 +114,40 @@
+             character if character.isalnum() or character in {"-", "_"} else "_"
+             for character in value
+         )
++
++
++@dataclass(frozen=True, slots=True)
++class ThreadOwnedProfilerCallback:
++    """Admit a profiling event only from its owning execution thread."""
++
++    thread_id: int
++    callback: Callable[..., object]
++
++    def __call__(self, *event_arguments: object) -> object:
++        if threading.get_ident() == self.thread_id:
++            return self.callback(*event_arguments)
++        return None
++
++
++class MonitoringCProfileWorkerProfilingPolicy(CProfileWorkerProfilingPolicy):
++    """Scope interpreter-wide cProfile callbacks to the worker thread."""
++
++    def configure_profile_event_scope(self) -> None:
++        monitoring = sys.monitoring
++        thread_id = threading.get_ident()
++        event_ids = {
++            value
++            for value in vars(monitoring.events).values()
++            if isinstance(value, int) and value > 0 and value & (value - 1) == 0
++        }
++        for event_id in sorted(event_ids):
++            callback = monitoring.register_callback(
++                monitoring.PROFILER_ID, event_id, None
++            )
++            if callback is not None:
++                monitoring.register_callback(
++                    monitoring.PROFILER_ID,
++                    event_id,
++                    ThreadOwnedProfilerCallback(thread_id, callback),
++                )
++
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/utils/environment.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/utils/environment.py
+@@ -22,6 +22,8 @@
+     cpu_only_key = "OPENHCS_CPU_ONLY"
+     headless_key = "OPENHCS_HEADLESS"
+     numba_cache_key = "NUMBA_CACHE_DIR"
++    worker_profile_directory_key = "OPENHCS_WORKER_PROFILE_DIR"
++    numba_sys_monitoring_key = "NUMBA_ENABLE_SYS_MONITORING"
+     subprocess_no_gpu_key = "OPENHCS_SUBPROCESS_NO_GPU"
+     polystore_subprocess_no_gpu_key = "POLYSTORE_SUBPROCESS_NO_GPU"
+     use_threading_key = "OPENHCS_USE_THREADING"
+@@ -58,6 +60,8 @@
+             cls.headless_key,
+             cls.numba_cache_key,
+             cls.use_threading_key,
++            cls.worker_profile_directory_key,
++            cls.numba_sys_monitoring_key,
+             FijiArchiveDistribution.cache_root_environment_key,
+             ImageJArchiveDownloadPolicy.allow_download_environment_key,
+         )
+@@ -117,6 +121,26 @@
+             values[cls.polystore_subprocess_no_gpu_key] = "1"
+ 
+     @classmethod
++    def worker_profile_directory(
++        cls,
++        environment: Mapping[str, str] | None = None,
++    ) -> Path | None:
++        """Return the activated worker-profile output directory."""
++        values = os.environ if environment is None else environment
++        profile_directory = values.get(cls.worker_profile_directory_key)
++        return Path(profile_directory) if profile_directory else None
++
++    @classmethod
++    def project_numba_worker_profiling_policy(
++        cls,
++        environment: MutableMapping[str, str] | None = None,
++    ) -> None:
++        """Activate kernel profiling before Numba constructs its dispatchers."""
++        values = os.environ if environment is None else environment
++        if cls.worker_profile_directory(values) is not None:
++            values[cls.numba_sys_monitoring_key] = "1"
++
++    @classmethod
+     def headless_mode(
+         cls,
+         environment: Mapping[str, str] | None = None,

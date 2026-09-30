@@ -1,0 +1,128 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________ test_profile_excludes_concurrent_polling_and_cleans_up[False] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa9e4f4c740>
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-141/test_profile_excludes_concurre0')
+raises = False
+
+    @pytest.mark.parametrize("raises", (False, True))
+    def test_profile_excludes_concurrent_polling_and_cleans_up(
+        monkeypatch, tmp_path, raises
+    ):
+        monkeypatch.setenv(
+            OpenHCSProcessEnvironment.worker_profile_directory_key, str(tmp_path)
+        )
+        policy = CProfileWorkerProfilingPolicy.from_environment()
+        active = threading.Event()
+        stop = threading.Event()
+        observed = threading.Event()
+    
+        def foreign_polling_thread():
+            active.wait()
+            while not stop.is_set():
+                time.sleep(0.001)
+                observed.set()
+    
+        def owning_thread_operation():
+            sum(range(100))
+            time.sleep(0.02)
+    
+        thread = threading.Thread(target=foreign_polling_thread)
+        thread.start()
+        try:
+            if raises:
+                with (
+                    pytest.raises(ValueError, match="execution failed"),
+                    policy.profile(**profile_arguments()),
+                ):
+                    active.set()
+                    owning_thread_operation()
+                    assert observed.wait(1)
+                    raise ValueError("execution failed")
+            else:
+                with policy.profile(**profile_arguments()):
+                    active.set()
+                    owning_thread_operation()
+                    assert observed.wait(1)
+        finally:
+            stop.set()
+            active.set()
+            thread.join(2)
+        assert not thread.is_alive()
+        stats = pstats.Stats(str(next(tmp_path.glob("*.prof"))))
+        assert not any(key[2] == "foreign_polling_thread" for key in stats.stats)
+>       (operation,) = (
+        ^^^^^^^^^^^^
+            value
+            for key, value in stats.stats.items()
+            if key[2] == "owning_thread_operation"
+        )
+E       ValueError: not enough values to unpack (expected 1, got 0)
+
+tests/unit/test_worker_profiling.py:85: ValueError
+_________ test_profile_excludes_concurrent_polling_and_cleans_up[True] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa9e4f5e690>
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-141/test_profile_excludes_concurre1')
+raises = True
+
+    @pytest.mark.parametrize("raises", (False, True))
+    def test_profile_excludes_concurrent_polling_and_cleans_up(
+        monkeypatch, tmp_path, raises
+    ):
+        monkeypatch.setenv(
+            OpenHCSProcessEnvironment.worker_profile_directory_key, str(tmp_path)
+        )
+        policy = CProfileWorkerProfilingPolicy.from_environment()
+        active = threading.Event()
+        stop = threading.Event()
+        observed = threading.Event()
+    
+        def foreign_polling_thread():
+            active.wait()
+            while not stop.is_set():
+                time.sleep(0.001)
+                observed.set()
+    
+        def owning_thread_operation():
+            sum(range(100))
+            time.sleep(0.02)
+    
+        thread = threading.Thread(target=foreign_polling_thread)
+        thread.start()
+        try:
+            if raises:
+                with (
+                    pytest.raises(ValueError, match="execution failed"),
+                    policy.profile(**profile_arguments()),
+                ):
+                    active.set()
+                    owning_thread_operation()
+                    assert observed.wait(1)
+                    raise ValueError("execution failed")
+            else:
+                with policy.profile(**profile_arguments()):
+                    active.set()
+                    owning_thread_operation()
+                    assert observed.wait(1)
+        finally:
+            stop.set()
+            active.set()
+            thread.join(2)
+        assert not thread.is_alive()
+        stats = pstats.Stats(str(next(tmp_path.glob("*.prof"))))
+        assert not any(key[2] == "foreign_polling_thread" for key in stats.stats)
+>       (operation,) = (
+        ^^^^^^^^^^^^
+            value
+            for key, value in stats.stats.items()
+            if key[2] == "owning_thread_operation"
+        )
+E       ValueError: not enough values to unpack (expected 1, got 0)
+
+tests/unit/test_worker_profiling.py:85: ValueError
+=========================== short test summary info ============================
+FAILED tests/unit/test_worker_profiling.py::test_profile_excludes_concurrent_polling_and_cleans_up[False]
+FAILED tests/unit/test_worker_profiling.py::test_profile_excludes_concurrent_polling_and_cleans_up[True]
+2 failed, 6 deselected in 0.90s
