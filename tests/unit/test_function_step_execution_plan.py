@@ -33,6 +33,7 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
 from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.step_dependencies import (
@@ -461,7 +462,7 @@ def _cross_channel_output_invocation():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def publish_channels(image, *, runtime):
         del runtime
@@ -521,7 +522,7 @@ def test_compiler_handoff_preserves_exact_same_name_output_types():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def publish_shared_outputs(image, *, runtime):
         del runtime
@@ -616,9 +617,9 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
         "runtime",
         lambda _request: object(),
         manages_artifact_inputs=True,
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
-    def publish_derived_channels(image, *, runtime):
+    def publish_derived_channels(image, *, illumination_function=None, runtime):
         del runtime
         return image
 

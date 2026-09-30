@@ -38,7 +38,11 @@ from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.image_payload_execution_mode import (
     ImagePayloadExecutionMode,
 )
-from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
+from openhcs.core.artifact_key_selection import (
+    ArtifactOutputPolicy,
+    ArtifactPlanKeySelector,
+    NativeReturnArtifactOutputPolicy,
+)
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -279,6 +283,14 @@ class CallableMetadata:
     prepare: Callable[..., object] | None = None
     primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None
     primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None
+
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Project recording ownership from this callable's adapter declaration."""
+        adapter = self.runtime_adapter
+        if adapter is None:
+            return NativeReturnArtifactOutputPolicy
+        return adapter.artifact_output_policy
 
     def __post_init__(self) -> None:
         """Normalize the generic artifact-fed callable parameter declaration."""
@@ -987,12 +999,6 @@ class CallableContract(ArtifactPlanKeySelector):
         )
 
     @property
-    def artifact_key_specs(self) -> ArtifactSpecCollection:
-        """Return declarations owned by this callable's effective artifact contract."""
-
-        return self.artifact_specs
-
-    @property
     def primary_input_parameter_name(self) -> str | None:
         """FunctionStep input payload parameter declared by callable signature."""
         signature = inspect.signature(self.resolve_canonical_raw_callable())
@@ -1167,6 +1173,11 @@ class CallableContract(ArtifactPlanKeySelector):
                     f"for {parameter_name!r}: {exc}"
                 ) from exc
         return tuple(kwargs.items())
+
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Project the output policy from the callable's adapter declaration."""
+        return self.metadata.artifact_output_policy
 
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""

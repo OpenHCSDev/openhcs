@@ -629,13 +629,7 @@ class MeasurementsFunctionOutputContextStrategy(ProjectedFunctionOutputContextSt
     def _declared_subject(output_plan: ArtifactOutputPlan | None) -> MeasurementSubject:
         if output_plan is None:
             raise ValueError("Measurement outputs require a compiled output plan.")
-        subject = output_plan.measurement_subject()
-        if subject is None:
-            raise ValueError(
-                f"Measurement output {output_plan.ref()!r} has no declared "
-                "measurement subject relation."
-            )
-        return subject
+        return MeasurementsArtifactType.require_output_subject(output_plan)
 
     @staticmethod
     def _validate_nominal_table(
@@ -1694,6 +1688,7 @@ def _load_artifact_input_values(
         edge_plan=input_plan,
         axis_scope=runtime_scope.axis_scope,
         backend=Backend.MEMORY.value,
+        source_binding_plan=runtime_scope.source_binding_plan,
     ).projected_values(context.runtime_value_store)
 
 

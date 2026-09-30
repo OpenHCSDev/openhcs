@@ -415,7 +415,7 @@ class CellProfilerArtifactBindingSummary:
     direction: str
     kind: str
     setting_names: tuple[str, ...]
-    parameter_name: str | None = None
+    parameter_name: str
     runtime_parameter_name: str | None = None
     repeated: bool = False
 
