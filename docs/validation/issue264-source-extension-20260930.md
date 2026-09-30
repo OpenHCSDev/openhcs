@@ -75,8 +75,12 @@ views. The existing projection helper is replaced by one typed behavior owner.
 No giant-class growth, foreign capability probes or parallel registry added.
 The R0 R1 script was read but not executed: it materializes/analyses full
 OpenHCS/dependency source context and is outside this light source-only budget.
-Packaged `agent-comms-ratchet` is absent; no download/install attempted. This is
-source tracing plus local AST class-size checks, not a full NRA/ratchet pass.
+Historical observation: the `agent-comms-ratchet` CLI entrypoint was absent,
+not the package source. Parent identifies the existing package under
+`/home/ts/wt/comms-owner-startup-sol-20260929/src`; its declared
+`agent_comms/debt_ratchet.py` and `/usr/bin/python3.14` are present. No install,
+download, copying, replacement measure or repeated scan: parent reviews the
+checkpoint. This is source tracing plus local AST class-size checks, not a full NRA/ratchet pass.
 Hosted CI is not a waiting gate; actual enforced integration rules remain.
 
 Persisted formats: all unchanged. Existing OpenHCS metadata/source-projection
@@ -119,3 +123,12 @@ checks:28 provenance/persistence/264 tests pass in1.90s and16 runtime identity/
 stack tests pass in2.23s. The93-test set above is the pre-integration source
 checkpoint;44 were rechecked against the merged source. Working draft262 is
 OPEN/DRAFT/MERGEABLE. No source/runtime installation or live acceptance claimed.
+
+Latest authorized main205 integration: `fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16`
+merged normally without conflicts at `82f6798957fe810c57f8e3107063206fb97fe60c`.
+The same93-test source set passes on this merged source:28 in1.96s,6 in2.37s,
+16 in2.16s,43 in3.05s. No test/source scope expansion. Parent owns the now
+available native slot for a fresh source-live262 full public fixture, then
+merge/install: images+labels+CSV+ROI with final inventory/readback, and257's
+dotted-OME chained control. Original jobs/receipts remain unreplayed; no native
+launch or installed-runtime mutation by this author.

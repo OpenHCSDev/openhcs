@@ -55,4 +55,13 @@ integration and affected installed/native acceptance; this remains a draft.
 
 Integrated current main `dbf1c7a8b` without conflict at `b5572e660`;44 relevant
 source cases rechecked after integration.93 is the complete pre-integration
-source checkpoint, not an installed/native acceptance claim.
+source checkpoint, not an installed/native acceptance claim. Latest: normal
+merge of main205 `fb5fea4f1` at `82f679895`, no conflicts; the same93 bounded
+source tests pass against that merged source. Parent owns fresh source-live262
+images+labels+CSV+ROI inventory/readback and257 dotted-OME chained acceptance,
+then merge/install. No native owner launched or old job replayed here.
+
+Ratchet clarification: only the CLI entrypoint was absent, not the package.
+Existing `/home/ts/wt/comms-owner-startup-sol-20260929/src/agent_comms/debt_ratchet.py`
+and Python3.14 are available. No install/copy/replacement measure/repeated scan;
+parent reviews the checkpoint rather than requesting another scan.

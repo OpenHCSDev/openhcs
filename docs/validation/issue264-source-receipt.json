@@ -39,6 +39,19 @@
       {"scope": "runtime identity/stack", "passed": 16, "seconds": 2.23}
     ]
   },
+  "main205_integration": {
+    "main": "fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16",
+    "source_head": "82f6798957fe810c57f8e3107063206fb97fe60c",
+    "conflicts": [],
+    "distinct_source_tests": 93,
+    "source_checks": [
+      {"scope": "provenance/persistence/issue264", "passed": 28, "seconds": 1.96},
+      {"scope": "image/ROI materialization", "passed": 6, "seconds": 2.37},
+      {"scope": "runtime identity/stack", "passed": 16, "seconds": 2.16},
+      {"scope": "produced inventory/projection", "passed": 43, "seconds": 3.05}
+    ],
+    "parent_owns_native_verification": true
+  },
   "original_evidence_sha256": {
     "ledger": "37850b1ecb11fe9dfe47634c2f35645828542068d176e42db7cf4b0196057cc3",
     "full_native_log": "84fbdccf0b497784b59e1aa7d31eb3e9be4bbbfc1002a0ba195b54e24d72f761",
