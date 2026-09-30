@@ -1,0 +1,182 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/function_catalog_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/function_catalog_preparation.py
+@@ -66,21 +66,57 @@
+         with self._lock:
+             if self._future is not None:
+                 return self._future
+-            future: Future[None] = Future()
+-            self._future = future
+-            if self._cancellation.requested():
+-                future.cancel()
++            future = self._new_preparation_future()
++            if future.cancelled():
+                 return future
+-            self._set_message("Starting function catalog preparation")
+             thread = threading.Thread(
+                 target=self._prepare,
+-                args=(future,),
++                args=(future, self._function_catalog.prepare),
+                 name="openhcs-function-catalog-preparation",
+                 daemon=True,
+             )
+             self._thread = thread
+             thread.start()
+             return future
++
++    def _new_preparation_future(self) -> Future[None]:
++        """Create this owner's future while the caller holds its lifecycle lock."""
++        future: Future[None] = Future()
++        self._future = future
++        if self._cancellation.requested():
++            future.cancel()
++        else:
++            self._set_message("Starting function catalog preparation")
++        return future
++
++    def prepare_before_serving(
++        self,
++        status_callback: Callable[[EndpointStartupStatus], None] | None = None,
++    ) -> None:
++        """Warm in the server main thread before accepting endpoint requests."""
++        with self._lock:
++            future = (
++                self._new_preparation_future() if self._future is None else None
++            )
++        if future is not None and not future.cancelled():
++            if status_callback is not None:
++                status_callback(self.snapshot())
++            self._prepare(future, self._prepare_current_process)
++        self.wait_until_ready(status_callback)
++
++    def _prepare_current_process(self, *, status_callback, cancellation) -> None:
++        """Use the registry owner and project its already-prepared catalogue."""
++        if cancellation.requested():
++            raise CancelledError
++        status_callback("Warming registered function kernels in the execution server")
++        self.prepare_persistent_catalog()
++        if cancellation.requested():
++            raise CancelledError
++        self._function_catalog.catalog(
++            compact_signatures=True,
++            status_callback=status_callback,
++            cancellation=cancellation,
++        )
+ 
+     def cancel_and_join(self) -> None:
+         """Cancel and join the exact preparation operation owned here."""
+@@ -199,9 +235,10 @@
+                 timestamp=time.time(),
+             )
+ 
+-    def _prepare(self, future: Future[None]) -> None:
++    def _prepare(self, future: Future[None], prepare: Callable[..., None]) -> None:
++        """Complete this same future under either admitted preparation context."""
+         try:
+-            self._function_catalog.prepare(
++            prepare(
+                 status_callback=self._set_message,
+                 cancellation=self._cancellation,
+             )
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/zmq_execution_server.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/zmq_execution_server.py
+@@ -123,7 +123,42 @@
+         }
+ 
+ 
+-class ZMQExecutionServer(ExecutionServer):
++class FunctionCatalogExecutionServer(ExecutionServer):
++    """Own catalogue preparation across physical endpoint start and stop."""
++
++    def __init__(self, *args, **kwargs):
++        super().__init__(*args, **kwargs)
++        from openhcs.agent.services.function_catalog_service import (
++            FunctionCatalogService,
++        )
++        from openhcs.runtime.function_catalog_preparation import (
++            FunctionCatalogPreparation,
++        )
++
++        self._function_catalog = FunctionCatalogService()
++        self._function_catalog_preparation = FunctionCatalogPreparation(
++            self._function_catalog
++        )
++
++    def prepare_runtime_capabilities(
++        self,
++        status_callback: EndpointStartupStatusCallback | None = None,
++    ) -> None:
++        """Warm every registered obligation before physical endpoint readiness."""
++        self._function_catalog_preparation.prepare_before_serving(status_callback)
++
++    def start(self) -> None:
++        self.prepare_runtime_capabilities()
++        super().start()
++
++    def stop(self) -> None:
++        try:
++            super().stop()
++        finally:
++            self._function_catalog_preparation.cancel_and_join()
++
++
++class ZMQExecutionServer(FunctionCatalogExecutionServer):
+     """OpenHCS-specific execution server."""
+ 
+     _server_type = "execution"
+@@ -153,36 +188,13 @@
+         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
+         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
+         self._server_environment = RuntimeEnvironmentSnapshot.current()
+-        from openhcs.agent.services.function_catalog_service import (
+-            FunctionCatalogService,
+-        )
+-        from openhcs.runtime.function_catalog_preparation import (
+-            FunctionCatalogPreparation,
+-        )
+-
+-        self._function_catalog = FunctionCatalogService()
+-        self._function_catalog_preparation = FunctionCatalogPreparation(
+-            self._function_catalog
+-        )
+-
+-    def prepare_runtime_capabilities(
+-        self,
+-        status_callback: EndpointStartupStatusCallback | None = None,
+-    ) -> None:
+-        """Materialize cached capabilities before exposing the live endpoint."""
+-
+-        self._function_catalog_preparation.wait_until_ready(status_callback)
+-
+     def stop(self) -> None:
+         """Stop transport and every exact process resource owned by this server."""
+ 
+         try:
+             super().stop()
+         finally:
+-            try:
+-                self._function_catalog_preparation.cancel_and_join()
+-            finally:
+-                cleanup_backend_connections(include_process_resources=True)
++            cleanup_backend_connections(include_process_resources=True)
+ 
+     def handle_control_message(self, message):
+         if ZMQControlMessageRouter.handles(message):
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/zmq_execution_server_launcher.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/zmq_execution_server_launcher.py
+@@ -195,6 +195,16 @@
+         )
+ 
+         status_reporter.emit(
++            EndpointStartupPhase.PREPARING_CAPABILITIES,
++            "Warming execution server function catalogue and kernels",
++        )
++        server.prepare_runtime_capabilities(
++            lambda status: status_reporter.emit(
++                EndpointStartupPhase.PREPARING_CAPABILITIES, status.message
++            )
++        )
++
++        status_reporter.emit(
+             EndpointStartupPhase.BINDING_ENDPOINT,
+             "Binding execution server endpoint",
+         )

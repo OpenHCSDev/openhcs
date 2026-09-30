@@ -107,11 +107,12 @@ instead of presets. A non-empty output directory is refused; use `--resume` to
 continue its ordinary-route `well_throughput.csv`. Failed observations remain in
 that CSV and make the command exit non-zero.
 
-Use `--reuse-execution-server` to keep one client-owned execution server across
-the selected observations. Its `server_lifecycle` column is `reused-per-sweep`,
+The commands keep one ready client-owned execution server across the selected
+observations by default. Its `server_lifecycle` column is `reused-per-sweep`,
 and each `total_seconds` measures the observation after the server is ready.
-Startup and shutdown are excluded from those per-observation totals; use the
-default `fresh-per-observation` lifecycle to include them for each observation.
+Startup and shutdown are excluded from pipeline totals. Use
+`--no-reuse-execution-server` for a separate cold-server diagnostic; its
+`fresh-per-observation` total includes startup and shutdown and is not pipeline time.
 Both totals begin after the input workspace is prepared. The reused-server
 option cannot be combined with `--max-memory-mb`, whose guard may kill the
 shared server before later observations.

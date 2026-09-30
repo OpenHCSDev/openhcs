@@ -481,8 +481,12 @@ def test_sweep_cli_reports_recorded_failure_with_nonzero_exit(
     assert args.cli_command.run(args) == 1
 
 
+@pytest.mark.parametrize(
+    "server_options,reuse_server",
+    [((), True), (("--no-reuse-execution-server",), False)],
+)
 def test_sweep_cli_passes_complete_native_summary_baselines(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, server_options, reuse_server
 ) -> None:
     import benchmark.cellprofiler_benchmark_cli as cli
     import benchmark.well_throughput_scaling as throughput
@@ -541,10 +545,12 @@ def test_sweep_cli_passes_complete_native_summary_baselines(
             str(tmp_path / "outputs"),
             "--native-summary-csv",
             str(summary_path),
+            *server_options,
         )
     )
 
     assert args.cli_command.run(args) == 0
+    assert captured["reuse_execution_server"] is reuse_server
     assert captured["native_execution_baselines"] == {
         "Example": NativeCellProfilerExecutionBaseline("Example", 2.5)
     }
