@@ -94,8 +94,11 @@ def test_new_output_kind_invariant_is_not_exempted_by_recording_owner(
         return publish
 
     def validate(func):
+        contract = CallableContract.from_callable(func)
+        assert contract.metadata.artifact_output_policy is output_policy
+        assert contract.artifact_output_policy is output_policy
         if boundary == "contract":
-            CallableContract.from_callable(func).validate_artifact_output_declarations()
+            contract.validate_artifact_output_declarations()
         else:
             compile_function_pattern(func, {}, {})
 
@@ -273,10 +276,12 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     authored = next(normalize_function_pattern(step.func).iter_items())
     contract = provider.plans[(0, authored.key)].contract
     assert contract.artifact_output_policy is CellProfilerRecordedArtifactOutputPolicy
+    assert contract.metadata.artifact_output_policy is CellProfilerRecordedArtifactOutputPolicy
     (measurement,) = contract.artifact_outputs.of_artifact_type(
         MeasurementsArtifactType
     )
     assert measurement.measurement_feature_owner is IdentifyPrimaryObjectsModule
+    assert measurement.require_measurement_feature_owner() is IdentifyPrimaryObjectsModule
     assert ArtifactSpecRelation.measurement_subject_for_output(measurement) is None
 
     compiled = compile_function_pattern(

@@ -56,7 +56,6 @@ from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
     SourcePayloadPlaneIdentitySequence,
@@ -654,11 +653,9 @@ class RuntimeInputBindingRequest:
                 self.adapter.request.source_artifact_payload(spec.ref()),
             )
         elif runtime_edge is not None:
-            runtime_input = RuntimeArtifactInput(
-                edge_plan=runtime_edge,
-                axis_scope=self.adapter.request.axis_scope,
+            runtime_input = self.adapter.request.runtime_artifact_input(
+                runtime_edge,
                 backend=self.adapter.backend,
-                source_binding_plan=self.adapter.request.source_binding_plan,
             )
             value = cast(
                 RuntimeCallableArgument,

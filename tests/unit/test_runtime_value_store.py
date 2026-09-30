@@ -1475,6 +1475,11 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
         axis_scope=runtime_input.axis_scope,
     )
 
+    projected = adapter.request.runtime_artifact_input(edge, backend=adapter.backend)
+    assert projected.edge_plan is edge
+    assert projected.axis_scope is adapter.request.axis_scope
+    assert projected.source_binding_plan is runtime_input.source_binding_plan
+    assert projected.records(store) == (record,)
     assert adapter.artifact_input_records("Nuclei", ObjectLabelsArtifactType) == (record,)
     request = RuntimeInputBindingRequest(
         adapter=adapter, kwargs={}, current_image=np.zeros((2, 2))

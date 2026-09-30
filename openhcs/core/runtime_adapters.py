@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.steps.function_runtime import FunctionRuntimeScope
+    from openhcs.core.runtime_stores import RuntimeArtifactInput
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -258,6 +259,22 @@ class RuntimeAdapterRequest:
                 "different runtime authorities."
             )
         return first
+
+    def runtime_artifact_input(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        *,
+        backend: str,
+    ) -> "RuntimeArtifactInput":
+        """Bind an exact compiled input to this request's declared source context."""
+        from openhcs.core.runtime_stores import RuntimeArtifactInput
+
+        return RuntimeArtifactInput(
+            edge_plan=edge,
+            axis_scope=self.axis_scope,
+            backend=backend,
+            source_binding_plan=self.source_binding_plan,
+        )
 
     def source_artifact_payload(self, ref: ArtifactSpecRef) -> object:
         """Resolve one source-bound artifact through workspace matching and VFS."""

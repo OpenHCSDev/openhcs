@@ -79,12 +79,7 @@ class CellProfilerRecordedArtifactOutputPolicy(AdapterRecordedArtifactOutputPoli
         # Common relation invariants are checked by the artifact kind. CP's
         # module owner assembles heterogeneous rows and validates their subjects
         # through its row policy and add_measurements at recording time.
-        if spec.measurement_feature_owner is None:
-            raise ValueError(
-                f"CellProfiler measurement output {spec.ref()!r} requires its "
-                "declared measurement_feature_owner. Finalize the module's "
-                "callable contract before compiling heterogeneous rows."
-            )
+        spec.require_measurement_feature_owner()
 
 
 @dataclass(slots=True)
@@ -153,12 +148,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 f"Compiled artifact input {name!r} has type "
                 f"{storage_plan.artifact_type.value}, not {artifact_type.value}."
             )
-        return RuntimeArtifactInput(
-            edge_plan=edge_plan,
-            axis_scope=self.request.axis_scope,
-            backend=self.backend,
-            source_binding_plan=self.request.source_binding_plan,
-        )
+        return self.request.runtime_artifact_input(edge_plan, backend=self.backend)
 
     def artifact_input_records(
         self,
