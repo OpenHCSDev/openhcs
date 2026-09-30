@@ -80,3 +80,10 @@ A changed configured default now requires one declaration edit instead of edits
 to the declaration, the shim and the CLI. New result formats still belong to the
 existing enum-keyed strategy family, without a CLI dispatch arm. No new family
 is needed for this deletion; arbitrary leaf classes would only add indirection.
+
+The actual original packaged ratchet passes both production roots at
+dd1afdaf00512472057585ca881462321a20744a against the audited main, exit 0 for
+each. ``openhcs/`` loses two string-keyed reads; ``scripts/`` has no positive
+metric deltas. Complete scoped policy/NRA coverage is not inferred from these
+structural measures. Original CLI stdout is filtered only after measurement,
+with pipefail preserving the original policy exit code.
