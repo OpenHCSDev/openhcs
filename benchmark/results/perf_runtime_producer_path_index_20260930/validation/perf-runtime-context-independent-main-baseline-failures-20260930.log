@@ -1,0 +1,163 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_bundle_payload_context_preserves_source_binding_plane_metadata ______
+
+    def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> None:
+        first = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w1_z001_t001.tif",),
+                component_metadata=({"well": "A01", "site": 1, "channel": 1},),
+            )
+        ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
+        second = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w2_z001_t001.tif",),
+                component_metadata=({"well": "A01", "site": 1, "channel": 2},),
+            )
+        ).payload_with(np.ones((4, 5), dtype=np.float32), None)
+    
+        bundle = ImagePayloadBundleContext.from_payloads((first, second)).compose()
+        metadata = image_payload_metadata(bundle)
+    
+        assert metadata.source_image_provenance_planes.paths == (
+            "/input/A01_s001_w1_z001_t001.tif",
+            "/input/A01_s001_w2_z001_t001.tif",
+        )
+        assert tuple(
+            dict(item)
+            for item in metadata.source_image_provenance_planes.component_metadata
+        ) == (
+            {"well": "A01", "site": 1, "channel": 1},
+            {"well": "A01", "site": 1, "channel": 2},
+        )
+>       assert dict(metadata.source_component_metadata) == {
+            "well": "A01",
+            "site": 1,
+            "extension": ".tif",
+        }
+E       AssertionError: assert {'site': 1, 'well': 'A01'} == {'well': 'A01...sion': '.tif'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+/home/ts/code/projects/openhcs/tests/unit/test_function_runtime_source_projection.py:721: AssertionError
+___ test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets ___
+
+    def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -> None:
+        bindings = (
+            NamedSourceBinding(
+                alias="OrigStain1",
+                selector=SourceSelector(
+                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            ),
+            NamedSourceBinding(
+                alias="OrigStain2",
+                selector=SourceSelector(
+                    components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+            ),
+        )
+        source_binding_plan = CompiledSourceBindingPlan(
+            bindings=bindings,
+            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        )
+    
+        source_set_measurements = ArtifactSpec.output(
+            "SourceSetMeasurements",
+            MeasurementsArtifactType,
+            relations=tuple(
+                GroupLineageSourceRelation(source=binding.input_spec().ref())
+                for binding in bindings
+            ),
+        )
+    
+        @artifact_inputs(*(binding.input_spec() for binding in bindings))
+        @artifact_outputs(source_set_measurements)
+        @composed_image_payload
+        def measure_source_set(image):
+            return image
+    
+        measurement_plan = ArtifactOutputPlan(
+            name="SourceSetMeasurements",
+            path="/memory/SourceSetMeasurements.pkl",
+            artifact_type=MeasurementsArtifactType,
+            group_keys=("1", "2"),
+            group_component=AllComponents.CHANNEL,
+            relations=source_set_measurements.relations,
+        )
+    
+        plan = SimpleNamespace(
+            axis_id="A01",
+            step_index=0,
+            step_name="SourceBoundAnchorFilter",
+            main_input_dependency=StepInputDependency.pipeline_start(),
+            source_binding_plan=source_binding_plan,
+            execution_group_scope=ComponentGroupScope.from_raw(
+                ("1", "2"),
+                component=AllComponents.CHANNEL,
+            ),
+>           compiled_function_pattern=compile_function_pattern(
+                measure_source_set,
+                {},
+                {plan.ref(): plan for plan in (measurement_plan,)},
+            ),
+        )
+
+/home/ts/code/projects/openhcs/tests/unit/test_function_runtime_source_projection.py:1588: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ts/code/projects/openhcs/openhcs/core/function_patterns.py:1057: in compile_function_pattern
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ts/code/projects/openhcs/openhcs/core/function_patterns.py:1057: in <genexpr>
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+/home/ts/code/projects/openhcs/openhcs/core/function_patterns.py:1227: in compile
+    invocations = tuple(
+/home/ts/code/projects/openhcs/openhcs/core/function_patterns.py:1228: in <genexpr>
+    _compile_invocation(
+/home/ts/code/projects/openhcs/openhcs/core/function_patterns.py:1267: in _compile_invocation
+    artifact_selector.validate_artifact_output_declarations()
+/home/ts/code/projects/openhcs/openhcs/core/artifact_key_selection.py:114: in validate_artifact_output_declarations
+    self.artifact_output_policy.validate_output_declarations(self.artifact_specs)
+/home/ts/code/projects/openhcs/openhcs/core/artifact_key_selection.py:32: in validate_output_declarations
+    cls.validate_payload_declaration(spec)
+/home/ts/code/projects/openhcs/openhcs/core/artifact_key_selection.py:47: in validate_payload_declaration
+    spec.artifact_type.validate_native_output_declaration(spec)
+/home/ts/code/projects/openhcs/openhcs/core/artifacts.py:717: in validate_native_output_declaration
+    cls.require_output_subject(spec)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'openhcs.core.artifacts.MeasurementsArtifactType'>
+output = ArtifactSpec(name='SourceSetMeasurements', artifact_type=<class 'openhcs.core.artifacts.MeasurementsArtifactType'>, pa...>, name='OrigStain2'))), plan_type=<class 'openhcs.core.artifacts.ArtifactOutputPlan'>, measurement_feature_owner=None)
+
+    @classmethod
+    def require_output_subject(
+        cls,
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject":
+        """Require the same declared subject at compile and runtime boundaries."""
+    
+        subject = ArtifactSpecRelation.measurement_subject_for_output(output)
+        if subject is None:
+>           raise ValueError(
+                f"Measurement output {output.ref()!r} has no declared "
+                "measurement subject relation. Add ImageMeasurementSubjectRelation "
+                "with the exact declared image ref for image-level rows, "
+                "ObjectMeasurementSubjectRelation with the exact object-label ref "
+                "for object-level rows, or ArtifactMeasurementSubjectRelation() "
+                "for artifact-level rows to ArtifactSpec.output(..., relations=(...,))."
+            )
+E           ValueError: Measurement output ArtifactSpecRef(plan_type=<class 'openhcs.core.artifacts.ArtifactOutputPlan'>, artifact_type=<class 'openhcs.core.artifacts.MeasurementsArtifactType'>, name='SourceSetMeasurements') has no declared measurement subject relation. Add ImageMeasurementSubjectRelation with the exact declared image ref for image-level rows, ObjectMeasurementSubjectRelation with the exact object-label ref for object-level rows, or ArtifactMeasurementSubjectRelation() for artifact-level rows to ArtifactSpec.output(..., relations=(...,)).
+
+/home/ts/code/projects/openhcs/openhcs/core/artifacts.py:699: ValueError
+=========================== short test summary info ============================
+FAILED ../home/ts/code/projects/openhcs/tests/unit/test_function_runtime_source_projection.py::test_bundle_payload_context_preserves_source_binding_plane_metadata
+FAILED ../home/ts/code/projects/openhcs/tests/unit/test_function_runtime_source_projection.py::test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets
+2 failed in 0.93s
