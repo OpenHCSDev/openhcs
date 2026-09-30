@@ -46,10 +46,15 @@ unrelated overlay leads are not assigned to this issue.
 Full NRA scan attempted with complete openhcs context, requested policy/numbering
 files, --json --raw-findings --json-payload full, parse/analysis workers1,
 --no-cache and an enforced512MiB/one-CPU/60s scope. It terminated exit124 with
-maximum RSS524536KiB and no JSON result. Original stderr/resource receipt retained.
+maximum RSS524536KiB and an explicit deadline_incomplete JSON result:
+complete=false, deadline_exceeded=true, stage=parse_python_module,
+budget_seconds20.0, elapsed_seconds22.054. Original stderr/resource receipt retained.
 Do not call this complete, zero omissions, R1 evidence, DSL preflight, native
-proof, or formal equivalence. A completed full-context scan needs resources
-beyond this observed boundary; no global limit was raised. There are no R1
+proof, or formal equivalence. The confirmed stopping condition is the internal
+parse deadline, not a demonstrated OOM. Observed process peak slightly exceeds
+512MiB despite the scoped cap; a repeat is not admitted under this RAM budget.
+Required resources for a complete context scan remain unknown; no global limit
+was raised. There are no R1
 mapping_read/unmodeled_record_shape/redundant_type_check findings to certify.
 This repair is an explicitly authored semantic patch, not an NRA-generated plan.
 
@@ -143,3 +148,11 @@ not a published source change. Disposable scratch measured652KiB; local build
 objects400KiB. No task process remains running at this checkpoint. Existing
 locally built extensions are not installed globally. Full test/dependency proof
 limits and inherited fixture ownership are recorded in checkpoint.rst.
+
+Current merged-head receipt: e3d991e9cf02c496daa7c9df32c73bfde4a7ad00 integrates
+main2b7969f700c33eb7f73f891d975afd1efc0628bb without changing shared owners.
+merged-main-census.json compares those exact revisions: +16 code lines, zero
+other syntax-screen deltas. Production/test checks at this head pass131 of139
+selected tests; eight inherited strict-subject fixture failures are retained and
+assigned to parent integration for disposition, not masked. Owned scratch/build
+disposal is complete and recoverably archived; checkpoint.rst records paths/SHA.
