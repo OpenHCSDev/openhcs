@@ -135,3 +135,35 @@ The parent owns this same PR215 and issue214, with no competing implementation.
 Complete the affected installed path before merge; do not wait for optional CI.
 The frozen scientific abstention, held-out boundary and full ZIP scope remain
 unchanged. Owner clarification:20GiB is a warning margin, not a hard disk limit.
+
+Result inventory continuation
+----------------------------
+
+Installed candidatecba1c90df with the75-case metadata fix still failed diagnostic
+reopening. The exact native viewer rejection was ``No component metadata
+available for path``. Its full log and terminal transcript are retained at
+primary-diagnostics-viewer-reopen-20260930; viewer/MCP were explicitly closed,
+the shell exited1, and ports5992/6792/6992 and validation.lock were freed.
+An attempted capture_scope=canvas was rejected at the boundary, so no bitmap
+inspection is claimed for that attempt.
+
+The result-directory owner now carries its existing typed source authority
+from OpenHCSMetadataHandler through PlateResultFileRecord to PlateFileRecord.
+The canonical projection/ref and acquisition components survive selecting a
+native TIFF as a result, not just as an image. Ordered inventory merging keeps
+the handler declaration ahead of path-only duplicate discoveries. There is no
+new JSON reader, filename-derived source identity or reconstructed source
+receipt. Generic external result directories still have genuinely optional
+source bindings; absence is handled by their nominal directory owner.
+
+The compiled plan owns artifact output plate-root resolution beside its two
+existing artifact directory properties. This removes the newly introduced
+foreign absence probe flagged by the original packaged ratchet. Its original
+exit1 JSON remains preserved; no baseline or guard was weakened.
+
+Four focused target/compiled-root cases PASS1.40s. Expanded inventory/native
+run97PASS/1FAIL20.84s: the new fixture used address.items instead of the declared
+component_values().items accessor. The original failed XML is retained. Final
+expanded run:98PASS18.82s. Directory existence/type admission is now owned by
+AnalysisResultDirectory, rather than growing OpenHCSMetadataHandler. Its focused
+guard and corrected installed viewer acceptance remain pending.

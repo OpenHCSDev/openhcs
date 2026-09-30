@@ -377,12 +377,33 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             subdirectory
         ).entries.items()
     }
+    from openhcs.core.plate_image_inventory import (
+        PlateFileRecord,
+        PlateResultFileInventory,
+    )
+    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+
+    result_inventory = PlateResultFileInventory.from_handler_and_configured_output_root(
+        plate_path=metadata_path.parent,
+        metadata_handler=OpenHCSMetadataHandler(context.filemanager),
+        parser=context.microscope_handler.parser,
+        path_config=orchestrator.get_effective_config().path_planning_config,
+    )
+    result_records = {
+        record.relative_path: PlateFileRecord.from_result(record)
+        for record in result_inventory.records
+    }
     for spec in diagnostic_specs:
         (saved_path,) = primary_plan.artifact_analysis_output_dir.glob(
             f"*_{spec.name}_step0.tif"
         )
         relative_path = str(saved_path.relative_to(primary_plan.output_plate_root))
         projection = entries[relative_path]
+        result_record = result_records[relative_path]
+        assert result_record.source_projection == projection
+        assert result_record.require_image_source_ref() == projection.ref
+        for component, value in projection.address.component_values().items():
+            assert str(result_record.metadata[component.value]) == value
         assert projection.source_alias == spec.name
         assert projection.artifact_kind is ImageArtifactType
         assert projection.image_metadata is not None

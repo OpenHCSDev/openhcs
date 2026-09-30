@@ -1108,15 +1108,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
         if not materialization.has_persistent_target:
             return None
         output_dir = plan.artifact_analysis_output_dir
-        plate_root = (
-            plan.materialized_output.plate_root
-            if plan.materialized_output is not None
-            else plan.output_plate_root
-        )
-        if plate_root is None:
-            raise ValueError(
-                "Persistent image artifacts require a compiled output plate root."
-            )
+        plate_root = plan.artifact_output_plate_root
         return cls(
             output_dir=output_dir,
             backend=materialization.require_persistent_backend(),
