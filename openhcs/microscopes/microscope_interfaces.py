@@ -18,6 +18,11 @@ from openhcs.core.components.parser_metaprogramming import (
     GenericFilenameParser,
 )
 from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.source_metadata import (
+    SourceMetadataValue,
+    SourceVoxelSpacing,
+    source_metadata_dict,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.viewer_transport import (
     ViewerFilenameParserABC,
@@ -496,6 +501,37 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         view without supplying the physical scalar artifact.
         """
         return self.get_pixel_size(plate_path)
+
+    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+        """Project this acquisition's physical calibration into source coordinates."""
+
+        pixel_size = self.get_pixel_size(plate_path)
+        return SourceVoxelSpacing((pixel_size, pixel_size))
+
+    def source_metadata_by_path(
+        self,
+        plate_path: Union[str, Path],
+        parser: FilenameParser,
+        source_paths: Iterable[str],
+    ) -> dict[str, dict[str, SourceMetadataValue]]:
+        """Publish parsed source identities with acquisition-owned calibration.
+
+        The filename parser owns component interpretation; this metadata owner
+        supplies physical coordinates. Explicit source spacing remains authoritative.
+        """
+
+        acquisition_spacing = self.source_voxel_spacing(plate_path)
+        sources = {}
+        for path in source_paths:
+            parsed = parser.parse_filename(Path(path).name)
+            if parsed is None:
+                continue
+            values = source_metadata_dict(parsed.wire_mapping())
+            SourceVoxelSpacing.from_source_metadata(values).with_missing_from(
+                acquisition_spacing
+            ).merge_into(values, path=path)
+            sources[path] = values
+        return sources
 
     @abstractmethod
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
