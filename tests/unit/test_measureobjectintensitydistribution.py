@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -896,3 +898,199 @@ def test_numba_self_centered_radial_distribution_preserves_native_zero_intensity
         accelerated.object_has_pixels,
         native.object_has_pixels,
     )
+
+
+@pytest.mark.parametrize(
+    "dtype", [np.uint8, np.uint16, np.int16, np.float32, np.float64]
+)
+@pytest.mark.parametrize("wants_scaled", [True, False])
+@pytest.mark.parametrize("image_kind", ["varying", "constant", "zero"])
+def test_default_radial_scalar_and_batch_preserve_native_dtype_measurements(
+    dtype, wants_scaled, image_kind
+):
+    labels = np.zeros((12, 14), dtype=np.int32)
+    labels[1:10, 1:6] = 1
+    labels[3:11, 8:13] = 3  # Keep the missing object row in the dense extent.
+    image = np.arange(labels.size, dtype=dtype).reshape(labels.shape)
+    if image_kind == "constant":
+        image.fill(3)
+    elif image_kind == "zero":
+        image.fill(0)
+    if dtype == np.int16 and image_kind == "varying":
+        image -= 80
+    native_backend = NativeNumpyRadialDistributionBackendStrategy()
+    backend = radial_distribution_backend()
+    geometry = native_backend.label_geometry(labels)
+    parameters = dict(bin_count=4, wants_scaled=wants_scaled, maximum_radius=3)
+    with np.errstate(all="ignore"):
+        expected = native_backend.measure_self_centered_with_geometry(
+            image, labels, geometry, **parameters
+        )
+        scalar = backend.measure_self_centered_with_geometry(
+            image, labels, geometry, **parameters
+        )
+        batched = backend.measure_batch_self_centered_with_geometry(
+            (image, image[:, ::-1]), labels, geometry, **parameters
+        )
+        reversed_expected = native_backend.measure_self_centered_with_geometry(
+            image[:, ::-1], labels, geometry, **parameters
+        )
+    for actual, reference in (
+        (scalar, expected),
+        (batched[0], expected),
+        (batched[1], reversed_expected),
+    ):
+        assert actual.n_bins == reference.n_bins
+        assert np.issubdtype(actual.fraction_at_distance.dtype, np.floating)
+        np.testing.assert_array_equal(
+            actual.object_has_pixels, reference.object_has_pixels
+        )
+        for field in (
+            "fraction_at_distance",
+            "mean_pixel_fraction",
+            "radial_cv_by_bin",
+        ):
+            np.testing.assert_allclose(
+                getattr(actual, field),
+                getattr(reference, field),
+                rtol=1e-6,
+                atol=1e-6,
+                equal_nan=True,
+            )
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize(
+    "image_kind", ["near_constant", "nan", "infinity", "zero_mean"]
+)
+def test_default_radial_cv_preserves_native_centered_variance_and_undefined_values(
+    dtype, image_kind
+):
+    labels = np.ones((8, 8), dtype=np.int32)
+    image = np.ones(labels.shape, dtype=dtype)
+    if image_kind == "near_constant":
+        image[::2] += 1e-5 if dtype == np.float32 else 1e-12
+    elif image_kind == "nan":
+        image[2, 2] = np.nan
+    elif image_kind == "infinity":
+        image[2, 2] = np.inf
+    else:
+        image[::2] = -1
+    native_backend = NativeNumpyRadialDistributionBackendStrategy()
+    backend = radial_distribution_backend()
+    geometry = native_backend.label_geometry(labels)
+    parameters = dict(bin_count=4, wants_scaled=True, maximum_radius=100)
+    with np.errstate(all="ignore"):
+        expected = native_backend.measure_self_centered_with_geometry(
+            image, labels, geometry, **parameters
+        )
+        scalar = backend.measure_self_centered_with_geometry(
+            image, labels, geometry, **parameters
+        )
+        batched = backend.measure_batch_self_centered_with_geometry(
+            (image,), labels, geometry, **parameters
+        )[0]
+    for actual in (scalar, batched):
+        for field in (
+            "fraction_at_distance",
+            "mean_pixel_fraction",
+            "radial_cv_by_bin",
+        ):
+            np.testing.assert_allclose(
+                getattr(actual, field),
+                getattr(expected, field),
+                rtol=1e-6,
+                atol=1e-6,
+                equal_nan=True,
+            )
+
+
+def _radial_request_for_boundary_tests():
+    image = np.ones((4, 4), dtype=np.float32)
+    labels = np.ones(image.shape, dtype=np.int32)
+    return RadialDistributionMeasureRequest(
+        image=image,
+        labels=labels,
+        d_to_edge=np.ones(image.shape, dtype=np.float64),
+        d_from_center=np.ones(image.shape, dtype=np.float64),
+        center_labels=labels.copy(),
+        centers_i=np.array([1.5]),
+        centers_j=np.array([1.5]),
+        bin_count=4,
+        wants_scaled=True,
+        maximum_radius=100,
+    )
+
+
+@pytest.mark.parametrize(
+    "backend_type",
+    (
+        NativeNumpyRadialDistributionBackendStrategy,
+        NumbaNumpyRadialDistributionBackendStrategy,
+    ),
+)
+@pytest.mark.parametrize("field", ("d_to_edge", "d_from_center", "center_labels"))
+def test_radial_backend_rejects_misaligned_geometry(backend_type, field):
+    request = _radial_request_for_boundary_tests()
+    request = replace(request, **{field: getattr(request, field)[:1]})
+    with pytest.raises(ValueError, match="geometry must match"):
+        backend_type().measure(request)
+
+
+@pytest.mark.parametrize(
+    "backend_type",
+    (
+        NativeNumpyRadialDistributionBackendStrategy,
+        NumbaNumpyRadialDistributionBackendStrategy,
+    ),
+)
+@pytest.mark.parametrize("centers_j", (np.zeros(2), np.zeros((1, 1))))
+def test_radial_backend_rejects_incompatible_center_vectors(backend_type, centers_j):
+    request = replace(_radial_request_for_boundary_tests(), centers_j=centers_j)
+    with pytest.raises(ValueError, match="equal-length vectors"):
+        backend_type().measure(request)
+
+
+@pytest.mark.parametrize(
+    "backend_type",
+    (
+        NativeNumpyRadialDistributionBackendStrategy,
+        NumbaNumpyRadialDistributionBackendStrategy,
+    ),
+)
+def test_radial_backend_rejects_undeclared_center_ids(backend_type):
+    request = _radial_request_for_boundary_tests()
+    request = replace(
+        request, center_labels=np.full(request.image.shape, 2, dtype=np.int32)
+    )
+    with pytest.raises(ValueError, match="exceed the declared center"):
+        backend_type().measure(request)
+
+
+@pytest.mark.parametrize(
+    "backend_type",
+    (
+        NativeNumpyRadialDistributionBackendStrategy,
+        NumbaNumpyRadialDistributionBackendStrategy,
+    ),
+)
+def test_radial_batch_validates_every_image_against_shared_geometry(backend_type):
+    request = _radial_request_for_boundary_tests()
+    geometry = mid.RadialLabelGeometry(
+        request.d_to_edge,
+        mid.RadialCenterDistanceFields(
+            request.d_from_center,
+            request.center_labels,
+            request.centers_i,
+            request.centers_j,
+        ),
+    )
+    with pytest.raises(ValueError, match="labels must match"):
+        backend_type().measure_batch_self_centered_with_geometry(
+            (request.image, request.image[:1]),
+            request.labels,
+            geometry,
+            bin_count=request.bin_count,
+            wants_scaled=request.wants_scaled,
+            maximum_radius=request.maximum_radius,
+        )
