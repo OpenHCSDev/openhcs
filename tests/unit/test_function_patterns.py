@@ -13,6 +13,7 @@ from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactType,
+    ArtifactMeasurementSubjectRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
     ObjectLabelsArtifactType,
@@ -50,6 +51,7 @@ from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
     normalize_pattern,
 )
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
@@ -683,8 +685,9 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
     measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=tuple(
-            GroupLineageSourceRelation(source=source.ref()) for source in (blue, green)
+        relations=(
+            ArtifactMeasurementSubjectRelation(),
+            *(GroupLineageSourceRelation(source=source.ref()) for source in (blue, green)),
         ),
     )
 
@@ -693,7 +696,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_channels(image, *, runtime):
         del runtime
@@ -757,11 +760,14 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
 
 def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() -> None:
     source = ArtifactSpec.input("OrigBlue", ImageArtifactType)
-    aggregate = ArtifactSpec.output("Aggregate", MeasurementsArtifactType)
+    aggregate = ArtifactSpec.output(
+        "Aggregate", MeasurementsArtifactType,
+        relations=(ArtifactMeasurementSubjectRelation(),),
+    )
     scoped = ArtifactSpec.output(
         "BlueMeasurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(source=source.ref()),),
+        relations=(GroupLineageSourceRelation(source=source.ref()), ArtifactMeasurementSubjectRelation()),
     )
 
     @artifact_inputs(source)
@@ -769,7 +775,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_with_aggregate(image, *, runtime):
         del runtime
@@ -831,12 +837,12 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
     blue_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(source=blue.ref()),),
+        relations=(GroupLineageSourceRelation(source=blue.ref()), ArtifactMeasurementSubjectRelation()),
     )
     green_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(source=green.ref()),),
+        relations=(GroupLineageSourceRelation(source=green.ref()), ArtifactMeasurementSubjectRelation()),
     )
 
     @artifact_inputs(blue)
@@ -844,7 +850,7 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_blue(image, *, runtime):
         del runtime
@@ -855,7 +861,7 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_green(image, *, runtime):
         del runtime
@@ -1162,13 +1168,16 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
 
 def test_adapter_managed_outputs_use_exact_compiled_output_plans():
     cells_spec = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
-    measurements_spec = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+    measurements_spec = ArtifactSpec.output(
+        "Measurements", MeasurementsArtifactType,
+        relations=(ArtifactMeasurementSubjectRelation(),),
+    )
 
     @artifact_outputs(cells_spec, measurements_spec)
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def runtime_recorded_outputs(image, *, runtime):
         return image
@@ -1205,7 +1214,7 @@ def test_adapter_managed_outputs_use_exact_compiled_output_plans():
 
     adapter = invocation.contract.runtime_adapter
     assert adapter is not None
-    assert adapter.manages_artifact_outputs
+    assert adapter.artifact_output_policy.records_outputs
     assert invocation.artifact_output_plans == (cells_output, measurement_output)
     assert selected_outputs == {
         cells_output.ref(): cells_output,

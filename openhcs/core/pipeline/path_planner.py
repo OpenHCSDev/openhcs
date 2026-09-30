@@ -1250,7 +1250,6 @@ class PathPlannerArtifactStage:
                     ArtifactInputPlan,
                     artifact_inputs,
                 )
-                invocation.contract.validate_artifact_input_parameter_bindings()
                 input_edge_keys = InvocationArtifactInputProjectionKey.for_input_count(
                     invocation.key,
                     len(invocation.contract.artifact_inputs),

@@ -10,8 +10,10 @@ from typing import cast
 import numpy as np
 
 from openhcs.constants.constants import Backend
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
+    ArtifactSpec,
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -69,6 +71,17 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
 RelationshipIdVector = np.ndarray | Sequence[int]
 
 
+class CellProfilerRecordedArtifactOutputPolicy(AdapterRecordedArtifactOutputPolicy):
+    """CP recorders supply per-row subjects for heterogeneous measurement tables."""
+
+    @classmethod
+    def validate_measurement_subject(cls, spec: ArtifactSpec) -> None:
+        # Common relation invariants are checked by the artifact kind. CP's
+        # module owner assembles heterogeneous rows and validates their subjects
+        # through its row policy and add_measurements at recording time.
+        spec.require_measurement_feature_owner()
+
+
 @dataclass(slots=True)
 class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
     """CellProfiler-like API backed by typed OpenHCS runtime state.
@@ -98,7 +111,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             parameter_name=cls.require_parameter_name(),
             factory=cellprofiler_runtime_adapter_factory,
             manages_artifact_inputs=True,
-            manages_artifact_outputs=True,
+            artifact_output_policy=CellProfilerRecordedArtifactOutputPolicy,
             runtime_callable_factory=cellprofiler_runtime_callable_factory,
         )
 
@@ -135,11 +148,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 f"Compiled artifact input {name!r} has type "
                 f"{storage_plan.artifact_type.value}, not {artifact_type.value}."
             )
-        return RuntimeArtifactInput(
-            edge_plan=edge_plan,
-            axis_scope=self.request.axis_scope,
-            backend=self.backend,
-        )
+        return self.request.runtime_artifact_input(edge_plan, backend=self.backend)
 
     def artifact_input_records(
         self,

@@ -1,0 +1,247 @@
+{
+  "modes": {
+    "1w": {
+      "control": {
+        "median": {
+          "compile": 3.1729878187179565,
+          "execution": 14.658194541931152,
+          "total": 20.61841557570733,
+          "warming_seconds": 4.247051399899647
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 4.273309373762459,
+            "compile": 3.1749558448791504,
+            "execution": 15.122684240341187,
+            "total": 21.147580006625503,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-control-main-1w-r1-20260930"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 4.220793426036835,
+            "compile": 3.1710197925567627,
+            "execution": 14.193704843521118,
+            "total": 20.08925114478916,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-control-main-1w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.04373586177825928,
+          "IdentifyObjectsInGrid": 0.279330849647522,
+          "MeasureObjectIntensity": 1.3133723735809326,
+          "FilterObjects": 0.7386995553970337,
+          "MaskImage": 0.031667351722717285,
+          "Smooth": 0.13473951816558838,
+          "EnhanceEdges": 0.04153871536254883,
+          "Closing": 0.4719209671020508,
+          "IdentifyPrimaryObjects": 0.7979185581207275,
+          "MeasureObjectSizeShape": 0.699219822883606,
+          "ExpandOrShrinkObjects": 0.4504842758178711,
+          "RelateObjects": 0.0444488525390625,
+          "OverlayOutlines": 0.2112053632736206,
+          "MeasureGranularity": 4.25203549861908,
+          "MeasureTexture": 0.8290523290634155,
+          "MeasureObjectIntensityDistribution": 2.436956524848938,
+          "ExportToSpreadsheet": 1.4640589952468872
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 3.176267623901367,
+          "execution": 13.348194479942322,
+          "total": 19.217691231984645,
+          "warming_seconds": 4.270719605498016
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 4.2702068029902875,
+            "compile": 3.1721413135528564,
+            "execution": 13.226338624954224,
+            "total": 19.056465027853847,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-candidate-main-1w-r1-20260930"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 4.271232408005744,
+            "compile": 3.180393934249878,
+            "execution": 13.47005033493042,
+            "total": 19.378917436115444,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-candidate-main-1w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.04403126239776611,
+          "IdentifyObjectsInGrid": 0.2740638256072998,
+          "MeasureObjectIntensity": 1.2533769607543945,
+          "FilterObjects": 0.7283607721328735,
+          "MaskImage": 0.031737685203552246,
+          "Smooth": 0.13366901874542236,
+          "EnhanceEdges": 0.041947007179260254,
+          "Closing": 0.4740753173828125,
+          "IdentifyPrimaryObjects": 0.786880612373352,
+          "MeasureObjectSizeShape": 0.6908732652664185,
+          "ExpandOrShrinkObjects": 0.44933807849884033,
+          "RelateObjects": 0.04328298568725586,
+          "OverlayOutlines": 0.2093421220779419,
+          "MeasureGranularity": 3.0555654764175415,
+          "MeasureTexture": 0.7966787815093994,
+          "MeasureObjectIntensityDistribution": 2.461549758911133,
+          "ExportToSpreadsheet": 1.46406888961792
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 1.3100000619888306,
+          "percent": 8.936981005685595
+        },
+        "total": {
+          "seconds": 1.4007243437226862,
+          "percent": 6.793559566104701
+        }
+      },
+      "native_execution_ratio": 4.93878425453424
+    },
+    "16w": {
+      "control": {
+        "median": {
+          "compile": 10.203732132911682,
+          "execution": 82.3656941652298,
+          "total": 95.53237865050323,
+          "warming_seconds": 4.24681255617179
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 4.2719087223522365,
+            "compile": 10.221742630004883,
+            "execution": 81.80845522880554,
+            "total": 95.0487328520976,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-control-main-16w-r1-20260930"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 4.221716389991343,
+            "compile": 10.185721635818481,
+            "execution": 82.92293310165405,
+            "total": 96.01602444890887,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-control-main-16w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.0418968200683594,
+          "IdentifyObjectsInGrid": 10.325844407081604,
+          "MeasureObjectIntensity": 26.010854840278625,
+          "FilterObjects": 26.768836975097656,
+          "MaskImage": 1.0132720470428467,
+          "Smooth": 3.760213613510132,
+          "EnhanceEdges": 1.2064422369003296,
+          "Closing": 9.314061880111694,
+          "IdentifyPrimaryObjects": 27.255749821662903,
+          "MeasureObjectSizeShape": 15.535412669181824,
+          "ExpandOrShrinkObjects": 18.476860404014587,
+          "RelateObjects": 1.1317481994628906,
+          "OverlayOutlines": 9.527266144752502,
+          "MeasureGranularity": 29.830827355384827,
+          "MeasureTexture": 14.358763337135315,
+          "MeasureObjectIntensityDistribution": 18.4710693359375,
+          "ExportToSpreadsheet": 24.195916414260864
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 10.242069005966187,
+          "execution": 81.81143260002136,
+          "total": 95.12323435605504,
+          "warming_seconds": 4.672953375149518
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 4.8225063141435385,
+            "compile": 10.323435544967651,
+            "execution": 82.33573579788208,
+            "total": 95.6846810770221,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-candidate-main-16w-r1-20260930"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 4.523400436155498,
+            "compile": 10.160702466964722,
+            "execution": 81.28712940216064,
+            "total": 94.56178763508797,
+            "status": "success",
+            "new_or_modified_granularity_cache_files": {},
+            "cache_file_count": 42,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-granularity-native-candidate-main-16w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.0338358879089355,
+          "IdentifyObjectsInGrid": 10.043143630027771,
+          "MeasureObjectIntensity": 25.547236919403076,
+          "FilterObjects": 28.303051948547363,
+          "MaskImage": 1.1399648189544678,
+          "Smooth": 4.279767870903015,
+          "EnhanceEdges": 1.4332592487335205,
+          "Closing": 9.334523320198059,
+          "IdentifyPrimaryObjects": 27.958191394805908,
+          "MeasureObjectSizeShape": 15.756672382354736,
+          "ExpandOrShrinkObjects": 18.88354730606079,
+          "RelateObjects": 1.1558619737625122,
+          "OverlayOutlines": 9.662855744361877,
+          "MeasureGranularity": 22.691042304039,
+          "MeasureTexture": 14.132394075393677,
+          "MeasureObjectIntensityDistribution": 19.856740593910217,
+          "ExportToSpreadsheet": 24.22780692577362
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 0.5542615652084351,
+          "percent": 0.672927692561609
+        },
+        "total": {
+          "seconds": 0.4091442944481969,
+          "percent": 0.4282781400691493
+        }
+      },
+      "native_execution_ratio": 4.45206845668786
+    }
+  },
+  "native_reference": {
+    "1w_execution_seconds": 65.923852724,
+    "16w_execution_seconds": 364.230098475,
+    "scope": "Previously completed physical CP 4.2.8.1 analysis; startup, full warmup and final shutdown excluded. Original 16w controller exit unobserved."
+  }
+}
