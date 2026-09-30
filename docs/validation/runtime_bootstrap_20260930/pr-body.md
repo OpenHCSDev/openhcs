@@ -12,13 +12,16 @@ exclusive startup/process identity, and [metaclass-registry1](https://github.com
 non-creating cache path projection at448cdf0. Exact gitlinks are committed.
 Parent remains integration/install/live owner; frozen source/skill/runtime untouched.
 
-**Current paired-pin checkpoint:** based on normally integrated main65, PR256
-now records exact published nativePR9 **2b3d821f1394b7a172f6276fe7e302f33d69be96**
-(implementation4434b11, includes mergedACK3374), plus ArrayBridge409. Pin/source
-test commitbd070a329: **181 current-pair source casesPASS5.44s**, zero skips/
-deselections; process6.24s/263292KiB/exit0. No new production edit or native run.
-The earlier recorded28d9ed6 mismatch is resolved; parent installed native0f9
-remains untouched. Ready for parent source integration review, not live activation.
+**Current paired-pin checkpoint:** normally integrated OpenHCS maincad1ed2bd and
+native main2aa6d21c (viewer7, includes ACK3374). Records published nativePR9
+**67d41b6**, production84b93a0, plus ArrayBridge409. Tests at source260e5941b:
+**187 source casesPASS5.51s**, zero skips/deselections; process6.41s/265012KiB/exit0.
+Includes original181 plus6 merged viewer-state controls. One corrected own stale
+docstring: reservation publisher accepts provisional invoker OR child; no behavior
+change. Native ratchet currentmain2aa->84b **PASS188 metrics/no positive deltas**,
+client-3,4.48s/48772KiB/exit0. No native run/install/ABI copy. Parent installed
+viewer-live/native2c68 authority remains separate and untouched. Ready for parent
+source integration review, not bootstrap live activation or whole ZIP completion.
 Dirac shared TransportEndpoint acknowledgement remains unverified; valid-volume
 and installed/native acceptance still pending, resource helper WARNING/exit2.
 [Exact pair, current tests, catalog owner review and gates](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/paired-pin-handoff.md).

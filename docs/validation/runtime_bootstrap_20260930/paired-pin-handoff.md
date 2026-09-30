@@ -77,3 +77,52 @@ attempts01/02/03 remain terminal partial/failed/stopped evidence, not acceptance
 No attempt04 or uncertain request replay. No issue251/257 closure/global-ready
 claim. After terminal source pytest and empty lsof, removed only2.3MiB generated
 paired-pin-pytest scratch; XML/resources and all original attempt artifacts remain.
+
+## Current native viewer-main pairing and real comment correction
+
+Native normally merged currentmain2aa6d21c000d18bd75647f998794015ba8f54710 at
+6e4242d3. Incoming files viewer_state.py/test_viewer_state.py are disjoint from
+bootstrap; no competing edits to those owners. Exact published native receipt
+head67d41b6 follows production84b93a0; only validation documents/artifacts differ.
+Parent records that published receipt head, not the older2b3 checkpoint.
+OpenHCS normally integrated newly fetched maincad1ed2bd (PR284) before tests;
+no competing processing/kernel changes or adoption of its benchmark evidence.
+
+At source260e5941b, explicit own root+all eight child src paths and existing
+Python3.12 -B/thread1/downloadfalse: **187 source testsPASS5.51s**, process6.41s/
+265012KiB RSS/exit0, zero skips/deselections. Original181 plus6 original merged
+viewer-state controls, controlled visualizers/one short lock-probe thread, no
+native/MCP/JVM/GUI or actual viewer. JUnit viewer-main-source-tests.xml and
+viewer-main-source-resources.txt are retained. Source path resolution remains
+all nine top-level packages under this own tree, not parent's installed viewer.
+
+Original native ratchet2aa6d21c->84b93a0 **PASS188 metrics, zero positive deltas,
+4.48s/48772KiB/exit0**, client GodClassExcess delta-3 only. Native JSON/resources
+published with PR9. This uses the newly merged viewer source as baseline; it
+does NOT waive/reclassify the parent's earlier viewer screening lead, nor certify
+full NRA/R1, global class decomposition or installed/live behavior.
+
+The scoped added-comment review read all newly introduced native bootstrap
+comments/docstrings against their real callers. Found one misleading comment:
+TransportDeclaration.record_startup_owner said spawned-child only, but existing
+reserve_startup_owner first publishes ProcessIdentity.current(), then startup
+publishes the child. Corrected that declaration's single docstring to exact
+invoker-or-child reservation; behavior unchanged. Existing rollback/identity
+tests witness both stages. Retained uncertainty/no-replay/held-inode/deadline
+rationale rather than deleting safety meaning or adding docstring snapshots.
+This is comment drift, not invented semantic factoring. IMPL-13/IDEN-8 still
+apply to the actual canonical identity/reservation owners, not prose volume.
+Scope is these five native changed files, not a whole-tree slop/ZIP audit.
+
+Resource WARNING/exit2, swap14.4GiB/RAM17.4GiB/home20.1GiB: no heavy/native
+allocation, install, ABI copy, extra agent or validation-slot use. After terminal
+pytest and empty lsof removed only2.3MiB rebuildable viewer-main-pytest; XML,
+resources/original attempts retained. Parent's installed viewer-live/native2c68/
+Array409-wheel proof remains separate, not reused as bootstrap acceptance.
+No H002/embedded-source interaction, uncertain replay, attempt04 or S1 resume.
+
+Full archive remains binding/incomplete: merged R0/L0 are not S1-S8 completion.
+Broader archive owner unknown; TransportEndpoint crossing acknowledgement still
+unverified. Parent owns PR159 regression isolation/integration/live review.
+Own current pair is ready for parent source integration review; valid-volume
+native/installed bootstrap acceptance remains pending authorized resource slot.
