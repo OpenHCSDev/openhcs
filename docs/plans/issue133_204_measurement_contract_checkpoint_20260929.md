@@ -3,10 +3,10 @@
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
 Base: `openhcsdev/main` at `c86f562e1` (merged disjoint PR260), integrated normally
-through `b7e6a2fbc` after implementation/acceptance commit `4f4332368`. All runtime
-results below were obtained before that last merge against `32d070c26` (PR255),
-integrated through `85d8b2ae7`; post-merge AST and diff checks pass, with no new
-native trial during the parent's slot. The preceding checkpoint merged
+through `b7e6a2fbc` after implementation/acceptance commit `4f4332368`. The initial
+278-test runtime checkpoint used `32d070c26` (PR255), integrated through
+`85d8b2ae7`; the refreshed journey below also verifies current main260 and the
+latest owner cutover. The preceding checkpoint merged
 `589c33a12` through `684e4bbd3`,
 and `de23449a4` through `21c15ad41` before that.
 The output-policy checkpoint used `283b21275`.
@@ -18,7 +18,104 @@ Closes #133. References #204; paired-channel headless execution now passes, but
 actual GUI/installed acceptance remains open. This is a source-headless verified
 draft, not an installed/live-readiness claim.
 
-## Current-main finite journey: terminal, working checkpoint
+## Latest checkpoint: main260 journey and R0 owner correction
+
+Read the complete new `docs/refactor` rules/index/R0/owner override package in
+Lovelace's existing PR263 worktree and the binding expanded-goal receipt. Existing
+PR205 keeps its scope. No R0/L0/S1-S8 implementation, parent259 method, issue264
+export owner, managed skill or installed source was edited here. Hosted CI is not
+a waiting gate; actual local behavior and enforced integration rules remain.
+
+At published source `9271a55f1` (main260 already normally merged), fresh locked
+admission measured **15.20 GiB RAM / 30.84 GiB disk**, with only authorized
+historical swap warning. All nine package roots and both native extensions
+resolved inside this worktree. Subject variants: **2 passed, 4 deselected**,
+3.60 seconds. The full six-case journey plus runtime/catalog/output-policy and
+module-local CellProfiler controls: **108 passed**, 40.30 seconds. The ten added
+backend controls cover all object-intensity features/row axes, secondary distance
+tie-breaking and replacement-primary topology/relationships. This is focused
+local parity evidence, **not the full native CellProfiler reference corpus**.
+No external dataset/reference acquisition, download or benchmark replay occurred.
+
+The newly applied packaged ratchet exposed a real gap in the earlier focused
+structural claim. Original comparison of main260 to `9271a55f1` returned **1**:
+one foreign absence probe in the CP policy, and class-excess growth of eight lines
+in `CallableContract`, one in `CellProfilerRuntimeAdapter`, and one in
+`RuntimeInputBindingRequest`. The original report is retained; it is not presented
+as a passing check or waived by the earlier index's historical debt total.
+
+Owner correction `5296400d0`:
+
+- `ArtifactSpec.require_measurement_feature_owner()` owns its required row-owner
+  obligation; CP policy calls it, rather than probing another declaration's field.
+  Common kind invariants and legitimate heterogeneous CP recording remain intact.
+- `CallableMetadata` owns policy projection from its existing adapter declaration;
+  `CallableContract` projects that result. Its redundant `artifact_key_specs`
+  override is deleted, using the existing inherited selection unchanged.
+- `RuntimeAdapterRequest.runtime_artifact_input()` supplies its own exact compiled
+  scope/source context. Both CP consumers call it; both duplicated constructors
+  are deleted. The native loader retains its existing non-adapter construction.
+  No matching roster, alternate store, channel-ignore flag or output exemption
+  was added; input management and output recording are still independent.
+
+These are IDEN-1/7, BOUND-2, IMPL-4/5/12 and TIME-1 owner/factoring corrections,
+not blank-line/class relocation to evade a size check. Source controls after the
+cutover: **159 passed**, 7.86 seconds. Strengthened metadata/policy and exact
+request-context identity assertions: **79 passed**, 2.09 seconds. Counts overlap.
+A subsequent ratchet report found only the redundant quoted postponed return
+annotation counted as a string subscript; `20bf7e401` uses the nominal postponed
+annotation directly, without any change to the tool or its rules.
+
+Final unweakened six-case journey at **`20bf7e401`**: **6 passed**, 7.16 seconds,
+test process wall time 12.57 seconds. Admission was **16.08 GiB RAM / 30.95 GiB
+disk**, under nonblocking `validation.lock`, without a new environment or GUI.
+Missing subject fails before callable entry; its subject-only correction executes
+and persists CSV. Exact two-producer selector, both source-document roundtrips,
+same-source/paired execution, actual typed channel scopes and omitted-selector
+fail-closed/single-producer controls all remain enabled. No xfail or deselection.
+
+Packaged ratchet at `20bf7e401` against `c86f562e1`: **exit 0**, 16 changed
+production files, **zero positive deltas**. It ran the existing package directly
+from `/home/ts/wt/comms-owner-startup-sol-20260929/src`, tooling revision
+`dbd0965d06a8d85310c8b34032ac0baf3421c3dd`, using the required interpreter;
+no install, copied script or tool edit. Coverage includes the available type-
+identity, long-chain/term, foreign-probe, codec, string-subscript and class-excess
+measures. This package revision does not include dispatch-arm measures; focused
+source/AST/new-kind caller evidence covers this change, **not a complete NRA R1
+or global semantic proof**. R0 automation/activation remains with Lovelace.
+
+All supervisors/tests **2375676, 2375692, 2375870, 2390917, 2390918, 2398808,
+2398809, 2403863, 2403884** are terminal and absent. No worktree process survives.
+The finite native slot is explicitly returned to the parent. Actual installed
+MCP/GUI verification still belongs to the integration owner; this source-native
+journey does not claim installation, activation, merge or biological acceptance.
+
+Owned receipt/scratch root:
+`/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929/pr205-post-main260-20260930`.
+Logs/reports are retained, including original ratchet failures and final success.
+Verified regeneratable cache/tiny synthetic pytest outputs were removed only after
+all processes terminated. Final evidence SHA256:
+
+- `journey-runtime-catalog-parity.log`:
+  `071260ee6ba492f7a7f61d742c462c8fd89dd5edfd07e3027505b38c773d43b9`.
+- `owner-cutover-six-case-journey.log`:
+  `cb171090de4e4b5fc8c0c33fbb4bd73506e115eff5766bd72ebe463d308928f2`.
+- `packaged-ratchet-final.log`:
+  `2b64440ecc0fc076fa238faf1b76c5e5ed596d6bc22435b132453b50d20f3a3b`.
+
+## Persisted-format declaration (R0 rule 6)
+
+- `PipelineDocument` source: external, unchanged serialization/schema; existing
+  exact selectors and subject relations roundtrip through the original authority.
+- Measurement CSV/images: external, unchanged format; the corrected synthetic
+  declaration persists through the existing materialization owner.
+- Artifact contracts, policies and runtime input projections: internal,
+  process-local state reset at fresh compile/execution; no durable migration,
+  compatibility reader or second format is introduced.
+- Catalog DTO: declaration-derived runtime projection, not a persisted store;
+  the existing selector field now carries its binding-owned required name.
+
+## Earlier finite journey: terminal, working checkpoint
 
 The parent released the finite serial slot after its terminal PR259 attempt.
 Every build/test phase acquired `validation.lock` nonblocking. Raw initial
