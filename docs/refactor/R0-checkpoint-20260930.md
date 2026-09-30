@@ -124,18 +124,19 @@ Small CLI success does not establish this full-context gate's bounded acceptance
 Source read identifies an important boundary: NRA analysis.py:2067 deliberately
 removes focused projection demands when include_semantic_descent_graph is true.
 The R0 consumer currently asks for that full graph to select typed mapping-read
-certificates. Remaining R1 work must use/extend the existing scoped projection
+certificates. Any further R1 performance work must use/extend the existing scoped projection
 owner, not parse finding strings, copy schema heuristics, omit dependency context,
 increase the observation timeout, or report a deadline as zero debt. This concrete
-bounded-entrypoint blocker remains owned by Lovelace; NRA PR12 is the separate
-existing FULL-lifetime repair, not a claimed fix here.
+bounded-entrypoint failure was owned by Lovelace; the later current-main pass is
+recorded below. NRA PR12 is the separate existing FULL-lifetime repair, not a
+claimed fix here.
 
 ## Authenticated reuse follow-up (source only)
 
 SourceRevision still creates two immutable committed snapshots. The consumer now
 passes the SAME original NRA parse/analysis cache directories to both scans,
-instead of segregating them by commit. NRA cache_checkout.py owns relative-root
-admission/rebinding and source/content identities own validity; no new cache,
+instead of segregating them by commit. NRA cache_checkout.py owns analysis-finding
+relative-root admission/rebinding and source/content identities own validity; no new cache,
 source roster, rebase of finding paths, or heuristic was added. The original API
 owns parse-cache enablement. Native cache status/projection counts and split
 preparation/analysis time are emitted as observations, not inferred performance.
@@ -146,9 +147,9 @@ It includes a changed schema causing the same consumer to transition from an
 owned mapping-read bypass to unmodeled_record_shape under shared authenticated
 cache use. Existing constructor descent, stale/missing source, parse/deadline,
 per-file growth, actual CLI and workflow-shell assertions remain intact.
-Ruff and diff checks pass. Cache reuse has NOT yet passed the actual own-PR
-full-context entrypoint; that bounded comparison is the remaining acceptance
-after parent's installed205/264 slot. Both failed originals remain preserved.
+Ruff and diff checks pass. These focused tests do not prove a full-context cache
+speedup. Both failed originals remain preserved; the actual later current-main
+entrypoint result is recorded below.
 
 The packaged scripts ratchet also passes at `dbe8c7749` against integrated main
 `fb5fea4f1`, zero positive deltas; its compressed raw report/resource capture is
@@ -160,5 +161,55 @@ reproducible from committed tests. Original failed receipts are not deleted.
 Existing Official30 numerical comparator is reused unchanged; its PR trigger
 already existed, so this change adds relevance and fail-closed status wiring
 rather than claiming to invent PR parity. No new native/JVM/GUI/installed parity
-run has occurred. Full R0 acceptance and archive L0/S1-S8 remain open; no global
-correctness or live readiness claim.
+run has occurred. Archive L0/S1-S8 remain open; no global correctness or installed
+application readiness claim.
+
+## Actual current-main R1 entrypoint: accepted scoped comparison
+
+Frozen source `98cf5c270078234dc2ef3e68cff84295ac095a0f`, base
+`fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16`, NRA source/pin
+`0844525ecaba93e090a064a4ae4914466b2dae60`. Imports were verified from this
+worktree and the reviewed NRA tree before dispatch. Exact original command:
+
+```sh
+PYTHONPATH=/home/ts/wt/openhcs-refactor-r0-20260930:/home/ts/wt/nra-bounded-full-audit-20260929 \
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+timeout 165s /home/ts/code/projects/openhcs/.venv/bin/python -m scripts.check_refactor_r1 \
+  --base fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16 \
+  --head 98cf5c270078234dc2ef3e68cff84295ac095a0f \
+  --scratch-root /home/ts/.cache/agent-scratch/openhcs-r0-r1-cache-reuse-20260930 \
+  --budget-seconds 160
+```
+
+The nonblocking batch validation lock and 3GiB address-space cap protected this
+one finite run. Start guard: /home29.3GiB, available RAM15.2GiB, only the
+authorized historical-swap warning. Result: **exit0,111.73s wall,261596KiB peak
+RSS**, valid JSON and zero positive R1 growth. NRA reports2980 projections,
+102.199s preparation,5.504s analysis, cache miss. Full original stdout, stderr
+and `/usr/bin/time -v` receipts are committed as
+`evidence/r1-cache-reuse-checkpoint.json`,
+`evidence/r1-cache-reuse-checkpoint-resources.txt` and
+`evidence/r1-cache-reuse-checkpoint-time.txt`.
+
+Coverage is the two selected original detectors plus original schema/descent
+graph across all declared production roots and recorded Git dependency sources,
+reporting only `scripts/check_refactor_r1.py`. That file is new and absent from
+the base, so the base has no report targets. The head performs the full declared
+context analysis. This is a passing actual own-PR scoped gate, **not** a passing
+85-detector/global FULL audit or a two-scan cache speedup benchmark. Sharing cache
+directories alone does not prove parse/projection reuse: NRA's
+CollectedFamilyCacheIdentity still includes an absolute source path. A future
+reuse extension belongs to that NRA owner, not consumer path rewriting or a
+second cache. No timeout increase or production-context exclusion occurred.
+
+Session76254 is terminal; scanner2491299, timeout2491294, time2491287 and
+flock2491277 are absent. The lock was independently acquired nonblocking and
+released after completion; the slot returns to parent262 acceptance. Temporary
+snapshots/caches were removed by their owner, leaving an empty owned scratch
+parent. End guard: /home29.1GiB, RAM16.0GiB, swap-only warning. No MCP, native
+execution server, JVM, GUI, install or branch-protection mutation occurred.
+
+R0 automation/local entrypoint evidence is now available for review and normal
+integration without hosted waiting. Hosted execution, required-check activation
+(explicitly forbidden by the current override), installed numerical parity and
+the rest of the archive are not inferred from this result.
