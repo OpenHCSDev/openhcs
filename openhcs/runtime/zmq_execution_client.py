@@ -45,7 +45,7 @@ from zmqruntime.startup import (
     EndpointStartupStatusCallback,
     EndpointStartupStatusMonitor,
 )
-from zmqruntime.transport import wait_for_endpoint_ready
+from zmqruntime.transport import TransportEndpoint, wait_for_endpoint_ready
 
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -98,6 +98,36 @@ class ExecutionRuntimeLaunchPlan:
     storage_dir: Path
     registry_cache_dir: Path
     transport_write_paths: tuple[Path, ...]
+
+    @classmethod
+    def resolve(
+        cls, endpoint: TransportEndpoint, config: OpenHCSZMQConfig
+    ) -> ExecutionRuntimeLaunchPlan:
+        """Project existing destination owners without writing or warming."""
+        from metaclass_registry.cache import get_cache_file_path
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        log_file = get_openhcs_log_dir(create=False) / (
+            f"openhcs_zmq_server_port_{endpoint.port}_{time.time_ns()}.log"
+        )
+        declaration = endpoint.transport_mode.declaration
+        ports = endpoint.port_pair(config).ports
+        sockets = tuple(
+            path
+            for port in ports
+            if (path := declaration.socket_path(port, config)) is not None
+        )
+        return cls(
+            runtime_dir=get_openhcs_data_dir(create=False),
+            log_file=log_file,
+            startup_status_file=log_file.with_suffix(".startup.jsonl"),
+            storage_dir=CustomFunctionManager.default_storage_directory(),
+            registry_cache_dir=get_cache_file_path("", create=False),
+            transport_write_paths=(
+                *(declaration.startup_lock_path(port, config) for port in ports),
+                *sockets,
+            ),
+        )
 
     def writable_paths(self) -> tuple[Path, ...]:
         return (
@@ -1188,32 +1218,9 @@ class ZMQExecutionClient(
 
     def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
         """Resolve owner defaults without creating directories or warming."""
-        from metaclass_registry.cache import get_cache_file_path
-        from openhcs.processing.custom_functions.manager import CustomFunctionManager
-
         if self._runtime_launch_plan is None:
-            log_file = get_openhcs_log_dir(create=False) / (
-                f"openhcs_zmq_server_port_{self.port}_{time.time_ns()}.log"
-            )
-            declaration = self.transport_mode.declaration
-            sockets = tuple(
-                path
-                for port in self.endpoint.port_pair(self.config).ports
-                if (path := declaration.socket_path(port, self.config)) is not None
-            )
-            self._runtime_launch_plan = ExecutionRuntimeLaunchPlan(
-                runtime_dir=get_openhcs_data_dir(create=False),
-                log_file=log_file,
-                startup_status_file=log_file.with_suffix(".startup.jsonl"),
-                storage_dir=CustomFunctionManager.default_storage_directory(),
-                registry_cache_dir=get_cache_file_path("", create=False),
-                transport_write_paths=(
-                    *(
-                        declaration.startup_lock_path(port, self.config)
-                        for port in self.endpoint.port_pair(self.config).ports
-                    ),
-                    *sockets,
-                ),
+            self._runtime_launch_plan = ExecutionRuntimeLaunchPlan.resolve(
+                self.endpoint, self.config
             )
         return self._runtime_launch_plan
 

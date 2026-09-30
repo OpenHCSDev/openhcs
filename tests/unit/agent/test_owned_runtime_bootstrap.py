@@ -20,7 +20,11 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.runtime_server_service import RuntimeServerService
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.runtime.zmq_execution_client import (
+    ExecutionRuntimeLaunchPlan,
+    ZMQExecutionClient,
+)
 from zmqruntime.client import (
     EndpointProcess,
     EndpointShutdownMode,
@@ -62,6 +66,54 @@ def setup(tmp_path, monkeypatch):
         TransportMode.TCP.declaration, "data_control_pair_is_available", lambda *_: True
     )
     return RuntimeServerService(path_policy=policy), request, spawn
+
+
+@pytest.mark.parametrize("mode", [TransportMode.TCP, TransportMode.IPC])
+def test_launch_plan_projects_native_owners_without_materialization(
+    setup, tmp_path, mode
+):
+    from metaclass_registry.cache import get_cache_file_path
+    from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+    from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+    _, _, spawn = setup
+    config = OpenHCSZMQConfig(
+        app_name="bootstrap-projection-test",
+        control_port_offset=1700,
+        ipc_socket_dir="selected-ipc",
+        ipc_socket_prefix="selected-prefix",
+        transport_mode=mode,
+    )
+    endpoint = config.client_endpoint(5914)
+    plan = ExecutionRuntimeLaunchPlan.resolve(endpoint, config)
+    declaration = mode.declaration
+    ports = endpoint.port_pair(config).ports
+    assert plan.transport_write_paths == (
+        *(declaration.startup_lock_path(port, config) for port in ports),
+        *(
+            path
+            for port in ports
+            if (path := declaration.socket_path(port, config)) is not None
+        ),
+    )
+    assert plan.runtime_dir == get_openhcs_data_dir(create=False)
+    assert plan.log_file.parent == get_openhcs_log_dir(create=False)
+    assert plan.startup_status_file == plan.log_file.with_suffix(".startup.jsonl")
+    assert plan.storage_dir == CustomFunctionManager.default_storage_directory()
+    assert plan.registry_cache_dir == get_cache_file_path("", create=False)
+    assert not tuple(tmp_path.iterdir())
+    spawn.assert_not_called()
+
+
+def test_client_retains_same_admitted_launch_plan(setup, monkeypatch):
+    _, request, spawn = setup
+    client = request.connection.execution_client(OpenHCSZMQConfig())
+    resolve = Mock(wraps=ExecutionRuntimeLaunchPlan.resolve)
+    monkeypatch.setattr(ExecutionRuntimeLaunchPlan, "resolve", resolve)
+    plan = client.runtime_launch_plan()
+    assert client.runtime_launch_plan() is plan
+    resolve.assert_called_once_with(client.endpoint, client.config)
+    spawn.assert_not_called()
 
 
 def test_startup_returns_typed_native_handle_without_catalogue_or_wait(
