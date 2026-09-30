@@ -1,0 +1,91 @@
+{
+  "status": "SOURCE_CHECKPOINT_NOT_NATIVE_ACCEPTED",
+  "base_commit": "d563e2749d9784cee84809193167bd83d14b2baa",
+  "implementation_owner": "Socrates PR262 issues257+264",
+  "integration_and_native_acceptance_owner": "parent",
+  "neighboring_owners": {
+    "issue265": "Zeno: path_planner main-flow/lineage arguments",
+    "R0": "Lovelace PR263"
+  },
+  "original_native_failure": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/source-live-publication-262-20260930/journey.json",
+    "sha256": "78dd804803d6da58856d180a6baed50d2c3e50b4ecbf68f9a76553df7f605745",
+    "execution_id": "2f15f508-d405-48f1-9ce3-35ae1ae314e1",
+    "elapsed_seconds": 114.77,
+    "terminal_status": "FAIL",
+    "first_step": "partial main/checkpoint TIFF + CSV + ROI ZIP",
+    "second_step": "issue265 lineage edge, separately owned",
+    "replayed": false
+  },
+  "product_delta": {
+    "added_lines": 7,
+    "deleted_lines": 20,
+    "composer": "Delete invented extension derived from all Path.suffixes; preserve declared metadata",
+    "materializer": "SourceImageIdentity.filename_extension, then existing with_parsed_path_components(self.parser) for absent fact",
+    "strict_guards_unchanged": true,
+    "new_parser_or_registry": false
+  },
+  "sha256": {
+    "openhcs/core/runtime_image_values.py": "c91c6dde42d1dfdb345ee384ff109898e7dd21b4f3f746954cc11dd2d891b72f",
+    "openhcs/processing/materialization/core.py": "47ec6f647adffbf0c9dbde66d7c10633bc8fd8c98c8e615da74503cba2a1b40b",
+    "tests/unit/test_materialization_source_extension.py": "199b3e793f6cbafec7f4dd732d356c6705b91bed18f27761e75c6d5392efa3fc",
+    "docs/validation/issue257-source-receipt.json": "047c384d28f4e74d69341876401175c4dc0a54f8ddc9717e1f7acb79d6585ef5",
+    "tools/reproduce_issue257_filename_identity.py": "43143a3495fe98b43d5e212ad3d6b80a65fa1ed1b4803fab87f693c79306163a"
+  },
+  "red": {
+    "failed": 6,
+    "passed": 4,
+    "deselected": 13,
+    "fixture_correction": "Four initial fixture-only plane-axis errors corrected to for_leading_source_plane(0), runtime guard unchanged"
+  },
+  "green": {
+    "passed": 112,
+    "groups": [
+      {
+        "scope": "provenance/persistence/257/264",
+        "exit_code": 0,
+        "output": "...............................................                          [100%]\n=============================== warnings summary ===============================\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n47 passed, 1 deselected, 2 warnings in 1.94s\n"
+      },
+      {
+        "scope": "image/ROI",
+        "exit_code": 0,
+        "output": "......                                                                   [100%]\n=============================== warnings summary ===============================\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n6 passed, 50 deselected, 2 warnings in 2.29s\n"
+      },
+      {
+        "scope": "runtime identity/stack",
+        "exit_code": 0,
+        "output": "................                                                         [100%]\n=============================== warnings summary ===============================\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 76 deselected, 2 warnings in 2.14s\n"
+      },
+      {
+        "scope": "produced inventory/projection",
+        "exit_code": 0,
+        "output": "...........................................                              [100%]\n=============================== warnings summary ===============================\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441\n  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n43 passed, 31 deselected, 2 warnings in 3.13s\n"
+      }
+    ],
+    "final_qualifier_alignment_recheck": {
+      "passed": 32,
+      "seconds": 1.67
+    }
+  },
+  "bounds": {
+    "python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "cpu_threads": 1,
+    "shell_timeout_seconds": 55,
+    "pytest": "--noconftest -p no:cacheprovider -q --tb=short",
+    "plugin_autoload": false,
+    "spawned_process_test_excluded": true,
+    "abi_collection_import": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/core/_tabular_native.abi3.so",
+    "native_server_or_jvm_or_mcp_or_gui": false,
+    "build_install_download": false,
+    "full_nra_or_ratchet_scan": false
+  },
+  "pending_acceptance": [
+    "fresh parent native chained control after265",
+    "exact marker-once filenames",
+    "CSV typed address",
+    "every ZIP exactly one ROI",
+    "disk projection full TIFF coverage with extension/address",
+    "typed MCP inventory full result readback"
+  ],
+  "frozen_science_or_heldout_access": false
+}
