@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pytest
@@ -24,6 +24,7 @@ from openhcs.core.artifacts import (
     MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+    SourceStackLineageSourceRelation,
 )
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -41,6 +42,10 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_object_labels import object_label_dense_array
+from openhcs.core.runtime_measurements import (
+    RuntimeMeasurementFeature,
+    RuntimeMeasurementFeatureOwner,
+)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -82,15 +87,35 @@ class CountRow:
     pixel_count: int
 
 
+class CountFeature(RuntimeMeasurementFeature):
+    PIXEL_COUNT = "pixel_count"
+
+
+class CountFeatureOwner(RuntimeMeasurementFeatureOwner):
+    feature_type = CountFeature
+
+    @classmethod
+    def owns_measurement_feature_name(cls, feature_name):
+        return any(feature.value == feature_name for feature in cls.feature_type)
+
+    @classmethod
+    def owns_primary_measurement_feature_name(cls, feature_name):
+        return cls.owns_measurement_feature_name(feature_name)
+
+
 COUNT_IMAGE = MainFlowStackOutputSpec.output("CountedImage", ImageArtifactType)
 MISSING_SUBJECT_ROWS = ArtifactSpec.output(
     "PixelCounts", MeasurementsArtifactType,
     materialization=MaterializationSpec(CsvOptions()),
+    measurement_feature_owner=CountFeatureOwner,
+    relations=(SourceStackLineageSourceRelation(COUNT_IMAGE.ref()),),
 )
-IMAGE_SUBJECT_ROWS = ArtifactSpec.output(
-    "PixelCounts", MeasurementsArtifactType,
-    materialization=MaterializationSpec(CsvOptions()),
-    relations=(ImageMeasurementSubjectRelation(COUNT_IMAGE.ref()),),
+IMAGE_SUBJECT_ROWS = replace(
+    MISSING_SUBJECT_ROWS,
+    relations=(
+        *MISSING_SUBJECT_ROWS.relations,
+        ImageMeasurementSubjectRelation(COUNT_IMAGE.ref()),
+    ),
 )
 
 
@@ -341,6 +366,18 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
             "Count pixels", {},
         )],
     )
+    document = PipelineDocumentAuthority.from_source(
+        PipelineDocumentAuthority.render(document)
+    )
+    invocation = next(
+        normalize_function_pattern(document.pipeline_steps[0].func).iter_items()
+    )
+    [rows] = (
+        spec for spec in invocation.contract.artifact_specs.specs
+        if spec.artifact_type is MeasurementsArtifactType
+    )
+    assert rows.measurement_feature_owner is CountFeatureOwner
+    assert SourceStackLineageSourceRelation(COUNT_IMAGE.ref()) in rows.relations
     global_config = GlobalPipelineConfig(num_workers=1, use_threading=True)
     if not valid:
         with pytest.raises(ValueError, match="PixelCounts.*no declared measurement subject") as exc:
@@ -352,5 +389,7 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
     assert results["A01"].is_success(), results["A01"].error_message
     store = bundle.runtime_contexts["A01"].runtime_value_store
     [counts] = store.find(name="PixelCounts", axis_id="A01")
+    [image] = store.find(name="CountedImage", axis_id="A01")
+    assert image.key.artifact_type is ImageArtifactType
     assert counts.value.data.subject.source_image_name == "CountedImage"
     assert tuple(counts.value.data.rows.column_values("pixel_count")) == (4,)

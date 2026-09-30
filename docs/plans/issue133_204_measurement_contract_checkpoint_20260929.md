@@ -2,14 +2,81 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `de23449a4`, fetched and merged normally on 2026-09-29
-through `21c15ad41`. The output-policy checkpoint used `283b21275`.
+Base: `openhcsdev/main` at `589c33a12`, merged normally through `684e4bbd3`.
+Remote main was independently rechecked at that same revision. The preceding
+checkpoint merged `de23449a4` through `21c15ad41`.
+The output-policy checkpoint used `283b21275`.
 The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
 main through normal merge `9f5d444515`. No parent/main-worktree edits, rebases,
 resets, installed-source edits, or gitlink changes.
 
 Closes #133. References #204; its paired-channel and actual GUI acceptance remain
 open. This is a source-verified draft, not an installed/live-readiness claim.
+
+## Current-main subject journey: prepared; refreshed live gate pending
+
+The newly reported frozen-author failure is precisely #133: a typed `PURE_3D`
+measurement output can carry a feature owner and source lineage without declaring
+what it measures. The original attempt remains untouched. No author source,
+science, pixels, parameters or references were needed or inspected for this
+continuation; no replay or author coaching occurred.
+
+The existing synthetic integration journey now declares its own `CountFeature`
+and nominal feature owner, CSV materialization and source-stack lineage in both
+variants. The corrected declaration is a `dataclasses.replace` of the invalid
+one, adding **only** `ImageMeasurementSubjectRelation(CountedImage.ref())`.
+Both variants render/parse through `PipelineDocumentAuthority`; the test asserts
+the reconstructed feature owner and source relation before the real headless
+compile boundary. The invalid callable still raises if entered. The valid case
+uses the real compiler and orchestrator and checks both image and measurement
+outputs and four counted synthetic pixels. These revised integration assertions
+are prepared, **not yet rerun** at current main.
+
+Actual lightweight checks at this checkpoint:
+
+- All nine imported package paths resolve inside this worktree, using the required
+  existing interpreter and eight recorded submodule `src` paths. PolyStore
+  `1209068f5` and ZMQRuntime `0f9e840a9` were synchronized from existing local Git
+  objects only: no dependency download, donor source edit or installation change.
+- Four direct, real output-policy checks passed: native-return and ordinary
+  adapter-recorded owners each reject a missing subject despite the declared
+  feature owner and source lineage, then accept the subject-only correction.
+  This is owner-hook behavior evidence, **not** compile/execution/CSV evidence.
+- AST parse and in-memory Python compilation passed for all **24 changed Python
+  files** against current main; `git diff --check` passed. Focused guards verify
+  common kind validation precedes payload-policy validation with no exemption
+  branch, and the removed `manages_artifact_outputs` has no source/test callers.
+- The original exact two-producer paired execution remains enabled, together
+  with omitted-selector ambiguity/single-producer cases and real unscoped and
+  asymmetric `RuntimeArtifactInput` regressions. No assertion, channel check,
+  selector, source policy or production owner was weakened in this continuation.
+
+NRA/refactor-audit coverage is **focused source/caller/AST inspection**, not a
+complete NRA scan or native proof. Actual owner evidence: IMPL-1/4/10 puts output
+invariants on the artifact kind and native/recorded obligations on their declared
+policy; the compiler calls `ArtifactPlanKeySelector` and runtime reuses
+`MeasurementsArtifactType.require_output_subject`. IDEN-1 keeps feature ownership,
+source lineage and measurement subject independent; schema/CSV is not a subject.
+MEMB-1/2 and IDEN-5 derive the catalog selector from the existing binding's
+`require_parameter_name`, with no copied roster/store. IDEN-7/BOUND-2 keeps exact
+producer/group selection before typed contextual compatibility; empty/asymmetric
+additional constraints do not alter global source-image matching semantics.
+The retained new-kind experiment declares one new artifact kind, requires
+**zero compiler/consumer changes**, and covers all three output policies,
+independent input management and both contract/compile boundaries. Its prior
+20-case passing evidence, including legitimate heterogeneous CP ownership, is
+historical below, not relabeled as a current-main rerun.
+
+Remaining named dependency: the parent integration owner must explicitly release
+the serialized slot after the blind freeze and review the tiny synthetic native
+compile/execute gate. This worktree lacks the current-main `_tabular_native`
+extension (`find_spec` returns `None`); no native build, environment startup,
+MCP/JVM/GUI, installation or managed-skill change was attempted. Slot release
+must not be inferred merely from the original 02:32:25 UTC deadline passing.
+After release, validate the two subject variants first, then the unweakened full
+six-case declaration journey and focused paired-source cases. Installed/live
+verification and merging remain with the parent; optional CI or broader paired
+research is not a prerequisite for shipping the reviewed #133 checkpoint.
 
 ## Frozen-harness compile incident: triaged, regression retained
 
