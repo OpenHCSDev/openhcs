@@ -1,0 +1,118 @@
+[
+  {
+    "number": 1,
+    "package": "main",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-platform-abba-1-main-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.6592843532562256",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "9.40029001235962",
+        "total_seconds": "11.801964120939374",
+        "wells_per_second": "0.10637969665671883",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1570.75",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "d75cac23c440d2c3703c34f55de47d79e118193cf510214b87abb070abd0f9ab"
+      }
+    ]
+  },
+  {
+    "number": 2,
+    "package": "candidate",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-platform-abba-2-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.7050771713256836",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "10.572460412979126",
+        "total_seconds": "13.005041989963502",
+        "wells_per_second": "0.09458536243582097",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2156.671875",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "bc64d405d0aef4cbaa45683f86d6599afe195e8014ddeaa14d15710d33a8e094"
+      }
+    ]
+  },
+  {
+    "number": 3,
+    "package": "candidate",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-platform-abba-3-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.8241350650787354",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "8.858160972595215",
+        "total_seconds": "11.38480524579063",
+        "wells_per_second": "0.11289024923951292",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1412.59375",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "bc64d405d0aef4cbaa45683f86d6599afe195e8014ddeaa14d15710d33a8e094"
+      }
+    ]
+  },
+  {
+    "number": 4,
+    "package": "main",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-platform-abba-4-main-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.6988980770111084",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "9.331552743911743",
+        "total_seconds": "11.764367830008268",
+        "wells_per_second": "0.10716330148296463",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1501.890625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "d75cac23c440d2c3703c34f55de47d79e118193cf510214b87abb070abd0f9ab"
+      }
+    ]
+  }
+]

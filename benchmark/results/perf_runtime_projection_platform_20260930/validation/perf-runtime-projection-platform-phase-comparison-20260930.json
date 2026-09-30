@@ -1,0 +1,67 @@
+{
+  "main": {
+    "_load_input_stack": {
+      "profiles": 32,
+      "profiled_scope_seconds": 2.6958356460000004,
+      "for_leading_source_plane_calls": 0,
+      "for_leading_source_plane_cumulative_seconds": 0,
+      "scalar_image_projection_calls": 0,
+      "scalar_image_projection_cumulative_seconds": 0,
+      "all_value_for_slice_owner_calls": 0,
+      "all_value_for_slice_owner_cumulative_seconds": 0
+    },
+    "_validate_and_unstack": {
+      "profiles": 28,
+      "profiled_scope_seconds": 1.94131022,
+      "for_leading_source_plane_calls": 4320,
+      "for_leading_source_plane_cumulative_seconds": 1.446300836,
+      "scalar_image_projection_calls": 2820,
+      "scalar_image_projection_cumulative_seconds": 1.740063337,
+      "all_value_for_slice_owner_calls": 5640,
+      "all_value_for_slice_owner_cumulative_seconds": 3.584533195
+    },
+    "_save_outputs": {
+      "profiles": 28,
+      "profiled_scope_seconds": 2.223880293,
+      "for_leading_source_plane_calls": 0,
+      "for_leading_source_plane_cumulative_seconds": 0,
+      "scalar_image_projection_calls": 0,
+      "scalar_image_projection_cumulative_seconds": 0,
+      "all_value_for_slice_owner_calls": 0,
+      "all_value_for_slice_owner_cumulative_seconds": 0
+    }
+  },
+  "candidate": {
+    "_load_input_stack": {
+      "profiles": 32,
+      "profiled_scope_seconds": 2.9100878830000005,
+      "for_leading_source_plane_calls": 0,
+      "for_leading_source_plane_cumulative_seconds": 0,
+      "scalar_image_projection_calls": 0,
+      "scalar_image_projection_cumulative_seconds": 0,
+      "all_value_for_slice_owner_calls": 0,
+      "all_value_for_slice_owner_cumulative_seconds": 0
+    },
+    "_validate_and_unstack": {
+      "profiles": 28,
+      "profiled_scope_seconds": 1.2647841880000001,
+      "for_leading_source_plane_calls": 2580,
+      "for_leading_source_plane_cumulative_seconds": 0.8946123760000001,
+      "scalar_image_projection_calls": 1680,
+      "scalar_image_projection_cumulative_seconds": 1.0755719570000002,
+      "all_value_for_slice_owner_calls": 3360,
+      "all_value_for_slice_owner_cumulative_seconds": 2.220536415
+    },
+    "_save_outputs": {
+      "profiles": 28,
+      "profiled_scope_seconds": 2.1813636799999996,
+      "for_leading_source_plane_calls": 0,
+      "for_leading_source_plane_cumulative_seconds": 0,
+      "scalar_image_projection_calls": 0,
+      "scalar_image_projection_cumulative_seconds": 0,
+      "all_value_for_slice_owner_calls": 0,
+      "all_value_for_slice_owner_cumulative_seconds": 0
+    }
+  },
+  "limits": "Distinct cProfile production runs, not unprofiled timing samples; main uses cf1f5a4025 installed header candidate before latest viewer merge; candidate c20b56b41. Call counts diagnose transfer; cumulative nested times cannot be added. Raw profiles retained in RUNS. all_value_for_slice_owner_* includes both authority and concrete strategy frames; use scalar_image_projection_calls for unique image projections."
+}

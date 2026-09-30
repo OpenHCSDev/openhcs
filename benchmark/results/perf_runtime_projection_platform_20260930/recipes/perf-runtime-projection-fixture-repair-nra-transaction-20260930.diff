@@ -1,0 +1,24 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_function_output_manifest_input_scope.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_function_output_manifest_input_scope.py
+@@ -46,7 +46,7 @@
+     specs = tuple(spec for spec, _scope in specs_with_scopes)
+ 
+     @artifact_inputs(*specs)
+-    def consume(image):
++    def consume(image, *, labels=None, illumination_function=None):
+         return image
+ 
+     compiled = compile_function_pattern(consume, {}, {})
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_path_planner_materialization.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_path_planner_materialization.py
+@@ -1282,7 +1282,9 @@
+                     ),
+                 ),
+             ),
+-            main_flow_artifacts=ArtifactSpecCollection((aligned_input,)),
++            # Stain1 is the stored auxiliary operand whose projection is tested.
++            # It must not also be declared as already carried in the main payload.
++            main_flow_artifacts=ArtifactSpecCollection(()),
+         )
+     )
+     _record_declared_output(

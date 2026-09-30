@@ -1,0 +1,22 @@
+........................................................................ [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+........................................................................ [ 56%]
+........................................................................ [ 65%]
+........................................................................ [ 74%]
+........................................................................ [ 84%]
+........................................................................ [ 93%]
+.................................................                        [100%]
+=============================== warnings summary ===============================
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1420: FutureWarning: `binary_dilation` is deprecated since version 0.26 and will be removed in version 0.28. Use `skimage.morphology.dilation` instead. Note the lack of mirroring for non-symmetric footprints (see docstring notes).
+    seeds = skimage.morphology.binary_dilation(
+
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1449: RuntimeWarning: overflow encountered in scalar add
+    y_data += np.abs(np.min(y_data)) + 1
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+769 passed, 2 warnings in 9.16s
