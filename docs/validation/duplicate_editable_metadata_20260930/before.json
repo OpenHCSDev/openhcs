@@ -1,0 +1,15 @@
+{
+  "cwd": "/tmp",
+  "pip_check_returncode": 1,
+  "openhcs_distributions": [
+    {
+      "version": "0.8.6",
+      "path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/openhcs-0.8.6.dist-info"
+    },
+    {
+      "version": "0.8.7",
+      "path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/openhcs-0.8.7.dist-info"
+    }
+  ],
+  "finding": "Both editable versions point to the current ROOT source; duplicate installation metadata, not a source rollback. Earlier root-cwd metadata checks hide the stale site record."
+}
