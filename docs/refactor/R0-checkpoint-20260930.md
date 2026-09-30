@@ -150,6 +150,13 @@ Ruff and diff checks pass. Cache reuse has NOT yet passed the actual own-PR
 full-context entrypoint; that bounded comparison is the remaining acceptance
 after parent's installed205/264 slot. Both failed originals remain preserved.
 
+The packaged scripts ratchet also passes at `dbe8c7749` against integrated main
+`fb5fea4f1`, zero positive deltas; its compressed raw report/resource capture is
+published. No205 production changes are attributed to R0 or reverted by its base.
+All owned test/scanner identities are terminal. About13MiB of generated Git/NRA
+fixture scratch was removed after receipts were saved; the fixtures are
+reproducible from committed tests. Original failed receipts are not deleted.
+
 Existing Official30 numerical comparator is reused unchanged; its PR trigger
 already existed, so this change adds relevance and fail-closed status wiring
 rather than claiming to invent PR parity. No new native/JVM/GUI/installed parity
