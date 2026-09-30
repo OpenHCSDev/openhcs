@@ -1,0 +1,106 @@
+{
+  "jobs": [
+    {
+      "pid": 893269,
+      "duration_proxy": 12.243645666632801,
+      "functions": [
+        "_dense_label_region_properties_2d_numba",
+        "_radius_features_from_labels_numba",
+        "_feret_diameters_from_labels_numba",
+        "_distance_to_label_edge_numba",
+        "_numpy124_aquicksort_indices_numba",
+        "_has_touching_foreground_labels_numba"
+      ]
+    },
+    {
+      "pid": 893270,
+      "duration_proxy": 5.598854252602905,
+      "functions": [
+        "_object_intensity_scan_numba",
+        "_collect_object_intensity_dense_2d_numba",
+        "_numpy124_aquicksort_indices_numba",
+        "_object_intensity_foreground_edges_3d_numba",
+        "_object_intensity_scan_3d_sparse_batch_numba",
+        "_collect_object_intensity_sparse_3d_numba"
+      ]
+    },
+    {
+      "pid": 893271,
+      "duration_proxy": 1.7743852003477514,
+      "functions": [
+        "_relate_children_to_parents_numba",
+        "_label_centroids_numba",
+        "_calculate_centroid_distances_numba",
+        "_calculate_minimum_distances_numba"
+      ]
+    },
+    {
+      "pid": 893272,
+      "duration_proxy": 2.0440741376951337,
+      "functions": [
+        "_foreground_components_2d_numba",
+        "_erode_labeled_objects_numba",
+        "_local_maxima_by_label_numba",
+        "_smooth_image_for_declumping_numba",
+        "_smooth_image_for_declumping_full_mask_numba"
+      ]
+    },
+    {
+      "pid": 894340,
+      "duration_proxy": 0.5878098821267486,
+      "functions": [
+        "_outline_numba"
+      ]
+    },
+    {
+      "pid": 894341,
+      "duration_proxy": 2.3469159766100347,
+      "functions": [
+        "_granularity_reconstruction_radius_one_numba",
+        "_granularity_reconstruction_radius_one_numba"
+      ]
+    },
+    {
+      "pid": 894342,
+      "duration_proxy": 0.8123144903220236,
+      "functions": [
+        "_object_bounding_boxes_numba"
+      ]
+    },
+    {
+      "pid": 894343,
+      "duration_proxy": 1.702329074498266,
+      "functions": [
+        "_haralick_2d_cooccurrence_matrices_numba",
+        "_haralick_features_numba"
+      ]
+    },
+    {
+      "pid": 894514,
+      "duration_proxy": 2.48394895484671,
+      "functions": [
+        "_propagate_labels_and_distances_numba",
+        "_propagate_labels_and_distances_zero_image_numba"
+      ]
+    },
+    {
+      "pid": 894515,
+      "duration_proxy": 5.011124191340059,
+      "functions": [
+        "_distance_to_label_edge_numba",
+        "_radial_unobstructed_center_fields",
+        "_accumulate_radial_distribution_numba",
+        "_radial_distribution_arrays_from_bin_totals_numba",
+        "_radial_distribution_geometry_index_numba",
+        "_accumulate_radial_distribution_from_geometry_index_numba",
+        "_accumulate_radial_distribution_numba",
+        "_radial_distribution_arrays_from_bin_totals_numba",
+        "_accumulate_radial_distribution_from_geometry_index_numba"
+      ]
+    }
+  ],
+  "fixed_wave_seconds_proxy": 19.601685834582895,
+  "refill_seconds_proxy": 12.243645666632801,
+  "possible_critical_path_saving_proxy": 7.358040167950094,
+  "scope": "Replay of saved actual-cold child dispatcher wall durations; PID order is a launch-order proxy. Imports, non-JIT work and contention transfer are not modeled. This is route selection, not an end-to-end performance claim."
+}
