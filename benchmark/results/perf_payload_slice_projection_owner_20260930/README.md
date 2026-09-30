@@ -26,6 +26,22 @@ Ordinary CPython 3.12.14 cProfile monitoring admits other threads into a profile
 
 Historical cProfile phase timings and call-graph attribution in the header-reuse and aligned-output reports are qualified: they cannot establish causal phase reductions. Unprofiled public wall clocks, native header replay and exact output comparisons remain valid. The replacement diagnostic uses thread-local explicit timers and does not run cProfile. Its receipt records 32 pattern groups, 26821 metadata merge calls and 6540 leading-plane projection calls with the scopes stated above.
 
-Scientific parity and whole-runtime acceptance are recorded separately from microreplay and structural checks. Pipeline clocks exclude ZMQ startup/shutdown; mandatory registry/callable/kernel preparation completes before readiness and workers use fork. Native CellProfiler and multiwell scaling are still pending for the newest changes; older native timings are not presented as fresh results.
+## Public runtime acceptance
++
++Main 2b7969f70 versus integrated candidate 3d23d9602, separate ordinary public 3D CPU5 1w_1t ABBA, two observations per version:
++
++| Mean | Main | Candidate |
++|---|---:|---:|
++| Compilation | 1.769s | 1.726s |
++| Execution | 9.301s | 9.411s |
++| Pipeline total | 11.797s | 11.847s |
++
++**This series does not demonstrate an overall speedup.** Candidate execution is 10.413s and 8.408s, compared with main 9.151s and 9.451s. The variation exceeds the bounded slice saving. No causal attribution is made; the ownership change and saved projection savings are the supported result. Source imports resolve to the selected checkout with shared current installed dependencies; these observations use Python source and are not claimed as newly built wheel runs. No application source changes during the series.
++
++All four public runs report SUCCESS, one successful well and normal process exit. Their 24 complete measurement CSVs and 480 label images match the saved successful control exactly. Both distinct diagnostic runs also match: another 12 CSVs and 240 label images. Labels retain exact filenames/dtype/shape/pixels, CSVs are byte exact. Scientific parity and whole-runtime acceptance are recorded separately from microreplay and structural checks. Pipeline clocks exclude ZMQ startup/shutdown; mandatory registry/callable/kernel preparation completes before readiness and workers use fork. Native CellProfiler and multiwell scaling are still pending for the newest changes; older native timings are not presented as fresh results.
 
-Refs #318, #319, #162. The broad performance goal remains active.
+Final current-main R0/R1 have no increases. R0 examines three changed production modules and 5140 metrics. R1 materializes the complete committed main/dependency context, with 3040/3056 projections; its two configured detectors preserve the existing colocalization mapping/record finding. The first per-file R0 failure, caused by transferring one existing absence probe, is retained; the obsolete second validation was then removed under the actual metadata contract, with new boundary regressions. No metric or scientific assertion was weakened.
++
++[Ownership receipt](validation/perf-payload-slice-projection-ownership-20260930.json), [structural scope](validation/structural_checks.json), [final R1](validation/r1_final.json), [complete public observations](validation/perf-payload-slice-projection-public-abba-observations-20260930.json), [scientific parity and means](validation/perf-payload-slice-projection-public-comparison-20260930.json), [direct timer](validation/perf-runtime-owner-timer-summary-20260930.json), and [profiler reproduction](validation/perf-profile-thread-contamination-reproduction-20260930.json) are retained. Reproduction and exact source transactions are under `recipes/`. Full census, native images and large raw profiles remain in `/home/ts/code/projects/openhcs-benchmark-runs/`.
++
++Fixes #318, #319. Refs #162. The broad performance goal remains active.
