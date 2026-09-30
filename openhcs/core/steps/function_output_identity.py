@@ -359,9 +359,9 @@ class FunctionOutputExtensionAuthority:
         cls,
         metadata: SourceComponentMetadata | None,
     ) -> str | None:
-        if metadata is None:
-            return None
-        return cls.from_raw(metadata.get("extension"))
+        return cls.from_raw(
+            SourceImageIdentity(component_metadata=metadata).filename_extension
+        )
 
     @classmethod
     def from_path(

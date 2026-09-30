@@ -22,7 +22,10 @@ Existing ABI SHA256:
 `d0051154f8af59874004373603aabff0ae0576216c48076e1470d6569bb18b88`.
 
 R0/L0/S1–S8 does not expand this bug PR's scope. Lovelace owns R0 CI; hosted
-CI is not a wait condition. Newly assigned264 is being traced before combining.
+CI is not a wait condition.264 is now combined through the same declared
+source-extension owner; see `issue264-source-extension-20260930.md` for cause,
+current93-test source checkpoint and remaining native acceptance. The58-test
+result above is the earlier257 checkpoint, not an installed-readiness claim.
 
 - `FunctionOutputIdentity.filename_values` owns storage coordinates, separate
   from semantic components; inherited `filename_address` projects them through
