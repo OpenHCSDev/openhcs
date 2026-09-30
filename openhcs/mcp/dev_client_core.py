@@ -83,7 +83,7 @@ MCP_DEV_TRANSPORT_FAILURE_HINT = (
 )
 
 
-class McpDevCliUsageError(ValueError):
+class McpDevCliUsageError(argparse.ArgumentTypeError, ValueError):
     """Local command-line validation failure before an MCP call is made."""
 
 
@@ -825,9 +825,14 @@ class UiToolArguments(McpToolArgumentRecord):
 
 def parse_json_object(argument_text: str) -> dict[str, JsonValue]:
     """Parse a JSON object for MCP tool arguments."""
-    value = cast(JsonValue, json.loads(argument_text))
+    try:
+        value = cast(JsonValue, json.loads(argument_text))
+    except json.JSONDecodeError as exc:
+        raise McpDevCliUsageError(
+            f"MCP tool arguments must be valid JSON: {exc}"
+        ) from exc
     if not isinstance(value, dict):
-        raise ValueError("MCP tool arguments must be a JSON object.")
+        raise McpDevCliUsageError("MCP tool arguments must be a JSON object.")
     return value
 
 

@@ -124,6 +124,17 @@ def test_multi_call_command_honors_its_declared_timeout_floor() -> None:
 def test_persistent_client_initializes_once_for_distinct_command_specs(
     monkeypatch,
 ) -> None:
+    from openhcs.mcp.dev_client_commands import ui
+
+    decoded_arguments = []
+    parse_arguments = ui.parse_json_object
+
+    def count_argument_decode(text):
+        decoded_arguments.append(text)
+        return parse_arguments(text)
+
+    monkeypatch.setattr(ui, "parse_json_object", count_argument_decode)
+
     class FakeMcpDevStdioSession:
         initialize_count = 0
         tool_calls: list[str] = []
@@ -181,13 +192,17 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     with dev_client.McpDevClient(sys.executable) as client:
         tools = client.execute(("tools", "--json"))
         health = client.execute(("health", "--json"))
+        raw_health = client.execute(("call", "openhcs_health_check", "--arguments", "{}"))
 
     assert FakeMcpDevStdioSession.initialize_count == 1
-    assert FakeMcpDevStdioSession.tool_calls == ["openhcs_health_check"]
+    assert FakeMcpDevStdioSession.tool_calls == ["openhcs_health_check"] * 2
     assert tools.returncode == 0
     assert tools.payload["tools"][0]["name"] == "openhcs_health_check"
     assert health.returncode == 0
     assert health.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert raw_health.returncode == 0
+    assert raw_health.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert decoded_arguments == ["{}"]
     assert type(dev_client.McpDevCommandSpec.for_name("tools")) is not type(
         dev_client.McpDevCommandSpec.for_name("health")
     )
@@ -256,7 +271,21 @@ def test_persistent_client_does_not_close_caller_owned_server_stderr() -> None:
     assert server_stderr.closed is False
 
 
-def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
+@pytest.mark.parametrize(
+    ("argv", "exception_type", "message"),
+    (
+        (("viewer-state", "--json"), dev_client.McpDevCliUsageError, "requires a port"),
+        (("call", "openhcs_health_check", "--arguments", "{broken}"), SystemExit, "valid JSON"),
+        (("call", "openhcs_health_check", "--arguments", "[]"), SystemExit, "JSON object"),
+        (("call", "openhcs_health_check", "--arguments", "null"), SystemExit, "JSON object"),
+        (("call", "openhcs_health_check", "--arguments", "42"), SystemExit, "JSON object"),
+    ),
+)
+def test_persistent_client_preserves_local_usage_errors(
+    monkeypatch, capsys, argv, exception_type, message
+) -> None:
+    dispatched_calls = []
+
     class FakeMcpDevStdioSession:
         def __init__(self, server_spec, server_stderr) -> None:
             del server_stderr
@@ -271,6 +300,10 @@ def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
         async def initialize(self, *, timeout_seconds: float) -> None:
             del timeout_seconds
 
+        async def call_tool(self, *args, **kwargs):
+            dispatched_calls.append((args, kwargs))
+            raise AssertionError("Invalid local arguments must never dispatch.")
+
     monkeypatch.setattr(
         dev_client,
         "McpDevStdioSession",
@@ -278,8 +311,15 @@ def test_persistent_client_preserves_local_usage_errors(monkeypatch) -> None:
     )
 
     with dev_client.McpDevClient(sys.executable) as client:
-        with pytest.raises(dev_client.McpDevCliUsageError, match="requires a port"):
-            client.execute(("viewer-state", "--json"))
+        with pytest.raises(exception_type) as caught:
+            client.execute(argv)
+
+    assert dispatched_calls == []
+    if exception_type is SystemExit:
+        assert caught.value.code == 2
+        assert message in capsys.readouterr().err
+    else:
+        assert message in str(caught.value)
 
 
 def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
