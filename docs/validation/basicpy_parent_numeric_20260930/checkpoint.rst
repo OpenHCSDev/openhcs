@@ -1,6 +1,10 @@
 BaSiCPy parent numerical integration
 ====================================
 
+Latest source ownership closure: owner-closure.rst. The prior failed guard
+below is preserved historical evidence; its findings are now corrected and
+the unmodified guard passes. Installed/MCP acceptance is still separate.
+
 Integration owner: parent, 2026-09-30, existing PR217. Original Linnaeus
 worktrees are unchanged. Normal current-main merge incorporates
 d3a99c0d46dea979bba3f9076da87386e49cbed3. The sole merge conflict was the

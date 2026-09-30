@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-export PYTHONPATH=/home/ts/wt/openhcs-basicpy-parent-integration-20260930:/home/ts/wt/arraybridge-basicpy-parent-integration-20260930/src:/home/ts/wt/basicpy-parent-numeric-20260930/src:/home/ts/wt/openhcs-viewer-live-20260930/external/zmqruntime/src
+export PYTHONPATH=/home/ts/wt/openhcs-basicpy-parent-integration-20260930:/home/ts/wt/basicpy-parent-numeric-20260930/src:/home/ts/wt/openhcs-viewer-live-20260930/external/zmqruntime/src
 export PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true
 export JAX_PLATFORMS=cpu OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 export NUMBA_NUM_THREADS=1 XLA_FLAGS=--xla_cpu_multi_thread_eigen=false QT_QPA_PLATFORM=offscreen
@@ -16,7 +16,7 @@ os.sched_setaffinity(0, {min(os.sched_getaffinity(0))})
 import openhcs, arraybridge, basicpy, zmqruntime
 for module, directory in (
     (openhcs, "/home/ts/wt/openhcs-basicpy-parent-integration-20260930/openhcs"),
-    (arraybridge, "/home/ts/wt/arraybridge-basicpy-parent-integration-20260930/src/arraybridge"),
+    (arraybridge, "/home/ts/wt/openhcs-basicpy-parent-integration-20260930/external/arraybridge/src/arraybridge"),
     (basicpy, "/home/ts/wt/basicpy-parent-numeric-20260930/src/basicpy"),
     (zmqruntime, "/home/ts/wt/openhcs-viewer-live-20260930/external/zmqruntime/src/zmqruntime"),
 ):

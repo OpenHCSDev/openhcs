@@ -10,7 +10,7 @@ from openhcs.processing.backends.enhance.basic_processor_jax import (
 )
 
 
-def shaded_observations(*, stationary_biology=False):
+def shaded_observations(*, stationary_biology=False, volume=False):
     """Synthetic acquisition only: no biological data, reference or downloaded image."""
     size = 32
     count = 24
@@ -30,7 +30,11 @@ def shaded_observations(*, stationary_biology=False):
             biology = 5000 * np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / 0.008)
         frame = (background + biology) * flatfield
         observations.append(np.rint(frame).astype(np.uint16))
-    return np.stack(observations), flatfield
+    observations = np.stack(observations)
+    if volume:
+        observations = np.stack((observations, observations), axis=1)
+        flatfield = np.stack((flatfield, flatfield))
+    return observations, flatfield
 
 
 def run_fit(observations):
@@ -42,8 +46,9 @@ def run_fit(observations):
     )
 
 
-def test_real_fit_keeps_measurement_range_and_returns_same_fit_fields():
-    observations, truth = shaded_observations()
+@pytest.mark.parametrize("volume", [False, True])
+def test_real_fit_keeps_measurement_range_and_returns_same_fit_fields(volume):
+    observations, truth = shaded_observations(volume=volume)
     corrected, flatfield, darkfield = run_fit(observations)
     corrected = np.asarray(corrected)
     flatfield_data = np.asarray(flatfield)
