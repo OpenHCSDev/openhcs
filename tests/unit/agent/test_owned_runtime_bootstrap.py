@@ -10,6 +10,7 @@ from zmqruntime.startup import EndpointStartupPhase
 from zmqruntime.transport import TransportEndpoint
 
 from openhcs.agent.capabilities import agent_capabilities
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.execution import (
     RuntimeBootstrapStartRequest,
     RuntimeBootstrapObserveRequest,
@@ -114,6 +115,182 @@ def test_client_retains_same_admitted_launch_plan(setup, monkeypatch):
     assert client.runtime_launch_plan() is plan
     resolve.assert_called_once_with(client.endpoint, client.config)
     spawn.assert_not_called()
+
+
+def test_connection_urls_share_effective_endpoint_owner(setup, tmp_path, monkeypatch):
+    _, _, spawn = setup
+    config = OpenHCSZMQConfig(
+        transport_mode=TransportMode.TCP, control_port_offset=1700
+    )
+    connection = ExecutionConnectionSpec(host="127.0.0.1", port=5968)
+    monkeypatch.setattr(
+        TransportMode, "default",
+        Mock(side_effect=AssertionError("No platform fallback for URL projection")),
+    )
+    endpoint = connection.execution_client(config).endpoint
+    assert connection.zmq_data_url(config) == endpoint.data_url(config)
+    assert connection.zmq_control_url(config) == endpoint.control_url(config)
+    assert connection.zmq_control_port(config) == endpoint.control_port(config)
+    assert not tuple(tmp_path.iterdir())
+    spawn.assert_not_called()
+
+
+@pytest.mark.parametrize("configured_mode", tuple(TransportMode))
+@pytest.mark.parametrize("requested_mode", (None, *TransportMode))
+def test_effective_connection_matches_configured_native_endpoint(
+    monkeypatch, configured_mode, requested_mode
+):
+    config = OpenHCSZMQConfig(
+        client_host="unselected-config-host",
+        default_port=5997,
+        transport_mode=configured_mode,
+    )
+    connection = ExecutionConnectionSpec(
+        host="127.0.0.1", port=5968, transport_mode=requested_mode
+    )
+    monkeypatch.setattr(
+        TransportMode,
+        "default",
+        Mock(side_effect=AssertionError("Do not recover a platform default")),
+    )
+    endpoint = connection.transport_endpoint(config)
+    assert endpoint == connection.execution_client(config).endpoint
+    assert endpoint.host == connection.host and endpoint.port == connection.port
+    assert endpoint.transport_mode is (
+        configured_mode if requested_mode is None else requested_mode
+    )
+    resolved = connection.resolved(config)
+    assert resolved.transport_endpoint() == endpoint
+    assert resolved.execution_client(config).endpoint == endpoint
+    assert connection.transport_mode is requested_mode  # Input stays immutable.
+    assert ZMQExecutionClient(config=config).endpoint == config.client_endpoint()
+
+
+@pytest.mark.parametrize("configured_mode", tuple(TransportMode))
+@pytest.mark.parametrize("requested_mode", (None, *TransportMode))
+def test_start_observe_close_retain_one_effective_route(
+    setup, tmp_path, monkeypatch, configured_mode, requested_mode
+):
+    _, request, spawn = setup
+    request = replace(
+        request,
+        connection=replace(
+            request.connection, host="127.0.0.1", transport_mode=requested_mode
+        ),
+    )
+    config = OpenHCSZMQConfig(
+        transport_mode=configured_mode, control_port_offset=1700,
+        app_name="owned-route-test", ipc_socket_prefix="selected-route",
+    )
+    expected = request.connection.transport_endpoint(config)
+    monkeypatch.setattr(
+        expected.transport_mode.declaration,
+        "data_control_pair_is_available",
+        Mock(return_value=True),
+    )
+    monkeypatch.setattr(
+        TransportMode, "default",
+        Mock(side_effect=AssertionError("No omitted-mode re-resolution")),
+    )
+    routes = []
+    original_start = ZMQExecutionClient.start_owned_process
+
+    def start(client, *, operation_deadline):
+        routes.append(client.endpoint)
+        return original_start(client, operation_deadline=operation_deadline)
+
+    def ping(endpoint, actual_config, *, timeout_ms):
+        routes.append(endpoint)
+        return PongResponse(
+            port=endpoint.port, control_port=endpoint.control_port(actual_config),
+            ready=True, server="fixture", server_role=ServerRole.EXECUTION,
+            process_identity=Child.identity,
+        )
+
+    def close(client, identity, *, mode, operation_deadline):
+        routes.append(client.endpoint)
+        assert identity == Child.identity
+        return EndpointShutdownResult(True, True, identity, True)
+
+    monkeypatch.setattr(ZMQExecutionClient, "start_owned_process", start)
+    monkeypatch.setattr(TransportEndpoint, "ping", ping)
+    monkeypatch.setattr(ZMQExecutionClient, "close_owned_process", close)
+    policy = AgentPathPolicy.with_roots(
+        readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+    )
+    service = RuntimeServerService(config=config, path_policy=policy)
+    started = service.start_from_request(request)
+    handle = dataclass_from_mapping(RuntimeBootstrapHandle, to_jsonable(started.handle))
+    assert handle.connection.transport_mode is expected.transport_mode
+    assert handle.connection.transport_endpoint() == expected
+    assert not handle.launch_plan.startup_status_file.exists()
+    # Retained explicit routing wins even if another observer has a different
+    # configured default. No second transport record or mutable mode cache.
+    observer_config = replace(
+        config,
+        transport_mode=next(mode for mode in TransportMode if mode is not configured_mode),
+    )
+    observer = RuntimeServerService(config=observer_config, path_policy=policy)
+    observed = observer.observe_bootstrap(RuntimeBootstrapObserveRequest(handle))
+    closed = observer.close_bootstrap(RuntimeBootstrapCloseRequest(handle))
+    assert observed.ready and observed.handle == handle
+    assert closed.outcome.succeeded and closed.handle == handle
+    assert routes == [expected, expected, expected]
+    assert not handle.launch_plan.startup_status_file.exists()
+    spawn.assert_called_once()
+
+
+@pytest.mark.parametrize("configured_mode", tuple(TransportMode))
+def test_locality_uses_effective_endpoint_before_plan_or_write(
+    setup, tmp_path, monkeypatch, configured_mode
+):
+    _, request, spawn = setup
+    request = replace(request, connection=replace(request.connection, transport_mode=None))
+    config = OpenHCSZMQConfig(transport_mode=configured_mode)
+    admission = Mock(return_value=False)
+    monkeypatch.setattr(configured_mode.declaration, "endpoint_is_local", admission)
+    plan = Mock(side_effect=AssertionError("No plan before locality admission"))
+    monkeypatch.setattr(ZMQExecutionClient, "runtime_launch_plan", plan)
+    service = RuntimeServerService(config=config)
+    with pytest.raises(ValueError, match="local connection"):
+        service.start_from_request(request)
+    admission.assert_called_once_with(request.connection.host, request.connection.port)
+    plan.assert_not_called()
+    spawn.assert_not_called()
+    assert not tuple(tmp_path.iterdir())
+
+
+def test_omitted_tcp_mode_cannot_borrow_ipc_locality(setup, tmp_path):
+    _, request, spawn = setup
+    request = replace(
+        request,
+        connection=replace(
+            request.connection, host="203.0.113.7", transport_mode=None
+        ),
+    )
+    service = RuntimeServerService(config=OpenHCSZMQConfig(transport_mode=TransportMode.TCP))
+    with pytest.raises(ValueError, match="local connection"):
+        service.start_from_request(request)
+    assert not tuple(tmp_path.iterdir())
+    spawn.assert_not_called()
+
+
+@pytest.mark.parametrize("configured_mode", tuple(TransportMode))
+@pytest.mark.parametrize("requested_mode", (None, *TransportMode))
+def test_catalog_route_uses_injected_config_owner(configured_mode, requested_mode):
+    from openhcs.agent.services.endpoint_function_catalog_service import ZMQFunctionCatalogService
+
+    config = OpenHCSZMQConfig(transport_mode=configured_mode)
+    provider = Mock(return_value=config)
+    factory = Mock(side_effect=AssertionError("No catalog startup or network"))
+    service = ZMQFunctionCatalogService(provider, client_factory=factory)
+    connection = ExecutionConnectionSpec(
+        host="127.0.0.1", port=5968, transport_mode=requested_mode
+    )
+    projected = service._endpoint_for_connection(connection)
+    assert projected.client_endpoint() == connection.execution_client(config).endpoint
+    provider.assert_called_once()
+    factory.assert_not_called()
 
 
 def test_startup_returns_typed_native_handle_without_catalogue_or_wait(

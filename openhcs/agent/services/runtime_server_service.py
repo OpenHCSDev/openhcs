@@ -291,14 +291,14 @@ class RuntimeServerService:
     def start_from_request(
         self, request: RuntimeBootstrapStartRequest
     ) -> RuntimeBootstrapState:
-        connection = request.connection
-        endpoint = connection.transport_endpoint()
+        connection = request.connection.resolved(self._config)
+        config = replace(self._config, server_host=connection.host)
+        client = connection.execution_client(config)
+        endpoint = client.endpoint
         if not endpoint.transport_mode.declaration.endpoint_is_local(
             endpoint.host, endpoint.port
         ):
             raise ValueError("Runtime bootstrap requires an explicit local connection")
-        config = replace(self._config, server_host=connection.host)
-        client = connection.execution_client(config)
         plan = client.runtime_launch_plan()
         for path in plan.writable_paths():
             self._path_policy.assert_writable(path)
@@ -349,7 +349,7 @@ class RuntimeServerService:
                 "No child readiness receipt observed",
             )
         )
-        endpoint = handle.connection.transport_endpoint()
+        endpoint = handle.connection.transport_endpoint(self._config)
         pong = (
             endpoint.ping(self._config, timeout_ms=self._config.server_info_timeout_ms)
             if alive

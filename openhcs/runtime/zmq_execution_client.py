@@ -623,16 +623,15 @@ class ZMQExecutionClient(
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
         connection_status_callback: EndpointStartupStatusCallback | None = None,
     ):
+        endpoint = config.client_endpoint(port, host=host, transport_mode=transport_mode)
         self._startup_status_path: Path | None = None
         self._runtime_launch_plan: ExecutionRuntimeLaunchPlan | None = None
         super().__init__(
-            config.default_port if port is None else port,
-            config.client_host if host is None else host,
+            endpoint.port,
+            endpoint.host,
             config.persistent if persistent is None else persistent,
             progress_callback=progress_callback,
-            transport_mode=(
-                config.transport_mode if transport_mode is None else transport_mode
-            ),
+            transport_mode=endpoint.transport_mode,
             config=config,
             connection_status_callback=connection_status_callback,
         )

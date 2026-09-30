@@ -631,7 +631,6 @@ class RuntimeBootstrapStartRequest(RuntimeServerInfoRequest):
     def __post_init__(self) -> None:
         validate_annotated_dataclass(self)
         self.connection.require_port("Explicit runtime bootstrap")
-        self.connection.transport_endpoint()
         if (
             self.timeout_ms <= 0
             or self.timeout_ms > OPENHCS_ZMQ_CONFIG.control_timeout_ms
