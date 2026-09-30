@@ -96,4 +96,6 @@ NRA's complete scan of the package is running and will be added to the evidence 
 
 ## Surface files
 
-Written one per turn, just in time: [`R0-stop-the-inflow.md`](R0-stop-the-inflow.md).
+Written just in time: [`R0-stop-the-inflow.md`](R0-stop-the-inflow.md),
+and the authoritative [L0 pattern-resolver checkpoint](L0-pattern-resolver.rst).
+The latter closes one confirmed dead module, not the whole L0 surface.
