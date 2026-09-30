@@ -1173,12 +1173,10 @@ class ContextualObjectLabelOutputValueContextStrategy(
         return output_value.with_source_image_context(source_payload)
 
 
-class NumpyArrayObjectLabelOutputValueContextStrategy(
+class DenseArrayObjectLabelOutputValueContextStrategy(
     ObjectLabelOutputValueContextStrategy
 ):
-    """Build object-label context for declared NumPy array outputs."""
-
-    value_type = np.ndarray
+    """Build declared object labels through the existing source-domain owner."""
 
     def contextualize(
         self,
@@ -1186,16 +1184,37 @@ class NumpyArrayObjectLabelOutputValueContextStrategy(
         output_value: ObjectLabelContextualizableOutput,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> ObjectLabelValue:
-        if not isinstance(output_value, np.ndarray):
-            raise TypeError(
-                "Runtime-array object-label output strategy requires a NumPy "
-                f"array, got {type(output_value).__name__}."
-            )
         return SourceImageObjectLabelBuildRequest(
             image=source_payload,
-            labels=output_value,
+            labels=self.label_array(output_value),
             plane_projection=plane_projection,
         ).payload()
+
+    @abstractmethod
+    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
+        """Project the dense label data owned by this nominal value case."""
+
+
+class NumpyArrayObjectLabelOutputValueContextStrategy(
+    DenseArrayObjectLabelOutputValueContextStrategy
+):
+    """Build object-label context for declared NumPy array outputs."""
+
+    value_type = np.ndarray
+
+    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
+        return output_value
+
+
+class ImagePayloadObjectLabelOutputValueContextStrategy(
+    DenseArrayObjectLabelOutputValueContextStrategy
+):
+    """Consume a declared label array with its preserved runtime plane carrier."""
+
+    value_type = ImagePayloadMetadataCarrier
+
+    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
+        return image_payload_data(output_value)
 
 
 @dataclass(frozen=True)
@@ -1892,11 +1911,9 @@ class FunctionCoreExecutor:
     def main_flow_call_argument(
         self, source_payload: RuntimePayload
     ) -> RuntimeCallableArgument:
-        """Expose arrays to ordinary callables and carriers to adapter-backed calls."""
+        """Project through the callable's declared processing and raw ABI owners."""
 
-        if self.invocation.contract.runtime_adapter is not None:
-            return source_payload
-        return image_payload_data(source_payload)
+        return self.invocation.contract.main_flow_call_argument(source_payload)
 
     def memory_types(self) -> "FunctionChainInvocationMemoryTypes":
         return FunctionChainInvocationMemoryTypes.from_invocation(self.invocation)
