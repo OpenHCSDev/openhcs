@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
+from zmqruntime.messages import AckReturnRoute, ImageTransferIdentity, ProcessIdentity
 
 from openhcs.core.config import (
     FijiDisplayConfig,
@@ -74,6 +75,9 @@ PRODUCER_IDENTITY = {
     "invocation_key": None,
     "artifact_kind": None,
 }
+
+ACK_ROUTE = AckReturnRoute("tcp://127.0.0.1:8111", "00000000-0000-0000-0000-000000000001",
+                          ProcessIdentity.current())
 
 
 def _component_value_domain(payload: dict) -> ViewerComponentValueDomainPayload:
@@ -329,7 +333,7 @@ def test_fiji_window_registry_owns_window_state_and_group_identity() -> None:
     image = FijiImagePayload(
         data=np.zeros((2, 2), dtype=np.uint8),
         metadata={"well": "A14"},
-        image_id="first",
+        transfer=ImageTransferIdentity("first", ACK_ROUTE),
     )
 
     registry.store_hyperstack("A14", image_plus, [image])
@@ -428,6 +432,8 @@ def test_fiji_batch_message_normalizes_wire_items() -> None:
                 {
                     "data_type": "image",
                     "image_id": "img-1",
+                    "return_route": ACK_ROUTE.to_dict(),
+                    "producer": ACK_ROUTE.owner.to_dict(),
                     "metadata": {"channel": 1},
                     "data": np.zeros((2, 2), dtype=np.uint8),
                 }
@@ -467,6 +473,8 @@ def test_fiji_batch_message_preserves_scoped_wire_component_layout() -> None:
                 {
                     "data_type": "image",
                     "image_id": "img-1",
+                    "return_route": ACK_ROUTE.to_dict(),
+                    "producer": ACK_ROUTE.owner.to_dict(),
                     "metadata": {
                         "channel": 1,
                         "z_index": 0,
@@ -510,6 +518,8 @@ def test_fiji_shared_memory_copy_leaves_sender_allocation_owned(monkeypatch) -> 
         {
             "data_type": "image",
             "image_id": "fiji-copy",
+            "return_route": ACK_ROUTE.to_dict(),
+            "producer": ACK_ROUTE.owner.to_dict(),
             "shm_name": shm.name,
             "shape": source.shape,
             "dtype": str(source.dtype),
@@ -971,8 +981,9 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
             self.windows = FijiWindowRegistry()
             self.acknowledgments = []
 
-        def _send_ack(self, image_id, status="success", error=None) -> None:
-            self.acknowledgments.append((image_id, status, error))
+        def send_ack(self, transfer, status="success", error=None) -> None:
+            assert transfer.return_route == ACK_ROUTE
+            self.acknowledgments.append((transfer.image_id, status, error))
 
     conversion_sizes = []
 
@@ -1007,6 +1018,8 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
         {
             "data_type": "rois",
             "image_id": "roi-batch",
+            "return_route": ACK_ROUTE.to_dict(),
+            "producer": ACK_ROUTE.owner.to_dict(),
             "path": "/tmp/cells.tif",
             "metadata": {"channel": 1, "z_index": 0, "timepoint": 0},
             "rois": [{"index": index} for index in range(257)],

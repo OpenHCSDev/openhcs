@@ -113,7 +113,10 @@ def render_authoring_context_sections(
 
 
 class CatalogPreparationReadinessSection(
-    AuthoringContextSection, FirstUseWorkflowContext, PipelineAuthoringRulesContext
+    AuthoringContextSection,
+    FirstUseWorkflowContext,
+    PipelineAuthoringRulesContext,
+    CustomFunctionAuthoringRulesContext,
 ):
     """One readiness entrypoint shared by first-use and pipeline contexts."""
 
@@ -126,10 +129,16 @@ class CatalogPreparationReadinessSection(
 Before first cold {agent_capabilities.search_functions.name}, discover "catalog preparation"
 with {agent_capabilities.search_capabilities.name}. If exposed, follow
 `openhcs_custom_function_workflow` / "Register on the intended process owner":
+If no endpoint exists, explicitly call {agent_capabilities.start_owned_runtime.name}
+with the intended local port; admit its native launch destinations and retain the
+exact child handle. Observe {agent_capabilities.observe_owned_runtime.name} until ready;
+never adopt a foreign endpoint or replay uncertain startup. Then call
 {agent_capabilities.start_function_catalog_preparation.name} on the intended existing endpoint,
 then observe that exact handle until READY. Keep cold warming separate from
 10-second tool observations; a timeout does not authorise restart/replay or
-mutation. If not exposed, report the surface boundary rather than guess a route."""
+mutation. Close your retained child with {agent_capabilities.close_owned_runtime.name};
+require exact process exit, not lost listeners. If not exposed, report the
+surface boundary rather than guess a route."""
 
 
 class PipelineSystemModelSection(

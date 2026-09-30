@@ -1113,6 +1113,13 @@ class ViewerRouteComponentValueTracker:
             if domain_key[0] == route_key:
                 self.domains.pop(domain_key)
 
+    def retain_routes(self, route_keys: frozenset[str]) -> None:
+        """Retain declared and observed domains for exactly the mounted routes."""
+
+        for domain_key in tuple(self.domains):
+            if domain_key[0] not in route_keys:
+                self.domains.pop(domain_key)
+
     @staticmethod
     def domain_key(
         route_key: str,

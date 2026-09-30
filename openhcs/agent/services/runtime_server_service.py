@@ -20,16 +20,30 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfo,
     RuntimeServerScanRequest,
     RuntimeServerScanResult,
+    RuntimeBootstrapStartRequest,
+    RuntimeBootstrapHandle,
+    RuntimeBootstrapObserveRequest,
+    RuntimeBootstrapState,
+    RuntimeBootstrapCloseRequest,
+    RuntimeBootstrapCloseResult,
     runtime_execution_status_error,
     runtime_execution_status_from_response,
     unreachable_runtime_server_info,
 )
 from openhcs.core.debug_view_models import DebugViewModel
+from openhcs.core.debug import DebugPausedWorkerStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import PongResponse, ServerRole
+from zmqruntime.startup import (
+    EndpointStartupPhase,
+    EndpointStartupStatus,
+    EndpointStartupStatusReader,
+)
+from zmqruntime.timeouts import OperationDeadline
+from zmqruntime.client import EndpointStartupUncertainError
 
 RUNTIME_SERVER_KIND_HINT = (
     "Use openhcs_scan_runtime_servers to discover endpoints. Viewer ports should "
@@ -262,15 +276,117 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
 
 
 class RuntimeServerService:
-    """Expose read-only state from running OpenHCS ZMQ execution servers."""
+    """Own explicit bootstrap admission and read-only runtime observation."""
 
     def __init__(
         self,
         gateway: RuntimeServerGatewayABC | None = None,
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
+        path_policy: AgentPathPolicy | None = None,
     ) -> None:
         self._config = config
         self._gateway = gateway or ZMQRuntimeServerGateway(config)
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
+
+    def start_from_request(
+        self, request: RuntimeBootstrapStartRequest
+    ) -> RuntimeBootstrapState:
+        connection = request.connection.resolved(self._config)
+        config = replace(self._config, server_host=connection.host)
+        client = connection.execution_client(config)
+        endpoint = client.endpoint
+        if not endpoint.transport_mode.declaration.endpoint_is_local(
+            endpoint.host, endpoint.port
+        ):
+            raise ValueError("Runtime bootstrap requires an explicit local connection")
+        plan = client.runtime_launch_plan()
+        for path in plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        deadline = OperationDeadline.after_milliseconds(
+            request.timeout_ms,
+            operation="explicit runtime bootstrap",
+        )
+        errors = ()
+        try:
+            process = client.start_owned_process(operation_deadline=deadline)
+        except EndpointStartupUncertainError as error:
+            process = error.process
+            errors = (AgentError.from_exception("runtime_bootstrap_uncertain", error),)
+        handle = RuntimeBootstrapHandle(connection, process.identity, plan)
+        # No waiting for endpoint readiness or catalogue preparation here.
+        return RuntimeBootstrapState(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            progress=EndpointStartupStatus(
+                EndpointStartupPhase.STARTING_PROCESS,
+                "Native child spawned; retain this exact handle",
+            ),
+            ready=False,
+            process_alive=process.is_alive(),
+            errors=errors,
+        )
+
+    def observe_bootstrap(
+        self, request: RuntimeBootstrapObserveRequest
+    ) -> RuntimeBootstrapState:
+        handle = request.handle
+        for path in handle.launch_plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        self._path_policy.assert_readable_location(
+            handle.launch_plan.startup_status_file
+        )
+        alive = handle.process_identity.is_alive()
+        statuses = (
+            EndpointStartupStatusReader(handle.launch_plan.startup_status_file)
+            .read()
+            .statuses
+        )
+        endpoint = handle.connection.transport_endpoint(self._config)
+        pong = (
+            endpoint.ping(self._config, timeout_ms=self._config.server_info_timeout_ms)
+            if alive
+            else None
+        )
+        return RuntimeBootstrapState.from_observation(
+            handle,
+            process_alive=alive,
+            statuses=statuses,
+            pong=pong,
+        )
+
+    def close_bootstrap(
+        self, request: RuntimeBootstrapCloseRequest
+    ) -> RuntimeBootstrapCloseResult:
+        """Admit native lifecycle writes, then close one proven owned incarnation."""
+        handle = request.handle
+        config = replace(self._config, server_host=handle.connection.host)
+        client = handle.connection.execution_client(config)
+        # Resolve actual transport writes in THIS launch environment, not only
+        # the caller's serialized plan. Never let a forged path admit a lock.
+        for path in client.runtime_launch_plan().transport_write_paths:
+            self._path_policy.assert_writable(path)
+        for path in handle.launch_plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        outcome = client.close_owned_process(
+            handle.process_identity,
+            mode=request.mode,
+            operation_deadline=OperationDeadline.after_milliseconds(
+                request.timeout_ms, operation="owned runtime close"
+            ),
+        )
+        return RuntimeBootstrapCloseResult(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            outcome=outcome,
+            errors=()
+            if outcome.succeeded
+            else (
+                AgentError(
+                    code="runtime_close_unresolved",
+                    message="Exact owner close is unresolved; retain this handle and observe without replay.",
+                ),
+            ),
+        )
 
     def server_info(
         self,

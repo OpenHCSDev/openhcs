@@ -1,0 +1,570 @@
+2026-09-30 03:46:35,255 - __main__ - INFO - ============================================================
+2026-09-30 03:46:35,255 - __main__ - INFO - ZMQ Execution Server
+2026-09-30 03:46:35,255 - __main__ - INFO - ============================================================
+2026-09-30 03:46:35,255 - __main__ - INFO - Log level: INFO (from --log-level=INFO)
+2026-09-30 03:46:35,255 - __main__ - INFO - Port: 5964 (control: 6964)
+2026-09-30 03:46:35,255 - __main__ - INFO - Host: 127.0.0.1
+2026-09-30 03:46:35,255 - __main__ - INFO - Transport mode: tcp
+2026-09-30 03:46:35,255 - __main__ - INFO - Persistent: True
+2026-09-30 03:46:35,255 - __main__ - INFO - Log file: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/data/openhcs/logs/openhcs_zmq_server_port_5964_1790754393037041240.log
+2026-09-30 03:46:35,255 - __main__ - INFO - ============================================================
+2026-09-30 03:46:35,712 - zmqruntime.server - INFO - ZMQ Server started on tcp://127.0.0.1:5964 (PUB), control tcp://127.0.0.1:6964
+2026-09-30 03:46:35,712 - zmqruntime.execution.server - INFO - Queue worker thread started - will process executions sequentially
+2026-09-30 03:46:35,712 - zmqruntime.execution.server - INFO - Started execution queue worker thread
+2026-09-30 03:46:35,712 - __main__ - INFO - Server ready - waiting for requests...
+2026-09-30 03:46:35,813 - zmqruntime.server - INFO - Server ready
+2026-09-30 03:48:03,638 - openhcs.processing.custom_functions.manager - INFO - Created custom functions directory: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/data/openhcs/custom_functions
+2026-09-30 03:48:03,638 - openhcs.processing.backends.lib_registry.registry_service - INFO - Registry metadata cache cleared
+2026-09-30 03:48:03,638 - openhcs.processing.custom_functions.manager - INFO - Loaded 0 persisted custom function(s)
+2026-09-30 03:48:03,649 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping CupyRegistry
+2026-09-30 03:48:03,649 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping PyclesperantoRegistry
+2026-09-30 03:48:06,451 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for openhcs
+2026-09-30 03:48:06,454 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 152 openhcs functions from cache
+2026-09-30 03:48:06,455 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for skimage
+2026-09-30 03:48:06,455 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 114 skimage functions from cache
+2026-09-30 03:48:06,455 - openhcs.processing.backends.lib_registry.registry_service - INFO - Total functions discovered: 266
+2026-09-30 03:48:08,194 - openhcs.processing.custom_functions.manager - INFO - Saved custom function to: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/data/openhcs/custom_functions/inspect_volume_fixture.py
+2026-09-30 03:48:08,194 - openhcs.processing.custom_functions.manager - INFO - Registered custom function: inspect_volume_fixture (numpy -> numpy)
+2026-09-30 03:48:08,194 - openhcs.processing.backends.lib_registry.registry_service - INFO - Registry metadata cache cleared
+2026-09-30 03:48:08,195 - openhcs.processing.backends.lib_registry.registry_service - INFO - Registry metadata cache cleared
+2026-09-30 03:48:08,195 - openhcs.processing.custom_functions.manager - INFO - Loaded 1 persisted custom function(s)
+2026-09-30 03:48:08,195 - openhcs.processing.func_registry - INFO - Loaded 1 custom function declaration(s)
+2026-09-30 03:48:08,198 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping CupyRegistry
+2026-09-30 03:48:08,198 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping PyclesperantoRegistry
+2026-09-30 03:48:08,377 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for openhcs
+2026-09-30 03:48:08,381 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 152 openhcs functions from cache
+2026-09-30 03:48:08,381 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for skimage
+2026-09-30 03:48:08,381 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 114 skimage functions from cache
+2026-09-30 03:48:08,381 - openhcs.processing.backends.lib_registry.registry_service - INFO - Total functions discovered: 267
+2026-09-30 03:48:16,051 - zmqruntime.execution.server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Queued for execution (position: 1)
+2026-09-30 03:48:16,051 - zmqruntime.execution.server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Dequeued for execution (queue size: 0)
+2026-09-30 03:48:16,051 - zmqruntime.execution.server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Starting execution (was queued)
+2026-09-30 03:48:16,051 - openhcs.runtime.zmq_execution_server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Starting plate /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:16,072 - openhcs.runtime.zmq_execution_server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Request received: plate=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate compile_only=True artifact_id=None step_count=3 pipeline_sha=78614093b82b request_sig=23db316ffad9
+2026-09-30 03:48:16,122 - polystore.backend_registry - INFO - Created storage registry with 6 backends: ['ome_zarr', 'zarr', 'disk', 'fiji_stream', 'memory', 'napari_stream']
+2026-09-30 03:48:16,122 - polystore.base - INFO - Lazily initialized storage registry
+2026-09-30 03:48:16,122 - polystore.base - INFO - Memory backend reset - files cleared, directories preserved
+2026-09-30 03:48:16,122 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator initialized with PipelineConfig for context discovery.
+2026-09-30 03:48:16,122 - openhcs.core.orchestrator.orchestrator - INFO - 🔒 PLATE_PATH FROZEN: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate is now immutable
+2026-09-30 03:48:16,122 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator using global StorageRegistry instance.
+2026-09-30 03:48:16,138 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:16,140 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:16,725 - openhcs.core.orchestrator.orchestrator - INFO - Orchestrator zarr backend configured with zlib compression
+2026-09-30 03:48:16,725 - openhcs.core.orchestrator.orchestrator - INFO - Initializing microscope handler using input directory: None...
+2026-09-30 03:48:16,751 - openhcs.microscopes.microscope_base - INFO - Using provided FileManager for microscope handler.
+2026-09-30 03:48:16,752 - openhcs.microscopes.microscope_base - INFO - Creating BioFormatsHandler
+2026-09-30 03:48:16,752 - openhcs.microscopes.microscope_base - INFO - Bound microscope handler to plate folder: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:16,752 - openhcs.core.orchestrator.orchestrator - INFO - Initialized microscope handler: BioFormatsHandler
+2026-09-30 03:48:16,752 - openhcs.core.orchestrator.orchestrator - INFO - Initializing workspace with microscope handler...
+2026-09-30 03:48:17,492 - imagej - INFO - Added 663 JARs to the Java classpath.
+[INFO] Overriding BigStitcher; identifier: command:net.preibisch.stitcher.plugin.BigStitcher; jar: file:/home/ts/.cache/polystore/imagej/fiji-20260718-0417-linux_x86_64-eb5d70b3ffb6/Fiji/jars/BigStitcher-3.0.8.jar
+OMETiffReader initializing /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif
+2026-09-30 03:48:21,546 - polystore.virtual_workspace - INFO - Loaded 3 mappings for /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:21,546 - openhcs.microscopes.microscope_base - INFO - Registered virtual workspace backend for /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:21,546 - openhcs.core.orchestrator.orchestrator - INFO - Set input directory to: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:21,573 - openhcs.core.orchestrator.orchestrator - INFO - VFS config at init: read_backend=Backend.AUTO intermediate_backend=Backend.MEMORY materialization_backend=MaterializationBackend.DISK
+2026-09-30 03:48:21,573 - openhcs.core.orchestrator.orchestrator - INFO - Caching component keys and metadata...
+2026-09-30 03:48:21,573 - openhcs.core.orchestrator.orchestrator - INFO - Caching component keys for: ['site', 'channel', 'z_index', 'timepoint', 'well']
+2026-09-30 03:48:21,573 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:21,573 - openhcs.core.orchestrator.orchestrator - INFO - Component key discovery: input_dir=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate backend_to_use=virtual_workspace microscope=bioformats parser=BioFormatsFilenameParser
+2026-09-30 03:48:21,574 - openhcs.core.orchestrator.orchestrator - INFO - Component key discovery: listed 3 files (extensions={'.gif', '.png', '.bmp', '.tif', '.jpeg', '.tiff', '.jpg'})
+2026-09-30 03:48:21,574 - openhcs.core.orchestrator.orchestrator - INFO - Component key caching complete. Cached 5 component types in single pass.
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: parse_metadata returned: {'site': {'1': 'A01'}, 'channel': {'1': None}, 'z_index': {'1': None, '2': None, '3': None}, 'timepoint': {'1': None}, 'well': {'image.ome.tif': 'image.ome.tif'}}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching site -> AllComponents.SITE: {'1': 'A01'}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching channel -> AllComponents.CHANNEL: {'1': None}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching z_index -> AllComponents.Z_INDEX: {'1': None, '2': None, '3': None}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching timepoint -> AllComponents.TIMEPOINT: {'1': None}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching well -> AllComponents.WELL: {'image.ome.tif': 'image.ome.tif'}
+2026-09-30 03:48:21,576 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Final cache state: {<AllComponents.SITE: 'site'>: {'1': 'A01'}, <AllComponents.CHANNEL: 'channel'>: {'1': None}, <AllComponents.Z_INDEX: 'z_index'>: {'1': None, '2': None, '3': None}, <AllComponents.TIMEPOINT: 'timepoint'>: {'1': None}, <AllComponents.WELL: 'well'>: {'image.ome.tif': 'image.ome.tif'}}
+2026-09-30 03:48:21,604 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:21,604 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator fully initialized with cached component keys and metadata.
+2026-09-30 03:48:21,604 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'step_names'], step_name=
+2026-09-30 03:48:21,624 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:21,629 - openhcs.core.pipeline.compiler - INFO - Starting compilation for axis values: image.ome.tif
+2026-09-30 03:48:21,636 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:22,178 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=0 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,178 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=0 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,178 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=1 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,178 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=1 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,179 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=2 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,179 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=2 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:22,203 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:22,217 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:22,217 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:22,218 - openhcs.core.steps.function_runtime - INFO - Prepared 3 compiled callable invocations across 3 groups.
+2026-09-30 03:48:22,218 - openhcs.core.pipeline.compiler - INFO - 📁 PATH PLANNING SUMMARY:
+2026-09-30 03:48:22,218 - openhcs.core.pipeline.compiler - INFO -    Main pipeline output: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture0: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture1: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step1
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture2: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step2
+2026-09-30 03:48:22,219 - objectstate.object_state_registry - INFO - Cascade unregistered 5 ObjectState(s) for scope=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate::pipeline::submission_7f1095de5dc0
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.compiler - INFO - Stripping attributes from pipeline definition steps.
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture0'
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture1'
+2026-09-30 03:48:22,219 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture2'
+2026-09-30 03:48:22,244 - openhcs.core.pipeline.compiler - INFO - Execution config: 1 workers configured for pipeline execution
+2026-09-30 03:48:22,244 - openhcs.core.pipeline.compiler - INFO - Compilation complete: 1 wells compiled successfully
+2026-09-30 03:48:22,244 - openhcs.core.pipeline.compiler - WARNING - CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+2026-09-30 03:48:22,244 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'worker_assignments'], step_name=
+2026-09-30 03:48:22,244 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'worker_assignments'], step_name=pipeline
+2026-09-30 03:48:22,244 - openhcs.runtime.zmq_compilation - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Captured auto_add_output_plate=False output_plate_root=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs
+2026-09-30 03:48:22,244 - openhcs.runtime.zmq_execution_server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Compilation-only request completed and artifact stored (artifact_id=7df28890-6769-4a8b-a1d2-b63f6fdc19fd sig=23db316ffad9)
+2026-09-30 03:48:22,244 - zmqruntime.execution.server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] ✓ Completed in 6.2s
+2026-09-30 03:48:22,247 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:22,247 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:22,247 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:22,248 - zmqruntime.execution.server - INFO - Published 3 progress update(s) to ZMQ
+2026-09-30 03:48:22,255 - zmqruntime.execution.server - INFO - No live worker processes found to kill
+2026-09-30 03:48:22,255 - zmqruntime.execution.server - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Execution cleanup complete
+2026-09-30 03:48:22,255 - openhcs.runtime.zmq_server_hooks - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Attached results_summary extras: output_plate_root=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs auto_add=False observation=None
+2026-09-30 03:48:22,582 - openhcs.runtime.zmq_server_hooks - INFO - [7df28890-6769-4a8b-a1d2-b63f6fdc19fd] Attached results_summary extras: output_plate_root=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs auto_add=False observation=None
+2026-09-30 03:48:22,879 - zmqruntime.execution.server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Queued for execution (position: 1)
+2026-09-30 03:48:22,879 - zmqruntime.execution.server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Dequeued for execution (queue size: 0)
+2026-09-30 03:48:22,879 - zmqruntime.execution.server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Starting execution (was queued)
+2026-09-30 03:48:22,879 - openhcs.runtime.zmq_execution_server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Starting plate /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:22,893 - openhcs.runtime.zmq_execution_server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Request received: plate=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate compile_only=False artifact_id=None step_count=3 pipeline_sha=78614093b82b request_sig=7e278f6c7836
+2026-09-30 03:48:22,893 - polystore.base - INFO - Memory backend reset - files cleared, directories preserved
+2026-09-30 03:48:22,893 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator initialized with PipelineConfig for context discovery.
+2026-09-30 03:48:22,893 - openhcs.core.orchestrator.orchestrator - INFO - 🔒 PLATE_PATH FROZEN: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate is now immutable
+2026-09-30 03:48:22,894 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:22,894 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator using global StorageRegistry instance.
+2026-09-30 03:48:22,899 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:22,933 - openhcs.core.orchestrator.orchestrator - INFO - Orchestrator zarr backend configured with zlib compression
+2026-09-30 03:48:22,933 - openhcs.core.orchestrator.orchestrator - INFO - Initializing microscope handler using input directory: None...
+2026-09-30 03:48:22,958 - openhcs.microscopes.microscope_base - INFO - Using provided FileManager for microscope handler.
+2026-09-30 03:48:22,958 - openhcs.microscopes.microscope_base - INFO - Creating BioFormatsHandler
+2026-09-30 03:48:22,958 - openhcs.microscopes.microscope_base - INFO - Bound microscope handler to plate folder: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:22,958 - openhcs.core.orchestrator.orchestrator - INFO - Initialized microscope handler: BioFormatsHandler
+2026-09-30 03:48:22,958 - openhcs.core.orchestrator.orchestrator - INFO - Initializing workspace with microscope handler...
+OMETiffReader initializing /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif
+2026-09-30 03:48:22,999 - polystore.virtual_workspace - INFO - Loaded 3 mappings for /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:22,999 - openhcs.microscopes.microscope_base - INFO - Registered virtual workspace backend for /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:22,999 - openhcs.core.orchestrator.orchestrator - INFO - Set input directory to: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - VFS config at init: read_backend=Backend.AUTO intermediate_backend=Backend.MEMORY materialization_backend=MaterializationBackend.DISK
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - Caching component keys and metadata...
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - Caching component keys for: ['site', 'channel', 'z_index', 'timepoint', 'well']
+2026-09-30 03:48:23,025 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - Component key discovery: input_dir=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate backend_to_use=virtual_workspace microscope=bioformats parser=BioFormatsFilenameParser
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - Component key discovery: listed 3 files (extensions={'.gif', '.png', '.bmp', '.tif', '.jpeg', '.tiff', '.jpg'})
+2026-09-30 03:48:23,025 - openhcs.core.orchestrator.orchestrator - INFO - Component key caching complete. Cached 5 component types in single pass.
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: parse_metadata returned: {'site': {'1': 'A01'}, 'channel': {'1': None}, 'z_index': {'1': None, '2': None, '3': None}, 'timepoint': {'1': None}, 'well': {'image.ome.tif': 'image.ome.tif'}}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching site -> AllComponents.SITE: {'1': 'A01'}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching channel -> AllComponents.CHANNEL: {'1': None}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching z_index -> AllComponents.Z_INDEX: {'1': None, '2': None, '3': None}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching timepoint -> AllComponents.TIMEPOINT: {'1': None}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Caching well -> AllComponents.WELL: {'image.ome.tif': 'image.ome.tif'}
+2026-09-30 03:48:23,026 - openhcs.core.metadata_cache - INFO - 🔍 METADATA_CACHE: Final cache state: {<AllComponents.SITE: 'site'>: {'1': 'A01'}, <AllComponents.CHANNEL: 'channel'>: {'1': None}, <AllComponents.Z_INDEX: 'z_index'>: {'1': None, '2': None, '3': None}, <AllComponents.TIMEPOINT: 'timepoint'>: {'1': None}, <AllComponents.WELL: 'well'>: {'image.ome.tif': 'image.ome.tif'}}
+2026-09-30 03:48:23,053 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:23,053 - openhcs.core.orchestrator.orchestrator - INFO - PipelineOrchestrator fully initialized with cached component keys and metadata.
+2026-09-30 03:48:23,053 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'step_names'], step_name=
+2026-09-30 03:48:23,074 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:23,080 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:23,080 - openhcs.core.pipeline.compiler - INFO - Starting compilation for axis values: image.ome.tif
+2026-09-30 03:48:23,111 - objectstate.object_state_registry - WARNING - Overwriting existing ObjectState for scope: 
+2026-09-30 03:48:23,353 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=0 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,353 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=0 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,353 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=1 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,353 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=1 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,353 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=2 field=napari_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,354 - openhcs.core.pipeline.compiler - INFO - Streaming resolution: step=2 field=fiji_streaming_config defaults_enabled=False per_stream_enabled=False effective_enabled=False
+2026-09-30 03:48:23,379 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:23,382 - openhcs.core.steps.function_runtime - INFO - Prepared 3 compiled callable invocations across 3 groups.
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO - 📁 PATH PLANNING SUMMARY:
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO -    Main pipeline output: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture0: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture1: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step1
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO -    Materialization VolumeFixture2: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step2
+2026-09-30 03:48:23,382 - objectstate.object_state_registry - INFO - Cascade unregistered 5 ObjectState(s) for scope=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate::pipeline::submission_7f100d91a840
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.compiler - INFO - Stripping attributes from pipeline definition steps.
+2026-09-30 03:48:23,382 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture0'
+2026-09-30 03:48:23,383 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture1'
+2026-09-30 03:48:23,383 - openhcs.core.pipeline.step_attribute_stripper - INFO - Successfully stripped all attributes from step 'VolumeFixture2'
+2026-09-30 03:48:23,399 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:23,407 - openhcs.core.pipeline.compiler - INFO - Execution config: 1 workers configured for pipeline execution
+2026-09-30 03:48:23,407 - openhcs.core.pipeline.compiler - INFO - Compilation complete: 1 wells compiled successfully
+2026-09-30 03:48:23,407 - openhcs.core.pipeline.compiler - WARNING - CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+2026-09-30 03:48:23,407 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:23,408 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'worker_assignments'], step_name=
+2026-09-30 03:48:23,408 - openhcs.runtime.zmq_execution_server - INFO - _enqueue_progress: total_wells=['image.ome.tif'], keys=['execution_id', 'plate_id', 'axis_id', 'step_name', 'phase', 'status', 'percent', 'completed', 'total', 'timestamp', 'pid', 'total_wells', 'worker_assignments'], step_name=pipeline
+2026-09-30 03:48:23,408 - openhcs.runtime.zmq_compilation - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Captured auto_add_output_plate=False output_plate_root=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs
+2026-09-30 03:48:23,408 - openhcs.runtime.zmq_worker_execution - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Worker start method requested=spawn resolved=spawn reason=spawn requested
+2026-09-30 03:48:23,409 - openhcs.runtime.zmq_worker_execution - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Passing 3 compiled step(s) to worker execution
+2026-09-30 03:48:23,409 - openhcs.core.orchestrator.compiled_plate_execution - INFO - Starting execution for 1 axis values with max_workers=1.
+2026-09-30 03:48:23,418 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:23,418 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:23,418 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:23,418 - zmqruntime.execution.server - INFO - Published 3 progress update(s) to ZMQ
+2026-09-30 03:48:23,447 - openhcs.core.steps.function_execution - INFO - Step 0 (VolumeFixture0) I/O: read='virtual_workspace', write='memory'.
+2026-09-30 03:48:23,447 - openhcs.core.steps.function_execution - INFO - Step 0 (VolumeFixture0) Paths: input_dir='/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate', output_dir='/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/images', same_dir=False
+2026-09-30 03:48:23,447 - openhcs.runtime.zmq_execution_server - INFO - Forwarding progress: pid=2725185, axis=image.ome.tif, step_name=pipeline, worker_slot=worker_0
+2026-09-30 03:48:23,448 - openhcs.core.steps.function_execution - INFO - Starting step 'VolumeFixture0' for axis image.ome.tif (group_by=CHANNEL, variable_components=['Z_INDEX'])
+2026-09-30 03:48:23,448 - openhcs.runtime.zmq_execution_server - INFO - Forwarding progress: pid=2725185, axis=image.ome.tif, step_name=VolumeFixture0, worker_slot=worker_0
+2026-09-30 03:48:23,449 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:23,449 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=0.0
+2026-09-30 03:48:23,450 - zmqruntime.execution.server - INFO - Published 2 progress update(s) to ZMQ
+OMETiffReader initializing /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif
+Reading IFDs
+Populating metadata
+OMETiffReader initializing /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif
+Reading IFDs
+Populating metadata
+OMETiffReader initializing /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif
+Reading IFDs
+Populating metadata
+2026-09-30 03:48:23,483 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:23,488 - openhcs.core.steps.function_runtime - INFO - Executing function: inspect_volume_fixture
+2026-09-30 03:48:23,492 - openhcs.core.steps.function_runtime - INFO - Saving artifact output 'volume_fixture_image' to VFS path '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/results/image.ome.tif_w1_volume_fixture_image_step0.pkl' (memory backend)
+2026-09-30 03:48:23,496 - openhcs.core.steps.function_runtime - INFO - Saving artifact output 'volume_fixture_labels' to VFS path '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/results/image.ome.tif_w1_volume_fixture_labels_step0.pkl' (memory backend)
+2026-09-30 03:48:23,498 - openhcs.core.steps.function_runtime - INFO - Saving artifact output 'volume_fixture_rows' to VFS path '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/results/image.ome.tif_w1_volume_fixture_rows_step0.pkl' (memory backend)
+2026-09-30 03:48:23,506 - openhcs.core.steps.function_execution - INFO - Completed step 'VolumeFixture0' for axis image.ome.tif in 0.026s.
+2026-09-30 03:48:23,506 - openhcs.runtime.zmq_execution_server - INFO - Forwarding progress: pid=2725185, axis=image.ome.tif, step_name=VolumeFixture0, worker_slot=worker_0
+2026-09-30 03:48:23,506 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=100.0
+2026-09-30 03:48:23,507 - zmqruntime.execution.server - INFO - Published 1 progress update(s) to ZMQ
+2026-09-30 03:48:23,508 - openhcs.core.steps.function_outputs - INFO - Materialized 3 files to /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0
+2026-09-30 03:48:23,508 - openhcs.core.steps.function_outputs - INFO - Starting materialization for 3 artifact outputs
+2026-09-30 03:48:23,521 - openhcs.processing.materialization.core - INFO - ROI materialization split into 3 addressable archive(s): [{'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z001_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '1', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z002_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '2', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z003_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '3', 'timepoint': '1', 'well': 'image.ome.tif'})}]
+2026-09-30 03:48:23,521 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,524 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,525 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,532 - polystore.disk - INFO - Saved 1 ROIs to .roi.zip archive: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z001_t001_volume_fixture_labels_step0_rois.roi.zip
+2026-09-30 03:48:23,532 - polystore.disk - INFO - Saved 1 ROIs to .roi.zip archive: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z002_t001_volume_fixture_labels_step0_rois.roi.zip
+2026-09-30 03:48:23,533 - polystore.disk - INFO - Saved 1 ROIs to .roi.zip archive: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z003_t001_volume_fixture_labels_step0_rois.roi.zip
+2026-09-30 03:48:23,534 - openhcs.core.steps.function_outputs - INFO - Completed artifact materialization
+2026-09-30 03:48:23,548 - openhcs.processing.materialization.core - INFO - ROI materialization split into 3 addressable archive(s): [{'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z001_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '1', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z002_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '2', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z003_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '3', 'timepoint': '1', 'well': 'image.ome.tif'})}]
+2026-09-30 03:48:23,581 - openhcs.core.steps.function_execution - INFO - FunctionStep 0 (VolumeFixture0) completed for axis image.ome.tif in 0.134s (execute=0.026s, finalize=0.075s).
+2026-09-30 03:48:23,591 - openhcs.processing.materialization.core - INFO - ROI materialization split into 3 addressable archive(s): [{'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z001_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '1', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z002_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '2', 'timepoint': '1', 'well': 'image.ome.tif'})}, {'path': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/checkpoints_step0_results/image.ome.tif_s001_w1_z003_t001_volume_fixture_labels_step0_rois.roi.zip', 'component_metadata': mappingproxy({'ome_image_id': 'Image:0', 'ome_sample_id': 'Image:0', 'OpenHCSSourceFilterPaths': mappingproxy({'0': 'image.ome.tif', '1': '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate/image.ome.tif'}), 'site': '1', 'channel': '1', 'z_index': '3', 'timepoint': '1', 'well': 'image.ome.tif'})}]
+2026-09-30 03:48:23,592 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,593 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,594 - polystore.roi - INFO - Extracted 1 ROIs from labeled mask
+2026-09-30 03:48:23,595 - openhcs.core.steps.function_execution - INFO - Step 1 (VolumeFixture1) I/O: read='memory', write='memory'.
+2026-09-30 03:48:23,595 - openhcs.core.steps.function_execution - INFO - Step 1 (VolumeFixture1) Paths: input_dir='/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/images', output_dir='/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/images', same_dir=True
+2026-09-30 03:48:23,596 - openhcs.core.steps.function_execution - INFO - Starting step 'VolumeFixture1' for axis image.ome.tif (group_by=CHANNEL, variable_components=['Z_INDEX'])
+2026-09-30 03:48:23,598 - openhcs.runtime.zmq_execution_server - INFO - Forwarding progress: pid=2725185, axis=image.ome.tif, step_name=VolumeFixture0, worker_slot=worker_0
+2026-09-30 03:48:23,599 - openhcs.microscopes.microscope_base - INFO - ✅ Using backend 'virtual_workspace' from FileManager registry
+2026-09-30 03:48:23,599 - openhcs.runtime.zmq_execution_server - INFO - Forwarding progress: pid=2725185, axis=image.ome.tif, step_name=VolumeFixture1, worker_slot=worker_0
+2026-09-30 03:48:23,602 - openhcs.core.steps.function_runtime - INFO - Executing function: inspect_volume_fixture
+2026-09-30 03:48:23,603 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=33.33333333333333
+2026-09-30 03:48:23,604 - openhcs.core.steps.function_runtime - INFO - Saving artifact output 'volume_fixture_image' to VFS path '/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/outputs/plate_openhcs/results/image.ome.tif_w1_volume_fixture_image_step1.pkl' (memory backend)
+2026-09-30 03:48:23,607 - zmqruntime.execution.server - INFO - Publishing to ZMQ: step=None, axis=image.ome.tif, plate_id=/home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt02/owned/plate, percent=33.33333333333333
+2026-09-30 03:48:23,607 - zmqruntime.execution.server - INFO - Published 2 progress update(s) to ZMQ
+2026-09-30 03:48:23,609 - openhcs.core.steps.function_runtime - ERROR - Error processing pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2508, in run
+    processed_stack = self._execute_pattern(loaded)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3057, in _execute_pattern
+    return runtime_scope.execute_chain(loaded.main_data_stack)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1524, in execute_chain
+    current_stack = executor.execute(
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1885, in execute
+    main_output = self.save_artifact_outputs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2218, in save_artifact_outputs
+    output_plan.ref(): self.save_artifact_output(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2305, in save_artifact_output
+    saved_value = _save_artifact_value(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1650, in _save_artifact_value
+    ).contextualize_from_projector(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 451, in contextualize_from_projector
+    return FunctionOutputContextStrategy.contextualize_from_projector(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 381, in contextualize_from_projector
+    return self.contextualize(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 616, in contextualize
+    return source_context_strategy.contextualize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 860, in contextualize
+    return image_payload_metadata(source_payload).derive_payload(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 349, in derive_payload
+    metadata = self._derived_metadata(data, plane_projection)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 437, in _derived_metadata
+    source_metadata.source_provenance.with_derived_source_image_names(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/source_image_provenance.py", line 1214, in with_derived_source_image_names
+    raise ValueError(
+ValueError: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+2026-09-30 03:48:23,610 - openhcs.core.steps.function_runtime - ERROR - Full traceback for pattern group image.ome.tif_s001_w1_z{iii}_t001.tif:
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2508, in run
+    processed_stack = self._execute_pattern(loaded)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3057, in _execute_pattern
+    return runtime_scope.execute_chain(loaded.main_data_stack)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1524, in execute_chain
+    current_stack = executor.execute(
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1885, in execute
+    main_output = self.save_artifact_outputs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2218, in save_artifact_outputs
+    output_plan.ref(): self.save_artifact_output(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2305, in save_artifact_output
+    saved_value = _save_artifact_value(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1650, in _save_artifact_value
+    ).contextualize_from_projector(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 451, in contextualize_from_projector
+    return FunctionOutputContextStrategy.contextualize_from_projector(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 381, in contextualize_from_projector
+    return self.contextualize(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 616, in contextualize
+    return source_context_strategy.contextualize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 860, in contextualize
+    return image_payload_metadata(source_payload).derive_payload(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 349, in derive_payload
+    metadata = self._derived_metadata(data, plane_projection)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 437, in _derived_metadata
+    source_metadata.source_provenance.with_derived_source_image_names(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/source_image_provenance.py", line 1214, in with_derived_source_image_names
+    raise ValueError(
+ValueError: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+
+2026-09-30 03:48:23,612 - openhcs.core.steps.function_execution - ERROR - Error in FunctionStep 1 (VolumeFixture1): Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2508, in run
+    processed_stack = self._execute_pattern(loaded)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3057, in _execute_pattern
+    return runtime_scope.execute_chain(loaded.main_data_stack)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1524, in execute_chain
+    current_stack = executor.execute(
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1885, in execute
+    main_output = self.save_artifact_outputs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2218, in save_artifact_outputs
+    output_plan.ref(): self.save_artifact_output(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2305, in save_artifact_output
+    saved_value = _save_artifact_value(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1650, in _save_artifact_value
+    ).contextualize_from_projector(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 451, in contextualize_from_projector
+    return FunctionOutputContextStrategy.contextualize_from_projector(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 381, in contextualize_from_projector
+    return self.contextualize(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 616, in contextualize
+    return source_context_strategy.contextualize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 860, in contextualize
+    return image_payload_metadata(source_payload).derive_payload(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 349, in derive_payload
+    metadata = self._derived_metadata(data, plane_projection)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 437, in _derived_metadata
+    source_metadata.source_provenance.with_derived_source_image_names(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/source_image_provenance.py", line 1214, in with_derived_source_image_names
+    raise ValueError(
+ValueError: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 753, in run
+    self._execute_pattern_groups(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 1099, in _execute_pattern_groups
+    _process_single_pattern_group(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3447, in _process_single_pattern_group
+    PatternGroupRuntime(request).run()
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2585, in run
+    raise ValueError(
+ValueError: Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+2026-09-30 03:48:23,613 - openhcs.core.steps.function_execution - ERROR - Full traceback for FunctionStep 1 (VolumeFixture1):
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2508, in run
+    processed_stack = self._execute_pattern(loaded)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3057, in _execute_pattern
+    return runtime_scope.execute_chain(loaded.main_data_stack)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1524, in execute_chain
+    current_stack = executor.execute(
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1885, in execute
+    main_output = self.save_artifact_outputs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2218, in save_artifact_outputs
+    output_plan.ref(): self.save_artifact_output(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2305, in save_artifact_output
+    saved_value = _save_artifact_value(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1650, in _save_artifact_value
+    ).contextualize_from_projector(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 451, in contextualize_from_projector
+    return FunctionOutputContextStrategy.contextualize_from_projector(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 381, in contextualize_from_projector
+    return self.contextualize(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 616, in contextualize
+    return source_context_strategy.contextualize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 860, in contextualize
+    return image_payload_metadata(source_payload).derive_payload(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 349, in derive_payload
+    metadata = self._derived_metadata(data, plane_projection)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 437, in _derived_metadata
+    source_metadata.source_provenance.with_derived_source_image_names(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/source_image_provenance.py", line 1214, in with_derived_source_image_names
+    raise ValueError(
+ValueError: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 753, in run
+    self._execute_pattern_groups(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 1099, in _execute_pattern_groups
+    _process_single_pattern_group(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3447, in _process_single_pattern_group
+    PatternGroupRuntime(request).run()
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2585, in run
+    raise ValueError(
+ValueError: Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+
+2026-09-30 03:48:23,614 - polystore.base - INFO - Memory backend reset - files cleared, directories preserved
+2026-09-30 03:48:23,614 - openhcs.core.orchestrator.compiled_plate_execution - ERROR - Failed to execute compiled plate: Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+2026-09-30 03:48:23,614 - openhcs.runtime.zmq_execution_server - INFO - Progress forwarder received None, exiting
+2026-09-30 03:48:23,623 - zmqruntime.execution.server - ERROR - [4084d670-c3fd-420b-9405-1da41462ed15] ✗ Failed: Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2508, in run
+    processed_stack = self._execute_pattern(loaded)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3057, in _execute_pattern
+    return runtime_scope.execute_chain(loaded.main_data_stack)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1524, in execute_chain
+    current_stack = executor.execute(
+                    ^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1885, in execute
+    main_output = self.save_artifact_outputs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2218, in save_artifact_outputs
+    output_plan.ref(): self.save_artifact_output(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2305, in save_artifact_output
+    saved_value = _save_artifact_value(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 1650, in _save_artifact_value
+    ).contextualize_from_projector(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 451, in contextualize_from_projector
+    return FunctionOutputContextStrategy.contextualize_from_projector(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 381, in contextualize_from_projector
+    return self.contextualize(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 616, in contextualize
+    return source_context_strategy.contextualize(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 860, in contextualize
+    return image_payload_metadata(source_payload).derive_payload(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 349, in derive_payload
+    metadata = self._derived_metadata(data, plane_projection)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/runtime_image_values.py", line 437, in _derived_metadata
+    source_metadata.source_provenance.with_derived_source_image_names(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/source_image_provenance.py", line 1214, in with_derived_source_image_names
+    raise ValueError(
+ValueError: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-context-bounding-20260929/external/zmqruntime/src/zmqruntime/execution/server.py", line 279, in run_execution
+    results = self.execute_task(execution_id, request)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/runtime/zmq_execution_server.py", line 388, in execute_task
+    return self._execute_pipeline(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/runtime/zmq_execution_server.py", line 448, in _execute_pipeline
+    return self._execute_with_orchestrator(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/runtime/zmq_execution_server.py", line 538, in _execute_with_orchestrator
+    return self._finish_compilation_or_execute(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/runtime/zmq_execution_server.py", line 720, in _finish_compilation_or_execute
+    ).execute()
+      ^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/runtime/zmq_worker_execution.py", line 67, in execute
+    self.orchestrator.execute_compiled_plate(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/orchestrator.py", line 702, in execute_compiled_plate
+    return execute_compiled_plate_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/compiled_plate_execution.py", line 234, in execute_compiled_plate_request
+    execution_results = executor_resources.run_worker_lanes(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/worker_execution.py", line 186, in run_worker_lanes
+    lane_results = InlineWorkerLaneRunner(self.cancellation).run(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/worker_execution.py", line 601, in run
+    return execute_worker_lane(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/worker_execution.py", line 1064, in execute_worker_lane
+    lane_results[axis_id] = _execute_axis_with_sequential_combinations(
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/worker_execution.py", line 794, in _execute_axis_with_sequential_combinations
+    result = _execute_single_axis_static(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/orchestrator/worker_execution.py", line 1019, in _execute_single_axis_static
+    step.process(frozen_context, step_index)
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_step.py", line 46, in process
+    return FunctionStepExecutor.execute(context, step_index)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 753, in run
+    self._execute_pattern_groups(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_execution.py", line 1099, in _execute_pattern_groups
+    _process_single_pattern_group(
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 3447, in _process_single_pattern_group
+    PatternGroupRuntime(request).run()
+  File "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/core/steps/function_runtime.py", line 2585, in run
+    raise ValueError(
+ValueError: Failed to process pattern group image.ome.tif_s001_w1_z{iii}_t001.tif: Derived image names must contain one shared name or exactly one name per runtime plane: 2 name(s) for 3 plane(s).
+2026-09-30 03:48:23,636 - zmqruntime.execution.server - INFO - No live worker processes found to kill
+2026-09-30 03:48:23,636 - zmqruntime.execution.server - INFO - [4084d670-c3fd-420b-9405-1da41462ed15] Execution cleanup complete
+2026-09-30 03:49:22,186 - zmqruntime.execution.server - INFO - No live worker processes found to kill
+2026-09-30 03:49:22,186 - zmqruntime.execution.server - INFO - Workers killed (0), server shutting down
+2026-09-30 03:49:22,197 - zmqruntime.server - INFO - ZMQ Server stopped
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: Starting cleanup for fiji
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: About to clean 0 shared memory blocks
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: Shared memory cleanup complete
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: About to close 0 publishers
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: Publishers cleanup complete
+2026-09-30 03:49:22,197 - polystore.streaming._streaming_backend - INFO - 🔥 CLEANUP: fiji streaming backend cleaned up
+/home/ts/.pyenv/versions/3.12.3/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 3 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

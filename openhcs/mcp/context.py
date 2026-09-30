@@ -247,7 +247,7 @@ class OpenHCSAgentContext:
                 RuntimeServerService,
             )
 
-            self._runtime_server_service = RuntimeServerService()
+            self._runtime_server_service = RuntimeServerService(path_policy=self.path_policy)
         return self._runtime_server_service
 
     @property

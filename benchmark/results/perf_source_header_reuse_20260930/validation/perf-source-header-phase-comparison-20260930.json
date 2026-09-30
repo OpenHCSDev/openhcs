@@ -1,0 +1,125 @@
+{
+  "main": {
+    "members": {
+      "calls": 4,
+      "seconds": 0.4891871390864253,
+      "metadata_calls": 0,
+      "metadata_seconds": 0.0,
+      "header_calls": 0,
+      "header_seconds": 0.0,
+      "native_parse_calls": 0,
+      "native_parse_seconds": 0.0
+    },
+    "source_loading": {
+      "calls": 9,
+      "seconds": 0.7862884649075568,
+      "metadata_calls": 540,
+      "metadata_seconds": 0.5077878101728857,
+      "header_calls": 540,
+      "header_seconds": 0.32867507031187415,
+      "native_parse_calls": 540,
+      "native_parse_seconds": 0.2905924255028367
+    },
+    "source_artifact": {
+      "calls": 4,
+      "seconds": 1.08829874265939,
+      "metadata_calls": 240,
+      "metadata_seconds": 0.21427537966519594,
+      "header_calls": 240,
+      "header_seconds": 0.13961006375029683,
+      "native_parse_calls": 240,
+      "native_parse_seconds": 0.1229054294526577
+    }
+  },
+  "candidate": {
+    "members": {
+      "calls": 4,
+      "seconds": 0.535719275008887,
+      "metadata_calls": 0,
+      "metadata_seconds": 0.0,
+      "header_calls": 0,
+      "header_seconds": 0.0,
+      "native_parse_calls": 0,
+      "native_parse_seconds": 0.0
+    },
+    "source_loading": {
+      "calls": 9,
+      "seconds": 0.4436112423427403,
+      "metadata_calls": 540,
+      "metadata_seconds": 0.19173680525273085,
+      "header_calls": 540,
+      "header_seconds": 0.04042238602414727,
+      "native_parse_calls": 0,
+      "native_parse_seconds": 0.0
+    },
+    "source_artifact": {
+      "calls": 4,
+      "seconds": 0.8130454900674522,
+      "metadata_calls": 240,
+      "metadata_seconds": 0.08282122341915965,
+      "header_calls": 240,
+      "header_seconds": 0.01932218996807933,
+      "native_parse_calls": 0,
+      "native_parse_seconds": 0.0
+    }
+  },
+  "candidate_variance_largest_step_deltas": [
+    {
+      "index": 20,
+      "step_name": "Watershed",
+      "slow_candidate": 1.07798171043396,
+      "other_candidate": 0.4038350582122803,
+      "delta": 0.6741466522216797
+    },
+    {
+      "index": 10,
+      "step_name": "Threshold",
+      "slow_candidate": 1.0098028182983398,
+      "other_candidate": 0.35554003715515137,
+      "delta": 0.6542627811431885
+    },
+    {
+      "index": 7,
+      "step_name": "ErodeObjects",
+      "slow_candidate": 0.39823031425476074,
+      "other_candidate": 0.12322425842285156,
+      "delta": 0.2750060558319092
+    },
+    {
+      "index": 13,
+      "step_name": "ImageMath",
+      "slow_candidate": 0.7957634925842285,
+      "other_candidate": 0.5891809463500977,
+      "delta": 0.20658254623413086
+    },
+    {
+      "index": 17,
+      "step_name": "Threshold",
+      "slow_candidate": 0.4807894229888916,
+      "other_candidate": 0.3139171600341797,
+      "delta": 0.16687226295471191
+    },
+    {
+      "index": 3,
+      "step_name": "Threshold",
+      "slow_candidate": 0.3612992763519287,
+      "other_candidate": 0.19570255279541016,
+      "delta": 0.16559672355651855
+    },
+    {
+      "index": 11,
+      "step_name": "ImageMath",
+      "slow_candidate": 0.2928760051727295,
+      "other_candidate": 0.13889002799987793,
+      "delta": 0.15398597717285156
+    },
+    {
+      "index": 19,
+      "step_name": "ErodeImage",
+      "slow_candidate": 0.21480441093444824,
+      "other_candidate": 0.13786625862121582,
+      "delta": 0.07693815231323242
+    }
+  ],
+  "scope": "Phase clocks nest; sum source_loading+source_artifact only. Header/native-parse clocks nest within them. Instrumented pair is separate from uninstrumented ABBA."
+}

@@ -49,6 +49,7 @@ from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import QDockWidget
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import (
+    ImageTransferIdentity,
     ControlMessageType,
     EndpointControlCapability,
     ResponseType,
@@ -610,7 +611,11 @@ class NapariImagePayload(NapariStreamLayerContext):
     """Typed view of one image/shapes message."""
 
     raw: Mapping[str, NapariWireValue]
-    image_id: str | None
+    transfer: ImageTransferIdentity | None
+
+    @property
+    def image_id(self) -> str | None:
+        return None if self.transfer is None else self.transfer.image_id
 
     def __post_init__(self) -> None:
         if not self.address.components:
@@ -631,10 +636,9 @@ class NapariImagePayload(NapariStreamLayerContext):
             layer_axis_projection_semantics,
             display_config,
         )
-        image_id = payload.optional(ViewerWireField.IMAGE_ID)
         return cls(
             raw=image_info,
-            image_id=str(image_id) if image_id is not None else None,
+            transfer=ImageTransferIdentity.from_item(image_info),
             entries=stream_layer_context.entries,
             layout=stream_layer_context.layout,
             producer=stream_layer_context.producer,
@@ -6078,7 +6082,12 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         )
 
     def clear_accumulated_stream_state(self) -> None:
-        """Reset stream domains that must not leak across pipeline executions."""
+        """Cancel intake work without orphaning inspectable mounted payloads.
+
+        A pipeline execution is not a native-layer removal. Mounted raw and
+        previous-result routes retain the data and domains that their controls
+        inspect; unmounted intake belongs only to the cancelled stream cycle.
+        """
         self.layer_route_state.reset_settlement()
         pending_updates = self.layer_route_state.drain_pending_updates()
         self.display_pipeline.clear_display_work()
@@ -6088,9 +6097,16 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 "clearing stream state",
                 len(pending_updates),
             )
-        self.component_groups.clear()
-        self.component_values = ViewerRouteComponentValueTracker()
-        self.component_name_metadata.clear()
+        if self.viewer is not None:
+            _NAPARI_COMPONENT_DISPLAY_COORDINATOR._reconcile_deleted_layers(self)
+        retained_routes = frozenset(self.layer_route_state.layers)
+        for route_key in tuple(self.component_groups):
+            if route_key not in retained_routes:
+                self.component_groups.purge(route_key)
+                self.layer_route_state.purge_route(route_key)
+        self.component_values.retain_routes(retained_routes)
+        if not retained_routes:
+            self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
         self.batch_processors = NapariBatchProcessorStore(
             debounce_policy=self.layer_batch_processor_debounce_policy,
@@ -6246,8 +6262,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 stream_layer_context=payload,
                 server=self,
             )
-            if payload.image_id:
-                self.send_ack(payload.image_id, status=_ACK_SUCCESS)
+            self.send_ack(payload.transfer, status=_ACK_SUCCESS)
 
         except Exception as e:
             self.layer_route_state.record_update_error(None, e)
@@ -6255,8 +6270,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 f"🔬 NAPARI PROCESS: Failed to process {payload_address.stream_layer_data_type} {payload_address.path}: {e}",
                 exc_info=True,
             )
-            if payload.image_id:
-                self.send_ack(payload.image_id, status=_ACK_ERROR, error=str(e))
+            self.send_ack(payload.transfer, status=_ACK_ERROR, error=str(e))
             # Don't re-raise - continue processing other messages instead of crashing
 
 

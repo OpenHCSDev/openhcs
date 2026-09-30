@@ -453,11 +453,12 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
         self, connection: ExecutionConnectionSpec
     ) -> OpenHCSZMQConfig:
         """Use the explicit typed route, never a companion endpoint registry."""
+        config = self._config_provider()
         return replace(
-            self._config_provider(),
+            config,
             default_port=connection.require_port("Function catalog operation"),
             client_host=connection.host,
-            transport_mode=connection.transport_endpoint().transport_mode,
+            transport_mode=connection.transport_endpoint(config).transport_mode,
             persistent=connection.persistent,
         )
 

@@ -1,0 +1,19 @@
+{
+  "returncode": 0,
+  "cli_seconds": 121.25414806092158,
+  "command": [
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs/benchmark/manifests/official30_portable_axis1.json",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-identity-fixed-cpu-abba-2-candidate-20260930",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "cp_tutorial_3d_monolayer",
+    "--case",
+    "ExampleImagingFlowCytometryObjectsInGrid"
+  ],
+  "package": "/tmp/openhcs-source-identity-installed-20260930"
+}
