@@ -1,0 +1,64 @@
+{
+  "ratchet": [
+    {
+      "original_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-progress-ratchet-openhcs-20260930.json",
+      "original_sha256": "090aa4ceab16d521e4b6387f9901b11cd32d6bce40f339b02f597f0e068b55f5",
+      "root": "openhcs/",
+      "base_revision": "c42d9bf5d83249975618c1d1c8dcfd3819a7b036",
+      "head_revision": "8586494d7e3d5ccca78dec5047d653c48f2e7bc3",
+      "changed_paths": [
+        "openhcs/core/processing_preparation.py",
+        "openhcs/processing/backends/lib_registry/registry_service.py",
+        "openhcs/runtime/function_catalog_preparation.py",
+        "openhcs/runtime/zmq_execution_server.py",
+        "openhcs/runtime/zmq_execution_server_launcher.py"
+      ],
+      "metrics_compared": 5131,
+      "increased": {}
+    },
+    {
+      "original_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-ratchet-benchmark-20260930.json",
+      "original_sha256": "84dbd68dd85dbf2bcc24683bfef17ac14001272cf5e610ed7f3fd3b612266631",
+      "root": "benchmark/",
+      "base_revision": "c42d9bf5d83249975618c1d1c8dcfd3819a7b036",
+      "head_revision": "3d98ad2c31d5f144f76e2e3878adcc69757bd7dc",
+      "changed_paths": [
+        "benchmark/cellprofiler_benchmark_cli.py"
+      ],
+      "metrics_compared": 411,
+      "increased": {}
+    },
+    {
+      "original_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-ratchet-scripts-20260930.json",
+      "original_sha256": "670984b33ba6a164619a9e1fbed2b18f047d935010fddc8210fbb33a66664a9a",
+      "root": "scripts/",
+      "base_revision": "c42d9bf5d83249975618c1d1c8dcfd3819a7b036",
+      "head_revision": "3d98ad2c31d5f144f76e2e3878adcc69757bd7dc",
+      "changed_paths": [
+        "scripts/benchmark_cppipe_well_throughput.py"
+      ],
+      "metrics_compared": 235,
+      "increased": {}
+    }
+  ],
+  "original_class_census": [
+    {
+      "source_revision": "c42d9bf5d83249975618c1d1c8dcfd3819a7b036",
+      "module_count": 701,
+      "original_class_count": 5097,
+      "projected_count": 5085,
+      "original_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-latest-main-nra-census-before-20260930.json",
+      "original_sha256": "19475b28c4cf935654932e5fff6e2d409fbd1d6f77099200e3b27ba5d03ce1ae",
+      "open_original_classes": 12
+    },
+    {
+      "source_revision": "8586494d7e3d5ccca78dec5047d653c48f2e7bc3",
+      "module_count": 701,
+      "original_class_count": 5098,
+      "projected_count": 5086,
+      "original_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-server-startup-progress-nra-census-after-20260930.json",
+      "original_sha256": "2bd8cf0ae694aad86fbe8b2183654e24935f9033800f5454b89ed4d973588ec6",
+      "open_original_classes": 12
+    }
+  ]
+}

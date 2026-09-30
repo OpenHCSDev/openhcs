@@ -1,0 +1,3 @@
+Processing ./openhcs-server-startup-final-wheel-20260930/openhcs-0.8.6-cp311-abi3-linux_x86_64.whl
+Installing collected packages: openhcs
+Successfully installed openhcs-0.8.6

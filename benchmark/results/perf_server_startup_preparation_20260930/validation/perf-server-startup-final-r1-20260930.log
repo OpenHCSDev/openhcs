@@ -1,0 +1,18 @@
+R1 c42d9bf5d83249975618c1d1c8dcfd3819a7b036: NRA cache=miss, projections=3006, prepare=50.132s, analysis=3.092s
+R1 3d98ad2c31d5f144f76e2e3878adcc69757bd7dc: NRA cache=miss, projections=3006, prepare=49.968s, analysis=3.093s
+{
+  "base": "c42d9bf5d83249975618c1d1c8dcfd3819a7b036",
+  "head": "3d98ad2c31d5f144f76e2e3878adcc69757bd7dc",
+  "changed": [
+    "benchmark/cellprofiler_benchmark_cli.py",
+    "openhcs/core/processing_preparation.py",
+    "openhcs/processing/backends/lib_registry/registry_service.py",
+    "openhcs/runtime/function_catalog_preparation.py",
+    "openhcs/runtime/zmq_execution_server.py",
+    "openhcs/runtime/zmq_execution_server_launcher.py",
+    "scripts/benchmark_cppipe_well_throughput.py"
+  ],
+  "before": [],
+  "after": [],
+  "increased": []
+}
