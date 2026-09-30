@@ -90,3 +90,27 @@ compiled/MCP discovery/execution and persisted corrected/flatfield/darkfield
 artifact readback. Frozen biology runs, actual installed harness and managed
 skill remain unchanged. Hosted CI is not the gate; real application verification
 is still required before readiness or activation is claimed.
+
+Current-main integration (2026-09-30)
+------------------------------------
+
+Parent normally merged main d1c6ab72ca252ea93656eeaaf84d34b81abd8317 into this
+isolated PR tree at e43420c69. No rebase, reset or global package change. Paired
+ArrayBridge/BaSiCPy revisions stay the same; own native9e11f6f, PolyStoredc34173,
+metaclass448cdf0 and pyqt3437d1c source checkouts reuse existing Git objects.
+The owner-check recipe now relies on app-owned source dependency projection;
+it no longer injects the older unrelated native checkout onto PYTHONPATH.
+
+Current-main controls:152passed16.83s, process18.95s, peakRSS1174892KiB, zero
+swaps. Original packaged ratchet5155metrics with zero positive deltas; metadata
+class-excess-9, foreign-absence-1 and string-subscripts-2 remain. Seven source
+contracts pass using the actual upstream basicpy.py file. Two mistaken
+directory-valued source-contract invocations failed with IsADirectoryError;
+their original logs remain separate, no production/backend invocation occurred.
+All reports persist in basicpy-owner-closure-20260930; no older report replaced.
+
+Real fit-field MCP/persisted readback remains pending one named runtime dependency:
+Russell's fresh context-isolated trial must release validation.lock first. This
+PR source tree is independent of that frozen source and skill; do not mutate
+or replay the scientific trial. This checkpoint is source-qualified numeric
+acceptance, not installed/live/biological readiness or a reason to wait for CI.
