@@ -54,6 +54,21 @@ GodClassExcess RuntimeServerService +15 and ZMQExecutionClient +32. Original JSO
 and resource receipt retained. This source correction does not claim a passing
 own-PR ratchet/global audit or fix that separate structural remainder.
 
+Source-only continuation normally integrates merged275/273 at main546edd57.
+At1f332d161, destination resolution moves onto the EXISTING
+ExecutionRuntimeLaunchPlan declaration; client caching, admission-before-spawn,
+native lifecycle, transport declarations and wire fields stay unchanged.
+Focused bootstrap suite:25 passed/3.16s, process3.72s/246212KiB/exit0.
+Original failed scratch-parent setup XML is retained separately.
+Original packaged GodClassExcess measure, authenticated against pinned3b03785,
+scoped to these two owner modules: client growth +32 -> +9; service remains +15.
+This is NOT a passing complete ratchet/NRA or full class decomposition.
+New-case witnesses use both existing transports with nondefault namespace,
+IPC naming and control-port topology, prove noncreating projection, and retain
+the exact cached/admitted plan. Current write set only client, bootstrap tests
+and receipts; no parent experimental-analysis/R0/L0 or Dirac ACK/viewer edits.
+[Owner move, evidence and remaining scope](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/launch-plan-factoring/checkpoint.md).
+
 ### Exact owned close (parent-reported5993 lifecycle defect)
 
 Adds typed `openhcs_close_owned_runtime` on the existing RuntimeServerService

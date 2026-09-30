@@ -14,9 +14,11 @@ managed skill, and blind native owners were not changed or contacted.
 - `RuntimeServerService` admits every projected native launch write through its
   injected `AgentPathPolicy` before canonical native startup. The normal context
   now passes its existing policy into this service too.
-- `ZMQExecutionClient.runtime_launch_plan` owns native log/status filenames and
+- `ExecutionRuntimeLaunchPlan.resolve` owns native log/status filenames and
   projects data/store/cache/transport destinations from their original owners.
-  `_spawn_server_process` consumes the same plan, not a second launcher.
+  The client retains the admitted plan; `_spawn_server_process` consumes that
+  same plan, not a second launcher. See the source-only owner-move receipt in
+  `runtime_bootstrap_20260930/launch-plan-factoring/checkpoint.md`.
 - Paired ZMQRuntime adds exclusive startup to its existing client/lifecycle lock.
   It never calls attach, kill, replacement, readiness warming, or source dispatch.
   Its existing startup lock carries a PID+creation-time pre-bind reservation;
