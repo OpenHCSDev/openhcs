@@ -2,8 +2,9 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `c86f562e1` (merged disjoint PR260), integrated normally
-through `b7e6a2fbc` after implementation/acceptance commit `4f4332368`. The initial
+Base: `openhcsdev/main` at `dbf1c7a8b` (merged PR259), integrated normally through
+`0e04ad6c7`. Earlier main260 `c86f562e1` was integrated through `b7e6a2fbc` after
+implementation/acceptance commit `4f4332368`. The initial
 278-test runtime checkpoint used `32d070c26` (PR255), integrated through
 `85d8b2ae7`; the refreshed journey below also verifies current main260 and the
 latest owner cutover. The preceding checkpoint merged
@@ -18,7 +19,51 @@ Closes #133. References #204; paired-channel headless execution now passes, but
 actual GUI/installed acceptance remains open. This is a source-headless verified
 draft, not an installed/live-readiness claim.
 
-## Latest checkpoint: main260 journey and R0 owner correction
+## Latest integration checkpoint: current main259 verified
+
+Normally merged `dbf1c7a8b` in the existing worktree at **`0e04ad6c7`** without
+conflicts. Parent main/raw argument hooks and object-label strategy leaves are
+unchanged by this worker. No source edit or competing fix for issue257/264, R0,
+startup, source binding or the broader archive was introduced.
+
+Explicit shared-file flags were delivered directly on the existing owner PRs:
+[Socrates PR262](https://github.com/OpenHCSDev/openhcs/pull/262#issuecomment-5904213847)
+and [Lovelace PR263](https://github.com/OpenHCSDev/openhcs/pull/263#issuecomment-5904214041).
+The available comms route rejected two attempted sends because sender Zeno is not
+registered there; no fake participant was registered and no delivery was claimed.
+The separate broader refactoring agent identity remains unconfirmed; Lovelace
+is the known R0 owner, not an inferred owner of every archive surface.
+
+Under the explicitly retained finite native slot and nonblocking lock, fresh
+admission measured **16.08 GiB available RAM / 30.57 GiB disk**, historical-swap
+warning only. The worktree import path and exact merged source were verified.
+`pytest -q tests/integration/test_measurement_declaration_journey.py
+tests/unit/test_artifact_output_ownership.py tests/unit/test_runtime_value_store.py
+--tb=short` passed **85 cases**, 37.74 seconds (43.61 seconds process wall time):
+all six real declaration/compile/orchestrator/CSV journeys, all 23 output-policy
+cases and all 56 runtime-input controls. No deselection, weakened assertion,
+mocked replacement entrypoint, restart or replay of any original blind run.
+
+The existing packaged ratchet against **`dbf1c7a8b` → `0e04ad6c7`** again exits
+**0**, 16 changed production files, zero positive deltas. All 25 changed Python
+files parse/compile in memory; diff check passes. Coverage limits from the R0
+receipt below still apply; this is not a complete NRA R1 proof or full reference
+corpus/installed GUI acceptance. The internal policy and source-context owners
+still reject invalid inputs independently of output recording ownership.
+
+Supervisor **2418566** and pytest **2418569** exited zero and are absent; no
+surviving worker runtime/test handle remains. The finite native slot is explicitly
+returned to the parent. Worker-owned self-generated fixture/cache scratch was
+removed after termination, retaining command and ratchet reports at
+`/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929/pr205-main259-dependency-20260930`.
+Final SHA256:
+
+- `journey-policy-input-controls.log`:
+  `a0cc302bb562e24b3f109fc4dea88d2ab6d2e3e7c6abb2921a57d373038a10e0`.
+- `packaged-ratchet.log`:
+  `50a31a25fd1f09503c5e3448d0b3bed421ac05f189c79ac48a6a4457cb9c9d8b`.
+
+## Main260 journey and R0 owner correction
 
 Read the complete new `docs/refactor` rules/index/R0/owner override package in
 Lovelace's existing PR263 worktree and the binding expanded-goal receipt. Existing
