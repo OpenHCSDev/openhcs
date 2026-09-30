@@ -69,6 +69,31 @@ the exact cached/admitted plan. Current write set only client, bootstrap tests
 and receipts; no parent experimental-analysis/R0/L0 or Dirac ACK/viewer edits.
 [Owner move, evidence and remaining scope](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/launch-plan-factoring/checkpoint.md).
 
+### Effective transport defect correction (parent943898 witness)
+
+Normally integrated mainc50f42c before correction at3b78eb1fd. The original
+OpenHCSZMQConfig.client_endpoint now owns host/port/mode default/override policy
+for both connection projection and actual native client construction. Deleted
+the client-side copied defaults. Source locality checks the ACTUAL effective
+client endpoint before plan/writes/spawn; produced typed handles retain the
+resolved nominal connection. Observe/close and URL/control projections derive
+that same route. The catalog projection supplies its injected config too.
+No duplicate endpoint/config store, global mode mutation, new launcher or mode
+switch. Native ZMQ/Dirac/viewer declarations unchanged; paired pins unchanged.
+
+**48 source testsPASS4.05s**, process4.65s/255392KiB/exit0: omitted/configured
+TCP/IPC and explicit overrides, locality no-write rejection, nested handle
+round-trip and start->observe->close route sameness with changed observer defaults.
+Spawn/network/shutdown intercepted; not a new native/installed acceptance.
+Unmodified parent3-case witness: actual observe route and explicitIPC nowPASS;
+raw no-config comparison stillFAIL/exit1 because it never supplies the different
+config used by its client. `transport_endpoint(config)` or `resolved(config)`
+fixes that caller-context omission without changing its expected native endpoint;
+six cases prove both. Original diagnostic/output retained, not made green by
+fabricating TCP defaults or cached hidden state. Parent owns its diagnostic.
+Scoped original GodClass measure now client+8/service+15, NOT full guard pass.
+[Exact review, tests and original witness limitation](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/effective-transport/checkpoint.md).
+
 ### Exact owned close (parent-reported5993 lifecycle defect)
 
 Adds typed `openhcs_close_owned_runtime` on the existing RuntimeServerService
