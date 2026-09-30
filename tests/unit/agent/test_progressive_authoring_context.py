@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,7 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentSummary,
     KnowledgeBaseDocumentTarget,
 )
+from openhcs.agent.image_analysis_qa import ImageAnalysisQaPolicy
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 
@@ -163,6 +165,50 @@ def test_actual_source_backed_guides_fit_the_public_default_bound() -> None:
         assert bounded.content == complete.content
 
 
+def test_default_image_analysis_context_preserves_the_entire_typed_qa_policy() -> None:
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog()
+    )
+    request = AuthoringContextRequest(
+        kind=ImageAnalysisWorkflowAuthoringContext.require_kind()
+    )
+    delivered = service.get_bounded_authoring_context(request)
+    assert delivered == service.get_authoring_context(request.kind)
+    assert len(delivered.content) <= request.max_chars
+    assert ImageAnalysisQaPolicy.repair_guidance() in delivered.content
+    for (
+        target
+    ) in ImageAnalysisWorkflowAuthoringContext.require_route().knowledge_targets:
+        assert target.document_id in delivered.content
+
+
+def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> None:
+    knowledge = _DeclaredKnowledgeBase()
+    knowledge._catalog = replace(
+        knowledge._catalog,
+        documents=tuple(
+            replace(document, summary="long-catalog-summary " * 2000)
+            for document in knowledge._catalog.documents
+        ),
+    )
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog(),
+        config_service=_ReflectedConfigService(),
+        knowledge_base=knowledge,
+    )
+    for declaration in AuthoringContextDeclaration.__registry__.values():
+        request = AuthoringContextRequest(kind=declaration.require_kind())
+        delivered = service.get_bounded_authoring_context(request)
+        assert delivered == service.get_authoring_context(request.kind)
+        assert len(delivered.content) <= request.max_chars
+        assert "long-catalog-summary" not in delivered.content
+        for target in declaration.require_route().knowledge_targets:
+            assert (
+                f"{target.document_id} — Title for {target.document_id}"
+                in delivered.content
+            )
+
+
 @pytest.mark.parametrize("kind", ("first_use", "pipeline"))
 def test_actual_mcp_onboarding_reaches_responsive_preparation_without_endpoint_contact(
     monkeypatch, kind: str
@@ -260,7 +306,7 @@ def test_every_context_is_complete_within_the_progressive_bound() -> None:
         assert "=== DEEPEN ONLY WHEN NEEDED ===" in context.content
         for target in route.knowledge_targets:
             assert target.document_id in context.content
-            assert f"Summary for {target.document_id}" in context.content
+            assert f"Title for {target.document_id}" in context.content
 
     assert config_service.requests == ["global", "pipeline"]
 
