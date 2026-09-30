@@ -67,6 +67,15 @@ Actual source validation on 2026-09-30:
   initialize another set of submodule checkouts or install packages.
 * The live-use search across production, tests, packaging and the package
   manifest returns no matches for the deleted module and its helper identities.
+* The original packaged structural ratchet passes, exit 0, for this production
+  deletion at d9f17dcdc62224a019f7f31626bcf2f4ea3b7233 against the audited main.
+  The original R1 attempt failed after 55 seconds while parsing full context;
+  it is retained as failed/incomplete, not a clean scan. Issue 274 and PR275
+  correct scope admission through the existing SourceRevision Git owner. The
+  corrected actual CLI comparison returns explicit unmeasured empty head report
+  scope in 1.50 seconds, exit 0, without snapshots or before/after counts.
+* The three disposable fixture copies were removed after validation completed;
+  the original fixture and retained XML/hash evidence remain unchanged.
 
 Run the existing OMERO parser/pattern-discovery tests against this exact source
 tree using the ordinary OpenHCS Python and one BLAS thread. Exercise actual
