@@ -1130,6 +1130,10 @@ class ViewerRouteComponentValueTracker:
     def shared_values_for(
         self,
         axis_components: Sequence[str],
+        *,
+        replacement_route: str | None = None,
+        replacement_domain: ViewerComponentValueDomain | None = None,
+        additional_component_values: ComponentValues | None = None,
     ) -> ComponentValues:
         """Derive the viewer-wide coordinate domain from routed domains.
 
@@ -1139,13 +1143,21 @@ class ViewerRouteComponentValueTracker:
         values arrived through different stream requests.
         """
 
+        domains = tuple(
+            domain
+            for key, domain in self.domains.items()
+            if key[0] != replacement_route
+        )
+        if replacement_domain is not None:
+            domains += (replacement_domain,)
         return {
             component: sorted(
                 {
                     value
-                    for domain in self.domains.values()
+                    for domain in domains
                     for value in domain.coordinate_values(component)
-                },
+                }
+                | set((additional_component_values or {}).get(component, ())),
                 key=ViewerComponentValueOrdering.key,
             )
             for component in axis_components
@@ -1414,32 +1426,32 @@ class ViewerLayerAxisProjectionRequestAuthority:
         route_value_tracker: ViewerRouteComponentValueTracker,
         aggregate_component_values: ComponentValues,
         geometric_component_values: ComponentValues,
+        publish: bool = True,
+        viewer_component_values: ComponentValues | None = None,
     ) -> ViewerLayerAxisProjectionRequest:
         axis_components = component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
         )
-        route_value_tracker.update(route_key, axis_components, layer_items)
+        domain = (
+            route_value_tracker.domain_for(route_key, axis_components)
+            if publish
+            else ViewerComponentValueDomain.for_axes(axis_components)
+        )
+        domain.replace_observed(layer_items)
         if aggregate_component_values:
-            route_value_tracker.update_component_values(
-                route_key,
-                axis_components,
-                aggregate_component_values,
-            )
+            domain.observe_component_values(aggregate_component_values)
         if geometric_component_values:
-            route_value_tracker.update_component_values(
-                route_key,
-                axis_components,
-                geometric_component_values,
-            )
+            domain.observe_component_values(geometric_component_values)
         declared_component_values = component_axis_semantics.required_component_values(
             axis_components
         )
-        route_value_tracker.declare_component_values(
-            route_key,
-            axis_components,
-            declared_component_values,
-        )
-        viewer_component_values = route_value_tracker.shared_values_for(axis_components)
+        domain.declare(declared_component_values)
+        if viewer_component_values is None:
+            viewer_component_values = route_value_tracker.shared_values_for(
+                axis_components,
+                replacement_route=route_key,
+                replacement_domain=domain,
+            )
         return ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=axis_components,
             route_component_coordinates=(
@@ -1449,10 +1461,7 @@ class ViewerLayerAxisProjectionRequestAuthority:
                     aggregate_component_values=aggregate_component_values,
                 )
             ),
-            route_component_values=route_value_tracker.values_for(
-                route_value_tracker.domain_key(route_key, axis_components),
-                axis_components,
-            ),
+            route_component_values=domain.observed(),
             viewer_component_values=viewer_component_values,
             declared_component_values=(
                 component_axis_semantics.required_component_values(axis_components)
