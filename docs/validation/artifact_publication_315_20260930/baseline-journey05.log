@@ -1,0 +1,197 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_public_planning_rejects_external_results_root ______________
+
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/baseline05/test_public_planning_rejects_e0')
+
+    def test_public_planning_rejects_external_results_root(tmp_path):
+        with pytest.raises(ValueError, match="materialization_results_path.*output plate root"):
+>           _compile(tmp_path, tmp_path / "external-results")
+
+tests/unit/test_artifact_publication_journey.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_artifact_publication_journey.py:115: in _compile
+    return orchestrator, steps, orchestrator.compile_pipelines(steps)
+openhcs/core/orchestrator/orchestrator.py:645: in compile_pipelines
+    return PipelineCompiler.compile_pipelines(
+openhcs/core/pipeline/compiler.py:1958: in compile_pipelines
+    compiled_contexts = PipelineCompiler._compile_axis_values(
+openhcs/core/pipeline/compiler.py:1271: in _compile_axis_values
+    PipelineCompiler._emit_axis_compile_progress(
+openhcs/core/pipeline/compiler.py:1734: in _emit_axis_compile_progress
+    emit(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def emit(
+        *,
+        execution_id: str,
+        plate_id: str,
+        axis_id: str,
+        step_name: str,
+        phase: ProgressPhase,
+        status: ProgressStatus,
+        percent: float,
+        completed: int = 0,
+        total: int = 1,
+        error: str | None = None,
+        traceback: str | None = None,
+        total_wells: list[str] | None = None,
+        worker_assignments: dict[str, list[str]] | None = None,
+        worker_slot: str | None = None,
+        owned_wells: list[str] | None = None,
+        message: str | None = None,
+        component: str | None = None,
+        pattern: str | None = None,
+        context: dict | None = None,
+        step_names: list[str] | None = None,
+    ) -> None:
+        """Emit progress event (replaces emit_progress()).
+    
+        Invariant emission path:
+        1. Validate inputs
+        2. Build immutable ProgressEvent
+        3. Put serialized event onto configured progress queue
+    
+        Args:
+            execution_id (str): Execution identifier (required)
+            plate_id (str): Plate identifier (required)
+            axis_id (str): Axis/well identifier (required)
+            step_name (str): Step name (required)
+            phase (ProgressPhase): Progress phase (required)
+            status (ProgressStatus): Progress status (required)
+            percent (float): Progress percentage 0-100 (required)
+            completed (int): Number of completed items (default: 0)
+            total (int): Total number of items (default: 1)
+            context: Optional progress context payload.
+    
+        Raises:
+            ValueError: If required fields missing or invalid
+            ProgressError: If progress queue is not configured
+        """
+        if _progress_queue is None:
+>           raise ProgressError(
+                "emit() requires explicit progress queue configuration via "
+                "set_progress_queue(queue). No fallback path is allowed."
+            )
+E           openhcs.core.progress.exceptions.ProgressError: emit() requires explicit progress queue configuration via set_progress_queue(queue). No fallback path is allowed.
+
+openhcs/core/progress/__init__.py:156: ProgressError
+------------------------------ Captured log call -------------------------------
+ERROR    openhcs.core.pipeline.compiler:compiler.py:2002 Failed to compile pipelines: emit() requires explicit progress queue configuration via set_progress_queue(queue). No fallback path is allowed.
+_____ test_converted_checkpoint_has_typed_address_on_final_reconciliation ______
+
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/baseline05/test_converted_checkpoint_has_0')
+
+    def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path):
+>       orchestrator, steps, bundle = _compile(tmp_path, Path("results"))
+
+tests/unit/test_artifact_publication_journey.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_artifact_publication_journey.py:115: in _compile
+    return orchestrator, steps, orchestrator.compile_pipelines(steps)
+openhcs/core/orchestrator/orchestrator.py:645: in compile_pipelines
+    return PipelineCompiler.compile_pipelines(
+openhcs/core/pipeline/compiler.py:1958: in compile_pipelines
+    compiled_contexts = PipelineCompiler._compile_axis_values(
+openhcs/core/pipeline/compiler.py:1271: in _compile_axis_values
+    PipelineCompiler._emit_axis_compile_progress(
+openhcs/core/pipeline/compiler.py:1734: in _emit_axis_compile_progress
+    emit(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def emit(
+        *,
+        execution_id: str,
+        plate_id: str,
+        axis_id: str,
+        step_name: str,
+        phase: ProgressPhase,
+        status: ProgressStatus,
+        percent: float,
+        completed: int = 0,
+        total: int = 1,
+        error: str | None = None,
+        traceback: str | None = None,
+        total_wells: list[str] | None = None,
+        worker_assignments: dict[str, list[str]] | None = None,
+        worker_slot: str | None = None,
+        owned_wells: list[str] | None = None,
+        message: str | None = None,
+        component: str | None = None,
+        pattern: str | None = None,
+        context: dict | None = None,
+        step_names: list[str] | None = None,
+    ) -> None:
+        """Emit progress event (replaces emit_progress()).
+    
+        Invariant emission path:
+        1. Validate inputs
+        2. Build immutable ProgressEvent
+        3. Put serialized event onto configured progress queue
+    
+        Args:
+            execution_id (str): Execution identifier (required)
+            plate_id (str): Plate identifier (required)
+            axis_id (str): Axis/well identifier (required)
+            step_name (str): Step name (required)
+            phase (ProgressPhase): Progress phase (required)
+            status (ProgressStatus): Progress status (required)
+            percent (float): Progress percentage 0-100 (required)
+            completed (int): Number of completed items (default: 0)
+            total (int): Total number of items (default: 1)
+            context: Optional progress context payload.
+    
+        Raises:
+            ValueError: If required fields missing or invalid
+            ProgressError: If progress queue is not configured
+        """
+        if _progress_queue is None:
+>           raise ProgressError(
+                "emit() requires explicit progress queue configuration via "
+                "set_progress_queue(queue). No fallback path is allowed."
+            )
+E           openhcs.core.progress.exceptions.ProgressError: emit() requires explicit progress queue configuration via set_progress_queue(queue). No fallback path is allowed.
+
+openhcs/core/progress/__init__.py:156: ProgressError
+------------------------------ Captured log call -------------------------------
+ERROR    openhcs.core.pipeline.compiler:compiler.py:2002 Failed to compile pipelines: emit() requires explicit progress queue configuration via set_progress_queue(queue). No fallback path is allowed.
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_artifact_publication_journey.py::test_public_planning_rejects_external_results_root
+FAILED tests/unit/test_artifact_publication_journey.py::test_converted_checkpoint_has_typed_address_on_final_reconciliation
+2 failed, 2 warnings in 6.50s
+Command exited with non-zero status 1
+	Command being timed: "timeout 45s /home/ts/code/projects/openhcs/.venv/bin/python -m pytest -o addopts= -q tests/unit/test_artifact_publication_journey.py --basetemp=/home/ts/.cache/agent-scratch/artifact-publication-315-20260930/baseline05"
+	User time (seconds): 6.85
+	System time (seconds): 0.32
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.22
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 339084
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 55822
+	Voluntary context switches: 5
+	Involuntary context switches: 89
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 72
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

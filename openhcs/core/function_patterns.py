@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
 
 from pyqt_reactive.pattern_metadata import PatternScopeToken
@@ -738,6 +739,37 @@ class CompiledFunctionGroup:
             elif not invocation.contract.preserves_input_main_flow():
                 owner = invocation
         return owner
+
+    def unwrapped_main_flow_output_context(
+        self,
+        output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+    ) -> AlignedImageSliceContext | None:
+        """Resolve this chain's producer semantics, not its input's artifact kind.
+
+        None retains the input producer only for a declared passthrough. An
+        unnamed replacement owns a new anonymous image flow, while named
+        outputs retain their exact component-projected output declaration.
+        """
+        from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+
+        declared_refs = frozenset(
+            plan.ref() for plan in self.resulting_main_flow_output_plans()
+        )
+        refs = tuple(ref for ref in output_plans if ref in declared_refs)
+        if not refs:
+            if self.resulting_implicit_main_flow_invocation() is not None:
+                return AlignedImageSliceContext.anonymous_main_flow()
+            return None
+        if len(refs) != 1:
+            raise ValueError(
+                "Multiple named main-flow outputs require AlignedImageStack "
+                f"contexts; got {tuple(refs)!r}."
+            )
+        ref = refs[0]
+        return AlignedImageSliceContext.main_flow(
+            output_key=ref.name,
+            artifact_kind=ref.artifact_type.value,
+        )
 
     def preserves_input_main_flow(self) -> bool:
         """Return whether every invocation leaves the group's input flow unchanged."""

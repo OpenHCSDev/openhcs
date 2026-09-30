@@ -166,7 +166,8 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     Directory for materialized named analysis artifacts such as CSV and JSON files.
 
     A relative path is resolved inside the compiled output plate root; an
-    absolute path is used unchanged. This pipeline-wide destination is separate
+    absolute path must also remain inside that root. Unsupported root geometry
+    is rejected during planning before dispatch. This destination is separate
     from ordinary image outputs and per-step main-flow checkpoints.
     """
 

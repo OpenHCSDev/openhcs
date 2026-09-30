@@ -3239,29 +3239,11 @@ class PatternGroupRuntime:
     def _unwrapped_main_flow_output_context(
         self,
     ) -> AlignedImageSliceContext | None:
-        declared_refs = frozenset(
-            plan.ref()
-            for plan in self.request.compiled_group.resulting_main_flow_output_plans()
-        )
-        refs = tuple(
-            output_plan.ref()
-            for output_plan in ComponentArtifactPlans.from_step_component(
+        return self.request.compiled_group.unwrapped_main_flow_output_context(
+            ComponentArtifactPlans.from_step_component(
                 self.request.execution_plan,
                 self.request.component_key,
-            ).outputs.values()
-            if output_plan.ref() in declared_refs
-        )
-        if not refs:
-            return None
-        if len(refs) != 1:
-            raise ValueError(
-                "Multiple named main-flow outputs require AlignedImageStack "
-                f"contexts; got {tuple(refs)!r}."
-            )
-        ref = refs[0]
-        return AlignedImageSliceContext.main_flow(
-            output_key=ref.name,
-            artifact_kind=ref.artifact_type.value,
+            ).outputs
         )
 
     def _save_outputs(
