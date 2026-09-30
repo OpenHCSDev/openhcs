@@ -637,11 +637,11 @@ def run(args) -> None:
             == "openhcs.processing.custom_functions.registration_live_probe"
         )
         from openhcs.core.config import (
+            LazyPathPlanningConfig,
             LazyStepMaterializationConfig,
+            LazyVFSConfig,
             MaterializationBackend,
-            PathPlanningConfig,
             PipelineConfig,
-            VFSConfig,
         )
         from openhcs.core.pipeline_document import PipelineDocumentAuthority
         from openhcs.core.steps.function_step import FunctionStep
@@ -651,10 +651,10 @@ def run(args) -> None:
             pipeline_config=PipelineConfig(
                 num_workers=1,
                 use_threading=True,
-                path_planning_config=PathPlanningConfig(
+                path_planning_config=LazyPathPlanningConfig(
                     global_output_folder=owned / "outputs"
                 ),
-                vfs_config=VFSConfig(
+                vfs_config=LazyVFSConfig(
                     materialization_backend=MaterializationBackend.DISK
                 ),
             ),

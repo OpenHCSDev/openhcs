@@ -73,3 +73,21 @@ Later installed proof uses this same driver with --installed-entrypoint, PYTHONP
 unset and cwd outside this source; ordinary McpDevServerSpec validates actual installed
 OpenHCS/PolyStore paths. Parent owns that journey after reviewed merge/install.
 Multiprocessing/cold hydration profiling is separate follow-up scope, not this gate.
+
+## Parent-owned fixture correction after attempt03
+
+Parent accepted the source handoff at82f265d3a. Attempt03 reached READY, verified
+zero pre-ready source RPCs, registered/discovered/described the persisted synthetic
+function (registration0.272s), then failed before compile while constructing the
+fixture's PipelineConfig: VFSConfig is not its declared LazyVFSConfig field type.
+The same declaration requires LazyPathPlanningConfig as well. Parent replaced
+both fixture constructors with their actual declared owners, not converters or
+production compatibility. A real source-import constructor check passes for
+both nested fields. No compile/execution request was sent by this failed attempt.
+
+Original attempt03 receipt/scratch remain retained with accepted=false. Supported
+close-owned completed all three exact native endpoints with returncode0 and
+endpoint_terminated=true; client_closed/runtime_terminal=true. Recorded driver,
+MCP and native PIDs are absent; six listeners are absent. No recorded request
+is replayed. The next independent synthetic journey uses new ports/owned store,
+fresh receipt/scratch and the fixture-correction commit as its source freeze.
