@@ -836,7 +836,7 @@ class IdentifyPrimaryObjectsKernelPreparation(
 
 
 identify_primary_objects.__openhcs_prepare__ = (
-    IdentifyPrimaryObjectsKernelPreparation().prepare
+    IdentifyPrimaryObjectsKernelPreparation().execute
 )
 __all__ = public_names_from_objects(
     ExcessObjectHandling,

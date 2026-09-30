@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
+    from openhcs.core.processing_preparation import PreparationOperation
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
     from openhcs.core.vfs_protocol import PlatePathDeclaration
@@ -151,6 +152,13 @@ class CompilerPreparedAutoRegisterFamily(ABC):
     @abstractmethod
     def prepare_registered_family(cls) -> None:
         """Prepare registered implementations before timed callable execution."""
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Project cache work independently of process-local readiness."""
+        from openhcs.core.processing_preparation import RegistryFamilyPreparation
+
+        return (RegistryFamilyPreparation(cls),)
 
     @classmethod
     def can_prepare_in_child(cls) -> bool:
@@ -938,7 +946,8 @@ class CallableContract(ArtifactPlanKeySelector):
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""
         return self.require_processing_contract().declaration.main_flow_call_argument(
-            self, source_payload,
+            self,
+            source_payload,
         )
 
     @property

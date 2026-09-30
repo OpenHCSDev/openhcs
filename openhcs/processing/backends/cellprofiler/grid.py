@@ -1597,7 +1597,7 @@ class IdentifyObjectsInGridKernelPreparation(
 
 def prepare_identify_objects_in_grid() -> None:
     """Prepare the kernels through their declared registry obligation."""
-    IdentifyObjectsInGridKernelPreparation().prepare()
+    IdentifyObjectsInGridKernelPreparation().execute()
 
 
 identify_objects_in_grid.__openhcs_prepare__ = prepare_identify_objects_in_grid

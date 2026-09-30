@@ -1260,7 +1260,7 @@ class ObjectSizeShapeKernelPreparation(
 
 
 measure_object_size_shape.__openhcs_prepare__ = (
-    ObjectSizeShapeKernelPreparation().prepare
+    ObjectSizeShapeKernelPreparation().execute
 )
 
 

@@ -4977,7 +4977,7 @@ class ExpandOrShrinkObjectsKernelPreparation(
 
 def prepare_expand_or_shrink_objects() -> None:
     """Prepare the kernels through their declared registry obligation."""
-    ExpandOrShrinkObjectsKernelPreparation().prepare()
+    ExpandOrShrinkObjectsKernelPreparation().execute()
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
