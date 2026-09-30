@@ -88,3 +88,81 @@ def test_explicit_centrosome_registration_preserves_default_and_fail_closed_sele
         LegacyWatershedBackendStrategy.for_memory_type(
             MemoryType.CUPY, backend_provider=CellProfilerBackendProvider.CENTROSOME
         )
+
+
+@pytest.mark.parametrize(
+    "provider",
+    (CellProfilerBackendProvider.CENTROSOME, CellProfilerBackendProvider.NATIVE),
+)
+def test_real_primary_callable_declumps_through_selected_signed_watershed(
+    monkeypatch, provider
+):
+    from openhcs.core.runtime_object_labels import object_label_dense_array
+    from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
+    from openhcs.processing.backends.cellprofiler.primary_objects import (
+        UnclumpMethod,
+        WatershedMethod,
+        identify_primary_objects,
+    )
+    from openhcs.processing.backends.cellprofiler.thresholding import (
+        CellProfilerThresholdMethod,
+    )
+
+    selected = []
+    requests = []
+    original_request = LegacyWatershedBackendStrategy.validated_request
+
+    def observe_request(self, image, *, markers, mask, connectivity=1):
+        request = original_request(
+            self, image, markers=markers, mask=mask, connectivity=connectivity
+        )
+        selected.append(self)
+        requests.append(request)
+        return request
+
+    monkeypatch.setattr(
+        LegacyWatershedBackendStrategy, "validated_request", observe_request
+    )
+    y, x = np.mgrid[:24, :32]
+    image = (
+        0.9
+        * (
+            np.exp(-((y - 12) ** 2 + (x - 11) ** 2) / 12)
+            + np.exp(-((y - 12) ** 2 + (x - 19) ** 2) / 12)
+        )
+    ).astype(np.float32)
+    original_image = image.copy()
+    returned_image, measurements, payload = identify_primary_objects(
+        image,
+        min_diameter=4,
+        max_diameter=14,
+        exclude_size=False,
+        exclude_border_objects=False,
+        unclump_method=UnclumpMethod.INTENSITY,
+        watershed_method=WatershedMethod.INTENSITY,
+        automatic_smoothing=False,
+        smoothing_filter_size=0,
+        automatic_suppression=False,
+        maxima_suppression_size=3,
+        low_res_maxima=False,
+        fill_holes=FillHolesOption.NEVER,
+        threshold_method=CellProfilerThresholdMethod.MANUAL,
+        manual_threshold=0.2,
+        threshold_smoothing_scale=0,
+        morphology_backend_provider=CellProfilerBackendProvider.CENTROSOME,
+        watershed_backend_provider=provider,
+    )
+    (selected_backend,) = selected
+    (request,) = requests
+    assert selected_backend.backend_provider is provider
+    assert np.unique(request.markers).tolist() == [-2, -1, 0]
+    assert request.prefer_fast is False
+    labels = object_label_dense_array(payload)
+    assert labels.dtype == np.int32
+    assert labels.shape == image.shape
+    assert np.unique(labels).tolist() == [0, 1, 2]
+    assert payload.domain.require_explicit_id_domain(context="primary journey") == (1, 2)
+    np.testing.assert_array_equal(labels > 0, image > 0.2)
+    np.testing.assert_array_equal(returned_image, original_image)
+    np.testing.assert_array_equal(image, original_image)
+    assert len(tuple(measurements.row_mappings())) == 1
