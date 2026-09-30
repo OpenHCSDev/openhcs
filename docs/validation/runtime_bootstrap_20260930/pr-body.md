@@ -94,6 +94,28 @@ fabricating TCP defaults or cached hidden state. Parent owns its diagnostic.
 Scoped original GodClass measure now client+8/service+15, NOT full guard pass.
 [Exact review, tests and original witness limitation](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/effective-transport/checkpoint.md).
 
+### Existing-owner closure of the structural growth remainder
+
+At9cb7703d2, normally integrated main7d0ce5e68, the EXISTING admitted
+ExecutionRuntimeLaunchPlan owns path materialization and process-policy invocation;
+deleted that command/directory/log procedure from the client. Canonical native
+reservations/incarnation/uncertainty remain unchanged. The EXISTING
+RuntimeBootstrapState owns pure derivation from typed native journal/heartbeat
+observations; the service retains admission and bounded I/O and its decision
+body is deleted. No new forwarding service/mixin/registry, mirror or launcher.
+Owner/new-case witnesses and IMPL-13/IDEN-8/BOUND-2/AGENT-6 review in the receipt.
+
+**100 source testsPASS4.74s**, process5.39s/257852KiB/exit0,0skips/deselections;
+all-phase readiness/identity, exact admitted-plan materialization, child config,
+failure/no-retry/log closure and original route/admission/uncertainty controls.
+Popen/network/shutdown intercepted; no native/installed/scientific proof claim.
+Original packaged structural ratchet against main7d0ce5e68 **PASS5,159metrics,
+zero positive deltas,15.83s/87520KiB/exit0**. Client excess181->139 (-42),
+service0->0. This closes the recorded own-PR +8/+15 growth, not existing debt,
+full class decomposition or R1/all-detector NRA. Earlier failed receipts retained.
+No native allocation under criticalswap16.3, no dependency-pin/ACK/viewer changes.
+[Exact owner decisions, tests, ratchet and limits](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/owner-factoring-checkpoint.md).
+
 ### Exact owned close (parent-reported5993 lifecycle defect)
 
 Adds typed `openhcs_close_owned_runtime` on the existing RuntimeServerService
@@ -160,5 +182,6 @@ resource gate, not optional hosted CI.
 
 Remaining: #257 successful full execution/publication and actual strict readback,
 additional cross-process uncertainty shard, then parent installed entrypoint
-acceptance. Prior god-class ratchet remainder is NOT waived. References #251
+acceptance. Prior failed god-class receipts remain; the original structural
+growth gate now passes as documented above, without a global NRA claim. References #251
 and #257; **not Closes** pending actual acceptance. Parent owns integration/live.
