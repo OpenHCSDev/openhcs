@@ -6250,8 +6250,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 stream_layer_context=payload,
                 server=self,
             )
-            if payload.transfer is not None:
-                self.send_ack(payload.transfer, status=_ACK_SUCCESS)
+            self.send_ack(payload.transfer, status=_ACK_SUCCESS)
 
         except Exception as e:
             self.layer_route_state.record_update_error(None, e)
@@ -6259,8 +6258,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 f"🔬 NAPARI PROCESS: Failed to process {payload_address.stream_layer_data_type} {payload_address.path}: {e}",
                 exc_info=True,
             )
-            if payload.transfer is not None:
-                self.send_ack(payload.transfer, status=_ACK_ERROR, error=str(e))
+            self.send_ack(payload.transfer, status=_ACK_ERROR, error=str(e))
             # Don't re-raise - continue processing other messages instead of crashing
 
 

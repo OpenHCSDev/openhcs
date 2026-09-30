@@ -724,7 +724,7 @@ class FijiImageStackBuilder:
 class FijiSharedMemoryItemCopier:
     """Copy shared-memory Fiji image payloads into local process memory."""
 
-    send_error_ack: Callable[[ImageTransferIdentity, str], None]
+    send_error_ack: Callable[[ImageTransferIdentity | None, str], None]
 
     def copy(self, items: Sequence[FijiWireItem]) -> list[FijiWireItem]:
         copied_items = []
@@ -751,8 +751,7 @@ class FijiSharedMemoryItemCopier:
                     shared_memory_spec.name,
                     error,
                 )
-                if item.transfer is not None:
-                    self.send_error_ack(item.transfer, str(error))
+                self.send_error_ack(item.transfer, str(error))
         return copied_items
 
 
@@ -2960,8 +2959,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
 
         # Send acknowledgments
         for image in all_images:
-            if image.transfer is not None:
-                self.send_ack(image.transfer, status=_ACK_SUCCESS)
+            self.send_ack(image.transfer, status=_ACK_SUCCESS)
 
     def request_shutdown(self):
         """Request graceful shutdown."""
@@ -3095,8 +3093,7 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
         for roi_item in request.items:
             rois_encoded = roi_item.rois
             if not rois_encoded:
-                if roi_item.transfer is not None:
-                    request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
+                request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
                 continue
 
             metadata = roi_item.metadata
@@ -3135,8 +3132,7 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
                 if request.work_unit_completed is not None:
                     request.work_unit_completed()
 
-            if roi_item.transfer is not None:
-                request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
+            request.server.send_ack(roi_item.transfer, status=_ACK_SUCCESS)
 
         if not roi_manager.isVisible():
             self.roi_manager_provider.show(roi_manager)
