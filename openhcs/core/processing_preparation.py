@@ -100,11 +100,12 @@ class ModuleRegistryPreparation(PreparationOperation):
 
     def cache_operations(self) -> tuple[PreparationOperation, ...]:
         return tuple(
-            RegistryFamilyPreparation(family)
+            operation
             for family in AutoRegisterRegistryPreparation.module_registry_owners(
                 (importlib.import_module(self.module_name),),
                 compiler_prepared_only=True,
             )
+            for operation in family.cache_preparation_operations()
         )
 
 

@@ -1,0 +1,72 @@
+{
+  "source_commit": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+  "base_commit": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+  "wheel_sha256": "1d35daa35d0b802c07aea7b99ca954fbedc6f7f6b86dc7f6eb53746a58e53d06",
+  "module_paths": [
+    {
+      "module": "openhcs.core.callable_contract",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/callable_contract.py",
+      "sha256": "bf59a55063f221d8352af6b1e187eb6c130a6f9d6f7a0c2a9a75b83dcfbab256"
+    },
+    {
+      "module": "openhcs.core.processing_preparation",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/processing_preparation.py",
+      "sha256": "9504dcb96224ea75b6999ba07f3cf3f1cb1dafe56fc5076bebdd7cdd69b90614"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler._backend",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/_backend.py",
+      "sha256": "192628f103c054713126f3cb71b8061b401c539643aa6526a303bf0e19905d62"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler._preparation",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/_preparation.py",
+      "sha256": "916c79eae5b2ba33266feac611521b352435a0e917e47eecbfe9af27ddf78bba"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler.grid",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/grid.py",
+      "sha256": "01b4fca478344f5f1f3fa548c7a0749b8349c1733a99627856c5c9117bdbd8c2"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler.morphology",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/morphology.py",
+      "sha256": "f5164e90016a6714f32631ceb33188e442f76e1632e55779aa2b9bec3dd91612"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler.primary_objects",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/primary_objects.py",
+      "sha256": "7513ab3daa6383e35718bb23d29ea3ab1a73a84fe64f8a2ce199ba0351583971"
+    },
+    {
+      "module": "openhcs.processing.backends.cellprofiler.shape",
+      "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/shape.py",
+      "sha256": "f533d4fb0ba16d4bbd63fafbf780b1671232c41708e6828f69ee0ef12f3493af"
+    }
+  ],
+  "child_import_root": "/tmp/openhcs-declared-kernel-integrated-installed-20260930",
+  "extensions": [
+    "openhcs/core/_tabular_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+  ],
+  "python": "3.12.14",
+  "versions": {
+    "openhcs": "0.8.6",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "numba": "0.67.0",
+    "arraybridge": "0.3.4",
+    "metaclass-registry": "0.2.1",
+    "zmqruntime": "0.2.24"
+  },
+  "gitlinks": {
+    "external/ObjectState": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+    "external/PolyStore": "1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7",
+    "external/arraybridge": "409b1e0831f815fa9ef91d4ecc04989f9fbb89c5",
+    "external/metaclass-registry": "ca0a87e873f929b311a87a4d60cd3bfba315dbcf",
+    "external/pycodify": "792b03413331fdf107e369c924c257a2f0b16126",
+    "external/pyqt-reactive": "a51c3d965f8ffdefe95a2b4b37347a85341d483a",
+    "external/python-introspect": "4e8f8bde5f750d9a50eacac80acd3806123addd8",
+    "external/zmqruntime": "0f9e840a9ed526f0a2b87a660393f5b7c34fc9eb"
+  }
+}

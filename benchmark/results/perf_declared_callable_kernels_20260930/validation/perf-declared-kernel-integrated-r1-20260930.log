@@ -1,0 +1,41 @@
+R1 65b2ed1017f36db193b6f48b8f9b46495cc915aa: NRA cache=miss, projections=3000, prepare=53.098s, analysis=3.279s
+R1 100f40c69ce1d2a957935d05856ecab8fdfb60b8: NRA cache=miss, projections=3002, prepare=51.849s, analysis=3.136s
+{
+  "base": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+  "head": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+  "changed": [
+    "openhcs/core/callable_contract.py",
+    "openhcs/core/processing_preparation.py",
+    "openhcs/processing/backends/cellprofiler/_backend.py",
+    "openhcs/processing/backends/cellprofiler/_preparation.py",
+    "openhcs/processing/backends/cellprofiler/grid.py",
+    "openhcs/processing/backends/cellprofiler/morphology.py",
+    "openhcs/processing/backends/cellprofiler/primary_objects.py",
+    "openhcs/processing/backends/cellprofiler/shape.py"
+  ],
+  "before": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/callable_contract.py",
+      "count": 1
+    },
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/shape.py",
+      "count": 1
+    }
+  ],
+  "after": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/callable_contract.py",
+      "count": 1
+    },
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/shape.py",
+      "count": 1
+    }
+  ],
+  "increased": []
+}
