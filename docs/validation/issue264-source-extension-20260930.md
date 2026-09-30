@@ -112,3 +112,10 @@ Original full native log SHA256: `84fbdccf0b497784b59e1aa7d31eb3e9be4bbbfc1002a0
 Original plate metadata SHA256: `cf7fe8ee79b2082ed016d54325b2260e6c15a86cfd5c8434113abf9c0891e287`.
 All read-only under `openhcs-issue-batch-20260929/source-live-runtime-payload-259-20260930-02`.
 Original257 probe and receipt hashes remain byte-identical to `ae6c90b6d`.
+
+Integrated current main `dbf1c7a8bb699f975bd072a0f39dbe4bd7131ecb` normally,
+without conflicts, at `b5572e660b6ba25535f3fd94fa6c5ef4939d7e1d`. Post-integration
+checks:28 provenance/persistence/264 tests pass in1.90s and16 runtime identity/
+stack tests pass in2.23s. The93-test set above is the pre-integration source
+checkpoint;44 were rechecked against the merged source. Working draft262 is
+OPEN/DRAFT/MERGEABLE. No source/runtime installation or live acceptance claimed.

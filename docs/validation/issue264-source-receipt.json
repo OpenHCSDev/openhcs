@@ -30,6 +30,15 @@
     "shell_timeout_seconds": 55,
     "native_thread_bounds": 1
   },
+  "main_integration": {
+    "main": "dbf1c7a8bb699f975bd072a0f39dbe4bd7131ecb",
+    "source_head": "b5572e660b6ba25535f3fd94fa6c5ef4939d7e1d",
+    "conflicts": [],
+    "source_checks": [
+      {"scope": "provenance/persistence/issue264", "passed": 28, "seconds": 1.90},
+      {"scope": "runtime identity/stack", "passed": 16, "seconds": 2.23}
+    ]
+  },
   "original_evidence_sha256": {
     "ledger": "37850b1ecb11fe9dfe47634c2f35645828542068d176e42db7cf4b0196057cc3",
     "full_native_log": "84fbdccf0b497784b59e1aa7d31eb3e9be4bbbfc1002a0ba195b54e24d72f761",

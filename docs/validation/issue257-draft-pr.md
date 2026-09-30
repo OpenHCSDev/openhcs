@@ -52,3 +52,7 @@ wait condition.264 shares the retained extension/address contract and is combine
 under the same sole file owner; no competing patch. No config/compiler edit or
 committed overlap with checked PR205/PR263/merged259 source. Parent owns
 integration and affected installed/native acceptance; this remains a draft.
+
+Integrated current main `dbf1c7a8b` without conflict at `b5572e660`;44 relevant
+source cases rechecked after integration.93 is the complete pre-integration
+source checkpoint, not an installed/native acceptance claim.
