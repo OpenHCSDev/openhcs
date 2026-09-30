@@ -1,0 +1,1325 @@
+{
+  "revision": "c20b56b411778bdf3bf2909cae280f20e55f9977",
+  "corpus": "every original OpenHCS source module; all original ClassDefs and OPEN rows are retained in the separately joined NRA class-family census",
+  "cache_decorators": [
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "line": 4080,
+      "function": "_load_capability_extensions",
+      "lexical_scope": [],
+      "decorators": [
+        "cache"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/agent/dto/common.py",
+      "line": 105,
+      "function": "serialized_errors_field_name",
+      "lexical_scope": [
+        "AgentResultEnvelope"
+      ],
+      "decorators": [
+        "cache"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/agent/services/knowledge_base_service.py",
+      "line": 226,
+      "function": "default_document_specs",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/agent/services/knowledge_base_service.py",
+      "line": 1398,
+      "function": "_official30_module_inventories_cached",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=8)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/constants/constants.py",
+      "line": 133,
+      "function": "_create_enums",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/constants/constants.py",
+      "line": 201,
+      "function": "_create_streaming_components",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/constants/constants.py",
+      "line": 310,
+      "function": "get_default_variable_components",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/constants/constants.py",
+      "line": 317,
+      "function": "get_default_group_by",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/constants/constants.py",
+      "line": 327,
+      "function": "get_multiprocessing_axis",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/autoregister_preparation.py",
+      "line": 105,
+      "function": "cached_module_registry_families",
+      "lexical_scope": [
+        "AutoRegisterRegistryPreparation"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/cells.py",
+      "line": 295,
+      "function": "_runtime_value_type_is_mapping",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/cells.py",
+      "line": 317,
+      "function": "_cached_runtime_cell_signature",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=131072)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/keys.py",
+      "line": 696,
+      "function": "semantic_core_feature_and_source_name_projection",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/keys.py",
+      "line": 908,
+      "function": "normalized_measurement_feature_name_parts",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/keys.py",
+      "line": 964,
+      "function": "_source_name_token_groups",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1024)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/keys.py",
+      "line": 1040,
+      "function": "_category_prefix_for_parts",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=16384)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/keys.py",
+      "line": 1058,
+      "function": "_core_strip_category_prefix_for_parts",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=16384)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/measurement_features.py",
+      "line": 74,
+      "function": "_for_feature_key_payload",
+      "lexical_scope": [
+        "RuntimeMeasurementFeatureSemanticProfile"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=32768)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/measurement_features.py",
+      "line": 479,
+      "function": "_object_measurement_feature_matches_marker_cached",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 687,
+      "function": "runtime_measurement_row_schema_for_header",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=4096)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 771,
+      "function": "runtime_measurement_row_header_projection",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=16384)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/measurement_rows.py",
+      "line": 2340,
+      "function": "aggregate_image_number_reference_measurement_field",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=32768)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1069,
+      "function": "_resolved_category_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1086,
+      "function": "_resolved_primary_category_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1103,
+      "function": "_resolved_feature_part_aliases",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1123,
+      "function": "_resolved_source_feature_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1140,
+      "function": "_resolved_calculated_feature_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1157,
+      "function": "_resolved_numbered_feature_prefix_aliases",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1180,
+      "function": "_resolved_directional_pair_feature_aliases",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1198,
+      "function": "_resolved_scale_qualified_feature_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1215,
+      "function": "_resolved_undirected_pair_feature_names",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1226,
+      "function": "_resolved_threshold_sensitive_pair_feature_names",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/equivalence/policy.py",
+      "line": 1242,
+      "function": "_resolved_non_measurement_field_prefixes",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=64)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/image_file_serialization.py",
+      "line": 208,
+      "function": "_source_metadata_for_revision",
+      "lexical_scope": [
+        "ImageFileFormat"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=4096)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/measurement_row_materialization.py",
+      "line": 60,
+      "function": "normalized_measurement_row_fields",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=32768)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/measurement_row_materialization.py",
+      "line": 2368,
+      "function": "_measurement_table_row_layout_from_field_names",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/funcstep_contract_validator.py",
+      "line": 421,
+      "function": "_extract_import_statements_from_module_file",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=512)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/function_contracts.py",
+      "line": 47,
+      "function": "resolved_callable_type_hints",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2838,
+      "function": "_cached_output_plate_root",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2860,
+      "function": "_cached_output_path",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2880,
+      "function": "_cached_results_path",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2901,
+      "function": "_cached_axis_filename",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=131072)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2914,
+      "function": "_cached_dict_pattern_path",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2920,
+      "function": "_cached_paths_by_group",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=32768)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/pipeline/path_planner.py",
+      "line": 2939,
+      "function": "_cached_analysis_results_dir_for",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=8192)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/registry_strategies.py",
+      "line": 38,
+      "function": "registered_strategy_types",
+      "lexical_scope": [
+        "RegisteredStrategyTypesMixin"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/registry_strategies.py",
+      "line": 98,
+      "function": "strategy_type_for_enum_member",
+      "lexical_scope": [
+        "EnumKeyedStrategyMixin"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/registry_strategies.py",
+      "line": 107,
+      "function": "registered_strategy_types",
+      "lexical_scope": [
+        "EnumKeyedStrategyMixin"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/registry_strategies.py",
+      "line": 183,
+      "function": "strategy_types_for_nominal_type",
+      "lexical_scope": [
+        "NominalTypeKeyedStrategyMixin"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/runtime_batch_contracts.py",
+      "line": 52,
+      "function": "runtime_callable_defaults",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1024)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/runtime_identifier.py",
+      "line": 45,
+      "function": "_normalize_identifier_text",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=32768)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_binding_selection.py",
+      "line": 73,
+      "function": "_cached_source_candidate_pattern_keys",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_bindings.py",
+      "line": 2275,
+      "function": "_source_runtime_path_lookup_keys",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_bindings.py",
+      "line": 2293,
+      "function": "_source_runtime_native_path",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_bindings.py",
+      "line": 2586,
+      "function": "source_path_identities",
+      "lexical_scope": [
+        "SourceBindingRuntimeContext"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=8192)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_matching.py",
+      "line": 358,
+      "function": "_source_filters_match_cached",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_matching.py",
+      "line": 961,
+      "function": "source_metadata_component",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_metadata.py",
+      "line": 91,
+      "function": "_cached_canonical_path_metadata_value",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_metadata.py",
+      "line": 107,
+      "function": "_cached_path_metadata_values_equivalent",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_metadata.py",
+      "line": 555,
+      "function": "source_metadata_field_identity",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=4096)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_path_identity.py",
+      "line": 10,
+      "function": "source_path_identity",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_path_identity.py",
+      "line": 16,
+      "function": "source_path_relative_to",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_path_identity.py",
+      "line": 22,
+      "function": "source_path_join",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/core/source_workspace_projection.py",
+      "line": 564,
+      "function": "source_schema_filename_metadata",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=8192)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/measurement_dialect.py",
+      "line": 119,
+      "function": "cellprofiler_lookup_dialect_for_measurement_owner",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/measurement_dialect.py",
+      "line": 216,
+      "function": "cellprofiler_projected_measurement_feature_name",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=8192)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
+      "line": 473,
+      "function": "measurement_feature_setting_bindings",
+      "lexical_scope": [
+        "PriorMeasurementArtifactInputModule"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 328,
+      "function": "_measurement_feature_marker_types_for_key_payload",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=4096)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 351,
+      "function": "measurement_feature_types",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 470,
+      "function": "alternative_measurement_feature_part_aliases",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 520,
+      "function": "measurement_feature_part_rewrite_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 542,
+      "function": "measurement_category_prefix_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 554,
+      "function": "primary_measurement_category_prefix_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 568,
+      "function": "measurement_source_feature_prefix_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 582,
+      "function": "calculated_measurement_feature_prefix_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 596,
+      "function": "numbered_measurement_feature_prefix_alias_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/module_measurement_features.py",
+      "line": 607,
+      "function": "scale_qualified_measurement_feature_prefix_declarations",
+      "lexical_scope": [
+        "CellProfilerMeasurementFeatureOwner"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/runtime/artifact_binding.py",
+      "line": 134,
+      "function": "for_artifact_type",
+      "lexical_scope": [
+        "RuntimeArtifactTypeStrategy"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler/runtime/output_recording.py",
+      "line": 73,
+      "function": "for_artifact_type",
+      "lexical_scope": [
+        "CellProfilerOutputRecorder"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/interop/cellprofiler_setting_normalization.py",
+      "line": 10,
+      "function": "normalize_cellprofiler_setting_name",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=4096)"
+      ],
+      "boundary": "interop-boundary",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 403,
+      "function": "_resolve_backend_class_cached",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 411,
+      "function": "_prepare_cellprofiler_backend_family_cached",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/illumination.py",
+      "line": 1297,
+      "function": "fit_polynomial_unmasked_gram",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=16)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/morphology.py",
+      "line": 3232,
+      "function": "_declumping_resize_coordinates",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=128)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/morphology.py",
+      "line": 3300,
+      "function": "_binary_shrink_table_stack",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/outlines.py",
+      "line": 1052,
+      "function": "_overlay_objects_color_table",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/thresholding.py",
+      "line": 642,
+      "function": "gaussian_kernel_1d",
+      "lexical_scope": [
+        "ThresholdApplicationSmoothing"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=32)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/thresholding.py",
+      "line": 672,
+      "function": "full_mask_weight",
+      "lexical_scope": [
+        "ThresholdApplicationSmoothing"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=32)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/thresholding_threshold_numba_diagnostics.py",
+      "line": 56,
+      "function": "_quantized_log_tables",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=8)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/thresholding_threshold_numba_diagnostics.py",
+      "line": 435,
+      "function": "_deterministic_normal_noise",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=16)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/worm_geometry.py",
+      "line": 125,
+      "function": "_cellprofiler_cornerness_table",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/worm_geometry.py",
+      "line": 136,
+      "function": "_cellprofiler_skeletonize_table",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/worm_geometry.py",
+      "line": 159,
+      "function": "_cellprofiler_branchpoints_table",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/worm_geometry.py",
+      "line": 181,
+      "function": "_cellprofiler_endpoints_table",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/zernike.py",
+      "line": 95,
+      "function": "indexed_object_intensity_zernike_feature_name",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/openhcs_registry.py",
+      "line": 153,
+      "function": "_source_declares_allowed_memory_type",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=1024)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
+      "line": 296,
+      "function": "_runtime_callable_parameters",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=256)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
+      "line": 411,
+      "function": "registered_families",
+      "lexical_scope": [
+        "Pure2DRegisteredStrategyFamily"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
+      "line": 429,
+      "function": "registered_strategies",
+      "lexical_scope": [
+        "Pure2DRegisteredStrategyFamily"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
+      "line": 453,
+      "function": "accepted_value_types",
+      "lexical_scope": [
+        "Pure2DRegisteredStrategyFamily"
+      ],
+      "decorators": [
+        "lru_cache(maxsize=None)"
+      ],
+      "boundary": "numerical-provider/declaration",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/processing/materialization/core.py",
+      "line": 1397,
+      "function": "_cached_stripped_materialization_path",
+      "lexical_scope": [],
+      "decorators": [
+        "lru_cache(maxsize=65536)"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/pyqt_gui/windows/dual_editor_window.py",
+      "line": 103,
+      "function": "_function_step_form_field_names",
+      "lexical_scope": [],
+      "decorators": [
+        "cache"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    },
+    {
+      "path": "openhcs/ui/shared/plate_manager_code_document.py",
+      "line": 269,
+      "function": "_declared_external_value_types",
+      "lexical_scope": [],
+      "decorators": [
+        "cache"
+      ],
+      "boundary": "platform/UI/agent-domain",
+      "proof": "original syntax/declaration inventory; live binding and semantic correctness are separate executed/domain obligations"
+    }
+  ],
+  "cache_family_declarations": [
+    {
+      "path": "openhcs/core/measurement_feature_queries.py",
+      "line": 413,
+      "class": "ColumnarMeasurementTableSchemaCache",
+      "bases": [
+        "IdentityBoundProcessCache"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/measurement_feature_queries.py",
+      "line": 1250,
+      "class": "MeasurementObjectFeatureVectorBatchQueryCache",
+      "bases": [
+        "RegisteredProcessLocalBoundedCache[MeasurementObjectFeatureVectorBatchCacheKey, MeasurementObjectFeatureVectorBatchCacheValue]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/measurement_feature_queries.py",
+      "line": 1261,
+      "class": "MeasurementObjectFeatureAxisBatchQueryCache",
+      "bases": [
+        "RegisteredProcessLocalBoundedCache[MeasurementObjectFeatureAxisBatchCacheKey, MeasurementObjectFeatureAxisBatchCacheValue]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/measurement_feature_queries.py",
+      "line": 1504,
+      "class": "MeasurementTableObjectFeatureSemanticsCache",
+      "bases": [
+        "IdentityBoundProcessCache"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/measurement_lookup_dialect.py",
+      "line": 302,
+      "class": "RuntimeMeasurementLookupAliasCache",
+      "bases": [
+        "RegisteredProcessLocalBoundedCache[tuple[str, int, str], tuple[str, ...]]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/process_local_cache.py",
+      "line": 43,
+      "class": "ProcessLocalBoundedCache",
+      "bases": [
+        "Generic[CacheKey, CachedValue]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/process_local_cache.py",
+      "line": 86,
+      "class": "RegisteredProcessLocalBoundedCache",
+      "bases": [
+        "ProcessLocalBoundedCache[CacheKey, CachedValue]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/process_local_cache.py",
+      "line": 104,
+      "class": "IdentityBoundProcessCache",
+      "bases": [
+        "ProcessLocalBoundedCache[int, tuple[object, Any]]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/runtime_artifact_queries.py",
+      "line": 110,
+      "class": "MeasurementLabelSliceFeatureBatchQueryCache",
+      "bases": [
+        "RegisteredProcessLocalBoundedCache[MeasurementLabelSliceFeatureBatchCacheKey, MeasurementLabelSliceFeatureBatchCacheValue]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/runtime_tabular_values.py",
+      "line": 270,
+      "class": "MeasurementRowMappingCache",
+      "bases": [
+        "RegisteredProcessLocalBoundedCache[int, tuple[object, Mapping[str, object]]]"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/source_matching.py",
+      "line": 967,
+      "class": "SourceMetadataLookupProjectionCache",
+      "bases": [
+        "IdentityBoundProcessCache"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/core/steps/function_runtime.py",
+      "line": 227,
+      "class": "FunctionInvocationCallableCache",
+      "bases": [
+        "IdentityBoundProcessCache"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 283,
+      "class": "CellProfilerBackendStrategyMixin",
+      "bases": [
+        "CellProfilerKernelCachePreparationMixin",
+        "CompilerPreparedAutoRegisterFamily"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_preparation.py",
+      "line": 38,
+      "class": "CellProfilerCallableKernelPreparation",
+      "bases": [
+        "CellProfilerKernelCachePreparationMixin",
+        "PreparationOperation",
+        "CompilerPreparedAutoRegisterFamily"
+      ],
+      "status": "original declaration lead; joined full class-family census is the authority"
+    }
+  ],
+  "limits": "Lexical retrieval inventories are not native invocation, purity, schema, thread-safety, or equivalence proofs. Architectural owner/consumer judgments and moved/correctly retained families are recorded in the bounded ownership receipt. Numerical cache keys remain with their mathematical provider; registry/kernel orchestration remains generic; lexical path caches and correlated aligned output projection are now single shared platform authorities."
+}

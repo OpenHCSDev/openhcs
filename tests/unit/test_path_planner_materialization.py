@@ -1282,7 +1282,9 @@ def test_artifact_lineage_projects_exact_source_binding_component():
                     ),
                 ),
             ),
-            main_flow_artifacts=ArtifactSpecCollection((aligned_input,)),
+            # Stain1 is the stored auxiliary operand whose projection is tested.
+            # It must not also be declared as already carried in the main payload.
+            main_flow_artifacts=ArtifactSpecCollection(()),
         )
     )
     _record_declared_output(
