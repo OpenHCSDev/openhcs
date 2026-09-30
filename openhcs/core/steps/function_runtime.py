@@ -1892,11 +1892,9 @@ class FunctionCoreExecutor:
     def main_flow_call_argument(
         self, source_payload: RuntimePayload
     ) -> RuntimeCallableArgument:
-        """Expose arrays to ordinary callables and carriers to adapter-backed calls."""
+        """Project through the callable's declared processing and raw ABI owners."""
 
-        if self.invocation.contract.runtime_adapter is not None:
-            return source_payload
-        return image_payload_data(source_payload)
+        return self.invocation.contract.main_flow_call_argument(source_payload)
 
     def memory_types(self) -> "FunctionChainInvocationMemoryTypes":
         return FunctionChainInvocationMemoryTypes.from_invocation(self.invocation)

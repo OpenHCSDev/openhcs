@@ -908,6 +908,27 @@ class CallableContract(ArtifactPlanKeySelector):
             )
         return processing_contract
 
+    def raw_main_flow_call_argument(self, source_payload: Any) -> Any:
+        """Project this callable's ABI without discarding an adapter's context."""
+        from arraybridge import ArrayPayload
+        from openhcs.core.runtime_image_values import image_payload_data
+
+        if self.runtime_adapter is not None:
+            return source_payload
+        raw_callable = self.resolve_canonical_raw_callable()
+        annotation = get_type_hints(raw_callable, include_extras=True).get(
+            self.primary_input_parameter_name,
+        )
+        if isinstance(annotation, type) and issubclass(annotation, ArrayPayload):
+            return source_payload
+        return image_payload_data(source_payload)
+
+    def main_flow_call_argument(self, source_payload: Any) -> Any:
+        """Let the processing declaration retain context needed before raw calls."""
+        return self.require_processing_contract().declaration.main_flow_call_argument(
+            self, source_payload,
+        )
+
     @property
     def collapses_input_plane_axis(self) -> bool:
         """Whether the nominal processing declaration reduces the stack axis."""

@@ -194,6 +194,38 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
     assert list(manager.storage_dir.iterdir()) == []
 
 
+@pytest.mark.parametrize("plane_count", (None, 1, 2))
+def test_reference_retains_plane_domain_until_raw_numpy_invocation(
+    tmp_path, monkeypatch, plane_count,
+):
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    prepared = manager._prepare_source(_reference_block("callable-artifact-reference"))
+    contract = CallableContract.from_callable(prepared.func)
+    fixture = np.zeros((8, 8), dtype=np.uint16)
+    fixture[2:6, 3:7] = 1
+    stack = ImageMetadataPayload(
+        data=fixture if plane_count is None else np.stack((fixture,) * plane_count),
+        metadata=ImagePayloadMetadata(
+            source_dtype="uint16",
+            plane_axis=None if plane_count is None else RuntimePlaneAxis.RUNTIME_SLICE,
+        ),
+    )
+    call_argument = contract.main_flow_call_argument(stack)
+    assert call_argument is stack
+    image, labels, rows = prepared.func(call_argument)
+    np.testing.assert_array_equal(image, stack.data)
+    np.testing.assert_array_equal(labels, stack.data)
+    assert rows.row_mappings() == tuple(
+        {"slice_index": plane, "object_label": 1, "pixel_count": 16}
+        for plane in range(1 if plane_count is None else plane_count)
+    )
+    assert not manager.storage_dir.exists()
+
+
 @pytest.mark.parametrize(
     "source",
     (
