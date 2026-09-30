@@ -51,7 +51,11 @@ def main() -> None:
     )
     figure.tight_layout(rect=(0, 0.04, 1, 0.95))
     figure.savefig(ROOT / "measured_phases.png", dpi=180)
-    figure.savefig(ROOT / "measured_phases.svg")
+    svg_path = ROOT / "measured_phases.svg"
+    figure.savefig(svg_path)
+    svg_path.write_text(
+        "\n".join(line.rstrip() for line in svg_path.read_text().splitlines()) + "\n"
+    )
 
 
 if __name__ == "__main__":
