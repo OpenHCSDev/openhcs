@@ -111,3 +111,28 @@ cutover, admitted finite valid-volume compile/execute/strict full durable readba
 and installed affected-entrypoint acceptance. Original attempts remain partial/
 failed/stopped, not acceptance. References251/257; no issue closure or global
 clean claim. Parent retains integration/install/live ownership.
+
+## Subsequent main65 integration (no new runtime allocation)
+
+Normally merged current main65b2ed101 at17c22731a27faec7102321a462dd0c2bb0a0ce58.
+That incoming delta is PR208 memory diagnostics/history controls/receipts plus
+the ArrayBridge gitlink, not bootstrap production ownership changes. Initialized
+own clean ArrayBridge worktree at recorded409b1e0831f815fa9ef91d4ecc04989f9fbb89c5.
+Initial submodule fetch was refused because its existing origin is a local file
+repository; preserved that failure and fetched only the exact recorded object
+read-only from the reviewed memory-integration tree with per-command file
+transport admission. Then no-fetch submodule checkout succeeded. No foreign
+source edits, persistent Git configuration change, install or package download.
+
+Native working child remains2b3d821; ACK3374 ancestry verified. Recorded parent
+native pin remains28d9ed6, awaiting parent reviewed cutover. Other child pins are
+unchanged. Existing interpreter with explicit own root+eight child src paths
+find_spec-resolves all nine top-level packages within this isolated tree. This
+is import-path authority verification without importing the package bodies,
+not an additional execution/import smoke or a freshly rerun181-case suite.
+Earlier181-case/XML and ratchet retain their exact prior source/base limits.
+
+Parent's ordinary installed import authority is now memory-integration main65
+with ArrayBridge409 and native0f9, not this PR256 candidate. No installed/managed
+skill mutation, native/MCP launch, validation-slot allocation or S1 resume by this
+worker. Resource warning/exit2 is not a new native waiver. No fourth attempt.

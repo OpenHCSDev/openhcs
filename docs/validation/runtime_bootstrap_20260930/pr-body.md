@@ -142,6 +142,14 @@ acknowledgement is NOT verified, no prior agreement claimed. No ACK-private/
 config/return-route/viewer edits. Full archive author unknown; S1 stays blocked.
 [Actual paired evidence and remaining gates](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/paired-native-owner-checkpoint.md).
 
+Subsequently normally integrated main65b2ed101 at17c22731a (PR208 memory source
+checkpoint), initialized exact ArrayBridge409 in this own tree. Native candidate
+still2b3d821 with verified ACK3374 ancestry; parent recorded pin still28d9ed6.
+Explicit source-path resolution verifies root+all eight children here without
+importing package bodies. No source suite rerun or new native/installed proof;
+181-case/ratchet evidence retains its exact earlier baseline. Parent's installed
+main65/ArrayBridge409/native0f9 authority remains separate and untouched.
+
 ### Exact owned close (parent-reported5993 lifecycle defect)
 
 Adds typed `openhcs_close_owned_runtime` on the existing RuntimeServerService
