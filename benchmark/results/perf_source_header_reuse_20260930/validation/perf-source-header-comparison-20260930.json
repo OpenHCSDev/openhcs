@@ -1,0 +1,101 @@
+{
+  "phase_observations": {
+    "main": {
+      "source_loading": {
+        "calls": 9,
+        "seconds": 0.7862884649075568,
+        "metadata_calls": 540,
+        "metadata_seconds": 0.5077878101728857,
+        "header_calls": 540,
+        "header_seconds": 0.32867507031187415,
+        "maximum_header_unique_paths_total": 3
+      },
+      "members": {
+        "calls": 4,
+        "seconds": 0.4891871390864253,
+        "metadata_calls": 0,
+        "metadata_seconds": 0.0,
+        "header_calls": 0,
+        "header_seconds": 0.0,
+        "maximum_header_unique_paths_total": 3
+      },
+      "source_artifact": {
+        "calls": 4,
+        "seconds": 1.08829874265939,
+        "metadata_calls": 240,
+        "metadata_seconds": 0.21427537966519594,
+        "header_calls": 240,
+        "header_seconds": 0.13961006375029683,
+        "maximum_header_unique_paths_total": 3
+      }
+    },
+    "candidate": {
+      "source_loading": {
+        "calls": 9,
+        "seconds": 0.4436112423427403,
+        "metadata_calls": 540,
+        "metadata_seconds": 0.19173680525273085,
+        "header_calls": 540,
+        "header_seconds": 0.04042238602414727,
+        "maximum_header_unique_paths_total": 3
+      },
+      "members": {
+        "calls": 4,
+        "seconds": 0.535719275008887,
+        "metadata_calls": 0,
+        "metadata_seconds": 0.0,
+        "header_calls": 0,
+        "header_seconds": 0.0,
+        "maximum_header_unique_paths_total": 3
+      },
+      "source_artifact": {
+        "calls": 4,
+        "seconds": 0.8130454900674522,
+        "metadata_calls": 240,
+        "metadata_seconds": 0.08282122341915965,
+        "header_calls": 240,
+        "header_seconds": 0.01932218996807933,
+        "maximum_header_unique_paths_total": 3
+      }
+    }
+  },
+  "unprofiled_abba_means": {
+    "cp_tutorial_3d_monolayer": {
+      "main": {
+        "compile_seconds": 1.174350619316101,
+        "execute_seconds": 9.796817898750305,
+        "total_seconds": 11.688148965593427
+      },
+      "candidate": {
+        "compile_seconds": 1.1997770071029663,
+        "execute_seconds": 10.309374809265137,
+        "total_seconds": 12.20727808936499
+      }
+    },
+    "ExampleImagingFlowCytometryObjectsInGrid": {
+      "main": {
+        "compile_seconds": 1.7306002378463745,
+        "execute_seconds": 16.970693588256836,
+        "total_seconds": 19.36362453456968
+      },
+      "candidate": {
+        "compile_seconds": 1.7526533603668213,
+        "execute_seconds": 17.219931721687317,
+        "total_seconds": 19.662678464083
+      }
+    }
+  },
+  "primary_only_abba_means": {
+    "main": {
+      "compile_seconds": 1.7098721265792847,
+      "execute_seconds": 9.938200235366821,
+      "total_seconds": 12.38457551645115
+    },
+    "candidate": {
+      "compile_seconds": 1.7170705795288086,
+      "execute_seconds": 9.094722986221313,
+      "total_seconds": 11.523764853132889
+    }
+  },
+  "limits": "Phase scopes nest; do not add members to source_artifact. One diagnostic run/version. First mixed-case ABBA is noisy; primary-only ABBA is a separate controlled series, two runs/version. No pooling across protocols. No native CP or scaling rerun in this checkpoint."
+}
