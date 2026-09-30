@@ -1,0 +1,67 @@
+{
+  "label": "candidate",
+  "runtime_module": "/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_image_values.py",
+  "rows": [
+    {
+      "step": 1,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-1-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "fixture_sha256": "84cf22f2e4e1263c3ee06e202a82ef504647817dbf104e70c1eeb7effd0c9991",
+      "exact_parity": true,
+      "samples": [
+        0.008282640017569065,
+        0.007714909967035055,
+        0.007848081178963184,
+        0.007579194847494364,
+        0.007559317164123058,
+        0.007532957009971142,
+        0.007533398922532797,
+        0.007576900999993086,
+        0.04804676119238138,
+        0.007609271910041571,
+        0.007570948917418718
+      ],
+      "median": 0.007579194847494364
+    },
+    {
+      "step": 13,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-13-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "fixture_sha256": "84258696d1d16c5471450067230ce35c27e1626c70ecc4a30c523bf6313dda77",
+      "exact_parity": true,
+      "samples": [
+        0.006902851164340973,
+        0.006580263841897249,
+        0.006485265213996172,
+        0.006569343153387308,
+        0.006491496227681637,
+        0.00656227907165885,
+        0.0065314010716974735,
+        0.006472920998930931,
+        0.006727110128849745,
+        0.006611973978579044,
+        0.006582136731594801
+      ],
+      "median": 0.006569343153387308
+    },
+    {
+      "step": 17,
+      "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-17-cb8f69f6b1ae-_validate_and_unstack.pickle",
+      "fixture_sha256": "70f1e696dc787e3c3d16480f32cd0941a3098a0268a54987c784d86fddaaa1c8",
+      "exact_parity": true,
+      "samples": [
+        0.008287157863378525,
+        0.0077417208813130856,
+        0.0077862548641860485,
+        0.008002863265573978,
+        0.007805290166288614,
+        0.007683951873332262,
+        0.007872696965932846,
+        0.007826811168342829,
+        0.007757862098515034,
+        0.007728005293756723,
+        0.007862108293920755
+      ],
+      "median": 0.007805290166288614
+    }
+  ],
+  "limits": "Sequential unprofiled saved real bundles. Includes projection, no other tests/audits/builds/benchmarks overlap. Microreplay only, not whole-runtime evidence."
+}

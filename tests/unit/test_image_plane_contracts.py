@@ -5,7 +5,6 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageSliceContext,
     ImageOutputBundle,
-    ImagePayloadSliceProjector,
     ImagePayloadExecutionMode,
     compose_aligned_image_payload,
     pack_aligned_image_outputs,
@@ -26,12 +25,15 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_image_values import (
+    ImagePayloadSliceProjector,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
     image_payload_data,
     image_payload_mask,
+    image_payload_mask_for_slice,
     image_payload_metadata,
+    image_payload_slice_context,
 )
 
 
@@ -126,6 +128,101 @@ def test_source_binding_slice_projection_preserves_shared_spatial_mask() -> None
     )
 
     np.testing.assert_array_equal(projected, mask)
+
+
+def test_scalar_and_batch_projection_preserve_distinct_mask_contracts() -> None:
+    data = np.zeros((2, 4, 5), dtype=np.float32)
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
+    )
+    shared_mask = np.ones((4, 5), dtype=np.uint8)
+    scalar = ImagePayloadSliceProjector(mask=shared_mask, metadata=metadata)
+
+    projected = scalar.mask_for_slice(data[1], 1)
+    assert projected.dtype == shared_mask.dtype
+    np.testing.assert_array_equal(projected, shared_mask)
+    with pytest.raises(ValueError, match="mask cardinality must exactly match"):
+        scalar.payloads_for_slices(tuple(data))
+
+    plane_masks = np.ones(data.shape, dtype=np.uint8)
+    plane_masks[1, 1, 2] = 0
+    batch = ImagePayloadSliceProjector(mask=plane_masks, metadata=metadata)
+    outputs = batch.payloads_for_slices(tuple(data))
+    for index, output in enumerate(outputs):
+        assert image_payload_mask(output).dtype == np.dtype(bool)
+        np.testing.assert_array_equal(image_payload_mask(output), plane_masks[index])
+    assert batch.mask_for_slice(data[1], 1).dtype == plane_masks.dtype
+
+
+@pytest.mark.parametrize("mask_shape", ((), (1, 4, 5), (3, 4, 5)))
+def test_batch_projection_checks_mask_cardinality_before_child_axis_errors(
+    mask_shape: tuple[int, ...],
+) -> None:
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_channel_axis=0,
+    )
+    projector = ImagePayloadSliceProjector(
+        mask=np.ones(mask_shape, dtype=bool), metadata=metadata
+    )
+
+    with pytest.raises(ValueError, match="mask cardinality must exactly match"):
+        projector.payloads_for_slices(tuple(np.zeros((2, 4, 5))))
+
+
+@pytest.mark.parametrize("entry", ("payload", "mask", "context"))
+def test_scalar_mask_projection_requires_metadata_owner_to_declare_plane_axis(
+    entry: str,
+) -> None:
+    data = np.zeros((4, 5), dtype=np.float32)
+    mask = np.ones(data.shape, dtype=bool)
+    metadata = ImagePayloadMetadata()
+    projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
+
+    with pytest.raises(ValueError, match="requires a declared plane axis"):
+        if entry == "payload":
+            projector.payload_for_slice(data, 0)
+        elif entry == "mask":
+            image_payload_mask_for_slice(
+                mask=mask, metadata=metadata, data_slice=data, plane_index=0
+            )
+        else:
+            image_payload_slice_context(metadata.payload_with(data, mask), data, 0)
+
+    assert ImagePayloadSliceProjector(mask=None, metadata=metadata).mask_for_slice(
+        data, 0
+    ) is None
+
+
+@pytest.mark.parametrize("batch", (False, True))
+def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) -> None:
+    data = np.zeros((2, 4, 5), dtype=np.float32)
+    masks = np.ones(data.shape, dtype=bool)
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_component_metadata={"well": "A01"},
+    )
+    payload = metadata.payload_with(data, masks)
+    projector = ImagePayloadSliceProjector(mask=masks, metadata=metadata)
+
+    def project():
+        if batch:
+            return projector.payloads_for_slices(tuple(data))[1]
+        return image_payload_slice_context(
+            payload, data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        )
+
+    first = project()
+    metadata.source_component_metadata = {"well": "B02"}
+    second = project()
+
+    assert image_payload_metadata(first).source_component_metadata["well"] == "A01"
+    assert image_payload_metadata(second).source_component_metadata["well"] == "B02"
+    assert image_payload_metadata(first).plane_axis is None
+    assert image_payload_metadata(second).plane_axis is None
+    np.testing.assert_array_equal(image_payload_mask(first), masks[1])
+    np.testing.assert_array_equal(image_payload_mask(second), masks[1])
 
 
 def test_source_binding_runtime_projection_preserves_shared_spatial_mask() -> None:
