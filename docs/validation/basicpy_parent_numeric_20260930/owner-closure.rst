@@ -72,6 +72,15 @@ ArrayBridge38metrics and BaSiCPy43metrics, neither adds a positive metric.
 Actual paired dtype tests and CPU BaSiC numerics were executed in the prior
 checkpoint. Merge/remote verification is recorded separately from installation.
 
+GitHub plus independent git ls-remote verification:
+BaSiCPyPR1 merged mainc1d7c3dc6a57a26acc1179de3f2e14b1c5faa0ec at19:07:50UTC.
+ArrayBridgePR2 merged into its old stacked base branch, not main; parent
+verified that branch821696e7 is tree-identical to tested d6d92a7, includes
+current main409, and contains only the two intended main-delta files.
+Main-targeted PR3 then merged main ea3f2a4cc91c4810d12343f58f85c1195e1a41e6
+at19:13:30UTC. No optional hosted-CI wait, bypass, force push or install.
+OpenHCS retains the same exact tested ancestor pins, not a dependency rollback.
+
 Remaining acceptance
 --------------------
 
