@@ -1,0 +1,45 @@
+{
+  "rows": [
+    {
+      "class": "Profile",
+      "sleep": [
+        [
+          "('~', 0, '<built-in method time.sleep>')",
+          [
+            23,
+            23,
+            0.037135203000000006,
+            0.14067006
+          ]
+        ]
+      ],
+      "work": [
+        [
+          "('/tmp/reproduce_profile_thread_contamination_20260930.py', 40, 'measured_work')",
+          [
+            1,
+            2,
+            0.0024826650000000002,
+            0.0032337010000000003
+          ]
+        ]
+      ]
+    },
+    {
+      "class": "ThreadBoundProfile",
+      "sleep": [],
+      "work": [
+        [
+          "('/tmp/reproduce_profile_thread_contamination_20260930.py', 40, 'measured_work')",
+          [
+            1,
+            1,
+            0.075309627,
+            0.150005352
+          ]
+        ]
+      ]
+    }
+  ],
+  "limits": "Pinned CPython 3.12.14. Diagnostic subclass uses private callback methods and is not installed as application/platform API. Production diagnostics instead use thread-local explicit timers. Normal-profiler counts are nondeterministic and intentionally retained."
+}

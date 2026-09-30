@@ -1,0 +1,363 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/aligned_image_payload.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/aligned_image_payload.py
+@@ -29,11 +29,11 @@
+ )
+ from openhcs.core.runtime_image_values import (
+     ImagePayloadMetadata,
++    ImagePayloadSliceProjector,
+     ImagePayloadMetadataCarrier,
+     ImagePayloadMetadataCompositionMode,
+     image_payload_data,
+     image_payload_mask,
+-    image_payload_mask_for_slice,
+     image_payload_metadata,
+     preserved_image_plane_projection,
+     with_image_payload_data,
+@@ -396,95 +396,6 @@
+         return adapter.value_in_payload_domain(reference)
+ 
+ 
+-@dataclass(frozen=True, slots=True)
+-class ImagePayloadSliceProjector:
+-    """Project payload context from a parent image into one child image slice."""
+-
+-    mask: RuntimeArrayData | None
+-    metadata: ImagePayloadMetadata
+-
+-    def payloads_for_slices(
+-        self,
+-        slices: Sequence[RuntimeArrayData],
+-    ) -> list[RuntimeArrayData]:
+-        """Return payloads for every child slice using one projection pass."""
+-        if self.metadata.plane_axis is None:
+-            if len(slices) != 1:
+-                raise ValueError(
+-                    "Image payload produced multiple slices without a declared "
+-                    "plane axis."
+-                )
+-            return [self.metadata.payload_with(slices[0], self.mask)]
+-        metadata = self.metadata.with_indexed_source_plane_provenance(len(slices))
+-        masks = self._masks_for_slices(slices) if self.mask is not None else None
+-        return [
+-            metadata.for_leading_source_plane(index).payload_with(
+-                slice_data,
+-                None if masks is None else masks[index],
+-            )
+-            for index, slice_data in enumerate(slices)
+-        ]
+-
+-    def _masks_for_slices(
+-        self,
+-        slices: Sequence[RuntimeArrayData],
+-    ) -> tuple[RuntimeArrayData, ...]:
+-        """Project masks after an explicit slice owner has fixed cardinality."""
+-        if self.mask is None:
+-            raise ValueError("Masked slice projection requires a mask payload.")
+-        mask_array = np.asarray(self.mask, dtype=bool)
+-        if mask_array.ndim == 0 or mask_array.shape[0] != len(slices):
+-            raise ValueError(
+-                "Image payload mask cardinality must exactly match the declared "
+-                f"plane axis: {mask_array.shape!r} for {len(slices)} slice(s)."
+-            )
+-        candidates = tuple(mask_array[index] for index in range(len(slices)))
+-        masks: list[RuntimeArrayData] = []
+-        for index, slice_data in enumerate(slices):
+-            metadata = self.metadata.for_leading_source_plane(index)
+-            if not metadata.mask_domain(slice_data).accepts(
+-                tuple(np.shape(candidates[index]))
+-            ):
+-                raise ValueError(
+-                    "Image payload mask shape must match the selected slice "
+-                    f"domain; got {tuple(np.shape(candidates[index]))!r} for "
+-                    f"{tuple(np.shape(slice_data))!r}."
+-                )
+-            masks.append(candidates[index])
+-        return tuple(masks)
+-
+-    def payload_for_slice(
+-        self,
+-        data_slice: RuntimeArrayData,
+-        index: int,
+-    ) -> RuntimeArrayData:
+-        """Return a slice payload with mask and metadata in the slice domain."""
+-        metadata = self.metadata_for_slice(data_slice, index)
+-        mask = self.mask_for_slice(data_slice, index)
+-        payload: RuntimeArrayData = metadata.payload_with(data_slice, mask)
+-        return payload
+-
+-    def metadata_for_slice(
+-        self,
+-        data_slice: RuntimeArrayData,
+-        index: int,
+-    ) -> ImagePayloadMetadata:
+-        """Return metadata for one explicitly selected child image slice."""
+-        del data_slice
+-        return self.metadata.for_leading_source_plane(index)
+-
+-    def mask_for_slice(
+-        self,
+-        data_slice: RuntimeArrayData,
+-        index: int,
+-    ) -> RuntimeArrayData | None:
+-        """Return the parent mask projected into ``data_slice``'s domain."""
+-        return image_payload_mask_for_slice(
+-            mask=self.mask,
+-            metadata=self.metadata,
+-            data_slice=data_slice,
+-            plane_index=index,
+-        )
+ 
+ 
+ def stack_image_payload_context(
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_image_values.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_image_values.py
+@@ -1447,6 +1447,131 @@
+     return resolved_metadata.payload_with(data, resolved_mask)
+ 
+ 
++@dataclass(frozen=True, slots=True)
++class ImagePayloadSliceProjector:
++    """Project payload context from a parent image into one child image slice."""
++
++    mask: RuntimeArrayData | None
++    metadata: ImagePayloadMetadata
++
++    def payloads_for_slices(
++        self,
++        slices: Sequence[RuntimeArrayData],
++    ) -> list[RuntimeArrayData]:
++        """Return payloads for every child slice using one projection pass."""
++        if self.metadata.plane_axis is None:
++            if len(slices) != 1:
++                raise ValueError(
++                    "Image payload produced multiple slices without a declared "
++                    "plane axis."
++                )
++            return [self.metadata.payload_with(slices[0], self.mask)]
++        metadata = self.metadata.with_indexed_source_plane_provenance(len(slices))
++        slice_metadata = tuple(
++            metadata.for_leading_source_plane(index)
++            for index in range(len(slices))
++        )
++        masks = (
++            self._masks_for_slices(slices, slice_metadata)
++            if self.mask is not None
++            else None
++        )
++        return [
++            slice_metadata[index].payload_with(
++                slice_data,
++                None if masks is None else masks[index],
++            )
++            for index, slice_data in enumerate(slices)
++        ]
++
++    def _masks_for_slices(
++        self,
++        slices: Sequence[RuntimeArrayData],
++        slice_metadata: Sequence[ImagePayloadMetadata],
++    ) -> tuple[RuntimeArrayData, ...]:
++        """Project masks after an explicit slice owner has fixed cardinality."""
++        if self.mask is None:
++            raise ValueError("Masked slice projection requires a mask payload.")
++        mask_array = np.asarray(self.mask, dtype=bool)
++        if mask_array.ndim == 0 or mask_array.shape[0] != len(slices):
++            raise ValueError(
++                "Image payload mask cardinality must exactly match the declared "
++                f"plane axis: {mask_array.shape!r} for {len(slices)} slice(s)."
++            )
++        candidates = tuple(mask_array[index] for index in range(len(slices)))
++        masks: list[RuntimeArrayData] = []
++        for index, slice_data in enumerate(slices):
++            if not slice_metadata[index].mask_domain(slice_data).accepts(
++                tuple(np.shape(candidates[index]))
++            ):
++                raise ValueError(
++                    "Image payload mask shape must match the selected slice "
++                    f"domain; got {tuple(np.shape(candidates[index]))!r} for "
++                    f"{tuple(np.shape(slice_data))!r}."
++                )
++            masks.append(candidates[index])
++        return tuple(masks)
++
++    def payload_for_slice(
++        self,
++        data_slice: RuntimeArrayData,
++        index: int,
++    ) -> RuntimeArrayData:
++        """Project one metadata snapshot for both child pixels and mask."""
++        metadata = self.metadata.for_leading_source_plane(index)
++        mask = self._mask_for_projected_slice(data_slice, index, metadata)
++        return metadata.payload_with(data_slice, mask)
++
++    def mask_for_slice(
++        self,
++        data_slice: RuntimeArrayData,
++        index: int,
++    ) -> RuntimeArrayData | None:
++        """Project a standalone mask through the same scalar slice policy."""
++        if self.mask is None:
++            return None
++        metadata = self.metadata.for_leading_source_plane(index)
++        return self._mask_for_projected_slice(data_slice, index, metadata)
++
++    def _mask_for_projected_slice(
++        self,
++        data_slice: RuntimeArrayData,
++        plane_index: int,
++        slice_metadata: ImagePayloadMetadata,
++    ) -> RuntimeArrayData | None:
++        if self.mask is None:
++            return None
++        mask_array = np.asarray(self.mask)
++        if self.metadata.plane_axis is None:
++            if plane_index != 0:
++                raise ValueError(
++                    "Image payload without a plane axis cannot select nonzero "
++                    f"slice index {plane_index}."
++                )
++            candidate = mask_array
++        elif (
++            self.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
++            and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
++        ):
++            candidate = mask_array
++        else:
++            if mask_array.ndim == 0 or plane_index >= mask_array.shape[0]:
++                raise ValueError(
++                    "Image payload mask does not carry the requested declared "
++                    f"slice index {plane_index}; got shape {mask_array.shape!r}."
++                )
++            candidate = mask_array[plane_index]
++        if slice_metadata.mask_domain(data_slice).accepts(
++            image_payload_geometry(candidate, value_name="Projected image mask").shape
++        ):
++            return candidate
++        raise ValueError(
++            "Image payload mask cannot be projected into slice domain; "
++            f"got mask {mask_array.shape!r} for slice "
++            f"{image_payload_geometry(data_slice).shape!r}."
++        )
++
++
+ def image_payload_slice_context(
+     payload: Any,
+     data: Any,
+@@ -1465,17 +1590,12 @@
+                 "Image slice projection axis conflicts with payload metadata: "
+                 f"{plane_axis.value!r} != {metadata.plane_axis.value!r}."
+             )
+-        metadata = metadata.replace_fields(plane_axis=plane_axis)
+-    mask = image_payload_mask(payload)
+-    return metadata.for_leading_source_plane(plane_index).payload_with(
+-        data,
+-        image_payload_mask_for_slice(
+-            mask=mask,
+-            metadata=metadata,
+-            data_slice=data,
+-            plane_index=plane_index,
+-        ),
+-    )
++        if metadata.plane_axis is not plane_axis:
++            metadata = metadata.replace_fields(plane_axis=plane_axis)
++    return ImagePayloadSliceProjector(
++        mask=image_payload_mask(payload),
++        metadata=metadata,
++    ).payload_for_slice(data, plane_index)
+ 
+ 
+ def image_payload_mask_for_slice(
+@@ -1487,37 +1607,8 @@
+ ) -> RuntimeArrayData | None:
+     """Project a shared or plane-specific mask into one declared image slice."""
+ 
+-    if mask is None:
+-        return None
+-    mask_array = np.asarray(mask)
+-    slice_metadata = metadata.for_leading_source_plane(plane_index)
+-    if metadata.plane_axis is None:
+-        if plane_index != 0:
+-            raise ValueError(
+-                "Image payload without a plane axis cannot select nonzero "
+-                f"slice index {plane_index}."
+-            )
+-        candidate = mask_array
+-    elif (
+-        metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+-        and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
+-    ):
+-        candidate = mask_array
+-    else:
+-        if mask_array.ndim == 0 or plane_index >= mask_array.shape[0]:
+-            raise ValueError(
+-                "Image payload mask does not carry the requested declared "
+-                f"slice index {plane_index}; got shape {mask_array.shape!r}."
+-            )
+-        candidate = mask_array[plane_index]
+-    if slice_metadata.mask_domain(data_slice).accepts(
+-        image_payload_geometry(candidate, value_name="Projected image mask").shape
+-    ):
+-        return candidate
+-    raise ValueError(
+-        "Image payload mask cannot be projected into slice domain; "
+-        f"got mask {mask_array.shape!r} for slice "
+-        f"{image_payload_geometry(data_slice).shape!r}."
++    return ImagePayloadSliceProjector(mask=mask, metadata=metadata).mask_for_slice(
++        data_slice, plane_index
+     )
+ 
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/colocalization.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/colocalization.py
+@@ -19,7 +19,6 @@
+ from openhcs.core.aligned_image_payload import (
+     AlignedImageStack,
+     ImagePayloadExecutionMode,
+-    ImagePayloadSliceProjector,
+     pack_aligned_image_outputs,
+ )
+ from openhcs.core.artifacts import (
+@@ -54,6 +53,7 @@
+ )
+ from openhcs.core.runtime_array_values import RuntimeArrayData
+ from openhcs.core.runtime_image_values import (
++    ImagePayloadSliceProjector,
+     image_intensity_scale_for_dtype,
+     image_payload_data,
+     image_payload_mask,
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_module_execution.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_module_execution.py
+@@ -23,7 +23,6 @@
+     ImageOutputBundle,
+     ImagePayloadBundleContext,
+     ImagePayloadExecutionMode,
+-    ImagePayloadSliceProjector,
+     aligned_image_stack_kwargs,
+     compose_aligned_image_payload,
+     pack_aligned_image_outputs,
+@@ -88,6 +87,7 @@
+ from openhcs.core.runtime_artifact_values import RuntimeValue
+ from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
+ from openhcs.core.runtime_image_values import (
++    ImagePayloadSliceProjector,
+     ImageMetadataPayload,
+     ImagePayloadMetadata,
+     MaskedImagePayload,
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_image_plane_contracts.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_image_plane_contracts.py
+@@ -5,7 +5,6 @@
+     AlignedImageStack,
+     AlignedImageSliceContext,
+     ImageOutputBundle,
+-    ImagePayloadSliceProjector,
+     ImagePayloadExecutionMode,
+     compose_aligned_image_payload,
+     pack_aligned_image_outputs,
+@@ -26,6 +25,7 @@
+ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+ from openhcs.core.source_spatial_domain import SourceSpatialDomain
+ from openhcs.core.runtime_image_values import (
++    ImagePayloadSliceProjector,
+     ImagePayloadMetadata,
+     ImagePayloadMetadataCompositionMode,
+     MaskedImagePayload,

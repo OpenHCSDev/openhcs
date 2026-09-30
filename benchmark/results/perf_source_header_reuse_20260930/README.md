@@ -6,6 +6,8 @@ Representative 3D preparation made **780 header reads across three actual physic
 
 ## End-to-end evidence and variance
 
+**Diagnostic qualification:** a later [thread-isolation reproduction and direct-timer replacement](../perf_payload_slice_projection_owner_20260930/README.md#corrected-diagnostic-scope) establishes background-thread contamination of ordinary CPython 3.12.14 cProfile. Historical profiled production-phase timing/call-graph attributions above cannot establish causal phase reductions. The unprofiled public clocks, native header replay and exact parity checks remain valid.
+
 An earlier 3D-only CPU5 ABBA (two observations/version, older dependency pins) found mean execution **9.938s → 9.095s**, pipeline total **12.385s → 11.524s**. Its preceding mixed-case ABBA found no total gain and no ImagingFlow gain. Both series are retained in full and are not pooled.
 
 After normally merging main and updating all actual source pins/distribution metadata to the ACK runtime generation, the separate current-main ABBA yields:

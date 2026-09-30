@@ -1,0 +1,204 @@
+{
+  "parity": [
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-0-main-20260930",
+      "label": "main",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-1-candidate-20260930",
+      "label": "candidate",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-2-candidate-20260930",
+      "label": "candidate",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-3-main-20260930",
+      "label": "main",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-owner-timer-production-20260930",
+      "label": "thread_local_direct_timer",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-whole-pattern-profile-production-20260930",
+      "label": "archived_contaminated_cprofile",
+      "byte_exact_csvs": [
+        {
+          "name": "3d_monolayer_Cells.csv",
+          "sha256": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d"
+        },
+        {
+          "name": "3d_monolayer_Image.csv",
+          "sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4"
+        },
+        {
+          "name": "3d_monolayer_Nuclei.csv",
+          "sha256": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c"
+        },
+        {
+          "name": "3d_monolayer_downsizedNuclei.csv",
+          "sha256": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08"
+        },
+        {
+          "name": "3d_monolayer_erodedDownsizedNuclei.csv",
+          "sha256": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0"
+        },
+        {
+          "name": "3d_monolayer_erodedResizedNuclei.csv",
+          "sha256": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+        }
+      ],
+      "exact_label_images": 120
+    }
+  ],
+  "means": {
+    "main": {
+      "compile_seconds": 1.768967628479004,
+      "execute_seconds": 9.301148653030396,
+      "total_seconds": 11.796611675526947
+    },
+    "candidate": {
+      "compile_seconds": 1.7256295680999756,
+      "execute_seconds": 9.410587906837463,
+      "total_seconds": 11.84703063685447
+    }
+  },
+  "public_observations": 4,
+  "limits": "Complete CSV/name/label/dtype/shape/pixel equality. Public unprofiled ABBA is separate from diagnostic observations and saved-bundle replay. Thread-local timer scopes overlap; archived cProfile timing/call attribution is not valid causal evidence. CPU5, fork workers, mandatory preparation before readiness, pipeline excludes ZMQ startup/shutdown; current main source and pins. All timed runs are sequential with tests/audits/builds stopped."
+}

@@ -1447,6 +1447,110 @@ def with_image_payload_data(
     return resolved_metadata.payload_with(data, resolved_mask)
 
 
+@dataclass(frozen=True, slots=True)
+class ImagePayloadSliceProjector:
+    """Project payload context from a parent image into one child image slice."""
+
+    mask: RuntimeArrayData | None
+    metadata: ImagePayloadMetadata
+
+    def payloads_for_slices(
+        self,
+        slices: Sequence[RuntimeArrayData],
+    ) -> list[RuntimeArrayData]:
+        """Project each child once, keeping strict batch-mask cardinality."""
+        if self.metadata.plane_axis is None:
+            if len(slices) != 1:
+                raise ValueError(
+                    "Image payload produced multiple slices without a declared "
+                    "plane axis."
+                )
+            return [self.metadata.payload_with(slices[0], self.mask)]
+        metadata = self.metadata.with_indexed_source_plane_provenance(len(slices))
+        masks = self._masks_for_slices(slices) if self.mask is not None else None
+        payloads: list[RuntimeArrayData] = []
+        for index, slice_data in enumerate(slices):
+            slice_metadata = metadata.for_leading_source_plane(index)
+            mask = None if masks is None else masks[index]
+            if mask is not None and not slice_metadata.mask_domain(slice_data).accepts(
+                tuple(np.shape(mask))
+            ):
+                raise ValueError(
+                    "Image payload mask shape must match the selected slice "
+                    f"domain; got {tuple(np.shape(mask))!r} for "
+                    f"{tuple(np.shape(slice_data))!r}."
+                )
+            payloads.append(slice_metadata.payload_with(slice_data, mask))
+        return payloads
+
+    def _masks_for_slices(
+        self,
+        slices: Sequence[RuntimeArrayData],
+    ) -> tuple[RuntimeArrayData, ...]:
+        """Select batch masks only after checking exact leading cardinality."""
+        if self.mask is None:
+            raise ValueError("Masked slice projection requires a mask payload.")
+        mask_array = np.asarray(self.mask, dtype=bool)
+        if mask_array.ndim == 0 or mask_array.shape[0] != len(slices):
+            raise ValueError(
+                "Image payload mask cardinality must exactly match the declared "
+                f"plane axis: {mask_array.shape!r} for {len(slices)} slice(s)."
+            )
+        return tuple(mask_array[index] for index in range(len(slices)))
+
+    def payload_for_slice(
+        self,
+        data_slice: RuntimeArrayData,
+        index: int,
+    ) -> RuntimeArrayData:
+        """Project one metadata snapshot for both child pixels and mask."""
+        metadata = self.metadata.for_leading_source_plane(index)
+        mask = self._mask_for_projected_slice(data_slice, index, metadata)
+        return metadata.payload_with(data_slice, mask)
+
+    def mask_for_slice(
+        self,
+        data_slice: RuntimeArrayData,
+        index: int,
+    ) -> RuntimeArrayData | None:
+        """Project a standalone mask through the same scalar slice policy."""
+        if self.mask is None:
+            return None
+        metadata = self.metadata.for_leading_source_plane(index)
+        return self._mask_for_projected_slice(data_slice, index, metadata)
+
+    def _mask_for_projected_slice(
+        self,
+        data_slice: RuntimeArrayData,
+        plane_index: int,
+        slice_metadata: ImagePayloadMetadata,
+    ) -> RuntimeArrayData | None:
+        if self.mask is None:
+            return None
+        mask_array = np.asarray(self.mask)
+        if (
+            self.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+            and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
+        ):
+            candidate = mask_array
+        else:
+            if mask_array.ndim == 0 or plane_index >= mask_array.shape[0]:
+                raise ValueError(
+                    "Image payload mask does not carry the requested declared "
+                    f"slice index {plane_index}; got shape {mask_array.shape!r}."
+                )
+            candidate = mask_array[plane_index]
+        if slice_metadata.mask_domain(data_slice).accepts(
+            image_payload_geometry(candidate, value_name="Projected image mask").shape
+        ):
+            return candidate
+        raise ValueError(
+            "Image payload mask cannot be projected into slice domain; "
+            f"got mask {mask_array.shape!r} for slice "
+            f"{image_payload_geometry(data_slice).shape!r}."
+        )
+
+
 def image_payload_slice_context(
     payload: Any,
     data: Any,
@@ -1465,17 +1569,12 @@ def image_payload_slice_context(
                 "Image slice projection axis conflicts with payload metadata: "
                 f"{plane_axis.value!r} != {metadata.plane_axis.value!r}."
             )
-        metadata = metadata.replace_fields(plane_axis=plane_axis)
-    mask = image_payload_mask(payload)
-    return metadata.for_leading_source_plane(plane_index).payload_with(
-        data,
-        image_payload_mask_for_slice(
-            mask=mask,
-            metadata=metadata,
-            data_slice=data,
-            plane_index=plane_index,
-        ),
-    )
+        if metadata.plane_axis is not plane_axis:
+            metadata = metadata.replace_fields(plane_axis=plane_axis)
+    return ImagePayloadSliceProjector(
+        mask=image_payload_mask(payload),
+        metadata=metadata,
+    ).payload_for_slice(data, plane_index)
 
 
 def image_payload_mask_for_slice(
@@ -1487,37 +1586,8 @@ def image_payload_mask_for_slice(
 ) -> RuntimeArrayData | None:
     """Project a shared or plane-specific mask into one declared image slice."""
 
-    if mask is None:
-        return None
-    mask_array = np.asarray(mask)
-    slice_metadata = metadata.for_leading_source_plane(plane_index)
-    if metadata.plane_axis is None:
-        if plane_index != 0:
-            raise ValueError(
-                "Image payload without a plane axis cannot select nonzero "
-                f"slice index {plane_index}."
-            )
-        candidate = mask_array
-    elif (
-        metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-        and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
-    ):
-        candidate = mask_array
-    else:
-        if mask_array.ndim == 0 or plane_index >= mask_array.shape[0]:
-            raise ValueError(
-                "Image payload mask does not carry the requested declared "
-                f"slice index {plane_index}; got shape {mask_array.shape!r}."
-            )
-        candidate = mask_array[plane_index]
-    if slice_metadata.mask_domain(data_slice).accepts(
-        image_payload_geometry(candidate, value_name="Projected image mask").shape
-    ):
-        return candidate
-    raise ValueError(
-        "Image payload mask cannot be projected into slice domain; "
-        f"got mask {mask_array.shape!r} for slice "
-        f"{image_payload_geometry(data_slice).shape!r}."
+    return ImagePayloadSliceProjector(mask=mask, metadata=metadata).mask_for_slice(
+        data_slice, plane_index
     )
 
 

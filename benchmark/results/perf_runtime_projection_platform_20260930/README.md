@@ -24,6 +24,8 @@ No new registry, wrapper class, manual roster or competing authority is added. T
 
 ## Performance and parity
 
+**Diagnostic qualification:** a subsequent [thread-isolation reproduction and direct-timer replacement](../perf_payload_slice_projection_owner_20260930/README.md#corrected-diagnostic-scope) shows that CPython 3.12.14 cProfile can admit unrelated background threads into its shared stack. The historical profiled phase timings and call-graph attribution below are archived observations, not reliable evidence of causal phase reductions. The unprofiled ABBA, sequential saved-input replay and exact output parity remain valid.
+
 Earlier fresh installed profiling attributed 1.941s to output validation/unstacking, with 2820 scalar image projections; pixel stack calls across the measured phases cost approximately 0.057s. Metadata/provenance reconstruction, rather than raw image stacking, dominates this measured overhead. The estimated payoff of removing the duplicate traversal was only 0.2–0.3s per 19-bundle well: a structural prerequisite for the larger metadata improvement, not a whole-execution target achievement.
 
 Sequential production replay on three actual saved 60-plane bundles (seven samples each, no overlapping checks) has median projection times of 29.07→14.50ms, 16.88→8.21ms and 30.04→15.13ms. Metadata, masks, pixels and contexts match saved outputs exactly. One earlier replay accidentally overlapped audits and its counterpart; its timing is explicitly rejected and retained, not pooled with the accepted replay. Replay revisions are c2d82ba23 / 3b6f39c9b, before the subsequent viewer merge; the common projection source is unchanged in that merge.
@@ -36,7 +38,7 @@ Current-main d1c6ab72c versus installed candidate c20b56b41, separate unprofiled
 | Execution | 9.366s | 9.715s |
 | Pipeline total | 11.783s | 12.195s |
 
-**No overall speedup is demonstrated in this series.** Candidate execution observations are 10.572s and 8.858s; the measured mean is higher. Do not causally attribute this variance without separate evidence. The installed diagnostic confirms scalar image projections 2820→1680 and leading-plane metadata reconstructions 4320→2580; profiled output validation/unstacking is 1.941→1.265s. These phase receipts are separate, profiled evidence and must not be pooled with unprofiled clocks. Continue the larger shared metadata/provenance improvement.
+**No overall speedup is demonstrated in this series.** Candidate execution observations are 10.572s and 8.858s; the measured mean is higher. Do not causally attribute this variance without separate evidence. The archived installed diagnostic recorded scalar image projections 2820→1680, leading-plane metadata reconstructions 4320→2580 and profiled output validation/unstacking 1.941→1.265s. Those cProfile observations are subject to the thread-isolation qualification above; they do not confirm causal phase savings. Continue the larger shared metadata/provenance improvement using isolated diagnostics and unprofiled clocks.
 
 All 24 complete measurement CSVs and 480 label images across the four observations match the saved successful control exactly. Both filenames and label dtype/shape/pixels are checked. The distinct profiled candidate also checks complete output parity. No scientific assertion or tolerance was loosened.
 
