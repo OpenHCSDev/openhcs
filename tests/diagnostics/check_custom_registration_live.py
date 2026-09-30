@@ -27,10 +27,10 @@ PROBE = SOURCE / "tests/diagnostics/registration_probe_source.py"
 
 def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
     """Diagnostic fault seam on the real launcher/server, not another registry."""
+    import openhcs
     import polystore
     from zmqruntime.messages import ControlErrorResponse, MessageFields
 
-    import openhcs
     from openhcs.agent.dto.functions import (
         CustomFunctionRegistrationControlResponse,
         FunctionCatalogControlField,
@@ -222,6 +222,7 @@ def run(args) -> None:
     )
     from dataclasses import replace
 
+    import openhcs
     import numpy as np
     import polystore
     from python_introspect import dataclass_from_mapping
@@ -229,7 +230,6 @@ def run(args) -> None:
     from zmqruntime.config import TransportMode
     from zmqruntime.transport import TransportEndpoint, wait_for_endpoint_ready
 
-    import openhcs
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.mcp.dev_client_core import McpDevServerSpec
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
