@@ -946,8 +946,7 @@ class CallableContract(ArtifactPlanKeySelector):
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""
         return self.require_processing_contract().declaration.main_flow_call_argument(
-            self,
-            source_payload,
+            self, source_payload,
         )
 
     @property
