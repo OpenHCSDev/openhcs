@@ -6,7 +6,9 @@ Dependency and package metadata comes exclusively from ``pyproject.toml``.
 import os
 import runpy
 import shutil
+from abc import ABC, abstractmethod
 from pathlib import Path
+
 from setuptools import Extension, setup
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.sdist import sdist as _sdist
@@ -50,18 +52,46 @@ class SdistWithMcpKnowledge(_sdist):
         )
 
 
-_native_granularity_extension = Extension(
-    "openhcs.processing.backends.cellprofiler._granularity_reconstruct",
-    sources=["openhcs/processing/backends/cellprofiler/_granularity_reconstruct.cpp"],
-    language="c++",
-    define_macros=[("Py_LIMITED_API", "0x030B0000")],
-    py_limited_api=True,
-    extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
-)
+class OpenHCSNativeExtension(Extension, ABC):
+    """Build native module declarations with one stable-ABI compiler policy."""
+
+    @property
+    @abstractmethod
+    def qualified_module_name(self) -> str:
+        """Declare the native module; its qualified name also owns its source path."""
+
+    def __init__(self) -> None:
+        module_name = self.qualified_module_name
+        source_path = Path(*module_name.split(".")).with_suffix(".cpp")
+        super().__init__(
+            module_name,
+            sources=[source_path.as_posix()],
+            language="c++",
+            define_macros=[("Py_LIMITED_API", "0x030B0000")],
+            py_limited_api=True,
+            extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
+        )
+
+    @classmethod
+    def declared_extensions(cls) -> list[Extension]:
+        """Derive compilation targets from concrete declarations in this family."""
+        return [declaration() for declaration in cls.__subclasses__()]
+
+
+class GranularityNativeExtension(OpenHCSNativeExtension):
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._granularity_reconstruct"
+
+
+class TabularNativeExtension(OpenHCSNativeExtension):
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.core._tabular_native"
 
 
 setup(
-    ext_modules=[_native_granularity_extension],
+    ext_modules=OpenHCSNativeExtension.declared_extensions(),
     cmdclass={
         "build_py": BuildPyWithMcpKnowledge,
         "sdist": SdistWithMcpKnowledge,
