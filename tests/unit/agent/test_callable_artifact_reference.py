@@ -13,11 +13,28 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
 )
-from openhcs.agent.knowledge_manifest import knowledge_base_source_paths_from_manifest
+from openhcs.agent.knowledge_manifest import (
+    DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
+    knowledge_base_source_paths_from_manifest,
+)
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.core.artifacts import ArtifactOutputPlan, ObjectLabelsArtifactType
+from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
+    ArtifactSpec,
+    ArtifactSpecCollection,
+    ImageArtifactType,
+    ObjectLabelsArtifactType,
+)
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.function_patterns import (
+    compile_function_pattern,
+    normalize_function_pattern,
+)
+from openhcs.core.invocation_artifacts import (
+    ArtifactDeclarationStepContext,
+    MainFlowArtifactContractProvider,
+    PIPELINE_INPUT_ARTIFACT,
+)
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -75,7 +92,9 @@ def test_canonical_reference_is_unique_searchable_and_fully_readable():
     ]
     assert len(matches) == 1
     assert matches[0].document_id == DOCUMENT_ID
-    assert ROOT / DOCUMENT_PATH in knowledge_base_source_paths_from_manifest()
+    assert ROOT / DOCUMENT_PATH in knowledge_base_source_paths_from_manifest(
+        ROOT / DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH
+    )
     result = service.search(
         KnowledgeBaseSearchRequest(
             query="RuntimeMeasurementFeatureOwner DataclassMeasurementColumnarRows",
@@ -146,10 +165,14 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
 
 
 def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
+    def fixture_storage(_name, *, create):
+        assert create is False
+        return tmp_path / "custom_functions"
+
     monkeypatch.setattr(
         custom_manager,
         "get_data_file_path",
-        lambda _name: tmp_path / "custom_functions",
+        fixture_storage,
     )
     manager = custom_manager.CustomFunctionManager()
     metadata = manager._prepare_source(_reference_block("callable-artifact-reference"))
@@ -169,6 +192,52 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
         {"slice_index": 1, "object_label": 1, "pixel_count": 16},
     )
     assert list(manager.storage_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        PIPELINE_INPUT_ARTIFACT,
+        ArtifactSpec.input("filtered_fixture", ImageArtifactType),
+    ),
+)
+def test_reference_binds_all_output_lineage_to_current_image(
+    reference_namespace, source,
+):
+    invocation = next(
+        normalize_function_pattern(
+            reference_namespace["inspect_label_fixture"]
+        ).iter_items()
+    )
+    plan = MainFlowArtifactContractProvider()(
+        invocation,
+        ArtifactDeclarationStepContext(
+            main_flow_artifacts=ArtifactSpecCollection((source,)),
+        ),
+    )
+    assert plan is not None
+    contract = plan.contract
+    assert contract.group_scope_inputs.specs == (source,)
+    assert contract.output_group_scope_sources == (source.ref(),)
+    for output in contract.artifact_outputs:
+        assert output.source_stack_scope_sources() == (source.ref(),)
+    assert contract.canonical_return_output_specs.names() == ("fixture_image",)
+    assert contract.trailing_return_output_specs.names() == (
+        "fixture_labels", "fixture_object_rows",
+    )
+    rows = contract.artifact_outputs.by_ref(
+        reference_namespace["FIXTURE_ROWS"].ref()
+    )
+    assert rows is not None
+    subject = ArtifactOutputPlan(
+        name=rows.name,
+        path="/memory/fixture_object_rows.csv",
+        artifact_type=rows.artifact_type,
+        relations=rows.relations,
+    ).object_subject_binding()
+    assert subject is not None
+    assert subject.source == reference_namespace["FIXTURE_LABELS"].ref()
+    assert subject.id_field == "object_label"
 
 
 def test_reference_writes_native_csv_and_roi_files(reference_namespace, tmp_path):
