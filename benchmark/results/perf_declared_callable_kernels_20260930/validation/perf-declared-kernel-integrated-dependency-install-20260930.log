@@ -1,0 +1,27 @@
+Obtaining file:///home/ts/code/projects/openhcs/external/arraybridge
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Installing backend dependencies: started
+  Installing backend dependencies: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: metaclass-registry>=0.1.5 in ./.venv/lib/python3.12/site-packages (from arraybridge==0.3.4) (0.2.1)
+Requirement already satisfied: numpy>=1.20 in ./.venv/lib/python3.12/site-packages (from arraybridge==0.3.4) (2.5.3)
+Requirement already satisfied: python-introspect>=0.1.11 in ./.venv/lib/python3.12/site-packages (from arraybridge==0.3.4) (0.1.14)
+Requirement already satisfied: annotated-types>=0.7.0 in ./.venv/lib/python3.12/site-packages (from python-introspect>=0.1.11->arraybridge==0.3.4) (0.8.0)
+Building wheels for collected packages: arraybridge
+  Building editable for arraybridge (pyproject.toml): started
+  Building editable for arraybridge (pyproject.toml): finished with status 'done'
+  Created wheel for arraybridge: filename=arraybridge-0.3.4-py3-none-any.whl size=3649 sha256=c9333e5d8b7654d528ea4be83c2a31f42424ee1907a90709a4a75abeba72da34
+  Stored in directory: /tmp/pip-ephem-wheel-cache-8kvefo7n/wheels/8a/57/67/75702e2512a0f608b1aae303c9ad3aa2d0c5325b6e2f35a5db
+Successfully built arraybridge
+Installing collected packages: arraybridge
+  Attempting uninstall: arraybridge
+    Found existing installation: arraybridge 0.3.4
+    Uninstalling arraybridge-0.3.4:
+      Successfully uninstalled arraybridge-0.3.4
+Successfully installed arraybridge-0.3.4

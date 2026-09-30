@@ -1,0 +1,84 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_cache_children_do_not_acquire_inherited_parent_readiness_lock ______
+
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-172/test_cache_children_do_not_acq0')
+
+    @pytest.mark.skipif(
+        "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    )
+    def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path):
+        script = textwrap.dedent("""
+            import os, signal, sys
+            from pathlib import Path
+            from types import ModuleType
+            from openhcs.core.processing_preparation import (
+                ModuleRegistryPreparation, PreparationCacheBatch,
+                PreparationCacheWorker, PreparationOperation,
+            )
+            from openhcs.processing.backends.cellprofiler._preparation import (
+                CellProfilerCallableKernelPreparation,
+            )
+            from metaclass_registry import AutoRegisterMeta
+            from numba import config
+            output = Path(sys.argv[1])
+            config.CACHE_DIR = str(output / 'cache')
+            def cancelled(signum, frame): raise SystemExit(128 + signum)
+            signal.signal(signal.SIGTERM, cancelled)
+            original_start = PreparationCacheWorker.start
+            def record_start(cls, context, operation):
+                worker = original_start(context, operation)
+                with (output / 'owned_pids').open('a') as stream:
+                    stream.write(f'{worker.process.pid}\\n')
+                return worker
+            PreparationCacheWorker.start = classmethod(record_start)
+            class First(CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta):
+                __registry__ = {}
+                def execute(self): (output / 'first').write_text(str(os.getpid()))
+            class Second(CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta):
+                __registry__ = {}
+                def execute(self): (output / 'second').write_text(str(os.getpid()))
+            module = ModuleType('_openhcs_inherited_lock_control')
+            module.First, module.Second = First, Second
+            sys.modules[module.__name__] = module
+            PreparationOperation.reset()
+            PreparationOperation._lock.acquire()
+            try:
+                PreparationCacheBatch((ModuleRegistryPreparation(module.__name__),)).populate_child_caches()
+                assert not PreparationOperation._completed
+            finally:
+                PreparationOperation._lock.release()
+            (output / 'completed').write_text('cache work finished while parent lock held')
+        """)
+        environment = os.environ.copy()
+        environment["OPENHCS_CPU_ONLY"] = "true"
+        process = subprocess.Popen(
+            (sys.executable, "-c", script, str(tmp_path)),
+            env=environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        timed_out = False
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            process.send_signal(signal.SIGTERM)
+            stdout, stderr = process.communicate(timeout=5)
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate(timeout=5)
+        assert (tmp_path / "owned_pids").is_file(), stdout + stderr
+        owned = [int(pid) for pid in (tmp_path / "owned_pids").read_text().splitlines()]
+        assert len(owned) == 2
+        assert all(not psutil.pid_exists(pid) for pid in owned)
+>       assert not timed_out, "cache children waited on the inherited lock"
+E       AssertionError: cache children waited on the inherited lock
+E       assert not True
+
+tests/unit/test_cellprofiler_callable_kernel_preparation.py:248: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_cellprofiler_callable_kernel_preparation.py::test_cache_children_do_not_acquire_inherited_parent_readiness_lock
+1 failed in 5.85s

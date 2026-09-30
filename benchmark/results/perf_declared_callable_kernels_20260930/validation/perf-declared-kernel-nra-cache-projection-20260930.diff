@@ -1,0 +1,55 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/callable_contract.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/callable_contract.py
+@@ -58,6 +58,7 @@
+     from openhcs.core.function_reference import FunctionReference
+     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
+     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
++    from openhcs.core.processing_preparation import PreparationOperation
+     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
+     from openhcs.core.vfs_protocol import PlatePathDeclaration
+@@ -151,6 +152,13 @@
+     @abstractmethod
+     def prepare_registered_family(cls) -> None:
+         """Prepare registered implementations before timed callable execution."""
++
++    @classmethod
++    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
++        """Project cache work independently of process-local readiness."""
++        from openhcs.core.processing_preparation import RegistryFamilyPreparation
++
++        return (RegistryFamilyPreparation(cls),)
+ 
+     @classmethod
+     def can_prepare_in_child(cls) -> bool:
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
+@@ -100,11 +100,12 @@
+ 
+     def cache_operations(self) -> tuple[PreparationOperation, ...]:
+         return tuple(
+-            RegistryFamilyPreparation(family)
++            operation
+             for family in AutoRegisterRegistryPreparation.module_registry_owners(
+                 (importlib.import_module(self.module_name),),
+                 compiler_prepared_only=True,
+             )
++            for operation in family.cache_preparation_operations()
+         )
+ 
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
+@@ -55,6 +55,10 @@
+         return type(self)
+ 
+     @classmethod
++    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
++        return tuple(declaration() for declaration in cls.__registry__.values())
++
++    @classmethod
+     def prepare_registered_family(cls) -> None:
+-        for declaration in cls.__registry__.values():
+-            declaration().prepare()
++        for operation in cls.cache_preparation_operations():
++            operation.prepare()
