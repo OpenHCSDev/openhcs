@@ -1,0 +1,153 @@
+{
+  "control_revision": "295e0ee81",
+  "candidate_revision": "b856ae56166d20bbf1316a57729dc5b919c96632",
+  "warming_seconds": 0.19416528102010489,
+  "fixtures_exact": 480,
+  "records": [
+    {
+      "source": "circle_1.pkl",
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "input_sha256": "2651b9c7b488096db8fa1942f5830ab054fc011c04e47d13829e33b6274d8b1b",
+      "ordered_hulls_exact": true,
+      "circles_byte_exact": true,
+      "samples": {
+        "control": [
+          0.11858596978709102,
+          0.11591768497601151,
+          0.11730275396257639,
+          0.11556824669241905
+        ],
+        "candidate": [
+          0.02661719499155879,
+          0.026869550812989473,
+          0.026772177312523127,
+          0.02672642096877098
+        ]
+      },
+      "medians": {
+        "control": 0.11661021946929395,
+        "candidate": 0.026749299140647054
+      }
+    },
+    {
+      "source": "circle_2.pkl",
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 495,
+      "input_sha256": "75db29efe5e6c960f0a133a5914684e6c1f68af82f4d7723b42f24372515fa26",
+      "ordered_hulls_exact": true,
+      "circles_byte_exact": true,
+      "samples": {
+        "control": [
+          0.06367282755672932,
+          0.06336629064753652,
+          0.06335960887372494,
+          0.06326410826295614
+        ],
+        "candidate": [
+          0.010559004731476307,
+          0.010660365223884583,
+          0.010631842073053122,
+          0.010713926050812006
+        ]
+      },
+      "medians": {
+        "control": 0.06336294976063073,
+        "candidate": 0.010646103648468852
+      }
+    },
+    {
+      "source": "circle_3.pkl",
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "input_sha256": "7be1edcfd233381255c3ccec7aa331719dacf0c9ba21060211fa59220a1fe7a0",
+      "ordered_hulls_exact": true,
+      "circles_byte_exact": true,
+      "samples": {
+        "control": [
+          0.06400232901796699,
+          0.06423632008954883,
+          0.06854489305987954,
+          0.06520582642406225
+        ],
+        "candidate": [
+          0.010707815177738667,
+          0.010631941724568605,
+          0.0106424018740654,
+          0.010646478738635778
+        ]
+      },
+      "medians": {
+        "control": 0.06472107325680554,
+        "candidate": 0.010644440306350589
+      }
+    },
+    {
+      "source": "circle_4.pkl",
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "input_sha256": "0ba913a73f66368feff2ae940118433091bfa5eb0bfd0b94a14f673bed3261a3",
+      "ordered_hulls_exact": true,
+      "circles_byte_exact": true,
+      "samples": {
+        "control": [
+          0.1688976469449699,
+          0.1693546469323337,
+          0.1727511240169406,
+          0.17085551377385855
+        ],
+        "candidate": [
+          0.048511657398194075,
+          0.048384628258645535,
+          0.04858118807896972,
+          0.049366537015885115
+        ]
+      },
+      "medians": {
+        "control": 0.17010508035309613,
+        "candidate": 0.048546422738581896
+      }
+    },
+    {
+      "source": "circle_5.pkl",
+      "shape": [
+        1650,
+        1650
+      ],
+      "objects": 900,
+      "input_sha256": "b1dba688725926aec645b08451b6b9df55fe2ca6eaa812c68319914549d290be",
+      "ordered_hulls_exact": true,
+      "circles_byte_exact": true,
+      "samples": {
+        "control": [
+          0.07949414290487766,
+          0.07954074116423726,
+          0.08029830688610673,
+          0.07929850509390235
+        ],
+        "candidate": [
+          0.017312632873654366,
+          0.01718371966853738,
+          0.01723153004422784,
+          0.01715958397835493
+        ]
+      },
+      "medians": {
+        "control": 0.07951744203455746,
+        "candidate": 0.01720762485638261
+      }
+    }
+  ]
+}

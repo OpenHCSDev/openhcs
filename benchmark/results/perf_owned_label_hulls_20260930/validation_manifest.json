@@ -1,0 +1,96 @@
+{
+  "control_revision": "295e0ee81",
+  "production_revision": "b856ae56166d20bbf1316a57729dc5b919c96632",
+  "numerical_tolerances": {
+    "rtol": 1e-06,
+    "atol": 1e-06
+  },
+  "tests": {
+    "command": "OPENHCS_CPU_ONLY=true OPENHCS_SUBPROCESS_NO_GPU=1 POLYSTORE_SUBPROCESS_NO_GPU=1 NUMBA_CACHE_DIR=/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2 /home/ts/code/projects/openhcs/.venv/bin/python -m pytest -q tests/unit/test_cellprofiler_label_hull.py tests/unit/test_cellprofiler_processing_backend.py tests/unit/test_cellprofiler_library_loading.py tests/unit/test_cellprofiler_module_execution.py tests/unit/test_cellprofiler_conditional_analysis_images.py tests/unit/test_runtime_equivalence.py",
+    "result": "918 passed, 11 existing warnings in 21.20s"
+  },
+  "baseline_failure": {
+    "issue": 269,
+    "command": "python /tmp/paired_owned_hull_main_runs_20260930.py baseline-test",
+    "result": "1 failed unchanged main; explicit extension fixture corrected without changing output assertion"
+  },
+  "ratchet": {
+    "tool_revision": "3b03785f45df2ef5dc62ba6aed99294192ecbb01",
+    "command": "PYTHONPATH=/home/ts/code/projects/openhcs-refactor-ratchet-tool-20260930/src:/home/ts/code/projects/openhcs/external/metaclass-registry/src /usr/bin/python3.14 -m agent_comms.debt_ratchet --root ROOT --base 295e0ee81 --head b856ae561",
+    "roots": [
+      "openhcs",
+      "scripts",
+      "benchmark"
+    ],
+    "result": "all exit 0; no increased measures"
+  },
+  "r1": {
+    "nra_revision": "0844525ecaba93e090a064a4ae4914466b2dae60",
+    "command": "/home/ts/code/projects/nominal-refactor-advisor-audit-20260929/.venv/bin/python -m scripts.check_refactor_r1 --base 295e0ee81 --head b856ae561 --scratch-root /tmp/openhcs-owned-hull-r1-20260930 --budget-seconds 160",
+    "result": "exit 0; before/after/increased empty, 2994 projections per full dependency context"
+  },
+  "replay": {
+    "command": "OPENHCS_CPU_ONLY=true NUMBA_CACHE_DIR=/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2 /home/ts/code/projects/openhcs/.venv/bin/python /tmp/replay_production_owned_hull_20260930.py",
+    "result": "480 exact fixtures; 5 saved production requests, exact hulls/counts and byte-identical circles; input digests unchanged"
+  },
+  "benchmark": {
+    "commands": [
+      "/home/ts/code/projects/openhcs/.venv/bin/python /tmp/paired_owned_hull_final_main_runs_20260930.py 1w_1t",
+      "/home/ts/code/projects/openhcs/.venv/bin/python /tmp/paired_owned_hull_final_main_runs_20260930.py 16w_4c"
+    ],
+    "result": "8 ordinary observations successful; no overlapping heavy agent work",
+    "warmup_excluded_from_total": true,
+    "existing_quicksort_signatures_compiled_in_ordinary_phase": true,
+    "new_geometry_signatures_compiled_in_ordinary_phase": false
+  },
+  "export": {
+    "command": "python benchmark/results/perf_granularity_native_sampling_20260930/check_export_parity.py --control CONTROL --candidate CANDIDATE --output OUTPUT",
+    "result": "4 paired complete exports; 1801/28801 rows; zero numeric differences; SHA256 byte-identical"
+  },
+  "source_digests": {
+    "openhcs/processing/backends/cellprofiler/label_geometry.py": "44d0098875d9570de4a35cf909c9ec1e6f70f3195dae80c236ad53a9ca13e123",
+    "openhcs/processing/backends/cellprofiler/illumination.py": "298483e084e4ce5931946cb1000990c6047547c179af6a59d7c03819093a51e0"
+  },
+  "native_digests": {
+    "_tabular_native.abi3.so": "9b045d263e8b96e166f41b3dcee51b0967d2cee87a6be71b1264067c6a15054c",
+    "_granularity_native.abi3.so": "043e8733b565a2042a449cdd2464fa08603844fdaecc37a76c38e255c49e9ee2"
+  },
+  "gitlinks": " b0004daf3223326ac78689ba7b2e68abc18ae298 external/ObjectState (v1.1.8)\n 1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7 external/PolyStore (v0.2.19-11-g1209068)\n fddd9857bcd21468d20bc8547a769e0c6c9f1906 external/arraybridge (v0.3.4)\n ca0a87e873f929b311a87a4d60cd3bfba315dbcf external/metaclass-registry (v0.2.1)\n 792b03413331fdf107e369c924c257a2f0b16126 external/pycodify (v0.1.3)\n a51c3d965f8ffdefe95a2b4b37347a85341d483a external/pyqt-reactive (v0.3.24)\n 4e8f8bde5f750d9a50eacac80acd3806123addd8 external/python-introspect (v0.1.14-1-g4e8f8bd)\n 0f9e840a9ed526f0a2b87a660393f5b7c34fc9eb external/zmqruntime (v0.2.24-2-g0f9e840)\n",
+  "input_digests_rechecked": 12,
+  "shared_environment_after_merge": "Separate acceptance receipt/comment follows normal main synchronization after merge; not claimed before merge.",
+  "installed_acceptance": {
+    "wheel": "/tmp/openhcs-owned-hull-wheel-20260930/openhcs-0.8.6-cp311-abi3-linux_x86_64.whl",
+    "sha256": "e967bce9445c4a8286d8cd4191cf7ba71cb2fabe6d7064a542bb4a9e2592d6a3",
+    "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+    "package_source": "/tmp/openhcs-owned-hull-installed-20260930/openhcs/__init__.py",
+    "geometry_source": "/tmp/openhcs-owned-hull-installed-20260930/openhcs/processing/backends/cellprofiler/label_geometry.py",
+    "public_preparation_seconds": 26.45958973513916,
+    "production_records": [
+      {
+        "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_1.pkl",
+        "circles_byte_identical": true
+      },
+      {
+        "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_2.pkl",
+        "circles_byte_identical": true
+      },
+      {
+        "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_3.pkl",
+        "circles_byte_identical": true
+      },
+      {
+        "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_4.pkl",
+        "circles_byte_identical": true
+      },
+      {
+        "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_5.pkl",
+        "circles_byte_identical": true
+      }
+    ],
+    "native_entries": [
+      "openhcs/core/_tabular_native.abi3.so",
+      "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+    ],
+    "source_shadowing": false
+  }
+}

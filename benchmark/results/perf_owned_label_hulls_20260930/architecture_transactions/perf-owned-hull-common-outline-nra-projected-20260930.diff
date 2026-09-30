@@ -1,0 +1,93 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/label_geometry.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/label_geometry.py
+@@ -298,7 +298,7 @@
+         requested = np.asarray(requested_indexes, dtype=np.int32)
+         positive_positions = np.flatnonzero(requested > 0)
+         sorted_positions = positive_positions[np.argsort(requested[positive_positions])]
+-        _counts, offsets, rows, columns = _requested_outline_points_numba(
++        _counts, offsets, rows, columns = _outline_points_at_positions_numba(
+             np.ascontiguousarray(labels, dtype=np.int32),
+             requested[sorted_positions],
+             sorted_positions,
+@@ -315,13 +315,13 @@
+ 
+ 
+ @njit(cache=True)
+-def _requested_outline_points_numba(
++def _outline_points_at_positions_numba(
+     labels: np.ndarray,
+     sorted_labels: np.ndarray,
+     sorted_positions: np.ndarray,
+     object_count: int,
+ ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+-    """Group requested outlines directly in their original row-major order."""
++    """Group selected outlines directly in their original row-major order."""
+     counts = np.zeros(object_count, np.int64)
+     offsets = np.zeros(object_count + 1, np.int64)
+     if sorted_labels.size == 0:
+@@ -646,61 +646,11 @@
+     labels: np.ndarray,
+     label_ids: np.ndarray,
+ ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+-    object_count = label_ids.size
+-    counts = np.zeros(object_count, dtype=np.int64)
+-    offsets = np.zeros(object_count + 1, dtype=np.int64)
+-    if object_count == 0:
+-        return (
+-            counts,
+-            offsets,
+-            np.zeros(0, dtype=np.int64),
+-            np.zeros(0, dtype=np.int64),
+-        )
+-
+-    height, width = labels.shape
++    """Derive raw-label output positions for the shared outline projection."""
+     sorted_output_indexes = np.argsort(label_ids)
+-    sorted_label_ids = label_ids[sorted_output_indexes]
+-
+-    for y in range(height):
+-        for x in range(width):
+-            label_id = int(labels[y, x])
+-            if label_id <= 0:
+-                continue
+-            sorted_index = np.searchsorted(sorted_label_ids, label_id)
+-            if (
+-                sorted_index >= object_count
+-                or int(sorted_label_ids[sorted_index]) != label_id
+-            ):
+-                continue
+-            object_index = sorted_output_indexes[sorted_index]
+-            if _is_label_outline_pixel_numba(labels, y, x, label_id):
+-                counts[object_index] += 1
+-
+-    for object_index in range(object_count):
+-        offsets[object_index + 1] = offsets[object_index] + counts[object_index]
+-    point_total = offsets[object_count]
+-    point_y = np.empty(point_total, dtype=np.int64)
+-    point_x = np.empty(point_total, dtype=np.int64)
+-    cursor = offsets.copy()
+-    for y in range(height):
+-        for x in range(width):
+-            label_id = int(labels[y, x])
+-            if label_id <= 0:
+-                continue
+-            sorted_index = np.searchsorted(sorted_label_ids, label_id)
+-            if (
+-                sorted_index >= object_count
+-                or int(sorted_label_ids[sorted_index]) != label_id
+-            ):
+-                continue
+-            object_index = sorted_output_indexes[sorted_index]
+-            if not _is_label_outline_pixel_numba(labels, y, x, label_id):
+-                continue
+-            point_index = cursor[object_index]
+-            point_y[point_index] = y
+-            point_x[point_index] = x
+-            cursor[object_index] += 1
+-    return counts, offsets, point_y, point_x
++    return _outline_points_at_positions_numba(
++        labels, label_ids[sorted_output_indexes], sorted_output_indexes, label_ids.size
++    )
+ 
+ 
+ @njit(cache=True)

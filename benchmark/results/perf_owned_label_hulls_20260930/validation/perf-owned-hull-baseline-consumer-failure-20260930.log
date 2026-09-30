@@ -1,0 +1,75 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_object_label_measurement_images_bundle_source_metadata __________
+
+    def test_object_label_measurement_images_bundle_source_metadata() -> None:
+        dna_payload = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w1_z001_t001.tif",),
+                component_metadata=(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "1",
+                        "z_index": "1",
+                    },
+                ),
+            ),
+            source_image_names=("OrigDNA",),
+        ).payload_with(np.full((4, 5), 1, dtype=np.float32), None)
+        rna_payload = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w2_z001_t001.tif",),
+                component_metadata=(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "2",
+                        "z_index": "1",
+                    },
+                ),
+            ),
+            source_image_names=("OrigRNA",),
+        ).payload_with(np.full((4, 5), 2, dtype=np.float32), None)
+
+        metadata = CellProfilerMeasurementImage.composed_source_metadata(
+            (
+                CellProfilerMeasurementImage(
+                    source_image_name=None,
+                    payload=dna_payload,
+                    reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                ),
+                CellProfilerMeasurementImage(
+                    source_image_name=None,
+                    payload=rna_payload,
+                    reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                ),
+            )
+        )
+
+        assert metadata is not None
+        assert metadata.source_image_provenance_planes.count == 2
+        assert tuple(
+            plane.source_identity.path
+            for plane in metadata.source_image_provenance_planes.planes
+        ) == (
+            "/input/A01_s001_w1_z001_t001.tif",
+            "/input/A01_s001_w2_z001_t001.tif",
+        )
+>       assert dict(metadata.source_component_metadata) == {
+            "extension": ".tif",
+            "well": "A01",
+            "site": "1",
+            "z_index": "1",
+        }
+E       AssertionError: assert {'z_index': '...'well': 'A01'} == {'extension':...z_index': '1'}
+E
+E         Omitting 3 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+tests/unit/test_cellprofiler_module_execution.py:9078: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_cellprofiler_module_execution.py::test_object_label_measurement_images_bundle_source_metadata
+1 failed in 2.39s
