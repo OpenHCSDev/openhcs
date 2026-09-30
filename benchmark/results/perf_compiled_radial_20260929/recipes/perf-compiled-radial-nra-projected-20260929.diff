@@ -1,0 +1,28 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
+@@ -1868,7 +1868,7 @@
+     )
+     memory_type = MemoryType.NUMPY
+     backend_provider = CellProfilerBackendProvider.NATIVE
+-    is_default_backend = True
++    is_default_backend = False
+ 
+     def measure(
+         self, request: RadialDistributionMeasureRequest
+@@ -1979,7 +1979,7 @@
+     )
+     memory_type = MemoryType.NUMPY
+     backend_provider = CellProfilerBackendProvider.NUMBA
+-    is_default_backend = False
++    is_default_backend = True
+ 
+     def prepare_backend(self) -> None:
+         labels = np.zeros((8, 8), dtype=np.int32)
+@@ -2170,6 +2170,7 @@
+     return -np.inf
+ 
+ 
++@njit(cache=True)
+ def _radial_distribution_geometry_index_numba(
+     labels: np.ndarray,
+     d_to_edge: np.ndarray,
