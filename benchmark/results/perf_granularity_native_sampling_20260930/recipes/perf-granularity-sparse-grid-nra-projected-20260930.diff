@@ -1,0 +1,42 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/granularity.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/granularity.py
+@@ -575,6 +575,23 @@
+             )
+         return output
+ 
++    def sample_positions(
++        self,
++        image: np.ndarray,
++        source: "GranularitySamplingGrid",
++        rows: np.ndarray,
++        columns: np.ndarray,
++    ) -> np.ndarray:
++        """Sample supplied physical positions through the same logical grid policy."""
++        from scipy import ndimage as ndi
++
++        scales = self.coordinate_scales_from(source)
++        coordinates = (
++            np.asarray(rows, dtype=np.float64) * scales[0],
++            np.asarray(columns, dtype=np.float64) * scales[1],
++        )
++        return ndi.map_coordinates(image, coordinates, order=1)
++
+     def sample_grid(
+         self, image: np.ndarray, source: "GranularitySamplingGrid"
+     ) -> np.ndarray:
+@@ -1556,12 +1573,9 @@
+         image: np.ndarray,
+         source_grid: GranularitySamplingGrid,
+     ) -> np.ndarray:
+-        from scipy import ndimage as ndi
+-
+-        scales = self.grid.coordinate_scales_from(source_grid)
+-        row_coords = self.row_offsets.astype(np.float64) * scales[0]
+-        column_coords = self.column_offsets.astype(np.float64) * scales[1]
+-        return ndi.map_coordinates(image, (row_coords, column_coords), order=1)
++        return self.grid.sample_positions(
++            image, source_grid, self.row_offsets, self.column_offsets
++        )
+ 
+ 
+ @njit(cache=True)
