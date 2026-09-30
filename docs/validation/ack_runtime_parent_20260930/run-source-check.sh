@@ -9,9 +9,9 @@ os.sched_setaffinity(0, set(sorted(os.sched_getaffinity(0))[:3]))
 import openhcs, zmqruntime, polystore, metaclass_registry
 for module, directory in (
     (openhcs, "/home/ts/wt/openhcs-ack-runtime-parent-20260930/openhcs"),
-    (zmqruntime, "/home/ts/wt/zmqruntime-ack-runtime-parent-20260930/src/zmqruntime"),
-    (polystore, "/home/ts/wt/polystore-ack-runtime-parent-20260930/src/polystore"),
-    (metaclass_registry, "/home/ts/wt/metaclass-ack-runtime-parent-20260930/src/metaclass_registry"),
+    (zmqruntime, "/home/ts/wt/openhcs-ack-runtime-parent-20260930/external/zmqruntime/src/zmqruntime"),
+    (polystore, "/home/ts/wt/openhcs-ack-runtime-parent-20260930/external/PolyStore/src/polystore"),
+    (metaclass_registry, "/home/ts/wt/openhcs-ack-runtime-parent-20260930/external/metaclass-registry/src/metaclass_registry"),
 ):
     assert Path(module.__file__).resolve().is_relative_to(Path(directory)), (module.__file__, directory)
     print("SOURCE", module.__file__, flush=True)

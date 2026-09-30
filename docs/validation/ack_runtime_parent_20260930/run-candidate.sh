@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-export PYTHONPATH=/home/ts/wt/openhcs-ack-runtime-parent-20260930:/home/ts/wt/zmqruntime-ack-runtime-parent-20260930/src:/home/ts/wt/polystore-ack-runtime-parent-20260930/src:/home/ts/wt/metaclass-ack-runtime-parent-20260930/src
+export PYTHONPATH=/home/ts/wt/openhcs-ack-runtime-parent-20260930
 export PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 export OPENHCS_CPU_ONLY=true OPENHCS_SUBPROCESS_NO_GPU=1 POLYSTORE_SUBPROCESS_NO_GPU=1
 export OPENHCS_USE_THREADING=true OPENHCS_HEADLESS=true CUDA_VISIBLE_DEVICES=
