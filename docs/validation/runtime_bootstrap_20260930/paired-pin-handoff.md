@@ -160,3 +160,17 @@ a normal McpDevClient consumer; no parser/renderer/bootstrap owner migration
 introduced. Parent owns parser correction/integration/installed freeze. No
 scientific inputs or frozen failures inspected. S1 remains blocked and full
 S1-S8 ZIP scope incomplete; no unknown attempt replay or fourth native run.
+
+## Explicit source-only account-switch continuation
+
+Newest authoritative checkpoint: [reserved-child-takeover/checkpoint.rst](reserved-child-takeover/checkpoint.rst).
+Normally integrated mainc42d at5b330a7b3e. Published PR9 child112c240 (production
+0ca331a) now preserves pair reservations BEFORE ordinary TCP takeover after
+failed attachment; healthy attachment remains allowed. Adopts that exact published
+gitlink, no other pin change. Source pair197PASS5.39s/process6.20s/264612KiB,
+native original188-metric ratchet PASS/no positive/client delta-1. Pre-fix six
+intercepted-kill failures and the initial path-assertion failure are preserved.
+No native/install/science/skill change or new allocation; S1 remains BLOCKED.
+Parent owns integration/review and actual installed/native four-selection journey.
+Earlier pinned sources/proof/resource observations above remain historical,
+not relabeled to this current pair. Original pause file and attempts retained.
