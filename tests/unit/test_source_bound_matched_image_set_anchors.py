@@ -5,6 +5,7 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
+    ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
     ArtifactSpec,
     GroupLineageSourceRelation,
@@ -146,11 +147,16 @@ def _filter_source_anchors(
         ArtifactSpec.output(
             "Measurements" if shared_output else f"{binding.alias}Measurements",
             MeasurementsArtifactType,
-            relations=tuple(
-                GroupLineageSourceRelation(source=source_spec.ref())
-                for source_spec in (
-                    declared_specs if shared_output else (binding.input_spec(),)
-                )
+            # These synthetic declarations test dependency anchors, not image
+            # or object measurement rows. Their subject is the artifact itself.
+            relations=(
+                ArtifactMeasurementSubjectRelation(),
+                *(
+                    GroupLineageSourceRelation(source=source_spec.ref())
+                    for source_spec in (
+                        declared_specs if shared_output else (binding.input_spec(),)
+                    )
+                ),
             ),
         )
         for binding in (compiled_bindings[:1] if shared_output else compiled_bindings)
@@ -163,9 +169,12 @@ def _filter_source_anchors(
             ArtifactSpec.output(
                 "AggregateMeasurements",
                 MeasurementsArtifactType,
-                relations=tuple(
-                    GroupLineageSourceRelation(source=source_spec.ref())
-                    for source_spec in declared_specs
+                relations=(
+                    ArtifactMeasurementSubjectRelation(),
+                    *(
+                        GroupLineageSourceRelation(source=source_spec.ref())
+                        for source_spec in declared_specs
+                    ),
                 ),
             ),
         )
@@ -545,8 +554,9 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
     measurements = ArtifactSpec.output(
         "SourceSetMeasurements",
         MeasurementsArtifactType,
-        relations=tuple(
-            GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs
+        relations=(
+            ArtifactMeasurementSubjectRelation(),
+            *(GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs),
         ),
     )
 
@@ -671,8 +681,9 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         ArtifactSpec.output(
             "AlignMeasurements",
             MeasurementsArtifactType,
-            relations=tuple(
-                GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs
+            relations=(
+                ArtifactMeasurementSubjectRelation(),
+                *(GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs),
             ),
         ),
     )
