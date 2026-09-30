@@ -1,8 +1,9 @@
 ## Working typed produced-address publication fix
 
 Fixes #257 and #264. Implementation/file owner: Socrates. Parent/OpenHCS
-coordinator is integration owner. Draft pending native acceptance; Zeno retains
-the source-live slot.
+coordinator is integration/native acceptance owner. Draft pending fresh native
+acceptance. Zeno owns265 path_planner lineage arguments; coordinate slot use
+before any heavy/native test. Lovelace owns R0/PR263.
 
 - Resolve source extensions through existing metadata/parser identity owners,
   preserving dotted well tokens and compound declared extensions.
@@ -19,8 +20,8 @@ the source-live slot.
   provenance. Declared scalar/plane/contributor semantics remain authoritative;
   collapsed omissions are not restored from storage filenames.
 
-Source checks:93 bounded tests pass (43 produced inventory/projection,
-28 provenance/persistence/264,16 identity/stack,6 image/ROI materializer), with generated-path
+Current source checks:112 bounded tests pass (43 produced inventory/projection,
+47 provenance/persistence/257/264,16 identity/stack,6 image/ROI materializer), with generated-path
 parsing made to fail and final reconciliation after memory release. Existing
 installed ABI module preloaded solely to collect source tests; no rebuild or
 installation. `git diff --check` passes. Global GUI/runtime cleanup fixtures and
@@ -44,6 +45,24 @@ Still required before readiness: ordinary native compile -> execute -> saved
 inventory/readback using a tiny synthetic OME-TIFF and typed image/artifact
 outputs, publication enabled, first/chained source lineage. No original failed
 job replay or scientific/held-out data is needed or used.
+
+Actual parent source82 journey still exposed257's duplicated dotted-well
+suffix before a separately owned265 lineage failure. First-step saved outputs
+are partial evidence, not acceptance. The current follow-up deletes the
+runtime composer's invented all-Path.suffixes extension; materialization reads
+the existing SourceImageIdentity extension or its registered parser boundary.
+No guess is relocated, no guard weakened, and declared compound extensions
+remain intact. Real source-schema -> runtime STACK/BUNDLE composition -> typed
+named-output path -> image-writer fixtures cover plain/dotted wells and both
+extensions, including marker-once fixture_image filenames. Corrected red6
+failures become green;32 tests in that module pass. See
+`docs/validation/issue257-runtime-composition-20260930.md` and its companion
+JSON receipt. Original failure/reproducer receipts remain unchanged.
+
+Parent's strengthened acceptance requires exact marker-once filenames, CSV
+typed address, every ZIP containing exactly one ROI, full TIFF disk projection
+coverage with extension/address, and typed MCP full inventory/result readback
+in the fresh chained control after265. No native test was run by this owner.
 
 Source guards also cover reordered dotted stacks, atomic missing-address
 rejection, concurrent publication and deletion from projection/component

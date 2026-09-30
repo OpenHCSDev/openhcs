@@ -102,6 +102,21 @@ or biological correctness is claimed. Parent integration must perform the tiny
 synthetic native acceptance after the live slot is available, with image
 publication enabled, first/chained lineage and image-plus-artifact outputs.
 
+## Current runtime-composition follow-up
+
+The actual source82 native control retained a factory-created dotted-well
+extension and duplicated the source address. This is not complete257
+acceptance. The current same-owner correction deletes the composer suffix
+guess and derives materializer extension candidates from SourceImageIdentity
+and its existing parser boundary. Product delta is7 added/20 deleted lines;
+strict omission/extension guards remain unchanged.112 bounded source tests
+pass, including the real source-schema/composer/materializer family. The
+original receipts above remain historical and unchanged. Full current
+root-cause, source red/green and parent acceptance requirements are in
+`issue257-runtime-composition-20260930.md` and its companion JSON receipt.
+Zeno owns265 path_planner lineage; Lovelace owns R0. Parent owns integration
+and the fresh finite native control; no native slot was used here.
+
 ## Reproducible bounded command
 
 Run from this worktree, with the environment/timeout above:

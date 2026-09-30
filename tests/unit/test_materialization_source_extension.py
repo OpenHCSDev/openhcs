@@ -1,6 +1,7 @@
-"""Issue264: preserve declared source identity into ordinary image publication."""
+"""Issues257/264: preserve source identity into ordinary image publication."""
 
 from pathlib import Path
+from dataclasses import replace
 from types import SimpleNamespace
 
 import numpy as np
@@ -10,6 +11,7 @@ from polystore.memory import MemoryStorageBackend
 
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
+    ImagePayloadMetadataCompositionMode,
     image_payload_metadata,
 )
 from openhcs.core.source_image_provenance import (
@@ -21,6 +23,10 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceImagePayloadProjection,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
+)
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentityAuthority,
+    FunctionOutputPathAuthority,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec
@@ -238,3 +244,90 @@ def test_issue264_header_only_metadata_reaches_actual_image_writer():
     assert tuple(output.path for output in outputs) == (
         "/analysis/A01_s001_w1_z001_t001_labels.tif",
     )
+
+
+@pytest.mark.parametrize("well", ("A01", "image.ome.tif"))
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+@pytest.mark.parametrize("retain_declared_extension", (False, True))
+@pytest.mark.parametrize("mode", tuple(ImagePayloadMetadataCompositionMode))
+def test_real_source_schema_composition_to_named_output_and_image_materializer(
+    well,
+    extension,
+    retain_declared_extension,
+    mode,
+):
+    parser = SourceSchemaFilenameParser()
+    filename = f"{well}_s001_w1_z001_t001{extension}"
+    parsed = parser.parse_filename(filename)
+    assert parsed.extension == extension
+    assert parsed.components.wire_mapping()["well"] == well
+    components = (
+        parsed.wire_mapping()
+        if retain_declared_extension
+        else parsed.components.wire_mapping()
+    )
+    pixels = np.ones((8, 8), dtype=np.uint16)
+    payload = ImagePayloadMetadata(
+        source_path=f"/input/{filename}",
+        source_component_metadata=components,
+    ).payload_with(pixels)
+    # This invokes the actual runtime composer which stamped all dotted well
+    # suffixes before the named main/checkpoint writer saw the source identity.
+    composed = ImagePayloadMetadata.compose((payload,), mode=mode)
+    scalar = composed.for_leading_source_plane(0)
+    identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+        parser, scalar
+    )
+    destination = FunctionOutputPathAuthority.filename_for_identity(
+        parser,
+        replace(identity, filename_qualifier="fixture_image"),
+    )
+    assert destination == f"{well}_s001_w1_z001_t001_fixture_image{extension}"
+    assert destination.count("_s001_w1_z001_t001") == 1
+    assert identity.extension == extension
+    assert composed.source_component_metadata.get("extension") == (
+        extension if retain_declared_extension else None
+    )
+
+    authority = ParserBackedSourceStemAuthority(parser=parser)
+    assert authority.path_parse_extensions(scalar) == (extension,)
+    # Real image writer, including the source identity projected from that same
+    # composed runtime plane. No Fake/DotParser or alternate scientific code.
+    outputs = materialization_outputs(
+        MaterializationSpec(ImageFileOptions(filename_suffix=".tif")),
+        scalar.payload_with(pixels),
+        "/analysis/fixture",
+        FileManager({"memory": MemoryStorageBackend()}),
+        context=SimpleNamespace(microscope_handler=SimpleNamespace(parser=parser)),
+    )
+    assert tuple(output.path for output in outputs) == (f"/analysis/{filename}",)
+
+
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+def test_materializer_resolves_dotted_source_extension_only_through_real_parser(
+    extension,
+):
+    parser = SourceSchemaFilenameParser()
+    filename = f"image.ome.tif_s001_w1_z001_t001{extension}"
+    metadata = ImagePayloadMetadata(
+        source_path=f"/input/{filename}",
+        source_component_metadata=parser.parse_filename(
+            filename
+        ).components.wire_mapping(),
+    )
+    assert ParserBackedSourceStemAuthority(parser=parser).path_parse_extensions(
+        metadata
+    ) == (extension,)
+
+
+def test_materializer_does_not_invent_extension_for_unparsed_source():
+    authority = ParserBackedSourceStemAuthority(parser=SourceSchemaFilenameParser())
+    unknown = ImagePayloadMetadata(
+        source_path="/input/physical.image.ome.tif",
+        source_component_metadata=COMPONENTS,
+    )
+    assert authority.path_parse_extensions(unknown) == ()
+    declared = unknown.with_source_component_metadata(
+        {**COMPONENTS, "extension": ".ome.tif"}
+    )
+    assert authority.path_parse_extensions(declared) == (".ome.tif",)
