@@ -13,6 +13,7 @@ import json
 import subprocess
 import sys
 import tarfile
+from abc import abstractmethod
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,8 +51,8 @@ class SourceRevision:
     repo: Path
     revision: str
 
-    def materialize(self, destination: Path, roots: tuple[str, ...] = ()) -> None:
-        """Read committed Python only, recursively at recorded gitlink objects."""
+    def require_repository(self) -> None:
+        """Reject an uninitialized child that Git would resolve to its parent."""
         if (
             Path(git(self.repo, "rev-parse", "--show-toplevel").decode().strip())
             != self.repo.resolve()
@@ -59,6 +60,30 @@ class SourceRevision:
             raise RuntimeError(
                 f"Recorded source repository is not initialized: {self.repo}"
             )
+
+    def surviving_paths(self, paths: tuple[str, ...]) -> tuple[str, ...]:
+        """Resolve exact changed paths against this committed Git tree."""
+        self.require_repository()
+        if not paths:
+            return ()
+        members = set(
+            git(
+                self.repo,
+                "--literal-pathspecs",
+                "ls-tree",
+                "-r",
+                "--name-only",
+                "-z",
+                self.revision,
+                "--",
+                *paths,
+            ).split(b"\0")
+        )
+        return tuple(path for path in paths if path.encode() in members)
+
+    def materialize(self, destination: Path, roots: tuple[str, ...] = ()) -> None:
+        """Read committed Python only, recursively at recorded gitlink objects."""
+        self.require_repository()
         if roots:
             roots = tuple(
                 root
@@ -159,10 +184,33 @@ def scan_counts(
 
 
 @dataclass(frozen=True)
-class R1Comparison(SemanticRecord):
+class R1Assessment(SemanticRecord):
     base: str
     head: str
     changed: tuple[str, ...]
+
+    @property
+    @abstractmethod
+    def increased(self) -> tuple[R1Count, ...]:
+        """Positive changed-file deltas admitted by this assessment."""
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class R1EmptyReportScope(R1Assessment):
+    """No changed Python survives at head; no baseline scan was performed."""
+
+    @json_report_property()
+    def reason(self) -> str:
+        return "no_surviving_changed_python"
+
+    @json_report_property()
+    def increased(self) -> tuple[R1Count, ...]:
+        return ()
+
+
+@dataclass(frozen=True)
+class R1Comparison(R1Assessment):
     before: tuple[R1Count, ...]
     after: tuple[R1Count, ...]
 
@@ -188,7 +236,7 @@ def compare(
     *,
     budget_seconds: float = 160,
     roots: tuple[str, ...] = ("openhcs", "scripts", "benchmark"),
-) -> R1Comparison:
+) -> R1Assessment:
     base, head = (
         git(repo, "rev-parse", "--verify", f"{ref}^{{commit}}").decode().strip()
         for ref in (base, head)
@@ -200,8 +248,8 @@ def compare(
         ).split(b"\0")
         if path.endswith(b".py")
     )
-    if not changed:
-        return R1Comparison(base, head, (), (), ())
+    if not SourceRevision(repo, head).surviving_paths(changed):
+        return R1EmptyReportScope(base, head, changed)
     scratch_root.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(prefix="r1-", dir=scratch_root) as temporary:
         work = Path(temporary)
