@@ -550,8 +550,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         """Return whether this invocation's adapter records selected outputs."""
         return bool(
             self.artifact_output_plans
-            and self.contract.runtime_adapter is not None
-            and self.contract.runtime_adapter.manages_artifact_outputs
+            and self.contract.artifact_output_policy.records_outputs
         )
 
     @property
@@ -1223,6 +1222,8 @@ def _compile_invocation(
         )
         item = replace(item, contract=contract_plan.contract)
     artifact_selector = declaration_provider(item, step_context)
+    item.contract.validate_artifact_input_parameter_bindings()
+    artifact_selector.validate_artifact_output_declarations()
     artifact_input_plans = artifact_selector.select_plans(
         ArtifactInputPlan,
         input_plans,

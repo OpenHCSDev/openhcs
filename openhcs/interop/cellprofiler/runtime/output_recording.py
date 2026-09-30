@@ -89,10 +89,9 @@ class CellProfilerOutputRecorder(
     ) -> Mapping[ArtifactSpecRef, RuntimeCallableArgument]:
         """Return callable outputs not recorded by this active invocation."""
 
-        runtime_adapter = callable_contract.runtime_adapter
         recorded_refs = (
             frozenset(plan.ref() for plan in active_output_plans)
-            if runtime_adapter is not None and runtime_adapter.manages_artifact_outputs
+            if callable_contract.artifact_output_policy.records_outputs
             else frozenset()
         )
         return MappingProxyType(
@@ -144,10 +143,8 @@ class CellProfilerOutputRecorder(
             active_output_plans=active_output_plans,
             returned_values=returned_values,
         )
-        runtime_adapter = callable_contract.runtime_adapter
         if (
-            runtime_adapter is None
-            or not runtime_adapter.manages_artifact_outputs
+            not callable_contract.artifact_output_policy.records_outputs
             or not active_output_plans
         ):
             return declared_only_outputs

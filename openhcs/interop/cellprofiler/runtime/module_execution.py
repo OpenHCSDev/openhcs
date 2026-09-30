@@ -170,7 +170,7 @@ class CellProfilerModuleExecutor:
         if (
             runtime_adapter is None
             or not runtime_adapter.manages_artifact_inputs
-            or not runtime_adapter.manages_artifact_outputs
+            or not self.callable_contract.artifact_output_policy.records_outputs
         ):
             raise TypeError(
                 "CellProfilerModuleExecutor requires a RuntimeAdapterSpec that "
