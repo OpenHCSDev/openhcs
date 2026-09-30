@@ -22,8 +22,9 @@ from zmqruntime.messages import (
     RunningExecutionInfo,
     WorkerState,
     ProcessIdentity,
+    ServerRole,
 )
-from zmqruntime.startup import EndpointStartupStatus
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from zmqruntime.client import EndpointShutdownMode, EndpointShutdownResult
 
 from openhcs.agent.dto.common import (
@@ -660,6 +661,57 @@ class RuntimeBootstrapState(AgentResultEnvelope):
     progress: EndpointStartupStatus
     ready: bool
     process_alive: bool | None
+
+    @classmethod
+    def from_observation(
+        cls,
+        handle: RuntimeBootstrapHandle,
+        *,
+        process_alive: bool | None,
+        statuses: tuple[EndpointStartupStatus, ...],
+        pong: PongResponse | None,
+    ) -> RuntimeBootstrapState:
+        """Derive the public state from already-typed native observations.
+
+        The journal describes startup activity, not endpoint ownership or
+        readiness. Only a heartbeat from this exact execution incarnation can
+        establish readiness; neither this projection nor its caller retries.
+        """
+        progress = (
+            statuses[-1]
+            if statuses
+            else EndpointStartupStatus(
+                EndpointStartupPhase.STARTING_PROCESS,
+                "No child readiness receipt observed",
+            )
+        )
+        ready = False
+        if pong is not None:
+            if (
+                pong.process_identity != handle.process_identity
+                or pong.server_role is not ServerRole.EXECUTION
+            ):
+                raise RuntimeError(
+                    "Bootstrap endpoint has a different native owner; no takeover"
+                )
+            ready = pong.ready
+            if ready:
+                progress = EndpointStartupStatus(
+                    EndpointStartupPhase.CONNECTED,
+                    "Exact execution child accepts controls",
+                )
+        elif process_alive is False:
+            progress = EndpointStartupStatus(
+                EndpointStartupPhase.FAILED,
+                "Exact spawned child is terminal; do not replay startup",
+            )
+        return cls(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            progress=progress,
+            ready=ready,
+            process_alive=process_alive,
+        )
 
 
 @dataclass(frozen=True, slots=True)

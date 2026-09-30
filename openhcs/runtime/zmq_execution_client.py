@@ -139,6 +139,66 @@ class ExecutionRuntimeLaunchPlan:
             *self.transport_write_paths,
         )
 
+    def spawn(
+        self,
+        endpoint: TransportEndpoint,
+        config: OpenHCSZMQConfig,
+        *,
+        persistent: bool,
+    ) -> subprocess.Popen:
+        """Materialize this admitted plan through the canonical process policy.
+
+        Reservation and child-incarnation publication remain with the native
+        ExecutionClient. This operation consumes its selected paths; it does
+        not resolve another launch plan or acquire another transport owner.
+        """
+        self.runtime_dir.mkdir(parents=True, exist_ok=True)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        self.startup_status_file.unlink(missing_ok=True)
+        server_config = replace(
+            config,
+            default_port=endpoint.port,
+            persistent=persistent,
+            transport_mode=endpoint.transport_mode,
+        )
+        launch_policy = BackgroundProcessLaunchPolicy.current(detached=persistent)
+        # The execution server is a multiprocessing parent. Preserve the
+        # interpreter identity used by its worker bootstrap; Windows window
+        # suppression belongs to the launch policy's creation flags.
+        cmd = [
+            sys.executable,
+            "-B",
+            "-X",
+            "faulthandler",
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                "openhcs.runtime.zmq_execution_server_launcher"
+            ),
+            "--log-file-path",
+            str(self.log_file),
+            "--startup-status-path",
+            str(self.startup_status_file),
+            "--config-source",
+            _pycodify_config_source(server_config),
+        ]
+        root_logger = logging.getLogger()
+        current_log_level = root_logger.getEffectiveLevel()
+        log_level_name = logging.getLevelName(current_log_level)
+        logger.debug(
+            "Spawning ZMQ server with log level: %s (numeric: %s)",
+            log_level_name,
+            current_log_level,
+        )
+        cmd.extend(["--log-level", log_level_name])
+        with self.log_file.open("w", encoding="utf-8") as log_stream:
+            return subprocess.Popen(
+                cmd,
+                stdout=log_stream,
+                stderr=subprocess.STDOUT,
+                cwd=self.runtime_dir,
+                env=MemoryType.subprocess_environment(),
+                **launch_policy.popen_arguments(),
+            )
+
 
 _COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
 
@@ -623,7 +683,9 @@ class ZMQExecutionClient(
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
         connection_status_callback: EndpointStartupStatusCallback | None = None,
     ):
-        endpoint = config.client_endpoint(port, host=host, transport_mode=transport_mode)
+        endpoint = config.client_endpoint(
+            port, host=host, transport_mode=transport_mode
+        )
         self._startup_status_path: Path | None = None
         self._runtime_launch_plan: ExecutionRuntimeLaunchPlan | None = None
         super().__init__(
@@ -1158,62 +1220,10 @@ class ZMQExecutionClient(
 
     @override
     def _spawn_server_process(self) -> subprocess.Popen:
-        import logging
-
         plan = self.runtime_launch_plan()
         self._runtime_launch_plan = None
-        runtime_dir = plan.runtime_dir
-        runtime_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = plan.log_file
-        log_file_path.parent.mkdir(parents=True, exist_ok=True)
         self._startup_status_path = plan.startup_status_file
-        self._startup_status_path.unlink(missing_ok=True)
-        server_config = replace(
-            self.config,
-            default_port=self.port,
-            persistent=self.persistent,
-            transport_mode=self.transport_mode,
-        )
-        launch_policy = BackgroundProcessLaunchPolicy.current(detached=self.persistent)
-        # The execution server is a multiprocessing parent. Preserve the
-        # interpreter identity used by its worker bootstrap; Windows window
-        # suppression belongs to the launch policy's creation flags.
-        cmd = [
-            sys.executable,
-            "-B",
-            "-X",
-            "faulthandler",
-            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-                "openhcs.runtime.zmq_execution_server_launcher"
-            ),
-        ]
-        cmd.extend(["--log-file-path", str(log_file_path)])
-        cmd.extend(["--startup-status-path", str(self._startup_status_path)])
-        cmd.extend(["--config-source", _pycodify_config_source(server_config)])
-
-        # Pass the current process's logging level to the server
-        # Get the root logger's effective level
-        root_logger = logging.getLogger()
-        current_log_level = root_logger.getEffectiveLevel()
-        log_level_name = logging.getLevelName(current_log_level)
-
-        # Log what we're passing to help debug
-        logger = logging.getLogger(__name__)
-        logger.debug(
-            f"Spawning ZMQ server with log level: {log_level_name} (numeric: {current_log_level})"
-        )
-
-        cmd.extend(["--log-level", log_level_name])
-
-        with log_file_path.open("w", encoding="utf-8") as log_stream:
-            return subprocess.Popen(
-                cmd,
-                stdout=log_stream,
-                stderr=subprocess.STDOUT,
-                cwd=runtime_dir,
-                env=MemoryType.subprocess_environment(),
-                **launch_policy.popen_arguments(),
-            )
+        return plan.spawn(self.endpoint, self.config, persistent=self.persistent)
 
     def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
         """Resolve owner defaults without creating directories or warming."""

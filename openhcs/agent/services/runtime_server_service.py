@@ -341,46 +341,17 @@ class RuntimeServerService:
             .read()
             .statuses
         )
-        progress = (
-            statuses[-1]
-            if statuses
-            else EndpointStartupStatus(
-                EndpointStartupPhase.STARTING_PROCESS,
-                "No child readiness receipt observed",
-            )
-        )
         endpoint = handle.connection.transport_endpoint(self._config)
         pong = (
             endpoint.ping(self._config, timeout_ms=self._config.server_info_timeout_ms)
             if alive
             else None
         )
-        ready = False
-        if pong is not None:
-            if (
-                pong.process_identity != handle.process_identity
-                or pong.server_role is not ServerRole.EXECUTION
-            ):
-                raise RuntimeError(
-                    "Bootstrap endpoint has a different native owner; no takeover"
-                )
-            ready = pong.ready
-            if ready:
-                progress = EndpointStartupStatus(
-                    EndpointStartupPhase.CONNECTED,
-                    "Exact execution child accepts controls",
-                )
-        elif alive is False:
-            progress = EndpointStartupStatus(
-                EndpointStartupPhase.FAILED,
-                "Exact spawned child is terminal; do not replay startup",
-            )
-        return RuntimeBootstrapState(
-            schema_version=SCHEMA_VERSION,
-            handle=handle,
-            progress=progress,
-            ready=ready,
+        return RuntimeBootstrapState.from_observation(
+            handle,
             process_alive=alive,
+            statuses=statuses,
+            pong=pong,
         )
 
     def close_bootstrap(

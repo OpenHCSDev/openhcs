@@ -6,7 +6,7 @@ from python_introspect import dataclass_from_mapping
 from openhcs.serialization.json import to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import ProcessIdentity, PongResponse, ServerRole
-from zmqruntime.startup import EndpointStartupPhase
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from zmqruntime.transport import TransportEndpoint
 
 from openhcs.agent.capabilities import agent_capabilities
@@ -17,6 +17,7 @@ from openhcs.agent.dto.execution import (
     RuntimeBootstrapHandle,
     RuntimeBootstrapCloseRequest,
     RuntimeBootstrapCloseResult,
+    RuntimeBootstrapState,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.runtime_server_service import RuntimeServerService
@@ -31,6 +32,8 @@ from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
 )
+
+_PRODUCTION_SPAWN = ZMQExecutionClient._spawn_server_process
 
 
 class Child(EndpointProcess):
@@ -117,6 +120,122 @@ def test_client_retains_same_admitted_launch_plan(setup, monkeypatch):
     spawn.assert_not_called()
 
 
+@pytest.mark.parametrize("mode", tuple(TransportMode))
+@pytest.mark.parametrize("persistent", [False, True])
+def test_admitted_plan_owns_materialization_and_child_configuration(
+    setup, tmp_path, monkeypatch, mode, persistent
+):
+    import subprocess
+    import sys
+    from openhcs.core.config_document import ConfigDocumentAuthority
+    from openhcs.runtime import zmq_execution_client as module
+    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+
+    _, _, intercepted_spawn = setup
+    config = OpenHCSZMQConfig(
+        transport_mode=mode,
+        default_port=5997,
+        persistent=not persistent,
+        control_port_offset=1700,
+        app_name="plan-materialization-test",
+        ipc_socket_prefix="selected-materialization",
+        server_host="127.0.0.1",
+    )
+    endpoint = config.client_endpoint(5914)
+    plan = ExecutionRuntimeLaunchPlan.resolve(endpoint, config)
+    assert not tuple(tmp_path.iterdir())
+    plan.startup_status_file.parent.mkdir(parents=True)
+    plan.startup_status_file.write_text("old journal", encoding="utf-8")
+    native_process = Mock(spec=subprocess.Popen)
+    launch = Mock(return_value=native_process)
+    policy = Mock()
+    policy.popen_arguments.return_value = {"start_new_session": persistent}
+    policy_selection = Mock(return_value=policy)
+    monkeypatch.setattr(
+        module.BackgroundProcessLaunchPolicy, "current", policy_selection
+    )
+    monkeypatch.setattr(module.subprocess, "Popen", launch)
+    environment = {"PLAN_TEST": "owned"}
+    monkeypatch.setattr(
+        module.MemoryType, "subprocess_environment", lambda: environment
+    )
+
+    assert plan.spawn(endpoint, config, persistent=persistent) is native_process
+    intercepted_spawn.assert_not_called()
+    launch.assert_called_once()
+    policy_selection.assert_called_once_with(detached=persistent)
+    args, kwargs = launch.call_args
+    command = args[0]
+    assert command[:4] == [sys.executable, "-B", "-X", "faulthandler"]
+    assert command[4:6] == list(
+        OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.runtime.zmq_execution_server_launcher"
+        )
+    )
+    child_config = ConfigDocumentAuthority.from_source(
+        command[command.index("--config-source") + 1],
+        expected_config_type=OpenHCSZMQConfig,
+    )
+    assert child_config == replace(
+        config, default_port=endpoint.port, transport_mode=mode, persistent=persistent
+    )
+    assert command[command.index("--log-file-path") + 1] == str(plan.log_file)
+    assert command[command.index("--startup-status-path") + 1] == str(
+        plan.startup_status_file
+    )
+    assert kwargs["cwd"] == plan.runtime_dir
+    assert kwargs["env"] is environment
+    assert kwargs["stderr"] is subprocess.STDOUT
+    assert kwargs["stdout"].name == str(plan.log_file)
+    assert kwargs["stdout"].closed  # Including after Popen returns.
+    assert kwargs["start_new_session"] is persistent
+    assert plan.log_file.is_file()
+    assert not plan.startup_status_file.exists()
+    assert not plan.storage_dir.exists()  # Storage/cache stay native-owned.
+    assert not plan.registry_cache_dir.exists()
+    assert all(not path.exists() for path in plan.transport_write_paths)
+
+
+def test_client_consumes_exact_admitted_plan_on_spawn_failure(setup, monkeypatch):
+    _, request, intercepted_spawn = setup
+    client = request.connection.execution_client(OpenHCSZMQConfig())
+    plan = client.runtime_launch_plan()
+
+    calls = []
+
+    def consume(selected_plan, endpoint, config, *, persistent):
+        calls.append((selected_plan, endpoint, config, persistent))
+        raise OSError("controlled no-child spawn failure")
+
+    monkeypatch.setattr(ExecutionRuntimeLaunchPlan, "spawn", consume)
+    # Exercise the original production hook rather than setup's interception.
+    with pytest.raises(OSError, match="no-child spawn failure"):
+        _PRODUCTION_SPAWN(client)
+    assert calls == [(plan, client.endpoint, client.config, client.persistent)]
+    assert calls[0][0] is plan
+    assert client._runtime_launch_plan is None
+    assert client._startup_status_path == plan.startup_status_file
+    intercepted_spawn.assert_not_called()
+
+
+def test_plan_closes_materialized_log_when_child_creation_fails(setup, monkeypatch):
+    from openhcs.runtime import zmq_execution_client as module
+
+    _, request, intercepted_spawn = setup
+    client = request.connection.execution_client(OpenHCSZMQConfig())
+    plan = client.runtime_launch_plan()
+    launch = Mock(side_effect=OSError("controlled child creation failure"))
+    monkeypatch.setattr(module.subprocess, "Popen", launch)
+    with pytest.raises(OSError, match="child creation failure"):
+        _PRODUCTION_SPAWN(client)
+    launch.assert_called_once()
+    assert launch.call_args.kwargs["stdout"].closed
+    assert plan.log_file.exists()
+    assert client._runtime_launch_plan is None
+    assert client._startup_status_path == plan.startup_status_file
+    intercepted_spawn.assert_not_called()
+
+
 def test_connection_urls_share_effective_endpoint_owner(setup, tmp_path, monkeypatch):
     _, _, spawn = setup
     config = OpenHCSZMQConfig(
@@ -124,7 +243,8 @@ def test_connection_urls_share_effective_endpoint_owner(setup, tmp_path, monkeyp
     )
     connection = ExecutionConnectionSpec(host="127.0.0.1", port=5968)
     monkeypatch.setattr(
-        TransportMode, "default",
+        TransportMode,
+        "default",
         Mock(side_effect=AssertionError("No platform fallback for URL projection")),
     )
     endpoint = connection.execution_client(config).endpoint
@@ -179,8 +299,10 @@ def test_start_observe_close_retain_one_effective_route(
         ),
     )
     config = OpenHCSZMQConfig(
-        transport_mode=configured_mode, control_port_offset=1700,
-        app_name="owned-route-test", ipc_socket_prefix="selected-route",
+        transport_mode=configured_mode,
+        control_port_offset=1700,
+        app_name="owned-route-test",
+        ipc_socket_prefix="selected-route",
     )
     expected = request.connection.transport_endpoint(config)
     monkeypatch.setattr(
@@ -189,7 +311,8 @@ def test_start_observe_close_retain_one_effective_route(
         Mock(return_value=True),
     )
     monkeypatch.setattr(
-        TransportMode, "default",
+        TransportMode,
+        "default",
         Mock(side_effect=AssertionError("No omitted-mode re-resolution")),
     )
     routes = []
@@ -202,8 +325,11 @@ def test_start_observe_close_retain_one_effective_route(
     def ping(endpoint, actual_config, *, timeout_ms):
         routes.append(endpoint)
         return PongResponse(
-            port=endpoint.port, control_port=endpoint.control_port(actual_config),
-            ready=True, server="fixture", server_role=ServerRole.EXECUTION,
+            port=endpoint.port,
+            control_port=endpoint.control_port(actual_config),
+            ready=True,
+            server="fixture",
+            server_role=ServerRole.EXECUTION,
             process_identity=Child.identity,
         )
 
@@ -228,7 +354,9 @@ def test_start_observe_close_retain_one_effective_route(
     # configured default. No second transport record or mutable mode cache.
     observer_config = replace(
         config,
-        transport_mode=next(mode for mode in TransportMode if mode is not configured_mode),
+        transport_mode=next(
+            mode for mode in TransportMode if mode is not configured_mode
+        ),
     )
     observer = RuntimeServerService(config=observer_config, path_policy=policy)
     observed = observer.observe_bootstrap(RuntimeBootstrapObserveRequest(handle))
@@ -245,7 +373,9 @@ def test_locality_uses_effective_endpoint_before_plan_or_write(
     setup, tmp_path, monkeypatch, configured_mode
 ):
     _, request, spawn = setup
-    request = replace(request, connection=replace(request.connection, transport_mode=None))
+    request = replace(
+        request, connection=replace(request.connection, transport_mode=None)
+    )
     config = OpenHCSZMQConfig(transport_mode=configured_mode)
     admission = Mock(return_value=False)
     monkeypatch.setattr(configured_mode.declaration, "endpoint_is_local", admission)
@@ -264,11 +394,11 @@ def test_omitted_tcp_mode_cannot_borrow_ipc_locality(setup, tmp_path):
     _, request, spawn = setup
     request = replace(
         request,
-        connection=replace(
-            request.connection, host="203.0.113.7", transport_mode=None
-        ),
+        connection=replace(request.connection, host="203.0.113.7", transport_mode=None),
     )
-    service = RuntimeServerService(config=OpenHCSZMQConfig(transport_mode=TransportMode.TCP))
+    service = RuntimeServerService(
+        config=OpenHCSZMQConfig(transport_mode=TransportMode.TCP)
+    )
     with pytest.raises(ValueError, match="local connection"):
         service.start_from_request(request)
     assert not tuple(tmp_path.iterdir())
@@ -278,7 +408,9 @@ def test_omitted_tcp_mode_cannot_borrow_ipc_locality(setup, tmp_path):
 @pytest.mark.parametrize("configured_mode", tuple(TransportMode))
 @pytest.mark.parametrize("requested_mode", (None, *TransportMode))
 def test_catalog_route_uses_injected_config_owner(configured_mode, requested_mode):
-    from openhcs.agent.services.endpoint_function_catalog_service import ZMQFunctionCatalogService
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        ZMQFunctionCatalogService,
+    )
 
     config = OpenHCSZMQConfig(transport_mode=configured_mode)
     provider = Mock(return_value=config)
@@ -378,6 +510,83 @@ def test_no_response_preserves_same_pending_handle(setup, monkeypatch):
     assert not observed.ready
     assert observed.progress.phase is EndpointStartupPhase.STARTING_PROCESS
     spawn.assert_called_once()
+
+
+@pytest.mark.parametrize("phase", [None, *EndpointStartupPhase])
+@pytest.mark.parametrize("heartbeat_ready", [None, False, True])
+def test_bootstrap_state_derives_readiness_from_typed_native_observations(
+    setup, phase, heartbeat_ready
+):
+    service, request, spawn = setup
+    handle = service.start_from_request(request).handle
+    statuses = (
+        ()
+        if phase is None
+        else (EndpointStartupStatus(phase, "original child activity", sequence=17),)
+    )
+    pong = (
+        None
+        if heartbeat_ready is None
+        else PongResponse(
+            port=handle.connection.port,
+            control_port=6913,
+            ready=heartbeat_ready,
+            server="fixture",
+            server_role=ServerRole.EXECUTION,
+            process_identity=handle.process_identity,
+        )
+    )
+    result = RuntimeBootstrapState.from_observation(
+        handle, process_alive=True, statuses=statuses, pong=pong
+    )
+    assert result.handle is handle
+    assert result.ready is (heartbeat_ready is True)
+    assert result.process_alive is True
+    if heartbeat_ready is True:
+        assert result.progress.phase is EndpointStartupPhase.CONNECTED
+    elif statuses:
+        assert result.progress is statuses[-1]
+    else:
+        assert result.progress.phase is EndpointStartupPhase.STARTING_PROCESS
+    assert dataclass_from_mapping(RuntimeBootstrapState, to_jsonable(result)) == result
+    spawn.assert_called_once()  # Projection never starts or resubmits.
+
+
+@pytest.mark.parametrize("alive", [False, None])
+def test_bootstrap_state_preserves_terminal_vs_unknown_process_identity(setup, alive):
+    service, request, _ = setup
+    handle = service.start_from_request(request).handle
+    result = RuntimeBootstrapState.from_observation(
+        handle, process_alive=alive, statuses=(), pong=None
+    )
+    assert result.handle is handle and not result.ready
+    assert result.process_alive is alive
+    assert result.progress.phase is (
+        EndpointStartupPhase.FAILED
+        if alive is False
+        else EndpointStartupPhase.STARTING_PROCESS
+    )
+
+
+@pytest.mark.parametrize("wrong_identity", [False, True])
+def test_bootstrap_state_rejects_foreign_incarnation_or_role(setup, wrong_identity):
+    service, request, _ = setup
+    handle = service.start_from_request(request).handle
+    identity = replace(
+        handle.process_identity, create_time=handle.process_identity.create_time - 1
+    )
+    pong = PongResponse(
+        port=5913,
+        control_port=6913,
+        ready=True,
+        server="fixture",
+        server_role=ServerRole.EXECUTION if wrong_identity else ServerRole.VIEWER,
+        process_identity=identity if wrong_identity else handle.process_identity,
+    )
+    with pytest.raises(RuntimeError, match="different native owner"):
+        RuntimeBootstrapState.from_observation(
+            handle, process_alive=True, statuses=(), pong=pong
+        )
 
 
 def test_normal_context_injects_path_admission(setup, tmp_path):
