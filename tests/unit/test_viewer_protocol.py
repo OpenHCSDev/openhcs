@@ -360,6 +360,7 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
             viewer_type=ViewerType.NAPARI,
         )
     )
+    monkeypatch.setattr(viewer, "active_process_launch", lambda: viewer.process_launch)
     observed_application = OPENHCS_ENDPOINT_APPLICATION
 
     def compatibility(_endpoint, *, timeout_ms, require_ready=True):
@@ -375,15 +376,15 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
 
     monkeypatch.setattr(
         viewer,
-        "existing_viewer_matches_process_launch",
-        lambda: False,
+        "matches_requested_process_launch",
+        lambda _requested: False,
     )
     assert not viewer.existing_viewer_is_ready()
 
     monkeypatch.setattr(
         viewer,
-        "existing_viewer_matches_process_launch",
-        lambda: True,
+        "matches_requested_process_launch",
+        lambda _requested: True,
     )
 
     observed_application = EndpointApplication(

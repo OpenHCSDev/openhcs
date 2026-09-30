@@ -1435,7 +1435,7 @@ class ManagedViewerLifecycleMixin(
                 timeout_ms=request.timeout_ms,
                 require_ready=request.require_ready,
             ).require_match()
-            if not self.existing_viewer_matches_process_launch():
+            if not self.matches_requested_process_launch(self.process_launch):
                 logging.getLogger(type(self).__module__).warning(
                     "%s viewer on port %s has a different process-launch "
                     "declaration and cannot be reused.",
@@ -1453,11 +1453,6 @@ class ManagedViewerLifecycleMixin(
             return False
         return True
 
-    def existing_viewer_matches_process_launch(self) -> bool:
-        """Return whether a reachable viewer matches process-global settings."""
-
-        return self.matches_requested_process_launch(self.process_launch)
-
     def matches_requested_process_launch(
         self, requested: ViewerProcessLaunchConfig
     ) -> bool:
@@ -1471,7 +1466,7 @@ class ManagedViewerLifecycleMixin(
         try:
             active = self.process_launch if owns_process else self.active_process_launch()
             return requested.matches_existing_viewer(active, owns_process=owns_process)
-        except (RuntimeError, TypeError, ValueError, KeyError) as error:
+        except (RuntimeError, TypeError, ValueError, KeyError, zmq.ZMQError) as error:
             logging.getLogger(type(self).__module__).warning(
                 "%s viewer process-launch check failed: %s",
                 self.viewer_process_label, error,

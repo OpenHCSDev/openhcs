@@ -220,10 +220,10 @@ def test_napari_viewer_reuse_requires_matching_process_launch(monkeypatch) -> No
             }
         ),
     )
-    assert visualizer.existing_viewer_matches_process_launch()
+    assert visualizer.matches_requested_process_launch(visualizer.process_launch)
 
     active_launch = ViewerProcessLaunchConfig(qt_font_dpi=120)
-    assert not visualizer.existing_viewer_matches_process_launch()
+    assert not visualizer.matches_requested_process_launch(visualizer.process_launch)
 
 
 @pytest.mark.parametrize("config", (GlobalPipelineConfig(), PipelineConfig()))

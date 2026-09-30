@@ -102,9 +102,11 @@ class ImageStreamingRequest(ViewerStreamingContext):
         projection: VirtualWorkspaceSourceProjection,
     ) -> None:
         """Admit the original source window, including a declared bounded crop."""
-        image_payload_metadata(image).source_spatial_domain.require_image_window(
-            image_payload_data(image).shape[-2:]
-        )
+        metadata = image_payload_metadata(image)
+        shape_yx = metadata.spatial_shape_yx(image)
+        if shape_yx is None:
+            raise ValueError("Streamed image requires declared spatial Y/X axes.")
+        metadata.source_spatial_domain.require_image_window(shape_yx)
 
 
 @dataclass(frozen=True, slots=True)

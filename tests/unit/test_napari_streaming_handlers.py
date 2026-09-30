@@ -3390,6 +3390,10 @@ def _run_fake_napari_entrypoint(
                 def resize(width, height):
                     events.append(("window_resize", width, height))
 
+                @staticmethod
+                def add_dock_widget(widget, *, name, area):
+                    events.append(("native_dock", name, area))
+
             self.window = Window()
 
     application = FakeApplication()
@@ -3397,6 +3401,14 @@ def _run_fake_napari_entrypoint(
     monkeypatch.setattr(QtWidgets, "QApplication", FakeApplication)
     monkeypatch.setattr(napari_viewer_server, "NapariViewerServer", FakeServer)
     monkeypatch.setattr(napari_viewer_server, "QTimer", FakeTimer)
+
+    from openhcs.runtime import napari_orthogonal_widget
+
+    monkeypatch.setattr(
+        napari_orthogonal_widget,
+        "OpenHCSOrthogonalWidget",
+        lambda _server: (events.append("orthogonal_surface_open") or object()),
+    )
 
     class FakeQtEnvironmentPolicy:
         def __init__(self, *, font_dpi=None):
@@ -3441,6 +3453,8 @@ def test_napari_entrypoint_publishes_endpoints_from_live_qt_event_loop(monkeypat
 
     assert entrypoint_error is None
     assert events.index("qt_environment_applied") < events.index("viewer_construct")
+    assert events.index("viewer_construct") < events.index("orthogonal_surface_open")
+    assert ("native_dock", "OpenHCS Spatial Planes", "right") in events
     assert events.index("startup_callback_queued") < events.index("event_loop_enter")
     assert events.index("result_selection_surface_open") < events.index(
         "startup_callback_queued"
