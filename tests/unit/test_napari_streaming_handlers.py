@@ -3169,6 +3169,7 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
         napari_viewer_server.NapariViewerServer
     )
     server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.viewer = None
     pending_timer = PendingTimer()
     server.layer_route_state.set_pending_update(
         "old",
@@ -3202,6 +3203,53 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
     assert server.batch_processors.debounce_policy.delay_ms == 123
     assert pending_timer.stopped is True
     assert server.layer_route_state.layer_pending_updates == {}
+
+
+@pytest.mark.parametrize("origin", ["manual", "pipeline", "direct"])
+def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(origin):
+    from openhcs.runtime.napari_viewer_server import (
+        NapariLayerDisplayPipeline,
+        NapariViewerServer,
+    )
+
+    server = NapariViewerServer.__new__(NapariViewerServer)
+    layer = object()
+    server.viewer = SimpleNamespace(layers=[layer])
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.layer_route_state.set_layer("retained", layer)
+    server.component_groups = NapariComponentGroupStore()
+    item = _layer_item(
+        {"well": "A01"},
+        data=np.ones((2, 2)),
+        producer=StreamProducerIdentity(origin, "image", "raw", "raw"),
+    )
+    server.component_groups.items_for("retained").append(item)
+    server.component_groups.items_for("cancelled").append(_layer_item({"well": "A14"}))
+    server.component_values = ViewerRouteComponentValueTracker()
+    server.component_values.update("retained", ["well"], [item])
+    server.component_values.declare_component_values("retained", ["well"], {"well": ["A01", "A02"]})
+    server.component_values.update("cancelled", ["well"], [_layer_item({"well": "A14"})])
+    domain = server.component_values.domain_for("retained", ["well"])
+    server.component_name_metadata = _component_name_metadata({"well": {"A01": "source well"}})
+    server.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
+    server.display_pipeline = NapariLayerDisplayPipeline(server)
+    server.batch_processors = NapariBatchProcessorStore()
+
+    server.clear_accumulated_stream_state()
+
+    assert server.component_groups.existing_items_for("retained") == [item]
+    assert server.component_groups.existing_items_for("cancelled") is None
+    assert server.component_values.domain_for("retained", ["well"]) is domain
+    assert domain.coordinate_values("well") == {"A01", "A02"}
+    assert server.component_values.shared_values_for(["well"]) == {"well": ["A01", "A02"]}
+    assert server.component_name_metadata.display_name("well", "A01") == "source well"
+
+    server.viewer.layers.remove(layer)
+    server.clear_accumulated_stream_state()
+    assert not server.layer_route_state.layers
+    assert not server.component_groups.groups
+    assert not server.component_values.domains
+    assert not server.component_name_metadata.to_wire_mapping()
 
 
 def _run_fake_napari_entrypoint(
