@@ -26,6 +26,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecAccumulator,
+    ArtifactSpecCollection,
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
@@ -227,6 +228,39 @@ class InvocationArtifactInputEdgePlan:
     projection: ArtifactInputProjectionPlan | None
     consumes_main_flow: bool = False
     main_flow_projection: MainFlowInputProjection | None = None
+
+    @classmethod
+    def from_source_declarations(
+        cls,
+        *,
+        key: InvocationArtifactInputProjectionKey,
+        spec: ArtifactSpec,
+        main_flow_artifacts: ArtifactSpecCollection,
+        invocation_sources: ArtifactSpecCollection,
+    ) -> "InvocationArtifactInputEdgePlan":
+        """Project one unstored source occurrence from its exact declarations."""
+
+        main_flow_refs = main_flow_artifacts.ref_set()
+        consumes_main_flow = (
+            spec.ref() in main_flow_refs
+            and spec.ref() in invocation_sources.ref_set()
+        )
+        return cls(
+            key=key,
+            spec=spec,
+            storage_plan=None,
+            projection=None,
+            consumes_main_flow=consumes_main_flow,
+            main_flow_projection=(
+                MainFlowInputProjection.COMPLETE_PAYLOAD
+                if consumes_main_flow and len(main_flow_refs) == 1
+                else (
+                    MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+                    if consumes_main_flow
+                    else None
+                )
+            ),
+        )
 
     def __post_init__(self) -> None:
         if type(self.consumes_main_flow) is not bool:

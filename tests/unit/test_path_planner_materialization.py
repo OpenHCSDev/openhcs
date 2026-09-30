@@ -818,10 +818,15 @@ def test_artifact_output_source_lookup_combines_repeated_main_flow_inputs():
     assert outputs[output.ref()].variable_components == (AllComponents.Z_INDEX,)
 
 
-def test_compiled_source_edges_only_consume_relation_owned_main_flow():
-    source_specs = tuple(
-        ArtifactSpec.input(name, ImageArtifactType)
-        for name in ("DNA", "Membrane", "Mitochondria")
+@pytest.mark.parametrize("stored_main_flow", [False, True])
+@pytest.mark.parametrize("stored_secondary", [False, True])
+def test_compiled_source_edges_only_consume_relation_owned_main_flow(
+    stored_main_flow, stored_secondary,
+):
+    source_specs = (
+        ArtifactSpec.input("DNA", ImageArtifactType),
+        ArtifactSpec.input("Membrane", ImageArtifactType, parameter_name="secondary"),
+        ArtifactSpec.input("Mitochondria", ImageArtifactType),
     )
     output_spec = ArtifactSpec.output_preserving_source_stack_scope(
         "Combined",
@@ -837,7 +842,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
 
     @artifact_inputs(*source_specs)
     @artifact_outputs(output_spec)
-    def combine_sources(image):
+    def combine_sources(image, secondary=None):
         return image
 
     compiled = compile_function_pattern(
@@ -845,9 +850,19 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
         {},
         {plan.ref(): plan for plan in (output_plan,)},
     )
+    stored_inputs = {
+        spec.ref(): ArtifactInputPlan(
+            name=spec.name,
+            path=f"/memory/previous-step/{spec.name}.pkl",
+            artifact_type=ImageArtifactType,
+            source_step_id=0,
+        )
+        for spec, stored in zip(source_specs[:2], (stored_main_flow, stored_secondary))
+        if stored
+    }
     compiled = _artifact_planner_stub().artifacts.compile_invocation_input_edges(
         compiled,
-        artifact_inputs={},
+        artifact_inputs=stored_inputs,
         relation_source_scopes={},
         execution_group_scope=PathPlannerGroupScope.ungrouped(),
         consumer_variable_components=ComponentSet((AllComponents.Z_INDEX,)),
@@ -857,6 +872,11 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
     edges = next(compiled.iter_invocations()).artifact_input_edges
     assert tuple(edge.spec for edge in edges) == source_specs
     assert tuple(edge.consumes_main_flow for edge in edges) == (True, False, False)
+    assert edges[0].storage_plan is None
+    assert edges[0].projection is None
+    assert edges[1].storage_plan is stored_inputs.get(source_specs[1].ref())
+    assert (edges[1].projection is not None) is stored_secondary
+    assert edges[1].spec.parameter_name == "secondary"
 
 
 def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
