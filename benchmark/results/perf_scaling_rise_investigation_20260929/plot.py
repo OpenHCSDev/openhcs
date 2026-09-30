@@ -1,4 +1,4 @@
-"""Rebuild measured current-main execution scaling relative to native CP."""
+"""Rebuild native scaling using uncontaminated OpenHCS repetitions."""
 
 import json
 from pathlib import Path
@@ -47,11 +47,13 @@ def main() -> None:
         ylim=(0, 4.5),
     )
     ratio.grid(axis="y", alpha=0.2)
-    figure.suptitle("Historical measurements: 16-well point overlapped AST audits")
+    figure.suptitle(
+        "ImagingFlow: clean OpenHCS repeats relative to native CellProfiler"
+    )
     figure.text(
         0.5,
         0.025,
-        "16w OpenHCS point is contaminated; corrected repeat figure is in the sibling investigation report.\nRepeated pixels; native 16w reports recovered after controller loss (see report).",
+        "OpenHCS: one 1w observation; median of two clean 16w repeats. CP excludes startup/warmup.\nRepeated pixels; native 16w reports recovered after controller loss (see report).",
         ha="center",
         fontsize=8,
     )

@@ -1,0 +1,14 @@
+{
+  "head": "be75ad88da4a7f57f121293c059e26b03fe0ef7c",
+  "texture_hashes": {
+    "fused": "fc55e27a4f5ac3e041c9a6ec4607b4c9a989b2cca9ac6714d618d89102ffcdc4",
+    "control": "640d9d2b5a17f643c3fe70b70bf424caa5b785693c7f6bae5d851942d52fb6f5"
+  },
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+    "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+  },
+  "design": "control/fused/fused/control; current main/dependencies; existing family warm before each fresh server; no other agent CPU work; repeated byte-identical source images"
+}
