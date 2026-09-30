@@ -73,3 +73,55 @@ unchanged. Retained5690 still has the separate geometry-source mismatch tracked
 in issue280. A synthetic viewer cannot establish biological QA or solve that
 protected-state cutover. The full ZIP R0/L0/S1-S8 and blind-analysis goal remain
 active and incomplete. Hosted CI waiting is not imposed.
+
+Actual installed live checkpoint
+-------------------------------
+
+Frozen source4cfe230f9, exact dependency2c68a114. A fresh nonresident MCP3247237
+reports this exact installed source, ready resources and no stale paths, then
+discovers the full-surface stream capability and streams two64x64 synthetic
+images on isolated display:88. Both real OS listeners belong to viewer3247334
+and bind only127.0.0.1:5794 and127.0.0.1:6794. Typed state is observed, image
+route and native Y/X axes are present, and the actual opened bitmap shows the
+expected gradient and native controls.
+
+A second fresh nonresident MCP3251697 successfully streams the same retained
+fixture through external attachment, observes typed state, captures another
+bitmap and closes the test viewer through openhcs_close_viewer_window. That
+response reports succeeded/endpoint_terminated. Both listeners and all three
+owned processes are independently absent after terminal completion; no OS
+signal was used. Original protected H002 processes remain unchanged. Both
+bitmaps were opened by the parent. Their camera zoom differs1.349 versus
+2.529375 with unchanged center/canvas; this is not a matched biological QA set
+or a claim of preserving presentation across streaming.
+
+Final installed core/viewer/Fiji regression rerun:113 pass6.45s, zero skips and
+deselections, on the committed4cfe source with PYTHONPATH unset. Three fake
+native-entrypoint checks pass separately,137 unrelated cases deselected.
+The wider Napari suite remains failed; its scope is not exonerated.
+
+Post-correction original screening retains5145metrics and just the Fiji class
++1 lead. Its exact new line is projection of launch_config.process_launch into
+the existing control context, not another policy/registry or dispatch. The
+common lifecycle's redundant forwarding member is genuinely removed. Paired
+dependency screening retains158metrics and one ForeignAbsenceProbe lead on
+``not instance.visualizer.is_running``. This queries the original nominal
+visualizer health contract, rather than reconstructing another owner's state
+from optional/private fields. Neither screening is called a pass and no guard
+was weakened. These original report limits remain part of full R0 acceptance;
+locally tested installed/live checkpoint shipment is distinct from whole-plan
+completion, under the owner's explicit CI-deferral and checkpoint requirements.
+
+The first client batch contained a local JSON quoting error before any stream
+dispatch. Its original response is preserved; source confirms argument parsing
+precedes tool dispatch. The next batch supplied corrected local input, never
+replayed an uncertain mutation. Misclassification as a transport error is now
+tracked separately in issue283. The RGB source defect is tracked in issue282,
+whose original failing counterexample is retained and now passes.
+
+Durable small fixture, original/fresh client responses and both captures live
+under tests/runtime_diagnostics/viewer_admission_live_20260930. No private XDG
+configuration/cache is published. Resources after closing the test viewer:
+17.5GiB available RAM,14.4GiB swap warning and20.3GiB home free. Removed only
+300KiB of older verified disposable build/diagnostic scratch; all source, saved
+history and durable receipts remain. No new scientific runtime or agent fleet.
