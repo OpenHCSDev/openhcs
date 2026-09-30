@@ -1,7 +1,9 @@
-"""Provider-free Git/NRA and actual workflow-shell contract witnesses."""
+"""Guardrail-tool tests, independent of the application test environment."""
 
+import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -122,6 +124,60 @@ def test_no_changed_python_is_explicit_empty_scope_without_dependency_start(
     assert result.changed == ()
     assert not result.increased
     assert not (tmp_path / "not-created").exists()
+
+
+@pytest.mark.parametrize("source,increased", [("", False), (RAW, True)])
+def test_actual_r1_cli_json_and_exit_status(repository, tmp_path, source, increased):
+    base = git(repository, "rev-parse", "HEAD").decode().strip()
+    head = commit(repository, "openhcs/read.py", source)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.check_refactor_r1",
+            "--base",
+            base,
+            "--head",
+            head,
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+        cwd=repository,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == int(increased), result.stderr
+    payload = json.loads(result.stdout)
+    assert bool(payload["increased"]) is increased
+    assert payload["head"] == head
+
+
+def test_missing_recorded_dependency_is_not_silently_parent_source(
+    repository, tmp_path
+):
+    base = git(repository, "rev-parse", "HEAD").decode().strip()
+    commit(repository, "openhcs/read.py", RAW)
+    git(
+        repository,
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        f"160000,{base},external/dependency",
+    )
+    git(
+        repository,
+        "-c",
+        "user.name=R0 fixture",
+        "-c",
+        "user.email=r0@example.invalid",
+        "commit",
+        "-qm",
+        "record missing dependency",
+    )
+    (repository / "external" / "dependency").mkdir(parents=True)
+    with pytest.raises(RuntimeError, match="not initialized"):
+        compare(repository, base, "HEAD", tmp_path / "scratch")
 
 
 def test_r1_parse_failure_and_deadline_are_not_clean_results(repository, tmp_path):

@@ -12,6 +12,8 @@ archive/refactoring agent remains unidentified; coordination is not confirmed.
 Write set: the new guardrail workflow, parity scope/status wiring in the existing
 integration workflow, PR template, R1 policy consumer, focused CI tests, and this
 planning receipt. No production or installed source edits. PR256 remains separate.
+Tool tests now live in `.github/tests`, selected unconditionally by the R1 job,
+so normal application test collection does not acquire NRA as a new dependency.
 
 PR259 `5c1adc9c6` was reviewed against `c86f562e`: callable ABI projection belongs
 to CallableContract and ProcessingContractDeclaration; PURE2D retains the plane
@@ -70,6 +72,22 @@ available Python3.14 interpreter, enumerating11 registered measures. Python3.12
 imports fail in unrelated eager package initialization (InputDocument annotation
 namespace); no consumer bypass was added. Hosted ratchet explicitly uses3.14.
 No local tool installation, environment creation or download was performed.
+
+The first actual own-PR R1 CLI run completed analysis but FAILED reporting at
+90.00s/256704KiB/exit1: R1Comparison did not inherit NRA's SemanticRecord.
+The original empty stdout and traceback/resource receipt remain in evidence.
+Correction uses the original report ancestor and declaration-owned computed JSON
+field; no consumer codec or raw DTO schema was added. Two real subprocess CLI
+tests now prove valid JSON and nonzero candidate-growth exit. The additional
+missing-gitlink test proves an uninitialized child cannot silently read parent
+source. The corrected20-case source suite passed17.41s/399024KiB, zero skips.
+The static scanner is terminal and its flock released; scratch snapshots removed.
+
+Packaged real Git comparisons at `9df03dada` pass for all three roots (including
+scripts/check_refactor_r1.py), zero positive metric deltas. Full JSON and resources
+are in evidence. Recorded worktree submodules were initialized, without any
+gitlink or installed-source change; pycodify reused the existing local uneval
+object repository. This is source preparation, not a new runtime/tool installation.
 
 Guard before checks: /home30.8GiB, available RAM16.0GiB, historical swap warning
 only. Synthetic Git/snapshot scratch is below6MiB, owned at

@@ -53,6 +53,11 @@ jobs:
           python-version: '3.12'
       - name: Install tool launcher (runner only)
         run: python -m pip install uv
+      - name: Verify the policy consumer and actual workflow shells
+        run: |
+          uv run --no-project --python 3.12 --with pytest --with pyyaml \
+            --with git+https://github.com/OpenHCSDev/NominalRefactorAdvisor@0844525ecaba93e090a064a4ae4914466b2dae60 \
+            python -m pytest --noconftest -o addopts='' .github/tests/test_refactor_guardrails.py -q
       - name: Compare changed-file R1 evidence through NRA declarations
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}

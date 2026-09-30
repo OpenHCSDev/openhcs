@@ -26,7 +26,11 @@ from nominal_refactor_advisor.detectors import (
     RedundantTypeCheckDetector,
     UnmodeledRecordShapeDetector,
 )
-from nominal_refactor_advisor.json_reports import json_report_object
+from nominal_refactor_advisor.json_reports import (
+    SemanticRecord,
+    json_report_object,
+    json_report_property,
+)
 from nominal_refactor_advisor.semantic_descent import (
     PresentationProjectionKind,
     ResolvedDescentCertificate,
@@ -84,7 +88,7 @@ class SourceRevision:
 
 
 @dataclass(frozen=True, order=True)
-class R1Count:
+class R1Count(SemanticRecord):
     check: str
     file: str
     count: int
@@ -144,14 +148,14 @@ def scan_counts(
 
 
 @dataclass(frozen=True)
-class R1Comparison:
+class R1Comparison(SemanticRecord):
     base: str
     head: str
     changed: tuple[str, ...]
     before: tuple[R1Count, ...]
     after: tuple[R1Count, ...]
 
-    @property
+    @json_report_property()
     def increased(self) -> tuple[R1Count, ...]:
         baseline = {(item.check, item.file): item.count for item in self.before}
         return tuple(
@@ -215,9 +219,6 @@ def main() -> int:
         budget_seconds=args.budget_seconds,
     )
     print(json.dumps(json_report_object(result), indent=2))
-    if result.increased:
-        print("R1 candidate growth (requires owning-declaration correction):")
-        print(json.dumps(json_report_object(result.increased), indent=2))
     return int(bool(result.increased))
 
 
