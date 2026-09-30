@@ -118,12 +118,14 @@ the real inspection gateway, checks the second step's producer storage and typed
 main-flow edge, then executes the real orchestrator. Assertions cover both exact
 step-addressed image/label/measurement records, label subject, 16-pixel rows,
 saved CSV/ROI and checkpoint TIFF readback. Publication remains enabled. This
-test is **prepared, not yet executed**.
+test's first parent execution is recorded below; corrected full readback remains
+pending.
 
 Prepared focused command (not a result):
 
 ```sh
 /home/ts/code/projects/openhcs/.venv/bin/python -m pytest -q \
+  --basetemp /home/ts/wt/openhcs-chained-lineage-edge-20260930/.artifacts/pytest-265-source-next \
   tests/unit/test_path_planner_materialization.py::test_compiled_source_edges_only_consume_relation_owned_main_flow \
   tests/unit/test_invocation_input_source_context_identity.py \
   tests/unit/test_artifact_input_edge_cardinality.py \
@@ -134,6 +136,29 @@ Prepared focused command (not a result):
 Run only in the authorized native-built source tree with verified submodule
 `PYTHONPATH`, bounded threads, nonblocking validation lock and fresh resource
 guard. Parent currently has next-start authority; this worker remains source-only.
+Use a fresh persistent owned basetemp for each future attempt; do not overwrite
+the failed run's outputs/receipts.
+
+### First integrated run and test query correction
+
+Parent's integrated `23e082` run completed in 5.96s: six unit controls passed,
+and the actual compiler plus both-step orchestrator completed successfully.
+The integration test then failed at its own readback query, passing invocation
+key `default` to a compiled `CHANNEL` output scope containing `1`. Preserve
+`/home/ts/wt/openhcs-issue-batch-20260929/parent-265-chained-20260930.xml` unchanged.
+This is not a second-step execution failure; the output authority correctly
+rejected the test's mismatched coordinate.
+
+The test now uses `plan.group_scope().select_runtime_key(invocation.key.group_key)`.
+That existing owner selects the sole compiled static key, preserves an ungrouped
+output's absent coordinate, and rejects a genuinely mismatched multi-key request.
+No production code, scope guard, assertion or hardcoded channel correction.
+Actual extracted `ComponentGroupScope` declaration execution passed five group
+projections (including a static channel other than `1`) and one fail-closed
+multi-key mismatch; corrected test syntax and `git diff --check` pass. This is
+source-only verification of the correction, not a corrected real readback pass.
+Parent owns the full native MCP run on unchanged production; await its receipts
+and the corrected full readback rerun before claiming acceptance.
 
 The unchanged base lacks Socrates' pending #264 publication repair. A full
 publication journey may reach that separate boundary before reaching the new
