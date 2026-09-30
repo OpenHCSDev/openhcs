@@ -19,7 +19,6 @@ from openhcs.constants.constants import GroupBy, MemoryType, VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
-    ImagePayloadSliceProjector,
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts import (
@@ -54,6 +53,7 @@ from openhcs.core.runtime_batch_contracts import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
+    ImagePayloadSliceProjector,
     image_intensity_scale_for_dtype,
     image_payload_data,
     image_payload_mask,

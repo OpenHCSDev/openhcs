@@ -23,7 +23,6 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
     ImagePayloadBundleContext,
     ImagePayloadExecutionMode,
-    ImagePayloadSliceProjector,
     aligned_image_stack_kwargs,
     compose_aligned_image_payload,
     pack_aligned_image_outputs,
@@ -88,6 +87,7 @@ from openhcs.core.runtime_artifact_queries import (
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_image_values import (
+    ImagePayloadSliceProjector,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,
