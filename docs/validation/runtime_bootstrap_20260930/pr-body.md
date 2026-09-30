@@ -12,7 +12,7 @@ exclusive startup/process identity, and [metaclass-registry1](https://github.com
 non-creating cache path projection at448cdf0. Exact gitlinks are committed.
 Parent remains integration/install/live owner; frozen source/skill/runtime untouched.
 
-Current source evidence: **136 passed, 2 actual MCP cases deselected, 10.64s, exit0**,
+Earlier source evidence: **136 passed, 2 actual MCP cases deselected, 10.64s, exit0**,
 whole process14.18s/432464KiB RSS. Dependency rollback/close shard:45 passed,
 0.40s, process3.68s/362564KiB RSS. Earlier123-pass and fixture failures retained.
 Verified source imports and focused nested handle/path/foreign/uncertainty/native
@@ -116,6 +116,32 @@ full class decomposition or R1/all-detector NRA. Earlier failed receipts retaine
 No native allocation under criticalswap16.3, no dependency-pin/ACK/viewer changes.
 [Exact owner decisions, tests, ratchet and limits](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/owner-factoring-checkpoint.md).
 
+### Paired native ownership correction and current source integration
+
+Normally integrated OpenHCS main4a9c9b3e at0ac6157e7. Paired native source
+implementation4434b11 normally merged ACK main3374aa8; published native receipt
+head2b3d821. Existing TransportEndpoint owns pair locks/admission/publication/
+provisional rollback, used by startup, ordinary connect and owned close. Existing
+shutdown operation owns one dispatch plus completion; existing mode owns close
+admission; discovery uses existing endpoint typed ping/projection. Deleted
+client procedures, no new size-only helper/mixin/store/codec/launcher.
+
+**181 paired source testsPASS5.00s**, process5.63s/257380KiB/exit0,0skips/deselections;
+native-only81PASS0.44s/44776KiB. No native/MCP/JVM/GUI allocation. Original
+packaged WHOLE native-root structural comparison3374aa8->4434b11 **PASS186 metrics,
+zero positive deltas,4.42s/48180KiB/exit0**, client excess127->124 (-3).
+Parent's original +142 failure retained. Existing debt remains; no global NRA,
+R1/all-detector or live proof. OpenHCS5159-metric pass remains its earlier exact
+7d0ce5 baseline, not a freshly run4a9 comparison.
+
+Recorded parent gitlink remains28d9ed6; explicit PYTHONPATH exercised candidate
+child4434b11. Parent owns reviewed paired-pin cutover/install/live. Additional
+shared TransportEndpoint extension communicated directly to Dirac in
+[PR11](https://github.com/OpenHCSDev/ZMQRuntime/pull/11#issuecomment-5910632999);
+acknowledgement is NOT verified, no prior agreement claimed. No ACK-private/
+config/return-route/viewer edits. Full archive author unknown; S1 stays blocked.
+[Actual paired evidence and remaining gates](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/paired-native-owner-checkpoint.md).
+
 ### Exact owned close (parent-reported5993 lifecycle defect)
 
 Adds typed `openhcs_close_owned_runtime` on the existing RuntimeServerService
@@ -175,13 +201,14 @@ close233ms proved process exit. Driver/MCP/native absent,5965/6965 vacant,
 shared lock released; accepted=false. No fourth attempt or installed change.
 After terminal cleanup the diagnostic consumes the original resource owner's
 critical level, without copying thresholds. Focused tests20pass/1.45s/exit0.
-Original stopped receipt unchanged; live progression remains blocked by critical
-resource gate, not optional hosted CI.
+Original stopped receipt unchanged; a later warning/exit2 resource observation
+does not authorize another native allocation, and no attempt04 has started.
 [Attempt03 disposition](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/native-attempt03/checkpoint.md).
 [Preparation and review](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/projection-attempt03-preparation.md).
 
 Remaining: #257 successful full execution/publication and actual strict readback,
-additional cross-process uncertainty shard, then parent installed entrypoint
-acceptance. Prior failed god-class receipts remain; the original structural
-growth gate now passes as documented above, without a global NRA claim. References #251
+additional cross-process uncertainty shard, Dirac shared-surface acknowledgement,
+reviewed paired pin, then parent installed entrypoint acceptance. Prior failed
+god-class receipts remain; both original structural comparisons now pass at the
+documented exact sources/baselines, without a global NRA claim. References #251
 and #257; **not Closes** pending actual acceptance. Parent owns integration/live.
