@@ -1,3 +1,6 @@
+import os
+from dataclasses import replace
+
 import numpy as np
 import pytest
 import tifffile
@@ -192,6 +195,142 @@ def test_tiff_source_metadata_uses_declared_planar_sample_axis(tmp_path) -> None
     assert metadata.pixel_semantics.channel_axis == 0
     assert metadata.pixel_semantics.channel_count == 3
     assert metadata.pixel_semantics.validated_channel_axis(tifffile.imread(path)) == 0
+
+
+def test_tiff_header_reuse_is_shared_by_strict_optional_and_format_instances(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "shared.tif"
+    tifffile.imwrite(path, np.zeros((3, 4, 3), dtype=np.uint8), photometric="rgb")
+    original = tifffile.TiffFile
+    opened = []
+
+    def record_open(*args, **kwargs):
+        opened.append(args[0])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(tifffile, "TiffFile", record_open)
+    metadata = image_file_source_metadata(path)
+    for _ in range(60):
+        assert require_image_file_source_metadata(path) is metadata
+        assert TiffImageFileFormat().source_metadata(path) is metadata
+    assert metadata.pixel_semantics.channel_axis == -1
+    assert metadata.pixel_semantics.channel_count == 3
+    assert opened == [path]
+
+
+def test_header_reuse_detects_same_size_rewrite_with_restored_mtime(tmp_path) -> None:
+    path = tmp_path / "rewrite.tif"
+    tifffile.imwrite(
+        path,
+        np.zeros((4, 5), dtype=np.uint16),
+        extratags=((281, "H", 1, 4095, False),),
+    )
+    before_stat = path.stat()
+    before = require_image_file_source_metadata(path)
+    tifffile.imwrite(
+        path,
+        np.zeros((4, 5), dtype=np.uint16),
+        extratags=((281, "H", 1, 8191, False),),
+    )
+    os.utime(path, ns=(before_stat.st_atime_ns, before_stat.st_mtime_ns))
+    after_stat = path.stat()
+    assert after_stat.st_size == before_stat.st_size
+    assert after_stat.st_mtime_ns == before_stat.st_mtime_ns
+    assert after_stat.st_ctime_ns != before_stat.st_ctime_ns
+
+    after = require_image_file_source_metadata(path)
+    assert before.source_dtype == np.dtype(np.uint16)
+    assert before.intensity_scale == 4095.0
+    assert after.source_dtype == np.dtype(np.uint16)
+    assert after.intensity_scale == 8191.0
+    assert image_file_source_metadata(path) is after
+
+
+def test_header_reuse_does_not_hide_deletion_or_recreation(tmp_path) -> None:
+    path = tmp_path / "replace.tif"
+    tifffile.imwrite(path, np.zeros((4, 5), dtype=np.uint16))
+    assert require_image_file_source_metadata(path).source_dtype == np.dtype(np.uint16)
+    path.unlink()
+    assert image_file_source_metadata(path).source_dtype is None
+    assert TiffImageFileFormat().source_metadata(path).source_dtype is None
+    with pytest.raises(ValueError, match="Image source does not exist"):
+        require_image_file_source_metadata(path)
+    with pytest.raises(FileNotFoundError):
+        TiffImageFileFormat().require_source_metadata(path)
+
+    tifffile.imwrite(path, np.zeros((4, 5, 3), dtype=np.uint8), photometric="rgb")
+    recreated = require_image_file_source_metadata(path)
+    assert recreated.source_dtype == np.dtype(np.uint8)
+    assert recreated.pixel_semantics.channel_count == 3
+
+
+def test_header_reuse_retries_transient_failure_without_file_change(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "retry.tif"
+    tifffile.imwrite(path, np.zeros((4, 5), dtype=np.uint16))
+    original = TiffImageFileFormat._read_source_metadata.__func__
+    attempts = []
+
+    def transient_reader(cls, source_path):
+        attempts.append(source_path)
+        if len(attempts) == 1:
+            raise OSError("Transient header read failure")
+        return original(cls, source_path)
+
+    monkeypatch.setattr(
+        TiffImageFileFormat, "_read_source_metadata", classmethod(transient_reader)
+    )
+    assert image_file_source_metadata(path).source_dtype is None
+    recovered = require_image_file_source_metadata(path)
+    assert recovered.source_dtype == np.dtype(np.uint16)
+    assert image_file_source_metadata(path) is recovered
+    assert attempts == [path, path]
+
+
+def test_header_reuse_observes_changed_nominal_reader(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "reader.tif"
+    tifffile.imwrite(path, np.zeros((4, 5), dtype=np.uint16))
+    before = require_image_file_source_metadata(path)
+    original = TiffImageFileFormat._read_source_metadata.__func__
+
+    def changed_reader(cls, source_path):
+        return replace(original(cls, source_path), intensity_scale=4095.0)
+
+    monkeypatch.setattr(
+        TiffImageFileFormat, "_read_source_metadata", classmethod(changed_reader)
+    )
+    after = require_image_file_source_metadata(path)
+    assert before.intensity_scale == 65535.0
+    assert after.intensity_scale == 4095.0
+    assert image_file_source_metadata(path) is after
+
+
+@pytest.mark.parametrize("suffix", (".npy", ".tif", ".png"))
+def test_native_header_readers_use_shared_strict_revision_algorithm(tmp_path, suffix):
+    path = tmp_path / f"native{suffix}"
+    image = np.zeros((4, 5), dtype=np.uint8)
+    image_format = ImageFileFormat.require_path(path)
+    image_format.write(path, image)
+    assert (
+        image_format.require_source_metadata.__func__
+        is ImageFileFormat.require_source_metadata
+    )
+    metadata = require_image_file_source_metadata(path)
+    assert metadata.source_dtype == np.dtype(np.uint8)
+    assert metadata.intensity_scale == 255.0
+    assert metadata.pixel_semantics.channel_axis is None
+    assert image_file_source_metadata(path) is metadata
+
+
+def test_numpy_optional_header_read_preserves_strict_failure_policy(tmp_path) -> None:
+    path = tmp_path / "invalid.npy"
+    path.write_bytes(b"not a numpy array")
+    with pytest.raises(ValueError):
+        image_file_source_metadata(path)
+    with pytest.raises(ValueError):
+        require_image_file_source_metadata(path)
 
 
 def test_native_disk_serialization_unwraps_image_metadata_payload() -> None:
