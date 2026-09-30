@@ -5929,7 +5929,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         super().__init__(
             request.port,
             viewer_type=ViewerType.NAPARI.wire_value,
-            host="*",
+            host=request.process_launch.listen_host,
             log_file_path=request.log_file_path,
             data_socket_type=zmq.REP,
             transport_mode=request.transport_mode,
@@ -6268,6 +6268,7 @@ def run_napari_viewer_process(
     transport_mode: TransportMode = TransportMode.IPC,
     scope_accent_color: str | None = None,
     font_dpi: int | None = None,
+    listen_host: str = "127.0.0.1",
 ) -> None:
     """
     Napari viewer process entry point. Runs in a separate process.
@@ -6281,6 +6282,7 @@ def run_napari_viewer_process(
         transport_mode: ZMQ transport mode (IPC or TCP)
         scope_accent_color: Exact UI-owned scope accent used to frame this window
         font_dpi: Explicit Qt font DPI applied before viewer construction
+        listen_host: Explicit TCP bind interface; defaults to local-only
     """
     import polystore
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
@@ -6299,7 +6301,10 @@ def run_napari_viewer_process(
             replace_layers=replace_layers,
             log_file_path=log_file_path,
             transport_mode=transport_mode,
-            process_launch=ViewerProcessLaunchConfig(qt_font_dpi=font_dpi),
+            process_launch=ViewerProcessLaunchConfig(
+                qt_font_dpi=font_dpi,
+                listen_host=listen_host,
+            ),
         )
 
         # Create ZMQ server instance (inherits from ZMQServer ABC)

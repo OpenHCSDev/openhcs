@@ -1,0 +1,169 @@
+{
+  "subdirectories": {
+    ".": {
+      "microscope_handler_name": "source_bindings",
+      "source_filename_parser_name": "SourceSchemaFilenameParser",
+      "grid_dimensions": [],
+      "pixel_size": 1,
+      "image_files": [
+        "A01_s001_w1_z001_t001.tif",
+        "A01_s001_w2_z002_t001.tif"
+      ],
+      "sites": {
+        "1": null
+      },
+      "channels": {
+        "1": null,
+        "2": null
+      },
+      "z_indexes": {
+        "1": null,
+        "2": null
+      },
+      "timepoints": {
+        "1": null
+      },
+      "wells": {
+        "A01": null
+      },
+      "available_backends": {
+        "disk": true
+      },
+      "workspace_mapping": {
+        "A01_s001_w1_z001_t001.tif": {
+          "backend": "disk",
+          "backend_address": "synthetic-channel1.tif",
+          "source_axis_indices": []
+        },
+        "A01_s001_w2_z002_t001.tif": {
+          "backend": "disk",
+          "backend_address": "synthetic-channel2.tif",
+          "source_axis_indices": []
+        }
+      },
+      "source_metadata": {
+        "A01_s001_w1_z001_t001.tif": {
+          "site": "1",
+          "channel": "1",
+          "z_index": "1",
+          "timepoint": "1",
+          "well": "A01"
+        },
+        "A01_s001_w2_z002_t001.tif": {
+          "site": "1",
+          "channel": "2",
+          "z_index": "2",
+          "timepoint": "1",
+          "well": "A01"
+        }
+      },
+      "source_projection": [
+        {
+          "virtual_path": "A01_s001_w1_z001_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            "well": "A01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "synthetic-channel1.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "image_metadata": {
+            "source_voxel_spacing": {
+              "values_zyx": [
+                2.0,
+                3.0
+              ],
+              "unit": "relative"
+            },
+            "source_spatial_domain": {
+              "origin_yx": [
+                7,
+                11
+              ],
+              "source_shape_yx": [
+                80,
+                100
+              ],
+              "fill_value": 0,
+              "value_name": "Dense array"
+            },
+            "source_provenance": {
+              "source_path": null,
+              "source_component_metadata": null,
+              "source_image_provenance_planes": [],
+              "source_image_names": []
+            },
+            "intensity_scale": 65535.0,
+            "source_dtype": "uint16",
+            "unit_interval_intensity": null,
+            "source_plane_intensity_scales": [],
+            "source_plane_dtypes": [],
+            "physical_border_edges_yx": null,
+            "mask_defines_border": null,
+            "source_channel_axis": null,
+            "plane_axis": null
+          }
+        },
+        {
+          "virtual_path": "A01_s001_w2_z002_t001.tif",
+          "address": {
+            "site": "1",
+            "channel": "2",
+            "z_index": "2",
+            "timepoint": "1",
+            "well": "A01"
+          },
+          "ref": {
+            "backend": "disk",
+            "backend_address": "synthetic-channel2.tif",
+            "source_axis_indices": []
+          },
+          "projection_role": "primary_plane",
+          "image_metadata": {
+            "source_voxel_spacing": {
+              "values_zyx": [
+                2.0,
+                3.0
+              ],
+              "unit": "relative"
+            },
+            "source_spatial_domain": {
+              "origin_yx": [
+                7,
+                11
+              ],
+              "source_shape_yx": [
+                80,
+                100
+              ],
+              "fill_value": 0,
+              "value_name": "Dense array"
+            },
+            "source_provenance": {
+              "source_path": null,
+              "source_component_metadata": null,
+              "source_image_provenance_planes": [],
+              "source_image_names": []
+            },
+            "intensity_scale": 65535.0,
+            "source_dtype": "uint16",
+            "unit_interval_intensity": null,
+            "source_plane_intensity_scales": [],
+            "source_plane_dtypes": [],
+            "physical_border_edges_yx": null,
+            "mask_defines_border": null,
+            "source_channel_axis": null,
+            "plane_axis": null
+          }
+        }
+      ],
+      "main": true
+    }
+  }
+}
