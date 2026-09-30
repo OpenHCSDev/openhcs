@@ -1,0 +1,15 @@
+{
+  "base_revision": "94070f5f4",
+  "design": "control/candidate/candidate/control; empty independent cold caches and new process on the same cache for warm; no concurrent tests/builds/audits",
+  "scope": "Four declared public processing preparations; total_seconds excludes imports, process_wall_seconds includes interpreter/import/preparation/exit; native selection precompiled at package build",
+  "source_hashes": {
+    "intensity.py": {
+      "control": "492d59ee13c487e160bda05515ad1ea050e3548cae9c539c6a179d661c67a6a2",
+      "candidate": "a778ef890108a5461a6a89f5300f5a1090a3924f178078cf2cddf874780c6263"
+    },
+    "intensity_object_quantiles_numba.py": {
+      "control": "f2cabccad8ee096b2b07f0a453ad558ad4d87eff42ae94c9f50b6386f1334ac9",
+      "candidate": "4ada5d886905e23d71bdc531600345dc96e258aba2ed9b60f831ea6e3d9b647c"
+    }
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "fixtures": 73,
+  "leaf_first_compile_seconds": 0.7766092419624329,
+  "production_records": [
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_001_3476384542898058.npz",
+      "objects": 900,
+      "pixels": 2722500,
+      "input_sha256": "2c45fe9b0dd333430db4f8c151834b015c6236028dfa8e74bd900dd0fe12caff",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.5751823023892939,
+      "samples": {
+        "control": [
+          0.0998358060605824,
+          0.09963363595306873,
+          0.09982143016532063,
+          0.09962507989257574
+        ],
+        "candidate": [
+          0.11370951822027564,
+          0.11354710115119815,
+          0.11345065012574196,
+          0.11421628203243017
+        ]
+      },
+      "medians": {
+        "control": 0.09972753305919468,
+        "candidate": 0.1136283096857369
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_002_3476385375160031.npz",
+      "objects": 900,
+      "pixels": 2722500,
+      "input_sha256": "79d408ae718699204daf0affe3922b5a4d2684f0e4e2684a10c4f25fd9321ca0",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.06602034717798233,
+      "samples": {
+        "control": [
+          0.052919451147317886,
+          0.05291958199813962,
+          0.05297091929242015,
+          0.052981358021497726
+        ],
+        "candidate": [
+          0.06558725098147988,
+          0.06578926090151072,
+          0.06617977702990174,
+          0.0655153258703649
+        ]
+      },
+      "medians": {
+        "control": 0.052945250645279884,
+        "candidate": 0.0656882559414953
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_003_3476401974979864.npz",
+      "objects": 887,
+      "pixels": 2722500,
+      "input_sha256": "ecd0c5b07503664f8614d7c97d7359a81659e41a6f7151e7796c1d15f5eb6d8d",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.017877941951155663,
+      "samples": {
+        "control": [
+          0.01693035662174225,
+          0.016917051747441292,
+          0.016923263669013977,
+          0.017258916050195694
+        ],
+        "candidate": [
+          0.01765007385984063,
+          0.017622461076825857,
+          0.01805959502235055,
+          0.01777909602969885
+        ]
+      },
+      "medians": {
+        "control": 0.016926810145378113,
+        "candidate": 0.01771458494476974
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_004_3476402798707457.npz",
+      "objects": 256,
+      "pixels": 2722500,
+      "input_sha256": "8ca0b6de83425a22eb4450bda57658a0dfb25d73d9f853d597417fd6430636af",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.0060668569058179855,
+      "samples": {
+        "control": [
+          0.0058203223161399364,
+          0.006270649842917919,
+          0.006037852261215448,
+          0.006152929272502661
+        ],
+        "candidate": [
+          0.006081264000386,
+          0.006220134906470776,
+          0.006267725024372339,
+          0.006335793994367123
+        ]
+      },
+      "medians": {
+        "control": 0.0060953907668590546,
+        "candidate": 0.006243929965421557
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_005_3476403144862733.npz",
+      "objects": 887,
+      "pixels": 2722500,
+      "input_sha256": "bd831aa59c37a49b545cf5559fe6ae5ef5cacedb424a7287fd614117e518ca30",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.0403532637283206,
+      "samples": {
+        "control": [
+          0.03628843789920211,
+          0.03623162116855383,
+          0.036254182923585176,
+          0.0363125829026103
+        ],
+        "candidate": [
+          0.040209381841123104,
+          0.04014846822246909,
+          0.040130725130438805,
+          0.04013564297929406
+        ]
+      },
+      "medians": {
+        "control": 0.03627131041139364,
+        "candidate": 0.04014205560088158
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_006_3476403697380220.npz",
+      "objects": 256,
+      "pixels": 2722500,
+      "input_sha256": "20faeb473a611dc783f00ad98b2bbbd67b01f72f1e1311cacd374b16cf30a900",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.012396337930113077,
+      "samples": {
+        "control": [
+          0.01137005491182208,
+          0.011328225955367088,
+          0.011392808053642511,
+          0.01144140912219882
+        ],
+        "candidate": [
+          0.012448756024241447,
+          0.012376250233501196,
+          0.012371500954031944,
+          0.012363255955278873
+        ]
+      },
+      "medians": {
+        "control": 0.011381431482732296,
+        "candidate": 0.01237387559376657
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_007_3476403954759857.npz",
+      "objects": 887,
+      "pixels": 2722500,
+      "input_sha256": "adaf87ec567b33ba7ef957b65fc2036c2c765510dd9f1c9fcbd83d1595e15219",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.015373574569821358,
+      "samples": {
+        "control": [
+          0.01448878925293684,
+          0.014492816757410765,
+          0.014521871693432331,
+          0.0148774110712111
+        ],
+        "candidate": [
+          0.015388925094157457,
+          0.015334051102399826,
+          0.016031363978981972,
+          0.015429672319442034
+        ]
+      },
+      "medians": {
+        "control": 0.014507344225421548,
+        "candidate": 0.015409298706799746
+      }
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_008_3476404425344910.npz",
+      "objects": 256,
+      "pixels": 2722500,
+      "input_sha256": "1202655b073f2e453e1439341880d9d0c9a99b7283478c8a5b96df4780d3cebe",
+      "outputs_exact": true,
+      "candidate_first_call_seconds": 0.005422784015536308,
+      "samples": {
+        "control": [
+          0.0051927510648965836,
+          0.005172071047127247,
+          0.005236954428255558,
+          0.005172451958060265
+        ],
+        "candidate": [
+          0.005364634096622467,
+          0.005338835995644331,
+          0.00536872074007988,
+          0.0053534428589046
+        ]
+      },
+      "medians": {
+        "control": 0.005182601511478424,
+        "candidate": 0.005359038477763534
+      }
+    }
+  ]
+}

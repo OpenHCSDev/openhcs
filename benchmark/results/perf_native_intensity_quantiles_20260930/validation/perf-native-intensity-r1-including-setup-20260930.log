@@ -1,0 +1,26 @@
+R1 642821c3c9350a5b28ec1cdc51dcbbad3f8faafb: NRA cache=miss, projections=2996, prepare=50.175s, analysis=3.058s
+R1 13d055130ab9e100a29f311e2563f47526e979aa: NRA cache=miss, projections=2996, prepare=49.503s, analysis=3.059s
+{
+  "base": "642821c3c9350a5b28ec1cdc51dcbbad3f8faafb",
+  "head": "13d055130ab9e100a29f311e2563f47526e979aa",
+  "changed": [
+    "openhcs/processing/backends/cellprofiler/intensity.py",
+    "openhcs/processing/backends/cellprofiler/intensity_object_quantiles_numba.py",
+    "setup.py"
+  ],
+  "before": [
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/intensity.py",
+      "count": 1
+    }
+  ],
+  "after": [
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/intensity.py",
+      "count": 1
+    }
+  ],
+  "increased": []
+}

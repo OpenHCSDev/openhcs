@@ -1,0 +1,36 @@
+{
+  "original_scope": {
+    "common_revision": "642821c3c",
+    "candidate_revision": "native-production-after-main-sync",
+    "source_hashes": {
+      "intensity.py": {
+        "candidate": "a778ef890108a5461a6a89f5300f5a1090a3924f178078cf2cddf874780c6263",
+        "control": "492d59ee13c487e160bda05515ad1ea050e3548cae9c539c6a179d661c67a6a2"
+      },
+      "intensity_object_quantiles_numba.py": {
+        "candidate": "4ada5d886905e23d71bdc531600345dc96e258aba2ed9b60f831ea6e3d9b647c",
+        "control": "f2cabccad8ee096b2b07f0a453ad558ad4d87eff42ae94c9f50b6386f1334ac9"
+      }
+    },
+    "design": "control/candidate/candidate/control; declared public preparation before fresh-server runs; no concurrent scans/tests/compilation",
+    "mode": "16w_4c",
+    "env": {
+      "OPENHCS_CPU_ONLY": "true",
+      "OPENHCS_SUBPROCESS_NO_GPU": "1",
+      "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+      "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+    }
+  },
+  "verified_committed_sources": {
+    "intensity.py": {
+      "control": "492d59ee13c487e160bda05515ad1ea050e3548cae9c539c6a179d661c67a6a2",
+      "candidate": "a778ef890108a5461a6a89f5300f5a1090a3924f178078cf2cddf874780c6263"
+    },
+    "intensity_object_quantiles_numba.py": {
+      "control": "f2cabccad8ee096b2b07f0a453ad558ad4d87eff42ae94c9f50b6386f1334ac9",
+      "candidate": "4ada5d886905e23d71bdc531600345dc96e258aba2ed9b60f831ea6e3d9b647c"
+    }
+  },
+  "candidate_revision": "13d055130",
+  "common_native_build_policy": "Native granularity/header/compiler policy is shared by both variants; A/B isolates the intensity consumer and selector. Native safety and old-export agreement are separate gates."
+}

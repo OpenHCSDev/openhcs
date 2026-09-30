@@ -1,0 +1,14 @@
+..........................                                               [100%]
+=============================== warnings summary ===============================
+../nominal-refactor-advisor-audit-20260929/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1464
+  /home/ts/code/projects/nominal-refactor-advisor-audit-20260929/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../nominal-refactor-advisor-audit-20260929/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1464
+  /home/ts/code/projects/nominal-refactor-advisor-audit-20260929/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+26 passed, 2 warnings in 13.07s

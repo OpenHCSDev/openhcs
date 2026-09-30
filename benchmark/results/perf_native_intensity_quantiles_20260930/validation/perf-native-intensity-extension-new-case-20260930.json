@@ -1,0 +1,25 @@
+{
+  "before": [
+    "openhcs.processing.backends.cellprofiler._granularity_native",
+    "openhcs.processing.backends.cellprofiler._intensity_native",
+    "openhcs.core._tabular_native"
+  ],
+  "after": [
+    "openhcs.processing.backends.cellprofiler._granularity_native",
+    "openhcs.processing.backends.cellprofiler._intensity_native",
+    "openhcs.core._tabular_native",
+    "openhcs.core._maintenance_probe_native"
+  ],
+  "probe_sources": [
+    "openhcs/core/_maintenance_probe_native.cpp"
+  ],
+  "probe_compiler_args": [
+    "-O3",
+    "-ffp-contract=off"
+  ],
+  "shared_header": [
+    "openhcs/core/native_array_buffer.hpp"
+  ],
+  "consumer_roster_edits": 0,
+  "scope": "In-memory new concrete declaration derives its compilation target from the existing parent; no probe module compiled or retained"
+}

@@ -1,0 +1,7 @@
+{
+  "import_root": "/tmp/openhcs-native-intensity-installed-20260930",
+  "child_arguments": [
+    "-c",
+    "import runpy, sys; sys.path.insert(0, '/tmp/openhcs-native-intensity-installed-20260930'); runpy.run_module('openhcs.runtime.zmq_execution_server_launcher', run_name='__main__', alter_sys=True)"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "installed_target": "/tmp/openhcs-native-intensity-installed-20260930",
+  "module_paths": {
+    "openhcs.processing.backends.cellprofiler.intensity_object_quantiles_numba": "/tmp/openhcs-native-intensity-installed-20260930/openhcs/processing/backends/cellprofiler/intensity_object_quantiles_numba.py",
+    "openhcs.processing.backends.cellprofiler._intensity_native": "/tmp/openhcs-native-intensity-installed-20260930/openhcs/processing/backends/cellprofiler/_intensity_native.abi3.so",
+    "openhcs.processing.backends.cellprofiler._granularity_native": "/tmp/openhcs-native-intensity-installed-20260930/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so",
+    "openhcs.core._tabular_native": "/tmp/openhcs-native-intensity-installed-20260930/openhcs/core/_tabular_native.abi3.so"
+  },
+  "public_preparations": [
+    "measure_object_size_shape",
+    "measure_object_intensity",
+    "measure_object_intensity_distribution",
+    "correct_illumination_calculate"
+  ],
+  "production_inputs": [
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_001_3476384542898058.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_002_3476385375160031.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_003_3476401974979864.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_004_3476402798707457.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_005_3476403144862733.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_006_3476403697380220.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_007_3476403954759857.npz",
+      "outputs_exact": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-intensity-input-artifacts-20260929/intensity_max_positions_008_3476404425344910.npz",
+      "outputs_exact": true
+    }
+  ],
+  "scope": "Installed wheel imports outside checkout; explicit target before ordinary dependencies; immutable main reference imported only for numerical comparison; no performance claim"
+}

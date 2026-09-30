@@ -1,0 +1,14 @@
+{
+  "source_commit": "13d055130ab9e100a29f311e2563f47526e979aa",
+  "sdist_sha256": "bbf45644564622397a95c85438e090071f1548c67e9d60ea4c341ee9ec5c6b58",
+  "wheel_sha256": "d1ff8b601da780876fae45c948c46a3a4c767dc85e864d402baefb25444e9b3c",
+  "sdist_header": [
+    "openhcs-0.8.6/openhcs/core/native_array_buffer.hpp"
+  ],
+  "wheel_extensions": [
+    "openhcs/core/_tabular_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_intensity_native.abi3.so"
+  ],
+  "built_from_sdist": true
+}

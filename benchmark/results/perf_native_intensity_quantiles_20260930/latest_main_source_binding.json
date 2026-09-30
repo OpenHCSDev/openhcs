@@ -1,0 +1,16 @@
+{
+  "measured_commit": "13d055130",
+  "accepted_production_commit": "412f31f86",
+  "latest_main": "cd047c4cf",
+  "all_production_and_new_test_sources_identical": true,
+  "sha256": {
+    "openhcs/core/native_array_buffer.hpp": "6043253e2f2d3032851e0e6008e0a1ed2d3bcd5cdf3a98afc49b970eb875fe0d",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.cpp": "1e7bc529869ad301d4f3345434da123d002468e63fa669ad373c2c53343c2794",
+    "openhcs/processing/backends/cellprofiler/_intensity_native.cpp": "0cbc6ba721288f831a9c21bfce618855488648acfaf9898d6065e2ac7dff96ef",
+    "openhcs/processing/backends/cellprofiler/intensity.py": "a778ef890108a5461a6a89f5300f5a1090a3924f178078cf2cddf874780c6263",
+    "openhcs/processing/backends/cellprofiler/intensity_object_quantiles_numba.py": "4ada5d886905e23d71bdc531600345dc96e258aba2ed9b60f831ea6e3d9b647c",
+    "setup.py": "e4cb83135b402aa56cf39491c88537341c1812d604727a87260869a4706c12e7",
+    "tests/unit/test_cellprofiler_object_intensity_quantiles.py": "5e88df5ecdca4a1c42ea29c298aa6d4be5c7e49a1d3ee96ba6585a0d134a72cd"
+  },
+  "main_only_changes": "R1 scope policy, policy tests and documentation; no numeric/runtime/dependency source changes"
+}
