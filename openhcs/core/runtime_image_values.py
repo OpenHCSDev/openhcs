@@ -1770,13 +1770,6 @@ class _ImagePayloadMetadataComposer:
                 )
                 or {}
             )
-        extension = self.common_metadata_value(
-            "".join(Path(metadata.source_path).suffixes)
-            for metadata in metadata_values
-            if metadata.source_path is not None
-        )
-        if extension:
-            common_metadata.setdefault("extension", extension)
         if not common_metadata:
             return None
         return MappingProxyType(common_metadata)
