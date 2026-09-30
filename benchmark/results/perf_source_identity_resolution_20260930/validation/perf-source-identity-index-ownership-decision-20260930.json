@@ -1,0 +1,51 @@
+{
+  "base": "d3a99c0d46dea979bba3f9076da87386e49cbed3",
+  "task_authority": "User requests execution/datamovement optimization through nominal inheritance and shared algorithms; preserve exact source identity and CP numerical tolerances.",
+  "corpus": "Complete original ClassDef census: 702 production/setup modules, 5109 originals, 5097 projected, 12 OPEN. Selected source_binding_selection and all exact-members consumers.",
+  "required_answers": [
+    "Resolve all candidates for each provenance identity without losing component correlations or ordering.",
+    "Preserve ambiguity and missing-source errors.",
+    "Reuse the binding-compatible universe within one query; preserve lazy filtering for alternate expansion callers."
+  ],
+  "determining_owners": {
+    "lexical_path_identity": "source_path_identity.source_path_identity_key / source_paths_equal",
+    "path_and_metadata_projection": "SourcePatternResolutionContext",
+    "exact_identity_matching": "SourceIdentityResolutionContext, meaningful derived context; promote existing predicate, remove old copy.",
+    "binding_membership_and_set_expansion": "SourceBindingMatchedImageSet",
+    "binding_filtering": "SourceBindingCandidateMatcher",
+    "image_set_compatibility": "SourceImageSetIdentityCompatibility"
+  },
+  "production_consumers": [
+    "RuntimeAdapterRequest.source_artifact_payload -> SourceBindingMatchedImageSet.members_for_binding",
+    "SourceBindingMatchedImageSet.expand / _expand_anchor -> shared _expand_single_alias"
+  ],
+  "required_pairs": [
+    "SourceBindingMatchedImageSet inherits exact identity algorithm from SourceIdentityResolutionContext",
+    "batch identity lookup derives exact source/runtime path spellings from shared predicate helper",
+    "members_for_binding passes prefiltered universe into existing expansion algorithm"
+  ],
+  "forbidden_pairs": [
+    "independent component matches across separate metadata records",
+    "new persistent metadata or pixel cache",
+    "basename/filesystem/casefold identity shortcuts",
+    "independent expansion implementation"
+  ],
+  "counterevidence": [
+    "Source maps and parser can be mutable; persistent memoization would require an explicit lifecycle, so index is query-local.",
+    "Physical source path may represent multiple virtual slices: all matching candidates must survive.",
+    "Metadata-only identities require original full-candidate scan.",
+    "Source path chooses first mapped physical spelling; broadening to all mapped paths would change semantics."
+  ],
+  "OPEN": [
+    "12 original unprojected ClassDefs retained; no claimed ownership proof for these.",
+    "Authored batch/index implementation requires executed behavior tests, not syntax proof.",
+    "Finite replay gain 0.486097 -> 0.215857 seconds across three captured real 60-plane queries is not pipeline timing."
+  ],
+  "migration": [
+    "Create no-state derived resolution parent and change matched-set base",
+    "NRA declaration-selected promotion of existing exact identity predicate",
+    "Add owned query-local path index and share path derivation with predicate",
+    "Replace quadratic loop with batch lookup and reuse filtered universe in shared expansion"
+  ],
+  "DSL_limit": "Declaration-selected PromoteClassMembersToAncestorOperation preflight rejected Native class capture remains unproved for this decorated source family. Preserve that rejection; authored exact source move below is syntax/revision checked, not native proof. Actual constructors, MRO, pickle and production consumer require execution gates."
+}
