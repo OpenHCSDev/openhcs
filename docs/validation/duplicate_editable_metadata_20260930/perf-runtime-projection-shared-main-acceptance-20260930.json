@@ -1,0 +1,57 @@
+{
+  "source_commit": "12e6f3b25a659bba8d8f7d3f4709db991c97000d",
+  "source_module": "/home/ts/code/projects/openhcs/openhcs/core/aligned_image_payload.py",
+  "command": [
+    "/usr/bin/taskset",
+    "-c",
+    "5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs/benchmark/manifests/official30_portable_axis1.json",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "cp_tutorial_3d_monolayer",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-shared-main-acceptance-20260930"
+  ],
+  "rows": [
+    {
+      "case_name": "cp_tutorial_3d_monolayer",
+      "mode_name": "1w_1t",
+      "worker_count": "1",
+      "well_count": "1",
+      "compile_seconds": "1.6919646263122559",
+      "prepare_seconds": "0.0",
+      "execute_seconds": "10.71840786933899",
+      "total_seconds": "13.164379698690027",
+      "wells_per_second": "0.09329743859259114",
+      "successful_wells": "1",
+      "native_single_sample_execution_seconds": "",
+      "projected_native_execution_seconds": "",
+      "projected_execution_speedup": "",
+      "peak_memory_mb": "1670.4453125",
+      "status": "success",
+      "memory_limit_mb": "",
+      "error_message": "",
+      "execution_route": "ordinary-zmq-outcomes-v1",
+      "server_lifecycle": "reused-per-sweep",
+      "run_input_sha256": "9d3b225b551c8729b2dedeef930f9ce82730980f7e6f7e355523618bd192e9cd"
+    }
+  ],
+  "cli_seconds_separate_from_pipeline": 126.4190752771683,
+  "fresh_kernel_cache": "/tmp/openhcs-runtime-projection-shared-main-fresh-cache-20260930",
+  "PYTHONPATH": "unset",
+  "exact_csv_count": 6,
+  "exact_label_image_count": 120,
+  "csv_sha256": {
+    "3d_monolayer_Cells.csv": "4d8c029000d5886e4cda889fd1c5f7f13ea31330ee34b1737feb190e2079b32d",
+    "3d_monolayer_Image.csv": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+    "3d_monolayer_Nuclei.csv": "2acbac3e2cfa9b62f17d1fccaf8b079a47076b0ca842f652324cb0acdf2b905c",
+    "3d_monolayer_downsizedNuclei.csv": "4b689ed9b94031f1ced06105b2617ccac539d60fece387450d2573695e0aef08",
+    "3d_monolayer_erodedDownsizedNuclei.csv": "9d640239186d1e243a251263f250761d8e0aacbd802952eda56d4ba3e4b758e0",
+    "3d_monolayer_erodedResizedNuclei.csv": "e49c8600995126ac6f9695896eaf5572567bace3a5872437f2b740ee73af308c"
+  },
+  "limits": "Shared editable main, fresh cache before mandatory server prewarm; preparation before readiness, fork workers; server startup/shutdown excluded from pipeline clocks. Distinct acceptance, not pooled with warm-cache ABBA. This first acceptance ran with duplicate 0.8.6/0.8.7 editable distribution metadata; scientific/source acceptance holds, but dependency-clean environment acceptance is not claimed. A corrected repeat follows normal uninstall/reinstall."
+}

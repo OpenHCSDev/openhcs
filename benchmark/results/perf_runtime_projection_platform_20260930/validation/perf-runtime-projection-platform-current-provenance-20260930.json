@@ -1,0 +1,39 @@
+{
+  "baseline": "d1c6ab72ca252ea93656eeaaf84d34b81abd8317",
+  "candidate": "c20b56b411778bdf3bf2909cae280f20e55f9977",
+  "openhcs_module": "/tmp/openhcs-runtime-projection-current-main-installed-20260930/openhcs/__init__.py",
+  "source_hashes_match": [
+    "openhcs/core/aligned_image_payload.py",
+    "openhcs/core/steps/function_runtime.py",
+    "openhcs/core/source_path_identity.py",
+    "openhcs/core/steps/function_output_identity.py",
+    "openhcs/core/steps/function_output_manifest.py",
+    "openhcs/core/source_binding_selection.py",
+    "openhcs/core/source_workspace_projection.py",
+    "openhcs/processing/materialization/core.py",
+    "openhcs/microscopes/microscope_base.py",
+    "openhcs/microscopes/microscope_interfaces.py",
+    "openhcs/core/viewer_streaming_service.py",
+    "openhcs/runtime/napari_viewer_server.py",
+    "openhcs/runtime/viewer_component_system.py"
+  ],
+  "wheel_sha256": "13e9e6d7b1f70c951a6c1ed51558272e6874d9651bd3b240751948cbf1b49df9",
+  "versions": {
+    "openhcs": "0.8.7",
+    "polystore": "0.3.0",
+    "zmqruntime": "0.3.0",
+    "pyqt-reactive": "0.3.25",
+    "metaclass-registry": "0.2.1"
+  },
+  "submodules": [
+    " b0004daf3223326ac78689ba7b2e68abc18ae298 external/ObjectState (v1.1.8)",
+    " dc3417392cef19083a907c8c9b88a15466f81df4 external/PolyStore (v0.2.19-17-gdc34173)",
+    " 409b1e0831f815fa9ef91d4ecc04989f9fbb89c5 external/arraybridge (v0.3.4-2-g409b1e0)",
+    " 448cdf07e0a0b513a9c9a8f67e896f601da11771 external/metaclass-registry (v0.2.1-1-g448cdf0)",
+    " 792b03413331fdf107e369c924c257a2f0b16126 external/pycodify (v0.1.3)",
+    " 3437d1c6fea00ef8bc022068726eb01a14221e45 external/pyqt-reactive (v0.3.24-2-g3437d1c)",
+    " 4e8f8bde5f750d9a50eacac80acd3806123addd8 external/python-introspect (v0.1.14-1-g4e8f8bd)",
+    " 9e11f6f2102c2083b3255520a65ccbbeb4144af3 external/zmqruntime (v0.2.24-30-g9e11f6f)"
+  ],
+  "nominal_inheritance_verified": true
+}

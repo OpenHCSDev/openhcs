@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import lru_cache
 from pathlib import Path
 from typing import ClassVar, Iterator, Sequence
 from weakref import WeakKeyDictionary
 
 from polystore.streaming.identity import StreamProducerIdentity
 
+from openhcs.core.source_path_identity import (
+    source_path_identity,
+    source_path_relative_to,
+)
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactType, ImageArtifactType
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
@@ -29,27 +32,6 @@ from openhcs.core.steps.function_output_identity import (
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-
-
-@lru_cache(maxsize=65536)
-def _cached_relative_output_path(output_path: str, output_dir: str) -> str:
-    """Return output path relative to a step output directory."""
-
-    return str(Path(output_path).relative_to(Path(output_dir)))
-
-
-@lru_cache(maxsize=65536)
-def _cached_posix_path(path: str) -> str:
-    """Return normalized POSIX spelling for manifest path matching."""
-
-    return Path(path).as_posix()
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_name(path: str) -> str:
-    """Return filename component for manifest path matching."""
-
-    return Path(path).name
 
 
 @dataclass(frozen=True, slots=True)
@@ -253,8 +235,8 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             source=identity.source,
             filename_component_values=identity.filename_component_values,
             filename_qualifier=identity.filename_qualifier,
-            output_path=_cached_posix_path(str(path)),
-            relative_output_path=_cached_path_name(str(path)),
+            output_path=source_path_identity(str(path)).as_posix(),
+            relative_output_path=source_path_identity(str(path)).name,
         )
 
 
@@ -610,7 +592,7 @@ class StepOutputManifestStore:
 
     @staticmethod
     def relative_output_path(output_path: str, output_dir: Path) -> str:
-        return _cached_relative_output_path(output_path, str(output_dir))
+        return source_path_relative_to(output_path, str(output_dir))
 
 
 _STEP_OUTPUT_MANIFESTS: WeakKeyDictionary[
@@ -643,8 +625,8 @@ class ProducedPathSet:
         tokens: set[str] = set()
         for record in records:
             for value in (record.relative_output_path, record.output_path):
-                tokens.add(_cached_posix_path(value))
-                tokens.add(_cached_path_name(value))
+                tokens.add(source_path_identity(value).as_posix())
+                tokens.add(source_path_identity(value).name)
             if record.filename_qualifier is not None:
                 tokens.add(
                     FunctionOutputPathAuthority.filename_for_identity(
@@ -704,7 +686,7 @@ class ProducedPathPatternSelector:
 
     @classmethod
     def from_pattern(cls, path: str) -> "ProducedPathPatternSelector":
-        path_text = _cached_posix_path(path)
+        path_text = source_path_identity(path).as_posix()
         return cls(path_text, PathPatternTemplateMatcher.from_pattern(path_text))
 
     def matches(self, path_set: ProducedPathSet) -> bool:

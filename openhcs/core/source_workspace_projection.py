@@ -9,6 +9,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypeVar
 
+from openhcs.core.source_path_identity import source_path_identity, source_path_join
 from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -315,7 +316,7 @@ class VirtualWorkspaceSourceProjection:
         return tuple(
             virtual_path
             for virtual_path, source_ref in self.source_refs_by_virtual_path.items()
-            if not _cached_path_is_absolute(virtual_path)
+            if not source_path_identity(virtual_path).is_absolute()
             and source_path_identity_key(source_ref.backend_address)
             in source_path_identities
         )
@@ -430,7 +431,7 @@ class VirtualWorkspaceSourceProjection:
         relative_virtual_paths = tuple(
             virtual_path
             for virtual_path in self.source_refs_by_virtual_path
-            if not _cached_path_is_absolute(virtual_path)
+            if not source_path_identity(virtual_path).is_absolute()
         )
         if relative_virtual_paths:
             return relative_virtual_paths
@@ -496,10 +497,10 @@ class VirtualWorkspaceSourceProjection:
         return any(source_metadata_values_equal(value, axis_id) for value in values)
 
     def _loadable_virtual_path(self, virtual_path: str) -> str:
-        if _cached_path_is_absolute(virtual_path):
+        if source_path_identity(virtual_path).is_absolute():
             return virtual_path
         if self.workspace_root is not None:
-            return _cached_join_workspace_path(str(self.workspace_root), virtual_path)
+            return source_path_join(str(self.workspace_root), virtual_path)
         return virtual_path
 
 
@@ -557,20 +558,6 @@ class VirtualWorkspaceImagePayloadProjection:
             image_payload_data(payload),
             image_payload_mask(payload),
         )
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_is_absolute(path: str) -> bool:
-    """Return whether a virtual/source path string is absolute."""
-
-    return Path(path).is_absolute()
-
-
-@lru_cache(maxsize=65536)
-def _cached_join_workspace_path(workspace_root: str, virtual_path: str) -> str:
-    """Return loadable path for a workspace-root/virtual-path pair."""
-
-    return str(Path(workspace_root) / virtual_path)
 
 
 @lru_cache(maxsize=8192)

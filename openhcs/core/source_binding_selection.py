@@ -52,6 +52,7 @@ from openhcs.core.source_matching import (
     source_metadata_values_equal,
 )
 from openhcs.core.source_path_identity import (
+    source_path_identity,
     source_path_identity_key,
     source_paths_equal,
 )
@@ -74,20 +75,6 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
 
     path = Path(pattern_path)
     return tuple(dict.fromkeys((pattern_path, path.as_posix(), path.name)))
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_is_absolute(path: str) -> bool:
-    """Return whether a candidate virtual path is absolute."""
-
-    return Path(path).is_absolute()
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_name(path: str) -> str:
-    """Return the filename component for candidate matching."""
-
-    return Path(path).name
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,8 +293,8 @@ class SourcePatternResolutionContext:
         return tuple(
             virtual_path
             for virtual_path in self.source_paths_by_virtual_path
-            if not _cached_path_is_absolute(virtual_path)
-            and matcher.matches(_cached_path_name(virtual_path))
+            if not source_path_identity(virtual_path).is_absolute()
+            and matcher.matches(source_path_identity(virtual_path).name)
         )
 
     def candidate_metadata(

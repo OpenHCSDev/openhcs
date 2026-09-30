@@ -1,0 +1,22 @@
+{
+  "cwd": "/tmp",
+  "PYTHONPATH": "unset",
+  "pip_check_returncode": 0,
+  "source_module": "/home/ts/code/projects/openhcs/openhcs/core/aligned_image_payload.py",
+  "distributions": [
+    {
+      "version": "0.8.7",
+      "path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/openhcs-0.8.7.dist-info"
+    }
+  ],
+  "versions": {
+    "openhcs": "0.8.7",
+    "polystore": "0.3.0",
+    "zmqruntime": "0.3.0",
+    "pyqt-reactive": "0.3.25",
+    "metaclass-registry": "0.2.1",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "numba": "0.67.0"
+  }
+}
