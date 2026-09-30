@@ -1032,7 +1032,7 @@ def test_persistent_capability_preparation_uses_registry_owner(
     monkeypatch.setattr(
         RegistryService,
         "prepare_in_current_process",
-        lambda: events.append("prepare"),
+        lambda *, status_callback: events.append("prepare"),
     )
     FunctionCatalogPreparation.prepare_persistent_catalog()
 

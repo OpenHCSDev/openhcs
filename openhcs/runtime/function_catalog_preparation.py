@@ -28,8 +28,10 @@ class FunctionCatalogPreparation:
     """Own one lazily started endpoint catalog preparation operation."""
 
     @staticmethod
-    def prepare_persistent_catalog() -> None:
-        """Build registry-owned persistent caches in the dedicated child process."""
+    def prepare_persistent_catalog(
+        *, status_callback: Callable[[str], None] | None = None
+    ) -> None:
+        """Prepare registry caches under cooperative owned-process cancellation."""
 
         from openhcs.processing.backends.lib_registry.registry_service import (
             RegistryService,
@@ -40,7 +42,7 @@ class FunctionCatalogPreparation:
 
         previous_handler = signal.signal(signal.SIGTERM, cancel_preparation)
         try:
-            RegistryService.prepare_in_current_process()
+            RegistryService.prepare_in_current_process(status_callback=status_callback)
         finally:
             signal.signal(signal.SIGTERM, previous_handler)
 
@@ -99,7 +101,7 @@ class FunctionCatalogPreparation:
         if future is not None and not future.cancelled():
             if status_callback is not None:
                 status_callback(self.snapshot())
-            self._prepare(future, self._prepare_current_process)
+            self._prepare(future, self._prepare_current_process, status_callback)
         self.wait_until_ready(status_callback)
 
     def _prepare_current_process(self, *, status_callback, cancellation) -> None:
@@ -107,7 +109,7 @@ class FunctionCatalogPreparation:
         if cancellation.requested():
             raise CancelledError
         status_callback("Warming registered function kernels in the execution server")
-        self.prepare_persistent_catalog()
+        self.prepare_persistent_catalog(status_callback=status_callback)
         if cancellation.requested():
             raise CancelledError
         self._function_catalog.catalog(
@@ -233,11 +235,22 @@ class FunctionCatalogPreparation:
                 timestamp=time.time(),
             )
 
-    def _prepare(self, future: Future[None], prepare: Callable[..., None]) -> None:
+    def _prepare(
+        self,
+        future: Future[None],
+        prepare: Callable[..., None],
+        observer: Callable[[EndpointStartupStatus], None] | None = None,
+    ) -> None:
         """Complete this same future under either admitted preparation context."""
+
+        def report(message: str) -> None:
+            self._set_message(message)
+            if observer is not None:
+                observer(self.snapshot())
+
         try:
             prepare(
-                status_callback=self._set_message,
+                status_callback=report,
                 cancellation=self._cancellation,
             )
         except CancelledError:

@@ -28,7 +28,7 @@ def test_direct_server_start_warms_main_thread_before_bind_and_reuses_future(
 ):
     events = []
 
-    def warm():
+    def warm(*, status_callback):
         assert threading.current_thread() is threading.main_thread()
         events.append("warm")
 
@@ -55,7 +55,7 @@ def test_direct_server_start_warms_main_thread_before_bind_and_reuses_future(
 
 
 def test_startup_warm_failure_cannot_bind_or_report_catalogue_ready(monkeypatch):
-    def fail():
+    def fail(*, status_callback):
         raise RuntimeError("declared kernel failed")
 
     monkeypatch.setattr(
@@ -78,7 +78,7 @@ def test_cancelled_startup_cannot_warm_or_bind(monkeypatch):
     monkeypatch.setattr(
         FunctionCatalogPreparation,
         "prepare_persistent_catalog",
-        staticmethod(lambda: pytest.fail("cannot warm")),
+        staticmethod(lambda *, status_callback: pytest.fail("cannot warm")),
     )
     monkeypatch.setattr(
         ExecutionServer, "start", lambda self: pytest.fail("cannot bind")
@@ -97,10 +97,30 @@ def test_cancellation_during_warm_preserves_same_cancelled_future(monkeypatch):
     monkeypatch.setattr(
         FunctionCatalogPreparation,
         "prepare_persistent_catalog",
-        staticmethod(preparation._cancellation.cancel),
+        staticmethod(lambda *, status_callback: preparation._cancellation.cancel()),
     )
     with pytest.raises(CancelledError):
         preparation.prepare_before_serving()
     future = preparation.ensure_started()
     assert future is preparation._future and future.cancelled()
     assert preparation._thread is None
+
+
+def test_startup_observer_receives_live_kernel_progress_before_binding(monkeypatch):
+    preparation = FunctionCatalogPreparation(PreparedCatalog([]))
+    observed = []
+
+    def observe(status):
+        observed.append((status.message, preparation._future.done()))
+
+    def warm(*, status_callback):
+        status_callback("Prepared kernel cache worker 123")
+        assert observed[-1] == ("Prepared kernel cache worker 123", False)
+        status_callback("Prepared callable example.process")
+        assert observed[-1] == ("Prepared callable example.process", False)
+
+    monkeypatch.setattr(
+        FunctionCatalogPreparation, "prepare_persistent_catalog", staticmethod(warm)
+    )
+    preparation.prepare_before_serving(observe)
+    assert observed[-1] == ("Function catalog ready", True)
