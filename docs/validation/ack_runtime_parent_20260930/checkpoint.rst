@@ -125,3 +125,14 @@ No global installed environment, managed skill or frozen scientific artifacts
 changed. This is real source-qualified application/MCP/native/viewer evidence,
 not an ordinary installed-user route activation claim. Shared installation
 cutover remains a reviewed follow-up; optional hosted CI is not a merge gate.
+
+Dependency main publication independently verified through GitHub merge state
+AND git ls-remote: nativePR12 main85c8284f, PolyStore19 mainb493c8f5,
+metaclass1 main34c3097b. The tested exact source ancestor pins stay unchanged.
+Native final48173ed differs from tested9e11f6f only in delivery/report files.
+New current-main9c37025dd is normally merged; its only incoming change is the
+unrelated persisted-window test fixture correction from PR301, not runtime code.
+All own runtime processes are terminal. Runtime logs have been copied into the
+persistent receipt directory before retiring both owned scratch directories to
+recoverable desktop Trash; source binaries and original test/transcript/fixture/
+output/PNG receipts remain preserved. No foreign caches or installations removed.
