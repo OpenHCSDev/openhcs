@@ -1253,6 +1253,29 @@ def test_source_identity_batch_keeps_components_on_one_metadata_record():
     ) == ((), (candidate,))
 
 
+def test_source_identity_batch_preserves_template_source_path_projection():
+    virtual_paths = (
+        "A01_s001_w1_z001_t001.tif",
+        "A01_s001_w1_z002_t001.tif",
+    )
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=dict(
+            zip(virtual_paths, ("/source/first.tif", "/source/second.tif"))
+        ),
+    )
+    pattern = "A01_s001_w1_z{iii}_t001.tif"
+    identities = tuple(
+        SourceImageIdentity(path)
+        for path in ("/source/first.tif", *virtual_paths, "/source/second.tif")
+    )
+    # Existing template projection uses the first physical path and every
+    # matching virtual path; the index must not broaden physical membership.
+    assert context.matching_candidates_for_source_identities(
+        identities, (pattern,)
+    ) == ((pattern,), (pattern,), (pattern,), ())
+
+
 def test_source_identity_batch_avoids_unrelated_metadata_reads(monkeypatch):
     candidates = tuple(f"/source/image_{index}.tif" for index in range(180))
     context = SourceIdentityResolutionContext.from_sources(
