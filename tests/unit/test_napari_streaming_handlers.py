@@ -2393,8 +2393,8 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
     viewer.dims = Dims(
         ndim=4,
         range=((0, 3, 1), (0, 1, 1), (0, 19, 1), (0, 19, 1)),
-        current_step=(3, 0, 0, 0),
     )
+    viewer.dims.current_step = (3, 0, 0, 0)
     viewer.camera = Camera()
     layer = type(
         "Layer",
@@ -6131,8 +6131,8 @@ def test_native_image_intensity_command_preserves_data_and_navigation():
         ndim=4,
         axis_labels=("a", "b", "y", "x"),
         range=((0, 3, 1), (0, 1, 1), (0, 3, 1), (0, 7, 1)),
-        current_step=(3, 0, 0, 0),
     )
+    viewer.dims.current_step = (3, 0, 0, 0)
     viewer.camera = Camera()
     pixels = np.arange(32, dtype=np.uint16).reshape(4, 8)
     layer = Image(

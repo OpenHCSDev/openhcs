@@ -125,3 +125,30 @@ configuration/cache is published. Resources after closing the test viewer:
 17.5GiB available RAM,14.4GiB swap warning and20.3GiB home free. Removed only
 300KiB of older verified disposable build/diagnostic scratch; all source, saved
 history and durable receipts remain. No new scientific runtime or agent fleet.
+
+Current-main shipment checkpoint
+-------------------------------
+
+Normally merged performance main cad1ed2bd without conflicts. The earlier wider
+Napari failures are now diagnosed and fixed in test fixtures, not waived: state,
+navigation and native intensity tests supplied incomplete Dims/camera doubles.
+They now use Napari's own Dims and Camera models with representative ranges;
+the nonzero current_step is assigned through its real setter. All original
+assertions remain, plus explicit displayed-axis/order/canvas projections.
+Production state projection still trusts the original native contracts directly;
+no attribute-default fallback or extra dispatch was added (BOUND-7).
+
+The offscreen Qt run terminated at GLX context creation, with no complete XML.
+Its observation is retained separately from the original fake-QApplication
+abort. The actual native Qt tests succeed using existing isolated display :88
+and software GL. The coherent current-main installed-source shard passes all
+253 Napari/core/viewer/Fiji cases in12.77s, zero skips/deselections, with only
+two disabled pytest-asyncio configuration warnings. Durable result:
+parent ledger viewer-current-main-final-253-20260930.xml. Intermediate failed
+XMLs remain there too. No hosted CI wait or full-plan guard-pass claim.
+
+The earlier actual MCP launch/external-attach/state/bitmap/close journey proves
+the unchanged viewer implementation; it does not evaluate biological accuracy.
+Paired ZMQRuntime PR7 is now merged at2aa6d21c, code-identical to this reviewed
+2c68a114 pin. Retained H002 history and issue280 remain protected. The full ZIP
+refactors, reference boundaries and autonomous scientific acceptance stay open.
