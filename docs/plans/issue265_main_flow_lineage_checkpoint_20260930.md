@@ -82,13 +82,26 @@ No package/environment/installed-source changes.
 - AST caller inventory: one production caller and 26 unit/helper call sites
   identified. Production supplies `step_context.main_flow_artifacts`; no caller
   signatures changed. This is an inventory, not execution of all those callers.
+- Existing packaged `agent_comms.debt_ratchet` source at `dbd0965d`, invoked
+  read-only with `--root openhcs --base bd1ef8d11 --head 3c4805473`: exit 0.
+  It covers seven measure families, including the complete class inventory;
+  it predates C0's string-dispatch/type-switch measures at the newly published
+  workflow pin. This is not a claim that the full current R0 suite passed.
 
 These are focused source checks, **not** a complete NRA/R1 scan, native proof,
 pytest compiler/runtime pass, numerical parity or installed/live acceptance.
 Importing the planner for source pytest currently stops at missing own-worktree
 `openhcs.core._tabular_native`; no donor binary or installed-source fallback was
-used. Native build/tests await the parent's finite serialized slot. No native,
-MCP, JVM, GUI or surviving test handle exists for this worker.
+used. Parent reviewed `3c4805473` and integrated it into its own current-main plus
+PR262 `5c0` tree with native extensions built there. The own-worker missing-native
+blocker does not block that integration. Parent owns the finite unit/compiler/
+orchestrator then full dotted-source native MCP gate; results await actual
+receipts. No native, MCP, JVM, GUI or surviving test handle exists for this worker.
+
+Published draft: <https://github.com/OpenHCSDev/openhcs/pull/267>.
+Production/test source checkpoint: `3c4805473`. Later receipt-only updates do
+not change the source tested by the focused checks. All worker check/publish
+commands are terminal; no slot/lock ownership is retained by this worker.
 
 ## Prepared behavioral regressions and remaining acceptance
 
@@ -106,6 +119,21 @@ main-flow edge, then executes the real orchestrator. Assertions cover both exact
 step-addressed image/label/measurement records, label subject, 16-pixel rows,
 saved CSV/ROI and checkpoint TIFF readback. Publication remains enabled. This
 test is **prepared, not yet executed**.
+
+Prepared focused command (not a result):
+
+```sh
+/home/ts/code/projects/openhcs/.venv/bin/python -m pytest -q \
+  tests/unit/test_path_planner_materialization.py::test_compiled_source_edges_only_consume_relation_owned_main_flow \
+  tests/unit/test_invocation_input_source_context_identity.py \
+  tests/unit/test_artifact_input_edge_cardinality.py \
+  tests/unit/test_function_patterns.py \
+  tests/integration/test_chained_callable_lineage_journey.py
+```
+
+Run only in the authorized native-built source tree with verified submodule
+`PYTHONPATH`, bounded threads, nonblocking validation lock and fresh resource
+guard. Parent currently has next-start authority; this worker remains source-only.
 
 The unchanged base lacks Socrates' pending #264 publication repair. A full
 publication journey may reach that separate boundary before reaching the new
