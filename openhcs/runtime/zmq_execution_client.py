@@ -912,17 +912,20 @@ class ZMQExecutionClient(
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect(
-            operation_deadline=operation_deadline
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom function registration",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
         ):
-            raise RuntimeError("Failed to connect to execution server")
-        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = (
-            self._send_control_request(payload)
-            if operation_deadline is None
-            else self._send_control_request(
-                payload, timeout_ms=operation_deadline.remaining_milliseconds()
+            raise RuntimeError(
+                "Custom registration requires an existing execution endpoint."
             )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
         )
         return CustomFunctionRegistrationControlResponse.from_control_response(
             response
@@ -940,17 +943,20 @@ class ZMQExecutionClient(
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect(
-            operation_deadline=operation_deadline
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom registration destination",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
         ):
-            raise RuntimeError("Failed to connect to execution server")
-        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = (
-            self._send_control_request(payload)
-            if operation_deadline is None
-            else self._send_control_request(
-                payload, timeout_ms=operation_deadline.remaining_milliseconds()
+            raise RuntimeError(
+                "Registration destination requires an existing execution endpoint."
             )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
         )
         return (
             CustomFunctionRegistrationDestinationControlResponse.from_control_response(

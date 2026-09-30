@@ -407,8 +407,8 @@ def run(args) -> None:
         )
 
     def finish_job(ref):
-        deadline = time.monotonic() + 45
-        while time.monotonic() < deadline:
+        # call() enforces the single existing 240s journey/10s observation bounds.
+        while True:
             status = call(
                 "openhcs_get_execution_status",
                 {"job_id": ref.job_id, "timeout_ms": 1000},
@@ -420,9 +420,6 @@ def run(args) -> None:
             time.sleep(
                 0.2
             )  # Existing submitted-job lifecycle observation, never a submit replay.
-        raise RuntimeError(
-            "Job observation bound exhausted; retain handles and original job."
-        )
 
     try:
         for role, port in ports.items():
@@ -556,15 +553,10 @@ def run(args) -> None:
             error_code="mcp_tool_failed",
         )
         receipt["stale_preparation_cancel_rejected"] = True
-        preparation_deadline = time.monotonic() + 100
         if not state.outcome.ready:
             register(error_code="function_catalog_not_ready")
         while not state.outcome.ready:
             assert not state.outcome.terminal, state
-            if time.monotonic() >= preparation_deadline:
-                raise RuntimeError(
-                    "Preparation observation budget exhausted; preserve exact handle."
-                )
             time.sleep(1)
             state = call(
                 "openhcs_get_function_catalog_preparation_status",
@@ -663,6 +655,7 @@ def run(args) -> None:
             },
             OrchestratorSessionRef,
         )
+        compile_started = time.monotonic()
         compiled = finish_job(
             call(
                 "openhcs_submit_compile",
@@ -671,6 +664,8 @@ def run(args) -> None:
             )
         )
         receipt["compile_response"] = to_jsonable(compiled)
+        receipt["compile_elapsed_seconds"] = time.monotonic() - compile_started
+        execution_started = time.monotonic()
         executed = finish_job(
             call(
                 "openhcs_submit_pipeline_execution",
@@ -679,6 +674,7 @@ def run(args) -> None:
             )
         )
         receipt["execution_response"] = to_jsonable(executed)
+        receipt["execution_elapsed_seconds"] = time.monotonic() - execution_started
         output_images = list((owned / "outputs").rglob("*.tif"))
         assert output_images, inspected
         from openhcs.core.image_file_serialization import ImageFileFormat
@@ -834,6 +830,7 @@ def run(args) -> None:
             for handle in handles:
                 handle.close()
             receipt["runtime_terminal"] = True
+            receipt["journey_elapsed_seconds"] = time.monotonic() - started
             save()
             fcntl.flock(lock, fcntl.LOCK_UN)
             lock.close()

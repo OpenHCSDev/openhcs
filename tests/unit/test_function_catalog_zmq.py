@@ -6,10 +6,11 @@ import textwrap
 import threading
 import time
 from concurrent.futures import CancelledError, Future
+from contextlib import contextmanager
 from dataclasses import replace
 
 import pytest
-from zmqruntime import OperationCancellation
+from zmqruntime import OperationCancellation, OperationDeadline
 from zmqruntime.client import EndpointConnectionPolicy
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import ProcessIdentity
@@ -455,7 +456,8 @@ def test_registration_client_sends_mutation_once_even_if_pending_or_uncertain(
     observed = []
     result = CustomFunctionRegistrationResult(schema_version="openhcs.agent.v1")
 
-    def send(payload):
+    def send(payload, *, timeout_ms):
+        assert 0 < timeout_ms <= 5000
         observed.append(payload)
         if response_kind == "timeout":
             raise TimeoutError("postdispatch observation")
@@ -489,6 +491,116 @@ def test_registration_client_sends_mutation_once_even_if_pending_or_uncertain(
         ):
             client.register_custom_function(request)
     assert observed == [FunctionCatalogControlPayload.from_request(request).to_dict()]
+
+
+@pytest.mark.parametrize("operation", ("destination", "register"))
+@pytest.mark.parametrize("endpoint_state", ("absent", "unresponsive"))
+@pytest.mark.parametrize("explicit_deadline", (False, True))
+def test_registration_attach_only_preserves_missing_or_unresponsive_endpoint(
+    monkeypatch,
+    operation,
+    endpoint_state,
+    explicit_deadline,
+):
+    """Exercise native attach-only, not a parallel fake connection lifecycle."""
+    from zmqruntime.config import TransportMode
+
+    client = ZMQExecutionClient(port=22319, transport_mode=TransportMode.TCP)
+    effects, attach_timeouts = [], []
+
+    def forbidden(effect):
+        def fail(*_args, **_kwargs):
+            effects.append(effect)
+            pytest.fail(f"Registration must not {effect}")
+
+        return fail
+
+    @contextmanager
+    def unlocked(*_args, **_kwargs):
+        yield True
+
+    def unresponsive(timeout):
+        attach_timeouts.append(timeout)
+        return False
+
+    monkeypatch.setattr("zmqruntime.client.endpoint_startup_lock", unlocked)
+    monkeypatch.setattr(
+        client, "_is_port_in_use", lambda port: endpoint_state == "unresponsive"
+    )
+    monkeypatch.setattr(client, "_attach_existing_endpoint", unresponsive)
+    monkeypatch.setattr(client, "connect", forbidden("enter implicit startup"))
+    monkeypatch.setattr(client, "_spawn_server_process", forbidden("start a process"))
+    monkeypatch.setattr(client, "_kill_processes_on_port", forbidden("kill a process"))
+    monkeypatch.setattr(
+        client, "_send_control_request", forbidden("send a control/source request")
+    )
+    deadline = (
+        OperationDeadline.after_milliseconds(500, operation="controlled attach-only")
+        if explicit_deadline
+        else None
+    )
+    calls = {
+        "destination": lambda: client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(
+                function_name="boundary_probe"
+            ),
+            operation_deadline=deadline,
+        ),
+        "register": lambda: client.register_custom_function(
+            CustomFunctionRegistrationRequest(
+                source_code="never evaluated", persist=False
+            ),
+            operation_deadline=deadline,
+        ),
+    }
+    with pytest.raises(RuntimeError, match="existing execution endpoint"):
+        calls[operation]()
+    assert effects == []
+    if endpoint_state == "absent":
+        assert attach_timeouts == []
+    else:
+        assert len(attach_timeouts) == 1
+        assert 0 < attach_timeouts[0] <= (0.5 if explicit_deadline else 1.0)
+    assert not client.is_connected()
+
+
+@pytest.mark.parametrize("operation", ("destination", "register"))
+def test_registration_expired_deadline_prevents_attachment_and_send(
+    monkeypatch, operation
+):
+    client = ZMQExecutionClient(port=22319)
+    monkeypatch.setattr(
+        client, "connect", lambda **kwargs: pytest.fail("No implicit startup")
+    )
+    monkeypatch.setattr(
+        client,
+        "connect_existing",
+        lambda **kwargs: pytest.fail("Expired before attachment"),
+    )
+    monkeypatch.setattr(
+        client,
+        "_send_control_request",
+        lambda **kwargs: pytest.fail("Expired before dispatch"),
+    )
+    deadline = OperationDeadline(
+        operation="already expired", timeout_ms=1, expires_at=0
+    )
+    calls = {
+        "destination": lambda: client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(
+                function_name="boundary_probe"
+            ),
+            operation_deadline=deadline,
+        ),
+        "register": lambda: client.register_custom_function(
+            CustomFunctionRegistrationRequest(
+                source_code="never evaluated", persist=False
+            ),
+            operation_deadline=deadline,
+        ),
+    }
+    with pytest.raises(TimeoutError, match="already expired"):
+        calls[operation]()
 
 
 def test_catalog_client_applies_request_cancellation_to_endpoint_startup(

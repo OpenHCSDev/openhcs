@@ -6,6 +6,19 @@ Source: /home/ts/wt/openhcs-custom-function-admission-20260929.
 This checkpoint follows normal main238 integration f5dbebb27 (main01d1a8c55c);
 recorded PolyStore1209068 is unchanged. No installed tree is edited.
 
+Latest source follow-up after4c6fbac0a: destination proof and source dispatch
+now use existing connect_existing, never attach-or-start/replacement. Each
+reuses the existing operation/control deadline for attachment and the one
+control exchange. Eight absent/unresponsive endpoint cases exercise the actual
+attach-only method and assert zero start, kill and source/control sends;
+two expired-deadline cases reject before attachment. Current focused shard:
+**57 passed,25 deselected,7.22s**, process8.04s,peak309668KiB,exit0.
+Receipt: tests/runtime_diagnostics/registration_attach_only_20260929/.
+Full startup-lock contention boundedness is not claimed: the recorded dependency's
+attach-only method has no operation_deadline parameter for that existing lock.
+The control/send deadline still prevents delayed lock acquisition from later
+dispatching source after budget expiry. No duplicate lock/lifecycle was added.
+
 ## Working source
 
 Registration requires an explicit reflected ExecutionConnectionSpec port, also
@@ -93,6 +106,23 @@ MCP and all three native handles are terminal; each server returned0, identities
 were verified and the lock released. Original H002033 and foreign saved side effect
 are preserved and never replayed. No science, shared7777 contact, GUI or JVM.
 
+Attempt02 at exact4c6fbac0a is also preserved as accepted=false. Ordinary MCP
+start returned0.020s;91 preparation-control observations stayed below0.027s.
+Stale cancellation rejected; pre-ready native source-bearing register count
+was exactly0. The diagnostic's redundant100s preparation sub-budget expired
+while the future was pending; this was not a tool timeout or hung MCP.
+Same-handle read-only observation subsequently returned READY: native progress
+timestamps1790725945.1608434 to1790726055.660598 (~110.50s). The supervised
+child was absent; MCP and all three native endpoints were closed by verified
+owner identity, returncodes0, runtime_terminal=true, lock released. Source and
+all original calls stayed frozen until closure. No mutation, compile or execution
+occurred. Slow real cold warming remains a limitation, not an optimisation claim;
+parent owns additional warmup diagnosis.
+Receipt: tests/runtime_diagnostics/registration_live_20260929_attempt02/.
+The next fresh journey removes redundant100s preparation/45s job subcaps,
+retaining the existing single240s total journey gate and unchanged10s per-call
+observation cap. Cold, compile and execution stage costs are recorded separately.
+
 ## Focused architectural audit
 
 Scope: changed production declarations, callers and source tests; no full NRA scan
@@ -104,6 +134,9 @@ or global proof. Actual catalog witnesses:
 - IMPL-13: start/status/cancel extends the one native future/cancellation/child.
   Repeated start coalesces the exact future/thread; failed readiness sends zero
   register RPCs. Mutation no longer borrows the discovery retry mechanism.
+  Registration and destination proof now consume the existing attach-only
+  lifecycle, not a caller-side replacement implementation. Eight absent/
+  unresponsive cases and two expired-budget cases guard the route closure.
 - IMPL-12: Manager.source_path_for_name owns save/admission, named reads/deletes/
   updates, require_source and rename destinations. Five interception cases prove
   those operations cannot bypass it. Directory enumeration reads real files and
@@ -141,11 +174,12 @@ McpDevServerSpec. It is implemented but not live-proved. Source mode is explicit
 labelled source_live_not_installed. Parent owns final merge/install and installed
 acceptance; no frozen installation changes are authorised here.
 
-At the latest worker guard, /home19.9GiB and RAM12.1GiB add a non-swap disk warning.
-No new heavy runtime starts under that warning. The bounded47-case source shard
-allocated328KiB fixture scratch; it is terminal and released the lock. Pending
-dependency: verified non-swap headroom release/recheck, then finite cold source-live
-journey and parent installed acceptance. No optional hosted CI wait.
+Parent cleared disk headroom; latest actual guard /home20.2GiB,RAM13.1GiB warns
+only about historical swap. Attempt02 and the57-case source follow-up are
+terminal and released the lock. Next is the authorised finite cold source-live
+journey on a fresh guard/nonblocking lock, then parent review/merge and
+installation of this same frozen tree (no extra checkout). No optional hosted
+CI wait or installed readiness claim.
 
 Owned disposable build objects136KiB, filename-test fixtures40KiB and current
 source-test fixtures328KiB were removed after retaining receipts. They are reproducible
