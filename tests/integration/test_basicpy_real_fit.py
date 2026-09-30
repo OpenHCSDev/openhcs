@@ -3,38 +3,12 @@
 import numpy as np
 import pytest
 
-pytest.importorskip("basicpy", reason="requires reviewed paired BaSiCPy source")
+pytest.importorskip("basicpy", reason="requires the openhcs-basicpy distribution")
 
 from openhcs.processing.backends.enhance.basic_processor_jax import (
     basic_flatfield_correction_jax,
 )
-
-
-def shaded_observations(*, stationary_biology=False, volume=False):
-    """Synthetic acquisition only: no biological data, reference or downloaded image."""
-    size = 32
-    count = 24
-    yy, xx = np.mgrid[-1 : 1 : complex(size), -1 : 1 : complex(size)]
-    flatfield = 1.2 - 0.3 * (yy**2 + xx**2) + 0.1 * xx
-    flatfield /= flatfield.mean()
-    rng = np.random.default_rng(213)
-    observations = []
-    for index in range(count):
-        background = 3000 + 50 * index
-        if stationary_biology:
-            # A stationary, background-scaled biological pattern is fundamentally
-            # confounded with multiplicative shading, not a convergence failure.
-            biology = background * np.exp(-((xx - 0.2) ** 2 + (yy + 0.1) ** 2) / 0.09)
-        else:
-            cx, cy = rng.uniform(-0.8, 0.8, size=2)
-            biology = 5000 * np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / 0.008)
-        frame = (background + biology) * flatfield
-        observations.append(np.rint(frame).astype(np.uint16))
-    observations = np.stack(observations)
-    if volume:
-        observations = np.stack((observations, observations), axis=1)
-        flatfield = np.stack((flatfield, flatfield))
-    return observations, flatfield
+from tests.diagnostics.basicpy_observation_fixture import shaded_observations
 
 
 def run_fit(observations):

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import ast
-import re
 import tomllib
 import unittest
 from pathlib import Path
+
+from packaging.requirements import Requirement
 
 ROOT = Path(__file__).resolve().parents[1]
 WRAPPER = ROOT / "openhcs/processing/backends/enhance/basic_processor_jax.py"
@@ -24,6 +25,28 @@ class BasicPySourceTests(unittest.TestCase):
             if isinstance(node, ast.FunctionDef)
             and node.name == "basic_flatfield_correction_jax"
         )
+
+    def test_reviewed_fork_is_an_ordinary_project_dependency(self):
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
+        requirements = tuple(Requirement(value) for value in project["dependencies"])
+        [fork] = [value for value in requirements if value.name == "openhcs-basicpy"]
+        self.assertIsNone(fork.url)
+        self.assertIn("1.3.0", fork.specifier)
+        self.assertNotIn("2.0.0", fork.specifier)
+        self.assertIsNotNone(fork.marker)
+        for system, machine, admitted in (
+            ("Linux", "x86_64", True),
+            ("Windows", "AMD64", True),
+            ("Darwin", "arm64", True),
+            ("Darwin", "x86_64", False),
+        ):
+            with self.subTest(system=system, machine=machine):
+                self.assertEqual(
+                    fork.marker.evaluate(
+                        {"platform_system": system, "platform_machine": machine}
+                    ),
+                    admitted,
+                )
 
     def test_every_exposed_knob_reaches_real_model_owner(self):
         owner = next(
@@ -157,18 +180,7 @@ class BasicPySourceTests(unittest.TestCase):
             ["CORRECTED_OUTPUT", "FLATFIELD_OUTPUT", "DARKFIELD_OUTPUT"],
         )
 
-    def test_reviewed_git_pin_and_jax_owned_version_matching(self):
-        requirement = next(
-            line
-            for line in (ROOT / "requirements-basicpy.txt").read_text().splitlines()
-            if line and not line.startswith("#")
-        )
-        self.assertRegex(
-            requirement,
-            re.compile(
-                r"^BaSiCPy @ git\+https://github.com/OpenHCSDev/BaSiCPy.git@[0-9a-f]{40}$"
-            ),
-        )
+    def test_jax_owns_plugin_version_matching(self):
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
         for extra in ("gpu", "all"):
             jax_requirements = [
@@ -207,16 +219,14 @@ class BasicPySourceTests(unittest.TestCase):
             "dtype_config_default",
             {argument.arg for argument in wrapper.args.kwonlyargs},
         )
-        requirements = (ROOT / "requirements-basicpy.txt").read_text().splitlines()
-        self.assertTrue(
-            any(
-                re.fullmatch(
-                    r"arraybridge @ git\+https://github.com/OpenHCSDev/ArrayBridge.git@[0-9a-f]{40}",
-                    requirement,
-                )
-                for requirement in requirements
-            )
-        )
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
+        [arraybridge] = [
+            Requirement(value)
+            for value in project["dependencies"]
+            if Requirement(value).name == "arraybridge"
+        ]
+        self.assertIsNone(arraybridge.url)
+        self.assertIn("0.3.4", arraybridge.specifier)
 
 
 if __name__ == "__main__":

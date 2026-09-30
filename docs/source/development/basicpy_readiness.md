@@ -5,6 +5,15 @@ Python3.12 CPU fits, dtype behavior and field provenance checks passed. See the
 canonical [2026-09-30 receipt](../../../validation/basicpy_parent_numeric_20260930/checkpoint.rst).
 No install, compiled/MCP execution or biological acceptance is claimed.
 
+The current packaging change declares `openhcs-basicpy>=1.3.0,<1.4` in the
+ordinary project dependencies. It supplies the reviewed JAX fork under its
+existing `basicpy` Python API; upstream PyPI `basicpy` 2.x is not substituted.
+The separate source requirements file is removed. The paired fork release must
+be published and resolved before this dependency change can be merged or called
+installed. Linux, Windows and Apple Silicon receive it automatically; Intel
+macOS is excluded because modern JAX no longer supplies that platform's wheels.
+This does not assert that illumination correction is available on Intel macOS.
+
 The remaining text records the historical 2026-09-29 source-only checkpoint;
 its pending checks and owners must not be read as today's runtime state.
 Original backend/dependency owner: Linnaeus. Parent PR151 owns recipes/policy. Memory/
@@ -41,13 +50,10 @@ retained-history PR1; neither is merged or installed here.
 
 The paired [BaSiCPy draft](https://github.com/OpenHCSDev/BaSiCPy/pull/1) reuses
 Tristan's clean JAX prototype `ae2c647`, rather than PyPI 2.x's PyTorch API.
-`requirements-basicpy.txt` pins the reviewed fork commit. As with this project's
-existing source-only dependency files, no Git URL enters PyPI metadata. After
-review, install that file in the coordinator-selected **isolated** validation
-environment; do not run it against the active analysis venv. A published fork
-wheel/version and ordinary optional extra can replace the source pin only after
-actual import/fit acceptance and release review, not by adding an unavailable
-PyPI dependency now.
+The historical checkpoint used `requirements-basicpy.txt` to pin the reviewed
+fork commit; that file has now been removed in favor of the ordinary dependency
+described above. No Git URL enters PyPI metadata. The historical source-only
+installation route is not an instruction to modify the active analysis venv.
 
 The existing gpu/all JAX constraints rejected this modern candidate. They now
 delegate exact JAXlib/CUDA-plugin matching to `jax[cuda12-local]>=0.9.2,<0.10`,
