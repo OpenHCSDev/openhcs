@@ -423,6 +423,9 @@ import logging
 import time
 from types import MappingProxyType
 import numpy as np
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerCallableKernelPreparation,
+)
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
@@ -1224,32 +1227,41 @@ def measure_object_size_shape(
     return (image, measurement_rows)
 
 
-def prepare_measure_object_size_shape() -> None:
-    """Compile AreaShape paths before benchmark execution."""
-    image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
-    labels = np.zeros((32, 32), dtype=np.int32)
-    labels[8:24, 8:24] = 1
-    measure_object_size_shape.__wrapped__(
-        image,
-        ObjectLabelPayload(
-            variant_data=ObjectLabelVariantData(labels=labels),
-            domain=ObjectLabelDomain(declared_object_ids=(1,)),
-        ),
-    )
-    image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape((8, 16, 16))
-    labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
-    labels_3d[1:4, 3:9, 3:9] = 1
-    labels_3d[4:7, 7:14, 7:14] = 2
-    measure_object_size_shape.__wrapped__(
-        image_3d,
-        ObjectLabelPayload(
-            variant_data=ObjectLabelVariantData(labels=labels_3d),
-            domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-        ),
-    )
+class ObjectSizeShapeKernelPreparation(
+    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Own the persistent kernel cache work for measure_object_size_shape."""
+
+    def execute(self) -> None:
+        """Compile AreaShape paths before benchmark execution."""
+        image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
+        labels = np.zeros((32, 32), dtype=np.int32)
+        labels[8:24, 8:24] = 1
+        measure_object_size_shape.__wrapped__(
+            image,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(labels=labels),
+                domain=ObjectLabelDomain(declared_object_ids=(1,)),
+            ),
+        )
+        image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape(
+            (8, 16, 16)
+        )
+        labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
+        labels_3d[1:4, 3:9, 3:9] = 1
+        labels_3d[4:7, 7:14, 7:14] = 2
+        measure_object_size_shape.__wrapped__(
+            image_3d,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(labels=labels_3d),
+                domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+            ),
+        )
 
 
-measure_object_size_shape.__openhcs_prepare__ = prepare_measure_object_size_shape
+measure_object_size_shape.__openhcs_prepare__ = (
+    ObjectSizeShapeKernelPreparation().prepare
+)
 
 
 @dataclass(frozen=True, slots=True)

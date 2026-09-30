@@ -10,6 +10,9 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 import numpy as np
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerCallableKernelPreparation,
+)
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
@@ -1554,37 +1557,47 @@ def identify_objects_in_grid(
     ).execute()
 
 
+class IdentifyObjectsInGridKernelPreparation(
+    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Own the persistent kernel cache work for identify_objects_in_grid."""
+
+    def execute(self) -> None:
+        """Compile grid-label kernels before timed execution."""
+        image = np.zeros((64, 64), dtype=np.float32)
+        grid = SpatialGrid(
+            name="Grid",
+            rows=4,
+            columns=4,
+            x_spacing=16.0,
+            y_spacing=16.0,
+            x_origin=8.0,
+            y_origin=8.0,
+        )
+        guide_labels = np.zeros((64, 64), dtype=np.int32)
+        guide_labels[8:18, 8:18] = 1
+        guide_labels[24:34, 24:34] = 2
+        guide_payload = SourceImageObjectLabelBuildRequest(
+            image=image,
+            labels=guide_labels,
+            declared_object_count=2,
+            declared_object_ids=(1, 2),
+        ).payload()
+        identify_objects_in_grid.__wrapped__(
+            image,
+            topology_inputs=(grid,),
+            shape_choice=ShapeChoice.RECTANGLE,
+        )
+        identify_objects_in_grid.__wrapped__(
+            image,
+            topology_inputs=(grid, guide_payload),
+            shape_choice=ShapeChoice.NATURAL,
+        )
+
+
 def prepare_identify_objects_in_grid() -> None:
-    """Compile grid-label kernels before timed execution."""
-    image = np.zeros((64, 64), dtype=np.float32)
-    grid = SpatialGrid(
-        name="Grid",
-        rows=4,
-        columns=4,
-        x_spacing=16.0,
-        y_spacing=16.0,
-        x_origin=8.0,
-        y_origin=8.0,
-    )
-    guide_labels = np.zeros((64, 64), dtype=np.int32)
-    guide_labels[8:18, 8:18] = 1
-    guide_labels[24:34, 24:34] = 2
-    guide_payload = SourceImageObjectLabelBuildRequest(
-        image=image,
-        labels=guide_labels,
-        declared_object_count=2,
-        declared_object_ids=(1, 2),
-    ).payload()
-    identify_objects_in_grid.__wrapped__(
-        image,
-        topology_inputs=(grid,),
-        shape_choice=ShapeChoice.RECTANGLE,
-    )
-    identify_objects_in_grid.__wrapped__(
-        image,
-        topology_inputs=(grid, guide_payload),
-        shape_choice=ShapeChoice.NATURAL,
-    )
+    """Prepare the kernels through their declared registry obligation."""
+    IdentifyObjectsInGridKernelPreparation().prepare()
 
 
 identify_objects_in_grid.__openhcs_prepare__ = prepare_identify_objects_in_grid
