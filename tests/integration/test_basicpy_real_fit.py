@@ -11,6 +11,25 @@ from openhcs.processing.backends.enhance.basic_processor_jax import (
 from tests.diagnostics.basicpy_observation_fixture import shaded_observations
 
 
+def test_real_algorithm_uses_numpy_transport_and_is_cpu_catalog_eligible(monkeypatch):
+    from openhcs.constants import MemoryType
+    from openhcs.core.callable_contract import CallableContract
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _catalog_memory_types,
+        _module_declares_allowed_memory_type,
+    )
+
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
+    contract = CallableContract.from_callable(basic_flatfield_correction_jax)
+    assert contract.declared_memory_types == frozenset({MemoryType.NUMPY})
+    assert _catalog_memory_types(basic_flatfield_correction_jax) == frozenset(
+        {MemoryType.NUMPY}
+    )
+    assert _module_declares_allowed_memory_type(
+        basic_flatfield_correction_jax.__module__, frozenset({MemoryType.NUMPY.value})
+    )
+
+
 def run_fit(observations):
     return basic_flatfield_correction_jax(
         observations,

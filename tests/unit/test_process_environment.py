@@ -81,6 +81,7 @@ def test_cpu_only_mode_projects_gpu_import_policy_to_dependencies() -> None:
         OpenHCSProcessEnvironment.cpu_only_key: "true",
         OpenHCSProcessEnvironment.subprocess_no_gpu_key: "1",
         OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key: "1",
+        OpenHCSProcessEnvironment.jax_platforms_key: "cpu",
     }
     assert OpenHCSProcessEnvironment.gpu_imports_disabled(environment) is True
 
@@ -93,3 +94,10 @@ def test_subprocess_gpu_suppression_projects_without_enabling_cpu_only() -> None
     assert OpenHCSProcessEnvironment.cpu_only_mode(environment) is False
     assert environment[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
     assert environment[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
+    assert OpenHCSProcessEnvironment.jax_platforms_key not in environment
+
+
+def test_cpu_only_mode_selects_cpu_even_if_jax_requested_an_accelerator() -> None:
+    environment = {OpenHCSProcessEnvironment.jax_platforms_key: "cuda"}
+    OpenHCSProcessEnvironment.enable_cpu_only_mode(environment)
+    assert environment[OpenHCSProcessEnvironment.jax_platforms_key] == "cpu"
