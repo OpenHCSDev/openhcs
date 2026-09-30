@@ -12,8 +12,9 @@ exclusive startup/process identity, and [metaclass-registry1](https://github.com
 non-creating cache path projection at448cdf0. Exact gitlinks are committed.
 Parent remains integration/install/live owner; frozen source/skill/runtime untouched.
 
-Source evidence: **123 passed, 2 actual MCP cases deselected, 12.16s, exit0**,
-peak285060KiB. Earlier62/66/114/122-pass checkpoints and fixture failures retained.
+Current source evidence: **136 passed, 2 actual MCP cases deselected, 10.64s, exit0**,
+whole process14.18s/432464KiB RSS. Dependency rollback/close shard:45 passed,
+0.40s, process3.68s/362564KiB RSS. Earlier123-pass and fixture failures retained.
 Verified source imports and focused nested handle/path/foreign/uncertainty/native
 readiness/declaration projection plus unchanged complete QA/context bounds.
 No native/MCP/GUI/JVM was launched. No installed/live/performance proof claimed.
@@ -22,13 +23,34 @@ Receipt, actual pattern review and focused census:
 
 Source hardening includes both-address pre-bind reservations, post-spawn
 uncertainty handles, expired-deadline no-spawn, real offline CLI projection and
-authoring/core exposure. Normally integrated current main32d070c26.
-Exact dependency pins: ZMQ9a93bbe and metaclass-registry448cdf07.
-Startup scoped census: no string/type dispatch/arms, raw-key, codec or foreign
+authoring/core exposure. Normally integrated current main295e0ee81.
+Exact dependency pins: ZMQ28d9ed6a0121ebb524ae37fd97de5355308bda7f and metaclass-registry448cdf07.
+Earlier startup scoped census: no string/type dispatch/arms, raw-key, codec or foreign
 absence-probe growth. Native reservation JSON decode/uncertainty catch/long
 startup method are reviewed leads, not a global clean claim. Close continuation
 also has no growth in those candidate classes; its native optional-state checks
 and one genuine raw identity shape check are inspected boundaries, not zero debt.
+
+### Reviewed no-child reservation leak correction
+
+Parent's9a93bbe reproducer proved expiry immediately after both provisional
+invoker reservations: zero spawn calls, but fresh independent startup remained
+blocked by the live invoker. Original reproducer/receipt preserved, not replayed.
+The canonical client now rolls back only publication/deadline/cancellation before
+spawn, while both original locks are held. The transport owner decodes through
+startup_owner and releases only exact ProcessIdentity matches by truncating the
+existing inode. Unknown/changed/child records remain; spawn exceptions and failed
+child publication do not roll back or automatically replay any operation.
+Thirteen new provider-free cases cover that boundary, both locks/inodes,
+partial records, second publication failure and post-spawn uncertainty.
+[Actual receipt](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/pre-spawn-rollback/checkpoint.md).
+Focused IMPL-13/IDEN-8/BOUND-2 owner review; no new launcher/store/codec/timeout.
+No native/MCP/GUI/Java was launched and installed source/skill remain immutable.
+
+Prior packaged R0 ratchet at78b5f9 vsbd1 failed (exit1,14.27s/86092KiB) on
+GodClassExcess RuntimeServerService +15 and ZMQExecutionClient +32. Original JSON
+and resource receipt retained. This source correction does not claim a passing
+own-PR ratchet/global audit or fix that separate structural remainder.
 
 ### Exact owned close (parent-reported5993 lifecycle defect)
 

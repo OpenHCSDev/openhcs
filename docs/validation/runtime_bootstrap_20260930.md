@@ -263,3 +263,20 @@ All source test/git publication handles are terminal.4.4MiB owned fixture scratc
 is disposable after preserving these captures; no scientific/UNKNOWN content.
 The source-only checkpoint is ready for parent review. Parent still owns
 integration/install/original5993 disposition; Zeno owns the next serial slot.
+
+## Parent-reviewed pre-spawn reservation rollback
+
+Fresh direct correction for the no-child leak at pinned ZMQ9a93bbe; not a resume
+of the blocked S1/refactor goal. Paired ZMQ28d9ed6 now releases only exact
+provisional invoker records under both original startup locks before spawn.
+Inodes remain; unknown/changed/child records and all post-spawn uncertainty stay.
+No launcher/store/codec fork, native replay or timeout increase.
+
+Current source evidence:136 passed,2 actual-MCP cases deselected in10.64s,
+process14.18s/432464KiB RSS/exit0. Dependency shard45 passed in0.40s,
+process3.68s/362564KiB RSS/exit0. Original fixture-path failure retained.
+Actual commands/captures, IMPL-13/IDEN-8/BOUND-2 owner review, and live boundaries:
+[pre-spawn-rollback/checkpoint.md](runtime_bootstrap_20260930/pre-spawn-rollback/checkpoint.md).
+No native/MCP/JVM/GUI/install was performed; parent owns integration and live.
+Prior own-PR packaged ratchet failure on god-class growth remains explicit in
+pr-body.md and r0-ratchet-before{,-resources}.{json,txt}; no passing ratchet claim.
