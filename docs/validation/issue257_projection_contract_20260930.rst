@@ -41,11 +41,12 @@ source and receipts remain intact. No compatibility branch is introduced.
 Source evidence and limits
 --------------------------
 
-Ten focused source controls pass in 1.09 seconds using the ordinary installed
+Ten focused source controls pass in 1.18 seconds using the ordinary installed
 OpenHCS Python at source 295e0ee81f070de6567d06cc706139018a01bdbc.
 The tests exercise actual image and object-label contextualization with nominal
 artifact output plans, exact ordered pixels and provenance, per-plane object
-domains, row indices/IDs/areas, repeated chaining, invalid selections and empty
+domains, contextualized measurement-table subjects and every row's five source
+coordinates, row indices/IDs/areas, repeated chaining, invalid selections and empty
 schema retention. Complete, full reorder, reduced and singleton selections are
 covered. Unit metadata is deliberately synthetic, not reader-proven metadata.
 
@@ -56,6 +57,8 @@ corrected expectation retains that exact plane record, without changing
 production code or removing equality checks. Both XML receipts remain in the
 parent ledger, ``issue257-projection-source-20260930.xml`` and
 ``issue257-projection-source-20260930b.xml``.
+The strengthened measurement-table/source-address run is retained separately
+as ``issue257-projection-source-20260930c.xml``. It also passes all ten tests.
 
 Not proved: BioFormats discovery, native compilation/execution, durable image,
 CSV/ROI publication, installed MCP acceptance, or biological accuracy. Issue257

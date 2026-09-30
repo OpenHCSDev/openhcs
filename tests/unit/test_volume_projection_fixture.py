@@ -18,7 +18,8 @@ from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.core.steps.function_runtime import ImageFunctionOutputContextStrategy, ObjectLabelsFunctionOutputContextStrategy
+from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.steps.function_runtime import ImageFunctionOutputContextStrategy, MeasurementsFunctionOutputContextStrategy, ObjectLabelsFunctionOutputContextStrategy
 
 
 spec = importlib.util.spec_from_file_location(
@@ -84,12 +85,26 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
         contextual_labels = ObjectLabelsFunctionOutputContextStrategy().contextualize(
             projected, labels, output_plan(fixture.VOLUME_LABELS), projection,
         )
+        contextual_rows = MeasurementsFunctionOutputContextStrategy().contextualize(
+            projected, rows, output_plan(fixture.VOLUME_ROWS), projection,
+        )
         np.testing.assert_array_equal(image_payload_data(contextual_image), expected)
         np.testing.assert_array_equal(object_label_dense_array(contextual_labels), expected.astype(np.int32))
         assert image_payload_metadata(contextual_image).source_provenance == expected_provenance
         assert contextual_labels.source_provenance == expected_provenance
         assert contextual_labels.declared_plane_count() == len(selected_indices)
         contextual_labels.validate_source_alignment(fixture.VOLUME_LABELS.name)
+        assert contextual_rows.source_provenance == expected_provenance
+        assert contextual_rows.subject.object_name == fixture.VOLUME_LABELS.name
+        assert contextual_rows.subject.id_field == "object_label"
+        for component in AllComponents:
+            assert tuple(contextual_rows.rows.column_values(component.value)) == tuple(
+                source_component_metadata_value(
+                    source_metadata.source_image_provenance_planes.plane(index).component_metadata,
+                    component,
+                )
+                for index in selected_indices
+            )
         np.testing.assert_array_equal(rows.column_values("slice_index"), np.arange(len(selected_indices)))
         np.testing.assert_array_equal(rows.column_values("object_label"), [11 + index for index in selected_indices])
         np.testing.assert_array_equal(rows.column_values("pixel_count"), [(index + 2) ** 2 for index in selected_indices])
@@ -114,3 +129,9 @@ def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     contextual.validate_source_alignment(fixture.VOLUME_LABELS.name)
     assert len(rows) == 0 and rows.row_type is fixture.VolumeProjectionFixtureRow
     assert all(len(rows.column_values(field.name)) == 0 for field in rows.fields)
+    table = MeasurementsFunctionOutputContextStrategy().contextualize(
+        image, rows, output_plan(fixture.VOLUME_ROWS), projection,
+    )
+    assert len(table.rows) == 0
+    assert table.subject.object_name == fixture.VOLUME_LABELS.name
+    assert table.source_provenance == image_payload_metadata(image).source_provenance
