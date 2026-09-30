@@ -31,7 +31,8 @@ class BasicPySourceTests(unittest.TestCase):
         requirements = tuple(Requirement(value) for value in project["dependencies"])
         [fork] = [value for value in requirements if value.name == "openhcs-basicpy"]
         self.assertIsNone(fork.url)
-        self.assertIn("1.3.0", fork.specifier)
+        self.assertIn("1.3.1", fork.specifier)
+        self.assertNotIn("1.3.0", fork.specifier)
         self.assertNotIn("2.0.0", fork.specifier)
         self.assertIsNotNone(fork.marker)
         for system, machine, admitted in (

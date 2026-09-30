@@ -4,8 +4,8 @@ Ordinary BaSiCPy dependency checkpoint
 Integration owner: parent; paired OpenHCS PR217 and BaSiCPy PR2.
 Publication explicitly authorized by Tristan on 2026-09-30.
 
-The project metadata owns ``openhcs-basicpy>=1.3.0,<1.4``. It supplies the
-reviewed JAX fork, retaining the upstream ``basicpy`` Python API and CLI.
+The project metadata owns ``openhcs-basicpy>=1.3.1,<1.4``. It supplies the
+reviewed JAX fork, retaining the upstream ``basicpy`` Python API.
 No copied algorithm, API alias, extra installation registry or source-path
 requirement is introduced. ``requirements-basicpy.txt`` is removed (recoverable
 in Git); ArrayBridge already has its ordinary project dependency. Linux,
@@ -14,7 +14,10 @@ core installation without modern JAX, whose CPU wheels exclude that platform.
 
 Do not merge an unavailable dependency. The fork's merged packaging checkpoint
 is ``8ca3be674d2e11602c152e5080ee4cdf94a780a3``; release automation is triggered
-by ``v1.3.0``. Registry availability and actual resolution must be verified
+by ``v1.3.0``. That queued job was cancelled before any steps ran after an
+installed-entrypoint check found a legacy TODO-only CLI. Issue313 and the
+corrective fork checkpoint remove the dead CLI in place and advance to1.3.1;
+the original tag/history are preserved. Registry availability and actual resolution must be verified
 separately; neither a tag nor a wheel build is publication.
 
 Actual validation

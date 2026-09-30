@@ -5,7 +5,7 @@ Python3.12 CPU fits, dtype behavior and field provenance checks passed. See the
 canonical [2026-09-30 receipt](../../../validation/basicpy_parent_numeric_20260930/checkpoint.rst).
 No install, compiled/MCP execution or biological acceptance is claimed.
 
-The current packaging change declares `openhcs-basicpy>=1.3.0,<1.4` in the
+The current packaging change declares `openhcs-basicpy>=1.3.1,<1.4` in the
 ordinary project dependencies. It supplies the reviewed JAX fork under its
 existing `basicpy` Python API; upstream PyPI `basicpy` 2.x is not substituted.
 The separate source requirements file is removed. The paired fork release must

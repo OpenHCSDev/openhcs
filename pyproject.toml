@@ -54,7 +54,7 @@ dependencies = [
     "PyWavelets>=1.6.0",
     # Reviewed JAX BaSiCPy fork, not upstream basicpy 2.x's PyTorch API.
     # Modern JAX has no Intel macOS wheels; preserve that desktop's core install.
-    "openhcs-basicpy>=1.3.0,<1.4; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+    "openhcs-basicpy>=1.3.1,<1.4; platform_system != 'Darwin' or platform_machine != 'x86_64'",
     "pandas>=2.3.1",
     "openpyxl>=3.1.0",
     "xlsxwriter>=3.2.0",
