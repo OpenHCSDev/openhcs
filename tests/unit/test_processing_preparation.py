@@ -24,6 +24,7 @@ from openhcs.core.processing_preparation import (
     CallablePreparation,
     PreparationCacheBatch,
     PreparationOperation,
+    PreparationCacheWorker,
 )
 
 
@@ -298,3 +299,118 @@ def test_cancelling_registry_child_reaps_its_live_cache_workers(tmp_path):
         if process.poll() is None:
             process.kill()
             process.communicate(timeout=5)
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
+    """Four held workers bound capacity; releasing one must admit the fifth."""
+    script = textwrap.dedent("""
+        import os, sys, time
+        from pathlib import Path
+        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+
+        directory = Path(sys.argv[1])
+        class WrittenPreparation(PreparationOperation):
+            def __init__(self, name): self.name = name
+            @property
+            def identity(self): return self.name
+            def can_prepare_in_child(self): return True
+            def execute(self):
+                (directory / self.name).write_text(str(os.getpid()))
+
+        class HeldPreparation(WrittenPreparation):
+            def execute(self):
+                super().execute()
+                while not (directory / (self.name + '.release')).exists():
+                    time.sleep(0.01)
+
+        jobs = tuple(HeldPreparation(str(i)) for i in range(4))
+        PreparationCacheBatch((*jobs, WrittenPreparation('fifth'))).populate_child_caches()
+    """)
+    process = subprocess.Popen(
+        (sys.executable, "-c", script, str(tmp_path)),
+        cwd=Path(__file__).parents[2],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    initial = tuple(tmp_path / str(index) for index in range(4))
+    try:
+        deadline = time.monotonic() + 15
+        while not all(path.exists() for path in initial):
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "four cache jobs did not start"
+            time.sleep(0.01)
+        pids = tuple(int(path.read_text()) for path in initial)
+        assert all(psutil.pid_exists(pid) for pid in pids)
+        assert not (tmp_path / "fifth").exists()
+        (tmp_path / "0.release").touch()
+        deadline = time.monotonic() + 5
+        while not (tmp_path / "fifth").exists():
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "a completed slot did not refill"
+            time.sleep(0.01)
+        assert not psutil.pid_exists(pids[0])
+        assert all(psutil.pid_exists(pid) for pid in pids[1:])
+        for index in range(1, 4):
+            (tmp_path / f"{index}.release").touch()
+        _, stderr = process.communicate(timeout=5)
+        assert process.returncode == 0, stderr
+        assert all(not psutil.pid_exists(pid) for pid in pids)
+        assert not psutil.pid_exists(int((tmp_path / "fifth").read_text()))
+    finally:
+        for index in range(4):
+            (tmp_path / f"{index}.release").touch()
+        if process.poll() is None:
+            process.communicate(timeout=5)
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_completed_worker_release_is_idempotent(tmp_path):
+    worker = PreparationCacheWorker.start(
+        multiprocessing.get_context("fork"),
+        AdditionalChildCachePreparation("completed", tmp_path),
+    )
+    pid = worker.process.pid
+    try:
+        worker.wait()
+        worker.close()
+        worker.close()
+        assert worker.closed
+        assert worker.result_connection.closed
+        assert not psutil.pid_exists(pid)
+    finally:
+        worker.close()
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_failure_in_refilled_slot_reaps_all_owned_workers(tmp_path, declared_module):
+    class HeldPreparation(AdditionalChildCachePreparation):
+        def execute(self):
+            super().execute()
+            time.sleep(5)
+            raise RuntimeError("a held cache job blocked refill")
+
+    class FailingPreparation(AdditionalChildCachePreparation):
+        def execute(self):
+            super().execute()
+            raise RuntimeError("failure in refilled slot")
+
+    operations = (
+        HeldPreparation("held", tmp_path),
+        *(AdditionalChildCachePreparation(str(index), tmp_path) for index in range(3)),
+        FailingPreparation("fifth", tmp_path),
+    )
+    with pytest.raises(RuntimeError, match="failure in refilled slot"):
+        PreparationCacheBatch(operations).populate_child_caches()
+    assert (tmp_path / "fifth").exists()
+    assert not PreparationOperation._completed
+    assert all(
+        not psutil.pid_exists(int(path.read_text())) for path in tmp_path.iterdir()
+    )
