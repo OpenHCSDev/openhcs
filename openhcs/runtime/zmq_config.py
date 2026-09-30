@@ -98,13 +98,21 @@ class OpenHCSZMQConfig(ZMQConfig):
     this does not delete pipeline outputs or compiled bundles saved to disk.
     """
 
-    def client_endpoint(self, port: int | None = None) -> TransportEndpoint:
+    def client_endpoint(
+        self,
+        port: int | None = None,
+        *,
+        host: str | None = None,
+        transport_mode: TransportMode | None = None,
+    ) -> TransportEndpoint:
         """Return the exact execution endpoint declared for an OpenHCS client."""
 
         return TransportEndpoint(
-            host=self.client_host,
+            host=self.client_host if host is None else host,
             port=self.default_port if port is None else port,
-            transport_mode=self.transport_mode,
+            transport_mode=TransportMode.resolve(
+                self.transport_mode if transport_mode is None else transport_mode
+            ),
         )
 
 

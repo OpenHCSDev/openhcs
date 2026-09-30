@@ -1,0 +1,323 @@
+..FF..FF..FF                                                             [100%]
+=================================== FAILURES ===================================
+_ test_ordinary_connect_preserves_both_pending_address_owners[True-True-False] _
+
+client = <test_owned_startup.Client object at 0x7f420d125be0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d125ca0>
+control = False, occupied = True, alive = True
+
+    @pytest.mark.parametrize("control", [False, True])
+    @pytest.mark.parametrize("occupied", [False, True])
+    @pytest.mark.parametrize("alive", [True, None])
+    def test_ordinary_connect_preserves_both_pending_address_owners(
+        client, monkeypatch, control, occupied, alive
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        owner = ProcessIdentity.current()
+        declaration.record_startup_owner(reserved_port, client.config, owner)
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: occupied)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        monkeypatch.setattr(ProcessIdentity, "is_alive", lambda *_: alive)
+        kill = Mock(side_effect=AssertionError("A pending child is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+>       assert client.connect(timeout=0.01) is False
+
+external/zmqruntime/tests/test_owned_startup.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921687170032'>, args = (5913,), kwargs = {}
+effect = AssertionError('A pending child is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: A pending child is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+_ test_ordinary_connect_preserves_both_pending_address_owners[True-True-True] __
+
+client = <test_owned_startup.Client object at 0x7f420d1263f0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d126ba0>
+control = True, occupied = True, alive = True
+
+    @pytest.mark.parametrize("control", [False, True])
+    @pytest.mark.parametrize("occupied", [False, True])
+    @pytest.mark.parametrize("alive", [True, None])
+    def test_ordinary_connect_preserves_both_pending_address_owners(
+        client, monkeypatch, control, occupied, alive
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        owner = ProcessIdentity.current()
+        declaration.record_startup_owner(reserved_port, client.config, owner)
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: occupied)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        monkeypatch.setattr(ProcessIdentity, "is_alive", lambda *_: alive)
+        kill = Mock(side_effect=AssertionError("A pending child is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+>       assert client.connect(timeout=0.01) is False
+
+external/zmqruntime/tests/test_owned_startup.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921687172816'>, args = (5913,), kwargs = {}
+effect = AssertionError('A pending child is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: A pending child is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+_ test_ordinary_connect_preserves_both_pending_address_owners[None-True-False] _
+
+client = <test_owned_startup.Client object at 0x7f420d126120>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d127bc0>
+control = False, occupied = True, alive = None
+
+    @pytest.mark.parametrize("control", [False, True])
+    @pytest.mark.parametrize("occupied", [False, True])
+    @pytest.mark.parametrize("alive", [True, None])
+    def test_ordinary_connect_preserves_both_pending_address_owners(
+        client, monkeypatch, control, occupied, alive
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        owner = ProcessIdentity.current()
+        declaration.record_startup_owner(reserved_port, client.config, owner)
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: occupied)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        monkeypatch.setattr(ProcessIdentity, "is_alive", lambda *_: alive)
+        kill = Mock(side_effect=AssertionError("A pending child is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+>       assert client.connect(timeout=0.01) is False
+
+external/zmqruntime/tests/test_owned_startup.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921664153968'>, args = (5913,), kwargs = {}
+effect = AssertionError('A pending child is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: A pending child is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+_ test_ordinary_connect_preserves_both_pending_address_owners[None-True-True] __
+
+client = <test_owned_startup.Client object at 0x7f420d168ef0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d1686e0>
+control = True, occupied = True, alive = None
+
+    @pytest.mark.parametrize("control", [False, True])
+    @pytest.mark.parametrize("occupied", [False, True])
+    @pytest.mark.parametrize("alive", [True, None])
+    def test_ordinary_connect_preserves_both_pending_address_owners(
+        client, monkeypatch, control, occupied, alive
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        owner = ProcessIdentity.current()
+        declaration.record_startup_owner(reserved_port, client.config, owner)
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: occupied)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        monkeypatch.setattr(ProcessIdentity, "is_alive", lambda *_: alive)
+        kill = Mock(side_effect=AssertionError("A pending child is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+>       assert client.connect(timeout=0.01) is False
+
+external/zmqruntime/tests/test_owned_startup.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921664150752'>, args = (5913,), kwargs = {}
+effect = AssertionError('A pending child is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: A pending child is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+_ test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[False] _
+
+client = <test_owned_startup.Client object at 0x7f420d16a0f0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d169d60>
+control = False
+
+    @pytest.mark.parametrize("control", [False, True])
+    def test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation(
+        client, monkeypatch, control
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        source = "unknown partial reservation"
+        path.write_text(source, encoding="utf-8")
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: True)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        kill = Mock(side_effect=AssertionError("Unknown reservation is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+        with pytest.raises(ValueError):
+>           client.connect(timeout=0.01)
+
+external/zmqruntime/tests/test_owned_startup.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921664154736'>, args = (5913,), kwargs = {}
+effect = AssertionError('Unknown reservation is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: Unknown reservation is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+_ test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[True] _
+
+client = <test_owned_startup.Client object at 0x7f420d16b0b0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f420d16aae0>
+control = True
+
+    @pytest.mark.parametrize("control", [False, True])
+    def test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation(
+        client, monkeypatch, control
+    ):
+        declaration = client.transport_mode.declaration
+        reserved_port = client.control_port if control else client.port
+        path = declaration.startup_lock_path(reserved_port, client.config)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        source = "unknown partial reservation"
+        path.write_text(source, encoding="utf-8")
+        inode = path.stat().st_ino
+        monkeypatch.setattr(client, "_is_port_in_use", lambda *_: True)
+        monkeypatch.setattr(client, "_attach_existing_endpoint", Mock(return_value=False))
+        kill = Mock(side_effect=AssertionError("Unknown reservation is not replaceable"))
+        monkeypatch.setattr(client, "_kill_processes_on_port", kill)
+        with pytest.raises(ValueError):
+>           client.connect(timeout=0.01)
+
+external/zmqruntime/tests/test_owned_startup.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/client.py:896: in connect
+    return self._connect_locked(
+external/zmqruntime/src/zmqruntime/client.py:1059: in _connect_locked
+    self._kill_processes_on_port(self.port)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1134: in __call__
+    return self._mock_call(*args, **kwargs)
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1138: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139921664158096'>, args = (5913,), kwargs = {}
+effect = AssertionError('Unknown reservation is not replaceable')
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               AssertionError: Unknown reservation is not replaceable
+
+../../.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py:1193: AssertionError
+- generated xml file: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/reserved-child-takeover/before-tests.xml -
+=========================== short test summary info ============================
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[True-True-False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[True-True-True]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[None-True-False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_both_pending_address_owners[None-True-True]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[False]
+FAILED external/zmqruntime/tests/test_owned_startup.py::test_ordinary_connect_preserves_occupied_endpoint_with_partial_reservation[True]
+6 failed, 6 passed, 22 deselected in 0.96s

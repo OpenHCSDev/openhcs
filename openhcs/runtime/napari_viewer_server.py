@@ -49,6 +49,7 @@ from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import QDockWidget
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import (
+    ImageTransferIdentity,
     ControlMessageType,
     EndpointControlCapability,
     ResponseType,
@@ -610,7 +611,11 @@ class NapariImagePayload(NapariStreamLayerContext):
     """Typed view of one image/shapes message."""
 
     raw: Mapping[str, NapariWireValue]
-    image_id: str | None
+    transfer: ImageTransferIdentity | None
+
+    @property
+    def image_id(self) -> str | None:
+        return None if self.transfer is None else self.transfer.image_id
 
     def __post_init__(self) -> None:
         if not self.address.components:
@@ -631,10 +636,9 @@ class NapariImagePayload(NapariStreamLayerContext):
             layer_axis_projection_semantics,
             display_config,
         )
-        image_id = payload.optional(ViewerWireField.IMAGE_ID)
         return cls(
             raw=image_info,
-            image_id=str(image_id) if image_id is not None else None,
+            transfer=ImageTransferIdentity.from_item(image_info),
             entries=stream_layer_context.entries,
             layout=stream_layer_context.layout,
             producer=stream_layer_context.producer,
@@ -6246,8 +6250,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 stream_layer_context=payload,
                 server=self,
             )
-            if payload.image_id:
-                self.send_ack(payload.image_id, status=_ACK_SUCCESS)
+            self.send_ack(payload.transfer, status=_ACK_SUCCESS)
 
         except Exception as e:
             self.layer_route_state.record_update_error(None, e)
@@ -6255,8 +6258,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 f"🔬 NAPARI PROCESS: Failed to process {payload_address.stream_layer_data_type} {payload_address.path}: {e}",
                 exc_info=True,
             )
-            if payload.image_id:
-                self.send_ack(payload.image_id, status=_ACK_ERROR, error=str(e))
+            self.send_ack(payload.transfer, status=_ACK_ERROR, error=str(e))
             # Don't re-raise - continue processing other messages instead of crashing
 
 

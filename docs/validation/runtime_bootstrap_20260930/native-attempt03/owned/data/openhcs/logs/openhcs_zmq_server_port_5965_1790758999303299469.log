@@ -1,0 +1,30 @@
+2026-09-30 05:03:21,549 - __main__ - INFO - ============================================================
+2026-09-30 05:03:21,549 - __main__ - INFO - ZMQ Execution Server
+2026-09-30 05:03:21,549 - __main__ - INFO - ============================================================
+2026-09-30 05:03:21,549 - __main__ - INFO - Log level: INFO (from --log-level=INFO)
+2026-09-30 05:03:21,549 - __main__ - INFO - Port: 5965 (control: 6965)
+2026-09-30 05:03:21,549 - __main__ - INFO - Host: 127.0.0.1
+2026-09-30 05:03:21,549 - __main__ - INFO - Transport mode: tcp
+2026-09-30 05:03:21,549 - __main__ - INFO - Persistent: True
+2026-09-30 05:03:21,549 - __main__ - INFO - Log file: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt03/owned/data/openhcs/logs/openhcs_zmq_server_port_5965_1790758999303299469.log
+2026-09-30 05:03:21,549 - __main__ - INFO - ============================================================
+2026-09-30 05:03:21,998 - zmqruntime.server - INFO - ZMQ Server started on tcp://127.0.0.1:5965 (PUB), control tcp://127.0.0.1:6965
+2026-09-30 05:03:21,999 - zmqruntime.execution.server - INFO - Queue worker thread started - will process executions sequentially
+2026-09-30 05:03:21,999 - zmqruntime.execution.server - INFO - Started execution queue worker thread
+2026-09-30 05:03:21,999 - __main__ - INFO - Server ready - waiting for requests...
+2026-09-30 05:03:22,050 - zmqruntime.server - INFO - Server ready
+2026-09-30 05:04:53,662 - openhcs.processing.custom_functions.manager - INFO - Created custom functions directory: /home/ts/wt/openhcs-context-bounding-20260929/docs/validation/runtime_bootstrap_20260930/native-attempt03/owned/data/openhcs/custom_functions
+2026-09-30 05:04:53,662 - openhcs.processing.backends.lib_registry.registry_service - INFO - Registry metadata cache cleared
+2026-09-30 05:04:53,663 - openhcs.processing.custom_functions.manager - INFO - Loaded 0 persisted custom function(s)
+2026-09-30 05:04:53,676 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping CupyRegistry
+2026-09-30 05:04:53,676 - openhcs.processing.backends.lib_registry.registry_service - INFO - CPU-only registry discovery skipping PyclesperantoRegistry
+2026-09-30 05:04:56,474 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for openhcs
+2026-09-30 05:04:56,478 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 152 openhcs functions from cache
+2026-09-30 05:04:56,478 - openhcs.processing.backends.lib_registry.unified_registry - INFO - 🔄 load_or_discover_functions called for skimage
+2026-09-30 05:04:56,478 - openhcs.processing.backends.lib_registry.unified_registry - INFO - ✅ Loaded 114 skimage functions from cache
+2026-09-30 05:04:56,478 - openhcs.processing.backends.lib_registry.registry_service - INFO - Total functions discovered: 266
+2026-09-30 05:05:23,484 - zmqruntime.execution.server - INFO - No live worker processes found to kill
+2026-09-30 05:05:23,484 - zmqruntime.execution.server - INFO - Workers killed (0), server shutting down
+2026-09-30 05:05:23,495 - zmqruntime.server - INFO - ZMQ Server stopped
+2026-09-30 05:05:23,495 - polystore.backend_registry - INFO - Backend connections cleaned up (including process resources)
+2026-09-30 05:05:23,496 - __main__ - INFO - Server stopped
