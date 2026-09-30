@@ -30,6 +30,7 @@ from zmqruntime.viewer_protocol import ViewerWireField
 from openhcs.core.config import FijiDisplayConfig
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
@@ -51,11 +52,13 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import (
     FijiPayloadKind,
     OpenHCSViewerServerABC,
+    OpenHCSViewerControlMessageType,
     ViewerBatchContextWireField,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlMessageType,
+    ViewerControlField,
     ViewerControlReplyHeader,
     ViewerControlReplyPayload,
     ViewerControlResponseField,
@@ -1216,6 +1219,9 @@ class FijiControlRequestContext:
     windows: FijiWindowRegistry
     imagej_runtime: object
     settlement: FijiBatchSettlementState
+    process_launch: ViewerProcessLaunchConfig = field(
+        default_factory=ViewerProcessLaunchConfig
+    )
 
 
 class FijiControlMessagePlan(ABC, metaclass=AutoRegisterMeta):
@@ -1306,6 +1312,25 @@ class FijiClearStateControlPlan(FijiControlMessagePlan):
                 response_type="clear_state_ack",
                 message="Dimension values cleared",
             ),
+        )
+
+
+class FijiProcessLaunchControlPlan(FijiControlMessagePlan):
+    """Project the server-owned launch declaration through the common boundary."""
+
+    wire_value = OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value
+
+    def response(
+        self, context: FijiControlRequestContext, payload: object | None
+    ) -> FijiControlMessageResponse:
+        return FijiControlMessageResponse(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.SUCCESS, response_type="process_launch_ack"
+            ),
+            fields={
+                ViewerControlField.PROCESS_LAUNCH.value:
+                    context.process_launch.to_wire_mapping(),
+            },
         )
 
 
@@ -1969,7 +1994,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         super().__init__(
             launch_config.port,
             viewer_type=ViewerType.FIJI.wire_value,
-            host="*",
+            host=launch_config.process_launch.listen_host,
             log_file_path=launch_config.log_file_path,
             data_socket_type=zmq.REP,
             transport_mode=launch_config.transport_mode,
@@ -2128,6 +2153,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
                 self.windows,
                 self.ij,
                 self.batch_processor.settlement,
+                self.launch_config.process_launch,
             )
         ).response_for(message)
         if response.shutdown_requested:
@@ -3139,6 +3165,7 @@ def fiji_viewer_server_process(
     display_enabled: bool = True,
     transport_mode: TransportMode = TransportMode.IPC,
     zmq_config: ZMQConfig | None = None,
+    listen_host: str = "127.0.0.1",
 ):
     """
     Fiji viewer server process function.
@@ -3152,6 +3179,7 @@ def fiji_viewer_server_process(
         log_file_path: Path to log file (for client discovery via ping/pong)
         transport_mode: ZMQ transport mode (IPC or TCP)
         zmq_config: ZMQ configuration object (optional, uses default if None)
+        listen_host: Explicit TCP bind interface; defaults to local-only
     """
     server = None
     try:
@@ -3166,6 +3194,7 @@ def fiji_viewer_server_process(
                 display_enabled=display_enabled,
                 transport_mode=transport_mode,
                 zmq_config=zmq_config,
+                process_launch=ViewerProcessLaunchConfig(listen_host=listen_host),
             )
         )
 

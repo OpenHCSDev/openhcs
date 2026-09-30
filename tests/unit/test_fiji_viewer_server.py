@@ -14,6 +14,7 @@ from openhcs.core.config import (
     NapariDisplayConfig,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
@@ -55,6 +56,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerObjectDisplayConfigInput,
 )
 from openhcs.runtime.viewer_protocol import (
+    OpenHCSViewerControlMessageType,
     ViewerControlMessageType,
     ViewerControlResponse,
     ViewerSettlePhase,
@@ -216,6 +218,18 @@ def test_fiji_control_dispatch_registry_is_module_local_and_eager() -> None:
         is FijiClearStateControlPlan
     )
     assert registry[ViewerControlMessageType.SETTLE.value] is FijiSettleControlPlan
+
+
+def test_fiji_process_launch_control_reports_server_owned_declaration() -> None:
+    active = ViewerProcessLaunchConfig(listen_host="*")
+    response = FijiControlMessageAuthority(
+        FijiControlRequestContext(
+            FijiWindowRegistry(), object(), FijiBatchSettlementState(), active
+        )
+    ).response_for({"type": OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value})
+    wire = response.to_wire_mapping()
+    assert wire["status"] == "success"
+    assert ViewerProcessLaunchConfig.from_wire_mapping(wire["process_launch"]) == active
 
 
 def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
