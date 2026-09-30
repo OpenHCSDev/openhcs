@@ -53,6 +53,12 @@ beyond this observed boundary; no global limit was raised. There are no R1
 mapping_read/unmodeled_record_shape/redundant_type_check findings to certify.
 This repair is an explicitly authored semantic patch, not an NRA-generated plan.
 
+Follow-up one-module compact loop reports79 detectors,0 omissions, complete=true
+and zero findings for source_matching.py alone (nra-owner-loop.json). Do not
+extend that completeness to the failed full-package context. Source commit
+6f636c2afe6d98cc has +16 core code lines and zero debt-screen delta in every
+other measured category; owner-census-delta.json retains exact observations.
+
 Original failing reproducer
 ---------------------------
 
@@ -130,3 +136,10 @@ historical swap8.7GiB. Worker512MiB and CPUQuota100percent/threads1 enforced;
 owned scratch ceiling256MiB at /home/ts/.cache/agent-scratch/issue314-russell.
 Source, failures and handoff stay in this persistent worktree. Archive/preserve
 failure logs and remove only owned disposable caches/builds after workers exit.
+
+Durable .issue314/ (41MiB) holds the extracted current instruction archive and
+original702b2c2c9 source snapshot for the inherited-failure control. It is local,
+not a published source change. Disposable scratch measured652KiB; local build
+objects400KiB. No task process remains running at this checkpoint. Existing
+locally built extensions are not installed globally. Full test/dependency proof
+limits and inherited fixture ownership are recorded in checkpoint.rst.

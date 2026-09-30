@@ -2,7 +2,7 @@
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
+from openhcs.constants.constants import AllComponents, GroupBy
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -145,3 +145,20 @@ def test_path_identity_stays_distinct_without_semantic_field_coordinates():
     ) != SourceImageSetIdentity.from_metadata(
         {}, fallback_source_path="/synthetic/two.tif", policy=policy
     )
+
+
+def test_pipeline_config_compiles_the_same_paired_field_identity_policy():
+    from openhcs.core.config import (
+        LazyProcessingConfig,
+        LazySourceBindingsConfig,
+        PipelineConfig,
+    )
+
+    config = PipelineConfig(
+        processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL),
+        source_bindings_config=LazySourceBindingsConfig(bindings=_bindings().bindings),
+    )
+
+    policy = SourceImageSetIdentityPolicy.from_pipeline_config(config)
+
+    assert policy.plane_member_components == frozenset((AllComponents.CHANNEL,))

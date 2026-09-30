@@ -44,4 +44,38 @@ No response or coordinated shared edit is claimed; no waiting or new agent call.
 
 H003e immutable REJECT remains untouched. Issue314 is not closed by source tests.
 Source/wheel/MCP continuity and external semantics acceptance remain separate
-parent gates. Pending follow-up checks will be added to this same coherent PR.
+parent gates.
+
+Additional source checkpoint before main integration
+---------------------------------------------------
+
+131 distinct source tests pass across the focused owner/exporter and related
+CellProfiler shape, secondary-distance and module-scope shards. The final
+policy/exporter shard is41 passed,4.91s, maximumRSS378400KiB and includes the
+normal from_pipeline_config path. The related shard is30 passed/8 failed,
+maximumRSS518188KiB (below512MiB). Its eight matched-anchor fixture failures
+all reach MeasurementsArtifactType.require_output_subject before this policy:
+legacy synthetic fixtures lack MeasurementSubjectRelation. All eight also fail
+on unmodified main702b2c2c9 (source-anchors-base-verified.log:8 failed/3 passed).
+Parent integration owns disposition of that inherited fixture mismatch; acceptance
+requires properly typed subjects, not weakening the guard. No fixture/assertion
+was relaxed. Earlier baseline snapshot assembly attempts (empty snapshot and
+missing pytest_integration_options) are retained separately as harness failures.
+
+The lightweight one-file NRA loop completed in2.97s/77176KiB, zero findings;
+its actual scan_status is exact_compact_global,79 analyzed detectors,0 omitted,
+complete=true. This is complete ONLY for the selected source_matching.py input,
+not a complete OpenHCS context scan or formal equivalence proof. Full-context
+failure remains retained. Changed-core census at source commit6f636c2afe6d98cc
+adds16 code lines and zero in every other measured syntax category.
+
+Effective OpenHCS imports resolve this worktree (source version0.8.7), not the
+installed distribution metadata0.8.6. Existing editable PolyStore resolves
+/home/ts/wt/openhcs-custom-function-admission-20260929/external/PolyStore,
+clean at1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7. This dependency is unmodified;
+these checks do not prove a frozen gitlink dependency closure or installed parity.
+Exact other effective imports/versions are retained in effective-imports.json.
+
+New main2b7969f700c33eb7f73f891d975afd1efc0628bb is being integrated normally
+at the owner's request. It changes viewer owners, not the repaired policy.
+No parent viewer/MCP acceptance is attributed to this source-only repair.
