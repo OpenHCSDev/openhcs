@@ -8,4 +8,4 @@ The instrumented production execution took 24.154 seconds (30.100 total). This i
 
 The NRA census covers 699 production modules and all original ClassDef nodes. Role excerpts retain all original/projected counts and unprojected OPEN classes; they are source-structure evidence, not a proof of behavioral equivalence. The authored exact-source transaction checks the initial staged bodies; subsequent abstract-parent/runtime-leaf refinement is validated by tests and the final census. CPython 3.12.14 / Numba 0.67.0 were physically exercised. The pre-monitoring Python 3.11 leaf preserves native behavior but was not physically run on Python 3.11 here.
 
-After merging current main b48fab2bb (custom registration admission), 122 integration tests passed on the combined source.
+After merging current main b48fab2bb (custom registration admission), 150 integration tests passed on the combined source.
