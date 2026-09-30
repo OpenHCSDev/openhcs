@@ -112,6 +112,14 @@ class SourceImageIdentity:
         return self.path is not None or self.component_metadata is not None
 
     @property
+    def filename_extension(self) -> str | None:
+        """Project the declared source filename fact, never a format default."""
+        if self.component_metadata is None:
+            return None
+        extension = source_metadata_value(self.component_metadata, "extension")
+        return None if extension is None else str(extension)
+
+    @property
     def identity(self) -> SourceProvenanceIdentity:
         if not hasattr(self, "_identity"):
             self._identity = (
@@ -133,7 +141,7 @@ class SourceImageIdentity:
         self,
         fallback: "SourceImageIdentity",
     ) -> SourceComponentMetadata | None:
-        """Fill missing OpenHCS component values from a fallback identity."""
+        """Fill missing address components and its declared file extension."""
         if self.component_metadata is None:
             return fallback.component_metadata
         if fallback.component_metadata is None:
@@ -149,6 +157,10 @@ class SourceImageIdentity:
             )
             if fallback_value is not None:
                 merged[component.value] = fallback_value
+        if self.filename_extension is None:
+            extension = fallback.filename_extension
+            if extension is not None:
+                merged["extension"] = extension
         return MappingProxyType(merged)
 
     def with_parsed_path_components(

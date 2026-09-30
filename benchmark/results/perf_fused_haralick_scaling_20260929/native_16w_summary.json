@@ -1,0 +1,233 @@
+{
+  "case": "ExampleImagingFlowCytometryObjectsInGrid",
+  "wells": 16,
+  "native_jobs": 4,
+  "image_sets_per_well": 2,
+  "total_image_sets": 32,
+  "timing": [
+    {
+      "repetition": -1,
+      "invocation_start_skew_seconds": 0.000560535117983818,
+      "invocation_through_completion_makespan_seconds": 398.87546842591837,
+      "first_module_start_skew_seconds": 0.02539458917453885,
+      "first_module_through_completion_makespan_seconds": 398.2397402571514,
+      "first_module_overlap_seconds": 395.13650636700913
+    },
+    {
+      "repetition": 0,
+      "invocation_start_skew_seconds": 0.008628705982118845,
+      "invocation_through_completion_makespan_seconds": 364.23009847523645,
+      "first_module_start_skew_seconds": 0.02430920908227563,
+      "first_module_through_completion_makespan_seconds": 364.0638042129576,
+      "first_module_overlap_seconds": 360.03427644399926
+    }
+  ],
+  "reports": [
+    {
+      "startup_seconds": 0.7573056230321527,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/0_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+        "input_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/inputs",
+        "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/0",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/file_list.txt",
+        "first_image_set": 1,
+        "last_image_set": 8,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/start_barrier",
+        "start_barrier_job_count": 4,
+        "start_barrier_job_index": 0
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/0/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 398.469403041061,
+          "pre_first_module_seconds": 0.6514280829578638,
+          "first_module_through_post_run_seconds": 397.81797495810315,
+          "invocation_started_monotonic_seconds": 3522264.875208747,
+          "first_module_started_monotonic_seconds": 3522265.52663683,
+          "completed_monotonic_seconds": 3522663.344611788
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/0/0",
+          "image_set_count": 8,
+          "invocation_seconds": 360.21763516496867,
+          "pre_first_module_seconds": 0.15986270364373922,
+          "first_module_through_post_run_seconds": 360.05777246132493,
+          "invocation_started_monotonic_seconds": 3522663.758064532,
+          "first_module_started_monotonic_seconds": 3522663.917927236,
+          "completed_monotonic_seconds": 3523023.975699697
+        }
+      ]
+    },
+    {
+      "startup_seconds": 0.7578557087108493,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/1_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+        "input_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/inputs",
+        "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/1",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/file_list.txt",
+        "first_image_set": 9,
+        "last_image_set": 16,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/start_barrier",
+        "start_barrier_job_count": 4,
+        "start_barrier_job_index": 1
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/1/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 398.43951038084924,
+          "pre_first_module_seconds": 0.6605622228235006,
+          "first_module_through_post_run_seconds": 397.77894815802574,
+          "invocation_started_monotonic_seconds": 3522264.875769282,
+          "first_module_started_monotonic_seconds": 3522265.536331505,
+          "completed_monotonic_seconds": 3522663.315279663
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/1/0",
+          "image_set_count": 8,
+          "invocation_seconds": 364.22206349717453,
+          "pre_first_module_seconds": 0.18256849329918623,
+          "first_module_through_post_run_seconds": 364.03949500387534,
+          "invocation_started_monotonic_seconds": 3522663.75885476,
+          "first_module_started_monotonic_seconds": 3522663.941423253,
+          "completed_monotonic_seconds": 3523027.980918257
+        }
+      ]
+    },
+    {
+      "startup_seconds": 0.7576401131227612,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/2_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+        "input_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/inputs",
+        "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/2",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/file_list.txt",
+        "first_image_set": 17,
+        "last_image_set": 24,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/start_barrier",
+        "start_barrier_job_count": 4,
+        "start_barrier_job_index": 2
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/2/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 398.87510390020907,
+          "pre_first_module_seconds": 0.6562674562446773,
+          "first_module_through_post_run_seconds": 398.2188364439644,
+          "invocation_started_monotonic_seconds": 3522264.875573273,
+          "first_module_started_monotonic_seconds": 3522265.531840729,
+          "completed_monotonic_seconds": 3522663.750677173
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/2/0",
+          "image_set_count": 8,
+          "invocation_seconds": 361.9424988743849,
+          "pre_first_module_seconds": 0.16629426227882504,
+          "first_module_through_post_run_seconds": 361.7762046121061,
+          "invocation_started_monotonic_seconds": 3522663.750819782,
+          "first_module_started_monotonic_seconds": 3522663.917114044,
+          "completed_monotonic_seconds": 3523025.693318656
+        }
+      ]
+    },
+    {
+      "startup_seconds": 0.7572910659946501,
+      "environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/3_tmp"
+      },
+      "request": {
+        "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",
+        "input_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/inputs",
+        "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/3",
+        "expected_image_sets": 8,
+        "repetitions": 1,
+        "file_list_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/file_list.txt",
+        "first_image_set": 25,
+        "last_image_set": 32,
+        "report_path": null,
+        "start_barrier_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/start_barrier",
+        "start_barrier_job_count": 4,
+        "start_barrier_job_index": 3
+      },
+      "observations": [
+        {
+          "repetition": -1,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/3/-1",
+          "image_set_count": 8,
+          "invocation_seconds": 395.79761911695823,
+          "pre_first_module_seconds": 0.6357181607745588,
+          "first_module_through_post_run_seconds": 395.1619009561837,
+          "invocation_started_monotonic_seconds": 3522264.875218755,
+          "first_module_started_monotonic_seconds": 3522265.510936916,
+          "completed_monotonic_seconds": 3522660.672837872
+        },
+        {
+          "repetition": 0,
+          "output_root": "/home/ts/code/projects/openhcs-benchmark-runs/perf-native-tabular-native-imaging-16w4j-20260929/native_jobs/3/0",
+          "image_set_count": 8,
+          "invocation_seconds": 361.31623701099306,
+          "pre_first_module_seconds": 0.15905648516491055,
+          "first_module_through_post_run_seconds": 361.15718052582815,
+          "invocation_started_monotonic_seconds": 3522663.759448488,
+          "first_module_started_monotonic_seconds": 3522663.918504973,
+          "completed_monotonic_seconds": 3523025.075685499
+        }
+      ]
+    }
+  ],
+  "controller_lifecycle": {
+    "driver_terminated_at_turn_boundary": true,
+    "outputs_recovered_from_original_live_worker_pipes": true,
+    "worker_completion_observed_from_reports_and_eof": true,
+    "driver_returncode_observed": false
+  }
+}

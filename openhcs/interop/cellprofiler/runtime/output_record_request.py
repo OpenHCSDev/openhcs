@@ -105,11 +105,9 @@ class CellProfilerOutputRecordRequest:
 
         ref = spec.ref()
         output_plan = self.adapter.request.artifact_output_plan(ref)
-        runtime_adapter = self.callable_contract.runtime_adapter
         recorded = bool(
             output_plan is not None
-            and runtime_adapter is not None
-            and runtime_adapter.manages_artifact_outputs
+            and self.callable_contract.artifact_output_policy.records_outputs
         )
         transient = ref in self.declared_only_outputs
         match recorded, transient:

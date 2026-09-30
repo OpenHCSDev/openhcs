@@ -1232,31 +1232,3 @@ def remove_inval_chars(name):
     for char in inval_chars:
         name = name.replace(char, "")
     return name
-
-
-def run_experimental_analysis(
-    results_path: str = "mx_results.xlsx",
-    config_file: str = "./config.xlsx",
-    compiled_results_path: str = "./compiled_results_normalized.xlsx",
-    heatmap_path: str = "./heatmaps.xlsx",
-):
-    """Run the compatibility entry point through the current engine authority."""
-    import warnings
-
-    from openhcs.core.config import ExperimentalAnalysisConfig
-    from openhcs.processing.backends.experimental_analysis import (
-        ExperimentalAnalysisEngine,
-    )
-
-    warnings.warn(
-        "run_experimental_analysis is deprecated. Use ExperimentalAnalysisEngine instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    result = ExperimentalAnalysisEngine(ExperimentalAnalysisConfig()).run_analysis(
-        results_path=results_path,
-        config_file=config_file,
-        compiled_results_path=compiled_results_path,
-        heatmap_path=heatmap_path,
-    )
-    return result["experiment_values"], result["feature_tables"]

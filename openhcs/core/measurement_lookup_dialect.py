@@ -90,6 +90,9 @@ class RuntimeMeasurementLookupDialect:
         ]
         | None
     ) = None
+    indexed_descriptor_suffix_width_provider: (
+        Callable[[RuntimeMeasurementFeatureParts], int | None] | None
+    ) = None
     object_domain_policy: RuntimeMeasurementObjectDomainPolicy = field(
         default_factory=RuntimeMeasurementObjectDomainPolicy
     )
@@ -162,6 +165,13 @@ class RuntimeMeasurementLookupDialect:
             raise TypeError(
                 "RuntimeMeasurementLookupDialect."
                 "alternative_feature_part_aliases_provider must be callable."
+            )
+        if self.indexed_descriptor_suffix_width_provider is not None and not callable(
+            self.indexed_descriptor_suffix_width_provider
+        ):
+            raise TypeError(
+                "RuntimeMeasurementLookupDialect."
+                "indexed_descriptor_suffix_width_provider must be callable."
             )
         if not isinstance(
             self.object_domain_policy, RuntimeMeasurementObjectDomainPolicy
@@ -357,8 +367,16 @@ class RuntimeMeasurementFeatureLookup:
     @property
     def source_names(self) -> tuple[str, ...]:
         names: list[str] = []
+        feature_parts = self.dialect_feature_parts
+        suffix_width_provider = self.dialect.indexed_descriptor_suffix_width_provider
+        suffix_width = (
+            None
+            if suffix_width_provider is None
+            else suffix_width_provider(self.normalized_parts)
+        )
+        source_end = len(feature_parts) - (0 if suffix_width is None else suffix_width)
         for feature_family in self.source_qualified_feature_families:
-            source_name = "_".join(self.dialect_feature_parts[len(feature_family) :])
+            source_name = "_".join(feature_parts[len(feature_family) : source_end])
             if source_name and source_name not in names:
                 names.append(source_name)
         return tuple(names)

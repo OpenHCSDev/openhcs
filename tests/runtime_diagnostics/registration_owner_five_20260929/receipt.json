@@ -1,0 +1,39 @@
+{
+  "source_sha": "c10bb3f858d88e7d8fff2fbbfee61c40ca81c887",
+  "imports": {
+    "openhcs": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-custom-function-admission-20260929/external/PolyStore/src/polystore/__init__.py"
+  },
+  "arguments": [
+    "--noconftest",
+    "--import-mode=importlib",
+    "-p",
+    "no:cacheprovider",
+    "-o",
+    "addopts=",
+    "-q",
+    "--tb=short",
+    "--basetemp=/home/ts/.cache/agent-scratch/openhcs-registration-owner-five-20260929/pytest",
+    "tests/unit/agent/test_custom_registration_admission.py::test_manager_named_source_operations_use_filename_owner"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 3.0643175909935962,
+  "peak_rss_kib": 183520,
+  "headroom_before": {
+    "free_gib": {
+      "/": 8.6,
+      "/dev/shm": 15.4,
+      "/home": 20.1,
+      "/tmp": 9.6
+    },
+    "level": "warning",
+    "ram_available_gib": 13.4,
+    "reasons": [
+      "swap used 11.1 GiB"
+    ],
+    "swap_used_gib": 11.1
+  },
+  "scope": "five owner-interception source cases only; parent-authorized lightweight check despite disk warning",
+  "no_mcp_gui_jvm_install_or_science": true,
+  "owned_disposable_scratch": "/home/ts/.cache/agent-scratch/openhcs-registration-owner-five-20260929"
+}

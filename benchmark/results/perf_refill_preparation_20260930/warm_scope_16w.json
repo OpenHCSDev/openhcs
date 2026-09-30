@@ -1,0 +1,18 @@
+{
+  "common_revision": "c50f42c46",
+  "candidate_revision": "82303175b33426c811f3ee9a35155342849e01f0",
+  "source_hashes": {
+    "processing_preparation.py": {
+      "candidate": "00cba18268d137d212f81f731c62a49f359ec7c38a18d436337776f6e81201be",
+      "control": "feaf5ccf3afb35070d64f6a3abde47ded6f7d8497071f76a8c9358441f01f8c7"
+    }
+  },
+  "design": "one control/candidate four-worker acceptance pair; declared public preparation before fresh-server runs; no concurrent scans/tests/compilation",
+  "mode": "16w_4c",
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+    "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+  }
+}

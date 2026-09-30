@@ -146,23 +146,106 @@ class AtomicMetadataWriter:
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
-                subdirectory[key] = {
-                    **subdirectory.get(key, {}),
-                    **({} if projection_metadata is None else projection_metadata[key]),
-                }
-            entries = {
-                record["virtual_path"]: record
-                for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+            self._merge_source_projection_fields(subdirectory, projection_metadata)
+            self._update_projection_geometry(subdirectory)
+            return data
+
+        self._execute_update(metadata_path, update)
+
+    @staticmethod
+    def _merge_source_projection_fields(
+        subdirectory: dict[str, Any],
+        projection_metadata: Mapping[str, Any] | None,
+    ) -> None:
+        """Merge the one durable projection store; shared by both transactions."""
+        for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+            subdirectory[key] = {
+                **subdirectory.get(key, {}),
+                **({} if projection_metadata is None else projection_metadata[key]),
             }
-            if projection_metadata is not None:
-                entries.update(
-                    {
-                        record["virtual_path"]: record
-                        for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
-                    }
+        entries = {
+            record["virtual_path"]: record
+            for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+        }
+        if projection_metadata is not None:
+            entries.update(
+                {
+                    record["virtual_path"]: record
+                    for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
+                }
+            )
+        subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
+
+    def publish_source_projection_metadata(
+        self,
+        metadata_path: str | Path,
+        subdirectory_name: str,
+        projection_metadata: Mapping[str, Any] | None,
+        *,
+        serializer: SourceProjectionMetadataSerializer,
+        saved_image_paths: Sequence[str],
+        microscope_handler_name: str,
+        source_filename_parser_name: str,
+        component_labels: Mapping[AllComponents, Mapping[str, str | None] | None],
+        backend: str,
+        is_main: bool,
+        results_dir: str | None,
+    ) -> None:
+        """Publish saved inventory from retained addresses, never generated names.
+
+        Final reconciliation uses the same durable typed projections after step
+        memory has been released. Missing producer records fail rather than
+        inventing coordinates from filenames or the input label cache.
+        """
+        saved_paths = tuple(saved_image_paths)
+        saved_set = frozenset(saved_paths)
+
+        def update(data):
+            data = self._ensure_subdirectories_structure(data)
+            subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
+                subdirectory_name, {}
+            )
+            self._merge_source_projection_fields(subdirectory, projection_metadata)
+            entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                subdirectory
+            ).entries
+            missing = saved_set.difference(entries)
+            if missing and projection_metadata is None:
+                raise MetadataWriteError(
+                    f"Saved images lack typed produced addresses: {sorted(missing)!r}."
                 )
-            subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
+            # Concurrent axes may persist their pixels before publishing their
+            # own producer records. A step publishes known saved addresses only;
+            # completed-plate reconciliation requires the entire saved inventory.
+            published_paths = tuple(path for path in saved_paths if path in entries)
+            # Only final reconciliation can prune deleted images: a step's file
+            # snapshot may precede another axis's concurrent publication.
+            retained_paths = tuple(
+                (projection, path)
+                for path, projection in entries.items()
+                if (
+                    projection_metadata is not None
+                    or path in saved_set
+                    or Path(path).parent != Path(subdirectory_name)
+                )
+            )
+            subdirectory.update(serializer.projection_fields(retained_paths))
+            projections = SourceProjectionSet(
+                tuple(entries[path] for path in published_paths)
+            )
+            subdirectory.update(
+                serializer.component_metadata(projections, labels=component_labels)
+            )
+            subdirectory[FIELDS.IMAGE_FILES] = list(published_paths)
+            subdirectory[FIELDS.MICROSCOPE_HANDLER_NAME] = microscope_handler_name
+            subdirectory[FIELDS.SOURCE_FILENAME_PARSER_NAME] = source_filename_parser_name
+            subdirectory[FIELDS.AVAILABLE_BACKENDS] = {
+                **subdirectory.get(FIELDS.AVAILABLE_BACKENDS, {}), backend: True
+            }
+            if is_main:
+                subdirectory[serializer.MAIN_FIELD] = True
+            if results_dir is not None:
+                subdirectory[serializer.RESULTS_DIR_FIELD] = results_dir
             self._update_projection_geometry(subdirectory)
             return data
 

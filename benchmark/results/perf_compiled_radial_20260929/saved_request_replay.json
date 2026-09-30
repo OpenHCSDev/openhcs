@@ -1,0 +1,198 @@
+[
+  {
+    "source": "request_1.pkl",
+    "shape": [
+      64,
+      64
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.00293143093585968,
+    "numba_seconds": 2.570017292164266,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 10
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 10
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 5.551115123125783e-17,
+        "failed_cells": 0,
+        "cells": 8
+      }
+    }
+  },
+  {
+    "source": "request_2.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.08718966227024794,
+    "numba_seconds": 0.006315666250884533,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 2.0816681711721685e-17,
+        "failed_cells": 0,
+        "cells": 3600
+      }
+    }
+  },
+  {
+    "source": "request_3.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.06153331696987152,
+    "numba_seconds": 0.0033044940792024136,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 1.3877787807814457e-17,
+        "failed_cells": 0,
+        "cells": 1980
+      }
+    }
+  },
+  {
+    "source": "request_4.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.12286257091909647,
+    "numba_seconds": 0.011941492091864347,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 2.220446049250313e-16,
+        "failed_cells": 0,
+        "cells": 3600
+      }
+    }
+  },
+  {
+    "source": "request_5.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.07376910420134664,
+    "numba_seconds": 0.004925407003611326,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 1.1102230246251565e-16,
+        "failed_cells": 0,
+        "cells": 1980
+      }
+    }
+  },
+  {
+    "source": "request_6.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.08348362101241946,
+    "numba_seconds": 0.006639786064624786,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 4500
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 1.1102230246251565e-16,
+        "failed_cells": 0,
+        "cells": 3600
+      }
+    }
+  },
+  {
+    "source": "request_7.pkl",
+    "shape": [
+      1650,
+      1650
+    ],
+    "dtype": "float32",
+    "native_seconds": 0.06105803279206157,
+    "numba_seconds": 0.0033713700249791145,
+    "tolerances_pass": true,
+    "errors": {
+      "fraction_at_distance": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "mean_pixel_fraction": {
+        "maximum_absolute_difference": 0.0,
+        "failed_cells": 0,
+        "cells": 2475
+      },
+      "radial_cv_by_bin": {
+        "maximum_absolute_difference": 1.6653345369377348e-16,
+        "failed_cells": 0,
+        "cells": 1980
+      }
+    }
+  }
+]

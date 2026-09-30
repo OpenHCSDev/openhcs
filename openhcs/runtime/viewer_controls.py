@@ -7,13 +7,24 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from math import floor, isfinite
 from numbers import Real
-from typing import ClassVar, Self, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Self, TypeAlias, TypeVar
+
+from polystore.streaming.identity import StreamProducerIdentity
+from zmqruntime.viewer_protocol import (
+    ViewerNativeLayerTransform,
+    ViewerSourceSpatialDomainPayload,
+)
+from openhcs.core.source_metadata import SourceVoxelSpacing
+
+if TYPE_CHECKING:
+    import numpy as np
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.constants import AllComponents
 
 ViewerScalar: TypeAlias = str | int | float | bool | None
+VerticesYX: TypeAlias = tuple[tuple[float, float], ...]
 ViewerPayloadAxisIndices: TypeAlias = tuple[int, ...] | dict[str, int]
 ViewerShapePayloadValueT = TypeVar("ViewerShapePayloadValueT")
 
@@ -439,7 +450,20 @@ class ViewerStateControlOptions:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerIntensityWindowControlOptions:
+class ViewerRoutedImageControlOptions:
+    """Exact route and route-local semantic image coordinates."""
+
+    route_key: str
+    axis_indices: Mapping[str, int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.route_key, str) or not self.route_key:
+            raise ValueError("Viewer image route_key must be a non-empty string.")
+        ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerIntensityWindowControlOptions(ViewerRoutedImageControlOptions):
     """Route-global image contrast derived from caller-declared percentiles.
 
     Semantic ``axis_indices`` select every real payload record matching those
@@ -447,17 +471,11 @@ class ViewerIntensityWindowControlOptions:
     coordinate on the route; display-array padding is outside this contract.
     """
 
-    route_key: str
-    axis_indices: Mapping[str, int] = field(default_factory=dict)
     low_percentile: float = 1.0
     high_percentile: float = 99.0
 
     def __post_init__(self) -> None:
-        if not isinstance(self.route_key, str) or not self.route_key:
-            raise ValueError(
-                "Viewer intensity-window route_key must be a non-empty string."
-            )
-        ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
+        ViewerRoutedImageControlOptions.__post_init__(self)
         low = self._percentile(self.low_percentile, "low_percentile")
         high = self._percentile(self.high_percentile, "high_percentile")
         if low >= high:
@@ -495,6 +513,226 @@ class ViewerIntensityWindowControlOptions:
                 "[0, 100]."
             )
         return numeric
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerFeatureMeasurementControlOptions(ViewerRoutedImageControlOptions):
+    """Read-only source-native XY measurement, never a rendered screenshot."""
+
+    vertices_yx: tuple[tuple[float, float], ...]
+    max_pixels: int = 262144
+    MAX_VERTICES: ClassVar[int] = 64
+    MIN_VERTICES: ClassVar[int] = 2
+    MAX_PIXELS: ClassVar[int] = 262144
+
+    def __post_init__(self) -> None:
+        ViewerRoutedImageControlOptions.__post_init__(self)
+        self.validate_vertices(self.vertices_yx, self.MIN_VERTICES)
+        self.validate_budget(self.max_pixels, "max_pixels", self.MAX_PIXELS)
+
+    @classmethod
+    def validate_vertices(
+        cls, vertices: Sequence[Sequence[float]], minimum: int
+    ) -> None:
+        if not minimum <= len(vertices) <= cls.MAX_VERTICES:
+            raise ValueError(
+                f"Measurement requires {minimum}..{cls.MAX_VERTICES} vertices."
+            )
+        for vertex in vertices:
+            if len(vertex) != 2:
+                raise ValueError(
+                    "Measurement vertices must be source-native (y,x) pairs."
+                )
+            for value in vertex:
+                if isinstance(value, bool) or not isinstance(value, Real):
+                    raise TypeError("Measurement coordinates must be real numbers.")
+                if not isfinite(float(value)):
+                    raise ValueError("Measurement coordinates must be finite.")
+
+    @staticmethod
+    def validate_budget(value: int, name: str, ceiling: int) -> None:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(f"Measurement {name} must be an integer.")
+        if not 1 <= value <= ceiling:
+            raise ValueError(f"Measurement {name} must be within 1..{ceiling}.")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerPolylineControlOptions(ViewerFeatureMeasurementControlOptions):
+    """Polyline profile: inclusive endpoints, mean across a centred pixel band."""
+
+    line_width: int = 1
+    interpolation_order: int = 1
+    max_samples: int = 4096
+
+    def __post_init__(self) -> None:
+        ViewerFeatureMeasurementControlOptions.__post_init__(self)
+        self.validate_budget(self.line_width, "line_width", 31)
+        self.validate_budget(self.max_samples, "max_samples", 4096)
+        if isinstance(self.interpolation_order, bool) or not isinstance(
+            self.interpolation_order, int
+        ):
+            raise TypeError("Measurement interpolation_order must be an integer.")
+        if self.interpolation_order not in (0, 1):
+            raise ValueError(
+                "Only nearest(0) and bilinear(1) interpolation are supported."
+            )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerRegionControlOptions(ViewerFeatureMeasurementControlOptions):
+    """An independently authored simple polygon, not a biological object mask."""
+
+    MIN_VERTICES: ClassVar[int] = 3
+    background_vertices_yx: tuple[tuple[float, float], ...] | None = None
+    support_threshold: float | None = None
+    background_sigma: float = 2.0
+
+    def __post_init__(self) -> None:
+        ViewerFeatureMeasurementControlOptions.__post_init__(self)
+        if self.background_vertices_yx is not None:
+            self.validate_vertices(self.background_vertices_yx, 3)
+        for name, value in (
+            ("support_threshold", self.support_threshold),
+            ("background_sigma", self.background_sigma),
+        ):
+            if value is not None:
+                if isinstance(value, bool) or not isinstance(value, Real):
+                    raise TypeError(f"Measurement {name} must be numeric.")
+                if not isfinite(float(value)):
+                    raise ValueError(f"Measurement {name} must be finite.")
+        if self.background_sigma < 0:
+            raise ValueError("Measurement background_sigma must be nonnegative.")
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerMeasurementCoordinates:
+    """Audit projection from the admitted item and native coordinate owners."""
+
+    route_key: str
+    source_path: str
+    producer: StreamProducerIdentity
+    components: dict[str, ViewerScalar | tuple[ViewerScalar, ...]]
+    axis_indices: dict[str, int]
+    aggregate_axis_indices: tuple[int, ...]
+    layer_axis_labels: tuple[str, ...]
+    source_domain: ViewerSourceSpatialDomainPayload
+    source_spacing: SourceVoxelSpacing
+    native_transform: ViewerNativeLayerTransform
+    world_units: tuple[str, ...]
+    physical_calibration_verified: bool = False
+    coordinate_convention: str = (
+        "source-native (y,x) pixel centres; world points use mounted layer.data_to_world including full affine"
+    )
+    calibration_note: str = (
+        "Source spacing/units are declared provenance, not independent physical verification; scale1 is not proof of micrometres."
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerIntensityStatistics:
+    count: int
+    minimum: float
+    maximum: float
+    mean: float
+    median: float
+    standard_deviation: float
+    total: float
+
+    @classmethod
+    def from_pixels(cls, values: np.ndarray) -> ViewerIntensityStatistics:
+        import numpy as np
+
+        if not values.size or not np.isfinite(values).all():
+            raise ValueError("Measurement pixels must be nonempty and finite.")
+        result = cls(
+            int(values.size),
+            float(values.min()),
+            float(values.max()),
+            float(values.mean()),
+            float(np.median(values)),
+            float(values.std(ddof=0)),
+            float(values.sum()),
+        )
+        if not all(
+            isfinite(v) for v in (result.mean, result.standard_deviation, result.total)
+        ):
+            raise ValueError("Measurement statistics overflowed.")
+        return result
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerPolylineMeasurement:
+    vertices_yx: VerticesYX
+    world_vertices: tuple[tuple[float, ...], ...]
+    data_length: float
+    data_chord_length: float
+    world_length: float
+    world_chord_length: float
+    profile_distance_data: tuple[float, ...]
+    profile_distance_world: tuple[float, ...]
+    profile_values: tuple[float, ...]
+    statistics: ViewerIntensityStatistics
+    line_width: int
+    interpolation_order: int
+    reduction: str = "mean across centred perpendicular band"
+    sampling: str = (
+        "ceil(segment length+1) endpoint-inclusive; repeated junction uses preceding segment; "
+        "nearest(0)/bilinear(1), constant exterior=0 with full band admitted inside source"
+    )
+    data_length_unit: str = "pixel"
+    intensity_unit: str = "raw source value"
+    statistics_precision: str = "float64, population standard deviation (ddof=0)"
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerPolygonGeometry:
+    area: float
+    perimeter: float
+    extent: float
+    roundness: float
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerRasterRegionGeometry:
+    area_pixels: int
+    bbox_yx: tuple[int, int, int, int]
+    centroid_yx: tuple[float, float]
+    extent: float
+    perimeter_pixels: float
+    roundness: float | None
+    eccentricity: float
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerRegionMeasurement:
+    vertices_yx: VerticesYX
+    world_vertices: tuple[tuple[float, ...], ...]
+    polygon: ViewerPolygonGeometry
+    world_area: float
+    world_perimeter: float
+    world_roundness: float
+    raster: ViewerRasterRegionGeometry
+    statistics: ViewerIntensityStatistics
+    background_vertices_yx: VerticesYX | None
+    background_statistics: ViewerIntensityStatistics | None
+    support_threshold: float | None
+    support_count: int | None
+    support_fraction: float | None
+    foreground_minus_background_mean: float | None
+    background_sigma: float
+    region_definition: str = (
+        "independent simple polygon; integer pixel centres including boundary; NOT a biological mask"
+    )
+    support_definition: str = (
+        "raw values strictly > threshold; explicit threshold or background mean + sigma*population std"
+    )
+    geometry_definition: str = (
+        "polygon area/perimeter are continuous; raster area/extent/perimeter use skimage.regionprops, 4-neighbour perimeter; roundness=4*pi*area/perimeter^2 (not clamped)"
+    )
+    data_area_unit: str = "pixel^2"
+    intensity_unit: str = "raw source value"
+    statistics_precision: str = "float64, population standard deviation (ddof=0)"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

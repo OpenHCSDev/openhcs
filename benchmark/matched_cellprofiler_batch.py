@@ -188,23 +188,32 @@ def _invoke_native_worker(
     native_environment.update(
         {name: str(temporary_root) for name in ("TMPDIR", "TMP", "TEMP")}
     )
-    process = subprocess.run(
-        (str(native_python), str(worker_script), str(request_path)),
-        cwd=project_root,
-        env=native_environment,
-        capture_output=True,
-        text=True,
-        timeout=900 * (repetitions + 1),
-        check=False,
-    )
-    evidence_prefix.with_name(evidence_prefix.name + "_stdout.log").write_text(
-        process.stdout
-    )
-    evidence_prefix.with_name(evidence_prefix.name + "_stderr.log").write_text(
-        process.stderr
-    )
+    report_path = evidence_prefix.with_name(
+        evidence_prefix.name + "_report.json"
+    ).resolve()
+    request = json.loads(request_path.read_text())
+    request["report_path"] = str(report_path)
+    request_path.write_text(json.dumps(request, indent=2) + "\n")
+    with (
+        evidence_prefix.with_name(evidence_prefix.name + "_stdout.log").open(
+            "w"
+        ) as stdout,
+        evidence_prefix.with_name(evidence_prefix.name + "_stderr.log").open(
+            "w"
+        ) as stderr,
+    ):
+        process = subprocess.run(
+            (str(native_python), str(worker_script), str(request_path)),
+            cwd=project_root,
+            env=native_environment,
+            stdout=stdout,
+            stderr=stderr,
+            text=True,
+            timeout=900 * (repetitions + 1),
+            check=False,
+        )
     process.check_returncode()
-    return json.loads(process.stdout.splitlines()[-1])
+    return json.loads(report_path.read_text())
 
 
 def _worker_axis_evidence(

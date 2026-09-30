@@ -4261,6 +4261,8 @@ def test_mcp_dev_client_function_commands_project_tool_arguments(tmp_path):
             str(custom_source),
             "--no-persist",
             "--full-signature",
+            "--port",
+            "15993",
         )
     )
     authoring_args = parser.parse_args(
@@ -4290,6 +4292,12 @@ def test_mcp_dev_client_function_commands_project_tool_arguments(tmp_path):
         "source_code": "from openhcs.core.memory import numpy\n",
         "persist": False,
         "compact_signature": False,
+        "function_name": None,
+        "storage_dir": None,
+        "host": "localhost",
+        "port": 15993,
+        "transport_mode": None,
+        "persistent": True,
     }
     assert authoring_call.name == "openhcs_get_authoring_context"
     assert authoring_call.arguments == {

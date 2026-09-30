@@ -1,0 +1,8 @@
+phase,name,symbol,bases,is_abstract,status
+before,BuildPyWithMcpKnowledge,home.ts.code.projects.openhcs-compile-perf.setup.BuildPyWithMcpKnowledge,['_build_py'],False,projected
+before,SdistWithMcpKnowledge,home.ts.code.projects.openhcs-compile-perf.setup.SdistWithMcpKnowledge,['_sdist'],False,projected
+after,BuildPyWithMcpKnowledge,home.ts.code.projects.openhcs-compile-perf.setup.BuildPyWithMcpKnowledge,['_build_py'],False,projected
+after,SdistWithMcpKnowledge,home.ts.code.projects.openhcs-compile-perf.setup.SdistWithMcpKnowledge,['_sdist'],False,projected
+after,OpenHCSNativeExtension,home.ts.code.projects.openhcs-compile-perf.setup.OpenHCSNativeExtension,"['Extension', 'ABC']",True,projected
+after,GranularityNativeExtension,home.ts.code.projects.openhcs-compile-perf.setup.GranularityNativeExtension,['OpenHCSNativeExtension'],False,projected
+after,TabularNativeExtension,home.ts.code.projects.openhcs-compile-perf.setup.TabularNativeExtension,['OpenHCSNativeExtension'],False,projected

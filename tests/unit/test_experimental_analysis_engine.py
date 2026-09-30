@@ -1,9 +1,14 @@
 """Tests for the declaration-configured experimental-analysis workflow."""
 
 import inspect
+import os
+import subprocess
+import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from openhcs.core.config import ExperimentalAnalysisConfig, NormalizationMethod
 from openhcs.processing.backends.experimental_analysis import (
@@ -145,24 +150,25 @@ def test_legacy_experimental_format_mirrors_are_removed() -> None:
     assert all(not (repository_root / path).exists() for path in legacy_paths)
 
 
-def test_directory_workflow_runs_declared_metaxpress_analysis_end_to_end(
-    tmp_path: Path,
+def write_analysis_inputs(
+    directory: Path,
+    wells: tuple[str, str, str] = ("A01", "A02", "A03"),
 ) -> None:
     layout = pd.DataFrame(
         [
             ["N", 1, None],
             ["Scope", "EDDU_metaxpress", None],
-            ["Controls", "A01", "A02"],
+            ["Controls", wells[0], wells[1]],
             ["Plate Group", 1, 1],
             ["Group N", 1, 1],
             ["Condition", "Drug", None],
             ["Dose", 1, None],
-            ["Wells1", "A03", None],
+            ["Wells1", wells[2], None],
             ["Plate Group", 1, None],
         ]
     )
     plate_groups = pd.DataFrame([[None, 1], ["N1", "plate-a"]])
-    with pd.ExcelWriter(tmp_path / "config.xlsx") as writer:
+    with pd.ExcelWriter(directory / "config.xlsx") as writer:
         layout.to_excel(
             writer,
             sheet_name="drug_curve_map",
@@ -180,16 +186,21 @@ def test_directory_workflow_runs_declared_metaxpress_analysis_end_to_end(
             ["Barcode", "barcode", None],
             ["Plate ID", "plate-a", None],
             ["Well", "Area", None],
-            ["A01", 2, None],
-            ["A02", 4, None],
-            ["A03", 6, None],
+            [wells[0], 2, None],
+            [wells[1], 4, None],
+            [wells[2], 6, None],
         ]
     ).to_csv(
-        tmp_path / "metaxpress_style_summary.csv",
+        directory / "metaxpress_style_summary.csv",
         index=False,
         header=False,
     )
 
+
+def test_directory_workflow_runs_declared_metaxpress_analysis_end_to_end(
+    tmp_path: Path,
+) -> None:
+    write_analysis_inputs(tmp_path)
     result = ExperimentalAnalysisEngine(ExperimentalAnalysisConfig()).run_directory(
         tmp_path
     )
@@ -201,3 +212,62 @@ def test_directory_workflow_runs_declared_metaxpress_analysis_end_to_end(
         "compiled_results_raw.xlsx",
         "heatmaps.xlsx",
     }.issubset(path.name for path in tmp_path.iterdir())
+
+
+def run_standalone_cli(directory: Path) -> subprocess.CompletedProcess[str]:
+    source_root = Path(__file__).resolve().parents[2]
+    return subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(source_root / "scripts/run_experimental_analysis.py"),
+            str(directory),
+        ],
+        env={**os.environ, "PYTHONPATH": str(source_root)},
+        cwd=directory,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+
+
+@pytest.mark.parametrize(
+    "wells", [("A01", "A02", "A03"), ("R01C01", "R01C02", "R01C03")]
+)
+def test_actual_standalone_cli_preserves_values_inputs_and_output_names(
+    tmp_path, wells
+):
+    write_analysis_inputs(tmp_path, wells)
+    inputs = {
+        path: sha256(path.read_bytes()).hexdigest() for path in tmp_path.iterdir()
+    }
+    command = run_standalone_cli(tmp_path)
+    assert command.returncode == 0, command.stdout + command.stderr
+    assert "deprecated" not in command.stderr
+    assert "Analysis complete" in command.stdout
+    assert {path: sha256(path.read_bytes()).hexdigest() for path in inputs} == inputs
+    expected_outputs = {
+        "compiled_results_normalized.xlsx",
+        "compiled_results_normalized_raw.xlsx",
+        "heatmaps.xlsx",
+    }
+    assert expected_outputs.issubset(path.name for path in tmp_path.iterdir())
+    assert not (tmp_path / "compiled_results_raw.xlsx").exists()
+    normalized = pd.read_excel(
+        tmp_path / "compiled_results_normalized.xlsx", sheet_name="Area", index_col=0
+    )
+    raw = pd.read_excel(
+        tmp_path / "compiled_results_normalized_raw.xlsx",
+        sheet_name="Area",
+        index_col=0,
+    )
+    assert normalized.iloc[0, 0] == 2.0
+    assert raw.iloc[0, 0] == 6.0
+
+
+def test_actual_standalone_cli_rejects_missing_inputs_without_outputs(tmp_path):
+    command = run_standalone_cli(tmp_path)
+    assert command.returncode == 1
+    assert "Config file not found" in command.stdout
+    assert not tuple(tmp_path.iterdir())
