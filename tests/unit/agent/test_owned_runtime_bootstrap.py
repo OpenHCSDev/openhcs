@@ -210,10 +210,45 @@ def test_failed_reservation_keeps_exact_child_and_uncertainty(setup, monkeypatch
     monkeypatch.setattr(
         TransportMode.TCP.declaration,
         "record_startup_owner",
-        Mock(side_effect=OSError("readonly reservation")),
+        Mock(side_effect=[None, None, OSError("readonly reservation")]),
     )
     result = service.start_from_request(request)
     assert result.handle.process_identity == ProcessIdentity.current()
     assert result.errors[0].code == "runtime_bootstrap_uncertain"
     assert not result.ready
     spawn.assert_called_once()
+
+
+def test_real_cli_projection_builds_explicit_connection_without_dispatch():
+    from openhcs.mcp.dev_client import _build_parser, _calls_from_args
+
+    parser = _build_parser()
+    args = parser.parse_args(
+        [
+            "runtime-start-owned",
+            "5913",
+            "--host",
+            "127.0.0.1",
+            "--transport-mode",
+            "tcp",
+        ]
+    )
+    calls = _calls_from_args(args)
+    assert len(calls) == 1
+    assert calls[0].name == agent_capabilities.start_owned_runtime.name
+    assert calls[0].arguments["port"] == 5913
+    assert calls[0].arguments["transport_mode"] == "tcp"
+
+
+def test_bootstrap_is_exposed_on_existing_authoring_and_core_surfaces():
+    from openhcs.agent.capabilities import (
+        AuthoringLocalCapabilitySurfaceProfile,
+        CoreLocalCapabilitySurfaceProfile,
+    )
+
+    for profile in (
+        AuthoringLocalCapabilitySurfaceProfile(),
+        CoreLocalCapabilitySurfaceProfile(),
+    ):
+        assert profile.includes(agent_capabilities.start_owned_runtime)
+        assert profile.includes(agent_capabilities.observe_owned_runtime)

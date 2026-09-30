@@ -1151,6 +1151,7 @@ class ZMQExecutionClient(
         # suppression belongs to the launch policy's creation flags.
         cmd = [
             sys.executable,
+            "-B",
             "-X",
             "faulthandler",
             *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
@@ -1207,7 +1208,10 @@ class ZMQExecutionClient(
                 storage_dir=CustomFunctionManager.default_storage_directory(),
                 registry_cache_dir=get_cache_file_path("", create=False),
                 transport_write_paths=(
-                    declaration.startup_lock_path(self.port, self.config),
+                    *(
+                        declaration.startup_lock_path(port, self.config)
+                        for port in self.endpoint.port_pair(self.config).ports
+                    ),
                     *sockets,
                 ),
             )

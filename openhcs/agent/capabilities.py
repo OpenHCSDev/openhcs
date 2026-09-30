@@ -2810,6 +2810,7 @@ class StartOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
     mutating = True
     side_effects = ("spawns_owned_execution_runtime", "writes_native_startup_artifacts")
     exposition = RuntimeServerCliConnectionCapability.exposition.refine(
+        workflow_group=CapabilityWorkflowGroup.FUNCTION_AUTHORING,
         visibility=CapabilityVisibility.STANDARD,
         role=CapabilityRole.PRIMARY,
         workflow_stage=CapabilityWorkflowStage.CONTROL,

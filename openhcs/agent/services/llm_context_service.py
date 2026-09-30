@@ -113,7 +113,10 @@ def render_authoring_context_sections(
 
 
 class CatalogPreparationReadinessSection(
-    AuthoringContextSection, FirstUseWorkflowContext, PipelineAuthoringRulesContext
+    AuthoringContextSection,
+    FirstUseWorkflowContext,
+    PipelineAuthoringRulesContext,
+    CustomFunctionAuthoringRulesContext,
 ):
     """One readiness entrypoint shared by first-use and pipeline contexts."""
 

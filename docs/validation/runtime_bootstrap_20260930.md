@@ -98,3 +98,35 @@ and actual generated MCP/CLI entrypoints. Installed acceptance follows parent
 review, paired dependency integration and offline installation. No Closes251
 claim from this source checkpoint. Existing startup does not optimise cold
 catalogue preparation; the retained110.5s predecessor remains a limitation.
+
+## Source hardening checkpoint
+
+Normally merged current main `32d070c261d9bcfeb2354b70203f79a71d15ce40`
+after initial draft publication. No production/doc/test edits to parent254's
+owned files. Paired drafts: [ZMQRuntime9](https://github.com/OpenHCSDev/ZMQRuntime/pull/9)
+and [metaclass-registry1](https://github.com/OpenHCSDev/metaclass-registry/pull/1),
+the latter pinned448cdf07e0a0b513a9c9a8f67e896f601da11771.
+
+The existing native startup locks now reserve both data/control addresses in
+stable order. A pre-bind second launch whose data address overlaps the first
+child's control address rejects before spawn. Reservation first transfers from
+the invoking process to the exact child; a publication failure retains an
+active reservation and uncertainty handle instead of inviting a replay.
+Deadline expiry rejects before spawn. Canonical child launch uses Python `-B`
+so it does not introduce unadmitted source bytecode writes.
+
+Source-only real CLI parser -> typed request -> tool-call projection passes
+using the existing positional port contract; no call is sent. Existing authoring
+and core surfaces include startup/observation from the leaf's FUNCTION_AUTHORING
+metadata, not a profile roster edit. The same readiness facet now reaches the
+custom-function context too, without another guide or changed QA/bounds.
+
+Final focused shard **66 passed, 2 actual MCP cases deselected, 11.85s**,
+process12.55s, peak280400KiB, exit0. Durable receipts:
+`runtime_bootstrap_20260930/source-hardening.txt` and
+`source-hardening-resources.txt`. Scoped undefined-name checks and diff-check
+pass. The existing gateway's missing DebugPausedWorkerStatus annotation import
+was closed in its own module, not bypassed in reflection.
+Latest actual guard /home20.4GiB RAM11.0GiB; historical swap13.3GiB is the only
+warning. No native/MCP validation or installed mutation. Remaining live gates
+above still apply; source pair-reservation tests are not cross-process live proof.
