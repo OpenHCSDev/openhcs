@@ -1677,7 +1677,7 @@ class ArtifactSpec:
             )
         return self.plan_type
 
-    def require_measurement_feature_owner(self) -> type["RuntimeMeasurementFeatureOwner"]:
+    def require_measurement_feature_owner(self) -> type[RuntimeMeasurementFeatureOwner]:
         """Require the declared row owner without inferring one from consumers."""
         if self.measurement_feature_owner is None:
             raise ValueError(
