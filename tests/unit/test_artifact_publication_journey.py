@@ -87,32 +87,37 @@ def progress_events():
     set_progress_queue(None)
 
 
-def _plate(root: Path) -> Path:
+def _plate(root: Path, site_count: int = 1) -> Path:
     root.mkdir()
-    path = root / "A01_s001_w1_z001_t001.tif"
     pixels = np.zeros((8, 8), dtype=np.uint16)
     pixels[2:5, 2:5] = 1
-    tifffile.imwrite(path, pixels)
-    address = OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1)
-    metadata = ImagePayloadMetadata(
-        source_path=str(path),
-        source_component_metadata={**address.as_component_metadata(), "extension": ".tif"},
-        source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
-    )
-    projection = SourcePlaneProjection(
-        address=address,
-        ref=SourcePixelRef("disk", str(path)),
-        source_metadata=metadata.source_component_metadata,
-        image_metadata=metadata,
-    )
+    projections = []
+    projection_paths = []
+    for site in range(1, site_count + 1):
+        path = root / f"A01_s{site:03d}_w1_z001_t001.tif"
+        tifffile.imwrite(path, pixels)
+        address = OpenHCSPlaneAddress.from_values("A01", site, 1, 1, 1)
+        metadata = ImagePayloadMetadata(
+            source_path=str(path),
+            source_component_metadata={**address.as_component_metadata(), "extension": ".tif"},
+            source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
+        )
+        projection = SourcePlaneProjection(
+            address=address,
+            ref=SourcePixelRef("disk", str(path)),
+            source_metadata=metadata.source_component_metadata,
+            image_metadata=metadata,
+        )
+        projections.append(projection)
+        projection_paths.append((projection, path.name))
     document = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()).metadata_dict(
-        SourceProjectionSet((projection,)),
+        SourceProjectionSet(tuple(projections)),
         microscope_handler_name=Microscope.OPENHCS.value,
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[1, 1],
         pixel_size=0.65,
         main=True,
-        projection_paths=((projection, path.name),),
+        projection_paths=tuple(projection_paths),
     )
     (root / "openhcs_metadata.json").write_text(json.dumps({"subdirectories": {".": document}}))
     return root
