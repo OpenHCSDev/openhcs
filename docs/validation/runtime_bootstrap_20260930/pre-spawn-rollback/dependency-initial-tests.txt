@@ -1,0 +1,32 @@
+/home/ts/code/projects/openhcs-sequential/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+.....F.......................................                            [100%]
+=================================== FAILURES ===================================
+_______________ test_malformed_startup_reservation_fails_closed ________________
+
+client = <test_owned_startup.Client object at 0x7fe35cdd2120>
+
+    def test_malformed_startup_reservation_fails_closed(client):
+        path = client.transport_mode.declaration.startup_lock_path(client.port, client.config)
+>       path.parent.mkdir(parents=True)
+
+tests/test_owned_startup.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/ts/.cache/agent-scratch/pr256-pre-spawn-rollback-20260930/dependency-pytest/test_malformed_startup_reserva0')
+mode = 511, parents = True, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileExistsError: [Errno 17] File exists: '/home/ts/.cache/agent-scratch/pr256-pre-spawn-rollback-20260930/dependency-pytest/test_malformed_startup_reserva0'
+
+/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py:1311: FileExistsError
+=========================== short test summary info ============================
+FAILED tests/test_owned_startup.py::test_malformed_startup_reservation_fails_closed
+1 failed, 44 passed in 0.56s

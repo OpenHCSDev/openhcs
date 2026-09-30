@@ -67,12 +67,13 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
         popen_call["stdout"].close()
 
     command = popen_call["command"]
-    assert command[:3] == [
+    assert command[:4] == [
         sys.executable,
+        "-B",
         "-X",
         "faulthandler",
     ]
-    assert command[3:5] == list(
+    assert command[4:6] == list(
         OpenHCSRuntimeImportAuthority.current().module_process_arguments(
             "openhcs.runtime.zmq_execution_server_launcher"
         )
