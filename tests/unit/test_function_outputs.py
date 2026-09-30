@@ -2147,3 +2147,34 @@ def test_completed_plate_metadata_skips_unmaterialized_output_target(tmp_path):
     OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
 
     assert not (plate_root / "openhcs_metadata.json").exists()
+
+
+@pytest.mark.parametrize("contents", ["absent", "tables", "images"])
+def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, contents):
+    directory = tmp_path / "results"
+    if contents != "absent":
+        directory.mkdir()
+        if contents == "tables":
+            (directory / "measurements.csv").write_text("ObjectNumber,Area\n1,4\n")
+        else:
+            tifffile.imwrite(directory / "A01_s001_w2_z001_t001.tif", np.ones((2, 2), dtype=np.uint8))
+    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    plan = function_step_plan("SaveImages")
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.analysis_results_dir = str(directory)
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend=Backend.DISK.value,
+    )
+    target = RuntimeArtifactMetadataTarget.from_plan(plan)
+    assert target is not None
+    assert target.output_dir == directory
+    selected = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+    if contents == "images":
+        assert selected == (target,)
+    else:
+        assert selected == ()
+        plan.create_openhcs_metadata = True
+        OpenHCSMetadataWriter.write(context, plan)
+        assert not (tmp_path / "openhcs_metadata.json").exists()
+    assert directory.exists() == (contents != "absent")
