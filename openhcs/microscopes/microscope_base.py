@@ -15,7 +15,7 @@ from typing import List, Optional, Tuple, Union, Type, TYPE_CHECKING
 
 # Import constants
 from openhcs.constants.constants import AllComponents, Backend, Microscope
-from openhcs.core.source_metadata import source_metadata_dict
+from openhcs.core.source_metadata import SourceVoxelSpacing, source_metadata_dict
 
 # Import generic metaclass infrastructure from external package
 from metaclass_registry import (
@@ -409,18 +409,28 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
         metadata_path = get_metadata_path(plate_path)
         writer = AtomicMetadataWriter()
 
+        # Publish acquisition calibration on the source identity consumed by
+        # both compiled loading and manual streaming, not only the UI scalar.
+        pixel_size = self.metadata_handler.get_pixel_size(plate_path)
+        acquisition_spacing = SourceVoxelSpacing((pixel_size, pixel_size))
+        source_metadata = {}
+        for virtual_path in workspace_mapping:
+            parsed = self.parser.parse_filename(Path(virtual_path).name)
+            if parsed is None:
+                continue
+            values = source_metadata_dict(parsed.wire_mapping())
+            SourceVoxelSpacing.from_source_metadata(values).with_missing_from(
+                acquisition_spacing
+            ).merge_into(values, path=virtual_path)
+            source_metadata[virtual_path] = values
+
         # Build metadata dict with all available fields
         metadata_dict = {
             FIELDS.WORKSPACE_MAPPING: {
                 virtual_path: source_ref.to_workspace_mapping()
                 for virtual_path, source_ref in workspace_mapping.items()
             },
-            FIELDS.SOURCE_METADATA: {
-                virtual_path: source_metadata_dict(parsed.wire_mapping())
-                for virtual_path in workspace_mapping
-                if (parsed := self.parser.parse_filename(Path(virtual_path).name))
-                is not None
-            },
+            FIELDS.SOURCE_METADATA: source_metadata,
             FIELDS.AVAILABLE_BACKENDS: {
                 Backend.DISK.value: True,
                 Backend.VIRTUAL_WORKSPACE.value: True,

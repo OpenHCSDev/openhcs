@@ -6082,7 +6082,12 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         )
 
     def clear_accumulated_stream_state(self) -> None:
-        """Reset stream domains that must not leak across pipeline executions."""
+        """Cancel intake work without orphaning inspectable mounted payloads.
+
+        A pipeline execution is not a native-layer removal. Mounted raw and
+        previous-result routes retain the data and domains that their controls
+        inspect; unmounted intake belongs only to the cancelled stream cycle.
+        """
         self.layer_route_state.reset_settlement()
         pending_updates = self.layer_route_state.drain_pending_updates()
         self.display_pipeline.clear_display_work()
@@ -6092,9 +6097,16 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 "clearing stream state",
                 len(pending_updates),
             )
-        self.component_groups.clear()
-        self.component_values = ViewerRouteComponentValueTracker()
-        self.component_name_metadata.clear()
+        if self.viewer is not None:
+            _NAPARI_COMPONENT_DISPLAY_COORDINATOR._reconcile_deleted_layers(self)
+        retained_routes = frozenset(self.layer_route_state.layers)
+        for route_key in tuple(self.component_groups):
+            if route_key not in retained_routes:
+                self.component_groups.purge(route_key)
+                self.layer_route_state.purge_route(route_key)
+        self.component_values.retain_routes(retained_routes)
+        if not retained_routes:
+            self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
         self.batch_processors = NapariBatchProcessorStore(
             debounce_policy=self.layer_batch_processor_debounce_policy,
