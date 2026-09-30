@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_execution.py", line 695, in execute
+    return executor.run()
+           ^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_execution.py", line 766, in run
+    step_observation = finalize_function_step_outputs(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_outputs.py", line 168, in finalize_function_step_outputs
+    _profile_finalization_phase(
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_outputs.py", line 181, in _profile_finalization_phase
+    operation()
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_outputs.py", line 170, in <lambda>
+    lambda: OpenHCSMetadataWriter.write(context, plan),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_outputs.py", line 1000, in write
+    target.write(context, produced_plan=plan)
+  File "/home/ts/code/projects/openhcs/openhcs/core/steps/function_outputs.py", line 776, in write
+    for path in context.filemanager.list_image_files(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/external/PolyStore/src/polystore/filemanager.py", line 479, in list_image_files
+    files = backend_instance.list_files(str(directory), pattern, extensions, recursive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/external/PolyStore/src/polystore/disk.py", line 489, in list_files
+    raise ValueError(f"Path is not a directory: {disk_directory}")
+ValueError: Path is not a directory: /home/ts/code/projects/openhcs-benchmark-runs/perf-current-3d-context-profile-after-index-run-20260930/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results

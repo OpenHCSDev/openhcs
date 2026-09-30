@@ -1103,6 +1103,15 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
     """Image artifacts persist independently of main-flow image/checkpoint storage."""
 
     @classmethod
+    def from_execution(
+        cls, context: ProcessingContext, plan: CompiledStepPlan
+    ) -> RuntimeArtifactMetadataTarget | None:
+        target = super().from_execution(context, plan)
+        if target is None or not target.contains_images(context):
+            return None
+        return target
+
+    @classmethod
     def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:
         materialization = plan.runtime_artifact_materialization
         if not materialization.has_persistent_target:
