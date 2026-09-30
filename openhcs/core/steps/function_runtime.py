@@ -82,6 +82,7 @@ from openhcs.core.aligned_image_payload import (
     unstack_image_payload_context,
 )
 from openhcs.core.memory import (
+    MemoryType,
     convert_memory,
     stack_runtime_slices,
     unstack_runtime_slices,
@@ -2437,6 +2438,36 @@ class PatternGroupOutputData:
                 f"got {len(self.slice_contexts)} context(s) for {len(self.slices)} slice(s)."
             )
 
+    @classmethod
+    def from_aligned_stack(
+        cls,
+        value: AlignedImageStack,
+        *,
+        memory_type: MemoryType,
+        device_id: int | None,
+    ) -> "PatternGroupOutputData":
+        """Materialize correlated output slices through the alignment owner."""
+        projected_outputs = tuple(value.projected_output_slices())
+        payloads = [payload for payload, _context in projected_outputs]
+        data = tuple(image_payload_data(payload) for payload in payloads)
+        stack_payload = None
+        if len({tuple(np.shape(item)) for item in data}) == 1:
+            stacked = stack_runtime_slices(data, memory_type, device_id)
+            stack_payload = stack_image_payload_context(
+                payloads,
+                stacked,
+                metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+            )
+        return cls(
+            slices=payloads,
+            slice_contexts=(
+                tuple(context for _payload, context in projected_outputs)
+                if value.slice_contexts
+                else ()
+            ),
+            stack_payload=stack_payload,
+        )
+
     def __iter__(self) -> Iterator[RuntimeArrayData]:
         return iter(self.slices)
 
@@ -3117,33 +3148,12 @@ class PatternGroupRuntime:
                 ),
             )
         if isinstance(processed_stack, AlignedImageStack):
-            projected_outputs = tuple(processed_stack.projected_output_slices())
-            output_payloads = [payload for payload, _context in projected_outputs]
-            output_data = tuple(
-                image_payload_data(payload) for payload in output_payloads
-            )
-            stack_payload = None
-            if len({tuple(np.shape(value)) for value in output_data}) == 1:
-                stacked_data = stack_runtime_slices(
-                    output_data,
-                    self.request.execution_plan.output_memory_type,
-                    self.request.execution_plan.device_id_for(
-                        self.request.execution_plan.output_memory_type
-                    ),
-                )
-                stack_payload = stack_image_payload_context(
-                    output_payloads,
-                    stacked_data,
-                    metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
-                )
-            return PatternGroupOutputData(
-                slices=output_payloads,
-                slice_contexts=(
-                    tuple(context for _payload, context in projected_outputs)
-                    if processed_stack.slice_contexts
-                    else ()
+            return PatternGroupOutputData.from_aligned_stack(
+                processed_stack,
+                memory_type=self.request.execution_plan.output_memory_type,
+                device_id=self.request.execution_plan.device_id_for(
+                    self.request.execution_plan.output_memory_type
                 ),
-                stack_payload=stack_payload,
             )
         output_context = self._unwrapped_main_flow_output_context()
         output_projection = RuntimeSliceProjection.preserved_context_for_value(

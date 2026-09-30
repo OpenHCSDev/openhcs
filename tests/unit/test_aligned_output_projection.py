@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from openhcs.core import aligned_image_payload
 from openhcs.core.aligned_image_payload import (
@@ -88,3 +89,17 @@ def test_shared_projection_retains_nesting_and_fresh_metadata_snapshots():
     )
     nested = AlignedImageStack((stack,))
     assert tuple(nested.projected_output_slices()) == ((payload, None),)
+
+
+def test_aligned_projection_preserves_strict_context_cardinality():
+    context = AlignedImageSliceContext.main_flow("A")
+    value = ImageOutputBundle((np.ones((2, 2)),), (context,))
+    value.slice_contexts = (context, context)
+
+    with pytest.raises(ValueError, match="zip"):
+        tuple(value.projected_output_slices())
+
+    assert (
+        ImageOutputBundle.projected_output_slices
+        is AlignedImageStack.projected_output_slices
+    )

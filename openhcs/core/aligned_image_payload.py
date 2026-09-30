@@ -1199,8 +1199,8 @@ class AlignedImageStack:
         self,
     ) -> Iterator[tuple[Any, AlignedImageSliceContext | None]]:
         """Project each output once together with its declaration-owned context."""
-        for index, payload in enumerate(self.slices):
-            context = self.slice_contexts[index] if self.slice_contexts else None
+        contexts = self.slice_contexts or (None,) * len(self.slices)
+        for payload, context in zip(self.slices, contexts, strict=True):
             for output_slice in payload_slices_for_alignment(payload):
                 yield output_slice, context
 
