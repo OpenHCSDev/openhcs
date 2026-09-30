@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import csv
-import io
-import math
 import re
 import statistics
 from collections import OrderedDict
@@ -15,6 +12,7 @@ from numbers import Real
 from pathlib import PurePosixPath
 from typing import cast, TYPE_CHECKING, ClassVar, TypeVar
 
+from openhcs.core._tabular_native import render_csv as _render_native_csv
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -901,29 +899,13 @@ def _render_csv(
     nan_representation: SpreadsheetNanRepresentation,
 ) -> str:
     columns = tuple(dict.fromkeys(field_name for row in rows for field_name in row))
-    stream = io.StringIO(newline="")
-    writer = csv.writer(stream, delimiter=delimiter.value, lineterminator="\n")
-    if columns:
-        writer.writerow(columns)
-        writer.writerows(
-            tuple(
-                _csv_cell(row.get(column, ""), nan_representation) for column in columns
-            )
-            for row in rows
-        )
-    return stream.getvalue()
-
-
-def _csv_cell(value: object, mode: SpreadsheetNanRepresentation) -> object:
-    if isinstance(value, Real) and not isinstance(value, bool):
-        numeric = float(value)
-        if not math.isfinite(numeric):
-            if mode is SpreadsheetNanRepresentation.NULL:
-                return ""
-            if math.isnan(numeric):
-                return "NaN"
-            return "Inf" if numeric > 0 else "-Inf"
-    return value
+    return _render_native_csv(
+        rows,
+        columns,
+        delimiter.value,
+        Real,
+        nan_representation is SpreadsheetNanRepresentation.NULL,
+    )
 
 
 def _coerce_enum(enum_type: type[_EnumT], value: object) -> _EnumT:

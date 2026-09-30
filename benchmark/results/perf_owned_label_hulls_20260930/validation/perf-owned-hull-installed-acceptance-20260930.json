@@ -1,0 +1,35 @@
+{
+  "wheel": "/tmp/openhcs-owned-hull-wheel-20260930/openhcs-0.8.6-cp311-abi3-linux_x86_64.whl",
+  "sha256": "e967bce9445c4a8286d8cd4191cf7ba71cb2fabe6d7064a542bb4a9e2592d6a3",
+  "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+  "package_source": "/tmp/openhcs-owned-hull-installed-20260930/openhcs/__init__.py",
+  "geometry_source": "/tmp/openhcs-owned-hull-installed-20260930/openhcs/processing/backends/cellprofiler/label_geometry.py",
+  "public_preparation_seconds": 26.45958973513916,
+  "production_records": [
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_1.pkl",
+      "circles_byte_identical": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_2.pkl",
+      "circles_byte_identical": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_3.pkl",
+      "circles_byte_identical": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_4.pkl",
+      "circles_byte_identical": true
+    },
+    {
+      "source": "/home/ts/code/projects/openhcs-benchmark-runs/perf-circle-frontier-inputs-20260930/circle_5.pkl",
+      "circles_byte_identical": true
+    }
+  ],
+  "native_entries": [
+    "openhcs/core/_tabular_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+  ],
+  "source_shadowing": false
+}

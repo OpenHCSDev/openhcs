@@ -1,0 +1,12 @@
+{
+  "control": {
+    "compile_seconds": 3.1630842685699463,
+    "execute_seconds": 19.00982928276062,
+    "total_seconds": 25.061977982753888
+  },
+  "fused": {
+    "compile_seconds": 3.171727180480957,
+    "execute_seconds": 18.21489179134369,
+    "total_seconds": 24.177903154166415
+  }
+}

@@ -1,0 +1,44 @@
+........................................................................ [ 21%]
+........................................................................ [ 43%]
+........................................................................ [ 65%]
+........................................................................ [ 87%]
+..........................................                               [100%]
+=============================== warnings summary ===============================
+tests/unit/test_cellprofiler_library_loading.py::test_absorbed_watershed_accepts_grayscale_volumes
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:965: FutureWarning: `binary_dilation` is deprecated since version 0.26 and will be removed in version 0.28. Use `skimage.morphology.dilation` instead. Note the lack of mirroring for non-symmetric footprints (see docstring notes).
+    seeds = binary_dilation(seeds, parameters.structuring_element)
+
+tests/unit/test_cellprofiler_library_loading.py::test_object_texture_crop_backend_matches_regionprops_intensity_images
+  /home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_library_loading.py:2701: FutureWarning: `RegionProperties.intensity_image` is deprecated starting in version 0.26 and will be removed in version 2.0. Use `RegionProperties.image_intensity` instead. 
+    np.testing.assert_array_equal(intensity_crop, prop.intensity_image)
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: divide by zero encountered in log
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: invalid value encountered in multiply
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:218: RuntimeWarning: invalid value encountered in divide
+    mean = (cs[j] - cs[i]) / diff
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:219: RuntimeWarning: invalid value encountered in divide
+    mean2 = (cs2[j] - cs2[i]) / diff
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_otsu_matches_development_oracle
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/centrosome/otsu.py:238: RuntimeWarning: invalid value encountered in log
+    score = w * np.log(var * w * np.sqrt(2 * np.pi * np.exp(1)))
+
+tests/unit/test_cellprofiler_library_loading.py::test_measure_image_quality_local_focus_matches_grid_semantics
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/scipy/ndimage/_measurements.py:810: RuntimeWarning: invalid value encountered in divide
+    return sum / np.asanyarray(count).astype(np.float64)
+
+tests/unit/test_cellprofiler_library_loading.py::test_correct_illumination_median_smoothing_hybrid_matches_rank_reference
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/filters/rank/generic.py:332: UserWarning: Bad rank filter performance is expected due to a large number of bins (49152), equivalent to an approximate bitdepth of 15.6.
+    image, footprint, out, mask, n_bins = _preprocess_input(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+330 passed, 9 warnings in 6.82s

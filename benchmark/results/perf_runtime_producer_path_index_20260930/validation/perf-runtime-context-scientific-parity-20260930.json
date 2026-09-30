@@ -1,0 +1,28 @@
+{
+  "source": "3118846ef7df0fb71e2f8002114f026414a340be",
+  "checks": [
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-abba-2-candidate-20260930",
+      "csv_byte_identical": 6,
+      "label_pixels_dtype_shape_identical": 120,
+      "imaging_full_csv_byte_identical": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-abba-2-candidate-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput/results/BF_cells_on_grid.csv"
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-abba-3-candidate-20260930",
+      "csv_byte_identical": 6,
+      "label_pixels_dtype_shape_identical": 120,
+      "imaging_full_csv_byte_identical": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-abba-3-candidate-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput/results/BF_cells_on_grid.csv"
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-fixed-cpu-abba-2-candidate-20260930",
+      "csv_byte_identical": 6,
+      "label_pixels_dtype_shape_identical": 120
+    },
+    {
+      "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-fixed-cpu-abba-3-candidate-20260930",
+      "csv_byte_identical": 6,
+      "label_pixels_dtype_shape_identical": 120
+    }
+  ],
+  "comparison": "Complete measurement file bytes, strict pixel/dtype/shape/name equality; no omitted fields or relaxed numerical comparisons"
+}

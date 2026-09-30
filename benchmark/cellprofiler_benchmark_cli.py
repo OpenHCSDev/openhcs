@@ -377,10 +377,12 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         parser.add_argument("--execution-port", type=int)
         parser.add_argument(
             "--reuse-execution-server",
-            action="store_true",
+            action=argparse.BooleanOptionalAction,
+            default=True,
             help=(
-                "Keep one client-owned server across observations. Per-observation "
-                "total_seconds then excludes server startup and shutdown."
+                "Keep one ready client-owned server across observations (default). "
+                "Pipeline total_seconds excludes server startup and shutdown. "
+                "Use --no-reuse-execution-server for cold-server diagnostics."
             ),
         )
         parser.add_argument(

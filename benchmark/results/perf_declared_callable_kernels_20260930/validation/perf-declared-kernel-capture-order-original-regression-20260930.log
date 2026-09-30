@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_capture_preparation_retains_registry_module_callable_effect_order ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2fc2aef8f0>
+kernel_module = <module '_openhcs_declared_kernel_test'>
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-174/test_capture_preparation_retai0')
+
+    def test_capture_preparation_retains_registry_module_callable_effect_order(
+        monkeypatch, kernel_module, tmp_path
+    ):
+        events = []
+    
+        class CapturedKernel(
+            CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+        ):
+            __registry__ = {}
+    
+            def execute(self):
+                events.append("kernel")
+    
+        kernel_module.CapturedKernel = CapturedKernel
+        process = declare_callable(kernel_module, CapturedKernel().execute)
+        kernel_module.__openhcs_prepare__ = lambda: events.append("module")
+        monkeypatch.setenv("OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR", str(tmp_path))
+        prepare_processing_callable(process)
+        prepare_processing_callable(process)
+>       assert events == ["module", "kernel"]
+E       AssertionError: assert ['kernel', 'module', 'kernel'] == ['module', 'kernel']
+E         
+E         At index 0 diff: 'kernel' != 'module'
+E         Left contains one more item: 'kernel'
+E         Use -v to get more diff
+
+tests/unit/test_cellprofiler_callable_kernel_preparation.py:139: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_cellprofiler_callable_kernel_preparation.py::test_capture_preparation_retains_registry_module_callable_effect_order
+1 failed in 0.73s

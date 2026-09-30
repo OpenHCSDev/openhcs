@@ -1,0 +1,55 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_manifest.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_manifest.py
+@@ -5,7 +5,7 @@
+ from dataclasses import dataclass, field
+ from functools import lru_cache
+ from pathlib import Path
+-from typing import ClassVar, Sequence
++from typing import ClassVar, Iterator, Sequence
+ from weakref import WeakKeyDictionary
+ 
+ from polystore.streaming.identity import StreamProducerIdentity
+@@ -685,17 +685,13 @@
+ 
+     def matching_records(self, path: str) -> tuple[ProducedOutputSemantics, ...]:
+         selector = ProducedPathPatternSelector.from_pattern(path)
+-        if selector.matcher is None:
+-            indices = self.record_indices_by_token.get(selector.path, ())
+-        else:
+-            indices = sorted(
+-                {
+-                    index
+-                    for token, token_indices in self.record_indices_by_token.items()
+-                    if selector.matches(ProducedPathSet(frozenset((token,))))
+-                    for index in token_indices
+-                }
+-            )
++        indices = sorted(
++            {
++                index
++                for token in selector.matching_tokens(self)
++                for index in self.record_indices_by_token[token]
++            }
++        )
+         return tuple(self.records[index] for index in indices)
+ 
+ 
+@@ -712,9 +708,14 @@
+         return cls(path_text, PathPatternTemplateMatcher.from_pattern(path_text))
+ 
+     def matches(self, path_set: ProducedPathSet) -> bool:
++        return next(self.matching_tokens(path_set), None) is not None
++
++    def matching_tokens(self, path_set: ProducedPathSet) -> Iterator[str]:
++        """Yield exact and template aliases through one matching policy."""
+         tokens = path_set.tokens
+         if self.path in tokens:
+-            return True
+-        if self.matcher is None:
+-            return False
+-        return any(self.matcher.matches(token) for token in tokens)
++            yield self.path
++        if self.matcher is not None:
++            for token in tokens:
++                if token != self.path and self.matcher.matches(token):
++                    yield token

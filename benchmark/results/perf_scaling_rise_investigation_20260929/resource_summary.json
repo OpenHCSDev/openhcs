@@ -1,0 +1,32 @@
+{
+  "audits": [
+    {
+      "name": "after",
+      "pid": 2589770,
+      "start": 1790732557.0432928,
+      "artifact_completed_at": 1790732580.885692,
+      "returncode": 0,
+      "sampled_peak_rss_bytes": 770756608,
+      "sampled_cpu_seconds": 33.07,
+      "first_sample_at": 1790732558.0651426,
+      "last_non_zombie_sample_at": 1790732590.4813898,
+      "first_zombie_sample_at": 1790732591.5083911
+    },
+    {
+      "name": "before_expanded",
+      "pid": 2592402,
+      "start": 1790732587.042694,
+      "artifact_completed_at": 1790732613.190832,
+      "returncode": 0,
+      "sampled_peak_rss_bytes": 775614464,
+      "sampled_cpu_seconds": 31.62,
+      "first_sample_at": 1790732587.383307,
+      "last_non_zombie_sample_at": 1790732620.5074184,
+      "first_zombie_sample_at": 1790732621.5597107
+    }
+  ],
+  "minimum_memory_available_kib": 1129148,
+  "global_memory_some_stall_seconds": 8.747934,
+  "page_size_bytes": 4096,
+  "warning": "RSS includes shared pages. PSI is host-wide; no clean-run PSI comparison was captured."
+}

@@ -304,12 +304,12 @@ def test_identify_primary_objects_runtime_uses_scope_owned_threshold_rows(
         "dtype_config": DtypeConfig(),
     }
 
-    _image, global_rows, _labels = identify_primary_objects(
+    _image, global_rows, _labels, *_diagnostics = identify_primary_objects(
         image,
         threshold_scope=CellProfilerThresholdScope.GLOBAL,
         **runtime_kwargs,
     )
-    _image, adaptive_rows, _labels = identify_primary_objects(
+    _image, adaptive_rows, _labels, *_diagnostics = identify_primary_objects(
         image,
         threshold_scope=CellProfilerThresholdScope.ADAPTIVE,
         **runtime_kwargs,

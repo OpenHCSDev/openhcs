@@ -1,0 +1,66 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_manifest.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_manifest.py
+@@ -431,13 +431,10 @@
+                 AlignedImageSliceContext.anonymous_main_flow() for _path in paths
+             )
+ 
++        path_index = ProducedPathRecordIndex.from_records(producer_records, parser)
+         contexts: list[AlignedImageSliceContext] = []
+         for path in paths:
+-            matching_records = tuple(
+-                record
+-                for record in producer_records
+-                if ProducedPathSet.from_records((record,), parser).contains(path)
+-            )
++            matching_records = path_index.matching_records(path)
+             if len(matching_records) != 1:
+                 raise NoStepOutputManifestMatch(
+                     "Expected one producer output context for input path "
+@@ -662,6 +659,47 @@
+ 
+ 
+ @dataclass(frozen=True, slots=True)
++class ProducedPathRecordIndex(ProducedPathSet):
++    """Batch lookup of original producer records through their owned path tokens."""
++
++    records: tuple[ProducedOutputSemantics, ...]
++    record_indices_by_token: dict[str, tuple[int, ...]]
++
++    @classmethod
++    def from_records(
++        cls,
++        records: Sequence[ProducedOutputSemantics],
++        parser: FilenameParser,
++    ) -> "ProducedPathRecordIndex":
++        indices_by_token: dict[str, list[int]] = {}
++        for index, record in enumerate(records):
++            for token in ProducedPathSet.from_records((record,), parser).tokens:
++                indices_by_token.setdefault(token, []).append(index)
++        return cls(
++            tokens=frozenset(indices_by_token),
++            records=tuple(records),
++            record_indices_by_token={
++                token: tuple(indices) for token, indices in indices_by_token.items()
++            },
++        )
++
++    def matching_records(self, path: str) -> tuple[ProducedOutputSemantics, ...]:
++        selector = ProducedPathPatternSelector.from_pattern(path)
++        if selector.matcher is None:
++            indices = self.record_indices_by_token.get(selector.path, ())
++        else:
++            indices = sorted(
++                {
++                    index
++                    for token, token_indices in self.record_indices_by_token.items()
++                    if selector.matches(ProducedPathSet(frozenset((token,))))
++                    for index in token_indices
++                }
++            )
++        return tuple(self.records[index] for index in indices)
++
++
++@dataclass(frozen=True, slots=True)
+ class ProducedPathPatternSelector:
+     """Prepared matcher for concrete and template producer path membership."""
+ 

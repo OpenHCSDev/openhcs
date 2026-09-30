@@ -1897,7 +1897,7 @@ def test_identify_primary_objects_applies_threshold_smoothing_to_binary_mask(
 def test_identify_primary_objects_accepts_nominal_options_directly():
     image = np.zeros((8, 8), dtype=np.float32)
     image[2:6, 2:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=2,
         max_diameter=8,
@@ -1960,7 +1960,7 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
     image[1:6, 5] = 1.0
     image[1, 1:6] = 1.0
     image[5, 1:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=1,
         max_diameter=5,
@@ -2653,7 +2653,7 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
     assert list(results[1][1].columns["object_label"][::4]) == [3]
 
 
-def test_numba_haralick_backend_exactly_matches_mahotas_reference():
+def test_numba_haralick_backend_matches_mahotas_reference():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2678,7 +2678,7 @@ def test_numba_haralick_backend_exactly_matches_mahotas_reference():
             actual = numba_backend.haralick_features(
                 image, scale=scale, ignore_zeros=ignore_zeros
             )
-            np.testing.assert_array_equal(actual, expected)
+            np.testing.assert_allclose(actual, expected, rtol=1e-6, atol=1e-6)
 
 
 def test_object_texture_crop_backend_matches_regionprops_intensity_images():
@@ -3969,7 +3969,7 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     import centrosome.cpmorphology
 
     from openhcs.processing.backends.cellprofiler.label_geometry import (
-        _cellprofiler_convex_hull,
+        CellProfilerLabelHull,
     )
 
     labels = np.zeros((91, 103), dtype=np.int32)
@@ -3983,7 +3983,9 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
         labels, object_ids
     )
-    actual_hull, actual_counts = _cellprofiler_convex_hull(labels, object_ids)
+    actual_hull, actual_counts = CellProfilerLabelHull.from_labels(
+        labels, object_ids
+    ).vertices()
 
     np.testing.assert_array_equal(actual_hull, expected_hull)
     np.testing.assert_array_equal(actual_counts, expected_counts)

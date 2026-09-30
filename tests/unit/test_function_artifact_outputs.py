@@ -16,6 +16,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    ImageMeasurementSubjectRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
     MetadataArtifactType,
@@ -40,6 +41,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_measurements import MeasurementRowAxisField, MeasurementTable
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
     runtime_adapter,
@@ -51,6 +53,7 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     special_outputs,
 )
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.source_bindings import (
@@ -114,6 +117,7 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )
@@ -1892,7 +1896,7 @@ def test_module_runtime_adapter_records_declared_outputs_and_returns_main_flow(
         "runtime",
         lambda _request: object(),
         manages_artifact_inputs=True,
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(ArtifactSpec.output("ModuleImage", ImageArtifactType))
     def module_step(image, *, runtime):
@@ -2317,6 +2321,92 @@ class _NativeCountRow:
     cell_count: int
 
 
+@pytest.mark.parametrize("boundary", ["contract", "compile"])
+def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
+    spec = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        materialization=MaterializationSpec(CsvOptions()),
+    )
+
+    @artifact_outputs(spec)
+    def count(image):
+        raise AssertionError("Invalid measurement declarations must not execute")
+
+    with pytest.raises(ValueError, match="cell_counts.*no declared measurement subject") as exc:
+        if boundary == "contract":
+            from openhcs.core.callable_contract import CallableContract
+
+            CallableContract.from_callable(count).validate_artifact_output_declarations()
+        else:
+            compile_function_pattern(count, {}, {})
+    assert "ImageMeasurementSubjectRelation" in str(exc.value)
+    assert "ArtifactSpec.output" in str(exc.value)
+
+
+def test_corrected_image_measurement_subject_compiles_and_executes_columnar_rows():
+    image = ArtifactSpec.output("CountedImage", ImageArtifactType)
+    rows = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        materialization=MaterializationSpec(CsvOptions()),
+        relations=(ImageMeasurementSubjectRelation(image.ref()),),
+    )
+
+    @artifact_outputs(image, rows)
+    def count(image):
+        return image, DataclassMeasurementColumnarRows((_NativeCountRow(0, 2),))
+
+    graph = extract_artifact_declarations(count)
+    assert graph.outputs[rows.ref()] == rows
+    context = ContextStub()
+    _execute_function_core(
+        CoreExecutionRequest(
+            func_callable=count,
+            main_data_arg=ImagePayloadMetadata(
+                source_path="/input/A01_s1_w1.tif"
+            ).payload_with(np.zeros((1, 4, 5), dtype=np.uint16)),
+            base_kwargs={},
+            context=context,
+            artifact_inputs={},
+            artifact_outputs={
+                spec.ref(): ArtifactOutputPlan(
+                    spec.name,
+                    f"/memory/{spec.name}.pkl",
+                    artifact_type=spec.artifact_type,
+                    relations=spec.relations,
+                )
+                for spec in (image, rows)
+            },
+        )
+    )
+    [stored] = context.runtime_value_store.find(name=rows.name, axis_id=context.axis_id)
+    assert isinstance(stored.value.data, MeasurementTable)
+    assert stored.value.data.subject == MeasurementSubject(
+        MeasurementScope.IMAGE, image.name
+    )
+    assert tuple(stored.value.data.rows.column_values("cell_count")) == (2,)
+
+
+def test_compile_rejects_conflicting_measurement_subject_relations():
+    image = ArtifactSpec.output("CountedImage", ImageArtifactType)
+    rows = ArtifactSpec.output(
+        "cell_counts",
+        MeasurementsArtifactType,
+        relations=(
+            ImageMeasurementSubjectRelation(image.ref()),
+            ArtifactMeasurementSubjectRelation(),
+        ),
+    )
+
+    @artifact_outputs(image, rows)
+    def count(image):
+        return image
+
+    with pytest.raises(ValueError, match="multiple measurement subjects"):
+        compile_function_pattern(count, {}, {})
+
+
 def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_identity():
     context = ContextStub()
     measurement_spec = ArtifactSpec.output(
@@ -2673,7 +2763,11 @@ def test_execute_function_core_requires_all_declared_artifact_values():
     context = ContextStub()
 
     @artifact_outputs(
-        ArtifactSpec.output("measurements", MeasurementsArtifactType),
+        ArtifactSpec.output(
+            "measurements",
+            MeasurementsArtifactType,
+            relations=(ArtifactMeasurementSubjectRelation(),),
+        ),
     )
     def analyze(image):
         return (image,)
@@ -2795,7 +2889,7 @@ def _declared_source_executor(
     ),
 ) -> FunctionCoreExecutor:
     @artifact_inputs(spec)
-    def declared_source_origin(image):
+    def declared_source_origin(image, *, image_to_save=None):
         return image
 
     invocation = next(
@@ -2924,6 +3018,63 @@ def test_declared_source_payload_preserves_compiled_complete_main_flow() -> None
     )
 
     assert result is primary
+
+
+def test_main_flow_artifact_is_bound_to_its_declared_callable_keyword() -> None:
+    spec = ArtifactSpec.input(
+        "NucleiImage", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(
+        spec, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD
+    )
+    primary = ImagePayloadMetadata(source_image_names=("NucleiImage",)).payload_with(
+        np.arange(24, dtype=np.uint16).reshape(2, 3, 4)
+    )
+    kwargs = {}
+    loaded = executor.load_artifact_inputs(kwargs, primary)
+    assert kwargs["image_to_save"] is primary
+    assert loaded == {spec.ref(): primary}
+
+
+def test_main_flow_keyword_rejects_a_different_declared_source() -> None:
+    spec = ArtifactSpec.input(
+        "NucleiImage", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(spec)
+    primary = ImagePayloadMetadata(source_image_names=("WrongImage",)).payload_with(
+        np.ones((2, 3, 4), dtype=np.uint16)
+    )
+    with pytest.raises(ValueError, match="does not represent declared source image"):
+        executor.load_artifact_inputs({}, primary)
+
+
+def test_source_bound_artifact_keyword_uses_the_exact_selected_image(monkeypatch):
+    spec = ArtifactSpec.input(
+        "OrigBlue", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(
+        spec,
+        source_binding_plan=CompiledSourceBindingPlan(
+            bindings=(NamedSourceBinding(alias="OrigBlue"),)
+        ),
+    )
+    primary = ImagePayloadMetadata(source_image_names=("OrigGreen",)).payload_with(
+        np.zeros((2, 3, 4), dtype=np.float32)
+    )
+    selected = ImagePayloadMetadata(source_image_names=("OrigBlue",)).payload_with(
+        np.ones((2, 3, 4), dtype=np.float32)
+    )
+
+    def source_artifact_payload(request, ref):
+        assert ref == spec.ref() and request.source_payload is primary
+        return selected
+
+    monkeypatch.setattr(
+        RuntimeAdapterRequest, "source_artifact_payload", source_artifact_payload
+    )
+    kwargs = {}
+    executor.load_artifact_inputs(kwargs, primary)
+    assert kwargs["image_to_save"] is selected
 
 
 def test_declared_source_payload_prefers_exact_loaded_ref_over_main_flow() -> None:

@@ -1,0 +1,24 @@
+{
+  "profile_file": "/home/ts/code/projects/openhcs-benchmark-runs/perf-worker-profile-corrected-20260929/ffa5b9a0-cbbf-47cd-9b56-5cfd186ab00e___home_ts__cache_openhcs_cellprofiler_examples_ExampleImagingFlowCytometryObjectsInGrid_images__worker_0__W001.prof",
+  "foreign_polling_entries": [],
+  "representative_compiled_kernels": [
+    {
+      "function": [
+        "/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py",
+        2034,
+        "_distance_to_label_edge_numba"
+      ],
+      "calls": 6,
+      "seconds": 0.120217814
+    },
+    {
+      "function": [
+        "/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/label_geometry.py",
+        424,
+        "_numpy124_aquicksort_indices_numba"
+      ],
+      "calls": 75,
+      "seconds": 0.6982787930000001
+    }
+  ]
+}

@@ -6,12 +6,20 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from zmqruntime.messages import MessageFields, ResponseType
 
+from openhcs.agent.dto.functions import FunctionCatalogControlRequestABC
+
 if TYPE_CHECKING:
+    from openhcs.agent.dto.functions import (
+        FunctionCatalogPreparationCancelRequest,
+        FunctionCatalogPreparationStartRequest,
+        FunctionCatalogPreparationState,
+        FunctionCatalogPreparationStatusRequest,
+    )
     from openhcs.agent.services.function_catalog_service import FunctionCatalogService
     from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
     from openhcs.runtime.zmq_compilation import ZMQCompileArtifactRecord
@@ -307,7 +315,120 @@ class FunctionReferenceReadMessageStrategy(FunctionCatalogMessageStrategy):
         ).to_control_response()
 
 
-class CustomFunctionRegistrationMessageStrategy(FunctionCatalogMessageStrategy):
+class CustomFunctionRegistrationDestinationMessageStrategy(ZMQControlMessageStrategy):
+    """Native store admission must not initialize/evaluate the function catalog."""
+
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationDestinationRequest
+
+    request_type = CustomFunctionRegistrationDestinationRequest
+    registry_key = request_type.message_type.value
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+        )
+
+        try:
+            request = self.request_type.from_control_payload(message)
+            return CustomFunctionRegistrationDestinationControlResponse(
+                value=context.require_function_catalog().custom_function_registration_destination(
+                    request
+                ),
+            ).to_control_response()
+        except Exception as error:
+            return self.error_response(error)
+
+
+PreparationRequestT = TypeVar(
+    "PreparationRequestT", bound=FunctionCatalogControlRequestABC
+)
+
+
+class FunctionCatalogPreparationMessageStrategy(
+    ZMQControlMessageStrategy,
+    Generic[PreparationRequestT],
+):
+    """Responsive projection of the existing native preparation owner."""
+
+    request_type: ClassVar[type[FunctionCatalogControlRequestABC]]
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        try:
+            request = self.request_type.from_control_payload(message)
+            return FunctionCatalogPreparationStateControlResponse(
+                value=self.preparation_state(
+                    context.require_function_catalog_preparation(), request
+                ),
+            ).to_control_response()
+        except Exception as error:
+            return self.error_response(error)
+
+    @abstractmethod
+    def preparation_state(
+        self,
+        preparation: FunctionCatalogPreparation,
+        request: PreparationRequestT,
+    ) -> FunctionCatalogPreparationState:
+        """Each request owns its operation, not a string action bag."""
+
+
+class StartFunctionCatalogPreparationStrategy(
+    FunctionCatalogPreparationMessageStrategy["FunctionCatalogPreparationStartRequest"],
+):
+    from openhcs.agent.dto.functions import FunctionCatalogPreparationStartRequest
+
+    request_type = FunctionCatalogPreparationStartRequest
+    registry_key = request_type.message_type.value
+
+    def preparation_state(
+        self,
+        preparation: FunctionCatalogPreparation,
+        request: FunctionCatalogPreparationStartRequest,
+    ) -> FunctionCatalogPreparationState:
+        return preparation.start(request.connection)
+
+
+class ReadFunctionCatalogPreparationStrategy(
+    FunctionCatalogPreparationMessageStrategy[
+        "FunctionCatalogPreparationStatusRequest"
+    ],
+):
+    from openhcs.agent.dto.functions import FunctionCatalogPreparationStatusRequest
+
+    request_type = FunctionCatalogPreparationStatusRequest
+    registry_key = request_type.message_type.value
+
+    def preparation_state(
+        self,
+        preparation: FunctionCatalogPreparation,
+        request: FunctionCatalogPreparationStatusRequest,
+    ) -> FunctionCatalogPreparationState:
+        return preparation.observe(request.handle)
+
+
+class CancelFunctionCatalogPreparationStrategy(
+    FunctionCatalogPreparationMessageStrategy[
+        "FunctionCatalogPreparationCancelRequest"
+    ],
+):
+    from openhcs.agent.dto.functions import FunctionCatalogPreparationCancelRequest
+
+    request_type = FunctionCatalogPreparationCancelRequest
+    registry_key = request_type.message_type.value
+
+    def preparation_state(
+        self,
+        preparation: FunctionCatalogPreparation,
+        request: FunctionCatalogPreparationCancelRequest,
+    ) -> FunctionCatalogPreparationState:
+        return preparation.cancel_preparation(request.handle)
+
+
+class CustomFunctionRegistrationMessageStrategy(ZMQControlMessageStrategy):
     """Register custom source through the execution endpoint catalog owner."""
 
     from openhcs.agent.dto.functions import CustomFunctionRegistrationRequest
@@ -315,19 +436,21 @@ class CustomFunctionRegistrationMessageStrategy(FunctionCatalogMessageStrategy):
     request_type = CustomFunctionRegistrationRequest
     registry_key = request_type.message_type.value
 
-    def handle_ready(
-        self,
-        message: dict,
-        function_catalog: "FunctionCatalogService",
-    ) -> dict:
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationControlResponse,
+            FunctionCatalogPreparationHandle,
         )
-
-        request = self.request_type.from_control_payload(message)
-        return CustomFunctionRegistrationControlResponse(
-            value=function_catalog.register_custom_function(request),
-        ).to_control_response()
+        try:
+            request = self.request_type.from_control_payload(message)
+            context.require_function_catalog_preparation().observe(
+                FunctionCatalogPreparationHandle(request.connection, request.require_server_identity())
+            ).require_ready()
+            return CustomFunctionRegistrationControlResponse(
+                value=context.require_function_catalog().register_custom_function(request),
+            ).to_control_response()
+        except Exception as error:
+            return self.error_response(error)
 
 
 class DebugSnapshotReadMessageStrategy(

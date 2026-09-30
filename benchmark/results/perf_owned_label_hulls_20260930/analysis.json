@@ -1,0 +1,441 @@
+{
+  "common_revision": "295e0ee81",
+  "candidate_revision": "b856ae561",
+  "modes": {
+    "1w": {
+      "control": {
+        "median": {
+          "compile": 4.340745568275452,
+          "execution": 13.411803245544434,
+          "total": 20.501091929152608,
+          "warming_seconds": 10.630140989087522
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 10.580282975919545,
+            "compile": 4.327256917953491,
+            "execution": 13.684619903564453,
+            "total": 20.73879355331883,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.2.nbc": [
+                1790751634722727312,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.nbi": [
+                1790751634722539949,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.4.nbc": [
+                1790751634409739785,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.nbi": [
+                1790751634409569344,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.3.nbc": [
+                1790751634170534555,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-control-main-1w-r1-20260930"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 10.6799990022555,
+            "compile": 4.354234218597412,
+            "execution": 13.138986587524414,
+            "total": 20.263390304986387,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.2.nbc": [
+                1790751742380987318,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.nbi": [
+                1790751742380796990,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.4.nbc": [
+                1790751742069936541,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.nbi": [
+                1790751742069771550,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.3.nbc": [
+                1790751741832181863,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-control-main-1w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.04548025131225586,
+          "IdentifyObjectsInGrid": 0.28406405448913574,
+          "MeasureObjectIntensity": 1.264465570449829,
+          "FilterObjects": 0.7371667623519897,
+          "MaskImage": 0.030192017555236816,
+          "Smooth": 0.13470768928527832,
+          "EnhanceEdges": 0.04364144802093506,
+          "Closing": 0.47466278076171875,
+          "IdentifyPrimaryObjects": 0.8071764707565308,
+          "MeasureObjectSizeShape": 0.7011526823043823,
+          "ExpandOrShrinkObjects": 0.4612100124359131,
+          "RelateObjects": 0.04484069347381592,
+          "OverlayOutlines": 0.212554931640625,
+          "MeasureGranularity": 3.000259041786194,
+          "MeasureTexture": 0.8571990728378296,
+          "MeasureObjectIntensityDistribution": 2.514361619949341,
+          "ExportToSpreadsheet": 1.4838557243347168
+        },
+        "derived_step_sums": {
+          "geometry": 3.215514302253723,
+          "non_target_excluding_geometry_export": 8.397620797157288,
+          "historical_other_excluding_granularity_export": 8.612876057624817,
+          "export": 1.4838557243347168
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 4.33268129825592,
+          "execution": 12.906828880310059,
+          "total": 19.928260260960087,
+          "warming_seconds": 11.881993555929512
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 11.83149917377159,
+            "compile": 4.34024715423584,
+            "execution": 12.894182920455933,
+            "total": 19.92653549881652,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.2.nbc": [
+                1790751671613667235,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.nbi": [
+                1790751671613480904,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.4.nbc": [
+                1790751671295121930,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.nbi": [
+                1790751671294958683,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.3.nbc": [
+                1790751671055009772,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-candidate-main-1w-r1-20260930"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 11.932487938087434,
+            "compile": 4.325115442276001,
+            "execution": 12.919474840164185,
+            "total": 19.929985023103654,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.2.nbc": [
+                1790751707666381139,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.nbi": [
+                1790751707666171925,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.4.nbc": [
+                1790751707354761417,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.nbi": [
+                1790751707354600864,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.3.nbc": [
+                1790751707118599977,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-candidate-main-1w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.044052958488464355,
+          "IdentifyObjectsInGrid": 0.28373265266418457,
+          "MeasureObjectIntensity": 1.3898165225982666,
+          "FilterObjects": 0.7365041971206665,
+          "MaskImage": 0.029577970504760742,
+          "Smooth": 0.13400185108184814,
+          "EnhanceEdges": 0.04193615913391113,
+          "Closing": 0.47462618350982666,
+          "IdentifyPrimaryObjects": 0.8047311305999756,
+          "MeasureObjectSizeShape": 0.5356122255325317,
+          "ExpandOrShrinkObjects": 0.45426368713378906,
+          "RelateObjects": 0.044724106788635254,
+          "OverlayOutlines": 0.21449828147888184,
+          "MeasureGranularity": 3.0538365840911865,
+          "MeasureTexture": 1.0595786571502686,
+          "MeasureObjectIntensityDistribution": 1.8252956867218018,
+          "ExportToSpreadsheet": 1.470970869064331
+        },
+        "derived_step_sums": {
+          "geometry": 2.3609079122543335,
+          "non_target_excluding_geometry_export": 8.765880942344666,
+          "historical_other_excluding_granularity_export": 8.072952270507812,
+          "export": 1.470970869064331
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 0.504974365234375,
+          "percent": 3.765148921358752
+        },
+        "total": {
+          "seconds": 0.5728316681925207,
+          "percent": 2.7941519904018053
+        }
+      },
+      "native_execution_ratio": 5.1076723287599926
+    },
+    "16w": {
+      "control": {
+        "median": {
+          "compile": 11.150702595710754,
+          "execution": 82.12585890293121,
+          "total": 96.37527067656629,
+          "warming_seconds": 10.580612392630428
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 10.581055556889623,
+            "compile": 11.126296281814575,
+            "execution": 82.11177229881287,
+            "total": 96.47411858523265,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.2.nbc": [
+                1790751894114316237,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.nbi": [
+                1790751894114116541,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.4.nbc": [
+                1790751893800872459,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.nbi": [
+                1790751893800706897,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.3.nbc": [
+                1790751893565813303,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-control-main-16w-r1-20260930"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 10.580169228371233,
+            "compile": 11.175108909606934,
+            "execution": 82.13994550704956,
+            "total": 96.27642276789993,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.2.nbc": [
+                1790752227181534668,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-424.py312.nbi": [
+                1790752227181343989,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.4.nbc": [
+                1790752226870090212,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.nbi": [
+                1790752226869927225,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-379.py312.3.nbc": [
+                1790752226639275167,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-control-main-16w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.0833725929260254,
+          "IdentifyObjectsInGrid": 10.950579285621643,
+          "MeasureObjectIntensity": 25.753689885139465,
+          "FilterObjects": 28.491591453552246,
+          "MaskImage": 0.9271897077560425,
+          "Smooth": 4.411641836166382,
+          "EnhanceEdges": 1.5228235721588135,
+          "Closing": 9.489806652069092,
+          "IdentifyPrimaryObjects": 27.442228317260742,
+          "MeasureObjectSizeShape": 15.046536803245544,
+          "ExpandOrShrinkObjects": 19.311085104942322,
+          "RelateObjects": 1.2268232107162476,
+          "OverlayOutlines": 9.404265880584717,
+          "MeasureGranularity": 22.996988654136658,
+          "MeasureTexture": 13.563129782676697,
+          "MeasureObjectIntensityDistribution": 20.43642556667328,
+          "ExportToSpreadsheet": 24.457590103149414
+        },
+        "derived_step_sums": {
+          "geometry": 35.48296236991882,
+          "non_target_excluding_geometry_export": 176.5752159357071,
+          "historical_other_excluding_granularity_export": 189.06118965148926,
+          "export": 24.457590103149414
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 11.192139744758606,
+          "execution": 79.7025750875473,
+          "total": 93.91659141075797,
+          "warming_seconds": 12.409569938434288
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 12.73721979605034,
+            "compile": 11.151220083236694,
+            "execution": 80.01563119888306,
+            "total": 94.17076774593443,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.2.nbc": [
+                1790752008028121894,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.nbi": [
+                1790752008027922949,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.4.nbc": [
+                1790752007713795682,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.nbi": [
+                1790752007713636722,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.3.nbc": [
+                1790752007475397316,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-candidate-main-16w-r1-20260930"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 12.081920080818236,
+            "compile": 11.233059406280518,
+            "execution": 79.38951897621155,
+            "total": 93.66241507558152,
+            "status": "success",
+            "new_or_modified_geometry_cache_files": {
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.2.nbc": [
+                1790752118846251009,
+                96476
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aquicksort_indices_numba-509.py312.nbi": [
+                1790752118846058877,
+                2870
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.4.nbc": [
+                1790752118536794934,
+                40733
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.nbi": [
+                1790752118536623802,
+                5544
+              ],
+              "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2/cellprofiler_66969d4684734de7ac3dc252d68cbb6169ec6252/label_geometry._numpy124_aheapsort_indices_numba-464.py312.3.nbc": [
+                1790752118303254614,
+                45320
+              ]
+            },
+            "cache_file_count": 73,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-owned-hull-final-candidate-main-16w-r2-20260930"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.0984739065170288,
+          "IdentifyObjectsInGrid": 10.985405683517456,
+          "MeasureObjectIntensity": 26.512329936027527,
+          "FilterObjects": 27.84886932373047,
+          "MaskImage": 0.9679239988327026,
+          "Smooth": 4.886882543563843,
+          "EnhanceEdges": 1.4612348079681396,
+          "Closing": 9.637670278549194,
+          "IdentifyPrimaryObjects": 27.19207465648651,
+          "MeasureObjectSizeShape": 10.63044273853302,
+          "ExpandOrShrinkObjects": 19.275122046470642,
+          "RelateObjects": 1.264761209487915,
+          "OverlayOutlines": 8.869650959968567,
+          "MeasureGranularity": 22.125394463539124,
+          "MeasureTexture": 13.435316324234009,
+          "MeasureObjectIntensityDistribution": 16.93678057193756,
+          "ExportToSpreadsheet": 24.37667167186737
+        },
+        "derived_step_sums": {
+          "geometry": 27.56722331047058,
+          "non_target_excluding_geometry_export": 175.56111013889313,
+          "historical_other_excluding_granularity_export": 181.00293898582458,
+          "export": 24.37667167186737
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 2.423283815383911,
+          "percent": 2.950695247215762
+        },
+        "total": {
+          "seconds": 2.458679265808314,
+          "percent": 2.5511516061621275
+        }
+      },
+      "native_execution_ratio": 4.569866131363015
+    }
+  },
+  "native_reference": {
+    "1w_execution_seconds": 65.923852724,
+    "16w_execution_seconds": 364.230098475,
+    "scope": "Earlier physical CP4.2.8.1 timings; startup/warmup/final shutdown excluded; original 16w controller exit unobserved. Native not rerun for this change."
+  }
+}

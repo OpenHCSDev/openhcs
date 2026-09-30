@@ -1,0 +1,4 @@
+{"variant": "fused", "repetition": 1, "warming_seconds": 3.51623483421281, "compile": "3.1885972023010254", "execution": "18.379088401794434", "total": "24.383288394194096", "status": "success"}
+{"variant": "control", "repetition": 1, "warming_seconds": 2.4094785833731294, "compile": "3.1729981899261475", "execution": "18.91236448287964", "total": "24.973469498101622", "status": "success"}
+{"variant": "control", "repetition": 2, "warming_seconds": 2.41403518198058, "compile": "3.153170347213745", "execution": "19.1072940826416", "total": "25.150486467406154", "status": "success"}
+{"variant": "fused", "repetition": 2, "warming_seconds": 3.488454175647348, "compile": "3.1548571586608887", "execution": "18.050695180892944", "total": "23.972517914138734", "status": "success"}

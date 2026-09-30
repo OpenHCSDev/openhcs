@@ -1,0 +1,10 @@
+{
+  "base": "fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16",
+  "head": "98cf5c270078234dc2ef3e68cff84295ac095a0f",
+  "changed": [
+    "scripts/check_refactor_r1.py"
+  ],
+  "before": [],
+  "after": [],
+  "increased": []
+}

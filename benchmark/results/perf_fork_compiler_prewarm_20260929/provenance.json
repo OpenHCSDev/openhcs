@@ -1,0 +1,24 @@
+{
+  "control_commit": "de23449a42f89a9aaa13218090ef3fb8c26d46a1",
+  "candidate_source_commit": "addd20b4394ac16d39be5b1e8a53e3af25fa6bc1",
+  "python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "cpu": "AMD Ryzen 5 5500",
+  "execution_workers": 1,
+  "worker_start_method": "fork",
+  "compiler_children": "up to 4 fork processes, only for an empty explicit CPU-only Numba cache",
+  "server_lifecycle": "fresh-per-observation",
+  "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+  "well_count": 1,
+  "cache_directory_prefix": "/tmp/openhcs-cold-<role>-20260929-c<repetition>",
+  "measurement_order": [
+    "control cold 1",
+    "candidate cold 1",
+    "candidate warm",
+    "control warm",
+    "candidate cold 2",
+    "control cold 2"
+  ],
+  "cache_state": "Cold cache directories were absent at launch; warm uses the same source checkout/cache as its first cold run.",
+  "host_activity": "Existing user x0vncserver, Kodi and other background processes retained. Short unit suites overlapped first candidate and second control preparation; no other benchmark ran concurrently.",
+  "source_parity": "Candidate method/module discovery remains declaration-owned. Parent preparation executes after child cache population."
+}

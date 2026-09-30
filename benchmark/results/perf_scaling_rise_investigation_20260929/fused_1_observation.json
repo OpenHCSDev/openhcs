@@ -1,0 +1,22 @@
+{
+  "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+  "mode_name": "16w_4c",
+  "worker_count": "4",
+  "well_count": "16",
+  "compile_seconds": "10.204697132110596",
+  "prepare_seconds": "0.0",
+  "execute_seconds": "96.57594895362854",
+  "total_seconds": "109.85262410808355",
+  "wells_per_second": "0.16567271844962647",
+  "successful_wells": "16",
+  "native_single_sample_execution_seconds": "",
+  "projected_native_execution_seconds": "",
+  "projected_execution_speedup": "",
+  "peak_memory_mb": "13560.14453125",
+  "status": "success",
+  "memory_limit_mb": "",
+  "error_message": "",
+  "execution_route": "ordinary-zmq-outcomes-v1",
+  "server_lifecycle": "fresh-per-observation",
+  "run_input_sha256": "a0f632956b693cf9e45141ac1ca78f7776eeac966ba86d15bee8f146513abc5e"
+}

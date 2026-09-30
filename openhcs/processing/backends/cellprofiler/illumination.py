@@ -72,7 +72,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
 )
 from openhcs.processing.backends.cellprofiler.label_geometry import (
-    _cellprofiler_convex_hull,
+    CellProfilerLabelHull,
 )
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
@@ -1907,10 +1907,11 @@ def _cellprofiler_convex_hull_transform(
 
     for level in unique_levels[1:]:
         level_mask = scaled >= int(level)
-        hull, counts = _cellprofiler_convex_hull(
+        label_hull = CellProfilerLabelHull.from_labels(
             level_mask.astype(np.int32),
             np.array([1], dtype=np.int32),
         )
+        hull, counts = label_hull.vertices()
         if counts[0] == 0:
             continue
         vertices = hull[:, 1:]

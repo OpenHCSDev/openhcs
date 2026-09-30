@@ -1,0 +1,20 @@
+[
+  {
+    "path": "openhcs/core/measurement_row_materialization.py",
+    "baseline_findings": 5,
+    "candidate_findings": 5,
+    "new_findings": []
+  },
+  {
+    "path": "openhcs/processing/backends/cellprofiler/spreadsheet_export.py",
+    "baseline_findings": 2,
+    "candidate_findings": 2,
+    "new_findings": []
+  },
+  {
+    "path": "tests/unit/test_validate_local_release_floors.py",
+    "baseline_findings": 1,
+    "candidate_findings": 1,
+    "new_findings": []
+  }
+]

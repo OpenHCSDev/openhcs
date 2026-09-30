@@ -76,7 +76,7 @@ class RegistryService:
             registry_instances = cls._available_registry_instances()
             cached_functions = cls._load_valid_persistent_catalog(registry_instances)
             if cached_functions is None:
-                cls._prepare_persistent_catalog(
+                cls.prepare_persistent_catalog(
                     status_callback=emit_status,
                     cancellation=cancellation,
                 )
@@ -101,18 +101,34 @@ class RegistryService:
             return {} if cls._metadata_cache is None else dict(cls._metadata_cache)
 
     @classmethod
-    def prepare_in_current_process(cls) -> Dict[str, FunctionMetadata]:
-        """Discover the complete catalog in this dedicated preparation process."""
+    def prepare_in_current_process(
+        cls, *, status_callback: RegistryPreparationCallback | None = None
+    ) -> Dict[str, FunctionMetadata]:
+        """Discover callables and prepare their declared persistent kernel caches."""
 
-        if cls._metadata_cache is not None:
-            return cls._metadata_cache
+        from openhcs.core.processing_preparation import (
+            CallablePreparation,
+            PreparationCacheBatch,
+        )
 
-        logger.debug(
-            "🎯 REGISTRY SERVICE: Discovering functions from all registries..."
+        emit_status = status_callback or logger.debug
+        emit_status("Discovering registered callables")
+        if cls._metadata_cache is None:
+            cls._metadata_cache = cls._metadata_from_instances(
+                cls._available_registry_instances()
+            )
+        functions = tuple(metadata.func for metadata in cls._metadata_cache.values())
+        emit_status("Preparing declared registry kernel caches")
+        PreparationCacheBatch.from_callables(functions).populate_child_caches(
+            status_callback=emit_status
         )
-        cls._metadata_cache = cls._metadata_from_instances(
-            cls._available_registry_instances()
-        )
+        for function in functions:
+            preparation = CallablePreparation.from_callable(function)
+            preparation.prepare()
+            emit_status(
+                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
+            )
+        emit_status(f"Registered kernels ready ({len(functions)} callables)")
         return cls._metadata_cache
 
     @classmethod
@@ -204,18 +220,18 @@ class RegistryService:
         return all_functions
 
     @classmethod
-    def _prepare_persistent_catalog(
+    def prepare_persistent_catalog(
         cls,
         *,
         status_callback: RegistryPreparationCallback | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Run behavior probing in a dedicated interpreter main thread."""
+        """Prepare catalog and kernel caches in a dedicated interpreter main thread."""
 
         if cancellation is not None and cancellation.requested():
             raise CancelledError
         status_callback = status_callback or logger.debug
-        status_callback("Discovering functions in an isolated execution process")
+        status_callback("Preparing function catalog and declared kernel caches")
 
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (
