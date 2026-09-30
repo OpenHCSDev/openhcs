@@ -25,6 +25,10 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
     PrimaryObjectsRuntimeTuple,
     UnexecutedDeclumpingEvidence,
 )
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializedFilenameIdentity,
+)
 
 
 def _source():
@@ -125,6 +129,12 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
         assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
         assert not spec.participates_in_main_flow
         assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert spec.materialization.outputs == (
+            ImageFileOptions(
+                filename_suffix=".tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            ),
+        )
         assert spec.source_context_sources() == (source.ref(),)
         assert ArtifactSidecarSourceRelation(source=objects.ref()) in spec.relations
     assert len(get_args(PrimaryObjectsRuntimeTuple)) == 3 + len(specs)

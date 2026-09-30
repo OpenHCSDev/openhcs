@@ -49,17 +49,52 @@ owner and primary_objects. Complete JSON lives in the parent persistent ledger
 as primary-diagnostics-packaged-ratchet-20260930.json. This screen does not
 replace complete NRA/R1, module parity or live acceptance.
 
-Remaining live acceptance
--------------------------
+Continuous native acceptance
+----------------------------
 
-Actual registered IPO modes, normal compiled primary-to-secondary identity,
-persisted sidecar readback and MCP/viewer raw/intermediate/final inspection
-remain unexecuted at this checkpoint. Synthetic continuity tests are present
-in tests/integration/test_primary_segmentation_diagnostics_journey.py; a
-prepared test is not executed evidence. No issue closure or main merge claimed.
+Following the scientific worker's verified terminal cleanup, the parent used
+the released validation lock for the real synthetic primary/secondary journey.
+No biological inputs, held-out data, extra environment or Fiji download.
 
-Fermat holds the sole scientific runtime admission/frozen installed c42d
-contract. This source checkpoint does not alter that application, managed
-skill or biological analysis. Run native/live acceptance only after its
-terminal cleanup and fresh admission, then integrate this same existing PR
-without waiting for optional hosted CI. Whole owner ZIP scope remains open.
+The originally unexecuted fixture had three API/semantic mistakes: row_count
+is a method; memory records belong to RuntimeValueStore, not an unrelated
+FileManager; source-binding identities are virtual addresses, not necessarily
+physical input filenames. Readback now compares ordinary persisted TIFFs with
+the existing writer's declared runtime-plane projection. Source identity and
+pixel contributors are checked through their nominal authorities; a sidecar's
+own runtime alias is not incorrectly required to equal the DNA alias.
+
+Native execution exposed a product defect: all seven diagnostic stages used
+the same source-derived filename. The diagnostic declaration now requests the
+existing artifact-name TIFF materialization, preserving each stage separately.
+No second writer, routing registry or serialization fallback was introduced.
+The first explicit declaration lacked its required .tif suffix; that failed
+attempt is retained rather than hidden by an inferred serialization format.
+
+Final command, with one CPU and native threads1, existing Python3.12 and this
+source checkout as PYTHONPATH:
+
+.. code-block:: text
+
+   python -m pytest tests/unit/test_primary_object_diagnostics.py \
+       tests/integration/test_primary_segmentation_diagnostics_journey.py -q
+
+Actual result:15PASS7.05s; process10.55s, peak463732KiB, exit0. The five real
+registered IPO modes include empty, declumping-disabled, watershed-disabled,
+intensity and shape. The continuous PipelineDocument roundtrip -> compile ->
+execute -> persist journey checks all seven distinct stage TIFFs pixel-exactly,
+source address and contributors, canonical unedited/small-removed label
+variants, primary-to-secondary label identity and containment of each own seed.
+All earlier failures and the final XML are retained in the parent ledger as
+primary-diagnostics-native-{first,second,third,fourth,fifth,sixth,seventh,eighth,ninth,final}-20260930.xml.
+
+Remaining installed acceptance
+------------------------------
+
+The affected installed MCP/viewer raw/intermediate/final journey remains
+unexecuted for this PR. Neither a main merge nor biological acceptance is
+claimed. The previous scientific run is frozen ABSTENTION_RESOURCE_GUARD,
+zeroof4 candidates; its clock, inputs and prior failures are unchanged.
+The parent owns the released integration slot. Publish this same existing PR
+and complete installed acceptance without waiting for optional hosted CI.
+Whole owner ZIP scope remains open.

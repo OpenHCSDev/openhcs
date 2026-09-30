@@ -50,7 +50,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     np.testing.assert_array_equal(diagnostics.threshold_support.data, image > 0.2)
     np.testing.assert_array_equal(diagnostics.unedited_objects.data, objects.unedited_labels)
     np.testing.assert_array_equal(diagnostics.small_removed_objects.data, objects.small_removed_labels)
-    assert measurements.row_count > 0
+    assert measurements.row_count() > 0
     if mode in ("empty", "disabled", "watershed-disabled"):
         assert not diagnostics.declump_response.mask.any()
         assert np.isnan(diagnostics.declump_response.data).all()
@@ -65,6 +65,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
 
 def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_binding(tmp_path):
     import tifffile
+    from openhcs.processing.materialization.core import MaterializationInput
     from openhcs.agent.services.execution_session_service import (
         AgentProgressQueue, CompileInspectionInput, InProcessCompileInspectionGateway,
     )
@@ -161,17 +162,40 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     store = context.runtime_value_store
     (primary_record,) = store.find(name="Nuclei", axis_id="A01")
     (secondary_record,) = store.find(name="Cells", axis_id="A01")
+    source_metadata = primary_record.value.data.metadata
     assert np.count_nonzero(object_label_dense_array(secondary_record.value.data)) >= np.count_nonzero(
         object_label_dense_array(primary_record.value.data)) > 0
+    primary_labels = object_label_dense_array(primary_record.value.data)
+    secondary_labels = object_label_dense_array(secondary_record.value.data)
+    np.testing.assert_array_equal(np.unique(primary_labels), np.unique(secondary_labels))
+    np.testing.assert_array_equal(
+        secondary_labels[primary_labels > 0], primary_labels[primary_labels > 0]
+    )
     diagnostic_specs = tuple(spec for spec in primary_invocation.contract.artifact_outputs
                              if spec.sidecar_role is not None)
     assert len(diagnostic_specs) == len(PrimaryObjectDiagnosticPlanes._fields)
     persisted = []
     for spec in diagnostic_specs:
         (record,) = store.find(name=spec.name, artifact_type=ImageArtifactType, axis_id="A01")
-        reloaded = orchestrator.filemanager.load(record.path, record.backend)
-        np.testing.assert_array_equal(image_payload_data(reloaded), image_payload_data(record.value.data))
-        assert image_payload_metadata(record.value.data).source_path.endswith("A01_s001_DNA.tif")
+        (saved_path,) = context.step_plans[0].artifact_analysis_output_dir.glob(
+            f"*_{spec.name}_step0.tif"
+        )
+        (options,) = spec.materialization.outputs
+        (plane,) = MaterializationInput.from_runtime_slice_projected_value(
+            record.value.data, options
+        ).items
+        np.testing.assert_array_equal(
+            tifffile.imread(saved_path), plane.data
+        )
+        metadata = image_payload_metadata(record.value.data)
+        # Sidecars have their own runtime alias, retaining the same source
+        # address and pixel contributors as the primary object payload.
+        assert metadata.source_provenance.scalar_source_identity == (
+            source_metadata.source_provenance.scalar_source_identity
+        )
+        assert metadata.source_image_provenance_planes.as_contributors().identity == (
+            source_metadata.source_image_provenance_planes.as_contributors().identity
+        )
         persisted.append(record.value.data)
     diagnostics = PrimaryObjectDiagnosticPlanes(*persisted)
     np.testing.assert_array_equal(diagnostics.unedited_objects.data, primary_record.value.data.unedited_labels)

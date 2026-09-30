@@ -28,6 +28,11 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariant
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    MaterializedFilenameIdentity,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,6 +175,12 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
                 ImageArtifactType,
                 sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
                 viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+                materialization=MaterializationSpec(
+                    ImageFileOptions(
+                        filename_suffix=".tif",
+                        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                    )
+                ),
                 relations=(
                     SourceStackLineageSourceRelation(source=source_image.ref()),
                     ArtifactSidecarSourceRelation(source=objects.ref()),
