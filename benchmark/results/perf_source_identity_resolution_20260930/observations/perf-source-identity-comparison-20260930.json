@@ -1,0 +1,89 @@
+{
+  "phase_observations": {
+    "main": {
+      "source_loading": {
+        "calls": 9,
+        "seconds": 0.9804887138307095,
+        "metadata_calls": 540,
+        "metadata_seconds": 0.6986050303094089,
+        "header_calls": 540,
+        "header_seconds": 0.3239523754455149,
+        "maximum_header_unique_paths_total": 3
+      },
+      "members": {
+        "calls": 4,
+        "seconds": 0.7727874591946602,
+        "metadata_calls": 0,
+        "metadata_seconds": 0.0,
+        "header_calls": 0,
+        "header_seconds": 0.0,
+        "maximum_header_unique_paths_total": 3
+      },
+      "source_artifact": {
+        "calls": 4,
+        "seconds": 1.2171323760412633,
+        "metadata_calls": 240,
+        "metadata_seconds": 0.22539018373936415,
+        "header_calls": 240,
+        "header_seconds": 0.14765753783285618,
+        "maximum_header_unique_paths_total": 3
+      }
+    },
+    "candidate": {
+      "source_loading": {
+        "calls": 9,
+        "seconds": 0.8170740776695311,
+        "metadata_calls": 540,
+        "metadata_seconds": 0.5306885787285864,
+        "header_calls": 540,
+        "header_seconds": 0.3506077448837459,
+        "maximum_header_unique_paths_total": 3
+      },
+      "members": {
+        "calls": 4,
+        "seconds": 0.3409434431232512,
+        "metadata_calls": 0,
+        "metadata_seconds": 0.0,
+        "header_calls": 0,
+        "header_seconds": 0.0,
+        "maximum_header_unique_paths_total": 3
+      },
+      "source_artifact": {
+        "calls": 4,
+        "seconds": 0.7714447779580951,
+        "metadata_calls": 240,
+        "metadata_seconds": 0.2194612747989595,
+        "header_calls": 240,
+        "header_seconds": 0.14325683610513806,
+        "maximum_header_unique_paths_total": 3
+      }
+    }
+  },
+  "unprofiled_abba_means": {
+    "cp_tutorial_3d_monolayer": {
+      "main": {
+        "compile_seconds": 1.1734075546264648,
+        "execute_seconds": 10.30881416797638,
+        "total_seconds": 12.213887558318675
+      },
+      "candidate": {
+        "compile_seconds": 1.186335802078247,
+        "execute_seconds": 10.258214473724365,
+        "total_seconds": 12.132738958112895
+      }
+    },
+    "ExampleImagingFlowCytometryObjectsInGrid": {
+      "main": {
+        "compile_seconds": 1.7966046333312988,
+        "execute_seconds": 17.99351966381073,
+        "total_seconds": 20.535507983062416
+      },
+      "candidate": {
+        "compile_seconds": 2.0036579370498657,
+        "execute_seconds": 18.405285120010376,
+        "total_seconds": 21.109541072975844
+      }
+    }
+  },
+  "limits": "Phase scopes nest; do not add members to source_artifact. One diagnostic run/version. ABBA two runs/version has substantial variance and does not establish a material end-to-end gain. No native CP or scaling rerun in this checkpoint."
+}
