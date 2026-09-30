@@ -232,6 +232,10 @@ class RuntimeArtifactMaterializationPlan:
     def has_persistent_target(self) -> bool:
         return self.persistent_enabled
 
+    def persists_to_backend(self, backend: str) -> bool:
+        """Own admission of a storage target to persistent artifact publication."""
+        return self.has_persistent_target and self.require_persistent_backend() == backend
+
     def require_persistent_backend(self) -> str:
         if self.persistent_backend is None:
             raise RuntimeError(
