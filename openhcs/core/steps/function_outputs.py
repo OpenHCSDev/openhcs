@@ -736,12 +736,9 @@ class OpenHCSMetadataWriter:
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Publish artifacts persisted in this declared storage target."""
             materialization = plan.runtime_artifact_materialization
-            if (
-                not materialization.has_persistent_target
-                or materialization.require_persistent_backend() != self.backend
-            ):
-                return ()
-            return self.project_runtime_artifacts(context, plan)
+            if materialization.persists_to_backend(self.backend):
+                return self.project_runtime_artifacts(context, plan)
+            return ()
 
         def contains_images(self, context: ProcessingContext) -> bool:
             """Return whether the completed target contains image outputs."""

@@ -69,6 +69,7 @@ from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataWriter,
     ProducedMemoryPathsAuthority,
     RuntimeArtifactMaterializationAuthority,
+    MaterializedImageMetadataTarget,
     RuntimeArtifactMetadataTarget,
     StreamOutputsAuthority,
     finalize_function_step_outputs,
@@ -1635,11 +1636,15 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
         lambda _plan, _context: (materialization,),
     )
 
-    target = RuntimeArtifactMetadataTarget.from_plan(plan)
+    target = MaterializedImageMetadataTarget.from_plan(plan)
     assert target is not None
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
         context, plan
     )
+
+    artifact_target = RuntimeArtifactMetadataTarget.from_plan(plan)
+    assert artifact_target is not None
+    assert artifact_target.runtime_artifact_projection_paths(context, plan) == ()
 
     assert virtual_path == (
         "analysis_inputs/A49_s001_w2_z001_t001_neurite_candidate_mask.checkpoint.tif"
