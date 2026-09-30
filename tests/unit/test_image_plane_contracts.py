@@ -31,6 +31,7 @@ from openhcs.core.runtime_image_values import (
     MaskedImagePayload,
     image_payload_data,
     image_payload_mask,
+    image_payload_mask_for_slice,
     image_payload_metadata,
     image_payload_slice_context,
 )
@@ -168,6 +169,30 @@ def test_batch_projection_checks_mask_cardinality_before_child_axis_errors(
 
     with pytest.raises(ValueError, match="mask cardinality must exactly match"):
         projector.payloads_for_slices(tuple(np.zeros((2, 4, 5))))
+
+
+@pytest.mark.parametrize("entry", ("payload", "mask", "context"))
+def test_scalar_mask_projection_requires_metadata_owner_to_declare_plane_axis(
+    entry: str,
+) -> None:
+    data = np.zeros((4, 5), dtype=np.float32)
+    mask = np.ones(data.shape, dtype=bool)
+    metadata = ImagePayloadMetadata()
+    projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
+
+    with pytest.raises(ValueError, match="requires a declared plane axis"):
+        if entry == "payload":
+            projector.payload_for_slice(data, 0)
+        elif entry == "mask":
+            image_payload_mask_for_slice(
+                mask=mask, metadata=metadata, data_slice=data, plane_index=0
+            )
+        else:
+            image_payload_slice_context(metadata.payload_with(data, mask), data, 0)
+
+    assert ImagePayloadSliceProjector(mask=None, metadata=metadata).mask_for_slice(
+        data, 0
+    ) is None
 
 
 @pytest.mark.parametrize("batch", (False, True))

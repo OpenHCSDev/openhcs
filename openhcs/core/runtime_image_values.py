@@ -1528,14 +1528,7 @@ class ImagePayloadSliceProjector:
         if self.mask is None:
             return None
         mask_array = np.asarray(self.mask)
-        if self.metadata.plane_axis is None:
-            if plane_index != 0:
-                raise ValueError(
-                    "Image payload without a plane axis cannot select nonzero "
-                    f"slice index {plane_index}."
-                )
-            candidate = mask_array
-        elif (
+        if (
             self.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
             and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
         ):
