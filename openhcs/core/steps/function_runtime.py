@@ -1860,7 +1860,7 @@ class FunctionInvocationArtifactScope:
         parameter_values: dict[str, list[RuntimeValue]] = {}
         for input_plan in self.selected_artifact_input_edges:
             parameter_name = input_plan.spec.parameter_name
-            if input_plan.storage_plan is None and parameter_name is None:
+            if not input_plan.requires_callable_binding():
                 continue
             if parameter_name is None:
                 raise ValueError(
@@ -1870,7 +1870,7 @@ class FunctionInvocationArtifactScope:
             artifact_ref = input_plan.spec.ref()
             projected_values = (
                 self.load_artifact_input(input_plan.spec.name, input_plan)
-                if input_plan.storage_plan is not None
+                if input_plan.uses_runtime_storage()
                 else (
                     RuntimeValue.from_spec(
                         input_plan.spec,
@@ -1891,7 +1891,7 @@ class FunctionInvocationArtifactScope:
     def should_load_artifact_inputs(self) -> bool:
         return bool(
             any(
-                edge.storage_plan is not None or edge.spec.parameter_name is not None
+                edge.requires_callable_binding()
                 for edge in self.selected_artifact_input_edges
             )
             and not self.invocation.adapter_manages_artifact_inputs
