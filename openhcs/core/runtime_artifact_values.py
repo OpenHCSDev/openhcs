@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Self
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactType
+from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactType
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
@@ -68,12 +68,29 @@ class RuntimeValue:
             output_plan.group_component if group_key is not None else None,
             group_key,
         )
+        return cls.from_spec(
+            output_plan,
+            data,
+            execution_scope=artifact_scope,
+            materialization_source_metadata=materialization_source_metadata,
+        )
+
+    @classmethod
+    def from_spec(
+        cls,
+        spec: ArtifactSpec,
+        data: Any,
+        *,
+        execution_scope: RuntimeExecutionAxisScope,
+        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
+    ) -> Self:
+        """Derive transient or stored runtime identity from one declared artifact."""
         return cls(
             key=ArtifactKey(
-                name=output_plan.name,
-                artifact_type=output_plan.artifact_type,
-                scope=artifact_scope,
-                semantic_id=output_plan.artifact_type.runtime_semantic_id(data),
+                name=spec.name,
+                artifact_type=spec.artifact_type,
+                scope=execution_scope,
+                semantic_id=spec.artifact_type.runtime_semantic_id(data),
             ),
             data=data,
             materialization_source_metadata=materialization_source_metadata,
