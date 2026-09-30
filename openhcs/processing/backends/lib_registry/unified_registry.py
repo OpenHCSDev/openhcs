@@ -34,6 +34,7 @@ from enum import Enum, auto
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -118,6 +119,9 @@ from openhcs.core.variable_component_stack_requirement import (
 from openhcs.core.xdg_paths import get_cache_file_path
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
 
@@ -1004,6 +1008,12 @@ class ProcessingContractDeclaration(ABC):
 
         return source_payload
 
+    def main_flow_call_argument(
+        self, callable_contract: "CallableContract", source_payload: Any,
+    ) -> Any:
+        """Expose the raw ABI when this contract needs no earlier plane slicing."""
+        return callable_contract.raw_main_flow_call_argument(source_payload)
+
     def injected_semantic_control_parameter_names(self) -> frozenset[str]:
         """Semantic controls that this contract may inject into public callables."""
         return frozenset(
@@ -1085,12 +1095,20 @@ class Pure3DProcessingContract(VariableComponentStackProcessingContract):
 class Pure2DProcessingContract(ProcessingContractDeclaration):
     """Execute a callable as independent 2D slices."""
 
+    def main_flow_call_argument(
+        self, callable_contract: "CallableContract", source_payload: Any,
+    ) -> Any:
+        """Keep the declared plane domain until the PURE_2D slicer consumes it."""
+        del callable_contract
+        return source_payload
+
     def execute(self, registry, func, image, *args, **kwargs):
         return registry.execute_pure_2d(func, image, *args, **kwargs)
 
 
 class FlexibleProcessingContract(
-    SemanticControlVariableComponentStackProcessingContract
+    SemanticControlVariableComponentStackProcessingContract,
+    Pure2DProcessingContract,
 ):
     """Choose 2D or full-stack semantics using this contract's control hook."""
 
@@ -1711,11 +1729,14 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     # ===== PROCESSING CONTRACT EXECUTION METHODS =====
     def execute_pure_3d(self, func, image, *args, **kwargs):
         """Execute a full-stack callable once and restore payload context."""
+        from openhcs.core.callable_contract import CallableContract
+
+        callable_contract = CallableContract.from_callable(func)
         result = (
             RuntimeCallablePolicy()
             .invocation(
                 func,
-                (image, *args),
+                (callable_contract.raw_main_flow_call_argument(image), *args),
                 kwargs,
             )
             .call()
@@ -1724,6 +1745,9 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
     def execute_pure_2d(self, func, image, *args, **kwargs):
         """Execute 2D→2D function with unstack/restack wrapper."""
+        from openhcs.core.callable_contract import CallableContract
+
+        callable_contract = CallableContract.from_callable(func)
         # Input slicing and output aggregation belong to distinct declarations.
         # Older registry callables may expose output memory only, in which case
         # their historical same-framework behavior remains the fallback.
@@ -1743,9 +1767,14 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 RuntimeCallablePolicy().invocation(func, (image, *args), kwargs).call()
             )
         if slicer.is_single_plane_value(image):
-            return (
-                RuntimeCallablePolicy().invocation(func, (image, *args), kwargs).call()
+            result = (
+                RuntimeCallablePolicy().invocation(
+                    func,
+                    (callable_contract.raw_main_flow_call_argument(image), *args),
+                    kwargs,
+                ).call()
             )
+            return contextualize_main_image_output(image, result)
         input_metadata = image_payload_metadata(image)
         plane_axis = input_metadata.plane_axis
         if plane_axis is None:
@@ -1801,15 +1830,16 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                     axis_size=slice_count,
                 ),
             )
-            return (
+            result = (
                 RuntimeCallablePolicy()
                 .invocation(
                     slice_func,
-                    (slice_2d, *args),
+                    (callable_contract.raw_main_flow_call_argument(slice_2d), *args),
                     projected_kwargs,
                 )
                 .call()
             )
+            return contextualize_main_image_output(slice_2d, result)
 
         slice_results = batch_executor(
             RuntimePure2DSliceBatchRequest(
