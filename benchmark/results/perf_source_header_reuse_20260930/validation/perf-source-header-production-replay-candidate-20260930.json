@@ -1,0 +1,15 @@
+{
+  "package": "candidate",
+  "module": "/tmp/openhcs-source-header-installed-20260930/openhcs/core/image_file_serialization.py",
+  "queries": "780 balanced reads across three actual source files; candidate cache cleared before each sample",
+  "exact_dtype_intensity_scale_and_pixel_semantics": true,
+  "seconds": [
+    0.02801461284980178,
+    0.028829858172684908,
+    0.027734465897083282,
+    0.027675603982061148,
+    0.02791805099695921
+  ],
+  "median_seconds": 0.02791805099695921,
+  "limit": "Local production-function replay, not an end-to-end measurement."
+}
