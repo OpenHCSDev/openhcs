@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, ClassVar, Mapping
@@ -1195,6 +1195,15 @@ class AlignedImageStack:
 
         return type(self)(tuple(slices), self.slice_contexts)
 
+    def projected_output_slices(
+        self,
+    ) -> Iterator[tuple[Any, AlignedImageSliceContext | None]]:
+        """Project each output once together with its declaration-owned context."""
+        for index, payload in enumerate(self.slices):
+            context = self.slice_contexts[index] if self.slice_contexts else None
+            for output_slice in payload_slices_for_alignment(payload):
+                yield output_slice, context
+
     def output_payload(
         self,
         artifact_ref: ArtifactSpecRef,
@@ -1526,31 +1535,12 @@ def payload_slices_for_alignment(payload: Any) -> tuple[Any, ...]:
 
 
 def flatten_aligned_image_payload_slices(payload: Any) -> tuple[Any, ...]:
-    """Return scalar image payload slices represented by an aligned output carrier."""
+    """Derive scalar image payloads from the nominal aligned-output owner."""
     if isinstance(payload, AlignedImageStack):
         return tuple(
-            output_slice
-            for aligned_slice in payload.slices
-            for output_slice in payload_slices_for_alignment(aligned_slice)
+            output_slice for output_slice, _context in payload.projected_output_slices()
         )
     return payload_slices_for_alignment(payload)
-
-
-def flatten_aligned_image_slice_contexts(
-    payload: Any,
-) -> tuple[AlignedImageSliceContext, ...]:
-    """Return per-output semantic context for flattened aligned image slices."""
-    if not isinstance(payload, AlignedImageStack) or not payload.slice_contexts:
-        return ()
-    return tuple(
-        slice_context
-        for aligned_slice, slice_context in zip(
-            payload.slices,
-            payload.slice_contexts,
-            strict=True,
-        )
-        for _output_slice in payload_slices_for_alignment(aligned_slice)
-    )
 
 
 def aligned_image_stack_kwargs(

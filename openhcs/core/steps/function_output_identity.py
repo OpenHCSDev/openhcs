@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from functools import lru_cache
 from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Mapping, Sequence, TypeAlias
 
+from openhcs.core.source_path_identity import source_path_identity
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -44,13 +44,6 @@ class IncompleteFunctionOutputFilenameIdentityError(ValueError):
     def __init__(self, component_name: str, message: str):
         self.component_name = component_name
         super().__init__(message)
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_name(path: str) -> str:
-    """Return filename component for output identity parsing."""
-
-    return Path(path).name
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,7 +205,7 @@ class FunctionOutputParserContext:
         return self.parser.__class__.__name__
 
     def parse_path_metadata(self, path: str | Path) -> SourceComponentMetadata | None:
-        parsed = self.parser.parse_filename(_cached_path_name(str(path)))
+        parsed = self.parser.parse_filename(source_path_identity(str(path)).name)
         return None if parsed is None else parsed.wire_mapping()
 
 
@@ -325,7 +318,9 @@ class FunctionOutputPathAuthority:
         if qualifier is None:
             return filename
         if not filename.endswith(extension):
-            raise ValueError("Constructed filename does not retain its declared extension.")
+            raise ValueError(
+                "Constructed filename does not retain its declared extension."
+            )
         return f"{filename[:-len(extension)]}_{qualifier}{extension}"
 
     @staticmethod
@@ -591,8 +586,10 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                metadata.source_component_metadata, metadata.source_path,
-                parser=parser, identity_cache=identity_cache,
+                metadata.source_component_metadata,
+                metadata.source_path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -646,8 +643,10 @@ class FunctionOutputIdentityAuthority:
             identity = cls._identity_from_metadata(
                 source_identity.component_metadata,
                 extension=FunctionOutputExtensionAuthority.from_source(
-                    source_identity.component_metadata, source_identity.path,
-                    parser=parser, identity_cache=identity_cache,
+                    source_identity.component_metadata,
+                    source_identity.path,
+                    parser=parser,
+                    identity_cache=identity_cache,
                 ),
                 source="single represented payload source metadata",
             )
@@ -705,8 +704,10 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                metadata.source_component_metadata, metadata.source_path,
-                parser=parser, identity_cache=identity_cache,
+                metadata.source_component_metadata,
+                metadata.source_path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -807,7 +808,7 @@ class FunctionOutputIdentityAuthority:
     ) -> FunctionOutputIdentity | None:
         cache_key = FunctionOutputParsedPathIdentityCacheKey(
             parser_id=id(parser),
-            path_name=_cached_path_name(path),
+            path_name=source_path_identity(path).name,
             source=source,
         )
         if cache_key in identity_cache.parsed_path_identities:
@@ -824,7 +825,7 @@ class FunctionOutputIdentityAuthority:
         *,
         source: str,
     ) -> FunctionOutputIdentity | None:
-        parsed = parser.parse_filename(_cached_path_name(path))
+        parsed = parser.parse_filename(source_path_identity(path).name)
         if parsed is None:
             return None
         return FunctionOutputIdentity(
@@ -905,8 +906,10 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             source_identity.component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                source_identity.component_metadata, source_identity.path,
-                parser=parser, identity_cache=identity_cache,
+                source_identity.component_metadata,
+                source_identity.path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source=f"represented source identity {identity_index} metadata",
         )

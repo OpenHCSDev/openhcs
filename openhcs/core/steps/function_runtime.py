@@ -76,7 +76,6 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
     ImageOutputBundle,
-    flatten_aligned_image_slice_contexts,
     flatten_aligned_image_payload_slices,
     stack_image_payload_context,
     stack_image_payload_context_from_metadata,
@@ -3118,9 +3117,8 @@ class PatternGroupRuntime:
                 ),
             )
         if isinstance(processed_stack, AlignedImageStack):
-            output_payloads = list(
-                flatten_aligned_image_payload_slices(processed_stack)
-            )
+            projected_outputs = tuple(processed_stack.projected_output_slices())
+            output_payloads = [payload for payload, _context in projected_outputs]
             output_data = tuple(
                 image_payload_data(payload) for payload in output_payloads
             )
@@ -3140,7 +3138,11 @@ class PatternGroupRuntime:
                 )
             return PatternGroupOutputData(
                 slices=output_payloads,
-                slice_contexts=flatten_aligned_image_slice_contexts(processed_stack),
+                slice_contexts=(
+                    tuple(context for _payload, context in projected_outputs)
+                    if processed_stack.slice_contexts
+                    else ()
+                ),
                 stack_payload=stack_payload,
             )
         output_context = self._unwrapped_main_flow_output_context()

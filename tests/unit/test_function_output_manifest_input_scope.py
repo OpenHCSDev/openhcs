@@ -46,7 +46,7 @@ def _compiled_pattern_with_input_edges(
     specs = tuple(spec for spec, _scope in specs_with_scopes)
 
     @artifact_inputs(*specs)
-    def consume(image):
+    def consume(image, *, labels=None, illumination_function=None):
         return image
 
     compiled = compile_function_pattern(consume, {}, {})
