@@ -41,6 +41,14 @@ typed pickle boundary, declaration extension without catalog changes, focused
 new-source antipattern guards, and original algorithm AST preservation apart
 from same-run capture. They are not full-package NRA or scientific acceptance.
 
+Required structural screen also ran using the existing packaged agent-comms
+ratchet, authenticated byte-identical to pinned3b03785 by SHA256e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562.
+Basec42d9bf5 to published1bc80d6e: PASS5114 metrics, zero nonzero or positive
+deltas,12.84s/86528KiB/exit0. Two changed production paths are the diagnostics
+owner and primary_objects. Complete JSON lives in the parent persistent ledger
+as primary-diagnostics-packaged-ratchet-20260930.json. This screen does not
+replace complete NRA/R1, module parity or live acceptance.
+
 Remaining live acceptance
 -------------------------
 
