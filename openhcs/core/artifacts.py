@@ -1591,6 +1591,10 @@ class ArtifactSpec:
         kw_only=True,
     )
 
+    def binds_callable_parameter(self) -> bool:
+        """Distinguish a runtime argument from a context-only artifact identity."""
+        return self.parameter_name is not None
+
     def __post_init__(self) -> None:
         if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
             raise TypeError(

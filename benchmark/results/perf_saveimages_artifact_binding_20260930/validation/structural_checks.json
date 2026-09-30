@@ -1,0 +1,22 @@
+{
+  "base": "616be7c8ef6b8d40d21a6cce2ed7fa7d3951e8fc",
+  "head": "399820539a659f0d485f6d5088fc87b9dd7508ca",
+  "changed_paths": [
+    "openhcs/core/artifacts.py",
+    "openhcs/core/function_patterns.py",
+    "openhcs/core/runtime_artifact_values.py",
+    "openhcs/core/steps/function_runtime.py"
+  ],
+  "metrics_compared": 5125,
+  "increased": {},
+  "original_ratchet_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-saveimages-binding-final-ratchet-openhcs-20260930.json",
+  "original_ratchet_sha256": "de617473f96a7e7f2bafa76313787e90f83c6b9b2748867a40c81e80312f7ade",
+  "census": {
+    "source_revision": "399820539",
+    "module_count": 701,
+    "original_class_count": 5099,
+    "projected_count": 5087
+  },
+  "open_original_classes": 12,
+  "original_census_path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-saveimages-binding-nra-census-after-20260930.json"
+}

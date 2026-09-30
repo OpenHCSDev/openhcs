@@ -1743,8 +1743,8 @@ def prepare_compiled_context_callables(
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionCoreExecutor:
-    """Execute one scoped callable invocation and route declared artifact I/O."""
+class FunctionInvocationArtifactScope:
+    """Own exact invocation artifact sources and their callable argument binding."""
 
     runtime_scope: FunctionRuntimeScope
     invocation: CompiledFunctionInvocation
@@ -1754,8 +1754,6 @@ class FunctionCoreExecutor:
     ]
     group_key: str | None
     plane_projection: RuntimePlaneProjection
-    main_data_arg: RuntimeArrayData
-    source_memory_type: str
 
     @property
     def selected_artifact_input_edges(
@@ -1781,156 +1779,9 @@ class FunctionCoreExecutor:
             source_payload=source_payload,
         )
 
-    def debug_cursor(self) -> DebugCursor:
-        return DebugCursor.from_invocation(
-            step_index=self.runtime_scope.execution_plan.step_index,
-            step_scope_id=self.runtime_scope.execution_plan.step_scope_id,
-            invocation=self.invocation,
-            pattern_group_identity=str(self.runtime_scope.runtime_plane_index),
-        )
-
-    def debug_artifacts(
-        self,
-        artifact_plans: ArtifactInputPlans | ArtifactOutputPlans,
-        artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
-    ) -> DebugArtifactRefProjection:
-        return DebugArtifactRefProjection.from_artifact_plans(
-            artifact_plans=artifact_plans,
-            cursor=self.debug_cursor(),
-            artifact_values=artifact_values,
-        )
-
-    def debug_event(
-        self,
-        event_type: DebugEventType,
-        *,
-        exception: Exception | None = None,
-        timing_seconds: float | None = None,
-        invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
-        input_artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
-    ) -> DebugEvent:
-        return DebugEvent.for_invocation(
-            event_type=event_type,
-            cursor=self.debug_cursor(),
-            step_name=self.runtime_scope.execution_plan.step_name,
-            callable_name=self.invocation.key.function_name,
-            axis_id=self.runtime_scope.execution_plan.axis_id,
-            input_artifacts=self.debug_artifacts(
-                {
-                    edge.storage_plan.ref(): edge.storage_plan
-                    for edge in self.artifacts.inputs.values()
-                    if edge.storage_plan is not None
-                },
-                input_artifact_values,
-            ),
-            output_artifacts=self.debug_artifacts(self.artifacts.outputs),
-            exception=exception,
-            timing_seconds=timing_seconds,
-            invocation_parameters=invocation_parameters,
-        )
-
-    @property
-    def func_callable(self) -> Callable:
-        return FunctionInvocationCallableResolver.resolve(self.invocation)
-
-    @property
-    def base_kwargs(self) -> RuntimeCallableKwargs:
-        return self.invocation.kwargs_dict
-
     @property
     def function_name(self) -> str:
         return self.invocation.contract.function_name
-
-    def main_flow_output_source_payload(
-        self,
-        source_payload: RuntimePayload,
-    ) -> RuntimePayload:
-        """Project source context through the callable's nominal processing contract."""
-
-        return self.invocation.contract.require_processing_contract().declaration.main_flow_output_source_payload(
-            source_payload
-        )
-
-    def execute(
-        self,
-        *,
-        debug_sink: DebugEventSink | None = None,
-    ) -> RuntimePayload | NoMainFlowOutput:
-        memory_types = self.memory_types()
-        source_payload = MainFlowMemoryConversion(
-            payload=self.main_data_arg,
-            source_type=self.source_memory_type,
-            target_type=memory_types.input_type,
-            target_device_id=self.runtime_scope.execution_plan.device_id_for(
-                memory_types.input_type
-            ),
-        ).converted_payload()
-        main_data_arg = self.main_flow_call_argument(source_payload)
-        final_kwargs = dict(self.base_kwargs)
-        self.bind_compiled_runtime_parameters(final_kwargs)
-        loads_artifact_inputs = self.should_load_artifact_inputs()
-        loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
-        if loads_artifact_inputs:
-            loaded_artifact_payloads = self.load_artifact_inputs(
-                final_kwargs,
-            )
-        self.bind_runtime_owned_parameters(final_kwargs)
-        self.bind_runtime_adapter(final_kwargs, source_payload)
-        raw_output = self.invoke(
-            main_data_arg,
-            final_kwargs,
-            loaded_artifact_payloads=loaded_artifact_payloads,
-            debug_sink=debug_sink,
-        )
-        main_output = self.save_artifact_outputs(
-            raw_output,
-            source_payload,
-            loaded_artifact_payloads=loaded_artifact_payloads,
-        )
-        if isinstance(main_output, NoMainFlowOutput):
-            return main_output
-        if self.invocation.adapter_records_artifact_outputs:
-            return main_output
-        output_source_payload = self.main_flow_output_source_payload(
-            self.execution_group_source_payload(source_payload)
-        )
-        return FunctionOutputContextStrategy.for_output_plan(
-            None
-        ).contextualize_from_projector(
-            output_source_payload,
-            main_output,
-            None,
-            self.plane_projection,
-        )
-
-    def main_flow_call_argument(
-        self, source_payload: RuntimePayload
-    ) -> RuntimeCallableArgument:
-        """Project through the callable's declared processing and raw ABI owners."""
-
-        return self.invocation.contract.main_flow_call_argument(source_payload)
-
-    def memory_types(self) -> "FunctionChainInvocationMemoryTypes":
-        return FunctionChainInvocationMemoryTypes.from_invocation(self.invocation)
-
-    def execution_group_source_payload(
-        self,
-        source_payload: RuntimePayload,
-    ) -> RuntimePayload:
-        """Return source payload metadata carrying the current grouped identity."""
-        component = self.runtime_scope.execution_plan.execution_group_scope.component
-        if component is None or self.group_key is None:
-            return source_payload
-        metadata = image_payload_metadata(source_payload)
-        component_metadata = dict(metadata.source_component_metadata or {})
-        component_metadata = with_source_component_metadata(
-            component_metadata,
-            component,
-            self.group_key,
-        )
-        return metadata.with_source_component_metadata(component_metadata).attach_to(
-            source_payload
-        )
 
     def declared_source_payload(
         self,
@@ -1998,6 +1849,7 @@ class FunctionCoreExecutor:
     def load_artifact_inputs(
         self,
         final_kwargs: dict[str, RuntimeCallableArgument],
+        source_payload: RuntimePayload,
     ) -> dict[ArtifactSpecRef, RuntimePayload]:
         if not self.should_load_artifact_inputs():
             return {}
@@ -2007,18 +1859,27 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}
         for input_plan in self.selected_artifact_input_edges:
-            if input_plan.storage_plan is None:
-                continue
             parameter_name = input_plan.spec.parameter_name
+            if not input_plan.requires_callable_binding():
+                continue
             if parameter_name is None:
                 raise ValueError(
                     f"Compiled invocation {self.invocation.key!r} runtime-loaded input "
                     f"edge {input_plan.key!r} has no callable parameter."
                 )
             artifact_ref = input_plan.spec.ref()
-            projected_values = self.load_artifact_input(
-                input_plan.spec.name,
-                input_plan,
+            projected_values = (
+                self.load_artifact_input(input_plan.spec.name, input_plan)
+                if input_plan.uses_runtime_storage()
+                else (
+                    RuntimeValue.from_spec(
+                        input_plan.spec,
+                        self.declared_source_payload(
+                            artifact_ref, source_payload, loaded_artifact_payloads={}
+                        ),
+                        execution_scope=self.runtime_scope.axis_scope,
+                    ),
+                )
             )
             loaded_value = RuntimeValue.compose(projected_values)
             loaded_artifact_payloads[artifact_ref] = loaded_value
@@ -2030,7 +1891,8 @@ class FunctionCoreExecutor:
     def should_load_artifact_inputs(self) -> bool:
         return bool(
             any(
-                edge.storage_plan is not None for edge in self.artifacts.inputs.values()
+                edge.requires_callable_binding()
+                for edge in self.selected_artifact_input_edges
             )
             and not self.invocation.adapter_manages_artifact_inputs
         )
@@ -2068,6 +1930,170 @@ class FunctionCoreExecutor:
             artifact_type=storage_plan.artifact_type.value,
         )
         return loaded_values
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCoreExecutor(FunctionInvocationArtifactScope):
+    """Execute one scoped callable invocation and route declared artifact I/O."""
+
+    runtime_scope: FunctionRuntimeScope
+    invocation: CompiledFunctionInvocation
+    artifacts: ComponentArtifactPlans[
+        InvocationArtifactInputProjectionKey,
+        InvocationArtifactInputEdgePlan,
+    ]
+    group_key: str | None
+    plane_projection: RuntimePlaneProjection
+    main_data_arg: RuntimeArrayData
+    source_memory_type: str
+
+    def debug_cursor(self) -> DebugCursor:
+        return DebugCursor.from_invocation(
+            step_index=self.runtime_scope.execution_plan.step_index,
+            step_scope_id=self.runtime_scope.execution_plan.step_scope_id,
+            invocation=self.invocation,
+            pattern_group_identity=str(self.runtime_scope.runtime_plane_index),
+        )
+
+    def debug_artifacts(
+        self,
+        artifact_plans: ArtifactInputPlans | ArtifactOutputPlans,
+        artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
+    ) -> DebugArtifactRefProjection:
+        return DebugArtifactRefProjection.from_artifact_plans(
+            artifact_plans=artifact_plans,
+            cursor=self.debug_cursor(),
+            artifact_values=artifact_values,
+        )
+
+    def debug_event(
+        self,
+        event_type: DebugEventType,
+        *,
+        exception: Exception | None = None,
+        timing_seconds: float | None = None,
+        invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
+        input_artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
+    ) -> DebugEvent:
+        return DebugEvent.for_invocation(
+            event_type=event_type,
+            cursor=self.debug_cursor(),
+            step_name=self.runtime_scope.execution_plan.step_name,
+            callable_name=self.invocation.key.function_name,
+            axis_id=self.runtime_scope.execution_plan.axis_id,
+            input_artifacts=self.debug_artifacts(
+                {
+                    edge.storage_plan.ref(): edge.storage_plan
+                    for edge in self.artifacts.inputs.values()
+                    if edge.storage_plan is not None
+                },
+                input_artifact_values,
+            ),
+            output_artifacts=self.debug_artifacts(self.artifacts.outputs),
+            exception=exception,
+            timing_seconds=timing_seconds,
+            invocation_parameters=invocation_parameters,
+        )
+
+    @property
+    def func_callable(self) -> Callable:
+        return FunctionInvocationCallableResolver.resolve(self.invocation)
+
+    @property
+    def base_kwargs(self) -> RuntimeCallableKwargs:
+        return self.invocation.kwargs_dict
+
+    def main_flow_output_source_payload(
+        self,
+        source_payload: RuntimePayload,
+    ) -> RuntimePayload:
+        """Project source context through the callable's nominal processing contract."""
+
+        return self.invocation.contract.require_processing_contract().declaration.main_flow_output_source_payload(
+            source_payload
+        )
+
+    def execute(
+        self,
+        *,
+        debug_sink: DebugEventSink | None = None,
+    ) -> RuntimePayload | NoMainFlowOutput:
+        memory_types = self.memory_types()
+        source_payload = MainFlowMemoryConversion(
+            payload=self.main_data_arg,
+            source_type=self.source_memory_type,
+            target_type=memory_types.input_type,
+            target_device_id=self.runtime_scope.execution_plan.device_id_for(
+                memory_types.input_type
+            ),
+        ).converted_payload()
+        main_data_arg = self.main_flow_call_argument(source_payload)
+        final_kwargs = dict(self.base_kwargs)
+        self.bind_compiled_runtime_parameters(final_kwargs)
+        loads_artifact_inputs = self.should_load_artifact_inputs()
+        loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
+        if loads_artifact_inputs:
+            loaded_artifact_payloads = self.load_artifact_inputs(
+                final_kwargs,
+                source_payload,
+            )
+        self.bind_runtime_owned_parameters(final_kwargs)
+        self.bind_runtime_adapter(final_kwargs, source_payload)
+        raw_output = self.invoke(
+            main_data_arg,
+            final_kwargs,
+            loaded_artifact_payloads=loaded_artifact_payloads,
+            debug_sink=debug_sink,
+        )
+        main_output = self.save_artifact_outputs(
+            raw_output,
+            source_payload,
+            loaded_artifact_payloads=loaded_artifact_payloads,
+        )
+        if isinstance(main_output, NoMainFlowOutput):
+            return main_output
+        if self.invocation.adapter_records_artifact_outputs:
+            return main_output
+        output_source_payload = self.main_flow_output_source_payload(
+            self.execution_group_source_payload(source_payload)
+        )
+        return FunctionOutputContextStrategy.for_output_plan(
+            None
+        ).contextualize_from_projector(
+            output_source_payload,
+            main_output,
+            None,
+            self.plane_projection,
+        )
+
+    def main_flow_call_argument(
+        self, source_payload: RuntimePayload
+    ) -> RuntimeCallableArgument:
+        """Project through the callable's declared processing and raw ABI owners."""
+
+        return self.invocation.contract.main_flow_call_argument(source_payload)
+
+    def memory_types(self) -> "FunctionChainInvocationMemoryTypes":
+        return FunctionChainInvocationMemoryTypes.from_invocation(self.invocation)
+
+    def execution_group_source_payload(
+        self,
+        source_payload: RuntimePayload,
+    ) -> RuntimePayload:
+        """Return source payload metadata carrying the current grouped identity."""
+        component = self.runtime_scope.execution_plan.execution_group_scope.component
+        if component is None or self.group_key is None:
+            return source_payload
+        metadata = image_payload_metadata(source_payload)
+        component_metadata = dict(metadata.source_component_metadata or {})
+        component_metadata = with_source_component_metadata(
+            component_metadata,
+            component,
+            self.group_key,
+        )
+        return metadata.with_source_component_metadata(component_metadata).attach_to(
+            source_payload
+        )
 
     def bind_runtime_owned_parameters(
         self,

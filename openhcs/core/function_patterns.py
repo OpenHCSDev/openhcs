@@ -242,8 +242,7 @@ class InvocationArtifactInputEdgePlan:
 
         main_flow_refs = main_flow_artifacts.ref_set()
         consumes_main_flow = (
-            spec.ref() in main_flow_refs
-            and spec.ref() in invocation_sources.ref_set()
+            spec.ref() in main_flow_refs and spec.ref() in invocation_sources.ref_set()
         )
         return cls(
             key=key,
@@ -261,6 +260,14 @@ class InvocationArtifactInputEdgePlan:
                 )
             ),
         )
+
+    def uses_runtime_storage(self) -> bool:
+        """Return whether an exact producer storage plan supplies this edge."""
+        return self.storage_plan is not None
+
+    def requires_callable_binding(self) -> bool:
+        """Admit parameter-bearing sources and validate every stored argument."""
+        return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
 
     def __post_init__(self) -> None:
         if type(self.consumes_main_flow) is not bool:

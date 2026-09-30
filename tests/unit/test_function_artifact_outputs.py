@@ -2889,7 +2889,7 @@ def _declared_source_executor(
     ),
 ) -> FunctionCoreExecutor:
     @artifact_inputs(spec)
-    def declared_source_origin(image):
+    def declared_source_origin(image, *, image_to_save=None):
         return image
 
     invocation = next(
@@ -3018,6 +3018,63 @@ def test_declared_source_payload_preserves_compiled_complete_main_flow() -> None
     )
 
     assert result is primary
+
+
+def test_main_flow_artifact_is_bound_to_its_declared_callable_keyword() -> None:
+    spec = ArtifactSpec.input(
+        "NucleiImage", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(
+        spec, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD
+    )
+    primary = ImagePayloadMetadata(source_image_names=("NucleiImage",)).payload_with(
+        np.arange(24, dtype=np.uint16).reshape(2, 3, 4)
+    )
+    kwargs = {}
+    loaded = executor.load_artifact_inputs(kwargs, primary)
+    assert kwargs["image_to_save"] is primary
+    assert loaded == {spec.ref(): primary}
+
+
+def test_main_flow_keyword_rejects_a_different_declared_source() -> None:
+    spec = ArtifactSpec.input(
+        "NucleiImage", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(spec)
+    primary = ImagePayloadMetadata(source_image_names=("WrongImage",)).payload_with(
+        np.ones((2, 3, 4), dtype=np.uint16)
+    )
+    with pytest.raises(ValueError, match="does not represent declared source image"):
+        executor.load_artifact_inputs({}, primary)
+
+
+def test_source_bound_artifact_keyword_uses_the_exact_selected_image(monkeypatch):
+    spec = ArtifactSpec.input(
+        "OrigBlue", ImageArtifactType, parameter_name="image_to_save"
+    )
+    executor = _declared_source_executor(
+        spec,
+        source_binding_plan=CompiledSourceBindingPlan(
+            bindings=(NamedSourceBinding(alias="OrigBlue"),)
+        ),
+    )
+    primary = ImagePayloadMetadata(source_image_names=("OrigGreen",)).payload_with(
+        np.zeros((2, 3, 4), dtype=np.float32)
+    )
+    selected = ImagePayloadMetadata(source_image_names=("OrigBlue",)).payload_with(
+        np.ones((2, 3, 4), dtype=np.float32)
+    )
+
+    def source_artifact_payload(request, ref):
+        assert ref == spec.ref() and request.source_payload is primary
+        return selected
+
+    monkeypatch.setattr(
+        RuntimeAdapterRequest, "source_artifact_payload", source_artifact_payload
+    )
+    kwargs = {}
+    executor.load_artifact_inputs(kwargs, primary)
+    assert kwargs["image_to_save"] is selected
 
 
 def test_declared_source_payload_prefers_exact_loaded_ref_over_main_flow() -> None:

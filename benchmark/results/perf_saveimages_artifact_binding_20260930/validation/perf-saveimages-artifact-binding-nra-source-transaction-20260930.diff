@@ -1,0 +1,259 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
+@@ -1743,7 +1743,200 @@
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+-class FunctionCoreExecutor:
++class FunctionInvocationArtifactScope:
++    """Own exact invocation artifact sources and their callable argument binding."""
++
++    runtime_scope: FunctionRuntimeScope
++    invocation: CompiledFunctionInvocation
++    artifacts: ComponentArtifactPlans[
++        InvocationArtifactInputProjectionKey,
++        InvocationArtifactInputEdgePlan,
++    ]
++    group_key: str | None
++    plane_projection: RuntimePlaneProjection
++
++
++    @property
++    def selected_artifact_input_edges(
++        self,
++    ) -> tuple[InvocationArtifactInputEdgePlan, ...]:
++        """Return component-selected compiled occurrences in declaration order."""
++
++        return tuple(self.artifacts.inputs.values())
++
++
++    def runtime_adapter_request(
++        self,
++        source_payload: RuntimePayload,
++    ) -> RuntimeAdapterRequest:
++        return RuntimeAdapterRequest.from_runtime_scope(
++            runtime_scope=self.runtime_scope,
++            callable_contract=self.invocation.contract,
++            artifact_inputs={
++                edge.key: edge for edge in self.selected_artifact_input_edges
++            },
++            artifact_outputs=self.artifacts.outputs,
++            group_key=self.group_key,
++            plane_projection=self.plane_projection,
++            source_payload=source_payload,
++        )
++
++
++    @property
++    def function_name(self) -> str:
++        return self.invocation.contract.function_name
++
++
++    def declared_source_payload(
++        self,
++        source_ref: ArtifactSpecRef,
++        primary_source_payload: RuntimePayload,
++        *,
++        loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
++    ) -> RuntimePayload:
++        input_spec = self.invocation.contract.artifact_inputs.by_ref(source_ref)
++        if input_spec is None:
++            raise ValueError(
++                f"Invocation {self.invocation.key!r} does not declare source artifact "
++                f"{source_ref!r}."
++            )
++        stored_payload = loaded_artifact_payloads.get(source_ref)
++        source_binding = (
++            self.runtime_scope.source_binding_plan.binding_for_artifact_ref(source_ref)
++        )
++        main_flow_edges = tuple(
++            edge
++            for edge in self.selected_artifact_input_edges
++            if edge.spec.ref() == source_ref and edge.consumes_main_flow
++        )
++        uses_main_flow = bool(
++            stored_payload is None and source_binding is None and main_flow_edges
++        )
++        resolved_origins = sum(
++            (
++                stored_payload is not None,
++                source_binding is not None,
++                uses_main_flow,
++            )
++        )
++        if resolved_origins != 1:
++            raise ValueError(
++                f"Invocation {self.invocation.key!r} source artifact {source_ref!r} "
++                "must resolve to exactly one compiled producer, source binding, or "
++                f"main-flow input; resolved {resolved_origins}."
++            )
++        if stored_payload is not None:
++            return stored_payload
++        if source_binding is not None:
++            return cast(
++                RuntimePayload,
++                self.runtime_adapter_request(
++                    primary_source_payload
++                ).source_artifact_payload(source_ref),
++            )
++        if len(main_flow_edges) != 1:
++            raise ValueError(
++                f"Invocation {self.invocation.key!r} source artifact {source_ref!r} "
++                "must resolve through exactly one selected main-flow input edge; "
++                f"resolved {len(main_flow_edges)}."
++            )
++        main_flow_projection = main_flow_edges[0].main_flow_projection
++        if main_flow_projection is MainFlowInputProjection.COMPLETE_PAYLOAD:
++            return primary_source_payload
++        if main_flow_projection is not MainFlowInputProjection.DECLARED_SOURCE_IMAGE:
++            raise ValueError(
++                f"Invocation {self.invocation.key!r} source artifact {source_ref!r} "
++                "consumes main flow without a compiled projection."
++            )
++        return project_declared_source_identity(primary_source_payload, source_ref)
++
++
++    def load_artifact_inputs(
++        self,
++        final_kwargs: dict[str, RuntimeCallableArgument],
++        source_payload: RuntimePayload,
++    ) -> dict[ArtifactSpecRef, RuntimePayload]:
++        if not self.should_load_artifact_inputs():
++            return {}
++        logger.info(
++            f"Artifact inputs for {self.function_name}: {self.artifacts.inputs}"
++        )
++        loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
++        parameter_values: dict[str, list[RuntimeValue]] = {}
++        for input_plan in self.selected_artifact_input_edges:
++            parameter_name = input_plan.spec.parameter_name
++            if input_plan.storage_plan is None and parameter_name is None:
++                continue
++            if parameter_name is None:
++                raise ValueError(
++                    f"Compiled invocation {self.invocation.key!r} runtime-loaded input "
++                    f"edge {input_plan.key!r} has no callable parameter."
++                )
++            artifact_ref = input_plan.spec.ref()
++            projected_values = (
++                self.load_artifact_input(input_plan.spec.name, input_plan)
++                if input_plan.storage_plan is not None
++                else (
++                    self.declared_source_payload(
++                        artifact_ref, source_payload, loaded_artifact_payloads={}
++                    ),
++                )
++            )
++            loaded_value = RuntimeValue.compose(projected_values)
++            loaded_artifact_payloads[artifact_ref] = loaded_value
++            parameter_values.setdefault(parameter_name, []).extend(projected_values)
++        for parameter_name, projected_values in parameter_values.items():
++            final_kwargs[parameter_name] = RuntimeValue.compose(tuple(projected_values))
++        return loaded_artifact_payloads
++
++
++    def should_load_artifact_inputs(self) -> bool:
++        return bool(
++            any(
++                edge.storage_plan is not None or edge.spec.parameter_name is not None
++                for edge in self.selected_artifact_input_edges
++            )
++            and not self.invocation.adapter_manages_artifact_inputs
++        )
++
++
++    def load_artifact_input(
++        self,
++        arg_name: str,
++        edge_plan: InvocationArtifactInputEdgePlan,
++    ) -> tuple[RuntimeValue, ...]:
++        storage_plan = edge_plan.storage_plan
++        if storage_plan is None:
++            raise ValueError("Artifact input loading requires a storage-backed edge.")
++        logger.info(
++            f"Loading artifact input '{arg_name}' from path '{storage_plan.path}' "
++            "(memory backend)"
++        )
++        load_started_at = time.perf_counter()
++        try:
++            loaded_values = _load_artifact_input_values(
++                self.runtime_scope,
++                edge_plan,
++            )
++        except Exception as exc:
++            logger.error(
++                f"Failed to load artifact input '{arg_name}' from "
++                f"'{storage_plan.path}': {exc}",
++                exc_info=True,
++            )
++            raise
++        RuntimeProfileSink.record(
++            "artifact_input_load",
++            time.perf_counter() - load_started_at,
++            function=self.function_name,
++            artifact=arg_name,
++            artifact_type=storage_plan.artifact_type.value,
++        )
++        return loaded_values
++
++
++@dataclass(frozen=True, slots=True)
++class FunctionCoreExecutor(FunctionInvocationArtifactScope):
+     """Execute one scoped callable invocation and route declared artifact I/O."""
+ 
+     runtime_scope: FunctionRuntimeScope
+@@ -1873,6 +2066,7 @@
+         if loads_artifact_inputs:
+             loaded_artifact_payloads = self.load_artifact_inputs(
+                 final_kwargs,
++                source_payload,
+             )
+         self.bind_runtime_owned_parameters(final_kwargs)
+         self.bind_runtime_adapter(final_kwargs, source_payload)
+@@ -1998,6 +2192,7 @@
+     def load_artifact_inputs(
+         self,
+         final_kwargs: dict[str, RuntimeCallableArgument],
++        source_payload: RuntimePayload,
+     ) -> dict[ArtifactSpecRef, RuntimePayload]:
+         if not self.should_load_artifact_inputs():
+             return {}
+@@ -2007,18 +2202,23 @@
+         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
+         parameter_values: dict[str, list[RuntimeValue]] = {}
+         for input_plan in self.selected_artifact_input_edges:
+-            if input_plan.storage_plan is None:
++            parameter_name = input_plan.spec.parameter_name
++            if input_plan.storage_plan is None and parameter_name is None:
+                 continue
+-            parameter_name = input_plan.spec.parameter_name
+             if parameter_name is None:
+                 raise ValueError(
+                     f"Compiled invocation {self.invocation.key!r} runtime-loaded input "
+                     f"edge {input_plan.key!r} has no callable parameter."
+                 )
+             artifact_ref = input_plan.spec.ref()
+-            projected_values = self.load_artifact_input(
+-                input_plan.spec.name,
+-                input_plan,
++            projected_values = (
++                self.load_artifact_input(input_plan.spec.name, input_plan)
++                if input_plan.storage_plan is not None
++                else (
++                    self.declared_source_payload(
++                        artifact_ref, source_payload, loaded_artifact_payloads={}
++                    ),
++                )
+             )
+             loaded_value = RuntimeValue.compose(projected_values)
+             loaded_artifact_payloads[artifact_ref] = loaded_value
+@@ -2030,7 +2230,8 @@
+     def should_load_artifact_inputs(self) -> bool:
+         return bool(
+             any(
+-                edge.storage_plan is not None for edge in self.artifacts.inputs.values()
++                edge.storage_plan is not None or edge.spec.parameter_name is not None
++                for edge in self.selected_artifact_input_edges
+             )
+             and not self.invocation.adapter_manages_artifact_inputs
+         )
