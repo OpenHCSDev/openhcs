@@ -1,0 +1,24 @@
+........................................................................ [ 40%]
+........................................................................ [ 80%]
+....................................                                     [100%]
+=============================== warnings summary ===============================
+tests/unit/test_measureobjectintensitydistribution.py::test_native_radial_distribution_excludes_pixels_without_valid_center
+tests/unit/test_measureobjectintensitydistribution.py::test_numba_self_centered_radial_distribution_preserves_native_zero_intensity_edges
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1950: RuntimeWarning: invalid value encountered in divide
+    histogram / np.dstack([sum_by_object] * (int(request.bin_count) + 1))[0]
+
+tests/unit/test_measureobjectintensitydistribution.py::test_native_radial_distribution_excludes_pixels_without_valid_center
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1959: RuntimeWarning: invalid value encountered in divide
+    number_at_distance
+
+tests/unit/test_measureobjectintensitydistribution.py::test_native_radial_distribution_excludes_pixels_without_valid_center
+tests/unit/test_measureobjectintensitydistribution.py::test_radial_center_fast_path_matches_propagation_with_obstacles_and_touching_labels
+tests/unit/test_measureobjectintensitydistribution.py::test_radial_cv_ignores_empty_angular_wedges
+tests/unit/test_measureobjectintensitydistribution.py::test_numba_self_centered_radial_distribution_matches_native_reference
+tests/unit/test_measureobjectintensitydistribution.py::test_numba_self_centered_radial_distribution_preserves_native_zero_intensity_edges
+tests/unit/test_measureobjectintensitydistribution.py::test_radial_batch_validates_every_image_against_shared_geometry[NativeNumpyRadialDistributionBackendStrategy]
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1995: RuntimeWarning: invalid value encountered in divide
+    radial_means = np.ma.masked_array(radial_values / pixel_count, mask)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+180 passed, 9 warnings in 14.81s
