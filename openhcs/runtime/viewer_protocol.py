@@ -30,6 +30,7 @@ from zmqruntime.messages import (
 )
 from zmqruntime.streaming import StreamingVisualizerServer, VisualizerProcessManager
 from zmqruntime.transport import resolve_transport_mode
+from zmqruntime.viewer_state import ViewerReuseAdmissionABC
 from openhcs.runtime.import_authority import (
     OpenHCSRuntimeImportAuthority,
 )
@@ -1289,6 +1290,24 @@ class ViewerControlMessageRequest:
                 context.term()
 
 
+@dataclass(frozen=True, slots=True)
+class ViewerProcessLaunchAdmission(ViewerReuseAdmissionABC):
+    """Admit a new OpenHCS launch request inside atomic managed acquisition."""
+
+    requested: ViewerProcessLaunchConfig
+
+    def require_reusable(self, visualizer: VisualizerProcessManager) -> None:
+        if not isinstance(visualizer, ManagedViewerLifecycleMixin):
+            raise TypeError("OpenHCS reuse requires a managed OpenHCS lifecycle.")
+        if not visualizer.matches_requested_process_launch(self.requested):
+            raise RuntimeError(
+                f"{visualizer.viewer_process_label} viewer on port "
+                f"{visualizer.required_port} does not match the requested "
+                f"process launch {self.requested!r}. The existing viewer is "
+                "unchanged; explicitly request a fresh viewer to replace it."
+            )
+
+
 class ManagedViewerLifecycleMixin(
     VisualizerProcessManager,
     ExecutionVisualizerABC,
@@ -1416,7 +1435,7 @@ class ManagedViewerLifecycleMixin(
                 timeout_ms=request.timeout_ms,
                 require_ready=request.require_ready,
             ).require_match()
-            if not self.existing_viewer_matches_process_launch():
+            if not self.matches_requested_process_launch(self.process_launch):
                 logging.getLogger(type(self).__module__).warning(
                     "%s viewer on port %s has a different process-launch "
                     "declaration and cannot be reused.",
@@ -1434,10 +1453,38 @@ class ManagedViewerLifecycleMixin(
             return False
         return True
 
-    def existing_viewer_matches_process_launch(self) -> bool:
-        """Return whether a reachable viewer matches process-global settings."""
+    def matches_requested_process_launch(
+        self, requested: ViewerProcessLaunchConfig
+    ) -> bool:
+        """Compare a new request with this lifecycle's actual active launch.
 
-        return True
+        Owned processes were launched from this immutable declaration. External
+        processes report their declaration through the shared control boundary;
+        a client does not gain authority over their listening interface.
+        """
+        owns_process = self.owned_viewer_process_is_alive()
+        try:
+            active = self.process_launch if owns_process else self.active_process_launch()
+            return requested.matches_existing_viewer(active, owns_process=owns_process)
+        except (RuntimeError, TypeError, ValueError, KeyError, zmq.ZMQError) as error:
+            logging.getLogger(type(self).__module__).warning(
+                "%s viewer process-launch check failed: %s",
+                self.viewer_process_label, error,
+            )
+            return False
+
+    def active_process_launch(self) -> ViewerProcessLaunchConfig:
+        """Decode the process-global declaration once at its wire boundary."""
+        response = ViewerControlMessageRequest(
+            endpoint=self.runtime_endpoint,
+            message_type=OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value,
+        ).send()
+        if not response.succeeded():
+            raise RuntimeError("Viewer did not admit process-launch inspection.")
+        wire_config = response.payload[ViewerControlField.PROCESS_LAUNCH.value]
+        if not isinstance(wire_config, Mapping):
+            raise TypeError("Viewer process-launch response must contain a mapping.")
+        return ViewerProcessLaunchConfig.from_wire_mapping(wire_config)
 
     def wait_for_ready(self, timeout: float = 10.0) -> bool:
         """Wait for the viewer endpoint to bind and report ready."""

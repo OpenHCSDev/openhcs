@@ -35,3 +35,15 @@ def test_viewer_identity_parses_only_at_the_wire_boundary() -> None:
     assert ViewerType.from_wire_value("fiji") is ViewerType.FIJI
     with pytest.raises(ValueError):
         ViewerType.from_wire_value("FijiViewerDeclaration")
+
+
+@pytest.mark.parametrize("viewer_type", tuple(ViewerType), ids=lambda item: item.value)
+def test_viewer_listen_interface_is_independent_of_connection_host(viewer_type):
+    config_type = StreamingConfig.config_type_for_viewer(viewer_type)
+    config = config_type(host="remote.example", listen_host="127.0.0.1")
+    runtime = config.viewer_runtime_config()
+    assert runtime.transport_endpoint.host == "remote.example"
+    assert runtime.process_launch.listen_host == "127.0.0.1"
+
+    exposed = config_type(host="127.0.0.1", listen_host="*")
+    assert exposed.viewer_runtime_config().process_launch.listen_host == "*"
