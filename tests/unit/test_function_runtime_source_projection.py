@@ -16,6 +16,7 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
+    ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
     ArtifactSidecarRole,
     ArtifactSpec,
@@ -691,17 +692,26 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
     )
 
 
-def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> None:
+@pytest.mark.parametrize("extension", (None, ".tif", ".png"))
+def test_bundle_payload_context_preserves_source_binding_plane_metadata(
+    extension: str | None,
+) -> None:
+    # Consensus preserves declared metadata; it must not parse the TIFF paths.
+    extension_metadata = {} if extension is None else {"extension": extension}
     first = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w1_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 1},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+            ),
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
     second = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w2_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 2},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
+            ),
         )
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
 
@@ -716,13 +726,13 @@ def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> Non
         dict(item)
         for item in metadata.source_image_provenance_planes.component_metadata
     ) == (
-        {"well": "A01", "site": 1, "channel": 1},
-        {"well": "A01", "site": 1, "channel": 2},
+        {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+        {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
     )
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": 1,
-        "extension": ".tif",
+        **extension_metadata,
     }
 
 
@@ -1558,7 +1568,8 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         relations=tuple(
             GroupLineageSourceRelation(source=binding.input_spec().ref())
             for binding in bindings
-        ),
+        )
+        + (ArtifactMeasurementSubjectRelation(),),
     )
 
     @artifact_inputs(*(binding.input_spec() for binding in bindings))
