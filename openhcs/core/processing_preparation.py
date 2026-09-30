@@ -9,8 +9,9 @@ import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Iterator
 from contextlib import ExitStack
-from dataclasses import dataclass
-from multiprocessing.connection import Connection
+from dataclasses import dataclass, field
+from itertools import islice
+from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
 from threading import Lock
 from typing import ClassVar
@@ -194,12 +195,13 @@ def _execute_cache_preparation(operation, result_connection) -> None:
         result_connection.close()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class PreparationCacheWorker:
     """Own one cache process and its completion channel through cancellation."""
 
     process: BaseProcess
     result_connection: Connection
+    closed: bool = field(default=False, init=False)
 
     @classmethod
     def start(cls, context, operation: PreparationOperation) -> PreparationCacheWorker:
@@ -234,8 +236,10 @@ class PreparationCacheWorker:
             )
 
     def close(self) -> None:
-        """Stop and reap only this worker; never scan unrelated descendants."""
+        """Release this owned worker once, including after early slot retirement."""
 
+        if self.closed:
+            return
         try:
             if self.process.is_alive():
                 self.process.terminate()
@@ -247,6 +251,7 @@ class PreparationCacheWorker:
                 raise TimeoutError("Cache preparation worker did not terminate")
             self.process.join()
             self.process.close()
+            self.closed = True
         finally:
             self.result_connection.close()
 
@@ -284,12 +289,19 @@ class PreparationCacheBatch:
         if len(children) < 2:
             return
         context = multiprocessing.get_context("fork")
-        for offset in range(0, len(children), 4):
-            with ExitStack() as resources:
-                workers: list[PreparationCacheWorker] = []
-                for operation in children[offset : offset + 4]:
+        pending = iter(children)
+        with ExitStack() as resources:
+            workers: list[PreparationCacheWorker] = []
+            while True:
+                for operation in islice(pending, 4 - len(workers)):
                     worker = PreparationCacheWorker.start(context, operation)
                     resources.callback(worker.close)
                     workers.append(worker)
-                for worker in workers:
-                    worker.wait()
+                if not workers:
+                    break
+                ready = wait(tuple(worker.result_connection for worker in workers))
+                for worker in tuple(workers):
+                    if worker.result_connection in ready:
+                        worker.wait()
+                        worker.close()
+                        workers.remove(worker)
