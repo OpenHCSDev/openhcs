@@ -18,13 +18,12 @@ from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
+    ArtifactSpecCollection,
     ImageArtifactType,
     ImageMeasurementSubjectRelation,
     MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -33,6 +32,10 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.invocation_artifacts import (
+    ArtifactDeclarationStepContext,
+    MainFlowArtifactContractProvider,
+)
 from openhcs.core.function_step_document import FunctionStepDocumentAuthority
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
@@ -104,11 +107,10 @@ class CountFeatureOwner(RuntimeMeasurementFeatureOwner):
 
 
 COUNT_IMAGE = MainFlowStackOutputSpec.output("CountedImage", ImageArtifactType)
-MISSING_SUBJECT_ROWS = ArtifactSpec.output(
+MISSING_SUBJECT_ROWS = MainFlowStackOutputSpec.output(
     "PixelCounts", MeasurementsArtifactType,
     materialization=MaterializationSpec(CsvOptions()),
     measurement_feature_owner=CountFeatureOwner,
-    relations=(SourceStackLineageSourceRelation(COUNT_IMAGE.ref()),),
 )
 IMAGE_SUBJECT_ROWS = replace(
     MISSING_SUBJECT_ROWS,
@@ -377,7 +379,22 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
         if spec.artifact_type is MeasurementsArtifactType
     )
     assert rows.measurement_feature_owner is CountFeatureOwner
-    assert SourceStackLineageSourceRelation(COUNT_IMAGE.ref()) in rows.relations
+    source_input = _source("DNA", "1").input_spec()
+    binding = MainFlowArtifactContractProvider()(
+        invocation,
+        ArtifactDeclarationStepContext(
+            main_flow_artifacts=ArtifactSpecCollection((source_input,)),
+        ),
+    )
+    assert binding is not None
+    assert binding.contract.group_scope_inputs.specs == (source_input,)
+    bound_rows = binding.contract.artifact_outputs.by_ref(rows.ref())
+    assert bound_rows is not None
+    assert bound_rows.source_stack_scope_sources() == (source_input.ref(),)
+    assert binding.contract.output_group_scope_sources == (source_input.ref(),)
+    assert (
+        ImageMeasurementSubjectRelation(COUNT_IMAGE.ref()) in bound_rows.relations
+    ) is valid
     global_config = GlobalPipelineConfig(num_workers=1, use_threading=True)
     if not valid:
         with pytest.raises(ValueError, match="PixelCounts.*no declared measurement subject") as exc:

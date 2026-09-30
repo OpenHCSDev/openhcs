@@ -2,9 +2,9 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `589c33a12`, merged normally through `684e4bbd3`.
-Remote main was independently rechecked at that same revision. The preceding
-checkpoint merged `de23449a4` through `21c15ad41`.
+Base: `openhcsdev/main` at `32d070c26` (merged PR255), integrated normally through
+`85d8b2ae7`. The preceding checkpoint merged `589c33a12` through `684e4bbd3`,
+and `de23449a4` through `21c15ad41` before that.
 The output-policy checkpoint used `283b21275`.
 The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
 main through normal merge `9f5d444515`. No parent/main-worktree edits, rebases,
@@ -21,16 +21,56 @@ what it measures. The original attempt remains untouched. No author source,
 science, pixels, parameters or references were needed or inspected for this
 continuation; no replay or author coaching occurred.
 
-The existing synthetic integration journey now declares its own `CountFeature`
-and nominal feature owner, CSV materialization and source-stack lineage in both
-variants. The corrected declaration is a `dataclasses.replace` of the invalid
+The existing synthetic integration journey declares its own `CountFeature`
+and nominal feature owner, CSV materialization and `MainFlowStackOutputSpec`
+for both row variants. The existing `MainFlowArtifactContractProvider` binds
+their stack/group lineage to the actual current image **input**. The corrected
+declaration is a `dataclasses.replace` of the invalid
 one, adding **only** `ImageMeasurementSubjectRelation(CountedImage.ref())`.
 Both variants render/parse through `PipelineDocumentAuthority`; the test asserts
-the reconstructed feature owner and source relation before the real headless
-compile boundary. The invalid callable still raises if entered. The valid case
+the reconstructed feature owner and real provider's input-qualified scope before
+the headless compile boundary; the subject remains the exact image **output**
+ref. The invalid callable still raises if entered. The valid case
 uses the real compiler and orchestrator and checks both image and measurement
 outputs and four counted synthetic pixels. These revised integration assertions
 are prepared, **not yet rerun** at current main.
+
+### Parent review: output-qualified lineage fixture repaired
+
+The parent correctly identified an independent invalid declaration in checkpoint
+`94595f271`: generic `ArtifactSpec.output` with
+`SourceStackLineageSourceRelation(CountedImage output ref)` does not make a legal
+group-scope input. The earlier four output-policy probes did not exercise that
+boundary. Their passing result was not evidence that this valid-subject variant
+could reach execution or CSV. No such readiness is claimed.
+
+A bounded source-only probe using the actual `CallableContract`,
+`NormalizedFunctionItem`, `ArtifactDeclarationStepContext` and
+`MainFlowArtifactContractProvider` reproduced the failure:
+`Callable 'count' output group-scope relations reference undeclared inputs`
+with the exact `CountedImage` OUTPUT ref. Switching both variants to the existing
+`MainFlowStackOutputSpec` yields three observed outcomes in the final probe:
+
+1. The original generic output-qualified lineage still fails the real
+   `CallableContract.group_scope_inputs` boundary.
+2. The corrected input-qualified lineage passes that boundary while its missing
+   measurement subject still fails output-owner validation.
+3. Adding only `ImageMeasurementSubjectRelation(CountedImage.ref())` passes both
+   boundaries and retains the exact OUTPUT subject separately from INPUT lineage.
+
+The first probe confirmed the red witness, then used a nonexistent
+`ArtifactSpec.measurement_subject()` test API. That probe error was corrected to
+`MeasurementsArtifactType.require_output_subject`; it was not a runtime defect.
+The final probe passed in 0.58 seconds without invoking the callable. It uses
+minimal metadata, not CSV/row/native execution, and is explicitly source-contract
+evidence. The actual integration fixture retains its feature owner, CSV options,
+roundtrip and compile/execute assertions for the released-slot gate.
+
+NRA/refactor-audit finding: IDEN-1 separates invocation source/group ownership
+from measurement subject; IMPL-4 reuses the output declaration's existing binding
+hook instead of restoring consumer inference. Only the journey fixture and this
+receipt are edited. No guard relaxation, new owner/registry, parent PR255 file
+edit, source-binding edit, installed-root use or production-code change occurred.
 
 Actual lightweight checks at this checkpoint:
 
@@ -67,16 +107,28 @@ independent input management and both contract/compile boundaries. Its prior
 20-case passing evidence, including legitimate heterogeneous CP ownership, is
 historical below, not relabeled as a current-main rerun.
 
-Remaining named dependency: the parent integration owner must explicitly release
-the serialized slot after the blind freeze and review the tiny synthetic native
-compile/execute gate. This worktree lacks the current-main `_tabular_native`
-extension (`find_spec` returns `None`); no native build, environment startup,
-MCP/JVM/GUI, installation or managed-skill change was attempted. Slot release
-must not be inferred merely from the original 02:32:25 UTC deadline passing.
-After release, validate the two subject variants first, then the unweakened full
+The parent explicitly granted the finite source-live slot after freezing and
+closing the original blind runtime and its finite installed acceptance attempt.
+The worker acquired `validation.lock` nonblocking for the admission check.
+It exited **78**: available RAM **14.08 GiB** exceeds the initial 11 GiB floor,
+but `/home` available disk **19.7195 GiB** is below the required 20 GiB floor.
+The general resource guard's rounded 20.0 GiB is not an admission proof.
+No build/test/MCP/JVM/GUI process started; the admission process exited and
+released its lock. Previously recorded worker-owned disposable scratch is
+already empty (4 KiB directory), so no other owner's artifacts were removed.
+
+Remaining named dependency: parent resource admission needs at least 0.3 GiB
+additional available disk plus build margin. This worktree still lacks the
+current-main `_tabular_native` extension (`find_spec` returns `None`). No native
+build, environment startup, installation or managed-skill change occurred.
+After admission, validate the two subject variants first, then the unweakened full
 six-case declaration journey and focused paired-source cases. Installed/live
 verification and merging remain with the parent; optional CI or broader paired
 research is not a prerequisite for shipping the reviewed #133 checkpoint.
+Parent owns the separate #254 payload ABI/PURE_2D follow-up, including only
+`FunctionChainInvocationExecutor.main_flow_call_argument` in the shared runtime
+file. This worker's measurement strategy/input-loader scope does not collide;
+no cherry-pick of that unpublished follow-up or installed-root validation occurs.
 
 ## Frozen-harness compile incident: triaged, regression retained
 
