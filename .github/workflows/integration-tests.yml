@@ -100,6 +100,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  parity-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.scope.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != pull_request ]; then
+            echo 'relevant=true' >> "$GITHUB_OUTPUT"
+          elif git diff --quiet --no-renames "$BASE" "$HEAD" -- \
+              openhcs/processing openhcs/interop/cellprofiler openhcs/core openhcs/formats \
+              external benchmark tests/integration .github/workflows/integration-tests.yml \
+              scripts/install_ci_candidate.py scripts/run_installed_tests.py pyproject.toml setup.py; then
+            echo 'relevant=false' >> "$GITHUB_OUTPUT"
+          else
+            result=$?
+            if [ "$result" -ne 1 ]; then exit "$result"; fi
+            echo 'relevant=true' >> "$GITHUB_OUTPUT"
+          fi
+
+  official30-parity-required:
+    runs-on: ubuntu-latest
+    needs: [parity-scope, official30-headless-parity]
+    if: always()
+    steps:
+      - name: Require relevant parity; allow only a proven irrelevant skip
+        env:
+          SCOPE: ${{ needs.parity-scope.result }}
+          RELEVANT: ${{ needs.parity-scope.outputs.relevant }}
+          PARITY: ${{ needs.official30-headless-parity.result }}
+        run: |
+          test "$SCOPE" = success
+          if [ "$RELEVANT" = true ]; then
+            test "$PARITY" = success
+          else
+            test "$RELEVANT" = false
+            test "$PARITY" = skipped
+          fi
+
   # Foundational unit-test gate, including GUI-backed tests under tests/unit.
   unit-tests:
     runs-on: ubuntu-latest
@@ -1960,7 +2007,8 @@ jobs:
   # semantic parity against committed native CellProfiler outputs.
   official30-headless-parity:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    needs: parity-scope
+    if: needs.parity-scope.outputs.relevant == 'true'
     timeout-minutes: 90
     env:
       OPENHCS_CP_NATIVE_REFERENCE_ROOT: ${{ github.workspace }}/benchmark/native_refs/official30_scoped_rows
