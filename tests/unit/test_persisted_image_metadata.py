@@ -296,7 +296,7 @@ def test_persisted_projection_validates_loaded_window_not_full_source_extent(
 ):
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_workspace_projection import (
-        VirtualWorkspaceSourceProjection,
+        VirtualWorkspaceImagePayloadProjection,
     )
 
     current = metadata_fixture().replace_fields(
@@ -304,12 +304,11 @@ def test_persisted_projection_validates_loaded_window_not_full_source_extent(
     )
     persisted = metadata_fixture().replace_fields(source_spatial_domain=authored_domain)
     payload = ImageMetadataPayload(np.zeros((2, 3), dtype=np.float32), current)
-    restored = VirtualWorkspaceSourceProjection._project_payload_source_metadata(
-        payload,
+    restored = VirtualWorkspaceImagePayloadProjection(
         source_metadata=None,
         source_alias="neurite",
         persisted_metadata=persisted,
-    )
+    ).apply(payload)
     metadata = image_payload_metadata(restored)
     assert metadata.source_spatial_domain == expected_domain
     assert metadata.source_image_names == ("neurite",)
