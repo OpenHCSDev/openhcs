@@ -73,3 +73,10 @@ counts. This is admission of an empty report scope, not a completed NRA scan.
 The source-only change to this guard has not itself received a full production
 NRA scan. The resource gate is critical at 16.6 GiB swap, so no such heavy scan
 or new native acceptance is started to manufacture stronger claims.
+
+The original installed ``agent_comms.debt_ratchet`` entrypoint also passes on
+``scripts/`` at source f8222167b7054cbb419724fb739a8b35f9026296 against the
+audited main. All 234 projected metric deltas are zero. These are projections
+of the packaged measure family, not 234 NRA detectors. The original exit code
+is retained with pipefail; stdout is filtered after measurement to avoid dumping
+the whole root's unchanged class inventory. No copied detector is used.
