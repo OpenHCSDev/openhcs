@@ -81,7 +81,7 @@ class OpenHCSNativeExtension(Extension, ABC):
 class GranularityNativeExtension(OpenHCSNativeExtension):
     @property
     def qualified_module_name(self) -> str:
-        return "openhcs.processing.backends.cellprofiler._granularity_reconstruct"
+        return "openhcs.processing.backends.cellprofiler._granularity_native"
 
 
 class TabularNativeExtension(OpenHCSNativeExtension):

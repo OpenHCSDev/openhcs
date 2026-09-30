@@ -159,7 +159,7 @@ def test_cpu_only_inventory_rejects_compiled_extension_source() -> None:
     )
 
     assert not _module_declares_allowed_memory_type(
-        "openhcs.processing.backends.cellprofiler._granularity_reconstruct",
+        "openhcs.processing.backends.cellprofiler._granularity_native",
         frozenset({"numpy"}),
     )
 
