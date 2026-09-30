@@ -44,7 +44,7 @@ Pipeline clocks exclude ZMQ server startup and shutdown. Mandatory registry/call
 
 ## Validation and integration
 
-Current main and all current dependency pins were normally merged before the final gates and installed ABI3 wheel benchmark. Source hashes for all eight refactor modules and five newly merged viewer modules are recorded. The shared environment uses normally resolving editable installations; pip check is clean.
+Current main and all current dependency pins were normally merged before the final gates and installed ABI3 wheel benchmark. Source hashes for all eight refactor modules and five newly merged viewer modules are recorded. The shared environment uses normally resolving editable installations. The initial source-directory pip check missed a stale duplicate editable record; [outside-source correction and merged-main acceptance](../../../docs/validation/duplicate_editable_metadata_20260930/README.md) retain that failure and establish one active distribution with clean dependency resolution.
 
 769 affected consumer tests pass, including masked/unmasked, named/anonymous, shallow nesting, strict cardinality, shared parent method lookup, fresh metadata snapshots after source mutation, output manifests, path planning, provenance, source admission and current calibration consumers. Three initial failing fixture cases were independently reproduced on unchanged main. Two fixture declarations were corrected to the existing strict contract while preserving every assertion: declare consumed artifact parameters, and keep a stored auxiliary fixture out of the admitted main-flow set. Original failures and main counterexamples are retained.
 
