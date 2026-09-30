@@ -71,6 +71,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogPage,
+    FunctionCatalogPreparationHandle,
+    FunctionCatalogPreparationState,
     FunctionDetail,
     FunctionDetailRequest,
     FunctionSearchRequest,
@@ -1891,6 +1893,57 @@ class DescribeFunctionCapability(
     )
 
 
+class StartFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+
+    name = "openhcs_start_function_catalog_preparation"
+    cli_command = "start-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Start catalog preparation"
+    description = "Starts/coalesces existing native catalog/kernel preparation at an explicit owned port. Returns promptly with the exact process-incarnation handle; no custom source is submitted. Observe status, then register only once ready."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("prepares_function_catalog", "writes_declared_kernel_caches")
+    input_contract = ExecutionConnectionSpec
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.start_catalog_preparation(request),
+    )
+
+
+class GetFunctionCatalogPreparationStatusCapability(FunctionCatalogCapability):
+    name = "openhcs_get_function_catalog_preparation_status"
+    cli_command = "get-function-catalog-preparation-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe catalog preparation"
+    description = "Returns the existing preparation future's current state/progress promptly. Use the exact returned connection/process handle; stale owners reject without starting or replacing a runtime."
+    service = "endpoint_function_catalog"
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.catalog_preparation_status(request),
+    )
+
+
+class CancelFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    name = "openhcs_cancel_function_catalog_preparation"
+    cli_command = "cancel-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Cancel owned catalog preparation"
+    description = "Signals cancellation of the same incarnation-bound preparation future without blocking for child cleanup. Observe status until terminal; it does not restart preparation or submit custom source."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("cancels_function_catalog_preparation",)
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.cancel_catalog_preparation(request),
+    )
+
+
 class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     name = "openhcs_register_custom_function"
     cli_command = "register-custom-function"
@@ -1899,7 +1952,11 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     description = (
         "Validates, registers, and optionally persists custom function Python "
         "source through CustomFunctionManager, then returns registry function_id "
-        "values for MCP pipeline authoring."
+        "values for MCP pipeline authoring. Requires an explicit execution port; "
+        "persist=true also requires the endpoint's exact storage_dir and function_name "
+        "under AgentPathPolicy writable roots before dispatch. Start/observe the native "
+        "catalog preparation handle first; not-ready registration rejects before source dispatch. A transport timeout "
+        "is uncertain, not proof that no source or registry mutation occurred."
     )
     service = "function_catalog"
     exposition = FunctionCatalogCapability.exposition.refine(
@@ -1909,7 +1966,7 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     side_effects = ("writes_custom_function_file", "updates_function_registry")
     input_contract = CustomFunctionRegistrationRequest
     output_contract = CustomFunctionRegistrationResult
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.register_custom_function(request),
     )

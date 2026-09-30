@@ -311,7 +311,7 @@ def test_pending_resolution_rejects_retired_source_without_poisoning_current_own
 def isolated_custom_runtime(monkeypatch, tmp_path):
     storage_dir = tmp_path / "custom_functions"
     storage_dir.mkdir()
-    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name: storage_dir)
+    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir)
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_declarations_by_name", {})
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_published_exports", {})
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_preparation_outcomes", {})

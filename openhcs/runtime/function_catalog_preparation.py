@@ -14,6 +14,11 @@ from zmqruntime import OperationCancellation
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 if TYPE_CHECKING:
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+    from openhcs.agent.dto.functions import (
+        FunctionCatalogPreparationHandle,
+        FunctionCatalogPreparationState,
+    )
     from openhcs.agent.services.function_catalog_service import (
         FunctionCatalogServiceABC,
     )
@@ -114,11 +119,82 @@ class FunctionCatalogPreparation:
         with self._lock:
             return self._snapshot
 
-    def _set_message(self, message: str) -> None:
+    def start(
+        self, connection: ExecutionConnectionSpec
+    ) -> FunctionCatalogPreparationState:
+        """Start/coalesce the existing future and return its responsive handle."""
+        from zmqruntime.messages import ProcessIdentity
+
+        from openhcs.agent.dto.functions import FunctionCatalogPreparationHandle
+
+        connection.require_port("Function catalog preparation")
+        handle = FunctionCatalogPreparationHandle(connection, ProcessIdentity.current())
+        self.ensure_started()
+        return self.observe(handle)
+
+    def observe(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        """Project this future, never wait, restart or build another job store."""
+        from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationOutcome as Outcome,
+        )
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationState,
+        )
+
+        handle.require_current_owner()
+        errors = ()
+        with self._lock:
+            future, snapshot = self._future, self._snapshot
+            if future is None:
+                outcome = Outcome.NOT_STARTED
+            elif future.cancelled():
+                outcome = Outcome.CANCELLED
+            elif not future.done():
+                outcome = (
+                    Outcome.CANCELLING
+                    if self._cancellation.requested()
+                    else Outcome.PENDING
+                )
+            elif (error := future.exception()) is not None:
+                outcome = Outcome.FAILED
+                errors = (
+                    AgentError(
+                        code="function_catalog_preparation_failed",
+                        message=str(error),
+                        exception_type=type(error).__name__,
+                    ),
+                )
+            else:
+                outcome = Outcome.READY
+        return FunctionCatalogPreparationState(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            outcome=outcome,
+            progress=snapshot,
+            errors=errors,
+        )
+
+    def cancel_preparation(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        """Signal the same owner promptly; its thread unwinds the supervised child."""
+        handle.require_current_owner()
+        self._cancellation.cancel()
+        return self.observe(handle)
+
+    def _set_message(
+        self,
+        message: str,
+        *,
+        phase: EndpointStartupPhase = EndpointStartupPhase.PREPARING_CAPABILITIES,
+    ) -> None:
         with self._lock:
             self._snapshot = EndpointStartupStatus(
                 sequence=self._snapshot.sequence + 1,
-                phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
+                phase=phase,
                 message=message,
                 timestamp=time.time(),
             )
@@ -130,8 +206,16 @@ class FunctionCatalogPreparation:
                 cancellation=self._cancellation,
             )
         except CancelledError:
+            self._set_message(
+                "Function catalog preparation cancelled",
+                phase=EndpointStartupPhase.FAILED,
+            )
             future.cancel()
         except BaseException as error:
+            self._set_message(str(error), phase=EndpointStartupPhase.FAILED)
             future.set_exception(error)
         else:
+            self._set_message(
+                "Function catalog ready", phase=EndpointStartupPhase.CONNECTED
+            )
             future.set_result(None)
