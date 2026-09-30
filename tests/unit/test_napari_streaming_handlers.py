@@ -215,7 +215,7 @@ def _axis_presentation(
         component_order=display_axis_components,
     )
     return NapariAxisPresentation(
-        entries=component_axis_semantics.entries,
+        entries=_component_value_domain(component_values).entries,
         layout=component_layout,
         route_key=layer_key,
         projection=ViewerLayerAxisProjection(
@@ -843,6 +843,15 @@ class _FakeViewer:
 
     def add_labels(self, data, *, name, **kwargs):
         return self._add_layer("labels", data, name, kwargs)
+
+    def add_layer(self, layer):
+        self.layers.append(layer)
+        self.calls.append(("shapes", layer.data, layer.name, {
+            "translate": tuple(layer.translate),
+            "axis_labels": tuple(layer.axis_labels),
+            "scale": tuple(layer.scale),
+            "units": tuple(str(unit) for unit in layer.units),
+        }))
 
     def _add_layer(self, layer_type, data, name, kwargs):
         layer_attributes = {"name": name, "data": data, "kwargs": kwargs}
