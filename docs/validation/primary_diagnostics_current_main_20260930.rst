@@ -88,13 +88,50 @@ variants, primary-to-secondary label identity and containment of each own seed.
 All earlier failures and the final XML are retained in the parent ledger as
 primary-diagnostics-native-{first,second,third,fourth,fifth,sixth,seventh,eighth,ninth,final}-20260930.xml.
 
-Remaining installed acceptance
-------------------------------
+Installed reopening defect and ownership cutover
+------------------------------------------------
 
-The affected installed MCP/viewer raw/intermediate/final journey remains
-unexecuted for this PR. Neither a main merge nor biological acceptance is
-claimed. The previous scientific run is frozen ABSTENTION_RESOURCE_GUARD,
-zeroof4 candidates; its clock, inputs and prior failures are unchanged.
-The parent owns the released integration slot. Publish this same existing PR
-and complete installed acceptance without waiting for optional hosted CI.
-Whole owner ZIP scope remains open.
+Ordinary editable imports at candidate97195 passed15 cases7.09s with PYTHONPATH
+unset. Actual fresh installed MCP then opened and streamed the raw synthetic
+image on isolated:91/5992. Reopening its persisted threshold-support TIFF
+failed StorageResolutionError. The viewer was closed explicitly through MCP,
+the shell exited1 after the failed command, and the ports and lock were freed.
+The original terminal transcript and failed fixture remain in the parent ledger.
+
+Correction to the initial diagnosis: the second step did not overwrite early
+diagnostic metadata. The first step's main-flow backend was memory and its
+checkpoint was absent. Both manually enumerated metadata targets were absent,
+although the independent artifact materialization target saved all stage TIFFs.
+AtomicMetadataWriter already retains those projections across later steps.
+
+The existing OutputTarget now owns an AutoRegisterMeta declaration family.
+Primary images and explicit checkpoints compose their shared produced-image
+capability by MI. RuntimeArtifactMetadataTarget resolves the independently
+compiled artifact destination and publishes its typed projections, including
+when main flow is memory. Shared serialization and AtomicMetadataWriter remain
+the only writer. The old primary/materialized constructors, repeated consumer
+rosters and is_main-based target dispatch are deleted, not retained as aliases.
+is_main is now a declaration fact consumed only by the external metadata format.
+
+MEMB-2, IMPL-4/5 and IDEN-1 witnesses: the old two-member tuples in write and
+finalize omitted artifact persistence; produced_projection_metadata dispatched
+through is_main. The new-case guard declares an additional target and proves
+automatic discovery for execution and reconciliation without changing either
+consumer. The native journey checks seven persistent stage source entries and
+both Nuclei/Cells label entries after secondary execution and reconciliation.
+Source identities after persistence are compared through the canonical JSON
+codec, which normalizes nested mapping keys; this is separate from the existing
+native sidecar/source identity and pixel-contributor equality checks.
+
+First combined run:72PASS/2FAIL9.57s. One real table-only publication regression
+was repaired by the primary declaration's execution admission hook; the other
+assertion incorrectly compared in-memory mapping keys with serialized JSON
+identities. Original XML retained. Second combined run:74PASS9.89s. The final
+family-discovery guard passed in the final75PASS8.64s run. Installed reopening
+still requires execution.
+These are focused source/native proofs, not complete NRA or biological QA.
+
+The parent owns this same PR215 and issue214, with no competing implementation.
+Complete the affected installed path before merge; do not wait for optional CI.
+The frozen scientific abstention, held-out boundary and full ZIP scope remain
+unchanged. Owner clarification:20GiB is a warning margin, not a hard disk limit.
