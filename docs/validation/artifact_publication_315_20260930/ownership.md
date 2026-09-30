@@ -74,3 +74,15 @@ Russell issue314 scope crossing notice:
 https://github.com/OpenHCSDev/openhcs/issues/314#issuecomment-5920738225.
 No edits to workspace/preparation, measurement identity or spreadsheet owners.
 Final source proof is not installed/MCP acceptance; parent owns that boundary.
+
+## Done when / dispatch
+
+Avicenna builds no new authority: the existing planner admits only publishable
+paths, and the compiled callable declaration owns replacement producer context.
+Source completion means both original failures are reproduced, saved converted
+pixels carry their typed address/calibration, passthrough/object/table controls
+remain valid, and original structural metrics have no positive deltas. Full
+acceptance additionally requires a completed original R1 comparison and the
+parent's affected live/MCP journeys. Those latter conditions are not claimed.
+Runtime contexts remain transient; durable metadata keeps its existing schema.
+No migration, legacy reader or replacement store is introduced.
