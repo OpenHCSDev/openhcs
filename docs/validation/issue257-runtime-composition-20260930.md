@@ -83,4 +83,3 @@ coverage with extension/address, and typed MCP inventory with full result
 readback; include images/labels/artifacts and the dotted-OME chained control
 after265 is integrated. Original partial readback is not full acceptance.
 No readiness/merge/install/live success claim follows from112 source tests.
-
