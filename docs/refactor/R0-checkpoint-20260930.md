@@ -99,11 +99,38 @@ Read-only GitHub API confirms admin/maintain/push rights. Main protection has no
 required status checks; effective rulesets are empty. Required-check activation
 is NOT claimed. Workflow publication is not check activation or hosted execution.
 
-Remaining: run the actual packaged Git comparison, preserve reusable command
-receipts, verify this PR's R1 entrypoint with its recorded submodules, and activate
-reviewed required status contexts without silently adding a hosted-wait merge
-gate contrary to OWNER-OVERRIDES. Existing Official30 numerical comparator is
-reused unchanged; its PR trigger already existed, so this change adds relevance
-and fail-closed status wiring rather than claiming to invent PR parity. No new
-native/JVM/GUI/installed parity run has occurred. Full R0 acceptance and archive
-L0/S1-S8 remain open; no global correctness or live readiness claim.
+Owner explicitly forbids adding a required-check/branch-protection rule that
+creates a hosted waiting gate. No protection mutation was performed. A fresh
+read confirms required_status_checks remains null and enforce_admins false.
+Automation publication and source validation do not imply required/live activation.
+
+Actual packaged Git comparisons are DONE; raw reports are preserved as gzip
+artifacts with resource captures. The two real final CLI subprocess cases pass
+6.08s (18 other cases deliberately unselected in that path-only check).
+
+The corrected own-PR R1 run at `ec66ef72f`, base `dbf1c7a8b`, is terminal FAILED,
+not accepted: NRA raised ScanDeadlineExceeded during parse_python_module at the
+existing160s absolute budget. Total161.74s includes cleanup, peak409600KiB,
+exit1, no result JSON. Its original stdout/traceback/resource receipts are retained
+separately from the first90s reporting failure. The exact flock/scan identities
+are absent and the lock was verified available afterward. Snapshots were removed
+by their owner. Parent owns the next installed205/264 native slot; no second heavy
+scan is launched ahead of it.
+
+Coverage was TWO selected detectors with the original schema/descent graph and
+all declared source/gitlink context. It was NOT an85-detector/global FULL audit.
+Small CLI success does not establish this full-context gate's bounded acceptance.
+Source read identifies an important boundary: NRA analysis.py:2067 deliberately
+removes focused projection demands when include_semantic_descent_graph is true.
+The R0 consumer currently asks for that full graph to select typed mapping-read
+certificates. Remaining R1 work must use/extend the existing scoped projection
+owner, not parse finding strings, copy schema heuristics, omit dependency context,
+increase the observation timeout, or report a deadline as zero debt. This concrete
+bounded-entrypoint blocker remains owned by Lovelace; NRA PR12 is the separate
+existing FULL-lifetime repair, not a claimed fix here.
+
+Existing Official30 numerical comparator is reused unchanged; its PR trigger
+already existed, so this change adds relevance and fail-closed status wiring
+rather than claiming to invent PR parity. No new native/JVM/GUI/installed parity
+run has occurred. Full R0 acceptance and archive L0/S1-S8 remain open; no global
+correctness or live readiness claim.
