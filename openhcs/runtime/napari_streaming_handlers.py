@@ -157,6 +157,10 @@ class NapariViewerLayerCreator(ABC):
     dims: NapariDimsController
 
     @abstractmethod
+    def add_layer(self, layer: NapariLayerHandle) -> NapariLayerHandle:
+        """Mount an already materialized native layer."""
+
+    @abstractmethod
     def add_image(
         self,
         data: LayerData,
@@ -212,6 +216,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
     timer: NapariTimerHandle
     data_type: StreamingDataType
     display_config: NapariDisplayConfig
+    items: list[NapariStreamLayerItem] = field(default_factory=list)
 
     @classmethod
     def from_semantics(
@@ -221,6 +226,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         data_type: StreamingDataType,
         semantics: ViewerComponentAxisSemantics,
         display_config: NapariDisplayConfig,
+        items: list[NapariStreamLayerItem] | None = None,
     ) -> "NapariPendingLayerUpdate":
         return cls(
             entries=semantics.entries,
@@ -228,6 +234,7 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
             timer=timer,
             data_type=data_type,
             display_config=display_config,
+            items=[] if items is None else items,
         )
 
     def stop_timer(self) -> None:
@@ -955,39 +962,54 @@ class NapariLayerUpdateAuthority:
         data: LayerData,
         layer_kwargs: Mapping[str, LayerKwargValue],
     ) -> NapariLayerHandle:
-        existing_layer = self._existing_layer(
-            viewer=viewer,
-            layers=layers,
-            route_key=route_key,
-        )
         selection = NapariLayerSelectionAuthority.capture(
             viewer,
-            existing_layer,
+            self._existing_layer(viewer=viewer, layers=layers, route_key=route_key),
         )
-        if existing_layer is not None:
-            viewer.layers.remove(existing_layer)
-            layers.pop(route_key, None)
-            logger.info(
-                "🔬 NAPARI PROCESS: Removed existing %s layer %s for route %s",
-                layer_kind.value,
-                layer_name,
-                route_key,
-            )
-
         new_layer = NAPARI_LAYER_CREATORS[layer_kind](
             viewer,
             data,
             layer_name,
             layer_kwargs,
         )
-        layers[route_key] = new_layer
-        NapariLayerSelectionAuthority.restore(
-            viewer,
-            selection,
-            new_layer,
+        self.mount(
+            viewer=viewer,
+            layers=layers,
+            route_key=route_key,
+            layer=new_layer,
+            selection=selection,
         )
         NAPARI_LAYER_CREATED_LOGGERS[layer_kind](layer_kind, layer_name, data)
         return new_layer
+
+    def mount(
+        self,
+        *,
+        viewer: NapariViewerLayerCreator,
+        layers: dict[str, NapariLayerHandle],
+        route_key: str,
+        layer: NapariLayerHandle,
+        selection: NapariLayerSelectionSnapshot | None = None,
+    ) -> None:
+        """Replace a mounted route only with a fully materialized native layer."""
+        existing_layer = self._existing_layer(
+            viewer=viewer,
+            layers=layers,
+            route_key=route_key,
+        )
+        if selection is None:
+            selection = NapariLayerSelectionAuthority.capture(viewer, existing_layer)
+        if existing_layer is not None:
+            viewer.layers.remove(existing_layer)
+            layers.pop(route_key, None)
+        layers[route_key] = layer
+        if layer not in viewer.layers:
+            viewer.add_layer(layer)
+        NapariLayerSelectionAuthority.restore(
+            viewer,
+            selection,
+            layer,
+        )
 
     @staticmethod
     def _existing_layer(
@@ -1011,6 +1033,7 @@ class NapariDimensionLayerState:
     labels: DimensionLabelMap
     scalar_labels: tuple[str, ...] = ()
     presentation: "NapariAxisPresentation | None" = None
+    display_config: NapariDisplayConfig = field(default_factory=NapariDisplayConfig)
 
     @classmethod
     def empty(cls) -> "NapariDimensionLayerState":
