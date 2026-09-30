@@ -72,12 +72,12 @@ measurements, not ground truth or an automatically validated parameter choice.
 
 Availability is determined by the **live** capability registry, not this guide.
 These source contracts accompany [issue221](https://github.com/OpenHCSDev/openhcs/issues/221);
-their source-pinned synthetic MCP/viewer path has verified original crop and
-relative spacing, empirical values, unchanged raw pixels/presentation and
-author-opened MCP bitmaps at 5da177ad9 with PolyStore c16b8fc, including actual
-child shared-cache/no-download policy verification. This is not a
-physical-calibration claim or installed readiness: parent merge/install and its
-affected-entrypoint check remain separate. Both operations are read-only and
+PR225 is merged and its installed synthetic MCP/native viewer journey at
+OpenHCS fbf6b2d91 / PolyStore1209068 verified a cropped two-channel fixture,
+empirical measurement, snapshot and native close. The earlier source proof
+also verified unchanged raw pixels/presentation and shared-cache/no-download
+child policy. Neither proof establishes physical calibration or biological
+accuracy. Both operations are read-only and
 require a settled, scalar, non-multiscale image route in a native YX 2-D display.
 Unbound stacks/RGB, ambiguous records, missing axes, sparse padding, nonfinite
 inputs/pixels and out-of-bounds geometry fail explicitly; no coordinate clamps.
