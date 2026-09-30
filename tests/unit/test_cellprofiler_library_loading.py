@@ -3969,7 +3969,7 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     import centrosome.cpmorphology
 
     from openhcs.processing.backends.cellprofiler.label_geometry import (
-        _cellprofiler_convex_hull,
+        CellProfilerLabelHull,
     )
 
     labels = np.zeros((91, 103), dtype=np.int32)
@@ -3983,7 +3983,9 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
         labels, object_ids
     )
-    actual_hull, actual_counts = _cellprofiler_convex_hull(labels, object_ids)
+    actual_hull, actual_counts = CellProfilerLabelHull.from_labels(
+        labels, object_ids
+    ).vertices()
 
     np.testing.assert_array_equal(actual_hull, expected_hull)
     np.testing.assert_array_equal(actual_counts, expected_counts)

@@ -1,0 +1,22 @@
+{
+  "common_revision": "295e0ee81",
+  "candidate_revision": "b856ae56166d20bbf1316a57729dc5b919c96632",
+  "source_hashes": {
+    "label_geometry.py": {
+      "candidate": "44d0098875d9570de4a35cf909c9ec1e6f70f3195dae80c236ad53a9ca13e123",
+      "control": "e4ed73846d9bf743dcab8b9db70f569226c60a0d345784fdaee65eb95d7176c9"
+    },
+    "illumination.py": {
+      "candidate": "298483e084e4ce5931946cb1000990c6047547c179af6a59d7c03819093a51e0",
+      "control": "eea290038829b19e338e1995ae09fc450216318068f37b95b3b9a19e140f6da7"
+    }
+  },
+  "design": "control/candidate/candidate/control; declared public preparation before fresh-server runs; no concurrent scans/tests/compilation",
+  "mode": "16w_4c",
+  "env": {
+    "OPENHCS_CPU_ONLY": "true",
+    "OPENHCS_SUBPROCESS_NO_GPU": "1",
+    "POLYSTORE_SUBPROCESS_NO_GPU": "1",
+    "NUMBA_CACHE_DIR": "/tmp/openhcs-registry-kernel-prewarm-production-20260929-c2"
+  }
+}
