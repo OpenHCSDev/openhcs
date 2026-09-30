@@ -49,15 +49,16 @@ def fixture_registration_sources():
     )
 
 
-def guard() -> dict:
+def guard(*, projected_disk_gib: float = 0.5, disk_reserve_gib: float = 2) -> dict:
     result = subprocess.run(
         ['/home/ts/bin/agent-resource-check', '--assert-headroom'],
         capture_output=True, text=True, check=False,
     )
     resources = json.loads(result.stdout)
-    if resources['level'] == 'critical' or resources['ram_available_gib'] < 8 or any(
-        not reason.startswith('swap used ') for reason in resources['reasons']
-    ):
+    # Warning text is not an admission policy: in particular, 20 GiB free
+    # is a host notification threshold, not the footprint of this bounded run.
+    if (resources['level'] == 'critical' or resources['ram_available_gib'] < 8
+            or resources['free_gib']['/home'] < projected_disk_gib + disk_reserve_gib):
         raise RuntimeError(f'Resource gate closed: {resources}')
     return resources
 

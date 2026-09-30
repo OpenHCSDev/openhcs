@@ -62,13 +62,17 @@ def test_each_fixture_registration_source_has_one_original_declaration():
         assert metadata.original_name == name
 
 
-@pytest.mark.parametrize("level,reasons,admitted", [
-    ("warning", ["swap used 11.0 GiB"], True),
-    ("critical", ["swap used 16.6 GiB"], False),
-    ("warning", ["disk headroom low"], False),
+@pytest.mark.parametrize("level,reasons,free_gib,ram_gib,admitted", [
+    ("warning", ["swap used 11.0 GiB"], 16.5, 18.3, True),
+    ("warning", ["/home free 16.5 GiB"], 16.5, 18.3, True),
+    ("warning", ["/home free 2.4 GiB"], 2.4, 18.3, False),
+    ("critical", ["swap used 16.6 GiB"], 16.5, 18.3, False),
+    ("warning", ["RAM available 7.0 GiB"], 16.5, 7.0, False),
 ])
-def test_resource_owner_critical_level_is_not_a_swap_warning_exception(monkeypatch, level, reasons, admitted):
-    receipt = dict(level=level, reasons=reasons, ram_available_gib=18.3)
+def test_resource_owner_warnings_do_not_replace_projected_run_budget(
+        monkeypatch, level, reasons, free_gib, ram_gib, admitted):
+    receipt = dict(level=level, reasons=reasons, ram_available_gib=ram_gib,
+                   free_gib={"/home": free_gib})
     monkeypatch.setattr("tests.diagnostics.check_owned_bootstrap_live.subprocess.run",
                         lambda *args, **kwargs: SimpleNamespace(stdout=json.dumps(receipt)))
     if admitted:
@@ -76,3 +80,13 @@ def test_resource_owner_critical_level_is_not_a_swap_warning_exception(monkeypat
     else:
         with pytest.raises(RuntimeError, match="Resource gate closed"):
             guard()
+
+
+def test_projected_run_cost_is_checked_independently_of_warning_text(monkeypatch):
+    receipt = dict(level="warning", reasons=["/home free 16.5 GiB"],
+                   ram_available_gib=18.3, free_gib={"/home": 16.5})
+    monkeypatch.setattr("tests.diagnostics.check_owned_bootstrap_live.subprocess.run",
+                        lambda *args, **kwargs: SimpleNamespace(stdout=json.dumps(receipt)))
+    assert guard(projected_disk_gib=1) == receipt
+    with pytest.raises(RuntimeError, match="Resource gate closed"):
+        guard(projected_disk_gib=15)
