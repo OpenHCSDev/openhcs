@@ -2,8 +2,12 @@
 
 Implementation owner: Zeno. Integration owner: OpenHCS issue-batch coordinator.
 Worktree: `/home/ts/wt/openhcs-exact-label-selection-20260929`.
-Base: `openhcsdev/main` at `32d070c26` (merged PR255), integrated normally through
-`85d8b2ae7`. The preceding checkpoint merged `589c33a12` through `684e4bbd3`,
+Base: `openhcsdev/main` at `c86f562e1` (merged disjoint PR260), integrated normally
+through `b7e6a2fbc` after implementation/acceptance commit `4f4332368`. All runtime
+results below were obtained before that last merge against `32d070c26` (PR255),
+integrated through `85d8b2ae7`; post-merge AST and diff checks pass, with no new
+native trial during the parent's slot. The preceding checkpoint merged
+`589c33a12` through `684e4bbd3`,
 and `de23449a4` through `21c15ad41` before that.
 The output-policy checkpoint used `283b21275`.
 The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
@@ -52,6 +56,8 @@ Actual results, in order (counts overlap; they are not an additive unique total)
   was deselected or weakened. The corrected subject case now also reads the
   actual emitted details CSV and asserts `pixel_count=4` and
   `source_image_name=CountedImage` against the returned subject.
+  Final log: `final-six-case-and-compile-regressions.log`, SHA256
+  `ef97da954948958ece3713fb1bfd5940f2de6f871bdf02554cb53efddb17710a`.
 
 The diagnostic repair moves the **existing**
 `CallableContract.validate_artifact_input_parameter_bindings()` call from the
@@ -86,6 +92,9 @@ remaining `manages_artifact_outputs` caller exists. `git diff --check` passes.
 The first AST command compared the moving remote main and tried to read an
 upstream-only new benchmark file absent from this older worktree; the check was
 corrected to the actual validated main32 baseline, without editing that file.
+After the normal main260 merge, the same **25 changed Python files** also pass
+AST parse/in-memory compilation against current `c86f562e1`; no fixture or owner
+conflict occurred. This structural recheck is not a post-merge journey rerun.
 
 Build/test processes **2304493, 2304586, 2305892, 2306949, 2320857, 2321108,
 2328819** and supervisors **2304492, 2305891, 2320856, 2328817** are all terminal
