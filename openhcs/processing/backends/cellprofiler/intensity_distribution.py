@@ -33,6 +33,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (
@@ -112,9 +113,6 @@ from openhcs.processing.backends.cellprofiler._backend import (
 )
 from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
-)
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    WideObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryPropagationBackendStrategy,
@@ -1464,9 +1462,7 @@ class IntensityDistributionMeasurementRequest:
 
 
 @dataclass(slots=True)
-class ObjectIntensityDistributionMeasurementColumnarRows(
-    WideObjectMeasurementColumnarRows
-):
+class ObjectIntensityDistributionMeasurementColumnarRows(ObjectMeasurementColumnarRows):
     """Columnar radial intensity-distribution rows."""
 
     object_row_identity = MeasurementObjectRowIdentity.LABEL_ID

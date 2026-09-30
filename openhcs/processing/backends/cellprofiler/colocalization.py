@@ -37,6 +37,7 @@ from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
@@ -159,9 +160,6 @@ from openhcs.processing.backends.cellprofiler.colocalization_costes import (
 )
 from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
-)
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    LongObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
@@ -2013,7 +2011,7 @@ class ObjectColocalizationMetricArrays:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectColocalizationColumnarMeasurements(LongObjectMeasurementColumnarRows):
+class ObjectColocalizationColumnarMeasurements(ObjectMeasurementColumnarRows):
     """Columnar object-colocalization rows preserving direct row iteration."""
 
     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(

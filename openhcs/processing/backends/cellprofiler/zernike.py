@@ -65,8 +65,8 @@ from openhcs.processing.backends.cellprofiler.granularity import (
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     minimum_enclosing_circle_from_labels,
 )
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    WideObjectMeasurementColumnarRows,
+from openhcs.core.measurement_row_materialization import (
+    ObjectMeasurementColumnarRows,
 )
 
 _INTENSITY_DEBUG_TRACE_DIR_ENV = "OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR"
@@ -652,7 +652,7 @@ class IntensityZernikeMeasurementRowsRequest:
 
 
 @dataclass(slots=True)
-class ObjectIntensityZernikeMeasurementColumnarRows(WideObjectMeasurementColumnarRows):
+class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRows):
     """Columnar intensity-Zernike measurement rows."""
 
     object_ids: Sequence[int]

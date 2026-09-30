@@ -17,6 +17,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -313,9 +314,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
     object_label_dense_array,
-)
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest

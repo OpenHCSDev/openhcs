@@ -8,7 +8,7 @@ from dataclasses import dataclass, field as dataclass_field, replace
 import inspect
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, TypeVar, cast
 
 from python_introspect import RuntimeParameterDeclarationABC
 
@@ -26,6 +26,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.process_local_cache import ProcessLocalBoundedCache
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
@@ -811,6 +812,9 @@ class RuntimeArtifactAddress:
         return dict(payload)
 
 
+StoreQueryCacheT = TypeVar("StoreQueryCacheT", bound=ProcessLocalBoundedCache[Any, Any])
+
+
 class RuntimeValueStore:
     """Source of truth for validated runtime artifact values in one context."""
 
@@ -822,6 +826,10 @@ class RuntimeValueStore:
         self._observation_records: list[StoredRuntimeValue] = []
         self._current_location_by_key: dict[ArtifactKey, RuntimeArtifactLocation] = {}
         self._revision = 0
+        self._query_caches: dict[
+            type[ProcessLocalBoundedCache[Any, Any]],
+            ProcessLocalBoundedCache[Any, Any],
+        ] = {}
         self._find_cache: dict[
             tuple[
                 int,
@@ -839,6 +847,27 @@ class RuntimeValueStore:
             tuple[int, RuntimeArtifactQuery],
             tuple[StoredRuntimeValue, ...],
         ] = {}
+
+    def query_cache(self, cache_type: type[StoreQueryCacheT]) -> StoreQueryCacheT:
+        """Return a bounded derived-value cache owned by this store's lifetime.
+
+        Concrete cache types separate query domains. Every store mutation clears
+        their values; transport reconstructs the store without derived caches.
+        """
+        cache = self._query_caches.get(cache_type)
+        if cache is None:
+            cache = cache_type()
+            self._query_caches[cache_type] = cache
+        return cast(StoreQueryCacheT, cache)
+
+    def __getstate__(self) -> dict[str, object]:
+        state = dict(self.__dict__)
+        del state["_query_caches"]
+        return state
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        self.__dict__.update(state)
+        self._query_caches = {}
 
     @staticmethod
     def address_matches_plan(
@@ -1098,6 +1127,8 @@ class RuntimeValueStore:
 
     def _mark_mutated(self) -> None:
         self._revision += 1
+        for cache in self._query_caches.values():
+            cache.clear()
         self._find_cache.clear()
         self._find_matching_cache.clear()
 

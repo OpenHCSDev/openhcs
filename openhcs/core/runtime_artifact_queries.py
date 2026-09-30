@@ -6,7 +6,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
-from weakref import WeakKeyDictionary
 
 import numpy as np
 
@@ -39,6 +38,7 @@ from openhcs.core.measurement_lookup_dialect import (
     resolve_runtime_measurement_lookup_dialect,
 )
 from openhcs.core.process_local_cache import (
+    ProcessLocalBoundedCache,
     RegisteredProcessLocalBoundedCache,
     identity_owner_tuples_match,
     named_identity_owner_tuples_match,
@@ -81,10 +81,14 @@ from openhcs.core.runtime_spatial_grid import (
 if TYPE_CHECKING:
     from openhcs.core.runtime_stores import RuntimeValueStore, StoredRuntimeValue
 
-_MEASUREMENT_TABLE_CACHE: WeakKeyDictionary[
-    RuntimeValueStore,
-    dict[tuple[int, str, str | None], tuple[MeasurementTable, ...]],
-] = WeakKeyDictionary()
+
+class RuntimeMeasurementTablesQueryCache(
+    ProcessLocalBoundedCache[
+        tuple[str, str | None],
+        tuple[MeasurementTable, ...],
+    ]
+):
+    """Store-owned measurement tables for one axis and component group."""
 
 
 MeasurementLabelSliceFeatureBatchCacheValue = tuple[
@@ -433,20 +437,16 @@ def runtime_measurement_tables(
     context: RuntimeArtifactQueryContext,
 ) -> tuple[MeasurementTable, ...]:
     """Return all measurement tables in a runtime query context."""
-    cache_key = (context.store.revision, context.axis_id, context.group_key)
-    store_cache = _MEASUREMENT_TABLE_CACHE.setdefault(context.store, {})
-    cached = store_cache.get(cache_key)
+    cache_key = (context.axis_id, context.group_key)
+    store_cache = context.store.query_cache(RuntimeMeasurementTablesQueryCache)
+    cached = store_cache.cached_value(cache_key)
     if cached is not None:
         return cached
     tables = tuple(
         cast(MeasurementTable, record.value.data)
         for record in context.find(artifact_type=MeasurementsArtifactType)
     )
-    for key in tuple(store_cache):
-        if key[0] != context.store.revision:
-            del store_cache[key]
-    store_cache[cache_key] = tables
-    return tables
+    return store_cache.store_value(cache_key, tables)
 
 
 def runtime_measurement_tables_for_object(

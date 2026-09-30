@@ -43,6 +43,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_tabular_values import (
@@ -86,9 +87,6 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendAuthority,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-)
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    LongObjectMeasurementColumnarRows,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._granularity_native import (
@@ -461,7 +459,7 @@ def object_granularity_measurement_value_fields() -> tuple[str, ...]:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectGranularityMeasurementRows(LongObjectMeasurementColumnarRows):
+class ObjectGranularityMeasurementRows(ObjectMeasurementColumnarRows):
     """Columnar object granularity rows over the emitted label-id domain."""
 
     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(

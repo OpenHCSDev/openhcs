@@ -21,7 +21,10 @@ from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementLabelSliceFeatureBatchQuery,
 )
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurement_feature_queries import (
+    MeasurementFeatureQuery,
+    RuntimeObjectLabelMeasurementQueryCache,
+)
 from openhcs.core.measurement_row_materialization import measurement_rows
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -49,7 +52,6 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 )
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
-    object_label_measurement_values_cache,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
     ObjectMeasurementTableIndex,
@@ -597,25 +599,25 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
         vectors: Mapping[str, tuple[np.ndarray, ...]],
         bindings: tuple[CellProfilerObjectMeasurementVectorBinding, ...],
     ) -> None:
-        process_cache = object_label_measurement_values_cache(
-            adapter.request.context.runtime_value_store
+        store_cache = adapter.request.context.runtime_value_store.query_cache(
+            RuntimeObjectLabelMeasurementQueryCache
         )
         for binding in bindings:
             values = vectors[binding.object_name]
             query = binding.measurement_query(adapter)
-            process_cache[query] = values
+            store_cache.store_value(query, values)
 
     def cached_runtime_batch_vectors(
         self,
         adapter: "CellProfilerRuntimeAdapter",
     ) -> dict[str, tuple[np.ndarray, ...]]:
-        process_cache = object_label_measurement_values_cache(
-            adapter.request.context.runtime_value_store
+        store_cache = adapter.request.context.runtime_value_store.query_cache(
+            RuntimeObjectLabelMeasurementQueryCache
         )
         cached_vectors: dict[str, tuple[np.ndarray, ...]] = {}
         for binding in self.bindings:
             query = binding.measurement_query(adapter)
-            cached = process_cache.get(query)
+            cached = store_cache.cached_value(query)
             if cached is not None:
                 cached_vectors[binding.object_name] = cached
         return cached_vectors
