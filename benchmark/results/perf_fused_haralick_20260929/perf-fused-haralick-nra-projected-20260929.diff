@@ -1,0 +1,83 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/texture.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/texture.py
+@@ -311,8 +311,6 @@
+     def haralick_features(
+         self, pixel_data: np.ndarray, *, scale: int, ignore_zeros: bool
+     ) -> np.ndarray:
+-        import mahotas.features.texture as mahotas_texture
+-
+         pixel_array = np.ascontiguousarray(pixel_data)
+         if pixel_array.ndim != 2:
+             raise ValueError("Haralick texture backend expects a 2-D image plane.")
+@@ -323,13 +321,7 @@
+         cooccurrence_matrices = _haralick_2d_cooccurrence_matrices_numba(
+             pixel_array.astype(np.int64, copy=False), int(scale)
+         )
+-        return np.asarray(
+-            mahotas_texture.haralick_features(
+-                cooccurrence_matrices,
+-                ignore_zeros=ignore_zeros,
+-            ),
+-            dtype=np.float64,
+-        )
++        return _haralick_features_numba(cooccurrence_matrices, ignore_zeros)
+ 
+ 
+ class NativeNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
+@@ -811,6 +803,56 @@
+     return matrices
+ 
+ 
++@njit(cache=True)
++def _haralick_entropy_numba(values: np.ndarray) -> float:
++ """Compute base-two entropy with zero-probability terms excluded."""
++ result=0.
++ for p in values.flat:
++  if p>0:result-=p*np.log2(p)
++ return result
++@njit(cache=True)
++def _haralick_features_numba(cmats: np.ndarray, ignore_zeros: bool) -> np.ndarray:
++ """Compute the thirteen default mahotas features without Python array setup.
++
++ No fastmath: preserve the formulas and compare within the CP numerical policy.
++ Difference variance is VAR[P(|x-y|)], as in mahotas defaults.
++ """
++ directions,n,_=cmats.shape;result=np.zeros((directions,13),np.float64)
++ for d in range(directions):
++  total=0
++  for i in range(n):
++   for j in range(n):
++    if not ignore_zeros or (i and j):total+=cmats[d,i,j]
++  if total==0:
++   raise ValueError('mahotas.haralick_features: the input is empty. Cannot compute features!\nThis can happen if you are using `ignore_zeros`')
++  p=np.zeros((n,n),np.float64);px=np.zeros(n,np.float64);py=np.zeros(n,np.float64);plus=np.zeros(2*n,np.float64);minus=np.zeros(n,np.float64)
++  asm=0.;ij=0.;inverse=0.
++  for i in range(n):
++   for j in range(n):
++    if ignore_zeros and (i==0 or j==0):continue
++    value=cmats[d,i,j]/float(total);p[i,j]=value
++    px[j]+=value;py[i]+=value;plus[i+j]+=value;minus[abs(i-j)]+=value
++    asm+=value*value;ij+=i*j*value;inverse+=value/(1.+(i-j)*(i-j))
++  ux=0.;uy=0.;xx=0.;yy=0.;contrast=0.;sum_average=0.;sum_square=0.
++  for i in range(n):
++   ux+=px[i]*i;uy+=py[i]*i;xx+=px[i]*i*i;yy+=py[i]*i*i;contrast+=minus[i]*i*i
++  for i in range(2*n):sum_average+=plus[i]*i;sum_square+=plus[i]*i*i
++  vx=xx-ux*ux;vy=yy-uy*uy;sx=np.sqrt(vx);sy=np.sqrt(vy)
++  result[d,0]=asm;result[d,1]=contrast
++  result[d,2]=1. if sx==0. or sy==0. else (1./sx/sy)*(ij-ux*uy)
++  result[d,3]=vx;result[d,4]=inverse;result[d,5]=sum_average;result[d,6]=sum_square-sum_average*sum_average
++  result[d,7]=_haralick_entropy_numba(plus);result[d,8]=_haralick_entropy_numba(p);result[d,9]=np.var(minus);result[d,10]=_haralick_entropy_numba(minus)
++  hx=_haralick_entropy_numba(px);hy=_haralick_entropy_numba(py);hxy1=0.;hxy2=0.
++  for i in range(n):
++   for j in range(n):
++    cross=px[i]*py[j]
++    if cross>0:
++     logarithm=np.log2(cross);hxy1-=p[i,j]*logarithm;hxy2-=cross*logarithm
++  divisor=max(hx,hy);result[d,11]=(result[d,8]-hxy1) if divisor==0. else (result[d,8]-hxy1)/divisor
++  result[d,12]=np.sqrt(max(0.,1.-np.exp(-2.*(hxy2-result[d,8]))))
++ return result
++
++
+ __all__ = public_names_from_objects(
+     CellProfilerTexturePixelDataRequest,
+     HaralickFeatureMatrixRequest,

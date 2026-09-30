@@ -2653,7 +2653,7 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
     assert list(results[1][1].columns["object_label"][::4]) == [3]
 
 
-def test_numba_haralick_backend_exactly_matches_mahotas_reference():
+def test_numba_haralick_backend_matches_mahotas_reference():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2678,7 +2678,7 @@ def test_numba_haralick_backend_exactly_matches_mahotas_reference():
             actual = numba_backend.haralick_features(
                 image, scale=scale, ignore_zeros=ignore_zeros
             )
-            np.testing.assert_array_equal(actual, expected)
+            np.testing.assert_allclose(actual, expected, rtol=1e-6, atol=1e-6)
 
 
 def test_object_texture_crop_backend_matches_regionprops_intensity_images():
