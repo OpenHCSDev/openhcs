@@ -446,6 +446,18 @@ class CompiledStepPlan:
         return None if component is None else component.value
 
     @property
+    def artifact_output_plate_root(self) -> str:
+        """Resolve artifact plate identity alongside its compiled directories."""
+        plate_root = self.output_plate_root
+        if self.materialized_output is not None:
+            plate_root = self.materialized_output.plate_root
+        if plate_root is None:
+            raise ValueError(
+                f"Step {self.step_index} ({self.step_name}) has no artifact output plate root."
+            )
+        return plate_root
+
+    @property
     def artifact_analysis_output_dir(self) -> Path:
         output_dir = self.analysis_results_dir
         if self.materialized_output is not None:

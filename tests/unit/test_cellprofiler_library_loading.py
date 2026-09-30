@@ -1897,7 +1897,7 @@ def test_identify_primary_objects_applies_threshold_smoothing_to_binary_mask(
 def test_identify_primary_objects_accepts_nominal_options_directly():
     image = np.zeros((8, 8), dtype=np.float32)
     image[2:6, 2:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=2,
         max_diameter=8,
@@ -1960,7 +1960,7 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
     image[1:6, 5] = 1.0
     image[1, 1:6] = 1.0
     image[5, 1:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=1,
         max_diameter=5,

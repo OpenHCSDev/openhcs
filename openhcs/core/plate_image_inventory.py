@@ -322,6 +322,7 @@ class PlateResultFileRecord:
     file_format: FileFormat
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     @property
     def full_path_obj(self) -> Path:
@@ -396,6 +397,7 @@ class PlateFileRecord:
             full_path=record.full_path,
             file_format=record.file_format,
             source_ref=record.source_ref,
+            source_projection=record.source_projection,
         )
 
     def matches(self, query: "PlateFileInventoryQuery") -> bool:
@@ -781,9 +783,10 @@ class PlateResultFileInventory:
         scanned_file_count = 0
         for inventory in inventories:
             scanned_file_count += inventory.scanned_file_count
-            records_by_path.update(
-                (record.full_path, record) for record in inventory.records
-            )
+            # The handler's declared inventory precedes path-only projections.
+            # Do not discard its typed source binding on duplicate discovery.
+            for record in inventory.records:
+                records_by_path.setdefault(record.full_path, record)
         return PlateResultFileInventory(
             plate_path=plate_path,
             records=tuple(
@@ -892,6 +895,9 @@ class PlateResultFileInventory:
             if file_format is None:
                 continue
             relative_path = file_path.relative_to(plate_path)
+            projection = result_directory.source_binding_for(
+                str(relative_path), str(file_path)
+            )
             metadata: dict[str, JsonValue] = {
                 "filename": str(relative_path),
                 "type": file_format.name,
@@ -900,7 +906,9 @@ class PlateResultFileInventory:
                 "result_subdirectory": result_directory.subdirectory_name,
                 "full_path": str(file_path),
             }
-            if parser is not None:
+            if projection is not None:
+                metadata.update(projection.source_metadata)
+            elif parser is not None:
                 parsed = parser.parse_filename(file_path.name)
                 if parsed:
                     metadata.update(parsed.wire_mapping())
@@ -910,13 +918,18 @@ class PlateResultFileInventory:
                     full_path=str(file_path),
                     file_format=file_format,
                     metadata=metadata,
+                    source_projection=projection,
                     source_ref=(
-                        SourcePixelRef(
-                            backend=Backend.DISK.value,
-                            backend_address=str(file_path),
+                        projection.ref
+                        if projection is not None
+                        else (
+                            SourcePixelRef(
+                                backend=Backend.DISK.value,
+                                backend_address=str(file_path),
+                            )
+                            if ImageFileFormat.is_image_path(file_path)
+                            else None
                         )
-                        if ImageFileFormat.is_image_path(file_path)
-                        else None
                     ),
                 )
             )
