@@ -66,21 +66,55 @@ class FunctionCatalogPreparation:
         with self._lock:
             if self._future is not None:
                 return self._future
-            future: Future[None] = Future()
-            self._future = future
-            if self._cancellation.requested():
-                future.cancel()
+            future = self._new_preparation_future()
+            if future.cancelled():
                 return future
-            self._set_message("Starting function catalog preparation")
             thread = threading.Thread(
                 target=self._prepare,
-                args=(future,),
+                args=(future, self._function_catalog.prepare),
                 name="openhcs-function-catalog-preparation",
                 daemon=True,
             )
             self._thread = thread
             thread.start()
             return future
+
+    def _new_preparation_future(self) -> Future[None]:
+        """Create this owner's future while the caller holds its lifecycle lock."""
+        future: Future[None] = Future()
+        self._future = future
+        if self._cancellation.requested():
+            future.cancel()
+        else:
+            self._set_message("Starting function catalog preparation")
+        return future
+
+    def prepare_before_serving(
+        self,
+        status_callback: Callable[[EndpointStartupStatus], None] | None = None,
+    ) -> None:
+        """Warm in the server main thread before accepting endpoint requests."""
+        with self._lock:
+            future = self._new_preparation_future() if self._future is None else None
+        if future is not None and not future.cancelled():
+            if status_callback is not None:
+                status_callback(self.snapshot())
+            self._prepare(future, self._prepare_current_process)
+        self.wait_until_ready(status_callback)
+
+    def _prepare_current_process(self, *, status_callback, cancellation) -> None:
+        """Use the registry owner and project its already-prepared catalogue."""
+        if cancellation.requested():
+            raise CancelledError
+        status_callback("Warming registered function kernels in the execution server")
+        self.prepare_persistent_catalog()
+        if cancellation.requested():
+            raise CancelledError
+        self._function_catalog.catalog(
+            compact_signatures=True,
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
 
     def cancel_and_join(self) -> None:
         """Cancel and join the exact preparation operation owned here."""
@@ -199,9 +233,10 @@ class FunctionCatalogPreparation:
                 timestamp=time.time(),
             )
 
-    def _prepare(self, future: Future[None]) -> None:
+    def _prepare(self, future: Future[None], prepare: Callable[..., None]) -> None:
+        """Complete this same future under either admitted preparation context."""
         try:
-            self._function_catalog.prepare(
+            prepare(
                 status_callback=self._set_message,
                 cancellation=self._cancellation,
             )
