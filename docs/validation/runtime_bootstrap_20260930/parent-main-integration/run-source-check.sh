@@ -7,6 +7,8 @@ export PYTHONPATH="$task_root:$dependency_root/ObjectState/src:$dependency_root/
 export PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1
 export OPENHCS_CPU_ONLY=true QT_QPA_PLATFORM=offscreen
+export POLYSTORE_IMAGEJ_CACHE_ROOT=/home/ts/.cache/polystore/imagej
+export POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false
 export XDG_CACHE_HOME="$receipt_root/test-scratch/cache"
 export XDG_DATA_HOME="$receipt_root/test-scratch/data"
 cd "$task_root"

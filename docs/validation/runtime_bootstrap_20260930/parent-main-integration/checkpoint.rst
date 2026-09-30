@@ -13,7 +13,7 @@ Paired pins and ownership
 ------------------------
 
 Native PR9 remains at published112c240464df6e81c25b0f97d2b1376d43bbbbc8;
-it contains main2c68a114. Metaclass448cdf07 contains mainca0a87e8. Other eight
+it contains main2c68a114. Metaclass448cdf07 contains mainca0a87e8. The remaining six
 dependency declarations are unchanged. Tests use the fresh parent root and
 read-only exact child source roots in the original checkout; all nine imports
 are independently asserted and printed in both test logs. These are explicit
@@ -40,11 +40,19 @@ Build completed exit0,3.37s,146744KiB RSS; native-build.log retains the command.
 Same source shard, original30s shell bound: **197 passed**, zero skips or
 deselections,6.51s tests/7.30s process,265044KiB peak RSS,exit0. Both warnings
 are disabled asyncio plugin settings. The readable run-source-check.sh records
-exact source paths, plugin/thread limits, shared Fiji download refusal and
+exact source paths, plugin/thread limits, Fiji download refusal and
 isolated persistent XDG scratch. Collection and corrected outcomes are separate.
 Real fixture records and portalocker locks execute; subprocess/network/process
 signals and visualizers are controlled. No MCP/native endpoint, JVM, science,
 GUI, paid provider or validation-slot allocation occurs in this shard.
+
+Post-test recipe review found that its Fiji root was pinned after isolating
+XDG_CACHE_HOME, so that test invocation selected owned disposable cache, NOT
+the shared bundle cache. No materialization/download/Java occurred. Preserve
+those original receipts and do not claim shared-cache runtime acceptance.
+The published recipe now explicitly selects /home/ts/.cache/polystore/imagej
+and downloadfalse before isolation. This future resource-only recipe correction
+does not change any production source or test assertion; no re-run claimed.
 
 Original authenticated installed agent-comms-ratchet, source SHA256
 e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562:
