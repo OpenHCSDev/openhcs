@@ -57,6 +57,7 @@ from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputIdentityAuthority,
     FunctionOutputPathAuthority,
+    FunctionOutputPathRequest,
 )
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -78,6 +79,7 @@ from openhcs.core.streaming_config_factory import (
 )
 from openhcs.core.virtual_workspace_metadata import (
     FIELDS,
+    MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.microscope_interfaces import MetadataHandler
@@ -1966,6 +1968,59 @@ def test_produced_address_publication_never_parses_generated_filenames(
         restored = ImagePayloadMetadata.from_mapping(record["image_metadata"])
         assert restored.source_dtype == "uint16"
         assert restored.source_voxel_spacing.values_zyx == (0.5, 0.5)
+
+    metadata_path = plate_root / "openhcs_metadata.json"
+    previous_metadata = metadata_path.read_bytes()
+    unregistered = output_dir / "unowned_s001_w1_z001_t001.tif"
+    tifffile.imwrite(unregistered, pixels)
+    with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+        OpenHCSMetadataWriter.finalize_completed_plate({well: context})
+    assert metadata_path.read_bytes() == previous_metadata
+    unregistered.unlink()  # This fixture owns the synthetic file.
+
+    if len(paths) > 1:
+        removed = paths[0]
+        (plate_root / removed).unlink()
+        OpenHCSMetadataWriter.finalize_completed_plate({well: context})
+        reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+        assert set(reconciled[FIELDS.IMAGE_FILES]) == set(paths[1:])
+        assert removed not in reconciled[FIELDS.WORKSPACE_MAPPING]
+        assert removed not in reconciled[FIELDS.SOURCE_METADATA]
+        assert {record["virtual_path"] for record in reconciled[FIELDS.SOURCE_PROJECTION]} == set(paths[1:])
+        assert set(reconciled["z_indexes"]) == {str(z) for z in z_values[1:]}
+
+
+@pytest.mark.parametrize("well", ("A01", "image.ome.tif"))
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+def test_produced_stacked_dotted_identity_keeps_declared_extension(
+    tmp_path, well, extension
+):
+    parser = SourceSchemaFilenameParser()
+    source_paths = tuple(
+        f"/source/{well}_s001_w1_z{z:03d}_t001{extension}"
+        for z in (3, 1, 2)
+    )
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=source_paths,
+        ),
+    )
+    request = FunctionOutputPathRequest(
+        parser=parser,
+        output_dir=tmp_path,
+        output_payload=metadata.payload_with(np.zeros((3, 4, 5), dtype=np.uint16), None),
+        input_path=Path(source_paths[0]).name,
+        variable_components=(VariableComponents.Z_INDEX,),
+    )
+    identity = FunctionOutputIdentityAuthority.identity(request)
+    assert identity.extension == extension
+    assert "z_index" not in identity.component_values
+    assert identity.filename_address.value_for(AllComponents.Z_INDEX) == "3"
+    assert identity.filename_address.value_for(AllComponents.WELL) == well
+    filename = FunctionOutputPathAuthority.filename_for_identity(
+        parser, identity.with_filename_qualifier("centre_dots")
+    )
+    assert filename == f"{well}_s001_w1_z003_t001_centre_dots{extension}"
 
 
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(

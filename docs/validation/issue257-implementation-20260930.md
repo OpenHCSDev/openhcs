@@ -10,6 +10,20 @@ the source-live slot. Frozen H002B files remain untouched.
 
 ## Implemented owners
 
+Working draft: https://github.com/OpenHCSDev/openhcs/pull/262, first product
+checkpoint `ddca5e7cb95419d275f818ab8fa20b016cb0d6eb`. Latest source evidence:
+28 publication/stack tests pass in2.81s;15 existing identity/stack tests pass
+in2.46s;15 projection/architecture tests pass in0.90s. Total58. The added cases
+cover reordered dotted stacks, atomic missing-address rejection and pruning
+deleted images from all three projection fields and component coverage.
+The24-test result below is the earlier checkpoint, not the latest total.
+
+Existing ABI SHA256:
+`d0051154f8af59874004373603aabff0ae0576216c48076e1470d6569bb18b88`.
+
+R0/L0/S1–S8 does not expand this bug PR's scope. Lovelace owns R0 CI; hosted
+CI is not a wait condition. Newly assigned264 is being traced before combining.
+
 - `FunctionOutputIdentity.filename_values` owns storage coordinates, separate
   from semantic components; inherited `filename_address` projects them through
   `OpenHCSPlaneAddress` without reading a generated filename.
@@ -44,7 +58,7 @@ Original failure reproducer and JSON receipt remain byte-identical to
 `ae6c90b6d`; the receipt is historical, not a receipt for changed source. Run
 that old probe against its original source revision, not the new signatures.
 
-Selected `test_function_outputs.py` tests: **24 passed, 31 deselected** in
+Initial selected `test_function_outputs.py` tests: **24 passed, 31 deselected** in
 2.60s. Includes 18 parameterized publication/readback fixtures for plain,
 dotted and OME-named wells, two declared extensions, and complete/reordered/
 reduced Z coverage. Their parser is made to raise during publication; final
