@@ -42,7 +42,7 @@ image/CSV/ROI inventories are checked, including final main output, with no miss
 plane/file fallback. This is diagnostic code, not a new production materializer.
 
 Provider-free command at merged source plus diagnostic changes:
-existing venv python -B -m pytest -o addopts='' 
+existing venv python -B -m pytest -o addopts=''
 tests/unit/agent/test_owned_bootstrap_readback.py
 tests/unit/test_volume_projection_fixture.py -q
 Explicit worktree PYTHONPATH, CPU/headless, thread1, shared Fiji cache/downloadfalse.
