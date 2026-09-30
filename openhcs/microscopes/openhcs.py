@@ -29,6 +29,7 @@ from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
 )
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
@@ -398,6 +399,11 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         plate_root = Path(plate_path)
         metadata_document = self.load_metadata_document(plate_root)
         subdirectories = self._metadata_subdirectories(metadata_document, plate_root)
+        source_projection = (
+            VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                plate_root, metadata_document
+            )
+        )
 
         result_directories = []
         for subdirectory_name, subdirectory_data in subdirectories.items():
@@ -409,26 +415,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                     f"OpenHCS metadata subdirectory {subdirectory_name!r} "
                     "results_dir must be a non-empty string when declared."
                 )
-            result_path = plate_root / result_dir_name
-            if not result_path.exists():
-                logger.debug(
-                    "OpenHCS metadata subdirectory %r declares missing results "
-                    "directory %s; treating it as no result artifacts.",
-                    subdirectory_name,
-                    result_path,
-                )
-                continue
-            if not result_path.is_dir():
-                raise NotADirectoryError(
-                    f"OpenHCS metadata subdirectory {subdirectory_name!r} "
-                    f"declares a non-directory results path: {result_path}"
-                )
-            result_directories.append(
-                AnalysisResultDirectory(
-                    subdirectory_name=subdirectory_name,
-                    path=result_path,
-                )
+            result_directory = AnalysisResultDirectory.from_declared_path(
+                subdirectory_name=subdirectory_name,
+                path=plate_root / result_dir_name,
+                source_projection=source_projection,
             )
+            if result_directory is not None:
+                result_directories.append(result_directory)
         return tuple(result_directories)
 
     def _metadata_projection(

@@ -235,7 +235,7 @@ def test_registry_preparation_derives_obligations_even_with_cached_metadata(
     monkeypatch.setattr(
         PreparationCacheBatch,
         "populate_child_caches",
-        lambda batch: events.append(
+        lambda batch, *, status_callback: events.append(
             tuple(item.module_name for item in batch.preparations)
         ),
     )
@@ -385,6 +385,25 @@ def test_completed_worker_release_is_idempotent(tmp_path):
         assert not psutil.pid_exists(pid)
     finally:
         worker.close()
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_path):
+    events = []
+    batch = PreparationCacheBatch(
+        tuple(AdditionalChildCachePreparation(name, tmp_path) for name in ("a", "b"))
+    )
+
+    def report(message):
+        pid = int(message.rsplit(" ", 1)[1])
+        assert not psutil.pid_exists(pid)
+        assert not PreparationOperation._completed
+        events.append(pid)
+
+    batch.populate_child_caches(status_callback=report)
+    assert set(events) == {int(path.read_text()) for path in tmp_path.iterdir()}
 
 
 @pytest.mark.skipif(

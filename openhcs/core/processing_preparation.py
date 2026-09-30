@@ -274,7 +274,9 @@ class PreparationCacheBatch:
         }
         return cls(tuple(sources.values()))
 
-    def populate_child_caches(self) -> None:
+    def populate_child_caches(
+        self, *, status_callback: Callable[[str], None] | None = None
+    ) -> None:
         if "fork" not in multiprocessing.get_all_start_methods():
             return
         operations = {
@@ -304,5 +306,9 @@ class PreparationCacheBatch:
                 for worker in tuple(workers):
                     if worker.result_connection in ready:
                         worker.wait()
+                        if status_callback is not None:
+                            status_callback(
+                                f"Prepared kernel cache worker {worker.process.pid}"
+                            )
                         worker.close()
                         workers.remove(worker)

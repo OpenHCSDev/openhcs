@@ -101,6 +101,7 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
+    ProducedPathRecordIndex,
     StepOutputManifestStore,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
@@ -5312,3 +5313,107 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         == "1"
     )
     assert records[0].component_values["site"] == 1
+
+
+@pytest.fixture
+def qualified_producer_manifest(tmp_path):
+    parser = SourceSchemaFilenameParser()
+    producer = SimpleNamespace(
+        step_scope_id="producer", step_name="Producer", pipeline_position=0,
+        axis_id="A01", output_dir=tmp_path,
+    )
+    consumer = SimpleNamespace(
+        axis_id="A01",
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0, source_step_scope_id="producer"
+        ),
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+    )
+    records = []
+    for plane in (1, 2):
+        parsed = parser.parse_filename(f"A01_s001_w2_z{plane:03d}_t001.tif")
+        identity = FunctionOutputIdentity(
+            component_values=dict(parsed.component_wire_mapping()),
+            extension=".tif", source="test", filename_qualifier=f"Output{plane}",
+        )
+        records.append(ProducedOutputSemantics.from_output(
+            producer, tmp_path / FunctionOutputPathAuthority.filename_for_identity(parser, identity),
+            identity, output_context=AlignedImageSliceContext.main_flow(
+                output_key=f"Output{plane}", artifact_kind=ImageArtifactType.value,
+            ),
+        ))
+    store = StepOutputManifestStore()
+    store.begin_step(producer)
+    store.record_outputs(producer, records)
+    return store, producer, consumer, tuple(records), parser
+
+
+def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicates(
+    qualified_producer_manifest, monkeypatch,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    calls = []
+    original = FunctionOutputPathAuthority.filename_for_identity
+
+    def count_filename(parser, identity):
+        calls.append(identity)
+        return original(parser, identity)
+
+    monkeypatch.setattr(FunctionOutputPathAuthority, "filename_for_identity", count_filename)
+    paths = (
+        records[1].output_path,
+        "A01_s001_w2_z001_t001.tif",
+        records[1].relative_output_path,
+        "A01_s001_w2_z001_t001.tif",
+    )
+    result = store.producer_output_contexts_for_paths(consumer, paths, parser)
+    assert tuple(context.output_key for context in result) == (
+        "Output2", "Output1", "Output2", "Output1",
+    )
+    assert len(calls) == len(records)
+
+
+def test_step_output_manifest_batch_lookup_template_deduplicates_record_aliases(
+    qualified_producer_manifest,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    path = "{anything}z001{suffix}.tif"
+    assert store.producer_output_contexts_for_paths(consumer, (path,), parser) == (
+        records[0].output_context,
+    )
+    index = ProducedPathRecordIndex.from_records(records, parser)
+    assert index.contains(path)
+    assert index.matching_records(path) == (records[0],)
+
+
+@pytest.mark.parametrize("path, count", [
+    ("missing.tif", 0),
+    ("A01_s001_w2_z{plane}_t001.tif", 2),
+])
+def test_step_output_manifest_batch_lookup_rejects_missing_and_ambiguous_templates(
+    qualified_producer_manifest, path, count,
+):
+    store, _producer, consumer, _records, parser = qualified_producer_manifest
+    with pytest.raises(NoStepOutputManifestMatch, match=f"found {count}"):
+        store.producer_output_contexts_for_paths(consumer, (path,), parser)
+
+
+def test_step_output_manifest_batch_lookup_rejects_shared_basename(
+    qualified_producer_manifest,
+):
+    store, producer, consumer, records, parser = qualified_producer_manifest
+    alias = records[0].relative_output_path
+    other = ProducedOutputSemantics.from_output(
+        producer, producer.output_dir / "another" / alias,
+        FunctionOutputIdentity(
+            component_values=records[1].component_values,
+            extension=".tif", source="test",
+        ),
+        output_context=records[1].output_context,
+    )
+    store.record_outputs(producer, (other,))
+    with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
+        store.producer_output_contexts_for_paths(consumer, (alias,), parser)
+    assert store.producer_output_contexts_for_paths(
+        consumer, (records[0].output_path, other.output_path), parser
+    ) == (records[0].output_context, other.output_context)

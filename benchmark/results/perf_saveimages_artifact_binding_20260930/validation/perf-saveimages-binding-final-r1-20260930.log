@@ -1,0 +1,47 @@
+R1 616be7c8ef6b8d40d21a6cce2ed7fa7d3951e8fc: NRA cache=miss, projections=3006, prepare=50.281s, analysis=3.085s
+R1 399820539a659f0d485f6d5088fc87b9dd7508ca: NRA cache=miss, projections=3006, prepare=51.031s, analysis=3.096s
+{
+  "base": "616be7c8ef6b8d40d21a6cce2ed7fa7d3951e8fc",
+  "head": "399820539a659f0d485f6d5088fc87b9dd7508ca",
+  "changed": [
+    "openhcs/core/artifacts.py",
+    "openhcs/core/function_patterns.py",
+    "openhcs/core/runtime_artifact_values.py",
+    "openhcs/core/steps/function_runtime.py"
+  ],
+  "before": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/artifacts.py",
+      "count": 6
+    },
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/function_patterns.py",
+      "count": 2
+    },
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/runtime_artifact_values.py",
+      "count": 1
+    }
+  ],
+  "after": [
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/artifacts.py",
+      "count": 6
+    },
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/function_patterns.py",
+      "count": 2
+    },
+    {
+      "check": "redundant_type_check",
+      "file": "openhcs/core/runtime_artifact_values.py",
+      "count": 1
+    }
+  ],
+  "increased": []
+}

@@ -27,7 +27,10 @@ from polystore.streaming.viewer_transport import (
 from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
-    from openhcs.core.source_projection import SourcePlaneDataset
+    from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
     from openhcs.microscopes.openhcs import OpenHCSMetadata
 
 
@@ -127,6 +130,36 @@ class AnalysisResultDirectory:
 
     subdirectory_name: str
     path: Path
+    source_projection: VirtualWorkspaceSourceProjection | None = None
+
+    @classmethod
+    def from_declared_path(
+        cls,
+        subdirectory_name: str,
+        path: Path,
+        source_projection: VirtualWorkspaceSourceProjection | None = None,
+    ) -> AnalysisResultDirectory | None:
+        """Admit existing declared directories without inventing missing results."""
+        if not path.exists():
+            return None
+        if not path.is_dir():
+            raise NotADirectoryError(
+                f"Analysis metadata subdirectory {subdirectory_name!r} "
+                f"declares a non-directory results path: {path}"
+            )
+        return cls(subdirectory_name, path, source_projection)
+
+    def source_binding_for(
+        self, virtual_path: str, full_path: str
+    ) -> SourceProjection | None:
+        """Resolve a file through this directory's metadata-owned source authority."""
+        if self.source_projection is None:
+            return None
+        from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+
+        return self.source_projection.source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)
+        )
 
 
 class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):

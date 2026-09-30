@@ -6007,6 +6007,10 @@ def test_core_cellprofiler_functions_resolve_with_numpy_memory_contract(module_n
 
 
 def test_cellprofiler_module_executor_runs_resolved_identify_primary_objects():
+    from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+        PrimaryObjectDiagnosticPlanes,
+    )
+
     adapter, filemanager = _adapter(
         (
             _output_binding(
@@ -6027,15 +6031,21 @@ def test_cellprofiler_module_executor_runs_resolved_identify_primary_objects():
     identify_primary_objects = CellProfilerModule.require_module(
         IDENTIFY_PRIMARY_OBJECTS
     ).require_callable()
+    source_image = ArtifactSpec.input(DNA_IMAGE, ImageArtifactType)
+    object_output = ArtifactSpec.output_inheriting_group_scope(
+        NUCLEI,
+        ObjectLabelsArtifactType,
+        source_image,
+    )
     executor = _executor(
         identify_primary_objects,
         adapter,
         (
             ArtifactSpec.output(MEASUREMENTS, MeasurementsArtifactType),
-            ArtifactSpec.output_inheriting_group_scope(
-                NUCLEI,
-                ObjectLabelsArtifactType,
-                ArtifactSpec.input(DNA_IMAGE, ImageArtifactType),
+            object_output,
+            *PrimaryObjectDiagnosticPlanes.artifact_specs(
+                source_image=source_image,
+                objects=object_output,
             ),
         ),
     )

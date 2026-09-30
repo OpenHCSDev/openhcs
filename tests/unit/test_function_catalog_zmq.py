@@ -943,26 +943,6 @@ def test_zmq_router_delegates_search_to_catalog_owner(monkeypatch) -> None:
     ]
 
 
-def test_execution_server_start_only_binds_endpoint(
-    monkeypatch,
-) -> None:
-    events: list[str] = []
-    monkeypatch.setattr(
-        FunctionCatalogService,
-        "catalog",
-        lambda self, *, compact_signatures=False: events.append("catalog"),
-    )
-    monkeypatch.setattr(
-        ExecutionServer,
-        "start",
-        lambda self: events.append("bind"),
-    )
-
-    ZMQExecutionServer().start()
-
-    assert events == ["bind"]
-
-
 def test_execution_server_runtime_capability_preparation_uses_single_owner(
     monkeypatch,
 ) -> None:
@@ -970,7 +950,7 @@ def test_execution_server_runtime_capability_preparation_uses_single_owner(
     server = ZMQExecutionServer()
     monkeypatch.setattr(
         server._function_catalog_preparation,
-        "wait_until_ready",
+        "prepare_before_serving",
         lambda callback=None: events.append(callback),
     )
     callback = object()
@@ -1052,7 +1032,7 @@ def test_persistent_capability_preparation_uses_registry_owner(
     monkeypatch.setattr(
         RegistryService,
         "prepare_in_current_process",
-        lambda: events.append("prepare"),
+        lambda *, status_callback: events.append("prepare"),
     )
     FunctionCatalogPreparation.prepare_persistent_catalog()
 

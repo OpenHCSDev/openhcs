@@ -1,0 +1,9 @@
+Processing ./.
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: openhcs
+  Building wheel for openhcs (pyproject.toml): started
+  Building wheel for openhcs (pyproject.toml): finished with status 'done'
+  Created wheel for openhcs: filename=openhcs-0.8.6-cp311-abi3-linux_x86_64.whl size=4158296 sha256=4f2e6ded99eee04613eb922fb65c4f17e27730ad103dbf8fce07a7ff05e0019f
+  Stored in directory: /tmp/pip-ephem-wheel-cache-x96q3tr2/wheels/6d/a7/9c/fc41c5b5ccf19267987fea8fab62c4201e60310164141d97d1
+Successfully built openhcs

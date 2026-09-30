@@ -69,6 +69,7 @@ from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataWriter,
     ProducedMemoryPathsAuthority,
     RuntimeArtifactMaterializationAuthority,
+    RuntimeArtifactMetadataTarget,
     StreamOutputsAuthority,
     finalize_function_step_outputs,
 )
@@ -1362,6 +1363,33 @@ def test_image_persistence_skips_object_label_main_flow_payloads():
     assert ProducedMemoryPathsAuthority.paths(context, plan) == []
 
 
+def test_metadata_target_family_discovers_new_declaration_without_consumer_edits(tmp_path):
+    registry = OpenHCSMetadataWriter.OutputTarget.__registry__
+    original_keys = set(registry)
+    try:
+        class SupplementalImageMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+            @classmethod
+            def from_plan(cls, plan):
+                return cls(
+                    output_dir=tmp_path,
+                    backend=Backend.DISK.value,
+                    plate_root=str(tmp_path),
+                    sub_dir="supplemental",
+                    results_dir=None,
+                )
+
+        plan = function_step_plan("memory-only")
+        plan.write_backend = Backend.MEMORY.value
+        context = context_stub(FileManagerStub({}))
+        (target,) = OpenHCSMetadataWriter.OutputTarget.for_plan(plan)
+        assert type(target) is SupplementalImageMetadataTarget
+        assert OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan) == (target,)
+        assert target.produced_projection_metadata(context, plan) is None
+    finally:
+        for key in set(registry) - original_keys:
+            del registry[key]
+
+
 def test_metadata_writer_skips_owner_without_image_outputs():
     path = "/tmp/output/A01_s1_w1.tif"
     filemanager = FileManagerStub({path: object()})
@@ -1607,7 +1635,7 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
         lambda _plan, _context: (materialization,),
     )
 
-    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    target = RuntimeArtifactMetadataTarget.from_plan(plan)
     assert target is not None
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
         context, plan
@@ -1720,7 +1748,7 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
         lambda _plan, _context: (materialization,),
     )
 
-    target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
+    target = RuntimeArtifactMetadataTarget.from_plan(plan)
     assert target is not None
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
         context, plan

@@ -123,7 +123,42 @@ class ZMQExecutionContext:
         }
 
 
-class ZMQExecutionServer(ExecutionServer):
+class FunctionCatalogExecutionServer(ExecutionServer):
+    """Own catalogue preparation across physical endpoint start and stop."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from openhcs.agent.services.function_catalog_service import (
+            FunctionCatalogService,
+        )
+        from openhcs.runtime.function_catalog_preparation import (
+            FunctionCatalogPreparation,
+        )
+
+        self._function_catalog = FunctionCatalogService()
+        self._function_catalog_preparation = FunctionCatalogPreparation(
+            self._function_catalog
+        )
+
+    def prepare_runtime_capabilities(
+        self,
+        status_callback: EndpointStartupStatusCallback | None = None,
+    ) -> None:
+        """Warm every registered obligation before physical endpoint readiness."""
+        self._function_catalog_preparation.prepare_before_serving(status_callback)
+
+    def start(self) -> None:
+        self.prepare_runtime_capabilities()
+        super().start()
+
+    def stop(self) -> None:
+        try:
+            super().stop()
+        finally:
+            self._function_catalog_preparation.cancel_and_join()
+
+
+class ZMQExecutionServer(FunctionCatalogExecutionServer):
     """OpenHCS-specific execution server."""
 
     _server_type = "execution"
@@ -153,25 +188,6 @@ class ZMQExecutionServer(ExecutionServer):
         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
         self._server_environment = RuntimeEnvironmentSnapshot.current()
-        from openhcs.agent.services.function_catalog_service import (
-            FunctionCatalogService,
-        )
-        from openhcs.runtime.function_catalog_preparation import (
-            FunctionCatalogPreparation,
-        )
-
-        self._function_catalog = FunctionCatalogService()
-        self._function_catalog_preparation = FunctionCatalogPreparation(
-            self._function_catalog
-        )
-
-    def prepare_runtime_capabilities(
-        self,
-        status_callback: EndpointStartupStatusCallback | None = None,
-    ) -> None:
-        """Materialize cached capabilities before exposing the live endpoint."""
-
-        self._function_catalog_preparation.wait_until_ready(status_callback)
 
     def stop(self) -> None:
         """Stop transport and every exact process resource owned by this server."""
@@ -179,10 +195,7 @@ class ZMQExecutionServer(ExecutionServer):
         try:
             super().stop()
         finally:
-            try:
-                self._function_catalog_preparation.cancel_and_join()
-            finally:
-                cleanup_backend_connections(include_process_resources=True)
+            cleanup_backend_connections(include_process_resources=True)
 
     def handle_control_message(self, message):
         if ZMQControlMessageRouter.handles(message):
