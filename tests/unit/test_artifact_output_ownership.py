@@ -12,6 +12,8 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ImageMeasurementSubjectRelation,
     MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
+    ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.artifact_key_selection import (
     AdapterRecordedArtifactOutputPolicy,
@@ -23,7 +25,7 @@ from openhcs.core.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,
 )
-from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_adapters import RuntimeAdapterSpec, runtime_adapter
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRecordedArtifactOutputPolicy,
@@ -121,6 +123,43 @@ def test_single_subject_output_policy_rejects_missing_measurement_subject(
 
     with pytest.raises(ValueError, match="no declared measurement subject"):
         compile_function_pattern(count, {}, {})
+
+
+@pytest.mark.parametrize(
+    "output_policy",
+    [
+        NativeReturnArtifactOutputPolicy,
+        AdapterRecordedArtifactOutputPolicy,
+        CellProfilerRecordedArtifactOutputPolicy,
+    ],
+)
+def test_scalar_input_ambiguity_precedes_dependent_output_subject_validation(
+    output_policy,
+):
+    inputs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType, parameter_name="labels")
+        for name in ("Nuclei", "Cells")
+    )
+    rows = ArtifactSpec.output(
+        "Measurements",
+        MeasurementsArtifactType,
+        relations=tuple(ObjectMeasurementSubjectRelation(spec.ref()) for spec in inputs),
+    )
+
+    @runtime_adapter(
+        "runtime", lambda request: object(), artifact_output_policy=output_policy
+    )
+    @artifact_inputs(*inputs)
+    @artifact_outputs(rows)
+    def measure(image, labels=None, *, runtime):
+        raise AssertionError("Invalid declarations must not execute")
+
+    with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
+        compile_function_pattern(measure, {}, {})
+
+    # Output obligations remain mandatory once input selection is unambiguous.
+    with pytest.raises(ValueError, match="multiple measurement subjects"):
+        CallableContract.from_callable(measure).validate_artifact_output_declarations()
 
 
 def test_cellprofiler_recording_policy_still_rejects_conflicting_explicit_subjects():

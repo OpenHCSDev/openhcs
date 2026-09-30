@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from csv import DictReader
 
 import numpy as np
 import pytest
@@ -410,3 +411,11 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
     assert image.key.artifact_type is ImageArtifactType
     assert counts.value.data.subject.source_image_name == "CountedImage"
     assert tuple(counts.value.data.rows.column_values("pixel_count")) == (4,)
+    step_plan = bundle.runtime_contexts["A01"].step_plans[0]
+    [csv_path] = step_plan.artifact_analysis_output_dir.glob(
+        f"*_{counts.key.name}_step{step_plan.step_index}_details.csv"
+    )
+    with csv_path.open(newline="") as stream:
+        [persisted] = DictReader(stream)
+    assert persisted["pixel_count"] == "4"
+    assert persisted["source_image_name"] == counts.value.data.subject.source_image_name

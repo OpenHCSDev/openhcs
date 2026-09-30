@@ -1222,6 +1222,7 @@ def _compile_invocation(
         )
         item = replace(item, contract=contract_plan.contract)
     artifact_selector = declaration_provider(item, step_context)
+    item.contract.validate_artifact_input_parameter_bindings()
     artifact_selector.validate_artifact_output_declarations()
     artifact_input_plans = artifact_selector.select_plans(
         ArtifactInputPlan,

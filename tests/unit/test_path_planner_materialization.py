@@ -16,6 +16,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
@@ -451,11 +452,13 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
         "Measurements",
         MeasurementsArtifactType,
         sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        relations=(ArtifactMeasurementSubjectRelation(),),
     )
     image_copy_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
         sidecar_role=ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,
+        relations=(ArtifactMeasurementSubjectRelation(),),
     )
     base_contract = CallableContract.from_callable(identify)
     contracts = tuple(
@@ -3839,7 +3842,10 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(source.ref()),),
+        relations=(
+            GroupLineageSourceRelation(source.ref()),
+            ImageMeasurementSubjectRelation(source.ref()),
+        ),
     )
 
     @artifact_inputs(source)

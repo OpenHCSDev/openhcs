@@ -10,10 +10,100 @@ The earlier checkpoint used `98d9b9d23`; the runtime checkpoint integrates new
 main through normal merge `9f5d444515`. No parent/main-worktree edits, rebases,
 resets, installed-source edits, or gitlink changes.
 
-Closes #133. References #204; its paired-channel and actual GUI acceptance remain
-open. This is a source-verified draft, not an installed/live-readiness claim.
+Closes #133. References #204; paired-channel headless execution now passes, but
+actual GUI/installed acceptance remains open. This is a source-headless verified
+draft, not an installed/live-readiness claim.
 
-## Current-main subject journey: prepared; refreshed live gate pending
+## Current-main finite journey: terminal, working checkpoint
+
+The parent released the finite serial slot after its terminal PR259 attempt.
+Every build/test phase acquired `validation.lock` nonblocking. Raw initial
+headroom was **12.99 GiB available RAM / 24.90 GiB disk**, and final admission
+was **13.07 GiB / 29.88 GiB**. Initial RAM >=11 GiB, trial RAM >=8 GiB and disk
+>=20 GiB were enforced; only the authorized historical-swap warning was waived.
+The existing interpreter and all nine imported source roots resolved inside this
+worktree. `setup.py build_ext --inplace --parallel 1` completed in **2.59 seconds**,
+building the two existing native extensions locally, without installation,
+downloads or shared-source changes.
+
+Actual results, in order (counts overlap; they are not an additive unique total):
+
+- Subject-only variants: **2 passed, 4 deselected**, 3.61 seconds. The real
+  headless compiler rejects missing subject before callable entry. Adding only
+  the exact image subject compiles, executes and returns the image-owned rows.
+- First complete journey: **1 failed, 5 passed**, 37.62 seconds. Actual paired
+  execution already passed. The omitted-selector case still failed closed, but
+  common output validation masked the original scalar-label ambiguity diagnostic.
+  Its original failure is retained in `full-six-case-journey.log`, SHA256
+  `850195091fec271e2a8b43d6dc7ce29a365f1ae4a0339cb46398efee3d4ac175`.
+- Runtime, output-policy, catalog and identity controls: **89 passed**, 3.37
+  seconds. This includes exact unscoped/asymmetric admission and coordinate,
+  producer, relation and ambiguity negative controls.
+- After the ordering repair, the unweakened complete journey: **6 passed**, 7.54
+  seconds. A broader compile run exposed three incomplete older test declarations:
+  **3 failed, 269 passed**, 9.38 seconds. Original failures are retained in
+  `finalized-contract-controls.log`, SHA256
+  `285082789885e46a8762cfe5913ccff507b68c244531e3f86ce84ee96262ff28`.
+- Final combined run: **278 passed**, 15.59 seconds: all 272 cases in
+  `test_function_patterns.py`, `test_artifact_output_ownership.py`,
+  `test_function_step_execution_plan.py`, `test_path_planner_materialization.py`
+  and `test_function_artifact_outputs.py`, plus all six continuous cases in
+  `tests/integration/test_measurement_declaration_journey.py`. No journey case
+  was deselected or weakened. The corrected subject case now also reads the
+  actual emitted details CSV and asserts `pixel_count=4` and
+  `source_image_name=CountedImage` against the returned subject.
+
+The diagnostic repair moves the **existing**
+`CallableContract.validate_artifact_input_parameter_bindings()` call from the
+later path-planner consumer into `_compile_invocation`, immediately after
+declaration finalization and before dependent output validation. The old call is
+deleted. Three new policy-parametrized cases prove scalar `labels` ambiguity wins
+at compile while the same declaration still independently fails the artifact
+kind's conflicting-subject invariant. No validator, output-policy exemption,
+selector, subject requirement or source compatibility predicate was weakened.
+
+The three older fixture repairs declare what their assertions already require:
+the artifact-fed `illumination_function` parameter now exists on the callable;
+both sidecar-conflict rows declare artifact subjects; and the channel-grouped
+rows declare their exact source image as subject separately from group lineage.
+Their component projection, sidecar conflict and channel/producer assertions are
+unchanged. The final output-policy file has **23 passing cases**, including the
+new-kind matrix across native, adapter-recorded and CP-recorded owners and the
+legitimate heterogeneous CP recording contract.
+
+NRA/refactor-audit evidence is focused, not a complete NRA semantic/proof scan:
+IDEN-1 keeps input lineage and output subject separate; BOUND-2/IMPL-4 retains
+validation with the finalized declaration owner; IMPL-5/12 removes the replaced
+consumer call in place. Adding an output kind still needs zero compiler/consumer
+branches. The catalog still derives its selector from the binding owner, and
+paired context still uses declared source relations rather than a global channel
+exception. Current caller and AST inspection complements the real owner cases.
+All **25 changed Python files** against the validated main32 parse and compile
+in memory. The two current production deltas contain only one added owner call
+and one removed call, with zero added `match` or `if` nodes. Caller search finds
+one finalized compiler call and the pre-existing explicit authoring wrapper; no
+remaining `manages_artifact_outputs` caller exists. `git diff --check` passes.
+The first AST command compared the moving remote main and tried to read an
+upstream-only new benchmark file absent from this older worktree; the check was
+corrected to the actual validated main32 baseline, without editing that file.
+
+Build/test processes **2304493, 2304586, 2305892, 2306949, 2320857, 2321108,
+2328819** and supervisors **2304492, 2305891, 2320856, 2328817** are all terminal
+and absent. Final test/supervisor exit codes were zero; no worktree process or
+surviving handle remains. The worker explicitly returned the native slot to the
+parent. No MCP server, JVM or GUI was launched. This exercises the real compiler,
+orchestrator, processing and CSV persistence on self-generated tiny fixtures;
+it does not claim installed MCP/GUI acceptance or a replay of any blind attempt.
+
+Owned scratch/log root:
+`/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929/pr205-live-20260930`.
+Command logs, including both original failures and the final passing run, are
+retained. Approximately 11 MiB of verified regeneratable build intermediates,
+synthetic pytest outputs and caches were removed after process termination.
+Locally built worktree extensions remain; no source, saved session, author input,
+reference, installed package or other owner's output was removed.
+
+## Historical subject preparation and lineage-boundary review
 
 The newly reported frozen-author failure is precisely #133: a typed `PURE_3D`
 measurement output can carry a feature owner and source lineage without declaring
@@ -32,8 +122,8 @@ the reconstructed feature owner and real provider's input-qualified scope before
 the headless compile boundary; the subject remains the exact image **output**
 ref. The invalid callable still raises if entered. The valid case
 uses the real compiler and orchestrator and checks both image and measurement
-outputs and four counted synthetic pixels. These revised integration assertions
-are prepared, **not yet rerun** at current main.
+outputs and four counted synthetic pixels. These assertions and actual CSV
+persistence now pass in the current-main finite journey above.
 
 ### Parent review: output-qualified lineage fixture repaired
 
@@ -69,8 +159,9 @@ roundtrip and compile/execute assertions for the released-slot gate.
 NRA/refactor-audit finding: IDEN-1 separates invocation source/group ownership
 from measurement subject; IMPL-4 reuses the output declaration's existing binding
 hook instead of restoring consumer inference. Only the journey fixture and this
-receipt are edited. No guard relaxation, new owner/registry, parent PR255 file
-edit, source-binding edit, installed-root use or production-code change occurred.
+receipt were edited in that preparation checkpoint. No guard relaxation, new
+owner/registry, parent PR255 file edit, source-binding edit, installed-root use
+or production-code change occurred in that checkpoint.
 
 Actual lightweight checks at this checkpoint:
 
@@ -107,7 +198,7 @@ independent input management and both contract/compile boundaries. Its prior
 20-case passing evidence, including legitimate heterogeneous CP ownership, is
 historical below, not relabeled as a current-main rerun.
 
-The parent explicitly granted the finite source-live slot after freezing and
+Historical first admission: the parent explicitly granted the slot after freezing and
 closing the original blind runtime and its finite installed acceptance attempt.
 The worker acquired `validation.lock` nonblocking for the admission check.
 It exited **78**: available RAM **14.08 GiB** exceeds the initial 11 GiB floor,
@@ -117,18 +208,30 @@ No build/test/MCP/JVM/GUI process started; the admission process exited and
 released its lock. Previously recorded worker-owned disposable scratch is
 already empty (4 KiB directory), so no other owner's artifacts were removed.
 
-Remaining named dependency: parent resource admission needs at least 0.3 GiB
+At that admission, the named dependency was at least 0.3 GiB
 additional available disk plus build margin. This worktree still lacks the
 current-main `_tabular_native` extension (`find_spec` returns `None`). No native
 build, environment startup, installation or managed-skill change occurred.
-After admission, validate the two subject variants first, then the unweakened full
-six-case declaration journey and focused paired-source cases. Installed/live
-verification and merging remain with the parent; optional CI or broader paired
-research is not a prerequisite for shipping the reviewed #133 checkpoint.
+The released-slot continuation above subsequently built the extensions and
+validated both subject variants, the complete six-case journey and paired-source
+controls. Installed/live verification and merging remain with the parent;
+optional CI is not a prerequisite for shipping the reviewed #133 checkpoint.
 Parent owns the separate #254 payload ABI/PURE_2D follow-up, including only
 `FunctionChainInvocationExecutor.main_flow_call_argument` in the shared runtime
 file. This worker's measurement strategy/input-loader scope does not collide;
 no cherry-pick of that unpublished follow-up or installed-root validation occurs.
+
+Finite-slot continuation after parent's terminal PR259 source-live attempt:
+parent explicitly returned the slot to PR205. Worker-owned disposable scratch is
+`/home/ts/.cache/agent-scratch/openhcs-issue-measurement-20260929/pr205-live-20260930`,
+purpose local native intermediates, command logs, and self-generated tiny pytest
+plates/cache only. No source, saved session, author input or reference belongs
+there. Keep failed-attempt receipts until classified, then remove verified
+regeneratable build/test scratch after preserving results. The build uses the
+existing `setup.py build_ext --inplace --parallel 1`; no installation or download.
+Validate required imported paths and fresh RAM/disk floors under the nonblocking
+shared lock before build, then both subject variants before the complete six-case
+journey. No parent PR259 contextualization method is edited by this worker.
 
 ## Frozen-harness compile incident: triaged, regression retained
 
@@ -179,7 +282,7 @@ on #204/PR205; it does not resolve the separate paired runtime/live gate.
   Producer address/group selection, stack-plane projection, and ambiguity checks
   remain authoritative; the old duplicate fixed-coordinate loops are deleted.
 
-## Focused evidence
+## Historical focused evidence (current rerun above)
 
 Using `/home/ts/code/projects/openhcs/.venv/bin/python` with this worktree and all
 eight recorded submodule `src` directories on `PYTHONPATH`; all nine imported
@@ -364,31 +467,22 @@ both compile and runtime use it unchanged. A new output kind supplies its own
 validation hook, with zero edits to the generic compiler consumer. The
 duplicate-resolution removal is factoring; no pure file move is claimed.
 
-## Remaining acceptance
+## Remaining acceptance and integration boundaries
 
-- The original paired-channel journey failed **before measurement**, while
-  secondary consumes `Nuclei`: the exact record has fixed channel 1 scope,
-  but `RuntimeArtifactInput._matches_execution_scope` compares it with the
-  secondary source's channel 2 scope and rejects it. Address, axis, and producer
-  identity match. Reproduce with `pytest -q
-  tests/integration/test_measurement_declaration_journey.py -k paired --tb=short`
-  under the serialized validation lock after coordinator handoff. Zeno is the
-  active runtime-fix owner under the explicit scope extension. The focused fix is
-  present and store regressions pass, but complete paired execution remains
-  unverified. No `core/source_bindings.py`, `core/source_binding_workspace.py`,
-  source preparation, ROI, viewer, or #211 authorization method/test was modified.
-- Scheduling: parent #151/#212 acceptance and installation are complete.
-  Confucius now owns the heavy runtime lock and frozen installation. Zeno will run
-  the full six-case headless journey only after an explicit serialized handoff.
-  No race for fresh environments, GUI, JVM, or installed-baseline changes is authorized.
-- Parent also owns the cold-inspection deletion in
-  `InProcessCompileInspectionGateway`; Zeno does not edit that method or its
-  catalog-initialization call. The pending continuous regression is strengthened
-  to verify the secondary declaration's exact source-context relation and the
-  primary/secondary records' actual typed channel coordinates, in addition to
-  the existing exact selector and measured-secondary-region assertions. These
-  additional assertions are syntax-checked only until the worker slot is handed
-  off; no end-to-end success is inferred from source review.
+- The original paired-channel failure was before measurement: exact channel-1
+  `Nuclei` was rejected against the secondary source's channel-2 context. This
+  regression now **passes actual paired execution** in the unweakened six-case
+  journey, including declared source relation, actual typed channel coordinates,
+  exact selector and measured-secondary-region assertions. The 56 runtime-store
+  controls also pass in the current 89-case run. No source-binding owner,
+  source preparation, ROI, viewer or #211 authorization method/test was modified.
+- The finite source-native slot is terminal and explicitly returned to the
+  parent. No surviving worker handle exists. Further heavy/installed acceptance
+  requires the next named serial handoff; no environment or blind replay is queued.
+- Parent owns the cold-inspection gateway change and PR259's argument ABI and
+  object-label contextualization follow-up. This worker does not edit those
+  methods, import unpublished parent changes or use foreign installed MCP as
+  source acceptance. Its measurement/input-loader scope remains separate.
 - Source-only explanation of the apparent grouped/ungrouped distinction: group
   coordinates are selected by the compiled edge, while the previous predicate
   compared fixed coordinates on either side. Binding-owned channel identities
@@ -400,8 +494,9 @@ duplicate-resolution removal is factoring; no pure file move is claimed.
   merge, and must not inspect Euler's blind input or output.
 - #204's corrected diagnosis is catalog discoverability, retaining the original
   failure and acceptance verbatim in `issue204_catalog_diagnosis_20260929.md`.
-  Same-source runtime selection is proven; paired-channel runtime and actual
-  GUI interaction remain open, so #204 is not claimed closed.
+  Exact author/compile/roundtrip, same-source and paired-channel execution are
+  proven here; actual installed GUI interaction remains open, so #204 is not
+  claimed closed. Review/merge/installation remain with the integration owner.
 
 Draft PR: https://github.com/OpenHCSDev/openhcs/pull/205.
 
@@ -413,6 +508,7 @@ Draft PR: https://github.com/OpenHCSDev/openhcs/pull/205.
 - `openhcs/core/artifacts.py`
 - `openhcs/core/callable_contract.py`
 - `openhcs/core/function_patterns.py`
+- `openhcs/core/pipeline/path_planner.py`
 - `openhcs/core/runtime_adapters.py`
 - `openhcs/core/component_group_scope.py`
 - `openhcs/core/runtime_stores.py`
@@ -442,7 +538,7 @@ reproducer. Generated arrays and logs are regeneratable; no source or saved
 sessions were stored there. No owned large scratch artifacts were created. Viewer-bind and ROI
 materialization implementation surfaces remain with their assigned owners.
 
-Current-main local build prerequisite: `a0263e82a1` adds the required
+Historical local build prerequisite: `a0263e82a1` adds the required
 `_granularity_reconstruct` extension, reached by intensity -> shape -> zernike ->
 granularity imports. A fresh source import failed with `ModuleNotFoundError`
 before a test could execute. Zeno owns the bounded worktree-only build using the

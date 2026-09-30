@@ -619,7 +619,7 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
         manages_artifact_inputs=True,
         artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
-    def publish_derived_channels(image, *, runtime):
+    def publish_derived_channels(image, *, illumination_function=None, runtime):
         del runtime
         return image
 
