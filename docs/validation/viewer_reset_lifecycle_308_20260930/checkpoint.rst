@@ -120,6 +120,13 @@ Draft PR309 remains Refs #308 and must not close it before that acceptance.
 Final authenticated structural guard: production4fae0e4c31c1ab13b0845766757d44e4a41ef1e4
 against pinned merged main;5140 actual original metrics, zero positive deltas,
 exit0, peak86988KiB. Scope is the three changed production paths plus original
-complete class/function inventories. This is a structural guard pass, not
+complete class inventories. This is a structural guard pass, not
 full NRA/R1 or runtime proof. Final matrix:8 passed in5.14s, peak453108KiB.
 Source/data/layout declarations remain with their original typed owners.
+
+Retained raw original/final metric reports are losslessly compressed as
+ratchet-first-314.json.gz and ratchet-final.json.gz. Plaintext duplicates are
+removed; both the compressed artifacts and original Git history retain them.
+Owned disposable scratch (5MiB pytest/formatter caches and authenticated audit
+source extraction) is cleared after validation. All failure/success receipts,
+inputs and originals remain in this persistent worktree and PR history.
