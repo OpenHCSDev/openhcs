@@ -103,9 +103,19 @@ configuration boundary; no foreign owner contacted and no collision fix claim.
 Normally integrated main642821c before any new dispatch. Diagnostic preparation
 now passes17 focused tests/1.49s: original manager accepts each single-declaration
 source, exact primary+named-image inventory and all five CSV coordinates guarded.
-Planned distinct12-step native workflow covers full/reordered/reduced/singleton,
-first/chained inspectors, two registrations once each after READY. No acceptance
-claimed before execution; original failures remain untouched.
+Distinct12-step native workflow was prepared for full/reordered/reduced/singleton,
+first/chained inspectors, two registrations once each after READY. Attempt03
+started at a6c0fa448 before the parent's new critical-swap stop. Its older diagnostic
+guard admitted swap-only reasons even at critical level: NOT a passing guard claim.
+Original progression was interrupted with ZERO registration/compile/execution
+calls. Same-handle preparation cancellation returned already READY; exact-owned
+close233ms proved process exit. Driver/MCP/native absent,5965/6965 vacant,
+shared lock released; accepted=false. No fourth attempt or installed change.
+After terminal cleanup the diagnostic consumes the original resource owner's
+critical level, without copying thresholds. Focused tests20pass/1.45s/exit0.
+Original stopped receipt unchanged; live progression remains blocked by critical
+resource gate, not optional hosted CI.
+[Attempt03 disposition](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/native-attempt03/checkpoint.md).
 [Preparation and review](https://github.com/OpenHCSDev/openhcs/blob/feat/owned-runtime-bootstrap-20260930/docs/validation/runtime_bootstrap_20260930/projection-attempt03-preparation.md).
 
 Remaining: #257 successful full execution/publication and actual strict readback,

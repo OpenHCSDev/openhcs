@@ -1,13 +1,15 @@
 """Provider-free witnesses for the diagnostic's complete publication checks."""
 
 import pytest
+import json
+from types import SimpleNamespace
 
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.agent.dto.execution import ArtifactMaterializationPlanSummary, ArtifactPlanSummary
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
-from tests.diagnostics.check_owned_bootstrap_live import fixture_registration_sources
+from tests.diagnostics.check_owned_bootstrap_live import fixture_registration_sources, guard
 from tests.diagnostics.owned_bootstrap_readback import require_csv_rows, require_projection_inventory
 
 
@@ -58,3 +60,19 @@ def test_each_fixture_registration_source_has_one_original_declaration():
     for name, code in sources:
         metadata = manager._prepare_source(code)
         assert metadata.original_name == name
+
+
+@pytest.mark.parametrize("level,reasons,admitted", [
+    ("warning", ["swap used 11.0 GiB"], True),
+    ("critical", ["swap used 16.6 GiB"], False),
+    ("warning", ["disk headroom low"], False),
+])
+def test_resource_owner_critical_level_is_not_a_swap_warning_exception(monkeypatch, level, reasons, admitted):
+    receipt = dict(level=level, reasons=reasons, ram_available_gib=18.3)
+    monkeypatch.setattr("tests.diagnostics.check_owned_bootstrap_live.subprocess.run",
+                        lambda *args, **kwargs: SimpleNamespace(stdout=json.dumps(receipt)))
+    if admitted:
+        assert guard() == receipt
+    else:
+        with pytest.raises(RuntimeError, match="Resource gate closed"):
+            guard()

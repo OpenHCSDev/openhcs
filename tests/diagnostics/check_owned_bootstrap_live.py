@@ -55,10 +55,10 @@ def guard() -> dict:
         capture_output=True, text=True, check=False,
     )
     resources = json.loads(result.stdout)
-    if resources['ram_available_gib'] < 8 or any(
+    if resources['level'] == 'critical' or resources['ram_available_gib'] < 8 or any(
         not reason.startswith('swap used ') for reason in resources['reasons']
     ):
-        raise RuntimeError(f'Non-swap resource gate closed: {resources}')
+        raise RuntimeError(f'Resource gate closed: {resources}')
     return resources
 
 
