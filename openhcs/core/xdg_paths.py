@@ -56,10 +56,10 @@ def get_openhcs_config_dir() -> Path:
     return config_dir
 
 
-def get_openhcs_log_dir() -> Path:
+def get_openhcs_log_dir(*, create: bool = True) -> Path:
     """Return the shared OpenHCS log directory without creating it."""
 
-    return get_openhcs_data_dir() / "logs"
+    return get_openhcs_data_dir(create=create) / "logs"
 
 
 def get_legacy_openhcs_dir() -> Path:

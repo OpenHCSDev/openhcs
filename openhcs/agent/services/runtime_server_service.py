@@ -20,16 +20,28 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfo,
     RuntimeServerScanRequest,
     RuntimeServerScanResult,
+    RuntimeBootstrapStartRequest,
+    RuntimeBootstrapHandle,
+    RuntimeBootstrapObserveRequest,
+    RuntimeBootstrapState,
     runtime_execution_status_error,
     runtime_execution_status_from_response,
     unreachable_runtime_server_info,
 )
 from openhcs.core.debug_view_models import DebugViewModel
+from openhcs.core.debug import DebugPausedWorkerStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import PongResponse, ServerRole
+from zmqruntime.startup import (
+    EndpointStartupPhase,
+    EndpointStartupStatus,
+    EndpointStartupStatusReader,
+)
+from zmqruntime.timeouts import OperationDeadline
+from zmqruntime.client import EndpointStartupUncertainError
 
 RUNTIME_SERVER_KIND_HINT = (
     "Use openhcs_scan_runtime_servers to discover endpoints. Viewer ports should "
@@ -262,15 +274,112 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
 
 
 class RuntimeServerService:
-    """Expose read-only state from running OpenHCS ZMQ execution servers."""
+    """Own explicit bootstrap admission and read-only runtime observation."""
 
     def __init__(
         self,
         gateway: RuntimeServerGatewayABC | None = None,
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
+        path_policy: AgentPathPolicy | None = None,
     ) -> None:
         self._config = config
         self._gateway = gateway or ZMQRuntimeServerGateway(config)
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
+
+    def start_from_request(
+        self, request: RuntimeBootstrapStartRequest
+    ) -> RuntimeBootstrapState:
+        connection = request.connection
+        endpoint = connection.transport_endpoint()
+        if not endpoint.transport_mode.declaration.endpoint_is_local(
+            endpoint.host, endpoint.port
+        ):
+            raise ValueError("Runtime bootstrap requires an explicit local connection")
+        config = replace(self._config, server_host=connection.host)
+        client = connection.execution_client(config)
+        plan = client.runtime_launch_plan()
+        for path in plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        deadline = OperationDeadline.after_milliseconds(
+            request.timeout_ms,
+            operation="explicit runtime bootstrap",
+        )
+        errors = ()
+        try:
+            process = client.start_owned_process(operation_deadline=deadline)
+        except EndpointStartupUncertainError as error:
+            process = error.process
+            errors = (AgentError.from_exception("runtime_bootstrap_uncertain", error),)
+        handle = RuntimeBootstrapHandle(connection, process.identity, plan)
+        # No waiting for endpoint readiness or catalogue preparation here.
+        return RuntimeBootstrapState(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            progress=EndpointStartupStatus(
+                EndpointStartupPhase.STARTING_PROCESS,
+                "Native child spawned; retain this exact handle",
+            ),
+            ready=False,
+            process_alive=process.is_alive(),
+            errors=errors,
+        )
+
+    def observe_bootstrap(
+        self, request: RuntimeBootstrapObserveRequest
+    ) -> RuntimeBootstrapState:
+        handle = request.handle
+        for path in handle.launch_plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        self._path_policy.assert_readable_location(
+            handle.launch_plan.startup_status_file
+        )
+        alive = handle.process_identity.is_alive()
+        statuses = (
+            EndpointStartupStatusReader(handle.launch_plan.startup_status_file)
+            .read()
+            .statuses
+        )
+        progress = (
+            statuses[-1]
+            if statuses
+            else EndpointStartupStatus(
+                EndpointStartupPhase.STARTING_PROCESS,
+                "No child readiness receipt observed",
+            )
+        )
+        endpoint = handle.connection.transport_endpoint()
+        pong = (
+            endpoint.ping(self._config, timeout_ms=self._config.server_info_timeout_ms)
+            if alive
+            else None
+        )
+        ready = False
+        if pong is not None:
+            if (
+                pong.process_identity != handle.process_identity
+                or pong.server_role is not ServerRole.EXECUTION
+            ):
+                raise RuntimeError(
+                    "Bootstrap endpoint has a different native owner; no takeover"
+                )
+            ready = pong.ready
+            if ready:
+                progress = EndpointStartupStatus(
+                    EndpointStartupPhase.CONNECTED,
+                    "Exact execution child accepts controls",
+                )
+        elif alive is False:
+            progress = EndpointStartupStatus(
+                EndpointStartupPhase.FAILED,
+                "Exact spawned child is terminal; do not replay startup",
+            )
+        return RuntimeBootstrapState(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            progress=progress,
+            ready=ready,
+            process_alive=alive,
+        )
 
     def server_info(
         self,

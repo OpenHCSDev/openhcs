@@ -98,6 +98,21 @@ the outcome; they are not write admission or a Python sandbox.
 
 Prepare the catalogue on the intended endpoint **before submitting source**:
 
+If that isolated endpoint does not exist, first discover "owned runtime" with
+the capability-search tool and inspect the reflected startup request. Use
+`openhcs_start_owned_runtime` with an explicit local port/connection. Its native
+launch plan resolves data/log/store/registry-cache and transport-write paths in
+the MCP launch environment; all must be admitted before spawn. Output-only
+roots require those launch destinations to be under the authorised roots too.
+It returns the exact child incarnation and launch artifacts, not catalogue
+readiness. Retain the complete handle and use `openhcs_observe_owned_runtime`
+until `ready=true`, then follow the preparation procedure below. The returned
+`launch_plan.storage_dir` is the native caller-intended store for registration.
+Occupied or reserved endpoints reject without attach, kill, or replacement.
+If startup observation expires, preserve its original inputs and any returned
+handle; observe that same owner, never replay startup or assume no process.
+Bootstrap does not authorise source registration or scientific execution.
+
 1. Call `openhcs_start_function_catalog_preparation` with the same explicit
    `port`, `host`, `transport_mode` and `persistent` connection fields. It starts
    or coalesces the endpoint's existing catalogue/kernel preparation future,

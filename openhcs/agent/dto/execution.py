@@ -21,7 +21,9 @@ from zmqruntime.messages import (
     QueuedExecutionInfo,
     RunningExecutionInfo,
     WorkerState,
+    ProcessIdentity,
 )
+from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -41,6 +43,7 @@ from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
 
 MAX_EXECUTION_STATUS_TRACEBACK_CHARS = 3000
 
@@ -616,6 +619,47 @@ class RuntimeServerInfoRequest(
                 else timeout_ms
             ),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapStartRequest(RuntimeServerInfoRequest):
+    """Explicit startup at a caller-selected local execution endpoint."""
+
+    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.server_info_timeout_ms
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
+        self.connection.require_port("Explicit runtime bootstrap")
+        self.connection.transport_endpoint()
+        if (
+            self.timeout_ms <= 0
+            or self.timeout_ms > OPENHCS_ZMQ_CONFIG.control_timeout_ms
+        ):
+            raise ValueError(
+                "Bootstrap observation must use the existing control budget"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapHandle:
+    """Exact spawned child and its pre-admitted native launch artifacts."""
+
+    connection: ExecutionConnectionSpec
+    process_identity: ProcessIdentity
+    launch_plan: ExecutionRuntimeLaunchPlan
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapObserveRequest:
+    handle: RuntimeBootstrapHandle
+
+
+@dataclass(frozen=True, kw_only=True)
+class RuntimeBootstrapState(AgentResultEnvelope):
+    handle: RuntimeBootstrapHandle
+    progress: EndpointStartupStatus
+    ready: bool
+    process_alive: bool | None
 
 
 @dataclass(frozen=True, slots=True)

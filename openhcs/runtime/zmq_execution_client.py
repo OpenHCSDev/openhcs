@@ -87,6 +87,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+@dataclass(frozen=True, slots=True)
+class ExecutionRuntimeLaunchPlan:
+    """Canonical native launch destinations, projected before any write."""
+
+    runtime_dir: Path
+    log_file: Path
+    startup_status_file: Path
+    storage_dir: Path
+    registry_cache_dir: Path
+    transport_write_paths: tuple[Path, ...]
+
+    def writable_paths(self) -> tuple[Path, ...]:
+        return (
+            self.runtime_dir,
+            self.log_file,
+            self.startup_status_file,
+            self.storage_dir,
+            self.registry_cache_dir,
+            *self.transport_write_paths,
+        )
+
+
 _COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
 
 
@@ -571,6 +594,7 @@ class ZMQExecutionClient(
         connection_status_callback: EndpointStartupStatusCallback | None = None,
     ):
         self._startup_status_path: Path | None = None
+        self._runtime_launch_plan: ExecutionRuntimeLaunchPlan | None = None
         super().__init__(
             config.default_port if port is None else port,
             config.client_host if host is None else host,
@@ -1104,17 +1128,16 @@ class ZMQExecutionClient(
         return DebugArtifactExportResponse.from_control_response(response)
 
     @override
-    def _spawn_server_process(self):
+    def _spawn_server_process(self) -> subprocess.Popen:
         import logging
 
-        runtime_dir = get_openhcs_data_dir()
-        log_dir = get_openhcs_log_dir()
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = (
-            log_dir
-            / f"openhcs_zmq_server_port_{self.port}_{int(time.time() * 1000000)}.log"
-        )
-        self._startup_status_path = log_file_path.with_suffix(".startup.jsonl")
+        plan = self.runtime_launch_plan()
+        self._runtime_launch_plan = None
+        runtime_dir = plan.runtime_dir
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        log_file_path = plan.log_file
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
+        self._startup_status_path = plan.startup_status_file
         self._startup_status_path.unlink(missing_ok=True)
         server_config = replace(
             self.config,
@@ -1161,6 +1184,34 @@ class ZMQExecutionClient(
                 env=MemoryType.subprocess_environment(),
                 **launch_policy.popen_arguments(),
             )
+
+    def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
+        """Resolve owner defaults without creating directories or warming."""
+        from metaclass_registry.cache import get_cache_file_path
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        if self._runtime_launch_plan is None:
+            log_file = get_openhcs_log_dir(create=False) / (
+                f"openhcs_zmq_server_port_{self.port}_{time.time_ns()}.log"
+            )
+            declaration = self.transport_mode.declaration
+            sockets = tuple(
+                path
+                for port in self.endpoint.port_pair(self.config).ports
+                if (path := declaration.socket_path(port, self.config)) is not None
+            )
+            self._runtime_launch_plan = ExecutionRuntimeLaunchPlan(
+                runtime_dir=get_openhcs_data_dir(create=False),
+                log_file=log_file,
+                startup_status_file=log_file.with_suffix(".startup.jsonl"),
+                storage_dir=CustomFunctionManager.default_storage_directory(),
+                registry_cache_dir=get_cache_file_path("", create=False),
+                transport_write_paths=(
+                    declaration.startup_lock_path(self.port, self.config),
+                    *sockets,
+                ),
+            )
+        return self._runtime_launch_plan
 
     @override
     def _wait_for_endpoint_ready(

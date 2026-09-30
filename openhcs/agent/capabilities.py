@@ -65,6 +65,9 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfoRequest,
     RuntimeServerScanRequest,
     RuntimeServerScanResult,
+    RuntimeBootstrapStartRequest,
+    RuntimeBootstrapObserveRequest,
+    RuntimeBootstrapState,
     SourceWorkspaceSummary,
 )
 from openhcs.agent.dto.functions import (
@@ -2794,6 +2797,43 @@ class CancelExecutionCapability(HeadlessExecutionCapability):
             request.job_id,
             timeout_ms=request.timeout_ms,
         ),
+    )
+
+
+class StartOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_start_owned_runtime"
+    cli_command = "runtime-start-owned"
+    kind = CapabilityKind.TOOL
+    title = "Start owned execution runtime"
+    description = "Explicitly spawn once at an empty local execution pair after native write admission. Returns the exact child handle promptly, without catalogue warming or adopting/replacing any endpoint. Never replay an uncertain startup."
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("spawns_owned_execution_runtime", "writes_native_startup_artifacts")
+    exposition = RuntimeServerCliConnectionCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+        role=CapabilityRole.PRIMARY,
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+    )
+    input_contract = RuntimeBootstrapStartRequest
+    output_contract = RuntimeBootstrapState
+    request_invocation = AgentFromFieldsServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.start_from_request(request),
+    )
+
+
+class ObserveOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_observe_owned_runtime"
+    kind = CapabilityKind.TOOL
+    title = "Observe owned runtime startup"
+    description = "Read startup activity and readiness of the exact spawned child handle. No spawn, replacement, catalogue warming, or mutation. Preserve pending/uncertain handles."
+    service = "runtime_server"
+    input_contract = RuntimeBootstrapObserveRequest
+    output_contract = RuntimeBootstrapState
+    exposition = StartOwnedRuntimeCapability.exposition.refine(workflow_stage=CapabilityWorkflowStage.STATUS)
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.observe_bootstrap(request),
     )
 
 
