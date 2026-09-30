@@ -53,7 +53,11 @@ from openhcs.core.source_metadata import (
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.step_dependencies import StepInputDependency
-from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentity,
+    FunctionOutputIdentityAuthority,
+    FunctionOutputPathAuthority,
+)
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
     step_output_manifest,
@@ -1869,6 +1873,101 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     }
 
 
+@pytest.mark.parametrize("well", ("A01", "sample.v2", "image.ome.tif"))
+@pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
+@pytest.mark.parametrize("z_values", ((1, 2, 3), (3, 1), (2,)))
+def test_produced_address_publication_never_parses_generated_filenames(
+    tmp_path, monkeypatch, well, extension, z_values
+):
+    """Bounded identity/image publication and durable reconciliation journey."""
+    plate_root = tmp_path / "plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    parser = SourceSchemaFilenameParser()
+    filemanager = FileManager({
+        Backend.DISK.value: DiskStorageBackend(),
+        Backend.MEMORY.value: MemoryStorageBackend(),
+    })
+    context = context_stub(filemanager, parser=parser)
+    context.metadata_cache = {
+        AllComponents.WELL: {well: None, "not-produced": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": "DNA", "99": "not-produced"},
+        AllComponents.Z_INDEX: {"1": None, "2": None, "3": None, "99": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("typed identity")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    plan.create_openhcs_metadata = True
+    context.step_plans = {plan.step_index: plan}
+    filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    records = []
+    paths = []
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    for z_index in z_values:
+        source_path = f"{well}_s001_w1_z{z_index:03d}_t001{extension}"
+        metadata = ImagePayloadMetadata(
+            source_path=source_path,
+            source_component_metadata={
+                "well": well, "site": 1, "channel": 1,
+                "z_index": z_index, "timepoint": 1,
+            },
+            source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+        )
+        identity = FunctionOutputIdentityAuthority.identity_from_metadata(parser, metadata)
+        assert identity is not None
+        assert identity.extension == extension
+        identity = identity.with_filename_qualifier("centre_dots")
+        filename = FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        assert filename == f"{well}_s001_w1_z{z_index:03d}_t001_centre_dots{extension}"
+        # Readback is an external boundary; publication below must not parse.
+        parsed = parser.parse_filename(filename)
+        assert parsed is not None
+        assert parsed.extension == extension
+        assert parsed.value_for(AllComponents.WELL) == well
+        path = output_dir / filename
+        tifffile.imwrite(path, pixels)
+        filemanager.save(metadata.payload_with(pixels, None), str(path), Backend.MEMORY.value)
+        records.append(ProducedOutputSemantics.from_output(
+            plan, path, identity,
+            output_context=AlignedImageSliceContext.main_flow(
+                output_key="centre_dots", artifact_kind=ImageArtifactType.value
+            ),
+            image_metadata=metadata,
+        ))
+        paths.append(f"images/{filename}")
+    step_output_manifest(context).record_outputs(plan, records)
+
+    def reject_generated_path_parse(_filename):
+        raise AssertionError("Publication must consume the typed produced address.")
+
+    monkeypatch.setattr(parser, "parse_filename", reject_generated_path_parse)
+    OpenHCSMetadataWriter.write(context, plan)
+    # Step memory is unavailable at final reconciliation. Durable projections
+    # must supply the same addresses, calibration and exact saved coverage.
+    for record in records:
+        filemanager.delete(record.output_path, Backend.MEMORY.value)
+    OpenHCSMetadataWriter.finalize_completed_plate({well: context})
+    subdirectory = json.loads((plate_root / "openhcs_metadata.json").read_text())[
+        FIELDS.SUBDIRECTORIES
+    ]["images"]
+    assert set(subdirectory[FIELDS.IMAGE_FILES]) == set(paths)
+    assert subdirectory["wells"] == {well: None}
+    assert subdirectory["channels"] == {"1": "DNA"}
+    assert set(subdirectory["z_indexes"]) == {str(z) for z in z_values}
+    assert subdirectory[FIELDS.PIXEL_SIZE] == 0.5
+    for record in subdirectory[FIELDS.SOURCE_PROJECTION]:
+        assert record["address"]["well"] == well
+        assert int(record["address"]["z_index"]) in z_values
+        restored = ImagePayloadMetadata.from_mapping(record["image_metadata"])
+        assert restored.source_dtype == "uint16"
+        assert restored.source_voxel_spacing.values_zyx == (0.5, 0.5)
+
+
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     tmp_path,
 ):
@@ -1883,6 +1982,9 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
 
     first_pixels = np.zeros((4, 5), dtype=np.uint16)
     ImageFileFormat.require_path(first_image).write(first_image, first_pixels)
+    # A concurrent axis can persist pixels before publishing its producer
+    # record. The first publication must not infer or discard that ownership.
+    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
 
     filemanager = FileManager(
         {
@@ -1916,8 +2018,8 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     )["subdirectories"]["images"]
     assert initial_metadata["wells"] == {"A01": None}
 
-    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
     follower_context = context_stub(filemanager)
+    follower_context.metadata_cache = owner_context.metadata_cache
     follower_plan = function_step_plan("final")
     follower_plan.axis_id = "B03"
     follower_plan.output_dir = images_dir
@@ -1926,6 +2028,10 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     follower_plan.analysis_results_dir = str(plate_root / "images_results")
     follower_plan.write_backend = Backend.DISK.value
     follower_context.step_plans = {follower_plan.step_index: follower_plan}
+    follower_plan.create_openhcs_metadata = True
+    filemanager.save(first_pixels, str(later_image), Backend.MEMORY.value)
+    record_output_path(follower_context, follower_plan, str(later_image))
+    OpenHCSMetadataWriter.write(follower_context, follower_plan)
 
     OpenHCSMetadataWriter.finalize_completed_plate(
         {"A01": owner_context, "B03": follower_context}

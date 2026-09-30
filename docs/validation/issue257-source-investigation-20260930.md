@@ -1,8 +1,12 @@
 # Issue257: produced filename and metadata address ownership
 
-Status: source investigation and runnable failure reproducer; **not a product
-fix or native acceptance**. Integration/implementation owner remains the
-OpenHCS coordinator, as recorded in
+Current ownership (explicit reassignment after `ae6c90b6d`): this agent is
+issue257 implementation/file owner; parent/OpenHCS coordinator is integration
+owner. A coherent product fix and working draft PR are authorized. Native
+acceptance remains deferred while Zeno owns the source-live slot.
+
+The investigation and original failure receipt below describe the historical
+`ae6c90b6d` source checkpoint, **not native acceptance**. Original owner record:
 `/home/ts/wt/openhcs-issue-batch-20260929/PRODUCED-FILENAME-ISSUE-20260930.md`.
 
 Worktree: `/home/ts/wt/openhcs-produced-output-address-20260930`.
@@ -58,6 +62,11 @@ manifest, outputs, source_projection, source_schema, and BioFormats files
 traced here. The implicated code survives on this current source base.
 
 ## Existing owners and proposed coherent fix
+
+Historical proposal below. The implemented checkpoint uses typed producer
+addresses without the proposed generated-filename round-trip; explicit owner
+instructions forbid parsing one's own generated path. See
+`issue257-implementation-20260930.md` for the current implementation and limits.
 
 The producer already owns the needed facts. `_save_outputs`
 (`function_runtime.py` lines3267–3306) resolves `FunctionOutputIdentity`, applies
@@ -163,5 +172,7 @@ The proposal applies BOUND-4/BOUND-2 (flattening and bypassing typed owners),
 IDEN-1 (semantic identity versus storage address), IDEN-5 (no duplicate
 authority), and TIME-9 (no permanent fallback adapter). Scope is this traced
 publication surface, not a repository-wide NRA scan, audit certificate, or
-architectural correctness claim. No production patch or competing draft PR
-was opened; the coordinator retains the coherent fix and native acceptance.
+architectural correctness claim. At the historical investigation checkpoint
+no production patch or PR was opened. The later reassignment above supersedes
+that ownership: this agent now implements and publishes the working draft;
+parent integrates and coordinates native acceptance.
