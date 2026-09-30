@@ -12,9 +12,11 @@ No durable format changed. Pending generations/native candidates reset; complete
 
 ## Evidence and remaining boundaries
 
-Six real Qt/native-model transitions passed (448260KiB maximum RSS); image/clear owner shard seven passed and native mount/shared-axis guard shard seven passed. Optional Numba JIT disabled to keep tiny synthetic model tests within512MiB. No native server or GL canvas instantiated. Logs and exact commands are in `docs/validation/viewer_reset_lifecycle_308_20260930/`.
+Production `4fae0e4c31c1ab13b0845766757d44e4a41ef1e4`: eight real Qt/native-model transitions passed in5.14s (453108KiB maximum RSS). Focused image/clear7, native mount/shared-axis7, queue/settlement9, Shapes/Points/chunks5 and4097-member native Shapes1 owner shards passed; these overlap, not a full-suite count. Optional Numba JIT disabled to keep synthetic native model tests within512MiB. No native server or GL canvas instantiated. Logs and exact commands are in `docs/validation/viewer_reset_lifecycle_308_20260930/`.
 
-Draft checkpoint: owner-test migration and final original packaged ratchet/R1 evidence remain in progress. Full installed/MCP acceptance is NOT claimed. Russell's terminal release of `validation.lock` is the named live dependency; parent performs the affected MCP viewer journey. This PR deliberately does not close issue308.
+Original structural ratchet from authenticated CI-pin package source `3b03785f45df2ef5dc62ba6aed99294192ecbb01`:5140 actual metrics, zero positive deltas, exit0. Initial sole positive StringSubscript+2 and its two unnecessary quoted-forward-annotation witnesses are retained; no detector definitions changed.
+
+Remaining: full R1 context needs the recorded arraybridge Git object absent from the frozen/shared store; native-presentation test collection needs the absent `_tabular_native` extension. No fetch/build/install was used to bypass these limits. Whole-owner-file attempts were nonzero and exceeded the512MiB budget; only the completed bounded shards are claimed. Full installed/MCP acceptance is NOT claimed. Russell's terminal release of `validation.lock` is the named live dependency; parent performs the affected MCP viewer journey and broader source-environment gates. This PR deliberately does not close issue308.
 
 ## Maintenance closure
 

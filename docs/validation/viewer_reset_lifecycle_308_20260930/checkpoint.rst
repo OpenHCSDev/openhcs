@@ -116,3 +116,10 @@ Original before/after metrics and resource reports are retained.
 No installed/live readiness claim. Parent owns affected MCP acceptance after
 Russell releases validation.lock, plus its full R1/source environment gate.
 Draft PR309 remains Refs #308 and must not close it before that acceptance.
+
+Final authenticated structural guard: production4fae0e4c31c1ab13b0845766757d44e4a41ef1e4
+against pinned merged main;5140 actual original metrics, zero positive deltas,
+exit0, peak86988KiB. Scope is the three changed production paths plus original
+complete class/function inventories. This is a structural guard pass, not
+full NRA/R1 or runtime proof. Final matrix:8 passed in5.14s, peak453108KiB.
+Source/data/layout declarations remain with their original typed owners.
