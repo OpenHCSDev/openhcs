@@ -1,0 +1,20 @@
+{
+  "wheel": "openhcs-0.8.6-cp311-abi3-linux_x86_64.whl",
+  "sha256": "8a4ee5c02c303a814db1d4b78dee1b317fcca6f04e76297e78c9c7f655176a3c",
+  "native_entries": [
+    "openhcs/core/_tabular_native.abi3.so",
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+  ],
+  "smoke": [
+    {
+      "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+      "returncode": 0,
+      "environment": "/tmp/openhcs-granularity-native-final-wheel-smoke-312-20260930"
+    },
+    {
+      "python": "3.14.5 (main, May 10 2026, 18:26:20) [GCC 16.1.1 20260430]",
+      "returncode": 0,
+      "environment": "/tmp/openhcs-granularity-native-final-wheel-smoke-314-20260930"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ __version__ = "0.8.6"
 # Configure polystore defaults for OpenHCS integration
 os.environ.setdefault("POLYSTORE_METADATA_FILENAME", "openhcs_metadata.json")
 OpenHCSProcessEnvironment.project_dependency_gpu_import_policy()
+OpenHCSProcessEnvironment.project_numba_worker_profiling_policy()
 
 ensure_source_checkout_external_paths()
 

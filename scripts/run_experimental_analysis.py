@@ -23,7 +23,6 @@ Example:
 import sys
 import re
 from pathlib import Path
-import pandas as pd
 
 
 def convert_opera_phenix_to_standard_well_id(well_id: str) -> str:
@@ -218,24 +217,30 @@ def main():
         print(f"Error: Directory not found: {directory}")
         sys.exit(1)
 
-    # Define expected input files
-    config_file = directory / "config.xlsx"
-    results_file = directory / "metaxpress_style_summary.csv"
+    from openhcs.core.config import ExperimentalAnalysisConfig
+
+    analysis_config = ExperimentalAnalysisConfig()
+    config_file = directory / analysis_config.config_file_name
+    results_file = directory / analysis_config.results_file_name
 
     # Check if input files exist
     if not config_file.exists():
         print(f"Error: Config file not found: {config_file}")
-        print("Expected: config.xlsx in the specified directory")
+        print(
+            f"Expected: {analysis_config.config_file_name} in the specified directory"
+        )
         sys.exit(1)
 
     if not results_file.exists():
         print(f"Error: Results file not found: {results_file}")
-        print("Expected: metaxpress_style_summary.csv in the specified directory")
+        print(
+            f"Expected: {analysis_config.results_file_name} in the specified directory"
+        )
         sys.exit(1)
 
     # Define output files
-    compiled_results = directory / "compiled_results_normalized.xlsx"
-    heatmaps = directory / "heatmaps.xlsx"
+    compiled_results = directory / analysis_config.compiled_results_file_name
+    heatmaps = directory / analysis_config.heatmap_file_name
 
     print("=" * 60)
     print("OpenHCS Experimental Analysis")
@@ -251,10 +256,12 @@ def main():
 
     # Import and run analysis
     try:
-        from openhcs.formats.experimental_analysis import run_experimental_analysis
+        from openhcs.processing.backends.experimental_analysis import (
+            ExperimentalAnalysisEngine,
+        )
 
         print("\nRunning experimental analysis...")
-        run_experimental_analysis(
+        ExperimentalAnalysisEngine(analysis_config).run_analysis(
             results_path=str(converted_results_file),
             config_file=str(converted_config_file),
             compiled_results_path=str(compiled_results),

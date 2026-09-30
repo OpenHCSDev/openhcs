@@ -1,0 +1,136 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
+@@ -1291,6 +1291,31 @@
+     wants_scaled: bool
+     maximum_radius: int
+ 
++    @classmethod
++    def from_geometry(
++        cls,
++        image: np.ndarray,
++        labels: np.ndarray,
++        geometry: RadialLabelGeometry,
++        *,
++        bin_count: int,
++        wants_scaled: bool,
++        maximum_radius: int,
++    ) -> "RadialDistributionMeasureRequest":
++        """Project a measurement request from the shared label geometry."""
++        return cls(
++            image=image,
++            labels=labels,
++            d_to_edge=geometry.d_to_edge,
++            d_from_center=geometry.center_fields.d_from_center,
++            center_labels=geometry.center_fields.center_labels,
++            centers_i=geometry.center_fields.centers_i,
++            centers_j=geometry.center_fields.centers_j,
++            bin_count=bin_count,
++            wants_scaled=wants_scaled,
++            maximum_radius=maximum_radius,
++        )
++
+     def arrays(
+         self,
+     ) -> tuple[
+@@ -1318,6 +1343,15 @@
+             raise ValueError(
+                 f"Radial distribution labels must match the image shape; got labels {labels_array.shape!r} for image {image_array.shape!r}."
+             )
++        if any(
++            array.shape != image_array.shape
++            for array in (d_to_edge_array, d_from_center_array, center_labels_array)
++        ):
++            raise ValueError("Radial distribution geometry must match the image shape.")
++        if centers_i_array.ndim != 1 or centers_i_array.shape != centers_j_array.shape:
++            raise ValueError("Radial distribution center coordinates must be equal-length vectors.")
++        if int(center_labels_array.max(initial=0)) > centers_i_array.size:
++            raise ValueError("Radial distribution center labels exceed the declared center coordinates.")
+         if self.bin_count <= 0:
+             raise ValueError(f"bin_count must be positive, got {self.bin_count!r}.")
+         return (
+@@ -1732,14 +1766,10 @@
+                 bin_count=bin_count, wants_scaled=wants_scaled
+             )
+         return self.measure(
+-            RadialDistributionMeasureRequest(
+-                image=image,
+-                labels=labels_array,
+-                d_to_edge=geometry.d_to_edge,
+-                d_from_center=geometry.center_fields.d_from_center,
+-                center_labels=geometry.center_fields.center_labels,
+-                centers_i=geometry.center_fields.centers_i,
+-                centers_j=geometry.center_fields.centers_j,
++            RadialDistributionMeasureRequest.from_geometry(
++                image,
++                labels_array,
++                geometry,
+                 bin_count=bin_count,
+                 wants_scaled=wants_scaled,
+                 maximum_radius=maximum_radius,
+@@ -2074,22 +2104,36 @@
+                 bin_count=bin_count, wants_scaled=wants_scaled
+             )
+             return tuple((empty for _image in images))
++        components = tuple(
++            RadialDistributionMeasureRequest.from_geometry(
++                image,
++                labels_array,
++                geometry,
++                bin_count=bin_count,
++                wants_scaled=wants_scaled,
++                maximum_radius=maximum_radius,
++            ).arrays()
++            for image in images
++        )
++        if not components:
++            return ()
++        (
++            _image,
++            labels_array,
++            d_to_edge,
++            d_from_center,
++            center_labels,
++            centers_i,
++            centers_j,
++        ) = components[0]
+         index = RadialDistributionGeometryIndex(
+             *_radial_distribution_geometry_index_numba(
+                 labels_array,
+-                np.ascontiguousarray(geometry.d_to_edge, dtype=np.float64),
+-                np.ascontiguousarray(
+-                    geometry.center_fields.d_from_center, dtype=np.float64
+-                ),
+-                np.ascontiguousarray(
+-                    geometry.center_fields.center_labels, dtype=np.int32
+-                ),
+-                np.ascontiguousarray(
+-                    geometry.center_fields.centers_i, dtype=np.float64
+-                ),
+-                np.ascontiguousarray(
+-                    geometry.center_fields.centers_j, dtype=np.float64
+-                ),
++                d_to_edge,
++                d_from_center,
++                center_labels,
++                centers_i,
++                centers_j,
+                 int(bin_count),
+                 bool(wants_scaled),
+                 int(maximum_radius),
+@@ -2097,14 +2141,14 @@
+             )
+         )
+         outputs: list[RadialDistributionArrays] = []
+-        for image in images:
++        for image, *_geometry_arrays in components:
+             (
+                 fraction_at_distance,
+                 mean_pixel_fraction,
+                 radial_cv_by_bin,
+                 object_has_pixels,
+             ) = _measure_radial_distribution_from_geometry_index_numba(
+-                np.ascontiguousarray(image),
++                image,
+                 index.pixel_rows,
+                 index.pixel_cols,
+                 index.object_indices,

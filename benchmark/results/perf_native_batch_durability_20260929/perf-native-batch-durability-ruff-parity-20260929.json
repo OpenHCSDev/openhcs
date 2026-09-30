@@ -1,0 +1,25 @@
+[
+  {
+    "path": "benchmark/matched_cellprofiler_batch.py",
+    "baseline": {},
+    "candidate": {}
+  },
+  {
+    "path": "benchmark/native_cellprofiler_batch_worker.py",
+    "baseline": {
+      "I001": 1,
+      "UP045": 6,
+      "B020": 1
+    },
+    "candidate": {
+      "I001": 1,
+      "UP045": 6,
+      "B020": 1
+    }
+  },
+  {
+    "path": "tests/unit/test_matched_cellprofiler_batch.py",
+    "baseline": {},
+    "candidate": {}
+  }
+]

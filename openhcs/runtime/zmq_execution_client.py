@@ -70,10 +70,14 @@ from openhcs.runtime.zmq_execution_signature import (
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationDestination,
+        CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
         FunctionCatalogControlRequest,
+        FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
+        FunctionCatalogPreparationState,
         FunctionDetail,
         FunctionDetailControlRequest,
         FunctionReferenceControlRequest,
@@ -894,22 +898,101 @@ class ZMQExecutionClient(
     def register_custom_function(
         self,
         request: CustomFunctionRegistrationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
     ) -> CustomFunctionRegistrationResult:
-        """Register custom source through this execution endpoint's catalog."""
+        """Send one mutation; readiness belongs to preceding read-only discovery.
+
+        Never poll/resend a source-bearing request, including when the server
+        reports preparation pending. A missing mutation receipt is uncertain.
+        """
 
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationControlResponse,
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom function registration",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
+        ):
+            raise RuntimeError(
+                "Custom registration requires an existing execution endpoint."
+            )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
         )
         return CustomFunctionRegistrationControlResponse.from_control_response(
             response
         ).result
+
+    def custom_function_registration_destination(
+        self,
+        request: CustomFunctionRegistrationDestinationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationDestination:
+        """Require the selected endpoint's native admission contract before mutation."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+            FunctionCatalogControlPayload,
+        )
+
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom registration destination",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
+        ):
+            raise RuntimeError(
+                "Registration destination requires an existing execution endpoint."
+            )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
+        )
+        return (
+            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+                response
+            ).destination
+        )
+
+    def function_catalog_preparation(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> FunctionCatalogPreparationState:
+        """One responsive start/status/cancel exchange on an existing endpoint."""
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogControlPayload,
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="function catalog preparation observation",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0)
+        ):
+            raise RuntimeError(
+                "Function catalog preparation requires an existing execution endpoint."
+            )
+        response = self._send_control_request(
+            FunctionCatalogControlPayload.from_request(request).to_dict(),
+            timeout_ms=deadline.remaining_milliseconds(),
+        )
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
 
     def _send_function_catalog_control_request(
         self,
@@ -917,7 +1000,7 @@ class ZMQExecutionClient(
         *,
         cancellation: OperationCancellation | None = None,
     ) -> dict:
-        """Poll a responsive endpoint while its catalog preparation is active."""
+        """Poll read-only discovery while endpoint catalog preparation is active."""
 
         from openhcs.agent.dto.functions import (
             FunctionCatalogPreparationControlResponse,

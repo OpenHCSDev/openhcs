@@ -1,0 +1,56 @@
+[
+  {
+    "implementation": "python",
+    "wall_seconds": 2.05634533893317,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_assembly",
+    "wall_seconds": 1.8031169809401035,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_both",
+    "wall_seconds": 1.4370525800623,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "python",
+    "wall_seconds": 1.9339215480722487,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_assembly",
+    "wall_seconds": 1.786977675743401,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_both",
+    "wall_seconds": 1.4530432177707553,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "python",
+    "wall_seconds": 1.9292319468222558,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_assembly",
+    "wall_seconds": 1.8018527938984334,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  },
+  {
+    "implementation": "compiled_both",
+    "wall_seconds": 1.4450346753001213,
+    "bytes": 11550064,
+    "sha256": "3e00436ae1500047fd2605021ae055492b17dbe0b4aa4ddbe2f62af6f8e073be"
+  }
+]

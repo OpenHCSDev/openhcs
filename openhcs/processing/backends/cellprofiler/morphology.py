@@ -4958,8 +4958,13 @@ def prepare_expand_or_shrink_objects() -> None:
     labels = np.zeros((16, 16), dtype=np.int32)
     labels[2:5, 3:7] = 1
     labels[8:12, 9:14] = 2
-    points = ShrinkToPointStrategy().shrink_to_point(labels, False)
-    ExpandDefinedPixelsStrategy().expand_defined_pixels(points, 2)
+    points = np.zeros_like(labels)
+    points[3, 5] = 1
+    points[10, 12] = 2
+    for strategy_type in ExpandShrinkOperationStrategy.__registry__.values():
+        strategy = strategy_type()
+        for fixture in (labels, points):
+            strategy.apply(fixture, iterations=2, fill_holes=False)
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)

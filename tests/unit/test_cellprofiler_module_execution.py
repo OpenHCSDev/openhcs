@@ -9027,6 +9027,7 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             paths=("/input/A01_s001_w1_z001_t001.tif",),
             component_metadata=(
                 {
+                    "extension": ".tif",
                     "well": "A01",
                     "site": "1",
                     "channel": "1",
@@ -9041,6 +9042,7 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             paths=("/input/A01_s001_w2_z001_t001.tif",),
             component_metadata=(
                 {
+                    "extension": ".tif",
                     "well": "A01",
                     "site": "1",
                     "channel": "2",

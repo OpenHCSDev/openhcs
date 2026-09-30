@@ -71,6 +71,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogPage,
+    FunctionCatalogPreparationHandle,
+    FunctionCatalogPreparationState,
     FunctionDetail,
     FunctionDetailRequest,
     FunctionSearchRequest,
@@ -162,6 +164,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
+    ViewerWindowPolylineMeasurementRequest,
+    ViewerWindowPolylineMeasurementResult,
+    ViewerWindowRegionMeasurementRequest,
+    ViewerWindowRegionMeasurementResult,
     ViewerEndpointDiscoveryResult,
     ViewerWindowCloseRequest,
     ViewerWindowImageIntensityRequest,
@@ -1887,6 +1893,57 @@ class DescribeFunctionCapability(
     )
 
 
+class StartFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+
+    name = "openhcs_start_function_catalog_preparation"
+    cli_command = "start-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Start catalog preparation"
+    description = "Starts/coalesces existing native catalog/kernel preparation at an explicit owned port. Returns promptly with the exact process-incarnation handle; no custom source is submitted. Observe status, then register only once ready."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("prepares_function_catalog", "writes_declared_kernel_caches")
+    input_contract = ExecutionConnectionSpec
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.start_catalog_preparation(request),
+    )
+
+
+class GetFunctionCatalogPreparationStatusCapability(FunctionCatalogCapability):
+    name = "openhcs_get_function_catalog_preparation_status"
+    cli_command = "get-function-catalog-preparation-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe catalog preparation"
+    description = "Returns the existing preparation future's current state/progress promptly. Use the exact returned connection/process handle; stale owners reject without starting or replacing a runtime."
+    service = "endpoint_function_catalog"
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.catalog_preparation_status(request),
+    )
+
+
+class CancelFunctionCatalogPreparationCapability(FunctionCatalogCapability):
+    name = "openhcs_cancel_function_catalog_preparation"
+    cli_command = "cancel-function-catalog-preparation"
+    kind = CapabilityKind.TOOL
+    title = "Cancel owned catalog preparation"
+    description = "Signals cancellation of the same incarnation-bound preparation future without blocking for child cleanup. Observe status until terminal; it does not restart preparation or submit custom source."
+    service = "endpoint_function_catalog"
+    mutating = True
+    side_effects = ("cancels_function_catalog_preparation",)
+    input_contract = FunctionCatalogPreparationHandle
+    output_contract = FunctionCatalogPreparationState
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.endpoint_function_catalog,
+        method=lambda service, request: service.cancel_catalog_preparation(request),
+    )
+
+
 class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     name = "openhcs_register_custom_function"
     cli_command = "register-custom-function"
@@ -1895,7 +1952,11 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     description = (
         "Validates, registers, and optionally persists custom function Python "
         "source through CustomFunctionManager, then returns registry function_id "
-        "values for MCP pipeline authoring."
+        "values for MCP pipeline authoring. Requires an explicit execution port; "
+        "persist=true also requires the endpoint's exact storage_dir and function_name "
+        "under AgentPathPolicy writable roots before dispatch. Start/observe the native "
+        "catalog preparation handle first; not-ready registration rejects before source dispatch. A transport timeout "
+        "is uncertain, not proof that no source or registry mutation occurred."
     )
     service = "function_catalog"
     exposition = FunctionCatalogCapability.exposition.refine(
@@ -1905,7 +1966,7 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     side_effects = ("writes_custom_function_file", "updates_function_registry")
     input_contract = CustomFunctionRegistrationRequest
     output_contract = CustomFunctionRegistrationResult
-    request_invocation = AgentDataclassRequestServiceInvocation(
+    request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.register_custom_function(request),
     )
@@ -2034,6 +2095,8 @@ class GenerateSyntheticPlateCapability(PlatePathCapability):
 
 
 class InspectPlatePathCapability(PlatePathCapability):
+    progress_heartbeat_seconds = 5.0
+    progress_worker_thread_safe = True
     name = "openhcs_inspect_plate_path"
     cli_command = "inspect-plate"
     kind = CapabilityKind.TOOL
@@ -2045,9 +2108,18 @@ class InspectPlatePathCapability(PlatePathCapability):
         "workspace-preparation advice, and structured workflow routing. "
         "It does not configure a running UI or make a handler override the setup "
         "route; use the PlateManager code document plus selected-plate init when "
-        "the result must remain visible in the desktop."
+        "the result must remain visible in the desktop. Optional Bio-Formats "
+        "cold preparation can download verified Fiji artifacts into its declared "
+        "bundle cache and start Java; progress keeps this operation observable "
+        "without blocking unrelated MCP reads. Plate contents remain read-only."
     )
     service = "selected_plate"
+    mutating = True
+    side_effects = (
+        "may_download_verified_fiji_runtime",
+        "may_write_runtime_bundle_cache",
+        "may_start_java_runtime",
+    )
     data_exposure = (
         "local_plate_path",
         "microscope_metadata",
@@ -2952,6 +3024,59 @@ class GetViewerWindowPayloadsCapability(ViewerWindowCliConnectionCapability):
     request_invocation = AgentViewerWindowRequestServiceInvocation(
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.window_payloads(request),
+    )
+
+
+class MeasureViewerPolylineCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_polyline"
+    kind = CapabilityKind.TOOL
+    title = "Measure native viewer polyline and intensity profile"
+    description = (
+        "Read-only bounded source-native (y,x) ruler/polyline with exact route and route-local axis_indices. "
+        "Returns data/pixel length versus chord, transformed world geometry and endpoint-inclusive raw intensity "
+        "profile. line_width uses a centred perpendicular band reduced by mean; interpolation_order0 nearest/1 bilinear. "
+        "Requires one scalar2D original plane; rejects ambiguous/sparse-padding/OOB geometry before interpolation. "
+        "Does not alter pixels, contrast, layers, axes or camera; world scale/units are not verified physical calibration."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_profile",
+    )
+    input_contract = ViewerWindowPolylineMeasurementRequest
+    output_contract = ViewerWindowPolylineMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_polyline(request),
+    )
+
+
+class MeasureViewerRegionCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_measure_viewer_region"
+    kind = CapabilityKind.TOOL
+    title = "Measure independent native region and background support"
+    description = (
+        "Read-only bounded independent simple polygon on one exact scalar2D original image route/axis coordinate. "
+        "Returns continuous polygon and raster pixel-centre area/extent/roundness, actual transformed world geometry, "
+        "raw intensity statistics and optional separately authored non-overlapping background polygon. "
+        "Support is raw value strictly greater than support_threshold, or background mean + background_sigma*population std. "
+        "This region is NOT a biological mask; world scale1 is not proof of micrometres. "
+        "Rejects nonfinite, ambiguous, invalid axes, padding/OOB or pixel/work-budget excess before allocating masks."
+    )
+    service = "viewer_window"
+    runtime_requirements = ("running_openhcs_napari_viewer_server",)
+    data_exposure = (
+        "viewer_native_measurements",
+        "viewer_source_coordinates",
+        "bounded_raw_intensity_statistics",
+    )
+    input_contract = ViewerWindowRegionMeasurementRequest
+    output_contract = ViewerWindowRegionMeasurementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.measure_region(request),
     )
 
 

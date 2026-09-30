@@ -8,6 +8,7 @@ while producing the same FunctionMetadata format as external libraries.
 
 import ast
 import importlib
+import importlib.abc
 import inspect
 import logging
 from abc import ABC, abstractmethod
@@ -134,37 +135,28 @@ def _module_declares_allowed_memory_type(
     if allowed_memory_types is None:
         return True
     spec = importlib.util.find_spec(module_name)
-    origin = spec.origin if spec is not None else None
     if spec is not None and spec.submodule_search_locations is not None:
         return True
-    if origin is None:
-        return True
-    try:
-        source_stat = Path(origin).stat()
-    except OSError:
-        return True
+    if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+        return False
+    source = spec.loader.get_source(module_name)
+    if source is None:
+        return False
     return _source_declares_allowed_memory_type(
-        origin,
-        source_stat.st_mtime_ns,
-        source_stat.st_size,
+        source,
+        spec.origin or module_name,
         allowed_memory_types,
     )
 
 
 @lru_cache(maxsize=1024)
 def _source_declares_allowed_memory_type(
+    source: str,
     origin: str,
-    source_mtime_ns: int,
-    source_size: int,
     allowed_memory_types: frozenset[str],
 ) -> bool:
-    """Inspect one source revision under the current admission declaration."""
+    """Inspect loader-decoded source; content identity invalidates edited modules."""
 
-    del source_mtime_ns, source_size
-    try:
-        source = Path(origin).read_text(encoding="utf-8")
-    except OSError:
-        return True
     try:
         module_ast = ast.parse(source, filename=origin)
     except SyntaxError:
