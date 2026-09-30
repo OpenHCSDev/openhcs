@@ -1,7 +1,8 @@
 # R0 working guardrails checkpoint
 
-Base audited: OpenHCS main `dbf1c7a8bb699f975bd072a0f39dbe4bd7131ecb`
-(merged PR259), normally integrated here. R0 owner: Lovelace, existing PR263.
+Latest integrated base: OpenHCS main `fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16`
+(merged PR205 and PR259), normally integrated here after scanner termination.
+Original checks below name their older tested bases. R0 owner: Lovelace, PR263.
 Read OWNER-OVERRIDES first: hosted CI waiting is deferred, not local evidence.
 
 ## Owners and crossings
@@ -128,6 +129,26 @@ owner, not parse finding strings, copy schema heuristics, omit dependency contex
 increase the observation timeout, or report a deadline as zero debt. This concrete
 bounded-entrypoint blocker remains owned by Lovelace; NRA PR12 is the separate
 existing FULL-lifetime repair, not a claimed fix here.
+
+## Authenticated reuse follow-up (source only)
+
+SourceRevision still creates two immutable committed snapshots. The consumer now
+passes the SAME original NRA parse/analysis cache directories to both scans,
+instead of segregating them by commit. NRA cache_checkout.py owns relative-root
+admission/rebinding and source/content identities own validity; no new cache,
+source roster, rebase of finding paths, or heuristic was added. The original API
+owns parse-cache enablement. Native cache status/projection counts and split
+preparation/analysis time are emitted as observations, not inferred performance.
+Coverage and the160s bound are unchanged; no production context is omitted.
+
+The latest21-case lightweight suite passes19.59s/399436KiB/exit0, zero skips.
+It includes a changed schema causing the same consumer to transition from an
+owned mapping-read bypass to unmodeled_record_shape under shared authenticated
+cache use. Existing constructor descent, stale/missing source, parse/deadline,
+per-file growth, actual CLI and workflow-shell assertions remain intact.
+Ruff and diff checks pass. Cache reuse has NOT yet passed the actual own-PR
+full-context entrypoint; that bounded comparison is the remaining acceptance
+after parent's installed205/264 slot. Both failed originals remain preserved.
 
 Existing Official30 numerical comparator is reused unchanged; its PR trigger
 already existed, so this change adds relevance and fail-closed status wiring

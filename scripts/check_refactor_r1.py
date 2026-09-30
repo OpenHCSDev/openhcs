@@ -11,6 +11,7 @@ import argparse
 import io
 import json
 import subprocess
+import sys
 import tarfile
 from collections import Counter
 from dataclasses import dataclass
@@ -95,7 +96,11 @@ class R1Count(SemanticRecord):
 
 
 def scan_counts(
-    snapshot: Path, roots: tuple[str, ...], changed: tuple[str, ...]
+    snapshot: Path,
+    roots: tuple[str, ...],
+    changed: tuple[str, ...],
+    *,
+    cache_root: Path,
 ) -> tuple[R1Count, ...]:
     context = tuple(snapshot / root for root in roots if (snapshot / root).exists())
     dependency_context = snapshot / "external"
@@ -109,10 +114,16 @@ def scan_counts(
         detector_types=(RedundantTypeCheckDetector, UnmodeledRecordShapeDetector),
         report_scope=AnalysisPathScope(context, reports),
         parse_workers=1,
-        use_parse_cache=False,
-        cache_dir=snapshot / ".nra-parse",
-        analysis_cache_dir=snapshot / ".nra-analysis",
+        cache_dir=cache_root / "parse",
+        analysis_cache_dir=cache_root / "analysis",
         include_semantic_descent_graph=True,
+    )
+    print(
+        f"R1 {snapshot.name}: NRA cache={result.cache_status.value}, "
+        f"projections={result.projection_count}, "
+        f"prepare={result.preparation_seconds:.3f}s, "
+        f"analysis={result.analysis_seconds:.3f}s",
+        file=sys.stderr,
     )
     graph = result.semantic_descent_graph
     if graph is None:
@@ -200,7 +211,9 @@ def compare(
                 snapshot = work / revision
                 snapshot.mkdir()
                 SourceRevision(repo, revision).materialize(snapshot, roots)
-                results.append(scan_counts(snapshot, roots, changed))
+                results.append(
+                    scan_counts(snapshot, roots, changed, cache_root=work / "nra")
+                )
         return R1Comparison(base, head, changed, *results)
 
 

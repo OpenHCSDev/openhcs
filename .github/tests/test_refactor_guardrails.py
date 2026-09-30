@@ -111,7 +111,10 @@ def check(row: Record):
     (snapshot / "openhcs").mkdir(parents=True)
     (snapshot / "openhcs" / "raw.py").write_text(RAW)
     assert {
-        item.check for item in scan_counts(snapshot, ("openhcs",), ("openhcs/raw.py",))
+        item.check
+        for item in scan_counts(
+            snapshot, ("openhcs",), ("openhcs/raw.py",), cache_root=tmp_path / "nra"
+        )
     } == {"unmodeled_record_shape"}
 
 
@@ -178,6 +181,22 @@ def test_missing_recorded_dependency_is_not_silently_parent_source(
     (repository / "external" / "dependency").mkdir(parents=True)
     with pytest.raises(RuntimeError, match="not initialized"):
         compare(repository, base, "HEAD", tmp_path / "scratch")
+
+
+def test_original_nra_reuse_invalidates_changed_schema_context(
+    repository, tmp_path, capsys
+):
+    commit(repository, "openhcs/model.py", SCHEMA)
+    base = commit(repository, "openhcs/consumer.py", RAW)
+    commit(repository, "openhcs/model.py", SCHEMA.replace("beta: int", "delta: int"))
+    head = commit(repository, "openhcs/consumer.py", RAW + "\n")
+    result = compare(repository, base, head, tmp_path / "scratch")
+    assert {item.check for item in result.before} == {"mapping_read"}
+    assert {item.check for item in result.after} == {"unmodeled_record_shape"}
+    assert [(item.check, item.file) for item in result.increased] == [
+        ("unmodeled_record_shape", "openhcs/consumer.py")
+    ]
+    assert "NRA cache=" in capsys.readouterr().err
 
 
 def test_r1_parse_failure_and_deadline_are_not_clean_results(repository, tmp_path):

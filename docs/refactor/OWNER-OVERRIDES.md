@@ -12,6 +12,11 @@ validated work without waiting for hosted runs. Retain applicable local parity,
 ownership review and affected installed/live-entrypoint verification. Respect
 actual enforced repository merge rules; do not invent another waiting gate.
 
+Latest R0 follow-up: publish automation and local validation, but **do not
+activate branch protection or a required-check rule that creates a new hosted
+waiting merge gate**. Existing repository rules remain respected. Neither YAML
+publication nor a local pass establishes required-check or installed activation.
+
 Public task guidance remains canonical RTD .rst source or declaration-owned
 facts. These Markdown files are refactor plans and evidence, not a second
 product knowledge-base authority. Preserve the archive's external contracts,
