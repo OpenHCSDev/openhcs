@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 from llvmlite import ir
 import numpy as np
@@ -111,8 +112,10 @@ def minimum_enclosing_circle_from_labels(
     if indexes.size == 0:
         return np.zeros((0, 2), dtype=float), np.zeros(0, dtype=float)
 
-    compact_labels = _compact_requested_labels(label_array, requested_indexes)
-    hull, point_count = _cellprofiler_convex_hull(compact_labels, indexes)
+    label_hull = CellProfilerLabelHull.from_requested_positions(
+        label_array, requested_indexes
+    )
+    hull, point_count = label_hull.vertices()
     centers = np.zeros((indexes.size, 2), dtype=float)
     radii = np.zeros(indexes.size, dtype=float)
     point_index = np.zeros(indexes.size, dtype=int)
@@ -267,83 +270,165 @@ def minimum_enclosing_circle_from_labels(
     return centers, radii
 
 
-def _compact_requested_labels(
-    labels: np.ndarray,
-    requested_indexes: np.ndarray,
-) -> np.ndarray:
-    """Map requested positive labels to a dense domain while clearing all others."""
-    compact = np.zeros(labels.shape, dtype=np.int32)
-    positive_positions = np.flatnonzero(requested_indexes > 0)
-    if positive_positions.size == 0:
-        return compact
-    order = np.argsort(requested_indexes[positive_positions])
-    sorted_positions = positive_positions[order]
-    sorted_labels = requested_indexes[sorted_positions]
-    insertion_points = np.searchsorted(sorted_labels, labels)
-    in_range = insertion_points < sorted_labels.size
-    matched = np.zeros(labels.shape, dtype=bool)
-    matched[in_range] = sorted_labels[insertion_points[in_range]] == labels[in_range]
-    compact[matched] = sorted_positions[insertion_points[matched]] + 1
-    return compact
+@dataclass(frozen=True, slots=True)
+class CellProfilerLabelHull:
+    """Grouped outline geometry with CellProfiler's exact envelope ordering."""
 
+    label_ids: np.ndarray
+    point_offsets: np.ndarray
+    point_rows: np.ndarray
+    point_columns: np.ndarray
 
-def _cellprofiler_convex_hull(
-    labels: np.ndarray,
-    label_ids: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return ordered per-label hull vertices using Centrosome's envelope walk."""
-    indexes = np.asarray(label_ids, dtype=np.int32)
-    counts, offsets, point_y, point_x = _outline_points_by_label_numba(
-        np.ascontiguousarray(labels, dtype=np.int32),
-        indexes,
-    )
-    hull_rows: list[tuple[int, int, int]] = []
-    hull_counts = np.zeros(indexes.size, dtype=np.int32)
-    for object_index, label_id in enumerate(indexes):
-        start = int(offsets[object_index])
-        stop = int(offsets[object_index + 1])
-        if start == stop:
-            continue
-        y_values = point_y[start:stop]
-        x_values = point_x[start:stop]
-        first_column = int(np.min(x_values))
-        relative_columns = x_values - first_column
-        column_count = int(np.max(relative_columns)) + 1
-        row_minimum = np.full(column_count, np.iinfo(np.int64).max, dtype=np.int64)
-        row_maximum = np.full(column_count, np.iinfo(np.int64).min, dtype=np.int64)
-        np.minimum.at(row_minimum, relative_columns, y_values)
-        np.maximum.at(row_maximum, relative_columns, y_values)
-        columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
-        candidates = [
-            (int(row_minimum[column]), int(column + first_column)) for column in columns
-        ]
-        candidates.extend(
-            (int(row_maximum[column]), int(column + first_column))
-            for column in columns[::-1]
+    @classmethod
+    def from_labels(
+        cls, labels: np.ndarray, label_ids: np.ndarray
+    ) -> "CellProfilerLabelHull":
+        """Group outline pixels in the caller's original label-ID domain."""
+        indexes = np.asarray(label_ids, dtype=np.int32)
+        _counts, offsets, rows, columns = _outline_points_by_label_numba(
+            np.ascontiguousarray(labels, dtype=np.int32), indexes
+        )
+        return cls(indexes, offsets, rows, columns)
+
+    @classmethod
+    def from_requested_positions(
+        cls, labels: np.ndarray, requested_indexes: np.ndarray
+    ) -> "CellProfilerLabelHull":
+        """Project outlines onto CP's requested row ordinals without a new frame."""
+        requested = np.asarray(requested_indexes, dtype=np.int32)
+        positive_positions = np.flatnonzero(requested > 0)
+        sorted_positions = positive_positions[np.argsort(requested[positive_positions])]
+        _counts, offsets, rows, columns = _requested_outline_points_numba(
+            np.ascontiguousarray(labels, dtype=np.int32),
+            requested[sorted_positions],
+            sorted_positions,
+            requested.size,
+        )
+        indexes = np.arange(1, requested.size + 1, dtype=np.int32)
+        return cls(indexes, offsets, rows, columns)
+
+    def vertices(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return exact ordered vertex rows and per-label counts."""
+        return _cellprofiler_hull_vertices_numba(
+            self.label_ids, self.point_offsets, self.point_rows, self.point_columns
         )
 
-        vertices: list[tuple[int, int]] = []
-        for candidate in candidates:
-            if vertices and candidate == vertices[-1]:
+
+@njit(cache=True)
+def _requested_outline_points_numba(
+    labels: np.ndarray,
+    sorted_labels: np.ndarray,
+    sorted_positions: np.ndarray,
+    object_count: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Group requested outlines directly in their original row-major order."""
+    counts = np.zeros(object_count, np.int64)
+    offsets = np.zeros(object_count + 1, np.int64)
+    if sorted_labels.size == 0:
+        return counts, offsets, np.empty(0, np.int64), np.empty(0, np.int64)
+    height, width = labels.shape
+    for y in range(height):
+        for x in range(width):
+            label = int(labels[y, x])
+            if label <= 0 or not _is_label_outline_pixel_numba(labels, y, x, label):
                 continue
-            while len(vertices) >= 2:
-                previous, middle = vertices[-2:]
-                cross = (middle[1] - previous[1]) * (candidate[0] - middle[0]) - (
-                    candidate[1] - middle[1]
-                ) * (middle[0] - previous[0])
-                if cross > 0 or (
-                    cross == 0 and middle[1] > previous[1] and middle[1] > candidate[1]
-                ):
+            index = np.searchsorted(sorted_labels, label)
+            if index < sorted_labels.size and int(sorted_labels[index]) == label:
+                counts[sorted_positions[index]] += 1
+    for i in range(object_count):
+        offsets[i + 1] = offsets[i] + counts[i]
+    ys = np.empty(offsets[-1], np.int64)
+    xs = np.empty(offsets[-1], np.int64)
+    cursor = offsets.copy()
+    for y in range(height):
+        for x in range(width):
+            label = int(labels[y, x])
+            if label <= 0 or not _is_label_outline_pixel_numba(labels, y, x, label):
+                continue
+            index = np.searchsorted(sorted_labels, label)
+            if index >= sorted_labels.size or int(sorted_labels[index]) != label:
+                continue
+            object_index = sorted_positions[index]
+            position = cursor[object_index]
+            ys[position] = y
+            xs[position] = x
+            cursor[object_index] += 1
+    return counts, offsets, ys, xs
+
+
+@njit(cache=True)
+def _cellprofiler_hull_vertices_numba(
+    indexes: np.ndarray,
+    offsets: np.ndarray,
+    point_y: np.ndarray,
+    point_x: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Project column envelopes through the exact CP ordered stack walk."""
+    hull_counts = np.zeros(indexes.size, np.int32)
+    # Each occupied column contributes at most two input candidates.
+    output = np.empty((2 * point_y.size, 3), np.int32)
+    output_count = 0
+    for object_index in range(indexes.size):
+        start = offsets[object_index]
+        stop = offsets[object_index + 1]
+        if start == stop:
+            continue
+        first = point_x[start]
+        last = first
+        for p in range(start + 1, stop):
+            first = min(first, point_x[p])
+            last = max(last, point_x[p])
+        row_minimum = np.full(last - first + 1, np.iinfo(np.int64).max, np.int64)
+        row_maximum = np.full(last - first + 1, np.iinfo(np.int64).min, np.int64)
+        for p in range(start, stop):
+            col = point_x[p] - first
+            y = point_y[p]
+            row_minimum[col] = min(row_minimum[col], y)
+            row_maximum[col] = max(row_maximum[col], y)
+        columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
+        vertices = np.empty((2 * columns.size, 2), np.int64)
+        vertex_count = 0
+        for k in range(2 * columns.size):
+            if k < columns.size:
+                col = columns[k]
+                y = row_minimum[col]
+            else:
+                col = columns[2 * columns.size - 1 - k]
+                y = row_maximum[col]
+            x = col + first
+            if (
+                vertex_count
+                and vertices[vertex_count - 1, 0] == y
+                and vertices[vertex_count - 1, 1] == x
+            ):
+                continue
+            while vertex_count >= 2:
+                previous_y = vertices[vertex_count - 2, 0]
+                previous_x = vertices[vertex_count - 2, 1]
+                middle_y = vertices[vertex_count - 1, 0]
+                middle_x = vertices[vertex_count - 1, 1]
+                cross = (middle_x - previous_x) * (y - middle_y) - (x - middle_x) * (
+                    middle_y - previous_y
+                )
+                if cross > 0 or (cross == 0 and middle_x > previous_x and middle_x > x):
                     break
-                vertices.pop()
-            vertices.append(candidate)
-        if len(vertices) > 1 and vertices[-1] == vertices[0]:
-            vertices.pop()
-
-        hull_counts[object_index] = len(vertices)
-        hull_rows.extend((int(label_id), row, column) for row, column in vertices)
-
-    return np.asarray(hull_rows, dtype=np.int32).reshape(-1, 3), hull_counts
+                vertex_count -= 1
+            vertices[vertex_count, 0] = y
+            vertices[vertex_count, 1] = x
+            vertex_count += 1
+        if (
+            vertex_count > 1
+            and vertices[vertex_count - 1, 0] == vertices[0, 0]
+            and vertices[vertex_count - 1, 1] == vertices[0, 1]
+        ):
+            vertex_count -= 1
+        hull_counts[object_index] = vertex_count
+        for p in range(vertex_count):
+            output[output_count, 0] = indexes[object_index]
+            output[output_count, 1] = vertices[p, 0]
+            output[output_count, 2] = vertices[p, 1]
+            output_count += 1
+    return output[:output_count].copy(), hull_counts
 
 
 def _grouped_minimum_positions(
@@ -761,6 +846,7 @@ def _feret_diameters_from_hull_numba(
 
 
 __all__ = [
+    "CellProfilerLabelHull",
     "feret_diameters_from_labels",
     "minimum_enclosing_circle_from_labels",
 ]
