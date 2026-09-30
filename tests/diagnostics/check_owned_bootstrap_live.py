@@ -152,16 +152,25 @@ def run(args) -> None:
             sockets_before=subprocess.check_output(['ss', '-ltnp'], text=True),
             foreign_ack_cleanup='never requested',
         )
-        image_path = fixture_root / 'A01/image.ome.tif'
+        original_image = fixture_root / 'A01/image.ome.tif'
+        plate = owned / 'plate'
+        plate.mkdir()
+        image_path = plate / original_image.name
+        import shutil
+        shutil.copyfile(original_image, image_path)
         import tifffile
         input_pixels = tifffile.imread(image_path)
         assert input_pixels.shape == (3, 8, 9)
         input_hash = hashlib.sha256(image_path.read_bytes()).hexdigest()
         assert input_hash == '5fc4e6baa8015be4b5ca09356575a2083ed70834f1ff447353e6c116fec248bb'
+        assert image_path.read_bytes() == original_image.read_bytes()
         probe_code = fixture_source.read_text()
         assert hashlib.sha256(probe_code.encode()).hexdigest() == '3ec3a9c02fc1cf4998fcb9487dc15cb904faec0fa98a9664b7bc799a1703f9c8'
         receipt['fixture'] = dict(source=str(fixture_source), input=str(image_path),
-                                 input_sha256=input_hash, plane_selections=[[], [2, 0], []])
+                                 original_input=str(original_image),
+                                 input_sha256=input_hash, byte_identical_copy=True,
+                                 plane_selections=[[], [2, 0], []],
+                                 omitted_controls=['full three-plane reorder', 'singleton'])
 
         class SourceSpec(McpDevServerSpec):
             mcp_environment_keys = (*McpDevServerSpec.mcp_environment_keys,
@@ -196,6 +205,11 @@ def run(args) -> None:
             response = result.payload['results'][0]
             assert not response['mcp_error'], response
             payload = response['payloads'][0]
+            if payload.get('errors') and payload['errors'][0]['code'] == 'agent_path_policy_rejected':
+                # This specific original path-policy owner rejects before dispatch.
+                # Other errors, especially post-dispatch uncertainty, retain handles.
+                receipt['uncertain_dispatch'] = None
+                save()
             assert not payload.get('errors'), payload
             value = dataclass_from_mapping(result_type, payload) if result_type else payload
             receipt['uncertain_dispatch'] = None
@@ -278,8 +292,11 @@ def run(args) -> None:
             )
             source = PipelineDocumentAuthority.render(document)
             (root/'pipeline.py').write_text(source)
-            call('openhcs_inspect_pipeline_source_artifact_plan',
-                 dict(plate_path=str(image_path.parent), pipeline_source=source))
+            from openhcs.agent.dto.execution import ArtifactPlanInspection
+            inspected = call('openhcs_inspect_pipeline_source_artifact_plan',
+                 dict(plate_path=str(image_path.parent), pipeline_source=source), ArtifactPlanInspection)
+            receipt['artifact_plan'] = to_jsonable(inspected)
+            assert inspected.step_count == 3 and inspected.axis_count == 1
             session = call('openhcs_create_orchestrator_session_from_pipeline_source',
                            dict(plate_path=str(image_path.parent), pipeline_source=source,
                                 port=args.port, host='127.0.0.1', transport_mode='tcp'),
@@ -287,10 +304,17 @@ def run(args) -> None:
             for tool, stage in (('openhcs_submit_compile', 'compile'),
                                 ('openhcs_submit_pipeline_execution', 'execution')):
                 tick = time.monotonic()
-                job = call(tool, dict(session_id=session.session_id, wait=False), ExecutionJobRef)
+                arguments = dict(session_id=session.session_id, wait=False)
+                if stage == 'execution':
+                    arguments['runtime_observation_export_path'] = str(owned/'observation.pkl.gz')
+                job = call(tool, arguments, ExecutionJobRef)
                 receipt[stage] = to_jsonable(finish(job))
                 receipt[stage+'_seconds'] = time.monotonic()-tick
                 save()
+            from tests.diagnostics.owned_bootstrap_readback import verify_volume_publication
+            receipt['volume_publication'] = verify_volume_publication(
+                owned, image_path, input_pixels, inspected,
+            )
             from openhcs.core.image_file_serialization import ImageFileFormat
             outputs = list((owned/'outputs').rglob('*.tif'))
             assert outputs
@@ -324,6 +348,7 @@ def run(args) -> None:
                     for path in roi_paths]
             receipt.update(measurement_readback=row_receipts, roi_reopen=rois)
             assert hashlib.sha256(image_path.read_bytes()).hexdigest() == input_hash
+            assert hashlib.sha256(original_image.read_bytes()).hexdigest() == input_hash
             receipt.update(accepted=True, unchanged_input_sha256=input_hash,
                            registration_mcp_calls=1, no_mutation_replay=True)
             save()
