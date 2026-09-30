@@ -68,6 +68,8 @@ from openhcs.agent.dto.execution import (
     RuntimeBootstrapStartRequest,
     RuntimeBootstrapObserveRequest,
     RuntimeBootstrapState,
+    RuntimeBootstrapCloseRequest,
+    RuntimeBootstrapCloseResult,
     SourceWorkspaceSummary,
 )
 from openhcs.agent.dto.functions import (
@@ -2835,6 +2837,23 @@ class ObserveOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.runtime_server_service,
         method=lambda service, request: service.observe_bootstrap(request),
+    )
+
+
+class CloseOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_close_owned_runtime"
+    kind = CapabilityKind.TOOL
+    title = "Close exact owned execution runtime"
+    description = "Close only the retained bootstrap child proven by both native endpoint reservations. FORCE sends at most one shutdown request and closes through the exact process owner within the existing budget; listener disappearance is not process exit. GRACEFUL clears workers but keeps the server. Retain unresolved handles and observe without replay."
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("requests_owned_runtime_shutdown", "terminates_exact_owned_process")
+    exposition = StartOwnedRuntimeCapability.exposition
+    input_contract = RuntimeBootstrapCloseRequest
+    output_contract = RuntimeBootstrapCloseResult
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.close_bootstrap(request),
     )
 
 

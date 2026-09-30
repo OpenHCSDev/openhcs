@@ -14,12 +14,18 @@ from openhcs.agent.dto.execution import (
     RuntimeBootstrapStartRequest,
     RuntimeBootstrapObserveRequest,
     RuntimeBootstrapHandle,
+    RuntimeBootstrapCloseRequest,
+    RuntimeBootstrapCloseResult,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.runtime_server_service import RuntimeServerService
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
-from zmqruntime.client import EndpointProcess
+from zmqruntime.client import (
+    EndpointProcess,
+    EndpointShutdownMode,
+    EndpointShutdownResult,
+)
 
 
 class Child(EndpointProcess):
@@ -163,6 +169,88 @@ def test_declaration_projects_startup_mcp_and_cli_contract():
         agent_capabilities.observe_owned_runtime.input_contract
         is RuntimeBootstrapObserveRequest
     )
+    assert (
+        agent_capabilities.close_owned_runtime.input_contract
+        is RuntimeBootstrapCloseRequest
+    )
+    assert agent_capabilities.close_owned_runtime.mutating
+
+
+@pytest.mark.parametrize("exited", [False, True, None])
+def test_close_preserves_native_outcome_and_original_handle(setup, monkeypatch, exited):
+    service, request, spawn = setup
+    started = service.start_from_request(request)
+    outcome = EndpointShutdownResult(
+        succeeded=exited is True,
+        endpoint_terminated=True,
+        process_identity=started.handle.process_identity,
+        process_exited=exited,
+        request_attempted=True,
+        acknowledged=True,
+    )
+    close = Mock(return_value=outcome)
+    monkeypatch.setattr(ZMQExecutionClient, "close_owned_process", close)
+    result = service.close_bootstrap(RuntimeBootstrapCloseRequest(started.handle))
+    assert result.handle == started.handle
+    assert result.outcome == outcome
+    assert bool(result.errors) is (exited is not True)
+    assert (
+        dataclass_from_mapping(RuntimeBootstrapCloseResult, to_jsonable(result))
+        == result
+    )
+    close.assert_called_once()
+    assert close.call_args.args == (started.handle.process_identity,)
+    assert close.call_args.kwargs["mode"] is EndpointShutdownMode.FORCE
+    assert close.call_args.kwargs["operation_deadline"].timeout_ms == 5000
+    spawn.assert_called_once()
+
+
+def test_close_native_transport_write_admission_precedes_lifecycle(
+    setup, tmp_path, monkeypatch
+):
+    service, request, _ = setup
+    started = service.start_from_request(request)
+    close = Mock(
+        side_effect=AssertionError("No lifecycle after denied native lock path")
+    )
+    monkeypatch.setattr(ZMQExecutionClient, "close_owned_process", close)
+    # The serialized plan cannot confer admission to native paths in a changed
+    # launch environment. The actual declaration is checked before lock writes.
+    new_home = tmp_path / "not-authorised"
+    new_home.mkdir()
+    monkeypatch.setenv("HOME", str(new_home))
+    policy = AgentPathPolicy.with_roots(
+        readable_roots=(tmp_path,),
+        writable_roots=(tmp_path / "data", tmp_path / "cache", tmp_path / ".openhcs"),
+    )
+    denied = RuntimeServerService(path_policy=policy)
+    with pytest.raises(AgentPathPolicyError):
+        denied.close_bootstrap(RuntimeBootstrapCloseRequest(started.handle))
+    close.assert_not_called()
+    assert not (new_home / ".openhcs").exists()
+
+
+def test_close_timeout_and_typed_mode_contract(setup):
+    from typing import get_type_hints
+
+    service, request, _ = setup
+    started = service.start_from_request(request)
+    hints = get_type_hints(RuntimeBootstrapCloseRequest, include_extras=True)
+    assert hints["mode"] is EndpointShutdownMode
+    assert (
+        dataclass_from_mapping(
+            RuntimeBootstrapCloseRequest,
+            {
+                "handle": to_jsonable(started.handle),
+                "mode": "graceful",
+                "timeout_ms": 500,
+            },
+        ).mode
+        is EndpointShutdownMode.GRACEFUL
+    )
+    for timeout in (0, -1, 10000, True):
+        with pytest.raises((ValueError, TypeError)):
+            RuntimeBootstrapCloseRequest(started.handle, timeout_ms=timeout)
 
 
 @pytest.mark.parametrize("ready", [False, True])
@@ -252,3 +340,31 @@ def test_bootstrap_is_exposed_on_existing_authoring_and_core_surfaces():
     ):
         assert profile.includes(agent_capabilities.start_owned_runtime)
         assert profile.includes(agent_capabilities.observe_owned_runtime)
+        assert profile.includes(agent_capabilities.close_owned_runtime)
+
+
+def test_close_uses_standard_context_and_declared_service_invocation(
+    setup, tmp_path, monkeypatch
+):
+    service, request, _ = setup
+    handle = service.start_from_request(request).handle
+    close = Mock(
+        return_value=EndpointShutdownResult(True, True, handle.process_identity, True)
+    )
+    monkeypatch.setattr(ZMQExecutionClient, "close_owned_process", close)
+    context = OpenHCSAgentContext(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        )
+    )
+    typed_request = dataclass_from_mapping(
+        RuntimeBootstrapCloseRequest, {"handle": to_jsonable(handle)}
+    )
+    from openhcs.agent.capabilities import get_agent_capability_declaration
+
+    declaration = get_agent_capability_declaration(
+        agent_capabilities.close_owned_runtime.name
+    )
+    result = declaration.request_invocation.execute(context, typed_request)
+    assert result.handle == handle and result.outcome.process_exited is True
+    close.assert_called_once()

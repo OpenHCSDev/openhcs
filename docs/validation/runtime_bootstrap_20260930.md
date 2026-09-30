@@ -152,3 +152,100 @@ metaclass-registry `448cdf07e0a0b513a9c9a8f67e896f601da11771` (draft1).
 Parent can release the finite native journey after blind freeze. No live worker
 handle was started; all source-test commands are terminal. Owned fixture scratch
 was1.8MiB and is disposable after retaining these receipts.
+
+## Identity-proven close continuation
+
+Parent-reported native reproducer: canonical FORCE on5993, exact PID2052959 /
+creation time1790731598.48, returned success/endpoint_terminated while listeners
+5993/6993 were gone and the same process remained live at981192KiB RSS. The
+parent retains the original attempt/disposition in H002B-CLEANUP-20260930.json.
+This worker did not query/replay/signal it or inspect scientific outputs.
+Interpreter/JVM teardown is unproved, not a profile result.
+
+New RuntimeBootstrapCloseRequest/Result and CloseOwnedRuntimeCapability expose
+`openhcs_close_owned_runtime` through ordinary typed MCP/service composition.
+The original bootstrap handle is returned unchanged. RuntimeServerService
+admits actual native transport write paths in the current launch environment,
+not only a caller-serialized plan, BEFORE native lock writes or close dispatch.
+The default5000ms control budget is unchanged; no timeout expansion or warmup.
+Read-only reconciliation reuses `openhcs_observe_owned_runtime` and the same
+handle. Missing/unknown outcomes never trigger a second close or startup.
+
+Paired native close requires both existing reservations and the exact recorded
+incarnation. FORCE sends at most one request; native ExecutionServer validates
+the incarnation before worker mutation. Its existing shutdown-mode completion
+and ProcessIdentity termination owners separate acknowledgement, listener
+cessation, and exact process exit. Lost listeners cannot prove child exit;
+unknown liveness remains unknown. GRACEFUL still retains the server. The native
+owner, not this service, performs bounded TERM/KILL/wait and declaration-owned
+stale IPC cleanup. Changed/foreign reservations or endpoints reject without
+startup, takeover, port-owner killing, or RPC replay.
+
+Executed source shard **123 passed,2 actual-MCP cases deferred,12.16s**, process
+12.86s, peak285060KiB,exit0. Same existing interpreter/explicit source PYTHONPATH,
+CPU-only/thread1/shared Fiji cache/downloadfalse as earlier checkpoints. Sources:
+
+```
+python -B -m pytest --noconftest -o addopts= -q \
+ tests/unit/agent/test_owned_runtime_bootstrap.py \
+ external/zmqruntime/tests/test_owned_close.py \
+ external/zmqruntime/tests/test_owned_startup.py \
+ external/zmqruntime/tests/test_shutdown.py \
+ external/zmqruntime/tests/test_startup.py \
+ external/zmqruntime/tests/test_execution.py::test_shutdown_rejects_endpoint_without_advertised_capability \
+ tests/unit/agent/test_capabilities.py \
+ tests/unit/agent/test_progressive_authoring_context.py \
+ tests/unit/agent/test_image_analysis_qa.py \
+ -k 'not actual_mcp_onboarding' --basetemp=<owned close scratch>/pytest-06
+```
+
+Mocks intercept socket sends/process signals/spawn. Tests cover exact native
+owner outcomes, both mode semantics, missing acknowledgement/one send, absent
+listener/no replay, changed owner before/after dispatch, access-unknown liveness,
+PID reuse, one total deadline including escalation, postdispatch expiry/no late
+signal, and native handler rejection before cancellation/worker changes. IPC
+tests preserve unproved socket sentinels and remove only declaration-proven
+stale fixture addresses. Main tests execute the standard context's declared
+service invocation, actual get_type_hints/nested dataclass decoding, authoring/
+core exposure and path escape rejection before native lifecycle calls. Existing
+whole-context source bounds/full QA checks still pass; no permanent bound-test
+deselection. Skill-creator validates the bundled skill; Diataxis keeps close
+instructions in the existing practical custom-function how-to, with a derived
+first-use/pipeline/custom pointer, not a second guide. Managed installed skill
+and frozen source/submodules remain untouched.
+
+Captures: source-close-final{,-resources}.txt; earlier fixture failures and
+114/122-pass coherent checkpoints are retained, not hidden. Undefined-name and
+diff checks pass. Source-only imports verified in this tree and children before
+checks. Owned small fixture scratch is
+/home/ts/.cache/agent-scratch/runtime-bootstrap-close-20260930; no scientific or
+UNKNOWN material. Initial actual guard /home20.2GiB/RAM14.2GiB,swap13.3-only;
+parent subsequently reports /home19.4GiB. No heavy/native start was made under
+either state, no serial slot acquired; Zeno retains the next native slot.
+
+Pattern witnesses (focused owner review, not full NRA/global proof): **IDEN-1**
+distinct process_exited/endpoint_terminated observations; **IDEN-8** same PID /
+creation-time identity at native admission, response and signal, with PID-reuse
+tests; **IMPL-2/12/13** existing mode leaf/process/transport owners retain the
+whole close procedure, replaced listener-only success/duplicated wait budget
+removed in place, no application process supervisor; **BOUND-1/2** shutdown
+request refines existing ControlRequestHeader and native identity codec, while
+MCP uses ordinary typed nested decoding; **TIME-7** actual native lock/socket
+paths admitted before writes; **IMPL-7/MEMB-2** separate close request/capability
+and derived exposure, no string action bag/second registry; **IMPL-4** standard
+context service method and native handler both implement the exposed contract.
+
+Remaining: released slot for actual cold native/MCP synthetic lifecycle journey,
+paired review/integration/install and installed user-entrypoint acceptance.
+No merged, installed, live, cold-latency or Closes251 claim from this checkpoint.
+
+Native lifecycle source published in paired draft9 at
+`9a93bbe` (root records its full gitlink). Focused changed-source census from
+prior native checkpointb7f6f5d22 to9a93bbe: zero growth in dispatch/arms, type
+switches, long boolean chains/terms, codecs, foreign absence probes, raw-key
+reads, getattr/default, broad catches, JSON decode or long functions. Adds144
+code lines, one typed request declaration,16 None checks for genuine optional
+local-incarnation/wire/ack/endpoint observations and one isinstance at the raw
+shutdown identity decode boundary. These are reviewed leads, not a global clean
+claim; unknown identity/liveness is preserved rather than filled by fallback.
+Capture: close-dependency-census.{txt,json}. Live acceptance remains gated.

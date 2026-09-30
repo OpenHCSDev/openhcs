@@ -24,6 +24,8 @@ from openhcs.agent.dto.execution import (
     RuntimeBootstrapHandle,
     RuntimeBootstrapObserveRequest,
     RuntimeBootstrapState,
+    RuntimeBootstrapCloseRequest,
+    RuntimeBootstrapCloseResult,
     runtime_execution_status_error,
     runtime_execution_status_from_response,
     unreachable_runtime_server_info,
@@ -379,6 +381,40 @@ class RuntimeServerService:
             progress=progress,
             ready=ready,
             process_alive=alive,
+        )
+
+    def close_bootstrap(
+        self, request: RuntimeBootstrapCloseRequest
+    ) -> RuntimeBootstrapCloseResult:
+        """Admit native lifecycle writes, then close one proven owned incarnation."""
+        handle = request.handle
+        config = replace(self._config, server_host=handle.connection.host)
+        client = handle.connection.execution_client(config)
+        # Resolve actual transport writes in THIS launch environment, not only
+        # the caller's serialized plan. Never let a forged path admit a lock.
+        for path in client.runtime_launch_plan().transport_write_paths:
+            self._path_policy.assert_writable(path)
+        for path in handle.launch_plan.writable_paths():
+            self._path_policy.assert_writable(path)
+        outcome = client.close_owned_process(
+            handle.process_identity,
+            mode=request.mode,
+            operation_deadline=OperationDeadline.after_milliseconds(
+                request.timeout_ms, operation="owned runtime close"
+            ),
+        )
+        return RuntimeBootstrapCloseResult(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            outcome=outcome,
+            errors=()
+            if outcome.succeeded
+            else (
+                AgentError(
+                    code="runtime_close_unresolved",
+                    message="Exact owner close is unresolved; retain this handle and observe without replay.",
+                ),
+            ),
         )
 
     def server_info(

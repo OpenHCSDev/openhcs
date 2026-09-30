@@ -1,0 +1,65 @@
+..........................FF............                                 [100%]
+=================================== FAILURES ===================================
+________ test_different_native_reservation_rejects_before_control[5914] ________
+
+fixture = (<test_owned_close.Client object at 0x7f135d723a10>, <Mock id='139721148869344'>, <Mock name='mock.socket()' id='139721157702720'>, <Mock id='139721148874624'>, <Mock id='139721148871360'>)
+port = 5914
+
+    @pytest.mark.parametrize("port", [5913, 5914])
+    def test_different_native_reservation_rejects_before_control(fixture, port):
+        client, ping, socket, terminate, cleanup = fixture
+>       client.transport_mode.declaration.record_startup_owner(
+            port, client.config, replace(IDENTITY, create_time=101.0)
+        )
+
+external/zmqruntime/tests/test_owned_close.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external/zmqruntime/src/zmqruntime/transport_modes.py:173: in record_startup_owner
+    with cls.startup_lock_path(port, config).open("r+b") as stream:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/ts/.cache/agent-scratch/runtime-bootstrap-close-20260930/pytest-02/test_different_native_reservat1/.zmqruntime/tcp/5914.startup.lock')
+mode = 'r+b', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/ts/.cache/agent-scratch/runtime-bootstrap-close-20260930/pytest-02/test_different_native_reservat1/.zmqruntime/tcp/5914.startup.lock'
+
+../../.pyenv/versions/3.12.3/lib/python3.12/pathlib.py:1013: FileNotFoundError
+__________ test_different_endpoint_incarnation_rejects_before_control __________
+
+fixture = (<test_owned_close.Client object at 0x7f135df973e0>, <Mock id='139721157734336'>, <Mock name='mock.socket()' id='139721157722864'>, <Mock id='139721157722576'>, <Mock id='139721157723536'>)
+
+    def test_different_endpoint_incarnation_rejects_before_control(fixture):
+        client, ping, socket, terminate, cleanup = fixture
+        ping.side_effect = [
+>           PongResponse(
+                port=5913, server="foreign", server_role=ServerRole.EXECUTION, process_identity=replace(IDENTITY, create_time=101.0)
+            )
+        ]
+E       TypeError: PongResponse.__init__() missing 2 required positional arguments: 'control_port' and 'ready'
+
+external/zmqruntime/tests/test_owned_close.py:146: TypeError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED external/zmqruntime/tests/test_owned_close.py::test_different_native_reservation_rejects_before_control[5914]
+FAILED external/zmqruntime/tests/test_owned_close.py::test_different_endpoint_incarnation_rejects_before_control
+2 failed, 38 passed, 2 warnings in 4.19s

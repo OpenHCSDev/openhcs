@@ -24,6 +24,7 @@ from zmqruntime.messages import (
     ProcessIdentity,
 )
 from zmqruntime.startup import EndpointStartupStatus
+from zmqruntime.client import EndpointShutdownMode, EndpointShutdownResult
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -660,6 +661,27 @@ class RuntimeBootstrapState(AgentResultEnvelope):
     progress: EndpointStartupStatus
     ready: bool
     process_alive: bool | None
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapCloseRequest:
+    """One explicit lifecycle request for the retained native bootstrap owner."""
+
+    handle: RuntimeBootstrapHandle
+    mode: EndpointShutdownMode = EndpointShutdownMode.FORCE
+    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
+        self.handle.connection.require_port("Owned runtime close")
+        if self.timeout_ms > OPENHCS_ZMQ_CONFIG.control_timeout_ms:
+            raise ValueError("Owned close must use the existing control budget")
+
+
+@dataclass(frozen=True, kw_only=True)
+class RuntimeBootstrapCloseResult(AgentResultEnvelope):
+    handle: RuntimeBootstrapHandle
+    outcome: EndpointShutdownResult
 
 
 @dataclass(frozen=True, slots=True)

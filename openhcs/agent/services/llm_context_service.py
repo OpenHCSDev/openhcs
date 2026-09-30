@@ -136,7 +136,9 @@ never adopt a foreign endpoint or replay uncertain startup. Then call
 {agent_capabilities.start_function_catalog_preparation.name} on the intended existing endpoint,
 then observe that exact handle until READY. Keep cold warming separate from
 10-second tool observations; a timeout does not authorise restart/replay or
-mutation. If not exposed, report the surface boundary rather than guess a route."""
+mutation. Close your retained child with {agent_capabilities.close_owned_runtime.name};
+require exact process exit, not lost listeners. If not exposed, report the
+surface boundary rather than guess a route."""
 
 
 class PipelineSystemModelSection(
