@@ -20,6 +20,10 @@ from typing import Any, ClassVar, TypeAlias, cast
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
+from openhcs.core._tabular_native import (
+    assign_cell as _assign_native_cell,
+    assign_columns as _assign_native_columns,
+)
 import numpy as np
 
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
@@ -1062,20 +1066,17 @@ class WideMeasurementRowAccumulator:
                 and row_subject not in self._object_subjects
             ):
                 self._object_subjects.append(row_subject)
-            for field_name, values in feature_columns:
-                value = values[row_index]
-                if is_structural_missing_measurement_cell(value):
-                    continue
-                self._assign(
-                    target,
-                    identity,
-                    project_feature_name(
-                        field_name,
-                        qualifier_values,
-                    ),
-                    value,
-                    missing_cell,
-                )
+            _assign_native_columns(
+                target,
+                identity,
+                feature_columns,
+                row_index,
+                project_feature_name,
+                qualifier_values,
+                MeasurementSparseCell,
+                missing_cell,
+                _measurement_sparse_cell_values_equal,
+            )
 
     def _add_object_scoped_long_form(
         self,
@@ -1190,16 +1191,14 @@ class WideMeasurementRowAccumulator:
         value: object,
         missing_cell: object,
     ) -> None:
-        existing = target.get(field_name, missing_cell)
-        if existing is not missing_cell and not _measurement_sparse_cell_values_equal(
-            existing,
+        _assign_native_cell(
+            target,
+            identity,
+            field_name,
             value,
-        ):
-            raise ValueError(
-                "Conflicting sparse measurement values for row identity "
-                f"{identity!r}, field {field_name!r}: {existing!r} vs {value!r}."
-            )
-        target[field_name] = value
+            missing_cell,
+            _measurement_sparse_cell_values_equal,
+        )
 
 
 def _measurement_sparse_cell_values_equal(left: object, right: object) -> bool:

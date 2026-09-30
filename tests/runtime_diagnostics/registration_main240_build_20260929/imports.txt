@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "openhcs": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-custom-function-admission-20260929/external/PolyStore/src/polystore/__init__.py"
+  },
+  "extensions": [
+    {
+      "path": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/processing/backends/cellprofiler/_granularity_reconstruct.abi3.so",
+      "bytes": 45440,
+      "sha256": "f0627903f263f701fc50736a934ee1b727ddcf4cbd97375f9933cf1c9182c091"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-custom-function-admission-20260929/openhcs/core/_tabular_native.abi3.so",
+      "bytes": 210808,
+      "sha256": "d0051154f8af59874004373603aabff0ae0576216c48076e1470d6569bb18b88"
+    }
+  ],
+  "scope": "source-only standard build/import, no install, kernel warming or JVM"
+}

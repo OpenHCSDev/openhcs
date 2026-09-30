@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pyqt_reactive.services.parameter_help_service import docstring_info_for_target
@@ -25,6 +26,8 @@ from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
     CellProfilerArtifactBindingSummary,
     CellProfilerModuleDeclarationSummary,
+    CustomFunctionRegistrationDestination,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionArtifactSpec,
@@ -37,6 +40,7 @@ from openhcs.agent.dto.functions import (
     catalog_page,
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -471,6 +475,20 @@ PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()
 class FunctionCatalogServiceABC(ABC):
     """Callable-catalog authority consumed by agent authoring services."""
 
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare the authoritative catalog through this service's transport."""
+
+        self.catalog(
+            compact_signatures=True,
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
+
     @abstractmethod
     def register_custom_function(
         self,
@@ -531,7 +549,22 @@ class FunctionCatalogServiceABC(ABC):
 class FunctionCatalogService(FunctionCatalogServiceABC):
     """Expose registered OpenHCS processing callables through stable IDs."""
 
-    def __init__(self) -> None:
+    def prepare(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare kernels in the owned registry child, including cached catalogs."""
+
+        RegistryService.prepare_persistent_catalog(
+            status_callback=status_callback,
+            cancellation=cancellation,
+        )
+        super().prepare(status_callback=status_callback, cancellation=cancellation)
+
+    def __init__(self, path_policy: AgentPathPolicy | None = None) -> None:
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
         self._projections: dict[
             tuple[SignatureView, SummaryView],
@@ -541,9 +574,24 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
     def register_custom_function(
         self, request: CustomFunctionRegistrationRequest
     ) -> CustomFunctionRegistrationResult:
-        manager = custom_function_manager.CustomFunctionManager()
+        request = request.admitted(request.admission_policy or self._path_policy)
+        # Caller admission cannot enlarge this server's own policy.
+        request.admitted(self._path_policy)
+        server_identity = request.require_server_identity()
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        if request.persist and manager.storage_dir.resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
+            raise ValueError(
+                f"Selected endpoint owns custom storage {manager.storage_dir}, "
+                f"not requested {request.storage_dir}; no source was evaluated."
+            )
+        def admit_write(path: Path) -> Path:
+            self._path_policy.assert_writable(path)
+            return request.admission_policy.assert_writable(path)
+
         registered_functions = manager.register_from_code(
-            request.source_code, persist=request.persist
+            request.source_code, persist=request.persist,
+            expected_function_name=request.function_name,
+            write_admission=admit_write,
         )
         function_ids = self.function_ids_for_callables(tuple(registered_functions))
         entries = tuple(
@@ -578,6 +626,22 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     f"Call openhcs_describe_function(function_id={function_id!r}), then use openhcs_add_function_step or draft-pipeline-step."
                     for function_id in function_ids
                 )
+            ),
+            connection=request.connection,
+            server_identity=server_identity,
+        )
+
+    def custom_function_registration_destination(
+        self, request: CustomFunctionRegistrationDestinationRequest
+    ) -> CustomFunctionRegistrationDestination:
+        """Project the native store without construction, source execution or IO."""
+        manager_type = custom_function_manager.CustomFunctionManager
+        storage_dir = manager_type.default_storage_directory()
+        return CustomFunctionRegistrationDestination(
+            storage_dir=str(storage_dir),
+            source_file_path=(
+                str(manager_type.source_path_for_name(storage_dir, request.function_name))
+                if request.function_name is not None else None
             ),
         )
 

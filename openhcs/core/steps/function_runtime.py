@@ -1685,6 +1685,7 @@ def prepare_compiled_context_callables(
     """Prepare every compiled callable visible in the compiled contexts."""
     prepared_group_keys: set[tuple[str, int, str]] = set()
     prepared_invocation_count = 0
+    groups: list[CompiledFunctionGroup] = []
     for context_key, context in compiled_contexts.items():
         step_plans = context.step_plans
         if not step_plans:
@@ -1701,9 +1702,20 @@ def prepare_compiled_context_callables(
                 )
                 if prepare_key in prepared_group_keys:
                     continue
-                prepare_compiled_function_group(group)
+                groups.append(group)
                 prepared_invocation_count += len(group.invocations)
                 prepared_group_keys.add(prepare_key)
+    from openhcs.core.processing_preparation import PreparationCacheBatch
+
+    PreparationCacheBatch.from_callables(
+        invocation.contract.resolve_canonical_raw_callable()
+        for group in groups
+        for invocation in group.invocations
+    ).populate_child_caches()
+    for group in groups:
+        # Parent preparation loads child-produced machine code and owns every
+        # process-local hook/cache that execution workers inherit.
+        prepare_compiled_function_group(group)
     logger.info(
         "Prepared %d compiled callable invocations across %d groups.",
         prepared_invocation_count,

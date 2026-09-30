@@ -1,0 +1,1 @@
+elapsed=8.04 max_rss_kib=309668 exit=0

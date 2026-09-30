@@ -12,6 +12,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.agent.authoring_contexts import (
     AuthoringContextDeclaration,
     CellProfilerTranslationContext,
+    CustomFunctionAuthoringContext,
     CustomFunctionAuthoringRulesContext,
     CustomFunctionRuntimeContext,
     DebuggingWorkflowContext,
@@ -109,6 +110,26 @@ def render_authoring_context_sections(
     header = f"=== {route.title.upper()} ===\nUse this context when {route.use_when}."
     deepening = service.render_knowledge_targets(context)
     return (header, *sections, deepening)
+
+
+class CatalogPreparationReadinessSection(
+    AuthoringContextSection, FirstUseWorkflowContext, PipelineAuthoringRulesContext
+):
+    """One readiness entrypoint shared by first-use and pipeline contexts."""
+
+    section_id = "catalog_preparation_readiness"
+
+    @classmethod
+    def render(cls, service: AgentAuthoringContextService) -> str:
+        del service
+        return f"""=== COLD LOCAL CATALOGUE READINESS ===
+Before first cold {agent_capabilities.search_functions.name}, discover "catalog preparation"
+with {agent_capabilities.search_capabilities.name}. If exposed, follow
+`openhcs_custom_function_workflow` / "Register on the intended process owner":
+{agent_capabilities.start_function_catalog_preparation.name} on the intended existing endpoint,
+then observe that exact handle until READY. Keep cold warming separate from
+10-second tool observations; a timeout does not authorise restart/replay or
+mutation. If not exposed, report the surface boundary rather than guess a route."""
 
 
 class PipelineSystemModelSection(
@@ -307,23 +328,22 @@ class ImageAnalysisWorkflowSection(
     StaticAuthoringContextSection,
     ImageAnalysisWorkflowContext,
 ):
-    """Canonical operating guide for multisite image-analysis workflows."""
+    """Image-analysis operating rules with the complete typed QA policy."""
 
     section_id = "image_analysis_workflow"
     content = f"""=== IMAGE-ANALYSIS WORKFLOW ===
-- Search examples for the operation, retrieve complete OpenHCS Python, and inspect candidates through the live registry. Reuse declarations; do not dispatch on function-name strings or create parallel catalogues.
-- Keep assembly and grouping distinct. `variable_components=[SITE]` plus `group_by=CHANNEL` compiles one SITE stack per channel. When its live declaration confirms percentile fitting, `stack_percentile_normalize` computes one low/high percentile pair over every site in that stack; it must not fit a separate percentile pair per field. Confirm the exact callable and reflected contract with {agent_capabilities.search_functions.name} and {agent_capabilities.describe_function.name}; names do not establish semantics.
-- Treat registration as a separate branch: calculate one position set and retain its typed artifact. Restart with `input_source=PIPELINE_START`, reuse that same position set by consuming its artifact, and assemble raw channel stacks or stacks whose analytical normalisation was explicitly fitted across all sites. Never recalculate positions by channel or result.
-- Preserve correspondence across QC views. Inspect raw mosaics at several percentile windows, including full range, while keeping placement coordinates, crop, scale, and result overlays identical. Record each pair and computed bounds. Compare channel histograms, clipped fractions, and segmentation coverage across tile interiors, joins, quadrants, and complete fields; report per-region object or traced-signal density so spatial drift is measured, not merely visible.
-- Display normalisation changes presentation only; analytical preprocessing needs a compiled FunctionStep retaining parameters, source/group identity, assembled SITE axis, shared positions, and artifact provenance.
-- Validate representative dim structures, bright structures, background, saturation, and strong unassigned residuals. For masks, sample supported foreground, missed-signal components, and unsupported foreground; report false-negative residual coverage, unsupported-mask coverage, splits/merges, and reference-boundary agreement. For traces, sample intensity along each path and its background band; inspect discontinuities, gaps, endpoints, branches, crossings, and ownership continuity. Display colour or a nonzero mask is not support.
+- For examples/declarations use kind="{PipelineAuthoringContext.require_kind()}"; for missing operations use kind="{CustomFunctionAuthoringContext.require_kind()}". Verify the same reflected signature and defaults in detail/code/form/MCP; an unregistered callable is not an OpenHCS pipeline result. No dispatch on function-name strings or parallel catalogues.
+- Keep assembly/grouping distinct: `variable_components=[SITE]` plus `group_by=CHANNEL` compiles one SITE stack per channel. Only with its live percentile-fitting contract, `stack_percentile_normalize` computes one low/high percentile pair over every site; it must not fit a separate percentile pair per field. Inspect the exact callable, not its name.
+- Treat registration as a separate branch: calculate one position set, restart with `input_source=PIPELINE_START`, reuse that same position set by consuming its artifact for raw channel stacks or stacks whose analytical normalisation was explicitly fitted across all sites. Never recalculate positions by channel/result.
+- Inspect raw mosaics under several percentile windows including full range; keep placement coordinates, crop, scale, and result overlays identical and record each pair/bounds. Compare channel histograms, clipped fractions and segmentation coverage across interiors, joins, quadrants, and complete fields; record per-region object or traced-signal density.
+- Display normalisation changes presentation only; compiled analytical FunctionSteps retain parameters, source/group identity, assembled SITE axis, shared positions and artifact provenance.
+- Check representative dim structures, bright structures, background, saturation and strong unassigned residuals. Masks: supported/unsupported foreground, missed-signal components, false-negative residual coverage, unsupported-mask coverage, splits/merges and reference-boundary agreement. Traces: intensity along each path/background band, discontinuities, gaps, endpoints, branches, crossings and ownership continuity. Colour/nonzero masks are not support.
 - {ImageAnalysisQaPolicy.repair_guidance()}
-- Freeze a blinded, spatially distributed representative set spanning dim/bright signal, sparse/dense regions, joins, and controls. Tune only on the declared development subset. Perturb one parameter with sources, coordinates, preprocessing, and display fixed; require counts, coverage, length, branches, endpoints, and control ordering remain stable. Score held-out fields once after freezing.
-- Record failure, one explicit hypothesis, one semantic change, pipeline identity, compile result, time, peak memory, and same-coordinate evidence. Preserve rejected attempts; multiple simultaneous changes make repair quality unscoreable.
-- If catalogue search cannot express the operation, follow the custom-function context. Verify the same reflected signature and defaults in function detail, code, form, and MCP. A local script or unregistered callable is not an OpenHCS pipeline result.
-- Keep analysis in the managed declaration/runtime. Do not preprocess scientific inputs in an external script, use X11/desktop automation, or manipulate a viewer behind the MCP surface. Use declared bindings, functions, artifacts, and managed viewer commands.
-- Escalate rather than declare success for missed signal, unsupported traces, incorrect splits/merges, unexplained tile/quadrant drift, unstable controls, or contradictory artifacts. Preserve provenance and repeat the same coordinates after a bounded repair. Ask the domain expert when biological identity remains ambiguous.
-- Reconcile artifacts with ROI and measurement identities. Record reproducible counts and coordinates; completion, aggregate plausibility, and layer existence are not scientific acceptance. Current declarations and artifact provenance remain authoritative."""
+- Freeze a blinded, spatially distributed representative set across dim/bright, sparse/dense, joins and controls. Tune only on the declared development subset; perturb one parameter with sources/coordinates/preprocessing/display fixed. Counts, coverage, length, branches, endpoints and control ordering remain stable. Score held-out fields once after freezing.
+- Record failure, one explicit hypothesis, one semantic change, pipeline identity, compile result, time/peak memory and same-coordinate evidence; multiple simultaneous changes make repair quality unscoreable. Retain rejected attempts.
+- Do not preprocess scientific inputs in an external script, use X11/desktop automation, or manipulate viewers behind the MCP surface.
+- Escalate rather than declare success for missed signal, unsupported traces, splits/merges, unexplained tile/quadrant drift, unstable controls or contradictory artifacts. Recheck identical coordinates after repair. Ask the domain expert about ambiguous biological identity.
+- Reconcile ROI/measurement identities and reproducible counts/coordinates; completion, aggregate plausibility and layer existence are not scientific acceptance."""
 
 
 class ConfigSchemaHintsSection(AuthoringContextSection, PipelineAuthoringRulesContext):
@@ -678,7 +698,7 @@ class AgentAuthoringContextService:
             target_id = target.document_id
             if target.section_id is not None:
                 target_id = f"{target_id}#{target.section_id}"
-            lines.append(f"- {target_id} — {document.title}: {document.summary}")
+            lines.append(f"- {target_id} — {document.title}")
         return "\n".join(lines)
 
     def get_bounded_authoring_context(

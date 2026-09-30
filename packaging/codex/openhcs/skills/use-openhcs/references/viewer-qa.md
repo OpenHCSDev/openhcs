@@ -47,6 +47,13 @@ across positions. Contrast crushing can conceal real signal; an uneven field
 does not establish the background's cause. Display contrast/gamma is not
 analytical preprocessing.
 
+Before selecting analysis scales or thresholds, follow
+[the empirical measurement procedure](measurement-interpretation.md#measure-feature-scales-before-choosing-parameters)
+on the distributed raw witnesses. Record native boundary spans, genuine
+neighbour separation and local intensity/background evidence as relevant; link
+each to its parameter rationale. A provisional result's geometry is not an
+independent raw-feature measurement, and screen-pixel length is not native length.
+
 ## Capture and inspect a matched three-view set
 
 Read viewer state before each set: route, channels, axes, camera/crop, scale,

@@ -1944,7 +1944,7 @@ class McpViewerRequestToolBindingABC(ABC, metaclass=AutoRegisterMeta):
         default_overrides: Mapping[str, JsonValue] | None = None,
     ) -> tuple[Parameter, ...]:
         factory_signature = inspect_signature(factory)
-        factory_type_hints = get_type_hints(factory)
+        factory_type_hints = get_type_hints(factory, include_extras=True)
         resolved_default_overrides = default_overrides or {}
         return tuple(
             parameter.replace(
@@ -1977,7 +1977,7 @@ class McpViewerRequestToolBindingABC(ABC, metaclass=AutoRegisterMeta):
         """Return public non-connection parameters from a viewer request DTO."""
         factory = request_type.from_fields
         factory_signature = inspect_signature(factory)
-        factory_type_hints = get_type_hints(factory)
+        factory_type_hints = get_type_hints(factory, include_extras=True)
         control_fields = cls.viewer_control_field_names()
         return tuple(
             parameter.replace(annotation=factory_type_hints[parameter.name])

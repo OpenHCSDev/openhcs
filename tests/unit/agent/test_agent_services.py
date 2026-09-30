@@ -53,6 +53,7 @@ from openhcs.agent.dto.viewer import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services import function_catalog_service as function_catalog_module
+from openhcs.agent.services import execution_session_service as execution_session_module
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.execution_session_service import (
@@ -114,6 +115,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core import virtual_workspace_metadata as metadata_module
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
@@ -624,6 +626,14 @@ class _WorkspacePreparingCompileInspectionGateway(_FakeCompileInspectionGateway)
         (request.plate / "openhcs_metadata.json").write_text(
             "{}",
             encoding="utf-8",
+        )
+        return super().compile(request)
+
+
+class _MetadataTransactionCompileInspectionGateway(_FakeCompileInspectionGateway):
+    def compile(self, request):
+        metadata_module.AtomicMetadataWriter().replace_subdirectory_metadata(
+            metadata_module.get_metadata_path(request.plate), "A01", {}
         )
         return super().compile(request)
 
@@ -3491,6 +3501,109 @@ def test_compile_inspection_rejects_read_only_plate_before_initialization(
 
     assert gateway.requests == []
     assert {path.name: path.read_bytes() for path in plate.iterdir()} == before
+
+
+@pytest.mark.parametrize(
+    "destination_kind",
+    (
+        "relative",
+        "absolute",
+        "directory_symlink",
+        "metadata_symlink",
+        "lock_symlink",
+        "transaction_parent",
+    ),
+)
+def test_compile_inspection_rejects_escaping_metadata_transaction(
+    monkeypatch, tmp_path: Path, destination_kind: str
+):
+    plate = tmp_path / "plate"
+    outside = tmp_path / "outside"
+    plate.mkdir()
+    outside.mkdir()
+    filename = "openhcs_metadata.json"
+    if destination_kind == "relative":
+        filename = "../outside/metadata.json"
+    elif destination_kind == "absolute":
+        filename = str(outside / "metadata.json")
+    elif destination_kind == "directory_symlink":
+        (plate / "transaction").symlink_to(outside, target_is_directory=True)
+        filename = "transaction/metadata.json"
+    elif destination_kind == "metadata_symlink":
+        (plate / filename).symlink_to(outside / "metadata.json")
+    elif destination_kind == "lock_symlink":
+        # Derive the lock from its real owner, not another suffix declaration.
+        config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+        _, lock = config.managed_paths(plate)
+        lock.symlink_to(outside / "transaction.lock")
+    elif destination_kind == "transaction_parent":
+        # The metadata target is admitted, but staging would still write outside.
+        filename = str(outside / "metadata.json")
+        (outside / "metadata.json").symlink_to(plate / "admitted.json")
+        metadata_module.LOCK_CONFIG.lock_path(outside / "metadata.json").symlink_to(
+            plate / "admitted.lock"
+        )
+    config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+    monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    before = tuple((path.name, path.is_symlink()) for path in outside.iterdir())
+    gateway = _MetadataTransactionCompileInspectionGateway()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(plate,), writable_roots=(plate,)
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+    with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
+        service.inspect_pipeline_source_artifact_plan(
+            PipelineSourceSessionRequest(
+                identity=ZMQExecutionIdentity(plate_id=str(plate)),
+                pipeline_source=_pipeline_document_source(),
+                global_config_id=None,
+                connection=ExecutionConnectionSpec(),
+            )
+        )
+    assert gateway.requests == []
+    assert tuple((path.name, path.is_symlink()) for path in outside.iterdir()) == before
+    assert not (plate / "admitted.json").exists()
+    assert not (plate / "admitted.lock").exists()
+
+
+def test_compile_inspection_uses_metadata_owner_despite_environment_drift(
+    monkeypatch, tmp_path: Path
+):
+    config = metadata_module.OpenHCSMetadataConfig(
+        METADATA_FILENAME="transaction/metadata.json"
+    )
+    monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    monkeypatch.setenv("OPENHCS_METADATA_FILENAME", "../unadmitted/metadata.json")
+    gateway = _MetadataTransactionCompileInspectionGateway()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+    inspection = service.inspect_pipeline_source_artifact_plan(
+        PipelineSourceSessionRequest(
+            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
+            connection=ExecutionConnectionSpec(),
+        )
+    )
+    assert inspection.errors == ()
+    assert len(gateway.requests) == 1
+    assert all(path.is_file() for path in config.managed_paths(tmp_path))
+    assert str(config.metadata_path(tmp_path)) in inspection.warnings[0].message
+    assert not (tmp_path.parent / "unadmitted").exists()
 
 
 def test_compile_inspection_capability_declares_workspace_persistence():
