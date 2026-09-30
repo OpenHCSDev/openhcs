@@ -10,6 +10,7 @@ import zmq
 
 from polystore.streaming.identity import StreamProducerIdentity
 from zmqruntime.config import TransportMode
+from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.transport import get_zmq_transport_url, remove_ipc_socket
 from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
@@ -78,6 +79,11 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
                 "metadata": metadata,
                 "data_type": "image",
                 "image_id": "transport-test-image",
+                "producer": ProcessIdentity.current().to_dict(),
+                "return_route": AckReturnRoute(
+                    "tcp://127.0.0.1:8111", "00000000-0000-0000-0000-000000000001",
+                    ProcessIdentity.current(),
+                ).to_dict(),
                 "producer_identity": producer.to_payload(),
             }
         ],
