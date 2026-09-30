@@ -1,0 +1,390 @@
+..................F................................F.................... [ 26%]
+.......................F...F............................................ [ 52%]
+..................................................F...............F..... [ 79%]
+.........................................................                [100%]
+=================================== FAILURES ===================================
+_____ test_object_label_pure_2d_aggregator_uses_image_metadata_composition _____
+
+    def test_object_label_pure_2d_aggregator_uses_image_metadata_composition() -> None:
+        spatial_domain = SourceSpatialDomain(
+            origin_yx=(2, 3),
+            source_shape_yx=(8, 9),
+        )
+        first = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(
+                labels=np.asarray([[0, 1], [0, 0]], dtype=np.int32)
+            ),
+            source_path="/input/A01_s001_w1.tif",
+            source_component_metadata={
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+            },
+            source_image_names=("rawDNA",),
+            source_spatial_domain=spatial_domain,
+            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+        )
+        second = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(
+                labels=np.asarray([[0, 2], [0, 0]], dtype=np.int32)
+            ),
+            source_path="/input/A01_s002_w1.tif",
+            source_component_metadata={
+                "well": "A01",
+                "site": "2",
+                "channel": "1",
+            },
+            source_image_names=("rawDNA",),
+            source_spatial_domain=spatial_domain,
+            domain=ObjectLabelDomain(declared_object_ids=(2,)),
+        )
+        expected_metadata = ImagePayloadMetadata.compose(
+            (first, second),
+            mode=ImagePayloadMetadataCompositionMode.STACK,
+        )
+    
+        aggregated = ObjectLabelPure2DSliceAggregator.aggregate(
+            (first, second),
+            "numpy",
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        )
+    
+        assert aggregated.source_provenance == expected_metadata.source_provenance
+        assert aggregated.source_spatial_domain == expected_metadata.source_spatial_domain
+        assert (
+            aggregated.parent_image_source_voxel_spacing
+            == expected_metadata.source_voxel_spacing
+        )
+        assert aggregated.source_component_metadata is not None
+>       assert dict(aggregated.source_component_metadata) == {
+            "well": "A01",
+            "channel": "1",
+            "extension": ".tif",
+        }
+E       AssertionError: assert {'well': 'A01...channel': '1'} == {'well': 'A01...sion': '.tif'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+tests/unit/test_runtime_values.py:528: AssertionError
+________ test_bundle_image_metadata_preserves_payload_source_provenance ________
+
+    def test_bundle_image_metadata_preserves_payload_source_provenance() -> None:
+        first = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w1_z001_t001.tif",),
+                component_metadata=(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "1",
+                        "z_index": "1",
+                    },
+                ),
+            )
+        ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
+        second = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w2_z001_t001.tif",),
+                component_metadata=(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "2",
+                        "z_index": "1",
+                    },
+                ),
+            )
+        ).payload_with(np.ones((4, 5), dtype=np.float32), None)
+    
+        bundle = ImagePayloadMetadata.compose(
+            (first, second),
+            mode=ImagePayloadMetadataCompositionMode.BUNDLE,
+        )
+        stack = ImagePayloadMetadata.compose((first, second))
+    
+        assert bundle.source_image_provenance_planes.count == 2
+        assert tuple(
+            plane.source_identity.path
+            for plane in bundle.source_image_provenance_planes.planes
+        ) == (
+            "/input/A01_s001_w1_z001_t001.tif",
+            "/input/A01_s001_w2_z001_t001.tif",
+        )
+>       assert dict(bundle.source_component_metadata) == {
+            "extension": ".tif",
+            "well": "A01",
+            "site": "1",
+            "z_index": "1",
+        }
+E       AssertionError: assert {'z_index': '...'well': 'A01'} == {'extension':...z_index': '1'}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+tests/unit/test_runtime_values.py:1609: AssertionError
+___________ test_group_scoped_measurements_preserve_runtime_row_axis ___________
+
+    def test_group_scoped_measurements_preserve_runtime_row_axis() -> None:
+        output_plan = ArtifactOutputPlan(
+            name="Measurements",
+            path="/memory/Measurements.pkl",
+            artifact_type=MeasurementsArtifactType,
+            group_keys=("1",),
+            group_component=AllComponents.CHANNEL,
+        )
+        table = MeasurementTable(
+            name="Measurements",
+            rows=MeasurementSparseColumnarRows.from_rows(
+                (
+                    {"slice_index": 0, "value": 1.0},
+                    {"slice_index": 1, "value": 2.0},
+                ),
+                fields=(
+                    FieldSpec("slice_index", int),
+                    FieldSpec("value", float),
+                ),
+            ),
+            subject=MeasurementSubject(MeasurementScope.ARTIFACT, "Measurements"),
+        )
+    
+        value = RuntimeValue.normalize(output_plan, table, axis_id="A01")
+    
+        assert value.data is table
+>       assert value.materialization_payload() == table.rows
+E       AssertionError: assert MeasurementTable(source_provenance=<openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7f8e8399b68...ect(scope=<MeasurementScope.ARTIFACT: 'artifact'>, name='Measurements', id_field=None), measurement_feature_owner=None) == MeasurementSparseColumnarRows(columns=mappingproxy({'slice_index': (0, 1), 'value': (1.0, 2.0)}), fields=(FieldSpec(na...ue)), missing_cell=MeasurementSparseCell(), declared_object_measurement_domain_covered=False, object_row_identity=None)
+E        +  where MeasurementTable(source_provenance=<openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7f8e8399b68...ect(scope=<MeasurementScope.ARTIFACT: 'artifact'>, name='Measurements', id_field=None), measurement_feature_owner=None) = materialization_payload()
+E        +    where materialization_payload = RuntimeValue(key=ArtifactKey(name='Measurements', artifact_type=<class 'openhcs.core.artifacts.MeasurementsArtifactTyp...artifact'>, name='Measurements', id_field=None), measurement_feature_owner=None), materialization_source_metadata=None).materialization_payload
+E        +  and   MeasurementSparseColumnarRows(columns=mappingproxy({'slice_index': (0, 1), 'value': (1.0, 2.0)}), fields=(FieldSpec(na...ue)), missing_cell=MeasurementSparseCell(), declared_object_measurement_domain_covered=False, object_row_identity=None) = MeasurementTable(source_provenance=<openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7f8e8399b68...ect(scope=<MeasurementScope.ARTIFACT: 'artifact'>, name='Measurements', id_field=None), measurement_feature_owner=None).rows
+
+tests/unit/test_runtime_values.py:2944: AssertionError
+__ test_normalize_artifact_value_preserves_slice_aligned_object_label_sources __
+
+    def test_normalize_artifact_value_preserves_slice_aligned_object_label_sources():
+        output_plan = ArtifactOutputPlan(
+            name="Nuclei",
+            path="/memory/Nuclei.pkl",
+            artifact_type=ObjectLabelsArtifactType,
+        )
+        expected_labels = np.array(
+            [
+                [[0, 1], [0, 0]],
+                [[0, 2], [0, 0]],
+            ],
+            dtype=np.int32,
+        )
+        first = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=expected_labels[0]),
+            source_path="/input/A02_s001_w1_z001_t001.tif",
+            source_component_metadata={"well": "A02", "site": 1, "channel": 1},
+            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+        )
+        second = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=expected_labels[1]),
+            source_path="/input/A02_s002_w1_z001_t001.tif",
+            source_component_metadata={"well": "A02", "site": 2, "channel": 1},
+            domain=ObjectLabelDomain(declared_object_ids=(2,)),
+        )
+    
+        value = RuntimeValue.normalize(
+            output_plan,
+            RuntimeSliceAlignedValues((first, second)),
+            axis_id="A02",
+        )
+        payload = value.data
+    
+        assert isinstance(payload, ObjectLabelSet)
+        assert payload.name == output_plan.name
+        assert payload.dimensions == ()
+        assert payload.source_image_name is None
+        assert payload.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+        assert payload.representation is ObjectLabelRepresentation.DENSE_LABELS
+        assert payload.dtype == np.dtype(np.int32)
+        assert payload.domain == ObjectLabelDomain(
+            declared_object_id_domains=((1,), (2,)),
+            scope=ObjectLabelDomainScope.PLANE,
+        )
+        assert payload.source_spatial_domain == SourceSpatialDomain()
+        assert payload.source_path is None
+>       assert dict(payload.source_component_metadata or {}) == {
+            "well": "A02",
+            "channel": 1,
+            "extension": ".tif",
+        }
+E       AssertionError: assert {'well': 'A02', 'channel': 1} == {'well': 'A02...sion': '.tif'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+tests/unit/test_runtime_values.py:3112: AssertionError
+_____ test_bundle_payload_context_preserves_source_binding_plane_metadata ______
+
+    def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> None:
+        first = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w1_z001_t001.tif",),
+                component_metadata=({"well": "A01", "site": 1, "channel": 1},),
+            )
+        ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
+        second = ImagePayloadMetadata(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("/input/A01_s001_w2_z001_t001.tif",),
+                component_metadata=({"well": "A01", "site": 1, "channel": 2},),
+            )
+        ).payload_with(np.ones((4, 5), dtype=np.float32), None)
+    
+        bundle = ImagePayloadBundleContext.from_payloads((first, second)).compose()
+        metadata = image_payload_metadata(bundle)
+    
+        assert metadata.source_image_provenance_planes.paths == (
+            "/input/A01_s001_w1_z001_t001.tif",
+            "/input/A01_s001_w2_z001_t001.tif",
+        )
+        assert tuple(
+            dict(item)
+            for item in metadata.source_image_provenance_planes.component_metadata
+        ) == (
+            {"well": "A01", "site": 1, "channel": 1},
+            {"well": "A01", "site": 1, "channel": 2},
+        )
+>       assert dict(metadata.source_component_metadata) == {
+            "well": "A01",
+            "site": 1,
+            "extension": ".tif",
+        }
+E       AssertionError: assert {'site': 1, 'well': 'A01'} == {'well': 'A01...sion': '.tif'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 1 more item:
+E         {'extension': '.tif'}
+E         Use -v to get more diff
+
+tests/unit/test_function_runtime_source_projection.py:721: AssertionError
+___ test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets ___
+
+    def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -> None:
+        bindings = (
+            NamedSourceBinding(
+                alias="OrigStain1",
+                selector=SourceSelector(
+                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            ),
+            NamedSourceBinding(
+                alias="OrigStain2",
+                selector=SourceSelector(
+                    components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+            ),
+        )
+        source_binding_plan = CompiledSourceBindingPlan(
+            bindings=bindings,
+            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        )
+    
+        source_set_measurements = ArtifactSpec.output(
+            "SourceSetMeasurements",
+            MeasurementsArtifactType,
+            relations=tuple(
+                GroupLineageSourceRelation(source=binding.input_spec().ref())
+                for binding in bindings
+            ),
+        )
+    
+        @artifact_inputs(*(binding.input_spec() for binding in bindings))
+        @artifact_outputs(source_set_measurements)
+        @composed_image_payload
+        def measure_source_set(image):
+            return image
+    
+        measurement_plan = ArtifactOutputPlan(
+            name="SourceSetMeasurements",
+            path="/memory/SourceSetMeasurements.pkl",
+            artifact_type=MeasurementsArtifactType,
+            group_keys=("1", "2"),
+            group_component=AllComponents.CHANNEL,
+            relations=source_set_measurements.relations,
+        )
+    
+        plan = SimpleNamespace(
+            axis_id="A01",
+            step_index=0,
+            step_name="SourceBoundAnchorFilter",
+            main_input_dependency=StepInputDependency.pipeline_start(),
+            source_binding_plan=source_binding_plan,
+            execution_group_scope=ComponentGroupScope.from_raw(
+                ("1", "2"),
+                component=AllComponents.CHANNEL,
+            ),
+>           compiled_function_pattern=compile_function_pattern(
+                measure_source_set,
+                {},
+                {plan.ref(): plan for plan in (measurement_plan,)},
+            ),
+        )
+
+tests/unit/test_function_runtime_source_projection.py:1588: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/function_patterns.py:1057: in compile_function_pattern
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1057: in <genexpr>
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1227: in compile
+    invocations = tuple(
+openhcs/core/function_patterns.py:1228: in <genexpr>
+    _compile_invocation(
+openhcs/core/function_patterns.py:1267: in _compile_invocation
+    artifact_selector.validate_artifact_output_declarations()
+openhcs/core/artifact_key_selection.py:114: in validate_artifact_output_declarations
+    self.artifact_output_policy.validate_output_declarations(self.artifact_specs)
+openhcs/core/artifact_key_selection.py:32: in validate_output_declarations
+    cls.validate_payload_declaration(spec)
+openhcs/core/artifact_key_selection.py:47: in validate_payload_declaration
+    spec.artifact_type.validate_native_output_declaration(spec)
+openhcs/core/artifacts.py:717: in validate_native_output_declaration
+    cls.require_output_subject(spec)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'openhcs.core.artifacts.MeasurementsArtifactType'>
+output = ArtifactSpec(name='SourceSetMeasurements', artifact_type=<class 'openhcs.core.artifacts.MeasurementsArtifactType'>, pa...>, name='OrigStain2'))), plan_type=<class 'openhcs.core.artifacts.ArtifactOutputPlan'>, measurement_feature_owner=None)
+
+    @classmethod
+    def require_output_subject(
+        cls,
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject":
+        """Require the same declared subject at compile and runtime boundaries."""
+    
+        subject = ArtifactSpecRelation.measurement_subject_for_output(output)
+        if subject is None:
+>           raise ValueError(
+                f"Measurement output {output.ref()!r} has no declared "
+                "measurement subject relation. Add ImageMeasurementSubjectRelation "
+                "with the exact declared image ref for image-level rows, "
+                "ObjectMeasurementSubjectRelation with the exact object-label ref "
+                "for object-level rows, or ArtifactMeasurementSubjectRelation() "
+                "for artifact-level rows to ArtifactSpec.output(..., relations=(...,))."
+            )
+E           ValueError: Measurement output ArtifactSpecRef(plan_type=<class 'openhcs.core.artifacts.ArtifactOutputPlan'>, artifact_type=<class 'openhcs.core.artifacts.MeasurementsArtifactType'>, name='SourceSetMeasurements') has no declared measurement subject relation. Add ImageMeasurementSubjectRelation with the exact declared image ref for image-level rows, ObjectMeasurementSubjectRelation with the exact object-label ref for object-level rows, or ArtifactMeasurementSubjectRelation() for artifact-level rows to ArtifactSpec.output(..., relations=(...,)).
+
+openhcs/core/artifacts.py:699: ValueError
+=========================== short test summary info ============================
+FAILED tests/unit/test_runtime_values.py::test_object_label_pure_2d_aggregator_uses_image_metadata_composition
+FAILED tests/unit/test_runtime_values.py::test_bundle_image_metadata_preserves_payload_source_provenance
+FAILED tests/unit/test_runtime_values.py::test_group_scoped_measurements_preserve_runtime_row_axis
+FAILED tests/unit/test_runtime_values.py::test_normalize_artifact_value_preserves_slice_aligned_object_label_sources
+FAILED tests/unit/test_function_runtime_source_projection.py::test_bundle_payload_context_preserves_source_binding_plane_metadata
+FAILED tests/unit/test_function_runtime_source_projection.py::test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets
+6 failed, 267 passed in 3.36s
