@@ -892,10 +892,9 @@ class RuntimeSliceProjection:
 
     @classmethod
     def full_stack_value(cls, value: RuntimeProjectionData) -> RuntimeProjectionData:
-        """Materialize nominal image alignment without changing other domains."""
-        return RuntimeSliceProjectionStrategy.strategy_for_value(
-            value
-        ).full_stack_value(value)
+        """Materialize declared alignment; preserve opaque whole-stack arguments."""
+        strategy = RuntimeSliceProjectionStrategy.for_nominal_value(value)
+        return value if strategy is None else strategy.full_stack_value(value)
 
     @classmethod
     def full_stack_kwargs(
