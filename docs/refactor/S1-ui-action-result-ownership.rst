@@ -143,3 +143,8 @@ isolated GUI started own5993/6993, but its cold connect failed while preparation
 was active; final native process absence is verified, not inferred from timeout.
 This is a separate native startup boundary, not proof that349 is ready to merge.
 The frozen blind trial and original backing installation remain unchanged.
+
+Latest installed checkpoint supersedes pending live status above:
+``S1-ui-action-result-installed-20261001.rst``. It records actual affected GUI/MCP
+acceptance, original R0/census/overlay, retained incomplete R1 and named independent
+follow-through. Historical failures above remain evidence, not current status.
