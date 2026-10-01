@@ -73,7 +73,7 @@ policy, report scope and semantic graph obligations remain unchanged.
 Focused verification and limits
 -------------------------------
 
-The completed source run passes34 tests in46.73s wall at144.06MiB sampled
+The final source run passes35 tests in45.51s wall at144.18MiB sampled
 combined child RSS, under the60s/512MiB source limits. The initial test command
 failed fixture setup because its scratch parent did not exist; the failure is
 retained in the sidecar's durable ``validation/focused-first.*`` receipts.
@@ -86,6 +86,26 @@ changed/added/removed/ambiguous schema context against a fresh original analysis
 and fixed-address projection reuse (zero reparses for a comment-only transition).
 Recursive dependency changes/removal match fresh original analysis. A weakref
 check verifies the baseline graph is gone before the second analysis starts.
+The actual CLI returns nonzero for both new raw-record and type-check debt.
+
+A separate read-only source-staging check on the exact original base/head passes
+in4.95s at207.47MiB combined RSS. Each revision contains1535 Python files and
+the same eight Git-recorded dependencies. All1530 unchanged files preserve their
+stat identity; only the five changed files are rewritten. Membership is checked
+independently against recursive ``git ls-tree`` output. This checks real source
+staging, not NRA analysis, cached counts or production comparison acceptance.
+
+The packaged lightweight census on the changed script reports zero growth in
+type-identity checks, raw string-key reads, dispatch subjects/arms, long boolean
+chains/terms, codecs, foreign probes and named-attribute access. The full scripts
+overlay has no raw-shape finding for this consumer. The new archive subprocess
+is an external streaming boundary with checked exit and guaranteed reap, not
+a provider/runtime launch. Both scripts complete with no parse warning.
+
+Commands, full successful/failed source logs, resource JSON, staging recipe and
+lightweight census/overlay reports are retained in
+``receipts/r1-357-source-20261001.tar.gz``. The initial setup failure is retained
+alongside successful runs, not overwritten.
 
 Interpreter/dependencies are read-only:
 ``/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python``.
