@@ -146,7 +146,9 @@ def test_scalar_input_ambiguity_precedes_dependent_output_subject_validation(
     rows = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=tuple(ObjectMeasurementSubjectRelation(spec.ref()) for spec in inputs),
+        relations=tuple(
+            ObjectMeasurementSubjectRelation(spec.ref()) for spec in inputs
+        ),
     )
 
     @runtime_adapter(
@@ -201,6 +203,67 @@ def test_cellprofiler_recording_requires_its_declared_measurement_row_owner():
 
     with pytest.raises(ValueError, match="declared measurement_feature_owner"):
         compile_function_pattern(measure, {}, {})
+
+
+@pytest.mark.parametrize(
+    "output_policy",
+    [NativeReturnArtifactOutputPolicy, AdapterRecordedArtifactOutputPolicy],
+)
+def test_table_wide_subject_owner_rejects_distinct_named_image_subjects(output_policy):
+    images = tuple(
+        ArtifactSpec.output(name, ImageArtifactType) for name in ("Stain1", "Stain2")
+    )
+    measurements = ArtifactSpec.output(
+        "Measurements",
+        MeasurementsArtifactType,
+        relations=tuple(
+            ImageMeasurementSubjectRelation(image.ref()) for image in images
+        ),
+    )
+
+    @runtime_adapter(
+        "runtime", lambda request: object(), artifact_output_policy=output_policy
+    )
+    @artifact_outputs(*images, measurements)
+    def measure(image, *, runtime):
+        raise AssertionError("Invalid declarations must not execute")
+
+    with pytest.raises(ValueError, match="multiple measurement subjects"):
+        compile_function_pattern(measure, {}, {})
+
+
+def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
+    from openhcs.core.artifacts import ArtifactSpecRelation
+    from openhcs.processing.backends.cellprofiler.image_quality import (
+        MeasureImageQualityModule,
+    )
+
+    images = tuple(
+        ArtifactSpec.output(name, ImageArtifactType) for name in ("Stain1", "Stain2")
+    )
+    measurements = ArtifactSpec.output(
+        "Measurements",
+        MeasurementsArtifactType,
+        relations=tuple(
+            ImageMeasurementSubjectRelation(image.ref()) for image in images
+        ),
+        measurement_feature_owner=MeasureImageQualityModule,
+    )
+
+    @runtime_adapter(
+        "runtime",
+        lambda request: object(),
+        artifact_output_policy=CellProfilerRecordedArtifactOutputPolicy,
+    )
+    @artifact_outputs(*images, measurements)
+    def measure(image, *, runtime):
+        raise AssertionError("Compile admission must not execute a callable")
+
+    compiled = compile_function_pattern(measure, {}, {})
+    subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
+    assert tuple(subject.name for subject in subjects) == ("Stain1", "Stain2")
+    assert len({subject.row_identity_domain for subject in subjects}) == 1
+    assert compiled is not None
 
 
 def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
@@ -276,12 +339,17 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     authored = next(normalize_function_pattern(step.func).iter_items())
     contract = provider.plans[(0, authored.key)].contract
     assert contract.artifact_output_policy is CellProfilerRecordedArtifactOutputPolicy
-    assert contract.metadata.artifact_output_policy is CellProfilerRecordedArtifactOutputPolicy
+    assert (
+        contract.metadata.artifact_output_policy
+        is CellProfilerRecordedArtifactOutputPolicy
+    )
     (measurement,) = contract.artifact_outputs.of_artifact_type(
         MeasurementsArtifactType
     )
     assert measurement.measurement_feature_owner is IdentifyPrimaryObjectsModule
-    assert measurement.require_measurement_feature_owner() is IdentifyPrimaryObjectsModule
+    assert (
+        measurement.require_measurement_feature_owner() is IdentifyPrimaryObjectsModule
+    )
     assert ArtifactSpecRelation.measurement_subject_for_output(measurement) is None
 
     compiled = compile_function_pattern(
