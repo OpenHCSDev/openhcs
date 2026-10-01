@@ -1,7 +1,16 @@
 """Focused dev-client rendering tests for reflected configuration schemas."""
 
-from openhcs.agent.dto.config import ConfigSchema
+import ast
+from dataclasses import dataclass, replace
+from pathlib import Path
+
+from openhcs.agent.dto.config import ConfigFieldSchema, ConfigSchema, ConfigTypeSchema
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser, _calls_from_args
+from openhcs.mcp.dev_client_core import (
+    McpDevServerIdentity,
+    McpDevToolBatchResponse,
+    McpDevToolResult,
+)
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     McpDevOutputRenderer,
@@ -10,6 +19,7 @@ from openhcs.mcp.dev_client_rendering import (
 
 def _config_schema_response() -> dict:
     return {
+        "server": {"command": "python", "module": "openhcs.mcp"},
         "errors": [],
         "results": [
             {
@@ -98,6 +108,7 @@ def _config_schema_response() -> dict:
 
 def _config_schema_error_response() -> dict:
     return {
+        "server": {"command": "python", "module": "openhcs.mcp"},
         "errors": [],
         "results": [
             {
@@ -140,7 +151,7 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
         CatalogRenderOptions(),
     )
 
-    assert rendered.startswith("Config schema: unavailable\n")
+    assert rendered.startswith("Result: <unavailable>\n")
     assert (
         "- mcp_server_stale: The OpenHCS MCP server source changed after this "
         'process started. hint="Restart the MCP client/server process."'
@@ -149,9 +160,13 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
 
     transport_rendered = binding.render_with_options(
         {
+            "server": {"command": "python", "module": "openhcs.mcp"},
             "errors": [
                 {
                     "code": "mcp_transport_failed",
+                    "phase": "call_tool",
+                    "exception_type": "EOFError",
+                    "causes": [],
                     "message": "MCP stdio exchange ended during source reload.",
                     "hint": "Retry with a fresh server process.",
                 }
@@ -160,7 +175,7 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
         },
         CatalogRenderOptions(),
     )
-    assert transport_rendered.startswith("Config schema: unavailable\n")
+    assert transport_rendered.startswith("Result: <unavailable>\n")
     assert (
         "- mcp_transport_failed: MCP stdio exchange ended during source reload. "
         'hint="Retry with a fresh server process."'
@@ -177,7 +192,7 @@ def test_config_schema_renderer_filters_and_bounds_reflected_fields() -> None:
     )
 
     assert (
-        "Config schema: type=PipelineConfig path=<root> " "authoring=ConfigPatch.values"
+        "Config schema: type=PipelineConfig path=<root> authoring=ConfigPatch.values"
     ) in rendered
     assert "Fields: total=3 matched=2 shown=1 registries=1 types=1" in rendered
     assert "Filter: contains=lazy" in rendered
@@ -255,3 +270,114 @@ def test_generated_config_schema_command_projects_request_and_render_options() -
     )
     assert "Fields: total=3 matched=3 shown=3 registries=1 types=1" in call_rendered
     assert '"payloads"' not in call_rendered
+
+
+def test_config_schema_typed_boundary_reuses_nested_values(monkeypatch) -> None:
+    response = McpDevToolBatchResponse.for_rendering(_config_schema_response())
+    schema = response.results[0].first_decoded_payload()
+    assert isinstance(schema, ConfigSchema)
+    assert isinstance(schema.fields[0], ConfigFieldSchema)
+    assert isinstance(schema.types[0], ConfigTypeSchema)
+    assert schema.fields[0].lazy is True
+    assert schema.fields[0].inheritable is True
+    assert schema.fields[0].default_repr == "None"
+
+    def unexpected_decode(*args, **kwargs):
+        raise AssertionError("The decoded schema must not be reinterpreted.")
+
+    monkeypatch.setattr(
+        "openhcs.mcp.dev_client_rendering.dataclass_from_mapping", unexpected_decode
+    )
+    binding = McpDevOutputRenderer.for_output_contract(ConfigSchema)
+    assert binding is not None
+    assert binding.decode_payload(schema) is schema
+    rendered = binding.render_result(response, CatalogRenderOptions())
+    assert "flags=optional,lazy,inheritable" in rendered
+    assert "default=None" in rendered
+
+
+def test_config_schema_subtype_uses_ancestor_without_registry_edits() -> None:
+    @dataclass(frozen=True, slots=True)
+    class AnnotatedConfigSchema(ConfigSchema):
+        annotation: str = "new declaration"
+
+    schema = AnnotatedConfigSchema(
+        config_type="PipelineConfig",
+        schema_version="openhcs.agent.v1",
+        fields=(
+            ConfigFieldSchema(
+                path="children[]",
+                type_repr="LazyChildConfig",
+                default_repr=None,
+                required=True,
+                description=" measured  source ",
+                authoring_value_path=("children", "[]"),
+                lazy=True,
+                inheritable=True,
+                ui_hidden=True,
+            ),
+        ),
+        path_prefix="children",
+    )
+    binding = McpDevOutputRenderer.for_output_contract(AnnotatedConfigSchema)
+    parent = McpDevOutputRenderer.for_output_contract(ConfigSchema)
+    assert binding is not None and parent is not None
+    assert binding.renderer_type is parent.renderer_type
+    assert binding.decode_payload(schema) is schema
+    response = McpDevToolBatchResponse(
+        server=McpDevServerIdentity(
+            command="python",
+            module="openhcs.mcp",
+        ),
+        results=(
+            McpDevToolResult(
+                tool="openhcs_describe_config_schema",
+                mcp_error=False,
+                payloads=(schema,),
+            ),
+        ),
+    )
+    rendered = binding.render_result(response, CatalogRenderOptions(limit=1))
+    assert "path=children" in rendered
+    assert "flags=required,lazy,inheritable,ui_hidden" in rendered
+    assert "authoring=children/[]" in rendered
+    assert 'help="measured source"' in rendered
+    assert "default=" not in rendered
+    bounded = binding.render_result(response, CatalogRenderOptions(limit=-1))
+    assert "Fields: total=1 matched=1 shown=0" in bounded
+    assert "...<truncated 1 fields>" in bounded
+    assert "- children[]:" not in bounded
+    empty = replace(schema, fields=(), types=(), registries=())
+    assert "total=0 matched=0 shown=0" in binding.render_result(
+        replace(response, results=(replace(response.results[0], payloads=(empty,)),)),
+        CatalogRenderOptions(),
+    )
+
+
+def test_config_schema_rejects_incomplete_nested_record() -> None:
+    response = _config_schema_response()
+    del response["results"][0]["payloads"][0]["fields"][0]["path"]
+    binding = McpDevOutputRenderer.for_output_contract(ConfigSchema)
+    assert binding is not None
+    rendered = binding.render_with_options(response, CatalogRenderOptions())
+    assert rendered.startswith("Result: <unavailable>\n")
+    assert "mcp_payload_invalid" in rendered
+    assert "Fields: total=" not in rendered
+
+
+def test_config_schema_renderer_has_no_raw_payload_reader() -> None:
+    from openhcs.mcp.dev_client_renderers import config
+
+    source = ast.parse(Path(config.__file__).read_text())
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in {"get", "first_tool_payload", "sequence_of_mappings"}
+        for node in ast.walk(source)
+    )
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in {"getattr", "isinstance", "dataclass_from_mapping"}
+        for node in ast.walk(source)
+    )
