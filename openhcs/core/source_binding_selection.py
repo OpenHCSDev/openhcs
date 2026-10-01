@@ -313,13 +313,43 @@ class SourcePatternResolutionContext:
     def virtual_paths_for_source(self, source_path: str) -> tuple[str, ...]:
         """Return exact virtual-workspace paths declared for one source path."""
 
-        return tuple(
-            virtual_path
-            for virtual_path, declared_source_path in (
-                self.source_paths_by_virtual_path.items()
+        return self.virtual_paths_for_sources((source_path,))[0]
+
+    def virtual_paths_for_sources(
+        self,
+        source_paths: Sequence[str],
+    ) -> tuple[tuple[str, ...], ...]:
+        """Resolve exact physical addresses in one pass over the declarations."""
+        positions_by_source: dict[str, list[str]] = {}
+        for position, source in self.source_paths_by_virtual_path.items():
+            positions_by_source.setdefault(source_path_identity_key(source), []).append(
+                position
             )
-            if source_paths_equal(declared_source_path, source_path)
+        return tuple(
+            tuple(positions_by_source.get(source_path_identity_key(source), ()))
+            for source in source_paths
         )
+
+    def declared_positions_for_candidates(
+        self,
+        candidates: Sequence[SourceCandidatePath],
+    ) -> tuple[SourceCandidatePath, ...]:
+        """Project exact physical spellings onto their declared workspace positions.
+
+        Workspace positions are not physical-file identities: several positions
+        may address different planes in one store. Keep every declared position,
+        and replace only a physical address explicitly mapped to those positions.
+        No basename, filesystem resolution or metadata inference participates.
+        """
+        positions: list[SourceCandidatePath] = []
+        for candidate, virtual_paths in zip(
+            candidates, self.virtual_paths_for_sources(candidates), strict=True
+        ):
+            if candidate in self.source_paths_by_virtual_path:
+                positions.append(candidate)
+            else:
+                positions.extend(virtual_paths or (candidate,))
+        return tuple(dict.fromkeys(positions))
 
     def runtime_paths_for_candidate(
         self,
@@ -1112,6 +1142,7 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
     ) -> tuple[tuple[SourceCandidatePath, ...], ...]:
         """Resolve a batch without rescanning unrelated paths for each identity."""
 
+        candidates = self.declared_positions_for_candidates(candidates)
         candidates_by_path: dict[str, list[SourceCandidatePath]] = {}
         for candidate in candidates:
             path_keys = dict.fromkeys(

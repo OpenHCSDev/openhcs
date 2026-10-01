@@ -1,0 +1,40 @@
+Engineering source checkpoint freeze, issue350, owner Schrodinger.
+Worktree: /home/ts/wt/openhcs-paired-raw-bootstrap-20261001
+Branch: fix/paired-raw-bootstrap-20261001
+Base: 094425c8c81324da7a3878379074e1bd8234ff52
+Reviewed source commit: e34fb4d6ebbe20ad96500c44f178ff718854f9b2
+Draft: https://github.com/OpenHCSDev/openhcs/pull/351
+Further handoff commits contain metadata/receipts only. No merge/install/live claim.
+No parent PR349 dev-client action/command/core/rendering file is in this source patch.
+
+SHA256 of reviewed production source and fixture/guard code:
+2f0abbc8ef1f1162bcb214786c1a6df6f2fbd8aaa3c673ab4ece0857479a365c  openhcs/core/source_binding_selection.py
+436b17eacbc7efa4d698fc5077360acd3fd24e4804251393e84d80d65d879d3e  openhcs/runtime/napari_streaming_handlers.py
+21721aef080e7cfd5e262ac65dd36549a847ec46ed433c64c38e9c95165dfe47  openhcs/runtime/napari_viewer_server.py
+a5f605c77ef1a5a975d1093d46272e0d6098bc4436e596f3ee529c3950fb48b4  openhcs/runtime/viewer_component_system.py
+fa17e812b265cb2c9ab38c67fa62c404438f704c21fab534a55de720c5363245  tests/unit/test_source_bindings.py
+461507180b60fa1351c90f8853668f19db00602744454c4a3ad25abfb91b9796  tests/unit/test_napari_streaming_handlers.py
+
+120 passed in three provider-free source shards:53 binding,52 viewer/navigation,
+15 pipeline projection; frozen installed Python3.12, oneCPU/thread pools1,
+kernel512MiB/no swap, outer60s. Ruff E9/F63/F7/F82 and git diff --check pass.
+New-case experiments: declared region hook using super(), original domain/name
+MI context, third source alias. Production consumer edits for new cases:zero.
+Two explicit inherited-owner policy guards pass; no copied detector is claimed.
+Local original R0/R1 did not qualify; complete failures remain in owner-review-
+local-guards.txt. Parent owns original supported-environment R0/R1 qualification.
+Initial label-capitalization fixture failure remains in owner-review-fixture-failure.txt.
+
+Exact cleanup after all retained executions exited; no active owned scanner:
+Removed /home/ts/wt/openhcs-paired-raw-bootstrap-20261001/.validation (1.6MiB),
+containing only regenerated task caches and synthetic pytest fixture files.
+Unlinked only task-created source-test symlinks:
+/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/openhcs/core/_tabular_native.abi3.so
+/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so
+The frozen installed targets remain present with identical SHA256:
+3c2dc1dcaa4cd8cf7f2c8505a673501de4c79f09372d6fef8fb5c044b6df3d56  _tabular_native.abi3.so
+469297bdce4f4605eb7f7fe0c7703cb520acb5d549352c2784abe980c588adde  _granularity_native.abi3.so
+Retained source/tests/receipts can regenerate disposable fixtures; no user data,
+science input/output or backing environment/source was removed or modified.
+Parent keeps validation.lock and native/MCP/UI launch ownership; no such process
+was launched by this engineering review. No frozen-trial retune/replay occurred.
