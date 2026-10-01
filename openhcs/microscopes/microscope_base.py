@@ -32,9 +32,9 @@ from objectstate.lazy_factory import replace_raw
 
 # Import interfaces from the base interfaces module
 from openhcs.microscopes.microscope_interfaces import (
-    FilenameParseResult,
     FilenameParser,
     MetadataHandler,
+    MicroscopeImagePathParser,
 )
 
 logger = logging.getLogger(__name__)
@@ -177,6 +177,7 @@ class MetadataMicroscopeDetector:
 
 class MicroscopeHandler(
     MetadataMicroscopeDetector,
+    MicroscopeImagePathParser,
     ViewerMicroscopeHandlerABC,
     ABC,
     metaclass=AutoRegisterMeta,
@@ -745,16 +746,6 @@ class MicroscopeHandler(
             f"This method is only needed for handlers that use the base class initialize_workspace(). "
             f"Handlers that override initialize_workspace() completely (like OMERO, OpenHCS) don't need this."
         )
-
-    # Delegate methods to parser
-    def parse_filename(self, filename: str) -> Optional[FilenameParseResult]:
-        """Delegate to parser."""
-        return self.parser.parse_filename(filename)
-
-    def construct_filename(self, components: FilenameParseResult) -> str:
-        """Delegate nominal filename construction to the parser."""
-
-        return self.parser.construct_filename(components)
 
     def auto_detect_patterns(
         self,

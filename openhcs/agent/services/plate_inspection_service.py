@@ -78,6 +78,7 @@ if TYPE_CHECKING:
         FilenameParser,
         MetadataComponentValueSet,
         MetadataHandler,
+        MicroscopeImagePathParser,
     )
     from polystore.filemanager import FileManager
 
@@ -526,7 +527,7 @@ class PlateInspectionFilenameParser:
     def parse(
         self,
         *,
-        parser: "FilenameParser | None",
+        parser: "MicroscopeImagePathParser | None",
         image_files: tuple[str, ...],
         bounds: PlateInspectionBounds,
     ) -> PlateInspectionParsedFileSet:
@@ -546,7 +547,7 @@ class PlateInspectionFilenameParser:
 
         for filename in image_files[:parse_limit]:
             try:
-                parsed = parser.parse_filename(Path(filename).name)
+                parsed = parser.parse_image_path(filename)
             except Exception as exc:
                 failed_count += 1
                 self._append_failure(
@@ -1633,7 +1634,7 @@ class PlateInspectionService:
             record.virtual_path for record in file_inventory.image_records
         )
         parsed = self._filename_parser.parse(
-            parser=parser,
+            parser=handler if parser is not None else None,
             image_files=image_files,
             bounds=bounds,
         )
@@ -1965,7 +1966,6 @@ class PlateInspectionService:
             image_inventory = PlateInspectionService._image_inventory(
                 handler,
                 plate_path,
-                parser,
                 filemanager,
                 warnings,
             )
@@ -2008,7 +2008,6 @@ class PlateInspectionService:
             PlateInspectionService._image_inventory(
                 handler,
                 plate_path,
-                parser,
                 filemanager,
                 warnings,
             ),
@@ -2032,7 +2031,6 @@ class PlateInspectionService:
         image_inventory = PlateInspectionService._image_inventory(
             handler,
             plate_path,
-            parser,
             filemanager,
             warnings,
         )
@@ -2048,7 +2046,6 @@ class PlateInspectionService:
     def _image_inventory(
         handler: "MicroscopeHandler",
         plate_path: Path,
-        parser: "FilenameParser | None",
         filemanager: "FileManager",
         warnings: list[AgentWarning],
     ) -> PlateImageInventory:
@@ -2065,8 +2062,7 @@ class PlateInspectionService:
                 handler.register_workspace_backends(plate_path, filemanager)
             return PlateImageInventory.from_handler(
                 plate_path=plate_path,
-                metadata_handler=handler.metadata_handler,
-                parser=parser,
+                handler=handler,
                 filemanager=filemanager,
                 backend=handler.get_primary_backend(plate_path, filemanager),
                 source_projection=source_projection,

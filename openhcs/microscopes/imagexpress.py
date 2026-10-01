@@ -8,7 +8,7 @@ for ImageXpress microscopes.
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, Type
+from typing import List, Optional, Tuple, Union, Type
 
 from openhcs.constants.constants import AllComponents, Backend, Microscope
 from openhcs.core.components.parser_metaprogramming import (
@@ -16,7 +16,6 @@ from openhcs.core.components.parser_metaprogramming import (
 )
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
-from polystore.virtual_workspace import SourcePixelRef
 from openhcs.microscopes.microscope_base import MicroscopeHandler
 from openhcs.microscopes.microscope_interfaces import (
     DiskImageFileListingMetadataHandler,
@@ -24,12 +23,51 @@ from openhcs.microscopes.microscope_interfaces import (
     FilenameParser,
     MetadataComponentValueSet,
     MetadataHandler,
+    MicroscopeImagePathParser,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class ImageXpressHandler(MicroscopeHandler):
+class ImageXpressTimePointPaths(MicroscopeImagePathParser):
+    """TimePoint folders independently own the acquisition time coordinate."""
+
+    _timepoint_folder_pattern = re.compile(r"TimePoint[_-]?(\d+)", re.IGNORECASE)
+
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        return (
+            *super().image_path_components(path),
+            *self.indexed_folder_components(
+                path,
+                AllComponents.TIMEPOINT,
+                self._timepoint_folder_pattern,
+            ),
+        )
+
+
+class ImageXpressZStepPaths(MicroscopeImagePathParser):
+    """ZStep folders independently own the acquisition depth coordinate."""
+
+    _zstep_folder_pattern = re.compile(r"ZStep[_-]?(\d+)", re.IGNORECASE)
+
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        return (
+            *super().image_path_components(path),
+            *self.indexed_folder_components(
+                path,
+                AllComponents.Z_INDEX,
+                self._zstep_folder_pattern,
+            ),
+        )
+
+
+class ImageXpressHandler(
+    ImageXpressTimePointPaths, ImageXpressZStepPaths, MicroscopeHandler
+):
     """
     MicroscopeHandler implementation for Molecular Devices ImageXpress systems.
 
@@ -106,12 +144,10 @@ class ImageXpressHandler(MicroscopeHandler):
             f"🔄 BUILDING VIRTUAL MAPPING: ImageXpress folder flattening for {plate_path}"
         )
 
-        # Initialize mapping dict (PLATE-RELATIVE paths)
-        workspace_mapping = {}
-
-        # Flatten TimePoint and ZStep folders virtually (starting from plate root)
-        self._flatten_timepoints(plate_path, filemanager, workspace_mapping, plate_path)
-        self._flatten_zsteps(plate_path, filemanager, workspace_mapping, plate_path)
+        workspace_mapping = self.acquisition_workspace_mapping(
+            self.metadata_handler.get_image_files(plate_path, all_subdirs=True),
+            backend=Backend.DISK.value,
+        )
 
         logger.info(
             f"Built {len(workspace_mapping)} virtual path mappings for ImageXpress"
@@ -122,173 +158,6 @@ class ImageXpressHandler(MicroscopeHandler):
 
         # Return the image directory
         return plate_path
-
-    def _flatten_zsteps(
-        self,
-        directory: Path,
-        fm: FileManager,
-        mapping_dict: Dict[str, SourcePixelRef],
-        plate_path: Path,
-        folder_components: tuple[tuple[AllComponents, int], ...] = (),
-    ):
-        """
-        Process Z-step folders virtually by building plate-relative mapping dict.
-
-        Args:
-            directory: Path to directory that might contain Z-step folders
-            fm: FileManager instance for file operations
-            mapping_dict: Dict to populate with virtual → real mappings
-            plate_path: Plate root path for computing relative paths
-        """
-        zstep_pattern = re.compile(r"ZStep[_-]?(\d+)", re.IGNORECASE)
-
-        # Find and process Z-step folders
-        self._flatten_indexed_folders(
-            directory=directory,
-            fm=fm,
-            folder_pattern=zstep_pattern,
-            component=AllComponents.Z_INDEX,
-            folder_type="ZStep",
-            mapping_dict=mapping_dict,
-            plate_path=plate_path,
-            folder_components=folder_components,
-        )
-
-    def _flatten_timepoints(
-        self,
-        directory: Path,
-        fm: FileManager,
-        mapping_dict: Dict[str, SourcePixelRef],
-        plate_path: Path,
-    ):
-        """
-        Process TimePoint folders virtually by building plate-relative mapping dict.
-
-        Args:
-            directory: Path to directory that might contain TimePoint folders
-            fm: FileManager instance for file operations
-            mapping_dict: Dict to populate with virtual → real mappings
-            plate_path: Plate root path for computing relative paths
-        """
-        timepoint_pattern = re.compile(r"TimePoint[_-]?(\d+)", re.IGNORECASE)
-
-        # First flatten Z-steps within each timepoint folder (if they exist)
-        entries = fm.list_dir(directory, Backend.DISK.value)
-        subdirs = [
-            Path(directory) / entry
-            for entry in entries
-            if (Path(directory) / entry).is_dir()
-        ]
-
-        for subdir in subdirs:
-            match = timepoint_pattern.search(subdir.name)
-            if match:
-                self._flatten_zsteps(
-                    subdir,
-                    fm,
-                    mapping_dict,
-                    plate_path,
-                    folder_components=((AllComponents.TIMEPOINT, int(match.group(1))),),
-                )
-
-        # Then flatten timepoint folders themselves
-        self._flatten_indexed_folders(
-            directory=directory,
-            fm=fm,
-            folder_pattern=timepoint_pattern,
-            component=AllComponents.TIMEPOINT,
-            folder_type="TimePoint",
-            mapping_dict=mapping_dict,
-            plate_path=plate_path,
-        )
-
-    def _flatten_indexed_folders(
-        self,
-        directory: Path,
-        fm: FileManager,
-        folder_pattern: re.Pattern,
-        component: AllComponents,
-        folder_type: str,
-        mapping_dict: Dict[str, SourcePixelRef],
-        plate_path: Path,
-        folder_components: tuple[tuple[AllComponents, int], ...] = (),
-    ):
-        """
-        Generic helper to flatten indexed folders virtually (TimePoint_N, ZStep_M, etc.).
-
-        Builds plate-relative mapping dict instead of moving files.
-
-        Args:
-            directory: Path to directory that might contain indexed folders
-            fm: FileManager instance for file operations
-            folder_pattern: Regex pattern to match folder names (must have one capture group for index)
-            component_name: Component to update in metadata (e.g., 'z_index', 'timepoint')
-            folder_type: Human-readable folder type name (for logging)
-            mapping_dict: Dict to populate with virtual → real mappings
-            plate_path: Plate root path for computing relative paths
-        """
-        # List all subdirectories
-        entries = fm.list_dir(directory, Backend.DISK.value)
-        subdirs = [
-            Path(directory) / entry
-            for entry in entries
-            if (Path(directory) / entry).is_dir()
-        ]
-
-        # Find indexed folders
-        indexed_folders = []
-        for d in subdirs:
-            match = folder_pattern.search(d.name)
-            if match:
-                index = int(match.group(1))
-                indexed_folders.append((index, d))
-
-        if not indexed_folders:
-            return
-
-        # Sort by index
-        indexed_folders.sort(key=lambda x: x[0])
-
-        logger.info(
-            f"Found {len(indexed_folders)} {folder_type} folders. Building virtual mapping..."
-        )
-
-        # Process each folder
-        for index, folder in indexed_folders:
-            logger.debug(f"Processing {folder.name} ({folder_type}={index})")
-
-            # List all files in the folder
-            img_files = fm.list_files(str(folder), Backend.DISK.value)
-
-            for img_file in img_files:
-                if not fm.is_file(img_file, Backend.DISK.value):
-                    continue
-
-                filename = Path(img_file).name
-
-                # Parse existing filename
-                metadata = self.parser.parse_filename(filename)
-                if not metadata:
-                    continue
-
-                # Reconstruct filename
-                new_filename = self.parser.construct_filename(
-                    metadata.with_values((*folder_components, (component, index)))
-                )
-
-                # Build PLATE-RELATIVE virtual flattened path (at plate root, not in subdirectory)
-                # This makes images appear at plate root in virtual workspace
-                virtual_relative = new_filename
-
-                # Build PLATE-RELATIVE real path (in subfolder)
-                real_relative = Path(img_file).relative_to(plate_path).as_posix()
-
-                # Add to mapping (both plate-relative)
-                mapping_dict[virtual_relative] = SourcePixelRef(
-                    backend=Backend.DISK.value,
-                    backend_address=real_relative,
-                )
-                logger.debug(f"  Mapped: {virtual_relative} → {real_relative}")
 
 
 class ImageXpressFilenameParser(FilenameParser):
