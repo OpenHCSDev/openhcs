@@ -50,7 +50,10 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolResult,
 )
-from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
+from openhcs.mcp.dev_client_rendering import (
+    McpDevOutputRenderer,
+    McpDevTypedOutputRenderer,
+)
 from openhcs.mcp.dev_client_renderers.pipeline import PipelineArtifactPlanRenderer
 from openhcs.serialization.json import to_jsonable
 
@@ -448,6 +451,10 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
     response = batch(ExtensionCapability.to_spec(), value)
     assert type(response.results[0].first_decoded_payload()) is ExtendedInspection
     assert "plate=extended" in PipelineArtifactPlanRenderer.render(response)
+    command = CapabilityBackedCommandSpec.for_capability_name(ExtensionCapability.name)
+    assert "plate=extended" in command.render_result(
+        response, command.call_render_args({})
+    )
 
 
 @pytest.mark.parametrize("value", [None, False, 0, ""])
@@ -472,13 +479,13 @@ def test_cooperative_diamond_renderer_identity_is_visited_once():
 
     events = []
 
-    class Left(PipelineArtifactPlanRenderer):
+    class Left(McpDevTypedOutputRenderer):
         @classmethod
         def render_payload(cls, payload, options):
             events.append("left")
             return super().render_payload(payload, options)
 
-    class Right(PipelineArtifactPlanRenderer):
+    class Right(McpDevTypedOutputRenderer):
         @classmethod
         def render_payload(cls, payload, options):
             events.append("right")

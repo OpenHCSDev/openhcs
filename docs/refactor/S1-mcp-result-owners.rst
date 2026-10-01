@@ -145,6 +145,47 @@ compact/JSON entrypoints with a controlled wire response, no runtime launch.
 Native server metadata remains exactly openhcs/outputContract=ExecutionJobRef.
 Typed error interpretation is tested with serialization forbidden.
 
+After normal integration of parent main b31807d9de067e18d212bdf9353d05099757fc74:
+29 passed (22 new, seven existing), 17.17s wall, 310812 KiB RSS. Single-declaration
+extension now also exercises real capability ingress and generated command
+rendering. Four nullable-fact cases prove false, zero and empty strings are not
+silently omitted as absence. Original R0 found eight repeated foreign optional
+probes; replaced all nine nullable composition sites with the typed ancestor's
+shared optional_lines policy, not local variable rebinding or guard exceptions.
+Leaf owners format present facts; the native None absence fact is unchanged.
+
+Original R0 at agent-comms 3b03785f45df2ef5dc62ba6aed99294192ecbb01,
+head 018caf90c, base b31807d9: openhcs PASS, 26.53s/87592 KiB. No increased
+measure. Original failed R0 remains archived. Syntax/correctness Ruff subset
+E9/F63/F7/F82 passes; broad inherited lint debt was not mass-edited.
+Whole renderer snapshot after pipeline: 5962 code lines, literal_key_get
+157.33/1000 (938 reads), isinstance_call 19.96/1000 (119), None 26.00/1000
+(155). Pipeline weighted debt 100 -> 11; 502 -> 400 code lines. This measures
+remaining family debt honestly and does not count shuffling as closure.
+
+Unchanged R1, authoritative NRA source 0844525ecaba93e090a064a4ae4914466b2dae60,
+base b31807d9, current source head c47b1f6a9: INCOMPLETE, not PASS. First bounded
+attempt could not mmap Git's pack under a 512 MiB address-space limit. Retried
+the same roots/revisions/tool with bounded Git mapping windows (8m/128m), not
+changed detector inputs: materialized recorded source/dependency context, then
+ScanDeadlineExceeded during parse_python_module at 55.000s. Wall 56.20s,
+263856 KiB RSS. No comparison or descent/proof result returned. Roots remain
+openhcs, scripts, benchmark plus all recorded external submodule Python context;
+report scope remains changed surviving production files. No exception/waiver,
+no substituted scoped result, no full-package/global NRA proof claim. Continuing
+source progress does not repair or claim completion of this independent tool.
+Owned persistent source snapshot scratch: worktree/.s1-r1-scratch; original tool
+TemporaryDirectory cleaned its snapshots on the caught deadline exit.
+
+R0 scripts and benchmark also PASS unchanged (empty changed Python scope).
+Shared-owner regression shard: 29 existing knowledge/architecture/function/
+authoring/tool-list/code-document command cases PASS, 28.04s/284140 KiB,
+provider-free, no runtime. These are behavior checks, not full remaining-family
+descent closure. Evidence archive: receipts/S1-pipeline-20261001.tar.gz contains
+original failures, subsequent passing logs/XML, full guard outputs and census.
+It excludes compiler/build products. Regenerate it after further owned checks;
+owned terminal scratch is disposable once the archive is verified.
+
 Original failures remain in the owned output archive: source-first import order
 collection failure; JsonValue annotation namespace failure; scoped registry/MRO
 failures; five existing fixture failures. Existing fixture updates supply missing
