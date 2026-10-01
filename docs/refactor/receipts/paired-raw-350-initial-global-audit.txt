@@ -1,0 +1,14 @@
+NRA pinned source0844525, original frozen installed Python, source worktree.
+Report targets source_binding_selection.py/viewer_component_system.py/
+napari_viewer_server.py; context openhcs and external, all detectors requested.
+--json --raw-findings --json-payload full --parse-workers1 --analysis-workers1
+--no-cache; outer timeout55s and tasksetCPU0, pools1.
+Original outcome: exit124; finding_payload_mode=deadline_incomplete;
+complete=false, deadline_exceeded=true, stage=parse_python_module,
+budget_seconds=20.0, elapsed_seconds=21.939; counts null, NOT zero findings.
+Wall23.33s; user22.76s/system0.47s; peakRSS525976KiB (513.65MiB).
+This peak EXCEEDED512MiB; this audit is rejected, not a resource pass or global
+ownership proof. No active scanner remains. Subsequent shards use kernel
+MemoryMax512M/MemorySwapMax0 scope enforcement, not RSS sampling alone.
+Recorded dependency gitlinks are uninitialized in this new worktree; external
+source context completeness is also unqualified. No dependency install/update.
