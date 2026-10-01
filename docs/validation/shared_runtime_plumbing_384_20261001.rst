@@ -69,6 +69,34 @@ already resolved target; no additional generic invocation type or parallel
 contract/callable fields are needed. Image source-name projection consumes the
 already resolved payload through the existing artifact strategy family.
 
+The executor does not own a second interpretation of input relations or returned
+artifact contexts. ``ArtifactSpecCollection`` derives exact broadcast indices
+from its ordered declarations; ``RuntimeReturnedOutputMatcher`` contextualizes
+the compiled canonical return ABI. The old CP helpers are deleted. The existing
+contract, collection and returned value determine these answers directly.
+
+The deeper clean-source probe at 5d1f1a781eda851b4783b68db342b76eeef9dea9 records
+10.053237 seconds of public execution, including 4.465789 seconds at the callable
+boundary and 4.939001 seconds elsewhere inside steps. Loading takes 0.699904
+exclusive seconds, image recording 0.519127, output identity 0.412492 and image
+request preparation 0.388981. Explicit diagnostic capture costs 0.044853 seconds.
+These partitions are diagnostic evidence, not accepted A/B measurements.
+
+All 23 produced-stack cache hits correspond to previously stored output paths.
+The nine misses are original inputs; seven repeat earlier source reads and cost
+0.5149 seconds inclusively. Those inputs are already in memory. Caching their
+mutable arrays by path alone is rejected: storage has no mutation revision and
+loaded source semantics depend on binding, aliases and plane contracts.
+
+The next shared route is metadata ownership, rather than a second pixel cache.
+Changing spatial context, intensity or image names repeatedly constructs source
+provenance and copies/fingerprints its component mapping. Source loading and CP
+image recording consume this common path. The saved typed ImageMath fixture
+retains actual nested mapping ownership for a cold-promotion and complete-workflow
+replay. An isolated query-cache payoff does not admit this migration. CP-recorded
+outputs already bypass generic postprocessing; removing that hypothetical second
+contextualization would not affect the measured recorder.
+
 The unmodified-main light trace located about 3.44 seconds in loading, unstacking,
 saving and finalization for the representative 3D pipeline. CP request and output
 context construction account for another approximately 1.216 seconds. These are
