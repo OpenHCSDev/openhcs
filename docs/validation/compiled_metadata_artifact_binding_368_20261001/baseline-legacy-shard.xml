@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="5" time="0.473" timestamp="2026-10-01T11:17:36.145294-04:00" hostname="desktop"><testcase classname="tests.unit.test_artifact_input_parameter_normalization" name="test_legacy_only_artifact_parameter_declaration_compiles" time="0.072"><failure message="ValueError: Callable 'consume' artifact-fed parameter 'labels' has no exact artifact declaration binding.">def test_legacy_only_artifact_parameter_declaration_compiles() -&gt; None:
+        @special_inputs("labels")
+        def consume(image, *, labels):
+            del labels
+            return image
+    
+&gt;       compiled = compile_function_pattern(consume, {}, {})
+
+tests/unit/test_artifact_input_parameter_normalization.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/function_patterns.py:1094: in compile_function_pattern
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+openhcs/core/function_patterns.py:1094: in &lt;genexpr&gt;
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+openhcs/core/function_patterns.py:1264: in compile
+    invocations = tuple(
+openhcs/core/function_patterns.py:1265: in &lt;genexpr&gt;
+    _compile_invocation(
+openhcs/core/function_patterns.py:1303: in _compile_invocation
+    item.contract.validate_artifact_input_parameter_bindings()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CallableContract(func=&lt;function test_legacy_only_artifact_parameter_declaration_compiles.&lt;locals&gt;.consume at 0x7f0168f...imary_image_carrier_requirement=None, primary_image_carrier_transition=None), runtime_batch_executors=mappingproxy({}))
+
+    def validate_artifact_input_parameter_bindings(self) -&gt; None:
+        """Validate exact artifact occurrences against the normalized callable ABI."""
+    
+        from openhcs.core.pipeline.function_contracts import (
+            resolved_callable_parameter,
+            special_input_parameter_accepts_sequence,
+        )
+    
+        raw_callable = self.resolve_canonical_raw_callable()
+        artifact_parameters = {
+            parameter_name: resolved_callable_parameter(raw_callable, parameter_name)
+            for parameter_name in self.artifact_input_parameter_names
+        }
+        specs_by_parameter: dict[str, list[ArtifactSpec]] = {}
+        for spec in self.artifact_inputs:
+            parameter_name = spec.parameter_name
+            if parameter_name is None:
+                continue
+            if parameter_name not in artifact_parameters:
+                raise ValueError(
+                    f"Callable {self.function_name!r} artifact input {spec.ref()!r} "
+                    f"binds undeclared artifact-fed parameter {parameter_name!r}."
+                )
+            parameter = artifact_parameters[parameter_name]
+            if (
+                parameter.annotation is not inspect.Signature.empty
+                and spec.artifact_type.runtime_parameter_types()
+                and not spec.artifact_type.accepts_parameter_annotation(
+                    parameter.annotation
+                )
+            ):
+                raise TypeError(
+                    f"Callable {self.function_name!r} parameter "
+                    f"{parameter_name!r} does not accept "
+                    f"{spec.artifact_type.require_value()} artifact payloads."
+                )
+            specs_by_parameter.setdefault(parameter_name, []).append(spec)
+    
+        for parameter_name, parameter in artifact_parameters.items():
+            bound_specs = tuple(specs_by_parameter.get(parameter_name, ()))
+            if not bound_specs:
+                if parameter.default is inspect.Parameter.empty:
+&gt;                   raise ValueError(
+                        f"Callable {self.function_name!r} artifact-fed parameter "
+                        f"{parameter_name!r} has no exact artifact declaration "
+                        "binding."
+                    )
+E                   ValueError: Callable 'consume' artifact-fed parameter 'labels' has no exact artifact declaration binding.
+
+openhcs/core/callable_contract.py:1232: ValueError</failure></testcase><testcase classname="tests.unit.test_artifact_input_parameter_normalization" name="test_artifact_spec_only_parameter_declaration_compiles" time="0.001" /><testcase classname="tests.unit.test_artifact_input_parameter_normalization" name="test_matching_legacy_and_artifact_spec_declarations_compile" time="0.001" /><testcase classname="tests.unit.test_artifact_input_parameter_normalization" name="test_conflicting_legacy_and_artifact_spec_declarations_fail_compilation" time="0.001" /><testcase classname="tests.unit.test_artifact_input_parameter_normalization" name="test_legacy_declaration_agrees_with_compiled_exact_artifact_binding" time="0.001" /></testsuite></testsuites>

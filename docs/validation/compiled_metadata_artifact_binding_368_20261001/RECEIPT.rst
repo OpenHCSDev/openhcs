@@ -31,9 +31,20 @@ default1, arbitrary-kwargs origin exemption, required-input skip, copied loader,
 compatibility reader or alternate runtime. Injection now follows the existing
 ArtifactSpec parameter_name owner, including metadata aliases.
 
-New case: one registered MetadataArtifactProvider subclass plus its declared
-ArtifactSpec/callable parameter. The engineering exposure-duration provider
-requires ZERO production edits after the generic fix. No roster is added.
+Provider selection and injection now live on PathPlannerMetadataArtifactInjection;
+PathPlannerArtifactStage inherits the algorithm and the single planner reference.
+The child's old implementation and assembly's duplicate provider precheck are
+deleted, not retained behind a facade.
+
+New case: a registered MetadataArtifactProvider leaf combines ResolutionReceipt
+and PositiveMetadataValue with the existing exposure provider through cooperative
+super(). Real compile -> injected kwargs -> FunctionCoreExecutor.execute records
+resolve, validate17.25, resolved17.25, and the callable receives17.25. A handler
+returning -17.25 triggers the validation capability before completion/callable;
+the receipt capability cannot falsely record success. This verifies real MRO
+behavior and independently composed policy, not only inheritance shape. The
+original provider registry discovers the leaf; ZERO shared consumer edits or
+parallel roster are needed for this new case.
 
 Original red and green
 ----------------------
@@ -74,14 +85,52 @@ dtype_config. That NEW assertion was corrected to test the actual invariant:
 metadata calibration is not mirrored into runtime_parameter_bindings; legitimate
 dtype configuration remains. No original behavior assertion was weakened.
 
-Remaining before source handoff completion
------------------------------------------
+Completed source qualification and remaining boundary
+----------------------------------------------------
 
-Run full affected source shards and exact production-file original packaged R0
-ratchet. R1 remains BLOCKED by issue357, not a complete scan, passing audit or
-waiver. No global architecture, CellProfiler numerical parity, performance,
-installed or biological acceptance claim. Parent owns the synthetic installed
-MCP -> compile -> native journey; do not replay the frozen biological trial.
+Qualified production/test commit410164878ee4c075fbbd7f4be30518004d63a062:
+
+* mro-planner-shard.xml: full planner file116passed;7.15s,445940KiB RSS.
+* pattern-runtime-shard.xml: full function_patterns and function_artifact_outputs
+  files131passed;6.85s,464252KiB RSS.
+* source-edge-shard.xml: full edge cardinality, projection, parameter normalization,
+  runtime source projection and axis source scope files113passed/1failed;
+  8.91s,429376KiB RSS. Total360passed/1failed across non-overlapping source files.
+* baseline-legacy-shard.xml: unchanged base98d2 parameter-normalization file
+  reproduces SAME failure with4passed;5.25s,417004KiB RSS. The failing original
+  test_legacy_only_artifact_parameter_declaration_compiles uses special_inputs
+  without an exact artifact declaration; unchanged CallableContract raises
+  'labels has no exact artifact declaration binding'. This is a base contract/test
+  conflict, not a #368 regression. No legacy compatibility reader was added and
+  no assertion was skipped/relaxed. Parent integration owner receives its exact
+  reproducer for separate triage; no overlapping source patch is authorized here.
+* git diff --check: clean.
+
+Original packaged R0 at /home/ts/wt/openhcs-s1-original-ratchet-20261001,
+detached3b03785f45df2ef5dc62ba6aed99294192ecbb01, runs its original CLI through
+capture_r0.py, not copied debt measures. Ratchet SHA256:
+e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562.
+First comparison at deca8f5 retained in r0-first.json: only positive delta was
+PathPlannerArtifactStage GodClassExcess+5. The inherited metadata owner removes
+that duplication in place. r0-qualified.json at410164878: exact three production
+paths,5170metrics, ZERO positive deltas,exit0,18.81s,86908KiB RSS. The evidence
+commit adds no production/test changes; this qualified source is frozen.
+
+R1 remains BLOCKED by issue357, not a complete scan, passing audit or waiver.
+No global architecture, CellProfiler numerical parity, performance, installed
+or biological acceptance claim. Parent owns the synthetic installed MCP ->
+compile -> native journey; do not replay the frozen biological trial.
+
+Owned disposable scratch: owned-scratch/baseline-98d2,34MiB, purpose exact
+git-archive base regression comparison. Removed after preserving XML/resource
+receipts; recoverable from base commit98d2. Base openhcs tree:
+00f2ba2bc86f0ca89b01036fb57333a1c5850ba0; normalization-test blob:
+7f66f530ce4bbb9a9bdbbc53529544a381c31a9d. Empty scratch parent removed.
+No owned native/viewer/MCP process or canonical lock was acquired in this source
+assignment; no install, launch or close is needed. Final resource helper returns
+warning/exit2: RAM20.4GiB available,home8.2GiB free,swap10.9GiB used. Its disk
+advisory is not a hard task threshold; actual source shards above used enforced
+oneCPU/512MiB/60s and retained output is under3MiB. No new parallel run was started.
 
 Persisted formats: none changed. Compiled invocation edge/runtime state is
 internal/transient; metadata values retain their original callable kwargs
