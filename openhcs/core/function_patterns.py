@@ -808,6 +808,11 @@ class CompiledFunctionPattern:
     is_grouped: bool
 
     @property
+    def runtime_domain(self) -> RuntimeInvocationDomain:
+        """Derive the shared anchor domain from the compiled invocations."""
+        return RuntimeInvocationDomain.from_invocations(tuple(self.iter_invocations()))
+
+    @property
     def execution_scope(self) -> FunctionStepExecutionScope:
         """Return the uniform lifecycle scope derived from its invocations."""
         return FunctionStepExecutionScope.require_uniform(

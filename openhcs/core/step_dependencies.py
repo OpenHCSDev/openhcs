@@ -98,6 +98,10 @@ class StepInputDependency:
             )
         return self.source_step_index
 
+    def uses_pipeline_start_anchors(self) -> bool:
+        """Only a pipeline-start main input is filtered against raw source bindings."""
+        return self.kind.is_pipeline_start
+
     def require_pipeline_start(self) -> None:
         """Prove that this terminal dependency reaches the pipeline source."""
 

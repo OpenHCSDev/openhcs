@@ -708,9 +708,16 @@ class MeasurementsArtifactType(ArtifactType):
 
     @classmethod
     def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
-        """Explicit subject relations must agree under every recording owner."""
+        """Reject incompatible row domains before payload-owner validation.
 
-        ArtifactSpecRelation.measurement_subject_for_output(spec)
+        Source-qualified image rows share one image-set domain. Their recording
+        owner determines whether multiple subjects can occupy the output; native
+        and ordinary recorded tables still require one exact subject.
+        """
+
+        subjects = ArtifactSpecRelation.measurement_subjects_for_output(spec)
+        if len({subject.row_identity_domain for subject in subjects}) > 1:
+            ArtifactSpecRelation.measurement_subject_for_output(spec)
 
     @classmethod
     def validate_native_output_declaration(cls, spec: "ArtifactSpec") -> None:
@@ -1271,12 +1278,12 @@ class ArtifactSpecRelation(ABC, metaclass=AutoRegisterMeta):
         return None
 
     @staticmethod
-    def measurement_subject_for_output(
+    def measurement_subjects_for_output(
         output: "ArtifactSpec | ArtifactOutputPlan",
-    ) -> "MeasurementSubject | None":
-        """Resolve the sole subject from an output's original relation owners."""
+    ) -> "tuple[MeasurementSubject, ...]":
+        """Derive all exact subjects from the original relation owners."""
 
-        subjects = tuple(
+        return tuple(
             dict.fromkeys(
                 subject
                 for relation in output.relations
@@ -1284,6 +1291,14 @@ class ArtifactSpecRelation(ABC, metaclass=AutoRegisterMeta):
                 if subject is not None
             )
         )
+
+    @staticmethod
+    def measurement_subject_for_output(
+        output: "ArtifactSpec | ArtifactOutputPlan",
+    ) -> "MeasurementSubject | None":
+        """Resolve one exact subject for a table-wide subject owner."""
+
+        subjects = ArtifactSpecRelation.measurement_subjects_for_output(output)
         if len(subjects) > 1:
             raise ValueError(
                 f"Artifact output {output.ref()!r} declares multiple measurement "
@@ -2008,8 +2023,7 @@ class ArtifactSpecAccumulator:
             and existing.sidecar_role is not incoming.sidecar_role
         ):
             raise ValueError(
-                f"Conflicting {self.role} artifact sidecar role for "
-                f"'{incoming.name}'."
+                f"Conflicting {self.role} artifact sidecar role for '{incoming.name}'."
             )
         sidecar_role = (
             existing.sidecar_role

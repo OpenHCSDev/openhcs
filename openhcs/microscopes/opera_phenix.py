@@ -522,15 +522,9 @@ class OperaPhenixFilenameParser(FilenameParser):
         z_index = components.required_value(AllComponents.Z_INDEX)
         timepoint = components.required_value(AllComponents.TIMEPOINT)
 
-        # Extract row and column from well name
-        # Check if well is in Opera Phenix format (e.g., 'R01C03')
-        match = self._well_pattern.match(well)
-        if match:
-            # Extract row and column from Opera Phenix format
-            row = int(match.group(1))
-            col = int(match.group(2))
-        else:
-            raise ValueError(f"Invalid well format: {well}. Expected format: 'R01C03'")
+        row_name, column_name = self.extract_component_coordinates(well)
+        row = ord(row_name) - ord("A") + 1
+        col = int(column_name)
 
         # Construct filename in Opera Phenix format
         site_part = f"f{format_filename_component(site, site_padding)}"
@@ -541,6 +535,18 @@ class OperaPhenixFilenameParser(FilenameParser):
             f"r{row:02d}c{col:02d}{site_part}{z_part}"
             f"-ch{format_filename_component(channel)}{sk_part}fk1fl1{components.extension}"
         )
+
+    def construct_acquisition_filename(
+        self,
+        components: FilenameParseResult,
+        *,
+        include_all_components: bool = False,
+        plate_name: str | None = None,
+        include_site: bool = True,
+        include_channel: bool = True,
+    ) -> str:
+        """Keep Harmony's physical field/plane spelling on the format owner."""
+        return self.construct_filename(components, site_padding=0, z_padding=2)
 
     def remap_field_in_filename(
         self, filename: str, xml_parser: Optional[OperaPhenixXmlParser] = None

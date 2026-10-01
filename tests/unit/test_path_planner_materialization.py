@@ -3791,6 +3791,70 @@ def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope
     )
 
 
+@pytest.mark.parametrize("stored_payload", (False, True))
+def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_payload):
+    payload = ArtifactSpec.input("ComposedImage", ImageArtifactType)
+    prefix = ArtifactSpec.input("FilenameSource", ImageArtifactType)
+    saved = ArtifactSpec.output(
+        "SavedImage",
+        ImageArtifactType,
+        relations=(GroupLineageSourceRelation(source=payload.ref()),),
+    )
+
+    @artifact_inputs(payload, prefix)
+    @artifact_outputs(saved)
+    def save_declared_payload(image):
+        return image
+
+    planner = _artifact_planner_stub()
+    bindings = [
+        NamedSourceBinding(
+            alias=prefix.name,
+            component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        )
+    ]
+    if stored_payload:
+        _record_declared_output(
+            planner,
+            ArtifactOutputPlan(
+                name=payload.name,
+                path="/memory/composed.pkl",
+                artifact_type=payload.artifact_type,
+                group_keys=("1", "2", "3"),
+                group_component=AllComponents.SITE,
+            ),
+        )
+    else:
+        bindings.append(
+            NamedSourceBinding(
+                alias=payload.name,
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+            )
+        )
+    snapshot = _snapshot(
+        is_function_step=True,
+        func=save_declared_payload,
+        group_by=GroupBy.CHANNEL,
+        variable_components=(VariableComponents.SITE,),
+        source_bindings=StepSourceBindingsConfig(enabled=True, bindings=tuple(bindings)),
+        input_source=InputSource.PREVIOUS_STEP,
+    )
+
+    scope = planner.execution_groups.get_execution_groups(
+        snapshot,
+        PathPlannerComponentScopes.empty(),
+        contracts=(CallableContract.from_callable(save_declared_payload),),
+    )
+
+    expected = (
+        PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+        if stored_payload
+        else PathPlannerGroupScope.from_raw(("3",), component=AllComponents.CHANNEL)
+    )
+    assert scope == expected
+    assert not scope.contains_runtime_key("1") or scope.is_dynamic
+
+
 def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
     planner = _artifact_planner_stub()
     source_bindings = StepSourceBindingsConfig(
