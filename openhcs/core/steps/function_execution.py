@@ -7,7 +7,7 @@ import os
 import time
 import traceback
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
@@ -28,6 +28,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.progress import ProgressPhase, ProgressStatus, emit
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
     SourceCandidatePath,
@@ -223,6 +224,9 @@ class StepAnchorPatternFilter:
     output_manifest: StepOutputManifestStore
     source_workspace_authority: VirtualWorkspaceSourceProjectionAuthority
     source_workspace_projection_cache: VirtualWorkspaceSourceProjectionCache
+    source_binding_context_cache: RuntimeSourceBindingContextCache = field(
+        default_factory=RuntimeSourceBindingContextCache
+    )
 
     @classmethod
     def from_context(
@@ -243,6 +247,7 @@ class StepAnchorPatternFilter:
             source_workspace_projection_cache=(
                 context.runtime_source_workspace_projection_cache
             ),
+            source_binding_context_cache=context.runtime_source_binding_context_cache,
         )
 
     def filtered(self, grouped_patterns: PatternGroups) -> PatternGroups:
@@ -611,7 +616,7 @@ class StepAnchorPatternFilter:
         """Return source-path context used to filter source-bound anchors."""
 
         projection = self.source_workspace_authority.projection_or_empty()
-        return SourcePatternResolutionContext.from_projection(
+        return self.source_binding_context_cache.source_pattern_context(
             parser=self.parser,
             projection=self.source_workspace_projection_cache.filtered_by_axis(
                 projection,

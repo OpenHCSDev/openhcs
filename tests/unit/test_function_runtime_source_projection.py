@@ -3733,6 +3733,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     """Producer bookkeeping must not override exact workspace source ownership."""
 
     from openhcs.core.steps import function_runtime
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 
     virtual_paths = (
         "A01_s001_w1_z001_t001.tif",
@@ -3870,6 +3871,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         ),
         filemanager=SourceFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         runtime_source_workspace_projection_cache=(
             VirtualWorkspaceSourceProjectionCache()
         ),
