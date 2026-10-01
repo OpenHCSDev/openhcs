@@ -15,7 +15,11 @@ from zmqruntime.config import TransportMode
 from zmqruntime.messages import MessageFields, ProcessIdentity, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
+from openhcs.agent.dto.common import (
+    SCHEMA_VERSION,
+    AgentDataclassCliRequest,
+    AgentResultEnvelope,
+)
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -104,7 +108,7 @@ class FunctionSearchRequest(FunctionCatalogControlRequestABC):
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionCatalogPreparationHandle:
+class FunctionCatalogPreparationHandle(AgentDataclassCliRequest):
     """The one preparation owner in this exact execution-server incarnation."""
 
     connection: ExecutionConnectionSpec

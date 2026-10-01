@@ -20,7 +20,12 @@ from pathlib import Path
 from typing import ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping, is_enum_type, optional_member_type
+from python_introspect import (
+    dataclass_from_mapping,
+    is_enum_type,
+    optional_member_type,
+    signature_analysis_target,
+)
 from zmqruntime.config import TransportMode
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -958,20 +963,24 @@ def request_factory_parameter(
 def request_factory_argument_type(
     request_factory,
     field_name: str,
-) -> type | None:
-    """Return an argparse scalar constructor from the declared DTO type."""
+) -> Callable[[str], object] | None:
+    """Return an argparse text decoder from the declared DTO annotation."""
 
-    annotation = get_type_hints(request_factory)[field_name]
+    annotation = get_type_hints(
+        inspect.unwrap(signature_analysis_target(request_factory))
+    )[field_name]
     annotation = optional_member_type(annotation) or annotation
     if annotation in {str, int, float} or is_enum_type(annotation):
         return cast(type, annotation)
+    if is_dataclass(annotation):
+        return parse_json_object
     return None
 
 
 def request_field_argument_type(
     request_type: type,
     field_name: str,
-) -> type | None:
+) -> Callable[[str], object] | None:
     """Return a primitive argparse type from a DTO from_fields annotation."""
     return request_factory_argument_type(request_type.from_fields, field_name)
 

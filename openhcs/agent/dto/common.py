@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import argparse
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from dataclasses import dataclass, fields
-from functools import cache
-from typing import Self, get_type_hints
+from dataclasses import MISSING, dataclass, fields
+from functools import cache, wraps
+from typing import Self, cast, get_type_hints
+
+from python_introspect import dataclass_from_mapping
 
 from openhcs.serialization.json import (
     JsonObject,
     JsonScalar as JsonScalar,
     JsonValue as JsonValue,
+    to_jsonable,
 )
 
 SCHEMA_VERSION = "openhcs.agent.v1"
@@ -29,7 +34,7 @@ class AgentCliArgumentSpec:
     flags: tuple[str, ...] = ()
     positional: bool = False
     nargs: str | int | None = None
-    action: str | None = None
+    action: str | type[argparse.Action] | None = None
     help: str | None = None
 
 
@@ -52,6 +57,57 @@ class AgentCliRequest(ABC):
     @abstractmethod
     def as_tool_arguments(self) -> JsonObject:
         raise NotImplementedError
+
+
+class AgentDataclassCliRequest(AgentCliRequest):
+    """CLI capability of a DTO whose declared fields are its tool input shape.
+
+    Constructor reflection owns the signature; existing boundary codecs own
+    nested reconstruction, constraints and JSON projection. Custom flattened
+    request factories remain on their actual request owners.
+    """
+
+    @classmethod
+    def from_fields(cls, **kwargs) -> Self:
+        return dataclass_from_mapping(cls, kwargs)
+
+    @classmethod
+    def agent_cli_factory(cls):
+        parameters = inspect.signature(cls).parameters
+
+        @wraps(cls, updated=())
+        def from_cli_fields(**kwargs):
+            # Keep Python's constructor marker out of the typed wire codec.
+            # Omitting that field lets its actual declared factory run once.
+            for declared_field in fields(cls):
+                if (
+                    declared_field.init
+                    and declared_field.default_factory is not MISSING
+                    and kwargs.get(declared_field.name)
+                    is parameters[declared_field.name].default
+                ):
+                    kwargs.pop(declared_field.name)
+            return cls.from_fields(**kwargs)
+
+        return from_cli_fields
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        annotations = get_type_hints(cls)
+        return (
+            *super().agent_cli_argument_specs(),
+            *(
+                AgentCliArgumentSpec(
+                    field_name=declared_field.name,
+                    action=argparse.BooleanOptionalAction,
+                )
+                for declared_field in fields(cls)
+                if declared_field.init and annotations[declared_field.name] is bool
+            ),
+        )
+
+    def as_tool_arguments(self) -> JsonObject:
+        return cast(JsonObject, to_jsonable(self))
 
 
 @dataclass(frozen=True, slots=True)
