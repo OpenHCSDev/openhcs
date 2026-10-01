@@ -1368,7 +1368,9 @@ def test_runtime_binding_uses_full_compiled_special_input_contract() -> None:
     np.testing.assert_array_equal(image_payload_data(topology_inputs[1]), 1.0)
 
 
-def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
+def test_image_artifact_resolution_uses_declared_artifact_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     spec = ArtifactSpec.input("IllumStain1", ImageArtifactType)
     source = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -1394,6 +1396,17 @@ def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
         ).source_image_name(RuntimeArtifactInputRequest(spec=spec, value=source))
         is None
     )
+    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+
+    def reject_second_resolution(*args, **kwargs):
+        raise AssertionError("Source-name projection resolved the image again")
+
+    monkeypatch.setattr(
+        type(strategy), "raw_runtime_input_value", reject_second_resolution
+    )
+    # The original name remains a contributor; the alias alone is not a
+    # unique represented source name.
+    assert strategy.source_image_name_from_value(payload) is None
 
 
 def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
@@ -1590,7 +1603,9 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
     assert image_payload_metadata(payload).source_image_names == ("Stain1",)
 
 
-def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None:
+def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     original_spec = ArtifactSpec.input("OrigStain1", ImageArtifactType)
     illumination_spec = ArtifactSpec.input(
         "IllumStain1",
@@ -1643,12 +1658,25 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
     executor = _module_executor(contract)
     _activate_runtime_contract(executor.callable_contract, runtime)
 
+    strategy_type = type(
+        RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+    )
+    resolve_image = strategy_type.raw_runtime_input_value
+    resolved_specs: list[ArtifactSpec] = []
+
+    def record_resolution(self, request: RuntimeArtifactInputRequest):
+        resolved_specs.append(request.spec)
+        return resolve_image(self, request)
+
+    monkeypatch.setattr(strategy_type, "raw_runtime_input_value", record_resolution)
+
     image_request = executor._image_request(
         current_image,
         runtime,
         module_type=CorrectIlluminationApplyModule,
         active_input_specs=contract.artifact_inputs.specs,
     )
+    assert resolved_specs == [original_spec]
     runtime_kwargs = executor._runtime_input_kwargs(
         runtime,
         current_image,

@@ -62,7 +62,8 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
 )
 
 _CELLPROFILER_RUNTIME_CALLABLE_POLICY = RuntimeCallablePolicy(
-    callable_view=RuntimeCallableView.RAW,
+    # execute() resolves the compiled raw target before processing dispatch.
+    callable_view=RuntimeCallableView.DECORATED,
     kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED,
 )
 
@@ -112,6 +113,7 @@ class CellProfilerFunctionContractExecutor:
         executor = type(self)(plane_projection=plane_projection)
         function_name = callable_contract.function_name
         processing_contract = callable_contract.require_processing_contract()
+        runtime_func = callable_contract.resolve_raw_runtime_callable()
         mode = execution_mode
         CellProfilerRuntimeProfileLogger.log_module_profile(
             "cp_executor_mode_resolution",
@@ -131,12 +133,19 @@ class CellProfilerFunctionContractExecutor:
                     | ProcessingContract.FLEXIBLE
                     | ProcessingContract.VOLUMETRIC_TO_SLICE,
                 ):
+                    runtime_kwargs = dict(kwargs)
+                    runtime_kwargs.update(
+                        processing_contract.declaration.consume_semantic_controls(
+                            runtime_kwargs,
+                            func=func,
+                        )
+                    )
                     result = processing_contract.execute(
                         executor,
-                        func,
+                        runtime_func,
                         image,
                         callable_contract=callable_contract,
-                        **dict(kwargs),
+                        **runtime_kwargs,
                     )
                 case (
                     ImagePayloadExecutionMode.FULL_STACK,
@@ -146,7 +155,7 @@ class CellProfilerFunctionContractExecutor:
                     | ProcessingContract.VOLUMETRIC_TO_SLICE,
                 ):
                     result = executor.execute_pure_3d(
-                        func,
+                        runtime_func,
                         image,
                         callable_contract=callable_contract,
                         **dict(kwargs),
@@ -160,7 +169,7 @@ class CellProfilerFunctionContractExecutor:
                 ):
                     result = executor._execute_aligned_multi_image_stack(
                         callable_contract,
-                        func,
+                        runtime_func,
                         image,
                         **dict(kwargs),
                     )

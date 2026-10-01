@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, replace
+from functools import wraps
+import inspect
 
 import numpy as np
 import pytest
@@ -18,7 +21,11 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import (
+    CallableContract,
+    CallableMetadata,
+    callable_request,
+)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -74,6 +81,119 @@ def test_morphological_skeleton_executes_one_planar_runtime_image() -> None:
 
     assert callable_contract.processing_contract is ProcessingContract.PURE_2D
     assert image_payload_data(result).shape == image.shape
+
+
+def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request_binding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    @dataclass(frozen=True, slots=True)
+    class ScaleRequest:
+        image: object
+        scale: int
+
+    seen: list[tuple[int, ...]] = []
+
+    @callable_request(ScaleRequest)
+    def request_bound(request: ScaleRequest) -> object:
+        data = image_payload_data(request.image)
+        seen.append(data.shape)
+        return data * request.scale
+
+    @wraps(request_bound)
+    def decorated(*args: object, **kwargs: object) -> object:
+        raise AssertionError("CellProfiler invoked an outer runtime wrapper")
+
+    contract = CallableContract.from_callable(decorated)
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            processing_contract=ProcessingContract.PURE_2D,
+        ),
+    )
+    raw_target = contract.resolve_canonical_raw_callable()
+    resolve_raw = CallableContract.resolve_raw_runtime_callable
+    resolutions: list[CallableContract] = []
+
+    def resolve_once(self: CallableContract) -> Callable[..., object]:
+        resolutions.append(self)
+        return resolve_raw(self)
+
+    def reject_reconstruction(*args: object, **kwargs: object) -> CallableContract:
+        raise AssertionError("Runtime execution rebuilt its compiled contract")
+
+    monkeypatch.setattr(CallableContract, "resolve_raw_runtime_callable", resolve_once)
+    monkeypatch.setattr(CallableContract, "from_callable", reject_reconstruction)
+    image = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(np.ones((3, 4, 5), dtype=np.float32), None)
+
+    result = CellProfilerFunctionContractExecutor().execute(
+        contract,
+        raw_target,
+        image,
+        {"scale": 4, "adapter_control": 17},
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=3,
+        ),
+    )
+
+    assert resolutions == [contract]
+    assert seen == [(4, 5)] * 3
+    assert isinstance(result, RuntimeSliceAlignedValues)
+    np.testing.assert_array_equal(
+        np.stack(tuple(image_payload_data(value) for value in result.slices)),
+        np.full((3, 4, 5), 4.0),
+    )
+
+
+@pytest.mark.parametrize("canonical_default", (False, True))
+def test_flexible_dispatch_preserves_canonical_signature_control_defaults(
+    canonical_default: bool,
+) -> None:
+    seen: list[tuple[tuple[int, ...], bool]] = []
+
+    def raw(image: np.ndarray, *, slice_by_slice: bool = False) -> np.ndarray:
+        seen.append((image.shape, slice_by_slice))
+        return image
+
+    @wraps(raw)
+    def decorated(*args: object, **kwargs: object) -> object:
+        raise AssertionError("CellProfiler invoked an outer runtime wrapper")
+
+    signature = inspect.signature(raw)
+    decorated.__signature__ = signature.replace(
+        parameters=(
+            parameter.replace(default=canonical_default)
+            if parameter.name == "slice_by_slice"
+            else parameter
+            for parameter in signature.parameters.values()
+        )
+    )
+    contract = _compiled_contract(decorated, ProcessingContract.FLEXIBLE)
+    image = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(np.ones((3, 4, 5), dtype=np.float32), None)
+
+    CellProfilerFunctionContractExecutor().execute(
+        contract,
+        decorated,
+        image,
+        {},
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=3,
+        ),
+    )
+
+    assert seen == (
+        [((4, 5), True)] * 3
+        if canonical_default
+        else [((3, 4, 5), False)]
+    )
 
 
 @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))

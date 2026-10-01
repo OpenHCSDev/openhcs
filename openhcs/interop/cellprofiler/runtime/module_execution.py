@@ -1332,8 +1332,11 @@ class CellProfilerModuleExecutor:
         input_binding = replace(input_binding, current_image=current_runtime_payload)
         for spec in image_inputs:
             request = input_binding.artifact_request_for_spec(spec)
-            payloads.append(image_strategy.runtime_input_value(request))
-            source_names.append(image_strategy.source_image_name(request))
+            payload = image_strategy.runtime_input_value(request)
+            payloads.append(payload)
+            source_names.append(
+                image_strategy.source_image_name_from_value(payload)
+            )
         parameter_image_inputs = input_binding.image_inputs
         broadcast_sources = tuple(
             sources[0]
