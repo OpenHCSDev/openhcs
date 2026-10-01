@@ -33,33 +33,36 @@ class ViewerWindowSnapshotService(QtWindowSnapshotService):
     ) -> None:
         super().request_capture(
             request,
-            partial(self._reply, descriptor, completed),
+            partial(self._complete_reply, descriptor, completed),
             failed,
         )
 
+    def _complete_reply(
+        self, descriptor, completed, snapshot: QtWindowSnapshot
+    ) -> None:
+        completed(self.snapshot_reply(descriptor, snapshot))
+
     @staticmethod
-    def _reply(descriptor, completed, snapshot: QtWindowSnapshot) -> None:
-        completed(
-            {
-                "type": "screenshot_ack",
-                "status": "success",
-                "viewer": {
-                    "type": descriptor.viewer_type.wire_value,
-                    "title": descriptor.title,
-                },
-                "resource": to_jsonable(
-                    AgentResourceRef(
-                        uri=snapshot.uri,
-                        title=snapshot.title,
-                        mime_type=snapshot.mime_type,
-                        path=snapshot.path,
-                        size_bytes=snapshot.size_bytes,
-                        sha256=snapshot.sha256,
-                    )
-                ),
-                "width": snapshot.width,
-                "height": snapshot.height,
-                "snapshot": snapshot.capture,
-                "observation": snapshot.observation,
-            }
-        )
+    def snapshot_reply(descriptor, snapshot: QtWindowSnapshot) -> dict[str, object]:
+        return {
+            "type": "screenshot_ack",
+            "status": "success",
+            "viewer": {
+                "type": descriptor.viewer_type.wire_value,
+                "title": descriptor.title,
+            },
+            "resource": to_jsonable(
+                AgentResourceRef(
+                    uri=snapshot.uri,
+                    title=snapshot.title,
+                    mime_type=snapshot.mime_type,
+                    path=snapshot.path,
+                    size_bytes=snapshot.size_bytes,
+                    sha256=snapshot.sha256,
+                )
+            ),
+            "width": snapshot.width,
+            "height": snapshot.height,
+            "snapshot": snapshot.capture,
+            "observation": snapshot.observation,
+        }

@@ -43,6 +43,7 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_controls import (
+    ViewerImageSpatialSampleControls,
     ViewerMeasurementCoordinates,
     ViewerPolylineMeasurement,
     ViewerRegionMeasurement,
@@ -173,6 +174,10 @@ class ViewerWindowCloseRequest(ViewerWindowControlRequest):
 class ViewerWindowSnapshotRequest(
     WindowSnapshotCaptureSpec, ViewerWindowControlRequest
 ):
+    frame_condition: WindowSnapshotFrameCondition = (
+        WindowSnapshotFrameCondition.RENDER_COMPLETE
+    )
+
     @classmethod
     def from_connection(
         cls,
@@ -181,7 +186,7 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
-        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.IMMEDIATE,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
         observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
     ) -> "ViewerWindowSnapshotRequest":
         if output_dir_path is None:
@@ -203,7 +208,7 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
-        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.IMMEDIATE,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
         observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
     ) -> "ViewerWindowSnapshotRequest":
         return cls.from_connection(
@@ -674,7 +679,7 @@ class ViewerWindowImageSampleRequest(ViewerWindowControlRequest):
             timeout_ms=self.timeout_ms,
             include_response=False,
             payload_projection=ViewerPayloadProjectionOptions(
-                controls=ViewerPayloadControlOptions.from_overrides(
+                controls=ViewerImageSpatialSampleControls.from_overrides(
                     route_key=self.route_key,
                     axis_indices=self.axis_indices,
                     include_array_values=True,

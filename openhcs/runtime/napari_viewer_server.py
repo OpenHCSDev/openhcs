@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
+from functools import partial
 from itertools import product
 from math import ceil
 from numbers import Integral
@@ -66,6 +67,8 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.constants import AllComponents
+from openhcs.agent.dto.viewer import ViewerWindowDescriptor
+from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
@@ -2544,6 +2547,40 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
 
     __registry__: ClassVar[dict[str, type["NapariControlMessageAction"]]] = {}
 
+    def dispatch(self, server, message, completed, failed) -> None:
+        """Default synchronous action hook on the shared reply owner."""
+        completed(self.handle(server, message))
+
+    @classmethod
+    def dispatch_accepted_request(
+        cls, server, request: NapariAcceptedControlRequest
+    ) -> None:
+        """Complete the existing socket reply queue without blocking Qt paint."""
+        message_type = request.message.get(ViewerControlResponseField.TYPE.value)
+        action = cls.for_message_type(
+            message_type if isinstance(message_type, str) else None
+        )
+        completed = partial(cls._complete_control_reply, server, request.response_queue)
+        try:
+            action.dispatch(
+                server,
+                request.message,
+                completed,
+                partial(cls._failed_observation, server, completed),
+            )
+        except Exception as error:
+            completed(server.control_error_response(error))
+
+    @staticmethod
+    def _complete_control_reply(server, response_queue, response) -> None:
+        response_queue.put(server.serialize_control_response(response))
+
+    @staticmethod
+    def _failed_observation(server, completed, failure) -> None:
+        response = server.control_error_response(failure.error).to_dict()
+        response["observation"] = failure.observation
+        completed(response)
+
     @classmethod
     def for_message_type(cls, message_type: str | None) -> "NapariControlMessageAction":
         if message_type in cls.__registry__:
@@ -4382,7 +4419,12 @@ class NapariViewerPayloadProjection(
             )
             data = self.aggregate_data_slice(item.data, aggregate_indices)
 
-        array_values, array_value_summary = self.array_value_projection(data)
+        array_values, array_value_summary = self.array_value_projection(
+            data,
+            image_metadata=item.image_metadata,
+            source_data=item.data,
+            removed_leading_axes=len(aggregate_indices),
+        )
         return {
             ViewerPayloadField.ROUTE_KEY.value: route_key,
             ViewerPayloadField.DATA_TYPE.value: (
@@ -4419,6 +4461,10 @@ class NapariViewerPayloadProjection(
     def array_value_projection(
         self,
         data: LayerData,
+        *,
+        image_metadata: ImagePayloadMetadata | None = None,
+        source_data: LayerData | None = None,
+        removed_leading_axes: int = 0,
     ) -> tuple[tuple[NapariWireValue, ...], dict[str, NapariWireValue]]:
         if not self.request.controls.include_array_values:
             return (), {}
@@ -4430,7 +4476,12 @@ class NapariViewerPayloadProjection(
             summary["omitted_reason"] = "payload_not_ndarray"
             return (), summary
 
-        sample, slice_summary = self.array_value_sample(data)
+        sample, slice_summary = self.array_value_sample(
+            data,
+            image_metadata=image_metadata,
+            source_data=source_data,
+            removed_leading_axes=removed_leading_axes,
+        )
         summary.update(slice_summary)
         summary.update(
             {
@@ -4463,39 +4514,46 @@ class NapariViewerPayloadProjection(
     def array_value_sample(
         self,
         data: np.ndarray,
+        *,
+        image_metadata: ImagePayloadMetadata | None = None,
+        source_data: np.ndarray | None = None,
+        removed_leading_axes: int = 0,
     ) -> tuple[np.ndarray, dict[str, NapariWireValue]]:
-        if self.request.controls.array_slices is None:
+        """Original bounded sampler; controls declare axes, metadata owns layout."""
+        controls = self.request.controls
+        if controls.array_slices is None:
             return data, {
                 "slice_ranges": tuple((0, int(axis_size)) for axis_size in data.shape)
             }
-        if len(self.request.controls.array_slices) > data.ndim:
-            if data.ndim == 0:
-                sample = data.reshape((1,))[0:0]
-            else:
-                sample = data[tuple(slice(0, 0) for _ in data.shape)]
+        axes = controls.sample_axis_indices(
+            data,
+            image_metadata,
+            data if source_data is None else source_data,
+            removed_leading_axes,
+        )
+        if len(controls.array_slices) > data.ndim:
+            sample = (
+                data.reshape((1,))[0:0]
+                if data.ndim == 0
+                else data[tuple(slice(0, 0) for _ in data.shape)]
+            )
             return sample, {
                 "slice_ranges": (),
-                "requested_slice_ranges": self.request.controls.array_slices,
+                "requested_slice_ranges": controls.array_slices,
                 "omitted_reason": "slice_rank_exceeds_array_rank",
             }
-
-        leading_dimension_count = data.ndim - len(self.request.controls.array_slices)
+        bounds_by_axis = dict(zip(axes, controls.array_slices, strict=True))
         slices: list[slice] = []
         applied_ranges: list[tuple[int, int]] = []
         for axis_index, axis_size in enumerate(data.shape):
-            slice_index = axis_index - leading_dimension_count
-            if slice_index >= 0:
-                start, stop = self.request.controls.array_slices[slice_index]
-                bounded_start = min(start, int(axis_size))
-                bounded_stop = min(stop, int(axis_size))
-            else:
-                bounded_start = 0
-                bounded_stop = int(axis_size)
+            start, stop = bounds_by_axis.get(axis_index, (0, int(axis_size)))
+            bounded_start = min(start, int(axis_size))
+            bounded_stop = min(stop, int(axis_size))
             slices.append(slice(bounded_start, bounded_stop))
             applied_ranges.append((bounded_start, bounded_stop))
         return data[tuple(slices)], {
             "slice_ranges": tuple(applied_ranges),
-            "requested_slice_ranges": self.request.controls.array_slices,
+            "requested_slice_ranges": controls.array_slices,
         }
 
     def shape_payloads(
@@ -5617,7 +5675,9 @@ class NapariLayerIsolationControlMessageAction(NapariControlMessageAction):
         return changed_route_count, ()
 
 
-class NapariScreenshotControlMessageAction(NapariControlMessageAction):
+class NapariScreenshotControlMessageAction(
+    NapariControlMessageAction, ViewerWindowSnapshotService
+):
     """Registered action that captures the Napari Qt window."""
 
     message_type = ViewerControlMessageType.SCREENSHOT.value
@@ -5627,18 +5687,38 @@ class NapariScreenshotControlMessageAction(NapariControlMessageAction):
         server: "NapariViewerServer",
         message: Mapping[str, object],
     ) -> dict[str, object]:
+        """Explicit immediate capture; observed conditions cannot bypass dispatch."""
+        request = self.snapshot_request(server, message)
+        return self._native_reply(
+            server,
+            self.snapshot_reply(
+                self.snapshot_descriptor(server),
+                super().capture(request),
+            ),
+        )
+
+    def dispatch(self, server, message, completed, failed) -> None:
+        super().request_viewer_capture(
+            self.snapshot_request(server, message),
+            self.snapshot_descriptor(server),
+            partial(self._complete_native_reply, server, completed),
+            failed,
+        )
+
+    @staticmethod
+    def snapshot_descriptor(server) -> ViewerWindowDescriptor:
+        return ViewerWindowDescriptor(
+            viewer_type=ViewerType.NAPARI, title=server.napari_window_title
+        )
+
+    @staticmethod
+    def snapshot_request(server, message):
         if server.viewer is None:
-            return ViewerControlReplyPayload(
-                ViewerControlReplyHeader(
-                    ViewerProtocolStatus.ERROR,
-                    response_type="screenshot_ack",
-                    message="Napari viewer is not available.",
-                )
-            ).to_wire_mapping()
+            raise ValueError("Napari viewer is not available.")
 
         from pyqt_reactive.services.window_snapshot import (
             QtWindowSnapshotRequest,
-            QtWindowSnapshotService,
+            OpenGLWidgetSnapshotRenderOwner,
             WindowSnapshotCaptureSpec,
         )
 
@@ -5647,36 +5727,27 @@ class NapariScreenshotControlMessageAction(NapariControlMessageAction):
             raise TypeError(
                 "Napari screenshot control payload must be WindowSnapshotCaptureSpec."
             )
-        snapshot = QtWindowSnapshotService().capture(
-            QtWindowSnapshotRequest(
-                widget=server.viewer.window.qt_viewer.window(),
-                capture=capture_spec,
-                subject_id=f"{ViewerType.NAPARI.wire_value}_{server.port}",
-                title=server.napari_window_title,
-            )
+        return QtWindowSnapshotRequest(
+            widget=server.viewer.window.qt_viewer.window(),
+            capture=capture_spec,
+            subject_id=f"{ViewerType.NAPARI.wire_value}_{server.port}",
+            title=server.napari_window_title,
+            render_owner=OpenGLWidgetSnapshotRenderOwner(
+                server.viewer.window.qt_viewer.canvas.native
+            ),
         )
-        return {
-            ViewerControlResponseField.TYPE.value: "screenshot_ack",
-            ViewerControlResponseField.STATUS.value: _ACK_SUCCESS,
-            ViewerControlField.VIEWER.value: {
-                ViewerDescriptorField.TYPE.value: ViewerType.NAPARI.wire_value,
-                ViewerDescriptorField.TITLE.value: server.napari_window_title,
-            },
-            ViewerControlField.RESOURCE.value: {
-                "uri": snapshot.uri,
-                "title": snapshot.title,
-                "mime_type": snapshot.mime_type,
-                "path": snapshot.path,
-                "size_bytes": snapshot.size_bytes,
-                "sha256": snapshot.sha256,
-            },
-            ViewerControlField.WIDTH.value: snapshot.width,
-            ViewerControlField.HEIGHT.value: snapshot.height,
-            ViewerControlField.SNAPSHOT.value: snapshot.capture,
-            ViewerControlField.NATIVE_DIMENSIONS.value: NapariViewerStateProjection.native_dimensions(
+
+    def _complete_native_reply(self, server, completed, response) -> None:
+        completed(self._native_reply(server, response))
+
+    @staticmethod
+    def _native_reply(server, response):
+        response[ViewerControlField.NATIVE_DIMENSIONS.value] = (
+            NapariViewerStateProjection.native_dimensions(
                 server.viewer
-            ).to_wire_mapping(),
-        }
+            ).to_wire_mapping()
+        )
+        return response
 
 
 class NapariUnknownControlMessageAction(NapariControlMessageAction):
@@ -6256,7 +6327,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
                 request = self.accepted_control_requests.get_nowait()
             except queue.Empty:
                 return
-            request.response_queue.put(self.control_response_payload(request.message))
+            NapariControlMessageAction.dispatch_accepted_request(self, request)
 
     def _accept_single_image(
         self,

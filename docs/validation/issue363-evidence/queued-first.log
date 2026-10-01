@@ -1,0 +1,179 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0
+rootdir: /home/ts/wt/openhcs-render-complete-snapshot-20261001
+configfile: pytest.ini
+collected 4 items
+
+tests/unit/test_napari_render_snapshot.py EEEE                           [100%]
+
+==================================== ERRORS ====================================
+_ ERROR at setup of test_default_render_condition_flows_through_registered_queue_and_real_paint _
+
+    @pytest.fixture
+    def queued_viewer():
+        # Real Qt paint entrypoint and real ViewerModel; no application/server startup.
+        app = QApplication.instance() or QApplication([])
+    
+        class Canvas(QWidget):
+            frameSwapped = pyqtSignal()
+    
+            def paintEvent(self, event):
+                painter = QPainter(self)
+                painter.fillRect(self.rect(), QColor("blue"))
+                painter.end()
+                self.frameSwapped.emit()
+    
+        canvas = Canvas()
+        canvas.resize(80, 60)
+        canvas.show()
+        app.processEvents()
+        viewer = ViewerModel()
+        viewer.__dict__["window"] = SimpleNamespace(
+            qt_viewer=SimpleNamespace(
+                window=canvas.window, canvas=SimpleNamespace(native=canvas)
+            )
+        )
+        server = object.__new__(NapariViewerServer)
+        server.viewer = viewer
+>       server.port = 5584
+E       AttributeError: property 'port' of 'NapariViewerServer' object has no setter
+
+tests/unit/test_napari_render_snapshot.py:51: AttributeError
+_ ERROR at setup of test_explicit_immediate_still_uses_shared_capture_contract _
+
+    @pytest.fixture
+    def queued_viewer():
+        # Real Qt paint entrypoint and real ViewerModel; no application/server startup.
+        app = QApplication.instance() or QApplication([])
+    
+        class Canvas(QWidget):
+            frameSwapped = pyqtSignal()
+    
+            def paintEvent(self, event):
+                painter = QPainter(self)
+                painter.fillRect(self.rect(), QColor("blue"))
+                painter.end()
+                self.frameSwapped.emit()
+    
+        canvas = Canvas()
+        canvas.resize(80, 60)
+        canvas.show()
+        app.processEvents()
+        viewer = ViewerModel()
+        viewer.__dict__["window"] = SimpleNamespace(
+            qt_viewer=SimpleNamespace(
+                window=canvas.window, canvas=SimpleNamespace(native=canvas)
+            )
+        )
+        server = object.__new__(NapariViewerServer)
+        server.viewer = viewer
+>       server.port = 5584
+E       AttributeError: property 'port' of 'NapariViewerServer' object has no setter
+
+tests/unit/test_napari_render_snapshot.py:51: AttributeError
+___ ERROR at setup of test_queued_destroyed_owner_preserves_failure_receipt ____
+
+    @pytest.fixture
+    def queued_viewer():
+        # Real Qt paint entrypoint and real ViewerModel; no application/server startup.
+        app = QApplication.instance() or QApplication([])
+    
+        class Canvas(QWidget):
+            frameSwapped = pyqtSignal()
+    
+            def paintEvent(self, event):
+                painter = QPainter(self)
+                painter.fillRect(self.rect(), QColor("blue"))
+                painter.end()
+                self.frameSwapped.emit()
+    
+        canvas = Canvas()
+        canvas.resize(80, 60)
+        canvas.show()
+        app.processEvents()
+        viewer = ViewerModel()
+        viewer.__dict__["window"] = SimpleNamespace(
+            qt_viewer=SimpleNamespace(
+                window=canvas.window, canvas=SimpleNamespace(native=canvas)
+            )
+        )
+        server = object.__new__(NapariViewerServer)
+        server.viewer = viewer
+>       server.port = 5584
+E       AttributeError: property 'port' of 'NapariViewerServer' object has no setter
+
+tests/unit/test_napari_render_snapshot.py:51: AttributeError
+_ ERROR at setup of test_new_control_case_requires_only_registered_declaration_and_hook _
+
+    @pytest.fixture
+    def queued_viewer():
+        # Real Qt paint entrypoint and real ViewerModel; no application/server startup.
+        app = QApplication.instance() or QApplication([])
+    
+        class Canvas(QWidget):
+            frameSwapped = pyqtSignal()
+    
+            def paintEvent(self, event):
+                painter = QPainter(self)
+                painter.fillRect(self.rect(), QColor("blue"))
+                painter.end()
+                self.frameSwapped.emit()
+    
+        canvas = Canvas()
+        canvas.resize(80, 60)
+        canvas.show()
+        app.processEvents()
+        viewer = ViewerModel()
+        viewer.__dict__["window"] = SimpleNamespace(
+            qt_viewer=SimpleNamespace(
+                window=canvas.window, canvas=SimpleNamespace(native=canvas)
+            )
+        )
+        server = object.__new__(NapariViewerServer)
+        server.viewer = viewer
+>       server.port = 5584
+E       AttributeError: property 'port' of 'NapariViewerServer' object has no setter
+
+tests/unit/test_napari_render_snapshot.py:51: AttributeError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/unit/test_napari_render_snapshot.py::test_default_render_condition_flows_through_registered_queue_and_real_paint
+ERROR tests/unit/test_napari_render_snapshot.py::test_explicit_immediate_still_uses_shared_capture_contract
+ERROR tests/unit/test_napari_render_snapshot.py::test_queued_destroyed_owner_preserves_failure_receipt
+ERROR tests/unit/test_napari_render_snapshot.py::test_new_control_case_requires_only_registered_declaration_and_hook
+======================== 2 warnings, 4 errors in 6.21s =========================
+Command exited with non-zero status 1
+	Command being timed: "timeout 60s taskset -c 0 env PYTHONPATH=/home/ts/wt/openhcs-render-complete-snapshot-20261001:/home/ts/wt/openhcs-render-complete-snapshot-20261001/external/pyqt-reactive/src PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 QT_QPA_PLATFORM=offscreen OPENHCS_CPU_ONLY=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 XDG_CACHE_HOME=/home/ts/.cache/agent-scratch/render-complete-snapshot-363-20261001/cache /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -m pytest tests/unit/test_napari_render_snapshot.py --noconftest -o addopts= -p no:cacheprovider --basetemp=/home/ts/.cache/agent-scratch/render-complete-snapshot-363-20261001/queued-first"
+	User time (seconds): 6.57
+	System time (seconds): 0.94
+	Percent of CPU this job got: 103%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.25
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 494376
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 151559
+	Voluntary context switches: 218
+	Involuntary context switches: 225
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 5536
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
