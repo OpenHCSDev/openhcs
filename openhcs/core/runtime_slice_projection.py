@@ -421,6 +421,10 @@ class RuntimeSliceProjectionStrategy(
         del context
         return value
 
+    def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        """Preserve values already in their callable's whole-stack domain."""
+        return value
+
     def slice_count_for_value(
         self,
         value: RuntimeProjectionData,
@@ -505,6 +509,9 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
     """Project an aligned image stack through its declared outer or inner axis."""
 
     value_type = AlignedImageStack
+
+    def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        return cast(AlignedImageStack, value).compose()
 
     def value_for_slice(
         self,
@@ -880,6 +887,19 @@ class SequenceRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
 
 class RuntimeSliceProjection:
     """SSOT for runtime-slice count and value projection."""
+
+    @classmethod
+    def full_stack_value(cls, value: RuntimeProjectionData) -> RuntimeProjectionData:
+        """Materialize nominal image alignment without changing other domains."""
+        return RuntimeSliceProjectionStrategy.strategy_for_value(
+            value
+        ).full_stack_value(value)
+
+    @classmethod
+    def full_stack_kwargs(
+        cls, kwargs: Mapping[str, RuntimeProjectionData]
+    ) -> dict[str, RuntimeProjectionData]:
+        return {name: cls.full_stack_value(value) for name, value in kwargs.items()}
 
     @classmethod
     def preserved_context_for_value(

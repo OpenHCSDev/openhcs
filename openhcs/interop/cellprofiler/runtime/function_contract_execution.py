@@ -305,8 +305,8 @@ class CellProfilerFunctionContractExecutor:
     ) -> RuntimeCallableArgument:
         function_name = callable_contract.function_name
         projection_started_at = time.perf_counter()
-        projected_image = image
-        projected_kwargs = dict(kwargs)
+        projected_image = RuntimeSliceProjection.full_stack_value(image)
+        projected_kwargs = RuntimeSliceProjection.full_stack_kwargs(kwargs)
         if callable_contract.processing_contract is ProcessingContract.PURE_3D:
             _validate_pure_3d_kwargs_do_not_carry_runtime_slice_alignment(
                 callable_contract,
