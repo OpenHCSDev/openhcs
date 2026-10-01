@@ -8,7 +8,11 @@ import pytest
 from openhcs.agent.capabilities import AgentResultFamilyContract, StartOwnedRuntimeCapability
 from openhcs.agent.dto.common import AgentError, AgentResultEnvelope, SCHEMA_VERSION
 from openhcs.agent.dto.execution import RuntimeBootstrapState, RuntimeBootstrapHandle
-from openhcs.mcp.dev_client_core import McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure
+from openhcs.mcp.dev_client_core import (
+    McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure,
+    state_surface_document, state_surface_payload, ui_bridge_operation_result,
+    workflow_result_payload,
+)
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.serialization.json import to_jsonable
 
@@ -129,3 +133,21 @@ def test_unknown_union_shape_preserves_each_rejection():
     assert result.first_decoded_payload() is None
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
     assert len(result.payloads[0].errors) == 2 and result.payloads[0].receipt is raw
+
+
+@pytest.mark.parametrize("tool", ("external_unknown_tool400", RenderlessCapability.name))
+def test_unknown_raw_or_rejected_records_cannot_masquerade_as_ui_contract(tool):
+    raw = {"payload": {"rows": []}, "status": "completed"}
+    result = McpDevToolResult(tool, False, (raw,))
+    assert state_surface_document(result) is None
+    assert state_surface_payload(result) == {}
+    assert ui_bridge_operation_result(result) is None
+    assert workflow_result_payload(result) is None
+
+
+def test_nominal_member_access_does_not_accept_other_declared_union_branch():
+    original = AnotherDeclaredResult(schema_version=SCHEMA_VERSION, token=9)
+    result = McpDevToolResult(UnionCapability.name, False, (to_jsonable(original),))
+    assert result.decoded_payload_as(RenderlessResult) is None
+    accepted = result.decoded_payload_as(AnotherDeclaredResult)
+    assert type(accepted) is AnotherDeclaredResult and accepted == original
