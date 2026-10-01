@@ -1254,25 +1254,8 @@ class ImageMeasurementInputModule(
         )
 
 
-class ObjectMeasurementInputModule(
-    MeasurementArtifactOutputModule,
-    ObjectArtifactInputModule,
-):
-    """Parent for measurement modules that consume object-label measurement inputs."""
-
-    object_measurement_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
-        "Select object sets to measure",
-        aliases=("Select objects to measure", "Select an object to measure"),
-    )
-    object_measurement_binding = SettingToKeywordBinding.input(
-        object_measurement_setting,
-        ObjectLabelsArtifactType,
-        runtime_parameter_name="labels",
-        repeated=True,
-    )
-    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
-        object_measurement_binding,
-    )
+class ObjectMeasurementArtifactOutputModule(MeasurementArtifactOutputModule):
+    """Compose object subjects independently of input settings and splitting."""
 
     @classmethod
     def measurement_output_relations(
@@ -1297,6 +1280,27 @@ class ObjectMeasurementInputModule(
                 for spec in artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
             ),
         )
+
+
+class ObjectMeasurementInputModule(
+    ObjectMeasurementArtifactOutputModule,
+    ObjectArtifactInputModule,
+):
+    """Parent for measurement modules that consume object-label measurement inputs."""
+
+    object_measurement_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
+        "Select object sets to measure",
+        aliases=("Select objects to measure", "Select an object to measure"),
+    )
+    object_measurement_binding = SettingToKeywordBinding.input(
+        object_measurement_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
+        repeated=True,
+    )
+    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
+        object_measurement_binding,
+    )
 
     @classmethod
     def invocation_module_blocks(
