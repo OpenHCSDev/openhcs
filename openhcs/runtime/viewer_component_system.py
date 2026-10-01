@@ -278,7 +278,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
 
     def with_shared_stack_axes(
         self,
-        layouts: Sequence["ViewerComponentLayout"],
+        layouts: Sequence[ViewerComponentLayout],
     ) -> "ViewerComponentLayout":
         """Derive shared native slots without changing any route's grouping.
 
