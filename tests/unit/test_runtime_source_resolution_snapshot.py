@@ -7,6 +7,7 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     DeclaredSourceMetadataRecord,
@@ -258,8 +259,14 @@ def test_snapshot_owns_position_and_projection_map_views():
         context.source_projections_by_virtual_path[PATH] = original_projection
 
 
-def test_warmed_cache_transport_reconstructs_all_derived_defaults():
-    cache = RuntimeSourceBindingContextCache()
+@pytest.mark.parametrize("context_owned", (False, True))
+def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned):
+    processing_context = ProcessingContext(axis_id="A01")
+    cache = (
+        processing_context.runtime_source_binding_context_cache
+        if context_owned
+        else RuntimeSourceBindingContextCache()
+    )
     parser = CountingParser()
     source_projection = projection({ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}})
     context = snapshot(cache, source_projection, parser)
@@ -269,7 +276,16 @@ def test_warmed_cache_transport_reconstructs_all_derived_defaults():
     )
     assert cache.source_resolution_snapshots
     assert cache.source_metadata_by_mapping_identity
-    restored = pickle.loads(pickle.dumps(cache))
+    restored_owner = pickle.loads(
+        pickle.dumps(processing_context if context_owned else cache)
+    )
+    restored = (
+        restored_owner.runtime_source_binding_context_cache
+        if context_owned
+        else restored_owner
+    )
+    if context_owned:
+        assert restored_owner.axis_id == "A01"
     assert restored == RuntimeSourceBindingContextCache()
     rebuilt = snapshot(restored, source_projection, parser)
     assert rebuilt is not context
