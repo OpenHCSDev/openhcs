@@ -403,11 +403,6 @@ class MicroscopeImagePathParser(ABC):
             raise ValueError(absence_message)
         return self.parser
 
-    @property
-    def image_path_parser(self) -> MicroscopeImagePathParser | None:
-        """Expose the actual path owner only when filename parsing is available."""
-        return None if self.parser is None else self
-
     def parse_image_path(self, relative_path: str) -> FilenameParseResult | None:
         """Decode once, then compose nominal coordinates from the relative path."""
         path = Path(relative_path)

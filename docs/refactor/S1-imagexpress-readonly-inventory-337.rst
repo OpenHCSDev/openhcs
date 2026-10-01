@@ -107,6 +107,23 @@ measured run remains below 512MiB resident memory; original failure is not erase
 Two subsequent test-fixture mistakes (enum order and DTO field names) are corrected;
 their original failures remain archived. No existing assertion was weakened.
 
-Pending: existing family regression shards and unchanged original guards.
+Existing regression closure: 42 service/new-path cases PASS, 11.77s/302392 KiB;
+28 inventory/registered-handler/ImageXpress compatibility cases PASS,
+7.57s/266464 KiB; 27 producer/parser-diamond/new-path/static-browser-inventory
+cases PASS, 6.00s/282932 KiB. No GUI/viewer launched. Both parser diamond orders
+are unchanged. Both new path capability orders now also initialize through the
+real handler and preserve the same physical references in the native inventory.
+
+Actual regression found and repaired: result-only OpenHCS inspection's parser
+property may raise MetadataNotFoundError, already captured by the existing
+_parser diagnostic boundary. The initial optional-self view retried that property
+and bypassed its recorded absence. That view was deleted; the caller retains
+the existing observation and supplies the real path owner only when available.
+Original 41-pass/one-failure service shard is retained. No legacy reader/fallback
+or duplicate diagnostic store was introduced; existing warning receipts survive.
+
+Original R0 at 3b03785, integrated f24 -> initial coherent source3c7240016:
+PASS 17.69s/87552 KiB, no exception/increased measure. Final source recheck and
+unchanged full-context R1 remain pending; original inputs/roots will be preserved.
 Parent owns final installed public generate-inspect-initialize-reinspect journey
 before merge. Neither source checks nor incomplete NRA evidence establish that.

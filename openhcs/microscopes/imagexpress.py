@@ -8,7 +8,7 @@ for ImageXpress microscopes.
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, Type
+from typing import List, Optional, Tuple, Union, Type
 
 from openhcs.constants.constants import AllComponents, Backend, Microscope
 from openhcs.core.components.parser_metaprogramming import (

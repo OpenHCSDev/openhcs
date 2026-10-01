@@ -1634,7 +1634,7 @@ class PlateInspectionService:
             record.virtual_path for record in file_inventory.image_records
         )
         parsed = self._filename_parser.parse(
-            parser=handler.image_path_parser,
+            parser=handler if parser is not None else None,
             image_files=image_files,
             bounds=bounds,
         )

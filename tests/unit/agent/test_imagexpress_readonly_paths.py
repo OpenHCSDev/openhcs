@@ -269,9 +269,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         assert result.image_files.count == result.parse_summary.parsed_file_count == 4
         summaries = {item.component: item for item in result.components}
         assert tuple(v.key for v in summaries[AllComponents.SITE].values) == ("7",)
-        assert tuple(v.key for v in summaries[AllComponents.TIMEPOINT].values) == (
-            "3",
-        )
+        assert tuple(v.key for v in summaries[AllComponents.TIMEPOINT].values) == ("3",)
         assert summaries[AllComponents.Z_INDEX].count == 2
         query = service_for(plate).query_files(
             PlateFileQueryRequest.from_fields(
@@ -293,6 +291,27 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         )
         assert MICROSCOPE_HANDLERS[key] is subtype
         assert not (plate / "openhcs_metadata.json").exists()
+        filemanager = FileManager(dict(storage_registry))
+        handler = create_microscope_handler(
+            key, plate_folder=plate, filemanager=filemanager
+        )
+        handler.initialize_workspace(plate, filemanager)
+        prepared = PlateFileInventory.from_handler(
+            plate_path=plate,
+            handler=handler,
+            filemanager=filemanager,
+            backend=handler.get_primary_backend(plate, filemanager),
+        )
+        assert len(prepared.image_records) == 4
+        assert {record.metadata["site"] for record in prepared.image_records} == {7}
+        assert {record.metadata["timepoint"] for record in prepared.image_records} == {
+            3
+        }
+        assert {record.source_path for record in prepared.image_records} == {
+            item.metadata["source_path"] for item in query.records
+        }
+        for path in {path for _, path in events}:
+            assert events.count(("site", path)) == events.count(("ancestor", path))
     finally:
         del MICROSCOPE_HANDLERS[key]
 
