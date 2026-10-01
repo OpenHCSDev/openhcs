@@ -135,10 +135,11 @@ MemoryMax512M and MemorySwapMax0, shell timeout60s:
 * queued-final.log:4 passed,7.16s elapsed,502964KiB peak. Original accepted
   control queue, canonical pickle serializer, registered action, real Qt paint
   and ViewerModel; no socket or server/application startup.
-* contracts-final.log:11 passed,5.51s elapsed,283604KiB peak. Nominal MCP
+* contracts-schema.log:14 passed,5.43s elapsed,289568KiB peak. Nominal MCP
   input contract/signature, capture-field projection, missing/stale/foreign
   receipt rejection, error receipt retention, DTO roundtrip, real Qt managed
-  reply and the original immediate/malformed service contracts.
+  reply, original immediate/malformed service contracts, and strict original
+  AgentResourceRef schema decoding (wrong types and unknown fields rejected).
 
 First failures are archived, not overwritten: contracts-first (missing reused
 native extension), contracts-checkpoint (wrong source dependency import path),
@@ -150,11 +151,19 @@ An early pair of small shards overlapped on CPU0; their conservative summed
 peak395MiB stayed below512MiB. Subsequent shards ran sequentially.
 
 R0's first committed-source review (r0-final.log,23.76s/87632KiB) found one
-new raw string-key subscript at error-receipt mutation. The replacement is a
+new raw string-key subscript at error-receipt mutation and five added lines in
+the already-large ViewerWindowService. The replacement for the raw mutation is a
 nominal ControlErrorResponse subclass with declaration-derived inherited
 fields and cooperative wire projection; the actual queued-destruction check
-passes through the existing canonical serializer. Raw evidence logs retain
-their original pytest whitespace; source-only diff whitespace checks pass.
+passes through the existing canonical serializer. The repeated snapshot
+resource-field hand mapping is removed in favor of dataclass_from_mapping
+against the original AgentResourceRef. Receipt shape validation reuses the
+existing _optional_typed boundary mechanism, not another bespoke type guard.
+The second R0 failure is retained as r0-closed.log; it cleared the raw mutation
+but still exposed service growth, which prompted the schema-owned correction.
+The pinned original detector is3b03785f45df2ef5dc62ba6aed99294192ecbb01,
+with a clean read-only worktree. Full production deltas include all five changed
+OpenHCS Python paths and the paired pyqt-reactive source change; no path omitted.
 
 This receipt is a focused source/ownership review, not a completed global NRA
 scan or equivalence proof. The user's source-only limits govern validation;

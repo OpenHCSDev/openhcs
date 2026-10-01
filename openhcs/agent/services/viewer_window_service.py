@@ -1332,9 +1332,7 @@ class ViewerWindowService:
         request: ViewerWindowSnapshotRequest,
         response: JsonObject,
     ) -> ViewerWindowSnapshotResult:
-        observation = response.get("observation")
-        if observation is not None and not isinstance(observation, WindowVisualObservation):
-            raise TypeError("Viewer snapshot observation must carry its nominal render receipt.")
+        observation = self._optional_typed(response, "observation", WindowVisualObservation)
         status = self._required_scalar(
             response, ViewerControlResponseField.STATUS, str, "a string"
         )
@@ -1373,16 +1371,7 @@ class ViewerWindowService:
             **request.capture_fields(),
             captured=True,
             observation=observation,
-            resource=AgentResourceRef(
-                uri=self._required_scalar(resource_payload, "uri", str, "a string"),
-                title=self._required_scalar(resource_payload, "title", str, "a string"),
-                mime_type=self._required_scalar(
-                    resource_payload, "mime_type", str, "a string"
-                ),
-                path=self._optional_typed(resource_payload, "path", str),
-                size_bytes=self._optional_typed(resource_payload, "size_bytes", int),
-                sha256=self._optional_typed(resource_payload, "sha256", str),
-            ),
+            resource=dataclass_from_mapping(AgentResourceRef, resource_payload),
             viewer=ViewerWindowDescriptor.from_wire_fields(
                 viewer_wire_value=self._required_scalar(
                     viewer_payload,

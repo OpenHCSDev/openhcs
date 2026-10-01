@@ -170,6 +170,28 @@ def test_native_receipt_and_capture_contract_roundtrip_through_result(tmp_path):
     assert decoded.observation == receipt
 
 
+@pytest.mark.parametrize(
+    "resource_change",
+    [
+        {"uri": 17},
+        {"size_bytes": "not an integer"},
+        {"undeclared_field": 1},
+    ],
+)
+def test_snapshot_resource_decodes_once_against_original_schema(
+    tmp_path, resource_change
+):
+    request = _request(tmp_path)
+    response = _response(request, _receipt(request))
+    response["resource"].update(resource_change)
+    with pytest.raises((TypeError, ValueError)):
+        ViewerWindowService()._snapshot_result_from_response(
+            connection=request.connection,
+            request=request,
+            response=response,
+        )
+
+
 def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_path):
     from PyQt6.QtCore import pyqtSignal
     from PyQt6.QtGui import QColor, QImage, QPainter
