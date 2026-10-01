@@ -13,15 +13,20 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 import openhcs.demo.synthetic_data as producer_module
 from openhcs.constants.constants import AllComponents
-from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
+    SourceProjectionMetadataSerializer,
+)
 from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
 from openhcs.core.virtual_workspace_metadata import (
     FIELDS, VirtualWorkspaceSourceProjectionEntries, component_metadata_field,
-    get_metadata_path,
+    AtomicMetadataWriter, get_metadata_path,
 )
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.microscopes.imagexpress import ImageXpressFilenameParser, ImageXpressHandler
+from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
 from polystore.virtual_workspace import SourcePixelRef
 
 
@@ -189,6 +194,95 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         self.assertEqual(canonical, parser.construct_filename(components))
         self.assertEqual(parser.construct_acquisition_filename(components),
                          "r04c12f17p99-ch7sk1fk1fl1.tiff")
+
+    def test_new_nominal_capabilities_cooperate_through_real_parser_diamond(self):
+        # Independent behaviors, not sibling format implementations: one records
+        # physical acquisitions; the other scopes their names. Both cooperate
+        # through the real owning ABC and the existing ImageXpress leaf.
+        class RecordedAcquisition(GenericFilenameParser):
+            def __init__(self, *args, **kwargs):
+                self.acquisition_calls = []
+                super().__init__(*args, **kwargs)
+
+            def construct_acquisition_filename(self, components, **options):
+                name = super().construct_acquisition_filename(components, **options)
+                self.acquisition_calls.append(name)
+                return name
+
+        class ScopedAcquisition(GenericFilenameParser):
+            def construct_acquisition_filename(self, components, **options):
+                return "scope172_" + super().construct_acquisition_filename(components, **options)
+
+        class RecordedScopedImageXpressParser(
+            RecordedAcquisition, ScopedAcquisition, ImageXpressFilenameParser
+        ):
+            pass
+
+        class ScopedRecordedImageXpressParser(
+            ScopedAcquisition, RecordedAcquisition, ImageXpressFilenameParser
+        ):
+            pass
+
+        for parser_type in (RecordedScopedImageXpressParser, ScopedRecordedImageXpressParser):
+            with self.subTest(parser_type=parser_type.__name__):
+                parser = parser_type()
+                self.assertIs(FilenameParser.__registry__[parser_type.__name__], parser_type)
+                self.assertEqual(parser_type.__mro__.count(GenericFilenameParser), 1)
+                self.assertEqual(parser.FILENAME_COMPONENTS, tuple(AllComponents))
+                components = parser.bind_declared_values(
+                    ((AllComponents.WELL, "D12"), (AllComponents.SITE, 17),
+                     (AllComponents.CHANNEL, 7), (AllComponents.Z_INDEX, 99),
+                     (AllComponents.TIMEPOINT, 3)))
+                physical_name = parser.construct_acquisition_filename(components)
+                self.assertEqual(physical_name, "scope172_D12_s017_w7.tif")
+                self.assertEqual(len(parser.acquisition_calls), 1)
+                expected_record = (physical_name if parser_type is RecordedScopedImageXpressParser
+                                   else "D12_s017_w7.tif")
+                self.assertEqual(parser.acquisition_calls, [expected_record])
+                # The ancestor's canonical operation still carries every axis.
+                canonical = GenericFilenameParser.construct_acquisition_filename(parser, components)
+                self.assertEqual(canonical, "D12_s017_w7_z099_t003.tif")
+                plate = self.root / parser_type.__name__
+                plate.mkdir()
+                tifffile.imwrite(plate / physical_name, np.full((32, 32), 172, dtype=np.uint16))
+                projection = SourcePlaneProjection(
+                    OpenHCSPlaneAddress.from_component_values(components.declared_values()),
+                    SourcePixelRef("disk", physical_name),
+                )
+                # Real unchanged consumer and automatic declaration registry:
+                # no alternate formatter, registration edits or reader adapter.
+                metadata = SourceProjectionMetadataSerializer(parser).metadata_dict(
+                    SourceProjectionSet((projection,)), microscope_handler_name="imagexpress",
+                    source_filename_parser_name=parser_type.__name__,
+                    grid_dimensions=[1, 1], pixel_size=0.65, main=True)
+                AtomicMetadataWriter().replace_subdirectory_metadata(get_metadata_path(plate), ".", metadata)
+                values = self.assert_coherent(plate, metadata, 1)
+                self.assertEqual(values[AllComponents.Z_INDEX], {"99"})
+                self.assertEqual(values[AllComponents.TIMEPOINT], {"3"})
+
+        class RecordedScopedImageXpressHandler(ImageXpressHandler):
+            _microscope_type = "recorded_scoped_imagexpress"
+
+            def __init__(self, filemanager, pattern_format=None):
+                super().__init__(filemanager, pattern_format)
+                self.parser = RecordedScopedImageXpressParser(filemanager, pattern_format)
+
+        self.assertIs(MICROSCOPE_HANDLERS[RecordedScopedImageXpressHandler._microscope_type],
+                      RecordedScopedImageXpressHandler)
+        plate = self.root / "declared-producer-extension"
+        with redirect_stdout(StringIO()):
+            generator = SyntheticMicroscopyGenerator(
+                str(plate), format="RecordedScopedImageXpress", grid_size=(1, 1),
+                tile_size=(32, 32), wavelengths=1, num_cells=4, wells=["D12"],
+                overlap_percent=0, stage_error_px=0, random_seed=7)
+            # Plane emission and metadata are the assigned identity surface;
+            # this does not certify new-family HTD/grid-layout generation.
+            generator._write_plane(np.full((32, 32), 172, dtype=np.uint16),
+                                   generator.timepoint_dir, "D12", 17, 7, 99)
+            generator.generate_openhcs_metadata(sub_dir=generator.timepoint_dir.name)
+        self.assertIsInstance(generator.parser, RecordedScopedImageXpressParser)
+        self.assertEqual(generator.parser.acquisition_calls, ["scope172_D12_s017_w7.tif"])
+        self.assert_coherent(plate, self.document(plate), 1)
 
 
 if __name__ == "__main__":
