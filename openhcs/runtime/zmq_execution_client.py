@@ -41,11 +41,12 @@ from zmqruntime.messages import (
     PongResponse,
 )
 from zmqruntime.startup import (
+    EndpointStartupObserver,
     EndpointStartupPhase,
     EndpointStartupStatusCallback,
     EndpointStartupStatusMonitor,
 )
-from zmqruntime.transport import TransportEndpoint, wait_for_endpoint_ready
+from zmqruntime.transport import TransportEndpoint
 
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -105,6 +106,7 @@ class ExecutionRuntimeLaunchPlan:
     ) -> ExecutionRuntimeLaunchPlan:
         """Project existing destination owners without writing or warming."""
         from metaclass_registry.cache import get_cache_file_path
+
         from openhcs.processing.custom_functions.manager import CustomFunctionManager
 
         log_file = get_openhcs_log_dir(create=False) / (
@@ -1234,65 +1236,19 @@ class ZMQExecutionClient(
         return self._runtime_launch_plan
 
     @override
-    def _wait_for_endpoint_ready(
-        self,
-        process: EndpointProcess,
-        timeout: float = 10.0,
-    ) -> PongResponse | None:
-        """Wait with an inactivity deadline refreshed by real child phases."""
-
-        return self._wait_for_endpoint_ready_observed(
-            process,
-            timeout=timeout,
-        )
-
-    @override
-    def _wait_for_endpoint_ready_before_deadline(
-        self,
-        process: EndpointProcess,
-        *,
-        timeout: float,
-        operation_deadline: OperationDeadline,
-    ) -> PongResponse | None:
-        """Wait for startup activity without exceeding the caller's total budget."""
-
-        return self._wait_for_endpoint_ready_observed(
-            process,
-            timeout=timeout,
-            operation_deadline=operation_deadline,
-        )
-
-    def _wait_for_endpoint_ready_observed(
-        self,
-        process: EndpointProcess,
-        *,
-        timeout: float,
-        operation_deadline: OperationDeadline | None = None,
-    ) -> PongResponse | None:
-        """Relay startup phases while waiting for the authoritative handshake."""
-
-        startup_monitor = EndpointStartupStatusMonitor(
+    def _endpoint_startup_observer(self, process: EndpointProcess) -> EndpointStartupObserver:
+        """Supply the execution child's journal to the inherited readiness owner."""
+        return EndpointStartupStatusMonitor(
             self._startup_status_path,
             status_emitter=self._emit_connection_status,
             process_has_exited=lambda: process.exit() is not None,
         )
 
-        endpoint: PongResponse | None = None
-        try:
-            endpoint = wait_for_endpoint_ready(
-                self.port,
-                self.transport_mode,
-                host=self.host,
-                config=self.config,
-                timeout=timeout,
-                poll_interval=self.config.server_poll_interval_seconds,
-                startup_observer=self._connection_startup_observer(startup_monitor),
-                operation_deadline=operation_deadline,
-            )
-            return endpoint
-        finally:
-            if endpoint is not None and self._startup_status_path is not None:
-                self._startup_status_path.unlink(missing_ok=True)
+    @override
+    def _endpoint_ready_observed(self, endpoint: PongResponse) -> None:
+        """Release the domain journal only after the typed handshake is ready."""
+        if self._startup_status_path is not None:
+            self._startup_status_path.unlink(missing_ok=True)
 
     @override
     def send_data(self, data):
