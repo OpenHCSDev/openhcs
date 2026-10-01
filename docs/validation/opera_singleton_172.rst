@@ -25,11 +25,13 @@ and seed 7, without --openhcs-format, emitted
 
 Originals, read-only:
 ``/home/ts/wt/openhcs-issue-batch-20260929/namespace-installed-20261001/fixtures/raw-opera/Images/Index.xml``
-and sibling ``live.stdout`` (generation/compile records at lines 1594-1680).
+and
+``/home/ts/wt/openhcs-issue-batch-20260929/namespace-installed-20261001/live.stdout``
+(generation/compile records at lines 1594-1680).
 XML SHA256:
 ``b3f2c03c8e7b6e7e3196535b934f01f65c7c6b6f6bb22cf6fd6fd308e54db276``.
 The XML declares field 1 at finite coordinates (0.000576762, 0.000576762) m.
-The base grid reader's ``len(images) > 1`` gate at line 268 rejects this valid
+The base grid reader's ``len(images) > 1`` gate at line 261 rejects this valid
 singleton. Colocated channels/planes remain separate singleton groups and fail
 the same gate. No original fixture, metadata or live process is modified.
 
@@ -126,10 +128,94 @@ Separate tracked inventory witness, retained under issue 172
 Parent observed persisted Opera A01 metadata versus filename-parsed R01C01:
 sample succeeds, combined inventory reports two wells. Source witness:
 SyntheticMicroscopyGenerator.generate_openhcs_metadata builds
-``wells = {well: well for well in self.wells}`` (demo/synthetic_data.py:1124);
-OperaPhenixFilenameParser.parse_filename emits RxxCxx (opera_phenix.py:490).
+``wells = {well: well for well in self.wells}`` (demo/synthetic_data.py:1125);
+OperaPhenixFilenameParser.parse_filename emits RxxCxx (opera_phenix.py:488).
 This is generator/catalog versus filename identity, not the stage-coordinate
 parser owner. Neither is changed by this fix. Parent retains installed evidence;
 issue 172 stays open for normalization through the existing filename declaration
 and persisted producer plus installed combined-inventory acceptance. Do not
 silently convert the fixture, accept two aliases or fabricate a fallback reader.
+
+Guard evidence, provenance and stack integration
+------------------------------------------------
+
+Draft PR 329 targets main:
+https://github.com/OpenHCSDev/openhcs/pull/329 . Issue 172 remains open.
+Working source qualified at ``1002437c4965c4c60bc56ed3fe19b6609dace53e``.
+
+The unchanged CI structural ratchet from agent-comms
+``3b03785f45df2ef5dc62ba6aed99294192ecbb01`` passes all three production roots,
+against base 5ce9e308 and working head 1002437c4. Tool SHA256:
+``e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562``.
+No exceptions or detector edits. Nonzero deltas: StringSubscript -4,
+LongBooleanChain -2, BooleanChainTerms -14, parser GodClassExcess -112.
+All other deltas zero. Root shard observations:
+
+* openhcs: exit 0, 17.71 seconds, 83.55 MiB peak combined RSS.
+* scripts: exit 0, 2.55 seconds, 51.47 MiB peak combined RSS.
+* benchmark: exit 0, 2.95 seconds, 50.46 MiB peak combined RSS.
+
+Focused current-archive debt census of the parser has zero unparsed files,
+string_key_subscript -4, long_boolean_chain -2, boolean_chain_terms -14,
+literal_key_get -2, none_identity -8, long_function -1, code_lines -77;
+all type/string dispatch measures remain zero delta. The local census script
+is byte-identical to the archive script, SHA256
+``fbe4651372d4d79963075d7fb6ba6dedf90d5e88e14eee07f845c5d836974e35``.
+Focused AST checks parse the XML parser, Opera handler, generator,
+SourceTileLayout and SpatialGridAxis source; record source hashes; verify both
+position readers call the shared decoder, grid raw string-subscript reads and
+grid sqrt guessing are absent, and the unchanged metadata consumer returns
+``(grid_size[1], grid_size[0])``. This is static evidence, not consumer execution
+or an NRA schema/descent certificate. The complete NRA dependency scan and
+changed-file global R1 comparison are not executed here; no pass or completeness
+claim is made for them. No guard is patched or waived.
+
+Instruction provenance: nra-refactoring SKILL.md SHA256
+``9f2f8b28bc82256eefa3e9d63248c50722dc3ffe7d77adba5793296df196b47e``;
+current refactor-audit.skill ZIP SHA256
+``100fbe8ef89664b866777e87b2c8640a3432e8a10e9188dff81c97942d551bf6``.
+
+Parent merged PolyStore PR 16 to 84f322e46871de5ed47e7fd20976ad03e533c1c4,
+then OpenHCS PR 206 to main e690c3bfc0f2042dcc2c75e6205d03fffe8aa603.
+This source branch normally merged that main at
+``2e2602e550a2f3e9fac45944a519e2187943db47`` without conflicts; no parent
+worktree was edited. The inherited PolyStore pin now matches main. New worktree
+submodules remain deliberately uninitialized: standalone source-file tests do
+not require discovery or initialize foreign dependencies. The post-merge hook
+reports those uninitialized gitlinks; it changes none of them.
+
+Git tree identity proves the qualified production roots and tests are unchanged
+by that merge. Main's openhcs/scripts/benchmark trees are byte-identical to the
+original audited base; merged-head roots are identical to the qualified head.
+Consequently the guard comparison is the same source comparison, not an
+extrapolated behavioral claim. Parser SHA256 remains
+``b80af276e29671a29fd4c710a12cd2727046a7164e4f1a1d22094d14d734f74b``.
+PR now contains only the owned parser, test, receipt and evidence archive.
+
+Archive and exact unresolved live boundary
+-----------------------------------------
+
+``opera_singleton_172_source_evidence.tgz`` retains the original installed XML
+and MCP error excerpt, source negative traceback, nine-method negative
+regression run (3 failures, 9 subtest errors), eleven-method passing run,
+original XML positive/reopen proof, whole-root unchanged ratchet JSON, focused
+census/AST, resource command summaries and the disposable supervisor/checker.
+The archive is verified by fresh extraction and byte comparison before cleanup.
+Owned scratch and the clean detached audit-tool worktree are removed only after
+all processes terminate. No original fixture, source worktree, submodule master,
+installed package or parent's process is removed.
+
+Source done: the original failure is reproduced and fixed without input changes;
+the regression relation and original structural ratchet pass. Installed status
+for this parser patch is NOT verified. Parent must integrate/install PR 329 and
+repeat the original raw Opera generation plus complete empty-document
+artifact-plan through the actual installed entrypoint, confirm warning/error
+absence, and retain fresh acceptance receipts. No science/native/MCP slot is
+claimed here. The separate persisted A01/R01C01 combined-inventory disagreement
+remains under issue 172; it is not concealed by this parser fix.
+
+Cleanup completed: fresh extraction and complete byte comparison passed; owned
+scratch (1.7 MiB before verification) and clean detached audit worktree (3.1 MiB)
+were removed after every worker was terminal. Evidence is recoverable from the
+158 KiB archive, SHA256
+``f46c0a64917011026493d4c60e9435995534fb0e9574e0e6e42aa906d21d9b9b``.
