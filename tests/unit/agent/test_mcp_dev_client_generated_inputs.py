@@ -193,6 +193,7 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
     @dataclass(frozen=True, kw_only=True)
     class ExtendedConnection(*bases, ExecutionConnectionSpec):
         request_tag: str = "new"
+        trace_enabled: bool = True
 
     import openhcs.agent.dto.common as common
 
@@ -220,6 +221,7 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
             "5993",
             "--request-tag",
             "retained",
+            "--no-trace-enabled",
         )
         assert generated.arguments == {
             "host": "localhost",
@@ -227,6 +229,7 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
             "transport_mode": None,
             "persistent": False,
             "request_tag": "retained",
+            "trace_enabled": False,
         }
         assert events == (["ephemeral", "host"] if reverse else ["host", "ephemeral"])
         assert len(decoded) == 1 and type(decoded[0]) is ExtendedConnection

@@ -963,8 +963,8 @@ def request_factory_parameter(
 def request_factory_argument_type(
     request_factory,
     field_name: str,
-) -> type | None:
-    """Return an argparse scalar constructor from the declared DTO type."""
+) -> Callable[[str], object] | None:
+    """Return an argparse text decoder from the declared DTO annotation."""
 
     annotation = get_type_hints(
         inspect.unwrap(signature_analysis_target(request_factory))
@@ -980,7 +980,7 @@ def request_factory_argument_type(
 def request_field_argument_type(
     request_type: type,
     field_name: str,
-) -> type | None:
+) -> Callable[[str], object] | None:
     """Return a primitive argparse type from a DTO from_fields annotation."""
     return request_factory_argument_type(request_type.from_fields, field_name)
 
@@ -1053,11 +1053,6 @@ def add_request_factory_option(
         kwargs["dest"] = field_name
     if "default" not in kwargs and parameter.default is not inspect.Parameter.empty:
         kwargs["default"] = parameter.default
-    annotation = get_type_hints(
-        inspect.unwrap(signature_analysis_target(request_factory))
-    )[field_name]
-    if annotation is bool and "action" not in kwargs:
-        kwargs["action"] = argparse.BooleanOptionalAction
     if "type" not in kwargs and "action" not in kwargs:
         argument_type = request_factory_argument_type(request_factory, field_name)
         if argument_type is not None:

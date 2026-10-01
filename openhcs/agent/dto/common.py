@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, fields
@@ -32,7 +33,7 @@ class AgentCliArgumentSpec:
     flags: tuple[str, ...] = ()
     positional: bool = False
     nargs: str | int | None = None
-    action: str | None = None
+    action: str | type[argparse.Action] | None = None
     help: str | None = None
 
 
@@ -76,6 +77,21 @@ class AgentDataclassCliRequest(AgentCliRequest):
             return cls.from_fields(**kwargs)
 
         return from_cli_fields
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        annotations = get_type_hints(cls)
+        return (
+            *super().agent_cli_argument_specs(),
+            *(
+                AgentCliArgumentSpec(
+                    field_name=declared_field.name,
+                    action=argparse.BooleanOptionalAction,
+                )
+                for declared_field in fields(cls)
+                if declared_field.init and annotations[declared_field.name] is bool
+            ),
+        )
 
     def as_tool_arguments(self) -> JsonObject:
         return cast(JsonObject, to_jsonable(self))

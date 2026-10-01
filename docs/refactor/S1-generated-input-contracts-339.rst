@@ -121,3 +121,27 @@ Ruff correctness E9/F63/F7/F82 and git diff --check PASS. Original R0/full-conte
 R1, existing generated request regressions and actual source CLI help receipt
 remain pending at publication. This draft is a working source checkpoint,
 not installed/live acceptance or global S1 completion.
+
+Declaration-policy correction after first publication
+----------------------------------------------------
+
+Original packaged R0 at3b03785 failed one StringSubscript increase from writing
+the argparse action keyword in the shared consumer. Original log is retained.
+Boolean argument behavior now belongs on the existing AgentCliArgumentSpec
+declaration: its external argparse action contract accepts action classes as well
+as strings. AgentDataclassCliRequest derives those specs from actual dataclass
+boolean annotations and composes inherited specs through super(). The existing
+consumer already applies these specs; the added raw keyword write is deleted,
+not renamed, waived or hidden. This avoids duplicate option-configuration logic.
+The new-case experiment now also declares a fresh boolean field and exercises
+its generated negative flag through the unchanged consumer, both MRO orders.
+
+60 combined new-input/config/pipeline source cases PASS5.97s/259176KiB RSS.
+An earlier11-case selected existing config/knowledge/runtime/profile shard
+PASS13.12s/317028KiB; an initial shell-runner SyntaxError is retained separately.
+No original tests were edited. Pinned NRA084 full-context R1 at d24bff236 is
+INCOMPLETE: original openhcs/scripts/benchmark roots plus all recorded dependency
+Python,55s parse_python_module deadline, wall57.30s/264084KiB RSS, AS512MiB/CPU0.
+Materialization completed, parsing did not. No counts, descent certificate,
+global pass or silent source exclusion is inferred. Guard reruns at the corrected
+source remain pending; timeout is not a blocker for independent source delivery.
