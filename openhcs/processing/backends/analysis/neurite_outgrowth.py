@@ -1208,7 +1208,7 @@ def _identify_cell_bodies_cellprofiler(
 
     maximum_width_px = settings.approximate_max_width / pixel_size_um
     minimum_area_px = settings.minimum_area / pixel_size_um**2
-    _, _, detected_payload = _raw_processing_leaf(identify_primary_objects)(
+    _, _, detected_payload, *_ = _raw_processing_leaf(identify_primary_objects)(
         _cellprofiler_foreground_image(image, bright_objects=bright_objects),
         **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
             adaptive_window_size=_cellprofiler_adaptive_window(
