@@ -1194,6 +1194,58 @@ class AlignedImageStack(ImagePayloadStackComposition):
             for output_slice in payload_slices_for_alignment(payload):
                 yield output_slice, context
 
+    def output_values_for_artifact_specs(
+        self,
+        canonical_specs: tuple[ArtifactSpec, ...],
+    ) -> dict[ArtifactSpecRef, Any]:
+        """Bind one complete declared main-flow roster to exact slice contexts."""
+
+        if not self.slice_contexts:
+            raise ValueError(
+                "Multiple canonical output specs require exact AlignedImageStack "
+                "slice contexts; positional slice order is not artifact identity."
+            )
+
+        specs_by_context = {
+            (spec.name, spec.artifact_type.value): spec for spec in canonical_specs
+        }
+        if len(specs_by_context) != len(canonical_specs):
+            raise ValueError("Canonical output ABI contains duplicate named contexts.")
+        resolved: dict[ArtifactSpecRef, Any] = {}
+        for payload, context in zip(
+            self.slices,
+            self.slice_contexts,
+            strict=True,
+        ):
+            if context.output_kind != AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND:
+                raise ValueError(
+                    "Canonical AlignedImageStack contains a non-main-flow slice "
+                    f"context: {context!r}."
+                )
+            context_key = (context.output_key, context.artifact_kind)
+            spec = specs_by_context.get(context_key)
+            if spec is None:
+                raise ValueError(
+                    "Canonical AlignedImageStack context is not declared by the "
+                    f"callable ABI: {context!r}."
+                )
+            ref = spec.ref()
+            if ref in resolved:
+                raise ValueError(
+                    "Canonical AlignedImageStack contains duplicate context for "
+                    f"{ref!r}."
+                )
+            resolved[ref] = payload
+        missing = tuple(
+            spec.ref() for spec in canonical_specs if spec.ref() not in resolved
+        )
+        if missing:
+            raise ValueError(
+                "Canonical AlignedImageStack does not carry every declared output: "
+                f"{missing!r}."
+            )
+        return resolved
+
     def output_payload(
         self,
         artifact_ref: ArtifactSpecRef,

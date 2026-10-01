@@ -161,12 +161,18 @@ class RuntimeReturnedOutputMatcher:
                 strict=True,
             )
         }
-        resolved.update(
-            self._canonical_values(
-                self.callable_contract.canonical_return_output_specs.specs,
-                canonical_output,
+        canonical_specs = self.callable_contract.canonical_return_output_specs.specs
+        if len(canonical_specs) == 1:
+            resolved[canonical_specs[0].ref()] = canonical_output
+        elif canonical_specs:
+            if not isinstance(canonical_output, AlignedImageStack):
+                raise TypeError(
+                    "Multiple canonical output specs require an AlignedImageStack with "
+                    "one exact named slice context per output."
+                )
+            resolved.update(
+                canonical_output.output_values_for_artifact_specs(canonical_specs)
             )
-        )
         return resolved
 
     def resolve_plan_values(
@@ -204,70 +210,6 @@ class RuntimeReturnedOutputMatcher:
                 )
             matched_outputs.append((plan, spec, returned_values[ref]))
         return returned_values, tuple(matched_outputs)
-
-    @classmethod
-    def _canonical_values(
-        cls,
-        canonical_specs: tuple[ArtifactSpec, ...],
-        canonical_output: Any,
-    ) -> dict[ArtifactSpecRef, Any]:
-        """Resolve named outputs represented by the one canonical return slot."""
-
-        if not canonical_specs:
-            return {}
-        if len(canonical_specs) == 1:
-            spec = canonical_specs[0]
-            return {spec.ref(): canonical_output}
-        if not isinstance(canonical_output, AlignedImageStack):
-            raise TypeError(
-                "Multiple canonical output specs require an AlignedImageStack with "
-                "one exact named slice context per output."
-            )
-        if not canonical_output.slice_contexts:
-            raise ValueError(
-                "Multiple canonical output specs require exact AlignedImageStack "
-                "slice contexts; positional slice order is not artifact identity."
-            )
-
-        specs_by_context = {
-            (spec.name, spec.artifact_type.value): spec for spec in canonical_specs
-        }
-        if len(specs_by_context) != len(canonical_specs):
-            raise ValueError("Canonical output ABI contains duplicate named contexts.")
-        resolved: dict[ArtifactSpecRef, Any] = {}
-        for payload, context in zip(
-            canonical_output.slices,
-            canonical_output.slice_contexts,
-            strict=True,
-        ):
-            if context.output_kind != AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND:
-                raise ValueError(
-                    "Canonical AlignedImageStack contains a non-main-flow slice "
-                    f"context: {context!r}."
-                )
-            context_key = (context.output_key, context.artifact_kind)
-            spec = specs_by_context.get(context_key)
-            if spec is None:
-                raise ValueError(
-                    "Canonical AlignedImageStack context is not declared by the "
-                    f"callable ABI: {context!r}."
-                )
-            ref = spec.ref()
-            if ref in resolved:
-                raise ValueError(
-                    "Canonical AlignedImageStack contains duplicate context for "
-                    f"{ref!r}."
-                )
-            resolved[ref] = payload
-        missing = tuple(
-            spec.ref() for spec in canonical_specs if spec.ref() not in resolved
-        )
-        if missing:
-            raise ValueError(
-                "Canonical AlignedImageStack does not carry every declared output: "
-                f"{missing!r}."
-            )
-        return resolved
 
     @staticmethod
     def _specs_by_ref(
