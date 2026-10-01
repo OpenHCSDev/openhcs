@@ -7,10 +7,12 @@ import importlib
 import inspect
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
 from typing import TYPE_CHECKING
+
+from python_introspect import Enableable
 
 from openhcs.core.callable_contract import (
     CallableImportIdentity,
@@ -18,7 +20,7 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from python_introspect import Enableable
+from openhcs.core.python_source_literal import PythonSourceLiteral
 
 if TYPE_CHECKING:
     from openhcs.core.steps.abstract import AbstractStep
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class FunctionReference(ABC):
+class FunctionReference(PythonSourceLiteral, ABC):
     """Picklable callable identity plus explicit compiler metadata."""
 
     import_identity: CallableImportIdentity
@@ -49,6 +51,36 @@ class FunctionReference(ABC):
         """Return the declaration module from the sole import identity owner."""
 
         return self.import_identity.module_name
+
+    @property
+    def source_import_identity(self) -> CallableImportIdentity:
+        """Import authority used to reconstruct this declaration in Python."""
+
+        return self.import_identity
+
+    def source_expression(self, imported_name: str) -> str:
+        """Render through the source authority, including pycodify name aliases."""
+
+        return imported_name
+
+    def source_literal(self) -> str:
+        return self.source_expression(self.source_import_identity.function_name)
+
+    def source_literal_with_names(
+        self, name_mappings: Mapping[tuple[str, str], str],
+    ) -> str:
+        identity = self.source_import_identity
+        imported_name = name_mappings.get(
+            (identity.module_name, identity.function_name), identity.function_name,
+        )
+        return self.source_expression(imported_name)
+
+    def source_literal_imports(self) -> frozenset[tuple[str, str]]:
+        imports = super().source_literal_imports()
+        identity = self.source_import_identity
+        if identity.module_name == "builtins":
+            return imports
+        return imports | frozenset({(identity.module_name, identity.function_name)})
 
     @abstractmethod
     def resolve(self) -> Callable:
@@ -108,6 +140,16 @@ class RegistryFunctionReference(FunctionReference):
         """Return the registry owner derived from the canonical composite key."""
 
         return self.composite_key.partition(":")[0]
+
+    @property
+    def source_import_identity(self) -> CallableImportIdentity:
+        return CallableImportIdentity(
+            module_name="openhcs.processing.func_registry",
+            function_name="get_function",
+        )
+
+    def source_expression(self, imported_name: str) -> str:
+        return f"{imported_name}({self.composite_key!r})"
 
     def resolve(self) -> Callable:
         from openhcs.processing.backends.lib_registry.registry_service import (
