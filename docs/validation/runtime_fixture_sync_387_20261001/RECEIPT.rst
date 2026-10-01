@@ -12,8 +12,8 @@ identity and row contents. No production source, filename inference, numerical
 tolerance, or benchmark clock changed.
 
 The complete repaired module passes: 181 tests in 17.60s. The original red and
-complete green pytest output and JUnit documents are retained beside this
-receipt. The test-only worktree used the shared Python3.12 environment and exact
+complete green pytest output and JUnit documents are retained byte-for-byte
+in pytest_evidence.tgz beside this receipt, with internal SHA256SUMS. The test-only worktree used the shared Python3.12 environment and exact
 native binaries from main. Extracted-package imports use the existing shared
 checkout at the same eight declared dependency revisions. This test-only
 qualification does not claim a performance improvement or a native CP ratio.
