@@ -34,3 +34,27 @@ source-sanity XML/log, build log and CLI help/rejection. Owned disposable output
 was tracked under /home/ts/.cache/agent-scratch/openhcs-imagexpress-readonly-
 inventory-337-20261001 (compiler-334/build-lib-334/334-merge-fixtures). Source
 and persistent worktrees stay; archived logs survive scratch cleanup.
+
+Current main356 integration (subsequent owner request)
+-----------------------------------------------------
+
+Normally merged currentmain3569105574cb707d75922dc165a313365e1bd33c:
+14e66ad42c6c84142f87cb1c0202d72520187e70, ordinary conflict-free ort merge.
+No production edit or competing runtime patch. All eleven S1 production modules
+remain byte-unchanged from reviewed ba3b1a/bdfd; merged runtime326 belongs to its
+existing owner. Existing source extensions rebuilt locally, 3.49s/143728 KiB,
+no installation or native application launch.
+
+Same focused source sanity: 37 PASS, 6.46s/259196 KiB RSS, CPU0/60s.
+Current build/log/XML added to the existing archive; earlier evidence retained.
+Source integration is ready for parent shipment without optional CI.
+
+Parent reports completed installed e16/f24 native and human/generated/MCP
+qualification, recorded publicly at PR334 comment5925763208. Actual source
+execution returned job1, native COMPLETE with four addressed/calibrated planes
+and exact samples; separate compile-only job2 COMPLETE. Parent reports original
+owned native/MCP processes closed and lock released. That is scoped historical
+acceptance of the eleven unchanged S1 modules, not installed356 qualification,
+biology/UI acceptance or a global R1 pass. Parent will rebuild exact merged main
+for its next phase. Source owner has not opened scientific inputs or launched
+a live endpoint. Issue339 separately owns omitted generated connection arguments.
