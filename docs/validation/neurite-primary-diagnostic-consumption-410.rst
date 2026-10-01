@@ -44,6 +44,12 @@ s1-installed-20261001 evidence directory:
   after four dots and was killed by the original512MiB supervisor at34.64s.
   This is not a completed five-case pass. The topology/scoring case remains
   uncompleted in that shard; its assertions were not weakened or removed.
+* neurite410-original-r0: unmodified packaged agent_comms.debt_ratchet at original
+  pinned owner /home/ts/wt/comms-ratchet-pinned-ui348-20261001/src, Python3.14,
+  --root openhcs --base e66500e7ae3804abca1396681c50e1cef5e9a11e
+  --head 6eff87d4b5b1fc2139b26befcd45dcb98b53fc2d. Exit0,23.03s,83.12MiB.
+  Full changed production union, no exclusions or altered measures. This is
+  scoped structural screening, not a completed global/context NRA-R1 audit.
 
 The installed MCP workflow acceptance belongs to the same retained scientific
 context after a reviewed wheel publication. Candidate4 remains biologically
