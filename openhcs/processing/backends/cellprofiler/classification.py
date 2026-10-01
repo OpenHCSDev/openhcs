@@ -74,6 +74,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 
 if TYPE_CHECKING:
+    from openhcs.core.function_patterns import FunctionInvocation
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -101,15 +102,73 @@ class ClassifiedImageSourceRelation(SourceStackLineageSourceRelation):
             raise ValueError("Classified image rule_index must be non-negative.")
 
 
-class _ClassifiedImageRuleIndicesRuntimeParameter(KeywordRuntimeParameter):
+class _ClassificationRuntimeInputParameter(KeywordRuntimeParameter, ABC):
+    """One declaration-owned contribution to classification runtime inputs."""
+
+    @classmethod
+    def bind_runtime_inputs(
+        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        if not cls.runtime_binding_active(request):
+            return {}
+        return cls.runtime_input_values(request, object_spec, labels)
+
+    @classmethod
+    def runtime_binding_active(cls, request: RuntimeInputBindingRequest) -> bool:
+        return True
+
+    @classmethod
+    @abstractmethod
+    def runtime_input_values(
+        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        """Bind this declaration's contribution, cooperatively where composed."""
+
+
+class _ClassificationModeRuntimeParameter(ABC):
+    """Declare the parsed measurement-count mode independently of binding."""
+
+    @classmethod
+    @abstractmethod
+    def classification_method(cls) -> ClassificationMethod:
+        """Return the existing parsed-mode member owned by this declaration."""
+
+
+class _ClassifiedImageRuleIndicesRuntimeParameter(_ClassificationRuntimeInputParameter):
     """Runtime-bound classification rules ordered by declared image outputs."""
 
     parameter_name = "classified_image_rule_indices"
     annotation_type = tuple[int, ...]
     parameter_default = ()
 
+    @classmethod
+    def runtime_input_values(
+        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        image_outputs = request.adapter.request.require_callable_contract().artifact_outputs.of_artifact_type(
+            ImageArtifactType
+        )
+        indices: list[int] = []
+        for output in image_outputs:
+            relations = tuple(
+                relation
+                for relation in output.relations
+                if isinstance(relation, ClassifiedImageSourceRelation)
+            )
+            if len(relations) != 1:
+                raise ValueError(
+                    "ClassifyObjects classified image outputs require one exact "
+                    f"ClassifiedImageSourceRelation, got {relations!r} for "
+                    f"{output.name!r}."
+                )
+            indices.append(relations[0].rule_index)
+        return {cls.require_parameter_name(): tuple(indices)}
 
-class _ClassificationMeasurementVectorRuntimeParameter(KeywordRuntimeParameter, ABC):
+
+class _ClassificationMeasurementVectorRuntimeParameter(_ClassificationRuntimeInputParameter):
     """Bind a declared feature through the original object-vector authority."""
 
     annotation_type = np.ndarray | None
@@ -121,7 +180,7 @@ class _ClassificationMeasurementVectorRuntimeParameter(KeywordRuntimeParameter, 
         """Return this vector's original authoring declaration."""
 
     @classmethod
-    def bind_runtime_inputs(
+    def runtime_input_values(
         cls,
         request: RuntimeInputBindingRequest,
         object_spec: ArtifactSpec,
@@ -151,13 +210,13 @@ class _SingleClassifiedImageOutputRuntimeBinding(ABC):
         """Return the original scalar image-output declaration."""
 
     @classmethod
-    def bind_runtime_inputs(
+    def runtime_input_values(
         cls,
         request: RuntimeInputBindingRequest,
         object_spec: ArtifactSpec,
         labels: ObjectLabelValue,
     ) -> dict[str, RuntimeCallableArgument]:
-        bound = super().bind_runtime_inputs(request, object_spec, labels)
+        bound = super().runtime_input_values(request, object_spec, labels)
         binding = cls.classified_image_output_binding()
         outputs = request.adapter.request.require_callable_contract().artifact_outputs.of_artifact_type(
             binding.require_artifact_type()
@@ -173,10 +232,19 @@ class _SingleClassifiedImageOutputRuntimeBinding(ABC):
 class _ClassificationMeasurementValuesRuntimeParameter(
     _SingleClassifiedImageOutputRuntimeBinding,
     _ClassificationMeasurementVectorRuntimeParameter,
+    _ClassificationModeRuntimeParameter,
 ):
     """A single-measurement vector AND its scalar retained-image selector."""
 
     parameter_name = "measurement_values"
+
+    @classmethod
+    def classification_method(cls) -> ClassificationMethod:
+        return ClassificationMethod.SINGLE_MEASUREMENT
+
+    @classmethod
+    def runtime_binding_active(cls, request: RuntimeInputBindingRequest) -> bool:
+        return not _ClassificationRuleValuesRuntimeParameter.runtime_binding_active(request)
 
     @classmethod
     def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
@@ -188,11 +256,16 @@ class _ClassificationMeasurementValuesRuntimeParameter(
 
 
 class _ClassificationMeasurement1ValuesRuntimeParameter(
-    _ClassificationMeasurementVectorRuntimeParameter
+    _ClassificationMeasurementVectorRuntimeParameter,
+    _ClassificationModeRuntimeParameter,
 ):
     """Runtime-bound first vector for two-measurement classification."""
 
     parameter_name = "measurement1_values"
+
+    @classmethod
+    def classification_method(cls) -> ClassificationMethod:
+        return ClassificationMethod.TWO_MEASUREMENTS
 
     @classmethod
     def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
@@ -200,23 +273,60 @@ class _ClassificationMeasurement1ValuesRuntimeParameter(
 
 
 class _ClassificationMeasurement2ValuesRuntimeParameter(
-    _ClassificationMeasurementVectorRuntimeParameter
+    _ClassificationMeasurementVectorRuntimeParameter,
+    _ClassificationModeRuntimeParameter,
 ):
     """Runtime-bound second vector for two-measurement classification."""
 
     parameter_name = "measurement2_values"
 
     @classmethod
+    def classification_method(cls) -> ClassificationMethod:
+        return ClassificationMethod.TWO_MEASUREMENTS
+
+    @classmethod
     def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
         return ClassifyObjectsSingleMeasurementModule.second_measurement_feature_binding
 
 
-class _ClassificationRuleValuesRuntimeParameter(KeywordRuntimeParameter):
+class _ClassificationRuleValuesRuntimeParameter(_ClassificationRuntimeInputParameter):
     """Runtime-bound vectors for imported classification rules."""
 
     parameter_name = "measurement_values_by_rule"
     annotation_type = tuple[np.ndarray, ...]
     parameter_default = ()
+
+    @classmethod
+    def rules_for_request(cls, request: RuntimeInputBindingRequest):
+        rules = request.kwargs.get("classification_rules", ())
+        if not isinstance(rules, (tuple, list)):
+            raise ValueError(
+                f"{request.adapter.request.require_callable_contract().module_name} classification_rules must be an ordered tuple or list."
+            )
+        return rules
+
+    @classmethod
+    def runtime_binding_active(cls, request: RuntimeInputBindingRequest) -> bool:
+        return bool(cls.rules_for_request(request))
+
+    @classmethod
+    def runtime_input_values(
+        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        return {
+            cls.require_parameter_name(): tuple(
+                CellProfilerObjectMeasurementVectorBinding.for_object(
+                    request,
+                    object_ref=object_spec,
+                    feature_name=_classification_rule_measurement_feature(
+                        rule, request.adapter.request.require_callable_contract().module_name
+                    ),
+                    labels=labels,
+                ).vector().runtime_value
+                for rule in cls.rules_for_request(request)
+            )
+        }
 
 
 class ClassifyObjectsMeasurementInputPolicy:
@@ -237,75 +347,15 @@ class ClassifyObjectsMeasurementInputPolicy:
             )
         labels_parameter, labels = next(iter(special_inputs.items()))
         measurement_labels = request.label_payload_for(object_spec)
-        classified_image_rule_indices = cls.classified_image_rule_indices(request)
-        if "classification_rules" in request.kwargs:
-            rules = request.kwargs["classification_rules"]
-            if not isinstance(rules, (tuple, list)):
-                raise ValueError(
-                    f"{request.adapter.request.require_callable_contract().module_name} classification_rules must be an ordered tuple or list."
-                )
-            return {
-                labels_parameter: labels,
-                _ClassificationRuleValuesRuntimeParameter.require_parameter_name(): tuple(
-                    (
-                        CellProfilerObjectMeasurementVectorBinding.for_object(
-                            request,
-                            object_ref=object_spec,
-                            feature_name=_classification_rule_measurement_feature(
-                                rule,
-                                request.adapter.request.require_callable_contract().module_name,
-                            ),
-                            labels=measurement_labels,
-                        )
-                        .vector()
-                        .runtime_value
-                        for rule in rules
-                    )
-                ),
-                _ClassifiedImageRuleIndicesRuntimeParameter.require_parameter_name(): (
-                    classified_image_rule_indices
-                ),
-            }
         bound_values = {
             name: value
             for parameter_type in request.adapter.request.require_callable_contract().runtime_bound_parameter_types
-            if issubclass(parameter_type, _ClassificationMeasurementVectorRuntimeParameter)
+            if issubclass(parameter_type, _ClassificationRuntimeInputParameter)
             for name, value in parameter_type.bind_runtime_inputs(
                 request, object_spec, measurement_labels
             ).items()
         }
-        return {
-            labels_parameter: labels,
-            **bound_values,
-            _ClassifiedImageRuleIndicesRuntimeParameter.require_parameter_name(): (
-                classified_image_rule_indices
-            ),
-        }
-
-    @staticmethod
-    def classified_image_rule_indices(
-        request: RuntimeInputBindingRequest,
-    ) -> tuple[int, ...]:
-        """Return rule indices in the compiled image-output declaration order."""
-
-        image_outputs = request.adapter.request.require_callable_contract().artifact_outputs.of_artifact_type(
-            ImageArtifactType
-        )
-        indices: list[int] = []
-        for output in image_outputs:
-            relations = tuple(
-                relation
-                for relation in output.relations
-                if isinstance(relation, ClassifiedImageSourceRelation)
-            )
-            if len(relations) != 1:
-                raise ValueError(
-                    "ClassifyObjects classified image outputs require one exact "
-                    f"ClassifiedImageSourceRelation, got {relations!r} for "
-                    f"{output.name!r}."
-                )
-            indices.append(relations[0].rule_index)
-        return tuple(indices)
+        return {labels_parameter: labels, **bound_values}
 
 
 def _classification_rule_measurement_feature(
@@ -584,9 +634,7 @@ class ClassifyObjectsSingleMeasurementModule(
     def _classification_kwargs(
         cls, module: "ModuleBlock", binder: "SettingsBinder"
     ) -> "RuntimeCallableKwargs":
-        if cls.uses_two_measurements(module):
-            return cls._two_measurement_kwargs(module, binder)
-        return cls._single_measurement_kwargs(module, binder)
+        return ClassificationMethod.from_module(cls, module).bind_settings(cls, module, binder)
 
     @classmethod
     def bind_settings(cls, module, *, binder):
@@ -642,24 +690,6 @@ class ClassifyObjectsSingleMeasurementModule(
         return values[-1]
 
     @classmethod
-    def uses_two_measurements(cls, module: "ModuleBlock") -> bool:
-        method = coerce_cellprofiler_enum(
-            ClassificationMethod,
-            cls.indexed_setting_value(
-                module,
-                cls.classification_decision_count_setting,
-                default=cls.classification_decision_default,
-            ),
-        )
-        return method is ClassificationMethod.TWO_MEASUREMENTS
-
-    @classmethod
-    def function_name_for_module(cls, module: "ModuleBlock") -> str:
-        if cls.uses_two_measurements(module):
-            return cls.function_variants[0]
-        return str(cls.function_name)
-
-    @classmethod
     def resolve_function(
         cls,
         module: "ModuleBlock",
@@ -668,7 +698,7 @@ class ClassifyObjectsSingleMeasurementModule(
         source_bindings: "StepSourceBindingsConfig",
     ) -> Callable[..., object]:
         del contract, source_bindings
-        return cls.require_callable(cls.function_name_for_module(module))
+        return ClassificationMethod.from_module(cls, module).require_callable(cls)
 
     @classmethod
     def finalize_module_blocks_for_invocation(
@@ -685,48 +715,9 @@ class ClassifyObjectsSingleMeasurementModule(
             invocation=invocation,
             step_context=step_context,
         )
-        rules = invocation.kwargs_dict.get("classification_rules")
-        if rules is None:
-            retained_image_name = normalized_symbol_name(
-                str(invocation.kwargs_dict.get("retained_image_name") or "")
-            )
-            return tuple(
-                cls._block_with_scalar_classification_output(
-                    block,
-                    retained_image_name=retained_image_name,
-                )
-                for block in blocks
-            )
-        if not isinstance(rules, tuple) or any(
-            not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
-        ):
-            raise TypeError(
-                "ClassifyObjects classification_rules must be a tuple of "
-                "SingleMeasurementClassificationRule values."
-            )
-        reconstructed = []
-        for block in blocks:
-            records = (
-                *(
-                    record
-                    for record in block.iter_settings()
-                    if not cls._single_group_setting_name(record.name)
-                    and not setting_name_matches(record.name, "Hidden")
-                ),
-                ModuleSetting("Hidden", str(len(rules))),
-                *(
-                    record
-                    for rule in rules
-                    for record in cls._single_rule_setting_records(rule)
-                ),
-            )
-            reconstructed.append(
-                replace(
-                    block,
-                    setting_records=list(records),
-                )
-            )
-        return tuple(reconstructed)
+        return ClassificationMethod.from_callable_contract(invocation.contract).finalize_module_blocks(
+            cls, blocks, invocation
+        )
 
     @classmethod
     def _block_with_scalar_classification_output(
@@ -1126,8 +1117,12 @@ class ClassifyObjectsSingleMeasurementModule(
     ) -> tuple[ClassifiedImageOutput, ...]:
         """Return every active repeated classified-image row in rule order."""
 
-        if cls.uses_two_measurements(module):
-            return cls._two_measurement_classified_image_outputs(module)
+        return ClassificationMethod.from_module(cls, module).classified_image_outputs(cls, module)
+
+    @classmethod
+    def _single_measurement_classified_image_outputs(
+        cls, module: "ModuleBlock"
+    ) -> tuple[ClassifiedImageOutput, ...]:
         records = module.iter_settings()
         if records:
             blocks = repeating_setting_blocks(
@@ -1322,6 +1317,127 @@ class ClassificationMethod(Enum):
         "Pair of measurements",
         "Two measurements",
     )
+
+    @classmethod
+    def from_module(
+        cls, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+    ) -> ClassificationMethod:
+        return coerce_cellprofiler_enum(
+            cls,
+            module_type.indexed_setting_value(
+                module,
+                module_type.classification_decision_count_setting,
+                default=module_type.classification_decision_default,
+            ),
+        )
+
+    @classmethod
+    def from_callable_contract(cls, contract: CallableContract) -> ClassificationMethod:
+        methods = frozenset(
+            parameter.classification_method()
+            for parameter in contract.runtime_bound_parameter_types
+            if issubclass(parameter, _ClassificationModeRuntimeParameter)
+        )
+        if len(methods) != 1:
+            raise ValueError(
+                f"Classification requires one declared measurement-count mode, got {methods!r}."
+            )
+        return next(iter(methods))
+
+    def require_callable(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+    ) -> Callable[..., object]:
+        matches = tuple(
+            func
+            for name in module_type.declared_function_names()
+            if self.from_callable_contract(
+                CallableContract.from_callable(func := module_type.require_callable(name))
+            ) is self
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                f"{module_type.module_name} requires one callable for {self.value!r}, got {matches!r}."
+            )
+        return matches[0]
+
+    def bind_settings(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock, binder: SettingsBinder,
+    ) -> RuntimeCallableKwargs:
+        if self is self.TWO_MEASUREMENTS:
+            return module_type._two_measurement_kwargs(module, binder)
+        return module_type._single_measurement_kwargs(module, binder)
+
+    def classified_image_outputs(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+    ) -> tuple[ClassifiedImageOutput, ...]:
+        if self is self.TWO_MEASUREMENTS:
+            return module_type._two_measurement_classified_image_outputs(module)
+        return module_type._single_measurement_classified_image_outputs(module)
+
+    def finalize_module_blocks(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+        blocks: tuple[ModuleBlock, ...], invocation: FunctionInvocation,
+    ) -> tuple[ModuleBlock, ...]:
+        blocks = tuple(
+            replace(
+                block,
+                setting_records=[
+                    ModuleSetting(
+                        module_type.classification_decision_count_setting.canonical,
+                        cellprofiler_setting_literal(self),
+                    ),
+                    *(
+                        record for record in block.iter_settings()
+                        if not setting_name_matches(
+                            record.name, module_type.classification_decision_count_setting
+                        )
+                    ),
+                ],
+            )
+            for block in blocks
+        )
+        if self is self.TWO_MEASUREMENTS:
+            return blocks
+        rules = invocation.kwargs_dict.get("classification_rules")
+        if rules is not None:
+            if not isinstance(rules, tuple) or any(
+                not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
+            ):
+                raise TypeError(
+                    "ClassifyObjects classification_rules must be a tuple of "
+                    "SingleMeasurementClassificationRule values."
+                )
+        if not rules:
+            retained_image_name = normalized_symbol_name(
+                str(invocation.kwargs_dict.get("retained_image_name") or "")
+            )
+            return tuple(
+                module_type._block_with_scalar_classification_output(
+                    block, retained_image_name=retained_image_name
+                )
+                for block in blocks
+            )
+        return tuple(
+            replace(
+                block,
+                setting_records=[
+                    *(
+                        record
+                        for record in block.iter_settings()
+                        if not module_type._single_group_setting_name(record.name)
+                        and not setting_name_matches(record.name, "Hidden")
+                    ),
+                    ModuleSetting("Hidden", str(len(rules))),
+                    *(
+                        record
+                        for rule in rules
+                        for record in module_type._single_rule_setting_records(rule)
+                    ),
+                ],
+            )
+            for block in blocks
+        )
 
 
 class ClassificationThresholdMethod(Enum):
