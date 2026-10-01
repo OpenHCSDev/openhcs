@@ -215,12 +215,16 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
 
         return self.render_response(to_jsonable(response), args)
 
+    def requests_json_output(self, args: argparse.Namespace) -> bool:
+        """Project this command's declared output selection for shared rendering."""
+        return args.json
+
 
 class TypedCompositeCommandSpec(McpDevCommandSpec):
     """Composite commands consume the same decoded batch as their wire ingress."""
 
     def render_result(self, response, args: argparse.Namespace) -> str:
-        if args.json:
+        if self.requests_json_output(args):
             from openhcs.serialization.json import to_jsonable
 
             return super().render_response(to_jsonable(response), args)
@@ -317,7 +321,7 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
         payload: JsonObject,
         args: argparse.Namespace,
     ) -> str:
-        if bool(vars(args).get("json", False)):
+        if self.requests_json_output(args):
             return super().render_response(payload, args)
         renderer_binding = self.output_renderer_binding()
         if renderer_binding is None:
@@ -328,7 +332,7 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
 
     def render_result(self, response, args: argparse.Namespace) -> str:
         binding = self.output_renderer_binding()
-        if args.json or binding is None:
+        if self.requests_json_output(args) or binding is None:
             return super().render_result(response, args)
         return binding.render_result(response, self.renderer_options(args))
 

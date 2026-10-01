@@ -110,3 +110,36 @@ the separate channel-domain/provenance engineering repair; its worktree never
 changes this command/action family or the frozen trial. Parent owns PR349 source
 and release/live acceptance. This PR remains DRAFT, not merged/installed/live
 verified. No hosted CI wait. Full expanded ZIP/goal scope remains ACTIVE.
+
+Installed widget-tree regression354
+-----------------------------------
+
+The first private wheel passed all785 OpenHCS member-byte checks and its real
+installed MCP health check. Live GUI inspection then exposed a retained-result
+CLI regression: WidgetTreeCommandSpec owns --output outline/json, but the shared
+CapabilityBackedCommandSpec path directly assumed args.json. The read-only tool
+returned before presentation raised AttributeError and terminated the shell.
+Earlier source tests called render_response instead of the actual CLI chain.
+Issue354 records the original failure; no scientific analysis was dispatched.
+
+The existing McpDevCommandSpec ancestor now owns requests_json_output, queried
+by both retained and serialized command paths. WidgetTreeCommandSpec supplies
+its small hook using its existing WidgetTreeOutputFormat declaration. There is
+no second json flag, getattr/default, consumer type/name switch or renderer copy
+(IMPL-4/IMPL-5 closure). Original options and JSON alias remain unchanged.
+Real CLI/codec regression covers default outline, explicit outline, explicit
+JSON, JSON alias and generic call. Only MCP wire is controlled; the original
+typed window/tree DTO and renderer are used. The initial new tests incorrectly
+expected an invented outline header; that3-failure receipt is retained. Corrected
+tests supply the native window summary and assert its actual title and no-tree
+presentation, not merely absence of an exception.12 family checks now pass.
+
+All existing non-live CLI checks were re-run in the original four exact-node
+shards:50+50+69+36=205 checks. No input or failure case was omitted; the separately
+assigned real MCP startup check and actual affected UI workflow remain due.
+The first GUI seed also failed typed Path validation; that setup failure and
+foreign-version refusal are retained in gui-seed-rejected.log. The corrected
+isolated GUI started own5993/6993, but its cold connect failed while preparation
+was active; final native process absence is verified, not inferred from timeout.
+This is a separate native startup boundary, not proof that349 is ready to merge.
+The frozen blind trial and original backing installation remain unchanged.

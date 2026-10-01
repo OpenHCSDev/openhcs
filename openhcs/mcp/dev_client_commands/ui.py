@@ -835,6 +835,9 @@ class InvokeWidgetActionCommandSpec(CapabilityBackedCommandSpec):
 class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_get_widget_tree
 
+    def requests_json_output(self, args: argparse.Namespace) -> bool:
+        return WidgetTreeOutputFormat(args.output).is_json
+
     @staticmethod
     def _effective_max_depth(args: argparse.Namespace) -> int | None:
         if args.max_depth is not None:

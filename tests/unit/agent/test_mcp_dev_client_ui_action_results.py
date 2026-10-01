@@ -22,6 +22,9 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceDocument,
     UiStateSurfaceIdentity,
     UiStateSurfaceSummary,
+    UiWidgetTreeResult,
+    UiWindowIdentity,
+    UiWindowSummary,
 )
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_core import (
@@ -198,6 +201,57 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
     assert "accepted=True" in rendered and "targets=scope-1" in rendered
     assert workflow_result_action_status(result) == "accepted"
     assert workflow_result_target_scope_ids(result) == ("scope-1",)
+
+
+@pytest.mark.parametrize("presentation", ((), ("--output", "outline"),
+    ("--output", "json"), ("--json",)))
+def test_actual_widget_tree_cli_uses_its_declared_output_format(
+    monkeypatch, capsys, presentation,
+):
+    """The real CLI must not require a second undeclared args.json flag."""
+    native = UiWidgetTreeResult(
+        schema_version=SCHEMA_VERSION, window_id="main_window", projected=True,
+        summary=UiWindowSummary(SCHEMA_VERSION, UiWindowIdentity(window_id="main_window"),
+            "OpenHCS regression window", "qt_top_level", True, True),
+    )
+    result = action_result(agent_capabilities.ui_get_widget_tree, native)
+    response = McpDevToolBatchResponse.from_results(
+        McpDevServerSpec(sys.executable), (result,),
+    )
+
+    async def controlled_wire(args):
+        return response
+
+    monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
+    assert dev_client.main(["widget-tree", "main_window", *presentation]) == 0
+    output = capsys.readouterr().out
+    if "json" in presentation or "--json" in presentation:
+        decoded = json.loads(output)
+        assert decoded["results"][0]["payloads"][0]["window_id"] == "main_window"
+        assert decoded["results"][0]["payloads"][0]["projected"] is True
+    else:
+        assert "Window: OpenHCS regression window" in output
+        assert "Tree: <not returned; use --include-tree or outline mode>" in output
+
+
+def test_generic_widget_tree_call_uses_the_same_output_declaration(monkeypatch, capsys):
+    native = UiWidgetTreeResult(
+        schema_version=SCHEMA_VERSION, window_id="main_window", projected=True,
+        summary=UiWindowSummary(SCHEMA_VERSION, UiWindowIdentity(window_id="main_window"),
+            "OpenHCS regression window", "qt_top_level", True, True),
+    )
+    result = action_result(agent_capabilities.ui_get_widget_tree, native)
+    response = McpDevToolBatchResponse.from_results(
+        McpDevServerSpec(sys.executable), (result,),
+    )
+
+    async def controlled_wire(args):
+        return response
+
+    monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
+    assert dev_client.main(["call", agent_capabilities.ui_get_widget_tree.name,
+        "--arguments", '{"window_id":"main_window"}']) == 0
+    assert "Window: OpenHCS regression window" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("reverse", (False, True))
