@@ -406,6 +406,11 @@ class CellProfilerModule(
         """Fold enabled modules into one public source-binding configuration."""
         from openhcs.core.source_bindings import SourceBindingsConfig
 
+        modules = tuple(modules)
+        cls.discover_source_declarations(
+            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
+            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
+        )
         if not isinstance(config, SourceBindingsConfig):
             raise TypeError(
                 "CellProfiler source binding import requires SourceBindingsConfig, "
@@ -448,10 +453,9 @@ class CellProfilerModule(
             "function_name",
             cls.__name__,
         )
-        matches = tuple(
-            module_type
-            for module_type in cls.__registry__.values()
-            if normalized_name in module_type.declared_function_names()
+        matches = cls.discover_source_declarations(
+            frozenset((normalized_name,)), ("function_name", "function_variants"), str,
+            lambda declaration: frozenset(declaration.declared_function_names()),
         )
         if len(matches) > 1:
             raise ValueError(
@@ -626,14 +630,11 @@ class CellProfilerModule(
     def for_module(cls, module_name: str) -> type["CellProfilerModule"] | None:
         """Return the registered module class for a canonical name or alias."""
         lookup_key = _module_lookup_key(module_name)
-        for module_type in cls.__registry__.values():
-            if _module_lookup_key(module_type.require_module_name()) == lookup_key:
-                return module_type
-            if lookup_key in {
-                _module_lookup_key(alias) for alias in module_type.aliases
-            }:
-                return module_type
-        return None
+        matches = cls.discover_source_declarations(
+            frozenset((lookup_key,)), ("module_name", "aliases"), _module_lookup_key,
+            _declared_lookup_keys,
+        )
+        return matches[0] if matches else None
 
     @classmethod
     def invocation_module_blocks(
