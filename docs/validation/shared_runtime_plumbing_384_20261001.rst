@@ -244,6 +244,21 @@ Issue355 is closed by its existing merged PR. The ABBA remains pinned to its
 measured sources; no timing result is projected through this synchronization.
 Evidence: shared-plumbing-main355-local-gates-20261001.json.
 
+Subsequent normal synchronization consumes documentation/knowledge changes in
+main PR405 and PR406, through e66500e7ae3804abca1396681c50e1cef5e9a11e. These merges
+do not change production source or dependencies. All 23 knowledge-transfer controls
+pass on the final merged declarations, with two existing warnings. Benchmark and source-gate
+observations remain pinned above.
+
+Independent review of the isolated metadata-owner migration found the important
+distinction between ordered selection-record equality and public mapping-content
+equality. It also checked duplicate stringified keys, normalization error order,
+output-extension insertion order and fields-only transport. That migration remains
+outside this PR until the affected consumers preserve their existing semantics
+and the complete production-owner replay and source gates pass. Review evidence:
+source-metadata-owner-independent-review-20261001.json. No stage replay is promoted
+as an end-to-end gain.
+
 Fresh native qualification and next dominant route
 ------------------------------------------------
 
