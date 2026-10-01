@@ -1,0 +1,165 @@
+"""Owner-thread diagnostic only: full step, finalization, and progress phases."""
+import functools
+import gc
+import hashlib
+import importlib.abc
+import importlib.machinery
+import json
+import os
+import sys
+import threading
+import time
+from pathlib import Path
+
+active = threading.local()
+OUTPUT = Path('/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-query-hash-diagnostic-20260930')
+TARGETS = {
+    'openhcs.core.steps.function_runtime',
+    'openhcs.core.steps.function_execution',
+    'openhcs.core.orchestrator.worker_execution',
+}
+
+
+def record(label, seconds, **fields):
+    if not getattr(active, 'enabled', False):
+        return
+    selected = {key: str(value) for key, value in fields.items()
+                if key in ('function', 'module', 'step', 'step_name', 'count', 'group', 'kind')}
+    active.events.append({'label': label, 'seconds': seconds, 'fields': selected})
+
+
+def timed(original, label):
+    @functools.wraps(original)
+    def wrapper(*args, **kwargs):
+        if not getattr(active, 'enabled', False):
+            return original(*args, **kwargs)
+        started = time.perf_counter()
+        try:
+            return original(*args, **kwargs)
+        finally:
+            calls, seconds = active.stats.get(label, (0, 0.0))
+            active.stats[label] = (calls + 1, seconds + time.perf_counter() - started)
+    return wrapper
+
+
+def scoped(original, key_for_call):
+    @functools.wraps(original)
+    def wrapper(*args, **kwargs):
+        assert not getattr(active, 'enabled', False), original.__qualname__
+        active.stats = {}
+        active.events = []
+        active.gc_started = {}
+        active.enabled = True
+        started = time.perf_counter()
+        try:
+            return original(*args, **kwargs)
+        finally:
+            seconds = time.perf_counter() - started
+            active.enabled = False
+            key, fields = key_for_call(args, kwargs)
+            label = os.environ['OPENHCS_EXECUTION_DIAGNOSTIC_CASE']
+            destination = OUTPUT / f'{label}-{key}.json'
+            assert not destination.exists(), destination
+            destination.write_text(json.dumps({
+                'seconds': seconds, 'thread': threading.get_ident(),
+                'stats': active.stats, 'events': active.events, **fields,
+            }))
+    return wrapper
+
+
+def gc_pause(phase, information):
+    if not getattr(active, 'enabled', False):
+        return
+    generation = information['generation']
+    if phase == 'start':
+        active.gc_started[generation] = time.perf_counter()
+    elif generation in active.gc_started:
+        record('owner_thread_gc_pause', time.perf_counter() - active.gc_started.pop(generation),
+               count=information['collected'])
+
+
+gc.callbacks.append(gc_pause)
+
+
+class PhaseDiagnosticLoader(importlib.abc.Loader):
+    def __init__(self, loader):
+        self.loader = loader
+
+    def create_module(self, spec):
+        return self.loader.create_module(spec)
+
+    def exec_module(self, module):
+        self.loader.exec_module(module)
+        expected = Path(os.environ['OPENHCS_DIAGNOSTIC_SOURCE']) / (module.__name__.replace('.', '/') + '.py')
+        assert Path(module.__file__).resolve() == expected
+        if module.__name__ == 'openhcs.core.steps.function_runtime':
+            from openhcs.core import runtime_profile
+            from openhcs.core.measurement_feature_queries import RuntimeObjectLabelMeasurementQuery
+            from openhcs.core.runtime_stores import RuntimeValueStore
+            RuntimeObjectLabelMeasurementQuery.__hash__ = timed(RuntimeObjectLabelMeasurementQuery.__hash__, 'RuntimeObjectLabelMeasurementQuery.__hash__')
+            RuntimeValueStore._mark_mutated = timed(RuntimeValueStore._mark_mutated, 'RuntimeValueStore._mark_mutated')
+            if os.environ['OPENHCS_EXECUTION_DIAGNOSTIC_CASE'] == 'candidate':
+                from openhcs.core.process_local_cache import BoundedCache
+                BoundedCache.cached_value = timed(BoundedCache.cached_value, 'BoundedCache.cached_value')
+                BoundedCache.store_value = timed(BoundedCache.store_value, 'BoundedCache.store_value')
+                RuntimeValueStore.query_cache = timed(RuntimeValueStore.query_cache, 'RuntimeValueStore.query_cache')
+            from openhcs.core.source_image_provenance import SourceImageIdentity
+            from openhcs.core.runtime_image_values import ImagePayloadMetadata
+            from numba.core.dispatcher import Dispatcher
+            runtime_profile.RuntimeProfileLogger.enabled = staticmethod(lambda: getattr(active, 'enabled', False))
+            runtime_profile.RuntimeProfileLogger.log = classmethod(lambda cls, logger, label, seconds, **fields: record(label, seconds, **fields))
+            module.RuntimeProfileSink.record = classmethod(lambda cls, label, seconds, **fields: record(label, seconds, **fields))
+            for owner, name in ((SourceImageIdentity, 'component_metadata_with_missing_from'),
+                                (ImagePayloadMetadata, 'for_leading_source_plane')):
+                setattr(owner, name, timed(getattr(owner, name), owner.__name__ + '.' + name))
+            for name in ('execute', 'invoke', 'load_artifact_inputs', 'save_artifact_outputs',
+                         'bind_runtime_adapter', 'execution_group_source_payload'):
+                setattr(module.FunctionCoreExecutor, name, timed(getattr(module.FunctionCoreExecutor, name), 'FunctionCoreExecutor.' + name))
+            for name in ('run', '_load_input_stack', '_execute_pattern', '_validate_and_unstack', '_save_outputs',
+                         '_apply_source_image_loading_semantics', '_apply_workspace_source_payload',
+                         '_apply_workspace_source_binding_payload', '_apply_source_binding_payload'):
+                setattr(module.PatternGroupRuntime, name, timed(getattr(module.PatternGroupRuntime, name), 'PatternGroupRuntime.' + name))
+            module.MainFlowMemoryConversion.converted_payload = timed(module.MainFlowMemoryConversion.converted_payload, 'MainFlowMemoryConversion.converted_payload')
+            original_compile = Dispatcher.compile
+
+            @functools.wraps(original_compile)
+            def compile_diagnostic(dispatcher, *args, **kwargs):
+                if not getattr(active, 'enabled', False):
+                    return original_compile(dispatcher, *args, **kwargs)
+                started = time.perf_counter()
+                try:
+                    return original_compile(dispatcher, *args, **kwargs)
+                finally:
+                    record('numba_compile', time.perf_counter() - started,
+                           module=dispatcher.py_func.__module__, function=dispatcher.py_func.__name__)
+            Dispatcher.compile = compile_diagnostic
+        elif module.__name__ == 'openhcs.core.steps.function_execution':
+            def execution_key(args, kwargs):
+                plan = args[0].plan
+                return f'step-{plan.step_index}-execution', {'step_index': plan.step_index, 'step_name': plan.step_name}
+            module.FunctionStepExecutor.run = scoped(module.FunctionStepExecutor.run, execution_key)
+        elif module.__name__ == 'openhcs.core.orchestrator.worker_execution':
+            def progress_key(args, kwargs):
+                plan = kwargs['plan']
+                return f'step-{plan.step_index}-progress', {'step_index': plan.step_index, 'step_name': plan.step_name, 'record_count': len(args[0])}
+            module._runtime_observation_progress_context = scoped(module._runtime_observation_progress_context, progress_key)
+            emit_sequence = 0
+
+            def emit_key(args, kwargs):
+                nonlocal emit_sequence
+                emit_sequence += 1
+                return f'emit-{emit_sequence}', {'step_name': kwargs['step_name'], 'phase': kwargs['phase'].value}
+            module.emit = scoped(module.emit, emit_key)
+
+
+class PhaseDiagnosticFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname not in TARGETS:
+            return None
+        spec = importlib.machinery.PathFinder.find_spec(fullname, path, target)
+        assert spec is not None and isinstance(spec.loader, importlib.machinery.SourceFileLoader)
+        spec.loader = PhaseDiagnosticLoader(spec.loader)
+        return spec
+
+
+sys.meta_path.insert(0, PhaseDiagnosticFinder())

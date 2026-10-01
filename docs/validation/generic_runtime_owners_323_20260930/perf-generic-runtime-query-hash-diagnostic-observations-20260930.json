@@ -1,0 +1,64 @@
+[
+  {
+    "label": "candidate",
+    "source": "/home/ts/code/projects/openhcs-compile-perf",
+    "revision": "eba8e5c871a84b5ddd2581d7562798223ebd2415",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-query-hash-diagnostic-production-candidate-20260930",
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "2.079096794128418",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "16.885579586029053",
+        "total_seconds": "19.683796766214073",
+        "wells_per_second": "0.05922213062958107",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2523.31640625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "03e0512487d859ace264e90f1e50a2b127ebc600e59aedfbc8d65b62e3628556"
+      }
+    ]
+  },
+  {
+    "label": "main",
+    "source": "/home/ts/code/projects/openhcs",
+    "revision": "74eac059f67389ca071055c93fcbdd556ba79f1a",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-query-hash-diagnostic-production-main-20260930",
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.546459674835205",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "16.987313270568848",
+        "total_seconds": "19.22593829082325",
+        "wells_per_second": "0.05886746091464253",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2641.8203125",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "a66d2ec852ae6cdb16bb4c0b70d3f8a32c48b6044ae301be3611fa2db8351560"
+      }
+    ]
+  }
+]

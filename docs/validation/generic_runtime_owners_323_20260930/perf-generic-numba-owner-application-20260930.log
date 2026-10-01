@@ -1,0 +1,14 @@
+Initial declaration-selected rename/move/base simulation passed; no source applied.
+Traceback (most recent call last):
+  File "/tmp/move_generic_numba_preparation_owner_20260930.py", line 93, in <module>
+    provider = replace_once(provider, identity + '\n\n', '')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/move_generic_numba_preparation_owner_20260930.py", line 61, in replace_once
+    assert text.count(old) == 1, old
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError:     @property
+    def identity(self) -> Hashable:
+        return type(self)
+
+
+

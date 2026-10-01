@@ -275,9 +275,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
 )
@@ -310,7 +308,7 @@ from openhcs.processing.backends.cellprofiler.watershed import (
 )
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 ClassNamespaceValue: TypeAlias = (
     str
     | bool

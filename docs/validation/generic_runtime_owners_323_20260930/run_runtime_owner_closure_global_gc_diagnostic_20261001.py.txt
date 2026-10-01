@@ -1,0 +1,41 @@
+import csv
+import hashlib
+import json
+import os
+import subprocess
+from pathlib import Path
+
+root = Path('/home/ts/code/projects/openhcs')
+candidate = root.parent / 'openhcs-compile-perf'
+runs = root.parent / 'openhcs-benchmark-runs'
+diagnostics = runs / 'perf-runtime-owner-closure-global-gc-diagnostic-20261001'
+diagnostics.mkdir()
+observations = []
+for label, source in (('main-a', root), ('candidate-a', candidate), ('candidate-b', candidate), ('main-b', root)):
+    case = 'ExampleImagingFlowCytometryObjectsInGrid'
+    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
+    output = runs / f'perf-runtime-owner-closure-global-gc-diagnostic-production-{label}-20261001'
+    assert not output.exists()
+    env = dict(os.environ,
+               PYTHONPATH=f'/tmp/openhcs-runtime-owner-closure-global-gc-site-20261001:{source}',
+               OPENHCS_EXECUTION_DIAGNOSTIC_CASE=label,
+               OPENHCS_DIAGNOSTIC_SOURCE=str(source),
+               OPENHCS_CPU_ONLY='true',
+               NUMBA_CACHE_DIR='/tmp/openhcs-source-identity-shared-cache-20260930')
+    command = ['/usr/bin/taskset', '-c', '5', str(root / '.venv/bin/python'),
+               str(root / 'scripts/benchmark_cppipe_well_throughput.py'),
+               '--manifest', str(root / 'benchmark/manifests/official30_portable_axis1.json'),
+               '--mode', '1w_1t', '--case', case, '--output-dir', str(output)]
+    with output.with_suffix('.log').open('w') as stream:
+        result = subprocess.run(command, cwd='/tmp', env=env, stdout=stream, stderr=subprocess.STDOUT)
+    assert result.returncode == 0, (label, result.returncode)
+    rows = list(csv.DictReader((output / 'well_throughput.csv').open()))
+    assert len(rows) == 1 and rows[0]['status'] == 'success' and rows[0]['successful_wells'] == '1'
+    csv_paths = sorted(output.rglob('BF_cells_on_grid.csv'))
+    assert len(csv_paths) == 1, csv_paths
+    digest = hashlib.sha256(csv_paths[0].read_bytes()).hexdigest()
+    assert digest == '517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c', digest
+    observations.append({'label': label, 'source': str(source), 'revision': revision,
+                         'directory': str(output), 'csv_sha256': digest, 'rows': rows})
+    (runs / 'perf-runtime-owner-closure-global-gc-diagnostic-observations-20261001.json').write_text(json.dumps(observations, indent=2) + '\n')
+    print(json.dumps(observations[-1]), flush=True)

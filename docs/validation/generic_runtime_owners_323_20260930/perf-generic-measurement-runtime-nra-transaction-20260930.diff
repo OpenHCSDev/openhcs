@@ -1,0 +1,542 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/measurement_feature_queries.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/measurement_feature_queries.py
+@@ -31,6 +31,7 @@
+ )
+ from openhcs.core.process_local_cache import (
+     IdentityBoundProcessCache,
++    ProcessLocalBoundedCache,
+     RegisteredProcessLocalBoundedCache,
+     identity_owner_tuples_match,
+ )
+@@ -149,6 +150,15 @@
+                 "RuntimeObjectLabelMeasurementQuery.label_plane_domains must be "
+                 "canonical positive object-id domains."
+             )
++
++
++class RuntimeObjectLabelMeasurementQueryCache(
++    ProcessLocalBoundedCache[
++        RuntimeObjectLabelMeasurementQuery,
++        tuple[np.ndarray, ...],
++    ]
++):
++    """Store-owned label-aligned values keyed by their full nominal query."""
+ 
+ 
+ def _diagnostic_value(value: object | None) -> str:
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/measurement_row_materialization.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/measurement_row_materialization.py
+@@ -148,6 +148,23 @@
+     [str, tuple[tuple[str, object], ...]],
+     str,
+ ]
++
++
++class ObjectMeasurementColumnarRows(ColumnarRows, ABC):
++    """Object measurement columns spanning their declared label domain."""
++
++    @property
++    def covers_declared_object_measurement_domain(self) -> bool:
++        """Object-measurement carriers span their declared label domain."""
++        return True
++
++    def __len__(self) -> int:
++        return self.row_count()
++
++
++    def __iter__(self):
++        yield from self.iter_row_mappings()
++
+ 
+ 
+ class MeasurementRowDeclaredValue(ABC, metaclass=AutoRegisterMeta):
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_artifact_queries.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_artifact_queries.py
+@@ -6,7 +6,6 @@
+ from dataclasses import dataclass
+ from types import MappingProxyType
+ from typing import TYPE_CHECKING, Any, cast
+-from weakref import WeakKeyDictionary
+ 
+ import numpy as np
+ 
+@@ -39,6 +38,7 @@
+     resolve_runtime_measurement_lookup_dialect,
+ )
+ from openhcs.core.process_local_cache import (
++    ProcessLocalBoundedCache,
+     RegisteredProcessLocalBoundedCache,
+     identity_owner_tuples_match,
+     named_identity_owner_tuples_match,
+@@ -81,10 +81,13 @@
+ if TYPE_CHECKING:
+     from openhcs.core.runtime_stores import RuntimeValueStore, StoredRuntimeValue
+ 
+-_MEASUREMENT_TABLE_CACHE: WeakKeyDictionary[
+-    RuntimeValueStore,
+-    dict[tuple[int, str, str | None], tuple[MeasurementTable, ...]],
+-] = WeakKeyDictionary()
++class RuntimeMeasurementTablesQueryCache(
++    ProcessLocalBoundedCache[
++        tuple[str, str | None],
++        tuple[MeasurementTable, ...],
++    ]
++):
++    """Store-owned measurement tables for one axis and component group."""
+ 
+ 
+ MeasurementLabelSliceFeatureBatchCacheValue = tuple[
+@@ -433,20 +436,16 @@
+     context: RuntimeArtifactQueryContext,
+ ) -> tuple[MeasurementTable, ...]:
+     """Return all measurement tables in a runtime query context."""
+-    cache_key = (context.store.revision, context.axis_id, context.group_key)
+-    store_cache = _MEASUREMENT_TABLE_CACHE.setdefault(context.store, {})
+-    cached = store_cache.get(cache_key)
++    cache_key = (context.axis_id, context.group_key)
++    store_cache = context.store.query_cache(RuntimeMeasurementTablesQueryCache)
++    cached = store_cache.cached_value(cache_key)
+     if cached is not None:
+         return cached
+     tables = tuple(
+         cast(MeasurementTable, record.value.data)
+         for record in context.find(artifact_type=MeasurementsArtifactType)
+     )
+-    for key in tuple(store_cache):
+-        if key[0] != context.store.revision:
+-            del store_cache[key]
+-    store_cache[cache_key] = tables
+-    return tables
++    return store_cache.store_value(cache_key, tables)
+ 
+ 
+ def runtime_measurement_tables_for_object(
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_stores.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_stores.py
+@@ -8,7 +8,7 @@
+ import inspect
+ from pathlib import Path
+ from types import MappingProxyType
+-from typing import Any
++from typing import Any, TypeVar, cast
+ 
+ from python_introspect import RuntimeParameterDeclarationABC
+ 
+@@ -26,6 +26,7 @@
+     ComponentGroupScope,
+ )
+ from openhcs.core.component_set import ComponentSet
++from openhcs.core.process_local_cache import ProcessLocalBoundedCache
+ from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
+ from openhcs.core.runtime_artifact_values import (
+     ArtifactKey,
+@@ -811,6 +812,9 @@
+         return dict(payload)
+ 
+ 
++StoreQueryCacheT = TypeVar("StoreQueryCacheT", bound=ProcessLocalBoundedCache[Any, Any])
++
++
+ class RuntimeValueStore:
+     """Source of truth for validated runtime artifact values in one context."""
+ 
+@@ -822,6 +826,10 @@
+         self._observation_records: list[StoredRuntimeValue] = []
+         self._current_location_by_key: dict[ArtifactKey, RuntimeArtifactLocation] = {}
+         self._revision = 0
++        self._query_caches: dict[
++            type[ProcessLocalBoundedCache[Any, Any]],
++            ProcessLocalBoundedCache[Any, Any],
++        ] = {}
+         self._find_cache: dict[
+             tuple[
+                 int,
+@@ -839,6 +847,27 @@
+             tuple[int, RuntimeArtifactQuery],
+             tuple[StoredRuntimeValue, ...],
+         ] = {}
++
++    def query_cache(self, cache_type: type[StoreQueryCacheT]) -> StoreQueryCacheT:
++        """Return a bounded derived-value cache owned by this store's lifetime.
++
++        Concrete cache types separate query domains. Every store mutation clears
++        their values; transport reconstructs the store without derived caches.
++        """
++        cache = self._query_caches.get(cache_type)
++        if cache is None:
++            cache = cache_type()
++            self._query_caches[cache_type] = cache
++        return cast(StoreQueryCacheT, cache)
++
++    def __getstate__(self) -> dict[str, object]:
++        state = dict(self.__dict__)
++        del state["_query_caches"]
++        return state
++
++    def __setstate__(self, state: dict[str, object]) -> None:
++        self.__dict__.update(state)
++        self._query_caches = {}
+ 
+     @staticmethod
+     def address_matches_plan(
+@@ -1098,6 +1127,8 @@
+ 
+     def _mark_mutated(self) -> None:
+         self._revision += 1
++        for cache in self._query_caches.values():
++            cache.clear()
+         self._find_cache.clear()
+         self._find_matching_cache.clear()
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/interop/cellprofiler/runtime/object_label_measurements.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/interop/cellprofiler/runtime/object_label_measurements.py
+@@ -4,7 +4,6 @@
+ 
+ from dataclasses import dataclass
+ from typing import TYPE_CHECKING, cast
+-from weakref import WeakKeyDictionary
+ 
+ import numpy as np
+ 
+@@ -14,6 +13,7 @@
+     ObjectLabelsArtifactType,
+ )
+ from openhcs.core.measurement_feature_queries import (
++    RuntimeObjectLabelMeasurementQueryCache,
+     MeasurementFeatureQuery,
+     RuntimeObjectLabelMeasurementQuery,
+     RuntimeObjectSliceMeasurementQuery,
+@@ -34,7 +34,6 @@
+     ObjectLabelMeasurementValues,
+ )
+ from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+-from openhcs.core.runtime_stores import RuntimeValueStore
+ from openhcs.interop.cellprofiler.measurement_dialect import (
+     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+ )
+@@ -47,29 +46,6 @@
+ 
+ if TYPE_CHECKING:
+     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
+-
+-ObjectLabelMeasurementValuesProcessCache = dict[
+-    RuntimeObjectLabelMeasurementQuery,
+-    tuple[np.ndarray, ...],
+-]
+-
+-_OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE: WeakKeyDictionary[
+-    RuntimeValueStore,
+-    tuple[int, ObjectLabelMeasurementValuesProcessCache],
+-] = WeakKeyDictionary()
+-
+-
+-def object_label_measurement_values_cache(
+-    store: RuntimeValueStore,
+-) -> ObjectLabelMeasurementValuesProcessCache:
+-    """Return label-aligned vectors bound to the store's current revision."""
+-    cached_revision = _OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE.get(store)
+-    if cached_revision is not None and cached_revision[0] == store.revision:
+-        return cached_revision[1]
+-    cache: ObjectLabelMeasurementValuesProcessCache = {}
+-    _OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE[store] = (store.revision, cache)
+-    return cache
+-
+ 
+ @dataclass(frozen=True, slots=True, kw_only=True)
+ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
+@@ -242,10 +218,10 @@
+         """Return object measurements aligned to this request's label planes."""
+         label_domain = self.label_domain()
+         query = self.measurement_query(adapter, label_domain=label_domain)
+-        object_label_values_cache = object_label_measurement_values_cache(
+-            adapter.request.context.runtime_value_store
+-        )
+-        cached = object_label_values_cache.get(query)
++        object_label_values_cache = adapter.request.context.runtime_value_store.query_cache(
++            RuntimeObjectLabelMeasurementQueryCache
++        )
++        cached = object_label_values_cache.cached_value(query)
+         if cached is not None:
+             return cached
+         child_name = child_count_feature_child_name(self.feature_name)
+@@ -299,8 +275,7 @@
+                 plane_projector=adapter,
+                 dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+             ).values_for_labels(self.labels)
+-        object_label_values_cache[query] = values
+-        return values
++        return object_label_values_cache.store_value(query, values)
+ 
+ 
+ @dataclass(frozen=True, slots=True, kw_only=True)
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/interop/cellprofiler/runtime/object_measurement_vectors.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/interop/cellprofiler/runtime/object_measurement_vectors.py
+@@ -21,7 +21,10 @@
+     MeasurementLabelSliceFeatureQuery,
+     MeasurementLabelSliceFeatureBatchQuery,
+ )
+-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
++from openhcs.core.measurement_feature_queries import (
++    MeasurementFeatureQuery,
++    RuntimeObjectLabelMeasurementQueryCache,
++)
+ from openhcs.core.measurement_row_materialization import measurement_rows
+ from openhcs.core.runtime_measurements import (
+     MeasurementRowAxisField,
+@@ -49,7 +52,6 @@
+ )
+ from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
+     ObjectLabelMeasurementSliceRequest,
+-    object_label_measurement_values_cache,
+ )
+ from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
+     ObjectMeasurementTableIndex,
+@@ -597,25 +599,25 @@
+         vectors: Mapping[str, tuple[np.ndarray, ...]],
+         bindings: tuple[CellProfilerObjectMeasurementVectorBinding, ...],
+     ) -> None:
+-        process_cache = object_label_measurement_values_cache(
+-            adapter.request.context.runtime_value_store
++        store_cache = adapter.request.context.runtime_value_store.query_cache(
++            RuntimeObjectLabelMeasurementQueryCache
+         )
+         for binding in bindings:
+             values = vectors[binding.object_name]
+             query = binding.measurement_query(adapter)
+-            process_cache[query] = values
++            store_cache.store_value(query, values)
+ 
+     def cached_runtime_batch_vectors(
+         self,
+         adapter: "CellProfilerRuntimeAdapter",
+     ) -> dict[str, tuple[np.ndarray, ...]]:
+-        process_cache = object_label_measurement_values_cache(
+-            adapter.request.context.runtime_value_store
++        store_cache = adapter.request.context.runtime_value_store.query_cache(
++            RuntimeObjectLabelMeasurementQueryCache
+         )
+         cached_vectors: dict[str, tuple[np.ndarray, ...]] = {}
+         for binding in self.bindings:
+             query = binding.measurement_query(adapter)
+-            cached = process_cache.get(query)
++            cached = store_cache.cached_value(query)
+             if cached is not None:
+                 cached_vectors[binding.object_name] = cached
+         return cached_vectors
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/colocalization.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/colocalization.py
+@@ -160,8 +160,8 @@
+ from openhcs.processing.backends.cellprofiler.granularity import (
+     CellProfilerRuntimeProfiler,
+ )
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+-    LongObjectMeasurementColumnarRows,
++from openhcs.core.measurement_row_materialization import (
++    ObjectMeasurementColumnarRows,
+ )
+ from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+@@ -2013,7 +2013,7 @@
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+-class ObjectColocalizationColumnarMeasurements(LongObjectMeasurementColumnarRows):
++class ObjectColocalizationColumnarMeasurements(ObjectMeasurementColumnarRows):
+     """Columnar object-colocalization rows preserving direct row iteration."""
+ 
+     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/granularity.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/granularity.py
+@@ -87,8 +87,8 @@
+     CellProfilerBackendProvider,
+     CellProfilerBackendStrategyMixin,
+ )
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+-    LongObjectMeasurementColumnarRows,
++from openhcs.core.measurement_row_materialization import (
++    ObjectMeasurementColumnarRows,
+ )
+ from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+ from openhcs.processing.backends.cellprofiler._granularity_native import (
+@@ -461,7 +461,7 @@
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+-class ObjectGranularityMeasurementRows(LongObjectMeasurementColumnarRows):
++class ObjectGranularityMeasurementRows(ObjectMeasurementColumnarRows):
+     """Columnar object granularity rows over the emitted label-id domain."""
+ 
+     fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity.py
+@@ -314,7 +314,7 @@
+     ObjectLabelValue,
+     object_label_dense_array,
+ )
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
++from openhcs.core.measurement_row_materialization import (
+     ObjectMeasurementColumnarRows,
+ )
+ from openhcs.core.runtime_profile import RuntimeProfileLogger
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/intensity_distribution.py
+@@ -113,8 +113,8 @@
+ from openhcs.processing.backends.cellprofiler.granularity import (
+     CellProfilerRuntimeProfiler,
+ )
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+-    WideObjectMeasurementColumnarRows,
++from openhcs.core.measurement_row_materialization import (
++    ObjectMeasurementColumnarRows,
+ )
+ from openhcs.processing.backends.cellprofiler.secondary import (
+     SecondaryPropagationBackendStrategy,
+@@ -1465,7 +1465,7 @@
+ 
+ @dataclass(slots=True)
+ class ObjectIntensityDistributionMeasurementColumnarRows(
+-    WideObjectMeasurementColumnarRows
++    ObjectMeasurementColumnarRows
+ ):
+     """Columnar radial intensity-distribution rows."""
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/object_measurement_columnar_rows.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/object_measurement_columnar_rows.py
+@@ -1,60 +0,0 @@
+-"""Columnar row base classes for CellProfiler object measurements."""
+-
+-from __future__ import annotations
+-
+-from abc import ABC
+-from collections.abc import Sequence
+-
+-from openhcs.core.runtime_measurements import (
+-    ObjectMeasurementSliceValueRow,
+-    ObjectMeasurementValueRow,
+-)
+-from openhcs.core.runtime_tabular_values import (
+-    ColumnarRows,
+-)
+-
+-
+-class ObjectMeasurementColumnarRows(ColumnarRows, ABC):
+-    """Object measurement columns spanning their declared label domain."""
+-
+-    slice_index: int | None
+-
+-    @property
+-    def covers_declared_object_measurement_domain(self) -> bool:
+-        """OpenHCS object-measurement carriers are built on their label domain."""
+-        return True
+-
+-    def __len__(self) -> int:
+-        return self.row_count()
+-
+-
+-class WideObjectMeasurementColumnarRows(ObjectMeasurementColumnarRows, ABC):
+-    """One object row with a named column for each measured feature."""
+-
+-    def __iter__(self):
+-        yield from self.iter_row_mappings()
+-
+-
+-class LongObjectMeasurementColumnarRows(ObjectMeasurementColumnarRows, ABC):
+-    """One object/feature/value row per measured feature."""
+-
+-    def __iter__(self):
+-        row_type = (
+-            ObjectMeasurementValueRow
+-            if self.slice_index is None
+-            else ObjectMeasurementSliceValueRow
+-        )
+-        columns = self.columns
+-        slice_values: Sequence[object] | None = columns.get("slice_index")
+-        for row_index in range(len(self)):
+-            kwargs = (
+-                {}
+-                if slice_values is None
+-                else {"slice_index": int(slice_values[row_index])}
+-            )
+-            yield row_type(
+-                object_label=int(columns["object_label"][row_index]),
+-                feature_name=str(columns["feature_name"][row_index]),
+-                result_value=float(columns["result_value"][row_index]),
+-                **kwargs,
+-            )
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
+@@ -457,8 +457,8 @@
+     object_label_sparse_ijv_rows,
+ )
+ from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+-    LongObjectMeasurementColumnarRows,
++from openhcs.core.measurement_row_materialization import (
++    ObjectMeasurementColumnarRows,
+ )
+ from openhcs.processing.backends.analysis.region_properties import (
+     LabelRegionPropertiesBackendStrategy,
+@@ -559,7 +559,7 @@
+         )
+ 
+ 
+-class ShapeObjectMeasurementRows(LongObjectMeasurementColumnarRows):
++class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
+     """Dense AreaShape rows that already span their declared object domain."""
+ 
+     object_row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/zernike.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/zernike.py
+@@ -65,8 +65,8 @@
+ from openhcs.processing.backends.cellprofiler.label_geometry import (
+     minimum_enclosing_circle_from_labels,
+ )
+-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+-    WideObjectMeasurementColumnarRows,
++from openhcs.core.measurement_row_materialization import (
++    ObjectMeasurementColumnarRows,
+ )
+ 
+ _INTENSITY_DEBUG_TRACE_DIR_ENV = "OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR"
+@@ -652,7 +652,7 @@
+ 
+ 
+ @dataclass(slots=True)
+-class ObjectIntensityZernikeMeasurementColumnarRows(WideObjectMeasurementColumnarRows):
++class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRows):
+     """Columnar intensity-Zernike measurement rows."""
+ 
+     object_ids: Sequence[int]
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_nominal_policy_migration.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_nominal_policy_migration.py
+@@ -116,7 +116,7 @@
+     from openhcs.processing.backends.cellprofiler.intensity import (
+         ObjectIntensityMeasurementRows,
+     )
+-    from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
++    from openhcs.core.measurement_row_materialization import (
+         ObjectMeasurementColumnarRows,
+     )
+     from openhcs.processing.backends.cellprofiler.shape import (
+--- a/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_runtime_cache_authorities.py
++++ b/home/ts/code/projects/openhcs-compile-perf/tests/unit/test_cellprofiler_runtime_cache_authorities.py
+@@ -48,9 +48,9 @@
+ from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
+ from openhcs.core.runtime_tabular_values import FieldSpec
+ from openhcs.core.runtime_stores import RuntimeValueStore
++from openhcs.core.measurement_feature_queries import RuntimeObjectLabelMeasurementQueryCache
+ from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
+     ObjectLabelMeasurementSliceRequest,
+-    object_label_measurement_values_cache,
+ )
+ 
+ AXIS_ID = "A01"
+@@ -238,7 +238,7 @@
+     )
+     query = request.measurement_query(adapter)
+     expected = (np.asarray([11.0], dtype=np.float64),)
+-    object_label_measurement_values_cache(store)[query] = expected
++    store.query_cache(RuntimeObjectLabelMeasurementQueryCache).store_value(query, expected)
+ 
+     resolved = request.values(adapter)
+ 

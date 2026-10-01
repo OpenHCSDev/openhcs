@@ -1,0 +1,186 @@
+{
+  "base": "447c926346084b5da434edf5bef3a1a602792f5c",
+  "authorization": "User explicitly requests removing optimizations at the wrong abstraction layer and consolidating shared algorithms through nominal owners.",
+  "census": {
+    "source_revision": "447c926346084b5da434edf5bef3a1a602792f5c",
+    "module_count": 702,
+    "original_class_count": 5121,
+    "projected_count": 5109
+  },
+  "OPEN_original_classes": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2618,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2696,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3064,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "domain": "Store-bound derived measurement queries and provider-independent dense object measurement columns.",
+  "determining_owners": {
+    "mutation_and_lifetime": "RuntimeValueStore",
+    "bounded_lookup_and_retention": "BoundedCache, extracted from the existing storage algorithm; ProcessLocalBoundedCache retains only process singleton lifetime policy",
+    "query_identity": "Existing RuntimeObjectLabelMeasurementQuery and axis/group coordinates",
+    "dense_object_column_semantics": "Existing ObjectMeasurementColumnarRows moved to core.measurement_row_materialization",
+    "store_query_domains": "RuntimeObjectLabelMeasurementQueryCache and RuntimeMeasurementTablesQueryCache derive from BoundedCache without process singleton APIs"
+  },
+  "required_pairs": [
+    "Store.record/replace/clear/merge_observed_values invalidate all attached query caches through _mark_mutated.",
+    "Generic measurement table lookup and CellProfiler label/vector consumers use store.query_cache.",
+    "Concrete cache subclasses select domain and key/value types; existing parent owns bounded storage, lookup and clearing.",
+    "All six numerical column providers inherit the existing object columnar owner in core.",
+    "Shared mapping iteration belongs to that object-column parent; typed leaf iteration remains leaf-owned.",
+    "Store-owned query domains do not inherit process-global singleton policy."
+  ],
+  "forbidden_pairs": [
+    "Provider modules own weak-global store revision caches.",
+    "Generic artifact consumers duplicate revision invalidation logic.",
+    "Numerical providers import generic row behavior from another provider module.",
+    "Unused long-row conversion or behavior-only forwarding subclasses remain."
+  ],
+  "counterevidence": [
+    "LongObjectMeasurementColumnarRows.__iter__ is shadowed by all three current children; those children declare wide feature columns, so moving its dead conversion loop would perpetuate an incorrect role.",
+    "WideObjectMeasurementColumnarRows only adds generic mapping iteration; its two children now inherit that behavior from their actual object-column ancestor.",
+    "Numerical kernel caches, CP feature naming and CP relationship interpretation have intrinsic/provider meaning and remain at those owners.",
+    "No speedup is claimed for lifecycle relocation. Column CSV prototype saves only 0.19s and is rejected as a primary runtime fix.",
+    "Saved measurement provenance replay costs15.9s but is not yet demonstrated in the live CP path; no production payoff is inferred."
+  ],
+  "production_consumers": [
+    "runtime_measurement_tables",
+    "ObjectLabelMeasurementSliceRequest.values",
+    "CellProfilerObjectMeasurementVectorBatch.cache_runtime_batch_vectors/cached_runtime_batch_vectors",
+    "Six object measurement column providers"
+  ],
+  "proof_limits": [
+    "Authored exact replacements: NRA revision/syntax checks do not prove native semantic equivalence.",
+    "Module deletion lacks NRA file-deletion primitive; emptying is revision checked and the empty owned file is then removed with an explicit assertion.",
+    "Removal of obsolete provider class import paths is intentional; external dynamic/pickle callers of those abstract classes remain OPEN.",
+    "Query cache capacity changes from unbounded dictionaries to existing bounded LRU; misses recompute. Derived caches must be excluded from serialization.",
+    "Current query IDs retain all existing axis/group/source/label-plane/domain scopes; the change does not add a new cross-dialect caller."
+  ],
+  "head": "eba8e5c871a84b5ddd2581d7562798223ebd2415",
+  "current_main": "74eac059f67389ca071055c93fcbdd556ba79f1a"
+}

@@ -1,0 +1,139 @@
+"""Minimal process-global GC timeline; processing/profile branches stay intact."""
+import functools
+import gc
+import importlib.abc
+import importlib.machinery
+import json
+import os
+import resource
+import sys
+import threading
+import time
+from pathlib import Path
+
+OUTPUT = Path('/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-owner-cpu-timeline-20261001')
+label = os.environ['OPENHCS_EXECUTION_DIAGNOSTIC_CASE']
+descriptor = os.open(str(OUTPUT / (label + '.jsonl')), os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+started = {}
+
+
+def write(event):
+    event['pid'] = os.getpid()
+    os.write(descriptor, (json.dumps(event) + '\n').encode())
+
+
+write({'kind': 'process', 'argv': sys.orig_argv})
+
+
+def gc_timeline(phase, information):
+    generation = information['generation']
+    key = (os.getpid(), generation)
+    if phase == 'start':
+        started[key] = (time.time(), time.perf_counter(), threading.get_ident())
+    elif key in started:
+        epoch, clock, thread = started.pop(key)
+        ended_at = time.time()
+        elapsed = time.perf_counter() - clock
+        write({'kind': 'gc', 'generation': generation, 'thread': thread,
+               'started_at': epoch, 'ended_at': ended_at, 'seconds': elapsed,
+               'collected': information['collected'], 'uncollectable': information['uncollectable']})
+
+
+gc.callbacks.append(gc_timeline)
+
+
+
+def start_span():
+    usage = resource.getrusage(resource.RUSAGE_THREAD)
+    return (time.time(), time.perf_counter(), time.thread_time(), time.process_time(),
+            usage.ru_nvcsw, usage.ru_nivcsw,
+            tuple(int(value) for value in Path(f"/proc/self/task/{threading.get_native_id()}/schedstat").read_text().split()))
+
+
+def stop_span(started, fields):
+    epoch, clock, thread_cpu, process_cpu, voluntary, involuntary, scheduling = started
+    ended_at = time.time()
+    elapsed = time.perf_counter() - clock
+    usage = resource.getrusage(resource.RUSAGE_THREAD)
+    current = tuple(int(value) for value in Path(f"/proc/self/task/{threading.get_native_id()}/schedstat").read_text().split())
+    write(dict(fields, thread=threading.get_ident(), native_thread=threading.get_native_id(),
+               started_at=epoch, ended_at=ended_at, seconds=elapsed,
+               thread_cpu_seconds=time.thread_time()-thread_cpu,
+               process_cpu_seconds=time.process_time()-process_cpu,
+               voluntary_switches=usage.ru_nvcsw-voluntary,
+               involuntary_switches=usage.ru_nivcsw-involuntary,
+               runqueue_wait_seconds=(current[1]-scheduling[1])/1e9))
+
+
+class StepTimelineLoader(importlib.abc.Loader):
+    def __init__(self, loader):
+        self.loader = loader
+
+    def create_module(self, spec):
+        return self.loader.create_module(spec)
+
+    def exec_module(self, module):
+        self.loader.exec_module(module)
+        if module.__name__ == 'openhcs.core.steps.function_execution':
+            assert Path(module.__file__).resolve() == Path(os.environ['OPENHCS_DIAGNOSTIC_SOURCE']) / 'openhcs/core/steps/function_execution.py'
+            original = module.FunctionStepExecutor.run
+
+            @functools.wraps(original)
+            def step_timeline(executor, *args, **kwargs):
+                started = start_span()
+                try:
+                    return original(executor, *args, **kwargs)
+                finally:
+                    stop_span(started, dict(kind='step', step_index=executor.plan.step_index,
+                                           step_name=executor.plan.step_name))
+            module.FunctionStepExecutor.run = step_timeline
+        elif module.__name__ == 'openhcs.core.orchestrator.worker_execution':
+            assert Path(module.__file__).resolve() == Path(os.environ['OPENHCS_DIAGNOSTIC_SOURCE']) / 'openhcs/core/orchestrator/worker_execution.py'
+            original_context = module._runtime_observation_progress_context
+            original_emit = module.emit
+
+            @functools.wraps(original_context)
+            def context_span(records, *, plan, context):
+                started = start_span()
+                try:
+                    return original_context(records, plan=plan, context=context)
+                finally:
+                    stop_span(started, dict(kind='progress_context', step_index=plan.step_index,
+                                           step_name=plan.step_name, records=len(records)))
+
+            @functools.wraps(original_emit)
+            def emit_span(*args, **kwargs):
+                started = start_span()
+                try:
+                    return original_emit(*args, **kwargs)
+                finally:
+                    stop_span(started, dict(kind='worker_emit', step_name=kwargs.get('step_name'),
+                                           phase=str(kwargs.get('phase'))))
+
+            module._runtime_observation_progress_context = context_span
+            module.emit = emit_span
+        else:
+            original_compile = module.Dispatcher.compile
+
+            @functools.wraps(original_compile)
+            def compile_span(dispatcher, *args, **kwargs):
+                started = start_span()
+                try:
+                    return original_compile(dispatcher, *args, **kwargs)
+                finally:
+                    stop_span(started, dict(kind='numba_compile', function=dispatcher.py_func.__qualname__))
+            module.Dispatcher.compile = compile_span
+
+
+class StepTimelineFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname not in ('openhcs.core.steps.function_execution',
+                            'openhcs.core.orchestrator.worker_execution', 'numba.core.dispatcher'):
+            return None
+        spec = importlib.machinery.PathFinder.find_spec(fullname, path, target)
+        assert spec is not None and isinstance(spec.loader, importlib.machinery.SourceFileLoader)
+        spec.loader = StepTimelineLoader(spec.loader)
+        return spec
+
+
+sys.meta_path.insert(0, StepTimelineFinder())
