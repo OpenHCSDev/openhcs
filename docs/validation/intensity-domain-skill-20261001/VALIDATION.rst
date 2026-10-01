@@ -90,3 +90,31 @@ Original logs A..F are retained adjacent to this receipt. Exact owned services
 and diagnostic processes exited before cleaning the named4.7MiB disposable
 scratch /home/ts/.cache/agent-scratch/intensity-domain-skill-20261001.
 No frozen trial hint was injected or installed; parent decides integration.
+
+Registry-name closure (owner review)
+-----------------------------------
+The original guide name was the actual registry metadata name, not the Python
+symbol. Clarified the fully qualified registry ID versus Python name; no new
+alias or runtime fix. Read the current installation, custom-function, measurement
+and segmentation package references fully before closure.
+
+Shard G used RegistryService.declared_metadata_for_callable(rescale_intensity),
+the existing declaration-local authority (no catalog warming or new store).
+It returned openhcs:cellprofiler_rescale_intensity, Python import
+openhcs.processing.backends.cellprofiler.intensity.rescale_intensity, typed
+RescaleMethod, ProcessingContract.PURE_2D and NumPy input/output. Exact runtime
+signature and enum members are preserved in registry-g.log. This is real owner
+projection, not a naming-string or prose-substring test.
+
+The registered metadata.func was invoked on a generic2x2 float32 fixture with
+RescaleMethod.DIVIDE_BY_VALUE/divisor2; output matched source/2 and input bytes
+remained unchanged. Installed registry_service.py, openhcs_registry.py and
+intensity.py matched canonical base source byte-for-byte. Shard success0,
+2.259s/131.2Mpeak, with the same oneCPU/512MiB/60s limit, JIT disabled. This
+does not prove full endpoint catalog readiness, a native journey or science.
+Pauli and candidate129 builds/installations were not accessed or changed.
+After the clarification, shard H reran all18analysis-transfer retrieval,
+projection and complete-sync tests:18passed,7.912s/163Mpeak. Original quick
+validation and packaging coverage remain applicable; entrypoint unchanged.
+G/H logs were archived before removing the exact owned1.5MiB registry-check
+scratch directory after process exit; no other cleanup or installation occurred.

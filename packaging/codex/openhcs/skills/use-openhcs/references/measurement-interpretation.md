@@ -180,8 +180,9 @@ raw maximum. Do not generalise those bounds to other callable contracts.
 
 If conversion is justified, preserve raw and untreated measurement routes and
 compose a distinct processing alias through the existing registered intensity
-owner, such as `cellprofiler_rescale_intensity`. Reflect its typed mode and
-input/output semantics; choose an explicit scale only from justified acquisition
+owner, such as registry ID `openhcs:cellprofiler_rescale_intensity` (Python
+`rescale_intensity`). Discover and describe the returned ID's current contract,
+including typed mode and input/output semantics; choose a scale only from justified acquisition
 or processing evidence. Do not infer `255` from a float dtype, silently auto-minmax,
 or rescale already-normalised pixels again. If the scale is unknown, retain that
 limitation rather than manufacture comparable units. Verify the resulting alias

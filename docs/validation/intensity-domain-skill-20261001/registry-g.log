@@ -1,0 +1,27 @@
+Running as unit: intensity-skill-registry-g-20261001.service
+{
+  "function_id": "openhcs:cellprofiler_rescale_intensity",
+  "metadata_name": "cellprofiler_rescale_intensity",
+  "original_name": "rescale_intensity",
+  "import_path": "openhcs.processing.backends.cellprofiler.intensity.rescale_intensity",
+  "source_file": "/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/intensity.py",
+  "signature": "(image: numpy.ndarray, rescale_method: openhcs.processing.backends.cellprofiler.intensity.RescaleMethod = <RescaleMethod.STRETCH: 'stretch'>, automatic_low: openhcs.processing.backends.cellprofiler.intensity.AutomaticLow = <AutomaticLow.EACH_IMAGE: 'each_image'>, automatic_high: openhcs.processing.backends.cellprofiler.intensity.AutomaticHigh = <AutomaticHigh.EACH_IMAGE: 'each_image'>, source_low: float = 0.0, source_high: float = 1.0, dest_low: float = 0.0, dest_high: float = 1.0, divisor_value: float = 1.0, *, dtype_config: openhcs.core.config.LazyDtypeConfig = LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>), enabled: bool = True) -> numpy.ndarray | openhcs.core.runtime_image_values.ImageMetadataPayload | openhcs.core.runtime_image_values.MaskedImagePayload",
+  "processing_contract": "ProcessingContract.PURE_2D",
+  "input_memory_type": "numpy",
+  "output_memory_type": "numpy",
+  "rescale_method_members": [
+    "STRETCH",
+    "MANUAL_INPUT_RANGE",
+    "MANUAL_IO_RANGE",
+    "DIVIDE_BY_IMAGE_MINIMUM",
+    "DIVIDE_BY_IMAGE_MAXIMUM",
+    "DIVIDE_BY_VALUE"
+  ],
+  "registered_callable_synthetic_invocation": "PASS",
+  "input_unchanged": true
+}
+          Finished with result: success
+Main processes terminated with: code=exited, status=0/SUCCESS
+               Service runtime: 2.259s
+             CPU time consumed: 2.161s
+                   Memory peak: 131.2M (swap: 0B)
