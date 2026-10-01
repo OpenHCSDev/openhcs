@@ -2,6 +2,9 @@
 
 from types import SimpleNamespace
 
+import pytest
+
+from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
@@ -57,3 +60,16 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
     assert plans[1].runtime_artifact_materialization.require_persistent_backend() == (
         "disk"
     )
+
+
+@pytest.mark.parametrize("backend", ("disk", "memory", "new-persistent-backend"))
+def test_materialization_owner_admits_only_its_enabled_backend(backend):
+    disabled = RuntimeArtifactMaterializationPlan.disabled()
+    enabled = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend=backend
+    )
+    assert disabled.persists_to_backend(backend) is False
+    assert enabled.persists_to_backend(backend) is True
+    assert enabled.persists_to_backend("other-backend") is False
+    with pytest.raises(RuntimeError, match="has no persistent backend"):
+        RuntimeArtifactMaterializationPlan(persistent_enabled=True).persists_to_backend(backend)
