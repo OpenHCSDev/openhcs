@@ -125,7 +125,7 @@ class RuntimeSourceBindingContextCache:
         self.source_resolution_snapshots[key] = snapshot
         return snapshot.context
 
-    def __reduce__(self) -> tuple[type["RuntimeSourceBindingContextCache"], tuple[()]]:
+    def __reduce__(self) -> tuple[type[RuntimeSourceBindingContextCache], tuple[()]]:
         """Transport reconstructs all derived caches from declaration defaults."""
         return type(self), ()
 

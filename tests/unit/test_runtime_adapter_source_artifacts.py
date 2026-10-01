@@ -2,6 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from scipy.io import savemat
@@ -12,7 +13,9 @@ from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_object_labels import ObjectLabelSet
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
@@ -54,6 +57,7 @@ def _filemanager() -> FileManager:
 
 def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_root = tmp_path / "source"
     workspace_root = tmp_path / "workspace"
@@ -141,6 +145,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         filemanager=filemanager,
         microscope_handler=microscope_handler,
         runtime_source_workspace_projection_cache=projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
             frozenset((AllComponents.CHANNEL,))
         ),
@@ -215,12 +220,11 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         )
 
     illumination_request = request()
+    illumination_payload = illumination_request.source_artifact_payload(
+        illumination_binding.input_spec().ref()
+    )
     np.testing.assert_array_equal(
-        image_payload_data(
-            illumination_request.source_artifact_payload(
-                illumination_binding.input_spec().ref()
-            )
-        ),
+        image_payload_data(illumination_payload),
         illumination[np.newaxis, ...],
     )
 
@@ -245,3 +249,37 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     )
     assert isinstance(label_set, ObjectLabelSet)
     np.testing.assert_array_equal(label_set.labels, labels[np.newaxis, ...])
+
+    # Exercise the actual source adapter and VFS under the independent live
+    # selector route. Payload identity belongs to the unchanged typed source
+    # projection, not the selector's resolved metadata record representation.
+    with monkeypatch.context() as live_selector:
+        live_selector.setattr(
+            RuntimeSourceBindingContextCache,
+            "source_pattern_context",
+            lambda self, **kwargs: SourcePatternResolutionContext.from_projection(
+                **kwargs
+            ),
+        )
+        live_illumination = request().source_artifact_payload(
+            illumination_binding.input_spec().ref()
+        )
+        live_labels = request().source_artifact_payload(labels_spec.ref())
+    for produced, live in (
+        (illumination_payload, live_illumination),
+        (labels_payload, live_labels),
+    ):
+        np.testing.assert_array_equal(
+            image_payload_data(produced), image_payload_data(live)
+        )
+        produced_metadata = image_payload_metadata(produced)
+        live_metadata = image_payload_metadata(live)
+        assert produced_metadata == live_metadata
+        assert (
+            produced_metadata.source_provenance.source_identity.identity
+            == live_metadata.source_provenance.source_identity.identity
+        )
+        assert (
+            produced_metadata.source_provenance.represented_source_identities
+            == live_metadata.source_provenance.represented_source_identities
+        )

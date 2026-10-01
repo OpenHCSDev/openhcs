@@ -260,6 +260,17 @@ def test_snapshot_owns_position_and_projection_map_views():
         context.source_projections_by_virtual_path[PATH] = original_projection
 
 
+def test_resolved_direct_constructor_owns_deep_immutable_invariant():
+    nested = {"Plate": "before"}
+    resolved = ResolvedSourceMetadataRecord(((ORIGINAL_SOURCE_METADATA_FIELD, nested),))
+    nested["Plate"] = "after"
+    assert resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "before"
+    with pytest.raises(TypeError):
+        resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] = "invalid"
+    with pytest.raises(TypeError, match="Source metadata scalar values"):
+        ResolvedSourceMetadataRecord((("nested", {"unsupported": {"deep": 1}}),))
+
+
 @pytest.mark.parametrize("context_owned", (False, True))
 def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned):
     processing_context = ProcessingContext(axis_id="A01")

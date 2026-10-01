@@ -170,19 +170,24 @@ class DeclaredSourceMetadataRecord(SourceMetadataRecord):
 class ResolvedSourceMetadataRecord(SourceMetadataRecord):
     """Immutable path-specific metadata resolved at a runtime snapshot boundary."""
 
-    @classmethod
-    def from_resolved_mapping(
-        cls, metadata: SourceMetadataMapping
-    ) -> "ResolvedSourceMetadataRecord":
-        return cls(
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "fields",
             tuple(
                 (
                     str(key),
                     SourceBindingRuntimeMetadataNormalizer.normalized_value(value),
                 )
-                for key, value in metadata.items()
-            )
+                for key, value in self.fields
+            ),
         )
+
+    @classmethod
+    def from_resolved_mapping(
+        cls, metadata: SourceMetadataMapping
+    ) -> "ResolvedSourceMetadataRecord":
+        return cls(tuple(metadata.items()))
 
     def resolve(
         self,
