@@ -361,8 +361,10 @@ class PipelineAuthoringService:
         func = self._function_catalog.resolve(ref.function_id)
         kwargs = dict(ref.kwargs)
         _validate_callable_kwargs(ref.function_id, func, kwargs)
+        contract = CallableContract.from_callable(func)
+        kwargs = contract.decode_public_kwargs(kwargs)
         kwargs = PipelineInvocationContractProviderAuthority.normalize_authoring_kwargs(
-            CallableContract.from_callable(func), kwargs,
+            contract, kwargs,
         )
         if not kwargs:
             return func

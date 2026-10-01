@@ -11,7 +11,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepSpec
+from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepAddRequest, FunctionStepSpec
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -294,6 +294,42 @@ def test_original_parsed_pair_runtime_binds_only_its_declared_signature():
     assert json.loads(rows.rows[0].object_classes) == {"1": "low_low", "2": "high_high"}
 
 
+@pytest.mark.parametrize("clean", (False, True))
+def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(clean, monkeypatch):
+    """Exact live request's kwargs, without plate/native/registration replay."""
+    function_id, metadata = RegistryService.declared_metadata_for_callable(
+        classify_objects_two_measurements
+    )
+    monkeypatch.setattr(RegistryService, "_metadata_cache", {function_id: metadata})
+    monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
+    author = PipelineAuthoringService(function_catalog=SelectedDeclarations())
+    ref = author.create_pipeline()
+    kwargs = json.loads('''{
+        "select_the_object_to_be_classified": "engineering_cells",
+        "measurement1_feature": "pixel_count",
+        "measurement2_feature": "calibration_um",
+        "threshold1_method": "custom", "threshold1_value": 100.0,
+        "threshold2_method": "custom", "threshold2_value": 2.0,
+        "low_low_name": "low_low", "high_low_name": "high_low",
+        "low_high_name": "low_high", "high_high_name": "high_high"
+    }''')
+    author.add_function_step_from_request(FunctionStepAddRequest.from_fields(
+        pipeline_id=ref.pipeline_id, function_id=function_id,
+        name="engineering_pair_classification", kwargs=kwargs,
+    ))
+    assert author.validate(ref).valid
+    document = PipelineDocumentAuthority.from_source(author.render_source(ref, clean=clean).source)
+    invocation = next(normalize_function_pattern(document.pipeline_steps[0].func).iter_items())
+    values = invocation.kwargs_dict
+    assert values["threshold1_method"] is ClassificationThresholdMethod.CUSTOM
+    assert values["threshold2_method"] is ClassificationThresholdMethod.CUSTOM
+    assert (values["threshold1_value"], values["threshold2_value"]) == (100.0, 2.0)
+    assert (values["measurement1_feature"], values["measurement2_feature"]) == ("pixel_count", "calibration_um")
+    assert values["select_the_object_to_be_classified"] == "engineering_cells"
+    executable = {name: value for name, value in values.items() if name != "select_the_object_to_be_classified"}
+    assert invocation.contract.validate_public_kwargs(executable) == tuple(executable.items())
+
+
 @pytest.mark.parametrize(
     "keyword",
     (
@@ -514,8 +550,9 @@ def test_new_pair_declaration_reconstructs_and_cooperative_mro_binds_both_capabi
 
 
 @pytest.mark.parametrize("clean", (False, True))
+@pytest.mark.parametrize("json_kwargs", (False, True))
 def test_paired_author_validate_render_parse_compile_and_original_runtime(
-    clean, monkeypatch
+    clean, json_kwargs, monkeypatch
 ):
     metadata = dict(
         RegistryService.declared_metadata_for_callable(func)
@@ -530,10 +567,16 @@ def test_paired_author_validate_render_parse_compile_and_original_runtime(
         classify_objects_two_measurements
     )
     author = PipelineAuthoringService(function_catalog=SelectedDeclarations())
+    authored_kwargs = paired_kwargs()
+    if json_kwargs:
+        authored_kwargs = json.loads(json.dumps(
+            authored_kwargs,
+            default=lambda member: member.value,
+        ))
     ref = author.create_pipeline(
         steps=(
             FunctionStepSpec(
-                "paired", "paired", (FunctionSpecRef(function_id, paired_kwargs()),)
+                "paired", "paired", (FunctionSpecRef(function_id, authored_kwargs),)
             ),
         )
     )
@@ -544,6 +587,8 @@ def test_paired_author_validate_render_parse_compile_and_original_runtime(
     invocation = next(
         normalize_function_pattern(restored.pipeline_steps[0].func).iter_items()
     )
+    assert invocation.kwargs_dict["threshold1_method"] is ClassificationThresholdMethod.CUSTOM
+    assert invocation.kwargs_dict["threshold2_method"] is ClassificationThresholdMethod.CUSTOM
     contract = _public_function_step_contract(
         ClassifyObjectsSingleMeasurementModule,
         invocation.contract.func,
