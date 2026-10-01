@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import logging
 from collections import defaultdict
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
@@ -1209,6 +1209,9 @@ class PathPlannerArtifactStage:
             source_bindings=step_context.source_bindings,
             available_artifacts=available_artifacts,
             main_flow_artifacts=step_context.main_flow_artifacts,
+            metadata_artifact_available=(
+                self.planner.ctx.microscope_handler.can_resolve_metadata_artifact
+            ),
         )
 
     def compile_invocation_input_edges(
@@ -1225,6 +1228,7 @@ class PathPlannerArtifactStage:
         source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
         available_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         main_flow_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
+        metadata_artifact_available: Callable[[str], bool] = lambda _name: False,
     ) -> CompiledFunctionPattern:
         """Compile exact invocation-to-input projections from nominal contracts."""
 
@@ -1287,6 +1291,8 @@ class PathPlannerArtifactStage:
                                 spec=input_spec,
                                 main_flow_artifacts=main_flow_artifacts,
                                 invocation_sources=invocation.contract.group_scope_inputs,
+                                metadata_available=metadata_artifact_available(input_spec.name),
+                                source_binding_available=source_bindings.declares_artifact_ref(input_spec.ref()),
                             )
                         )
                         continue
@@ -1990,18 +1996,17 @@ class PathPlannerArtifactStage:
         inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
     ) -> FunctionPatternSyntax:
         """Inject metadata for artifact inputs."""
-        for input_ref, spec in inputs.items():
-            key = spec.name
-            if input_ref.for_plan_type(
+        for spec in inputs.values():
+            if spec.ref().for_plan_type(
                 ArtifactOutputPlan
             ) not in self.planner.declared and self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
-                key
+                spec.name
             ):
                 value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
-                    key,
+                    spec.name,
                     self.planner.ctx.plate_path,
                 )
-                pattern = inject_artifact_input_values(pattern, {key: value})
+                pattern = inject_artifact_input_values(pattern, {spec.name: value})
         return pattern
 
 
@@ -2430,12 +2435,7 @@ class PathPlannerStepAssemblyStage:
             contract_source_bindings,
         )
 
-        if isinstance(snapshot.step, FunctionStep) and any(
-            self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
-                input_ref.name
-            )
-            for input_ref in declarations.inputs
-        ):
+        if isinstance(snapshot.step, FunctionStep):
             func_pattern = self.planner.artifacts.inject_metadata(
                 func_pattern,
                 declarations.inputs,

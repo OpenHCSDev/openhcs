@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.087" timestamp="2026-10-01T09:34:53.107418-04:00" hostname="desktop"><testcase classname="tests.unit.test_path_planner_materialization" name="test_metadata_satisfied_artifact_input_compiles_without_runtime_plan" time="0.105"><failure message="ValueError: Invocation FunctionInvocationKey(function_name='metadata_consumer', group_key='default', position=0) source artifact ArtifactSpecRef(plan_type=&lt;class 'openhcs.core.artifacts.ArtifactInputPlan'&gt;, artifact_type=&lt;class 'openhcs.core.artifacts.SpecialArtifactType'&gt;, name='grid_dimensions') must resolve to exactly one compiled producer, source binding, or main-flow input; resolved 0.">def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
+        received = []
+    
+        @numpy
+        @artifact_inputs("grid_dimensions")
+        def metadata_consumer(image, grid_dimensions):
+            received.append(grid_dimensions)
+            return image
+    
+        planner = _artifact_planner_stub()
+        planner.ctx.microscope_handler = SimpleNamespace(
+            can_resolve_metadata_artifact=lambda name: name == "grid_dimensions",
+            resolve_metadata_artifact=lambda name, _plate_path: (
+                (2, 3) if name == "grid_dimensions" else None
+            ),
+        )
+        planner.ctx.plate_path = planner.plate_path
+        pattern = (metadata_consumer, {"grid_dimensions": None})
+        snapshot = _snapshot(
+            func=pattern,
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True,
+                bindings=(NamedSourceBinding(alias="DNA"),),
+            ),
+        )
+        declarations, pattern, _, contracts = planner.artifacts.prepare_step_declarations(
+            snapshot
+        )
+        execution_bindings = planner.artifacts.source_bindings_for_contracts(
+            snapshot,
+            contracts,
+            StepInputDependency.step_output(
+                source_step_index=2,
+                source_step_scope_id="plate::functionstep_2",
+            ),
+        )
+        execution_group_scope = planner.execution_groups.get_execution_groups(
+            snapshot,
+            PathPlannerComponentScopes.empty(),
+            source_bindings=execution_bindings,
+            contracts=contracts,
+        )
+        runtime_input_plans = planner.artifacts.process_artifact_inputs(
+            declarations,
+            snapshot.index,
+            PathPlannerGroupScope.ungrouped(),
+            execution_bindings,
+            ComponentSet(),
+            snapshot.step.name,
+            execution_scope=FunctionStepExecutionScope.AXIS,
+        )
+    
+        compiled = planner.artifacts.build_step_compiled_function_pattern(
+            snapshot,
+            True,
+            planner.artifacts.inject_metadata(pattern, declarations.inputs),
+            runtime_input_plans,
+            {},
+            {},
+            PathPlannerGroupScope.ungrouped(),
+        )
+    
+        assert execution_bindings == EMPTY_SOURCE_BINDINGS
+        assert execution_group_scope == PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+        assert runtime_input_plans == {}
+        assert compiled is not None
+        (invocation,) = compiled.default_group.invocations
+        assert invocation.kwargs_dict["grid_dimensions"] == (2, 3)
+        (edge,) = invocation.artifact_input_edges
+        assert edge.spec == invocation.contract.artifact_inputs[0]
+        assert edge.spec.parameter_name == "grid_dimensions"
+        assert edge.storage_plan is None
+        assert edge.projection is None
+&gt;       _execute_compiled_metadata_pattern(compiled)
+
+tests/unit/test_path_planner_materialization.py:353: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_path_planner_materialization.py:157: in _execute_compiled_metadata_pattern
+    ).execute()
+openhcs/core/steps/function_runtime.py:2036: in execute
+    loaded_artifact_payloads = self.load_artifact_inputs(
+openhcs/core/steps/function_runtime.py:1877: in load_artifact_inputs
+    self.declared_source_payload(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = FunctionCoreExecutor(runtime_scope=FunctionRuntimeScope(context=namespace(axis_id='A01', runtime_value_store=&lt;openhcs....ne, plane_count=None), main_data_arg=array([[[0, 1, 2],
+        [3, 4, 5]]], dtype=uint16), source_memory_type='numpy')
+source_ref = ArtifactSpecRef(plan_type=&lt;class 'openhcs.core.artifacts.ArtifactInputPlan'&gt;, artifact_type=&lt;class 'openhcs.core.artifacts.SpecialArtifactType'&gt;, name='grid_dimensions')
+primary_source_payload = array([[[0, 1, 2],
+        [3, 4, 5]]], dtype=uint16)
+
+    def declared_source_payload(
+        self,
+        source_ref: ArtifactSpecRef,
+        primary_source_payload: RuntimePayload,
+        *,
+        loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
+    ) -&gt; RuntimePayload:
+        input_spec = self.invocation.contract.artifact_inputs.by_ref(source_ref)
+        if input_spec is None:
+            raise ValueError(
+                f"Invocation {self.invocation.key!r} does not declare source artifact "
+                f"{source_ref!r}."
+            )
+        stored_payload = loaded_artifact_payloads.get(source_ref)
+        source_binding = (
+            self.runtime_scope.source_binding_plan.binding_for_artifact_ref(source_ref)
+        )
+        main_flow_edges = tuple(
+            edge
+            for edge in self.selected_artifact_input_edges
+            if edge.spec.ref() == source_ref and edge.consumes_main_flow
+        )
+        uses_main_flow = bool(
+            stored_payload is None and source_binding is None and main_flow_edges
+        )
+        resolved_origins = sum(
+            (
+                stored_payload is not None,
+                source_binding is not None,
+                uses_main_flow,
+            )
+        )
+        if resolved_origins != 1:
+&gt;           raise ValueError(
+                f"Invocation {self.invocation.key!r} source artifact {source_ref!r} "
+                "must resolve to exactly one compiled producer, source binding, or "
+                f"main-flow input; resolved {resolved_origins}."
+            )
+E           ValueError: Invocation FunctionInvocationKey(function_name='metadata_consumer', group_key='default', position=0) source artifact ArtifactSpecRef(plan_type=&lt;class 'openhcs.core.artifacts.ArtifactInputPlan'&gt;, artifact_type=&lt;class 'openhcs.core.artifacts.SpecialArtifactType'&gt;, name='grid_dimensions') must resolve to exactly one compiled producer, source binding, or main-flow input; resolved 0.
+
+openhcs/core/steps/function_runtime.py:1819: ValueError</failure></testcase></testsuite></testsuites>

@@ -3,6 +3,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import numpy as np
 
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
@@ -31,7 +32,14 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
+from openhcs.constants.constants import MEMORY_TYPE_NUMPY
+from openhcs.core.memory import numpy
+from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
+from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
@@ -43,6 +51,7 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
+    CompiledMetadataArtifactInputEdgePlan,
     FunctionInvocationKey,
 )
 from openhcs.core.function_patterns import (
@@ -92,13 +101,108 @@ from openhcs.core.source_bindings import (
     SourceBindingOrigin,
     SourceBindingsConfig,
     SourceProjectionRole,
+    SourceBindingRuntimeContext,
     StepSourceBindingsConfig,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.steps.function_runtime import ComponentArtifactPlans
+from openhcs.core.steps.function_runtime import (
+    ComponentArtifactPlans,
+    FunctionCoreExecutor,
+    FunctionRuntimeScope,
+)
+from openhcs.microscopes.microscope_interfaces import MetadataArtifactProvider
+from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
+
+
+def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_outputs=()):
+    """Execute the original compiler result through the real callable runtime."""
+    input_plans = {} if input_plans is None else input_plans
+    plan = CompiledStepPlan(
+        step_index=3,
+        step_scope_id="plate::functionstep_3",
+        step_name="metadata-consumer",
+        step_type="FunctionStep",
+        axis_id="A01",
+        input_memory_type=MEMORY_TYPE_NUMPY,
+        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_load_plan=SourceLoadPlan(),
+        variable_components=(),
+        execution_group_scope=ComponentGroupScope.ungrouped(),
+        compiled_function_pattern=compiled,
+        artifact_inputs=input_plans,
+        artifact_outputs={},
+    )
+    context = SimpleNamespace(axis_id="A01", runtime_value_store=RuntimeValueStore())
+    for producer, value in stored_outputs:
+        context.runtime_value_store.record(
+            RuntimeValue.from_output_plan(
+                producer, value, execution_scope=RuntimeExecutionAxisScope(axis_id="A01")
+            ),
+            path=producer.path, backend="memory",
+        )
+    scope = FunctionRuntimeScope(
+        context=context,
+        execution_plan=plan,
+        compiled_group=compiled.default_group,
+        component_value=None,
+        artifacts=ComponentArtifactPlans.from_step_component(plan, None),
+        source_binding_context=SourceBindingRuntimeContext.empty(),
+        runtime_plane_index=0,
+        runtime_plane_count=1,
+    )
+    (invocation,) = compiled.default_group.invocations
+    source = np.arange(6, dtype=np.uint16).reshape(1, 2, 3)
+    result = FunctionCoreExecutor(
+        main_data_arg=ImagePayloadMetadata().payload_with(source),
+        source_memory_type=MEMORY_TYPE_NUMPY,
+        runtime_scope=scope,
+        invocation=invocation,
+        artifacts=scope.artifacts.select_for_invocation(
+            invocation, execution_scope=plan.execution_group_scope, component_key=None
+        ),
+        group_key=None,
+        plane_projection=RuntimePlaneProjection.stack(),
+    ).execute()
+    np.testing.assert_array_equal(image_payload_data(result), source)
+    return result
+
+
+class _EngineeringMetadataHandler(OpenHCSMetadataHandler):
+    def get_pixel_size(self, plate_path):
+        return 1.3556
+
+    def get_exposure_duration(self, plate_path):
+        return 17.25
+
+
+class _EngineeringExposureMetadataArtifactProvider(MetadataArtifactProvider):
+    artifact_name = "engineering_exposure_duration"
+
+    @classmethod
+    def supports_handler(cls, handler):
+        return isinstance(handler, _EngineeringMetadataHandler)
+
+    def resolve(self, handler, plate_path):
+        return handler.get_exposure_duration(plate_path)
+
+
+def _compile_metadata_pattern(planner, pattern):
+    snapshot = _snapshot(func=pattern)
+    declarations, pattern, _, _ = planner.artifacts.prepare_step_declarations(snapshot)
+    input_plans = planner.artifacts.process_artifact_inputs(
+        declarations, snapshot.index, PathPlannerGroupScope.ungrouped(),
+        EMPTY_SOURCE_BINDINGS, ComponentSet(), snapshot.step.name,
+        execution_scope=FunctionStepExecutionScope.AXIS,
+    )
+    compiled = planner.artifacts.build_step_compiled_function_pattern(
+        snapshot, True, planner.artifacts.inject_metadata(pattern, declarations.inputs),
+        input_plans, {}, {}, PathPlannerGroupScope.ungrouped(),
+    )
+    return compiled, input_plans
 
 
 @dataclass(frozen=True)
@@ -220,9 +324,13 @@ def _snapshot(
 
 
 def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
+    received = []
+
+    @numpy
     @artifact_inputs("grid_dimensions")
     def metadata_consumer(image, grid_dimensions):
-        return image, grid_dimensions
+        received.append(grid_dimensions)
+        return image
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = SimpleNamespace(
@@ -288,6 +396,112 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     assert edge.spec.parameter_name == "grid_dimensions"
     assert edge.storage_plan is None
     assert edge.projection is None
+    _execute_compiled_metadata_pattern(compiled)
+    assert received == [(2, 3)]
+
+
+@pytest.mark.parametrize(
+    "artifact_name, expected",
+    [("pixel_size", 1.3556), ("engineering_exposure_duration", 17.25)],
+)
+def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_name, expected):
+    received = []
+    spec = ArtifactSpec.input(artifact_name, SpecialArtifactType, parameter_name="calibration")
+
+    @numpy
+    @artifact_inputs(spec)
+    def metadata_consumer(image, *, calibration):
+        received.append(calibration)
+        return image
+
+    planner = _artifact_planner_stub()
+    planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+    planner.ctx.plate_path = planner.plate_path
+    assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
+    compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
+    (invocation,) = compiled.default_group.invocations
+    (edge,) = invocation.artifact_input_edges
+    assert isinstance(edge, CompiledMetadataArtifactInputEdgePlan)
+    assert input_plans == {}
+    assert invocation.kwargs_dict == {"calibration": expected}
+    assert all(binding.parameter_name != "calibration" for binding in invocation.runtime_parameter_bindings)
+    _execute_compiled_metadata_pattern(compiled)
+    assert received == [expected]
+
+
+def test_hidden_pixel_size_reaches_callable_with_exact_source_calibration():
+    received = []
+
+    @numpy
+    @artifact_inputs("pixel_size")
+    def metadata_consumer(image, pixel_size: HiddenPixelSize = HiddenPixelSize(1.0)):
+        received.append(pixel_size)
+        return image
+
+    planner = _artifact_planner_stub()
+    planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+    planner.ctx.plate_path = planner.plate_path
+    compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
+    _execute_compiled_metadata_pattern(compiled)
+    assert received == [1.3556]
+    assert received != [1.0]
+
+
+@pytest.mark.parametrize("value", [None, 0.0, False])
+def test_required_metadata_input_has_no_magic_default(value):
+    @numpy
+    @artifact_inputs("pixel_size")
+    def metadata_consumer(image, pixel_size):
+        assert pixel_size is value
+        return image
+
+    planner = _artifact_planner_stub()
+    planner.ctx.microscope_handler = SimpleNamespace(
+        can_resolve_metadata_artifact=lambda name: name == "pixel_size",
+        resolve_metadata_artifact=lambda name, plate_path: value,
+    )
+    planner.ctx.plate_path = planner.plate_path
+    compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
+    if value is None:
+        with pytest.raises(ValueError, match="Required metadata artifact .* has no value"):
+            _execute_compiled_metadata_pattern(compiled)
+    else:
+        _execute_compiled_metadata_pattern(compiled)
+
+
+def test_authored_kwarg_does_not_satisfy_an_unknown_artifact_origin():
+    @numpy
+    @artifact_inputs("unknown_metadata")
+    def metadata_consumer(image, unknown_metadata):
+        return image
+
+    planner = _artifact_planner_stub()
+    with pytest.raises(MissingArtifactInputError):
+        _compile_metadata_pattern(planner, (metadata_consumer, {"unknown_metadata": 1.3556}))
+
+
+def test_exact_producer_takes_precedence_over_metadata_provider():
+    @numpy
+    @artifact_inputs("pixel_size")
+    def metadata_consumer(image, pixel_size):
+        assert pixel_size == 2.125
+        return image
+
+    planner = _artifact_planner_stub()
+    planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+    planner.ctx.plate_path = planner.plate_path
+    producer = _record_declared_output(planner, ArtifactOutputPlan(
+        name="pixel_size", path="/memory/pixel_size.pkl",
+        artifact_type=SpecialArtifactType, producer_step_index=2,
+        producer_step_scope_id="plate::functionstep_2",
+    ))
+    compiled, input_plans = _compile_metadata_pattern(planner, metadata_consumer)
+    (invocation,) = compiled.default_group.invocations
+    (edge,) = invocation.artifact_input_edges
+    assert not isinstance(edge, CompiledMetadataArtifactInputEdgePlan)
+    assert edge.storage_plan.source_step_scope_id == producer.producer_step_scope_id
+    assert invocation.kwargs_dict == {}
+    _execute_compiled_metadata_pattern(compiled, input_plans, ((producer, 2.125),))
 
 
 def test_plate_artifact_consumer_omits_inherited_source_plans():
