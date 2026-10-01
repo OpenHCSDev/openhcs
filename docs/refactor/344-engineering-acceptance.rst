@@ -1,140 +1,146 @@
-PR344 engineering document handoff
-=================================
+PR344 engineering document and acceptance disposition
+====================================================
 
 Runtime source checkpoint: a14d471e3f2a92148f88a60b6c972e1a49f67db0.
-Parent owns installed integration with main 05c3cf288 and the sole native
-5993 slot. This child has not loaded fixture pixels, compiled the document,
-started MCP/native/viewer, or executed a pipeline. This is not H003g, a
-scientific retry, biological validation, or an installed acceptance receipt.
+Parent integrated current main and owns installed/native acceptance. Later
+child checkpoints change only authoring examples, diagnostic checks and receipts.
+H003g remains permanently FAILED and untouched. This is engineering, not biology.
 
-Complete source
----------------
+Corrected complete source
+-------------------------
 
-``examples/344-aligned-rescale-engineering.py`` is one complete public Python
-PipelineDocument: pipeline_config plus one ordered FunctionStep. Submit the
-entire file through the ordinary MCP document authoring/validation/compile
-route. Do not call a custom function, construct runtime arrays or invoke the
-contract executor as a substitute for that route. Imports are explicit in
-the source; input/output keyword keys come from
-RescaleIntensityModule.declared_artifact_bindings().require_parameter_name().
+examples/344-aligned-rescale-engineering.py is one complete PipelineDocument
+with pipeline_config and one ordinary registered RescaleIntensity FunctionStep.
+Its imports and declaration-derived input/output keyword names are explicit.
+It contains no custom callable, executor wrapper, arrays or pixel-file operations.
 
-Fixture request for the parent
------------------------------
+The current recipe adopts the parent's successfully admitted private engineering
+document's acquisition declarations, with only this example's output root/header
+different. Submit the entire source via normal MCP authoring/compile/run.
+Never strip its pipeline source bindings or substitute another config argument.
 
-Use the existing synthetic ImageXpress fixture infrastructure, not any frozen
-H003g input or artifact. Proposed separate root::
+Separate fixture: the parent's cp-stack-installed-20261001/fixture contains
+eight 2-D TIFFs, sites 1/2, channels 1/2, Z 1/2, timepoint 1. Representative
+physical spelling::
 
-    /home/ts/wt/openhcs-344-engineering-20261001/raw/EngineeringPlate/
-      TimePoint_1/ZStep_1/plate_A01_s1_w1.tif
-      TimePoint_1/ZStep_1/plate_A01_s1_w2.tif
-      TimePoint_1/ZStep_2/plate_A01_s1_w1.tif
-      TimePoint_1/ZStep_2/plate_A01_s1_w2.tif
+    TimePoint_1/ZStep_1/A01_s001_w1_z001_t001.tif
+    TimePoint_1/ZStep_2/A01_s001_w2_z002_t001.tif
 
-Each file: one 32x32 uint16 plane, one site, one timepoint; distinct channels
-and Z planes. One deterministic nonconstant engineering pattern is
-``1000*(channel-1) + 100*(z-1) + 32*y + x`` with channel/z in {1,2} and
-x/y in [0,31]. Record actual fixture creation, input hashes and inventory in
-the parent's receipt; no fixture files were created by this child.
+Required existing declarations:
 
-Two typed aliases explicitly select channel 1 and channel 2. Step variable
-components select Z_INDEX, group_by is NONE, and both aliases are enabled.
-There are no embedded stack axes in a 2-D file: source_stack_components
-deliberately remains empty. The existing source-bound artifact resolver loads
-each alias's members and calls stack_image_payloads in RUNTIME_SLICE mode
-(core/runtime_adapters.py). Two declared primary image inputs then pass
-through CellProfilerModuleExecutor._image_request and
-compose_aligned_image_payload: an AlignedImageStack with a two-channel bundle
-per Z slice. The callable's FULL_STACK mode overrides slice execution.
-This is the original primary carrier failure path, not an auxiliary kwarg
-or the ordinary single dense two-channel input path.
+* source_filters EXTENSION / IS_TIF excludes HTD and other sidecars.
+* FILE_NAME MetadataExtractionRule extracts well/site/channel/z_index/timepoint
+  from the actual verified filename grammar. Zero padding is excluded from the
+  numeric capture, so s001 resolves site "1", not a new site "001".
+* METADATA SourceBindingMatchPlan explicitly pairs both aliases by
+  well/site/z_index/timepoint. Channel distinguishes aliases, not the pair key.
+* Both typed selectors restrict SITE "1" and their respective CHANNEL.
+* Each NamedSourceBinding.component_identity explicitly declares CHANNEL "1"
+  or "2", selecting the documented semantic coordinate projection.
+* Calibration is (4.0, 0.5, 0.5) micrometers Z/Y/X. There are no embedded stack
+  axes in a 2-D file, so source_stack_components remains empty. The step declares
+  variable Z_INDEX, GroupBy.NONE and enabled inherited source bindings.
 
-Compile identity gates, before execution
----------------------------------------
+Source diagnosis and ownership
+-------------------------------
 
-Require the actual inventory to contain A01/site 1/timepoint 1, channel 1/2,
-Z 1/2. Main 05c3cf288 includes the parent's raw ImageXpress ZStep fix.
-Reject a flattened singleton-Z inventory rather than accepting a different
-test. Require the registered declaration owner RescaleIntensityModule,
-function_name rescale_intensity, ProcessingContract.PURE_2D and
-ImagePayloadExecutionMode.FULL_STACK. The public document authority
-canonicalizes decorator callables through RegistryService: callable object
-identity before/after normalization is NOT the identity gate. Its canonical
-raw callable and module declaration owner are the gates.
+Inspected source: public 327cec9f6 and parent candidate c7ed2acc4. Their
+source_binding_workspace.py is byte-identical. SourceBindingWorkspaceProjector
+source_candidates (line 886) builds file candidates from declared extraction
+rules, not an injected native filename parser. _component_is_compatible permits
+absent coordinates (line 997); _candidate_with_binding_components then assigns
+selector coordinates. Without acquisition metadata, both aliases therefore
+select the same physical universe; the ORDER ambiguity guard correctly rejects it.
 
-Require exactly two ImageArtifactType input occurrences, in declared order:
-EngineeringCH1 and EngineeringCH2. Both declaration bindings have
-runtime_parameter_name None; compiled artifact input parameter_name is None.
-No auxiliary runtime keyword image is injected. Each alias's source payload
-must retain two exact Z members in RUNTIME_SLICE order. The composed primary
-must be aligned before the full-stack contract materializes it, and its dense
-callable input should be (2 Z, 2 bindings, 32 Y, 32 X). These are acceptance
-requirements inferred from inspected production authorities, NOT a claimed
-compile or native observation. Preserve the observed typed plan and logs;
-if the entrypoint does not expose carrier evidence, do not invent it from a
-successful run or from file/channel count alone.
+ImageXpress inherits MicroscopeHandler.projects_declared_source_bindings False.
+The current create_microscope_handler factory selects SourceBindingsHandler for
+nonempty bindings when the requested owner does not project them. Raw inspection
+without bindings can retain ImageXpress and parse its native coordinates. Thus
+IMAGEXPRESS in pipeline source alone does not certify the resolved ingestion owner.
+The child construction-only test verifies the factory route, not the parent's
+live handler class; preserve actual handler identity in the parent receipt.
 
-Require one output ImageArtifactType named EngineeringRescaled. Its declared
-SourceStackLineageSourceRelation is anchored to EngineeringCH1 by
-RescaleIntensityModule.artifact_output_relations. Output contextualization
-and materialization remain owned by the existing output policies. This
-declaration does not promise a new four-source output identity contract.
+For store-emitted candidates, _source_set_projections (line 1157) retains
+declared_address unless component_identity is explicitly declared. Metadata
+extraction alone does not override a store's singleton address. NamedSourceBinding
+documents component_identity as authoritative over inferred store coordinates
+(source_bindings.py line 867). Explicit channel identity invokes the existing
+coordinate projection; matched metadata supplies well/site/Z/time.
 
-Addresses, pixels and metadata gates
------------------------------------
+Disposition: the minimal public recipe omitted required acquisition declarations.
+It was not a compiled valid native-alias recipe. Its inference of native alias
+projection was wrong. The existing native handler does not promise that capability;
+automatic propagation is a product/ingestion limitation, not a proven regression
+of a promised alias-projection contract. No production intake, selector, guard,
+dispatcher or executor changes are made. NRA BOUND-2 guidance keeps identity with
+the existing metadata/binding/coordinate owners rather than adding a second parser.
 
-Configured output plate root::
+Predecessors are not relabelled as passes. Parent reports four original admission
+attempts retained, including same-ref ORDER rejection, duplicate projection address,
+and HTD lacking well identity. Public predecessor source survives at 327cec9f6
+and inside the original a14 supplemental archive. The promoted example now carries
+the complete admitted acquisition declarations rather than the invalid minimal form.
 
-    /home/ts/wt/openhcs-344-engineering-20261001/output/EngineeringPlate_openhcs
+Plans, occurrence evidence and output scope
+-------------------------------------------
 
-For axis A01, step 0 and no grouping key, PathPlannerPaths.artifact_path
-derives this canonical runtime artifact address::
+Expected projected source inventory: A01/site1/time1, four virtual files
+CH1/2 x Z1/2, with exact physical refs and calibration. Both RescaleIntensity
+declaration inputs are primary ImageArtifactType occurrences with no runtime
+parameter injection. Callable mode is FULL_STACK, contract PURE_2D.
+
+The public artifact-plan artifact_inputs list is not the complete input-occurrence
+surface: _bounded_step_summaries renders step_plan.artifact_inputs storage plans.
+PathPlanner skips a storage input plan when an exact source binding satisfies it
+(path_planner.py line 1817). Exact invocation occurrences instead live in
+CompiledFunctionInvocation.artifact_input_edges and contract.artifact_inputs.
+RuntimeInputBindingRequest selects those declarations through RuntimeAdapterRequest,
+then resolves a source-satisfied edge via source_binding_plan/source_artifact_payload.
+
+For direct carrier proof, inspect those exact selected occurrences, their two
+source bindings, runtime source payload axes and composed primary value before
+the FULL_STACK projection. An empty storage-plan list does not prove missing
+bindings, and a successful multi-plane output does not prove the carrier's type.
+The actual MCP surface did not expose carrier or validity-mask inspection.
+
+EngineeringRescaled declares SourceStackLineageSourceRelation to EngineeringCH1.
+Output source identity must follow that first-source lineage, not a fabricated
+four-source output contract. Output plate root for this published example::
+
+    /home/ts/wt/openhcs-344-engineering-20261001/output/fixture_openhcs
+
+For plate name fixture, well A01, step0, no grouping key, the canonical runtime
+artifact-store address is::
 
     results/A01_EngineeringRescaled_step0.pkl
 
-This is an artifact-store address, NOT a claim that a durable pickle exists.
-ImageArtifactType projects disk exports under ``images/EngineeringRescaled``
-when its writer uses plane projection, or uses its declared source-identity
-filename policy for scalar exports. Retain exact compiled output/materialization
-plans and returned artifact descriptors before asserting TIFF suffixes or
-export filenames; this child has not compiled or observed those paths.
+This is not a promised durable pickle. Compile/materialization plans own actual
+TIFF destinations; retain the descriptors rather than guessing filenames.
+The earlier EngineeringPlate example root changes if that is the input basename.
 
-For the proposed integer pattern, the dense default stretch expectation is
-``(input - 0) / 2123`` across both Z planes and both source bindings. Confirm
-the actual callable normalization/dtype policy and compare every output
-plane against the recorded fixture, not just extrema or a run-success flag.
-The original failing full-stack path would raise float(AlignedImageStack)
-before emitting the image. Preserve a real original failure if available;
-do not reinstall/replay an old candidate merely to manufacture that receipt.
+Bounded source checks and parent acceptance
+-------------------------------------------
 
-Configuration declares synthetic physical calibration (4.0, 0.5, 0.5)
-micrometers in Z/Y/X order, and both source aliases retain their exact source
-paths, channel/Z coordinates and native 32x32 spatial domain. Inspect typed
-metadata at input composition and output contextualization separately.
-The input composition must retain all four source contributors and both
-aliases; output source scope follows the actual first-source lineage relation.
-Do not silently equate a virtual workspace path with its physical raw path:
-resolve provenance through the recorded source projection before comparing.
-Calibration metadata preservation is not a physical measurement validation.
+Child source-only checks parse the complete document and verify registered owner/
+canonical raw callable identity. Pure synthetic path/declaration checks reproduce
+the ambiguity and singleton-address failures, then prove four unique coordinates
+with the same physical SourcePixelRefs. No TIFF pixels are loaded, no workspace is
+initialized, and no pipeline is compiled/executed by this child. A first conflict
+test used the wrong exception class; its 3-pass/1-fail receipt is retained, and the
+corrected assertion preserves the actual existing RuntimeError contract.
 
-Ordinary raw TIFFs carry no validity mask: require mask None to remain None.
-``load_as_mask`` converts pixel values to booleans; it does NOT manufacture
-a validity mask. Nontrivial MaskedImagePayload preservation and independent
-mask capability MRO cases are covered by the source family controls. A live
-nontrivial-mask claim would require a separate parent-approved typed masked
-fixture/path; this minimal document does not claim that coverage.
+Parent's reported installed/native gate (2026-10-01): same owned native5993,
+ordinary MCP compile job1 COMPLETE in 1.823s; execution job2 COMPLETE in 0.745s.
+Main-flow and EngineeringRescaled each yielded two Z TIFFs, each (2,32,32) float32.
+MCP samples were compared against all four raw planes with global stretch
+min90/max8405: 8192 pixel comparisons across both destinations, maximum error
+1.23e-7 and zero errors over 1e-6. Parent reports exact declared calibration and
+first-source CH1/Z scope, and retains the actual native observation export.
+These are parent observations, not independently rerun child measurements.
 
-Source-only checks
-------------------
-
-diagnostics/test_344_engineering_document.py executes only the Python
-configuration document through PipelineDocumentAuthority.from_source and
-checks declared source selectors, calibrated config, step axis and canonical
-registered identity. It does not load data, compile or execute a pipeline.
-The initial object-identity assertion failed because canonical normalization
-replaces the decorator wrapper; that receipt is retained. The corrected test
-uses the owning module and canonical raw callable identity instead.
-
-No biological guide/validated assay recipe was retrieved or claimed. The
-use-openhcs skill's complete-document rule applies, but the parent's explicit
-source-only/no-MCP instruction defers its live catalog/schema/compile gates
-to the installed acceptance owner. Do not label this source check MCP validated.
+This clears the reported installed dense ABI continuity gate, not direct carrier/
+mask inspection or biology. Raw TIFF validity masks are None; source MaskedImagePayload
+and capability-MRO controls are separate evidence. Child source117+45 and parent's
+revised installed21 cases remain distinct from this continuous MCP/native gate.
+R1 remains unqualified. Parent alone closes/verifies owned processes, archives live
+receipts and integrates the public PR. No frozen H003g retry or held-out access occurs.
