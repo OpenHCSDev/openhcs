@@ -132,7 +132,7 @@ No owned native/viewer/MCP process or canonical lock was acquired in this source
 assignment; no install, launch or close is needed. Final resource helper returns
 warning/exit2: RAM20.4GiB available,home8.2GiB free,swap10.9GiB used. Its disk
 advisory is not a hard task threshold; actual source shards above used enforced
-oneCPU/512MiB/60s and retained output is under3MiB. No new parallel run was started.
+oneCPU/512MiB/60s and retained output is under4MiB. No new parallel run was started.
 
 Persisted formats: none changed. Compiled invocation edge/runtime state is
 internal/transient; metadata values retain their original callable kwargs
