@@ -11,8 +11,13 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyqt_reactive.services.parameter_help_service import docstring_info_for_target
+from pyqt_reactive.services.help_document import HelpDocument
+from pyqt_reactive.services.parameter_help_service import (
+    dataclass_type_from_annotation,
+    docstring_info_for_target,
+)
 from python_introspect import (
+    UnifiedParameterAnalyzer,
     enum_import_path,
     enum_input_values,
     enum_member_names,
@@ -381,6 +386,7 @@ class ParameterDocumentationPolicy:
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         authored_descriptions = docstring_info_for_target(func).parameters or {}
+        analyzed_parameters = UnifiedParameterAnalyzer.analyze(func)
         specs = []
         for name, parameter in sig.parameters.items():
             if not self.should_document(name, parameter):
@@ -397,6 +403,11 @@ class ParameterDocumentationPolicy:
                     description=self.parameter_description(
                         authored_descriptions.get(name),
                         supplier,
+                        annotation=(
+                            analyzed_parameters[name].param_type
+                            if name in analyzed_parameters
+                            else parameter.annotation
+                        ),
                     ),
                     enum_import_path=enum_import_path(parameter.annotation),
                     enum_members=enum_member_names(parameter.annotation),
@@ -478,7 +489,18 @@ class ParameterDocumentationPolicy:
         self,
         authored_description: str | None,
         supplier: FunctionParameterSource,
+        *,
+        annotation: object = inspect.Parameter.empty,
     ) -> str | None:
+        """Compose declaration-owned field help with callable/runtime prose."""
+        declaration = dataclass_type_from_annotation(annotation)
+        if declaration is not None:
+            document = HelpDocument.from_docstring_info(
+                docstring_info_for_target(declaration)
+            ).bounded()
+            authored_description = "\n\n".join(
+                part for part in (authored_description, document.content) if part
+            )
         runtime_description = supplier.runtime_description
         if authored_description and runtime_description:
             return f"{authored_description.rstrip()} {runtime_description}"
