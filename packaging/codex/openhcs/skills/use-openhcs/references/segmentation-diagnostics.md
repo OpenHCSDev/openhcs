@@ -15,6 +15,15 @@ histograms and the threshold's assumptions; use the preprocessing guide when
 the foreground failure is illumination, noise or contrast. Record connectivity:
 4/8 in 2-D and 6/26 in 3-D produce different connected objects.
 
+For all-foreground or empty support, compare the reported threshold with values
+from the **current processing alias**, not only the physical source or viewer
+window. Check [current processing intensity units](measurement-interpretation.md#current-processing-intensity-units)
+before changing seeds, watershed or threshold bounds. A threshold clipped to a
+normalised contract bound can be incompatible with unscaled float pixels;
+raising a final bound need not undo an earlier clamp. Establish the units and
+earliest failed operation first, preserving raw and any explicitly converted
+alias rather than retuning downstream stages to compensate.
+
 ## Touching round objects and watershed
 
 A distance-map/marker-controlled watershed is a candidate for separating

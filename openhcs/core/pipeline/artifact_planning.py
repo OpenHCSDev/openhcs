@@ -33,27 +33,10 @@ from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
     MaterializedFilenameIdentity,
-    MaterializationSpec,
     ROIOptions,
+    StreamingOnlyMaterializationSpec,
+    TerminalMaterializationSpec,
 )
-
-
-class TerminalMaterializationSpec(MaterializationSpec):
-    """Compiler-added persistence excluded from declared export comparison."""
-
-    def participates_in_runtime_export_observation(self) -> bool:
-        return False
-
-
-class StreamingOnlyMaterializationSpec(MaterializationSpec):
-    """Compiler-added viewer materialization excluded from persistent exports."""
-
-    def participates_in_runtime_export_observation(self) -> bool:
-        return False
-
-    def participates_in_persistent_materialization(self) -> bool:
-        return False
-
 
 class AutomaticArtifactOutputMaterializationStrategy(
     ArtifactTypeStrategyMatchMixin,

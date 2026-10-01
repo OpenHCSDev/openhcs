@@ -19,9 +19,12 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 from openhcs.constants.constants import AllComponents, Backend, VariableComponents
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.axis_filter import StepAxisFilterResolution, StepAxisFilterSet
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
@@ -88,7 +91,11 @@ from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization.core import Output
-
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    MaterializedFilenameIdentity,
+)
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
 def test_memory_output_writer_projects_runtime_image_payload_for_array_storage(
@@ -1753,6 +1760,13 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
         lambda _plan, _context: (materialization,),
     )
 
+    output_plan = ArtifactOutputPlan(
+        name="neurite_outgrowth",
+        path="/memory/neurite_outgrowth.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=MaterializationSpec(ImageFileOptions()),
+    )
+    plan.artifact_outputs = {output_plan.ref(): output_plan}
     target = RuntimeArtifactMetadataTarget.from_plan(plan)
     assert target is not None
     [(projection, virtual_path)] = target.runtime_artifact_projection_paths(
@@ -2167,9 +2181,44 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
     plan = function_step_plan("SaveImages")
     plan.write_backend = Backend.MEMORY.value
     plan.output_plate_root = str(tmp_path)
+    plan.output_dir = directory
     plan.analysis_results_dir = str(directory)
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
-        persistent_enabled=True, persistent_backend=Backend.DISK.value,
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    output_plan = ArtifactOutputPlan(
+        name="SavedImage",
+        path="/memory/SavedImage.pkl",
+        artifact_type=ImageArtifactType,
+        materialization=MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".tif",
+                filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+            )
+        ),
+    )
+    plan.artifact_outputs = {output_plan.ref(): output_plan}
+    context.runtime_value_store = RuntimeValueStore()
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            output_plan,
+            ImageMetadataPayload(
+                np.ones((2, 2), dtype=np.uint8),
+                ImagePayloadMetadata(
+                    source_component_metadata={
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "2",
+                        "z_index": "1",
+                        "timepoint": "1",
+                    }
+                ),
+            ),
+            axis_id="A01",
+        ),
+        path=output_plan.path,
+        backend=Backend.MEMORY.value,
     )
     target = RuntimeArtifactMetadataTarget.from_plan(plan)
     assert target is not None
@@ -2183,3 +2232,90 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
         OpenHCSMetadataWriter.write(context, plan)
         assert not (tmp_path / "openhcs_metadata.json").exists()
     assert directory.exists() == (contents != "absent")
+
+
+@pytest.mark.parametrize("stray_image", [False, True])
+def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
+    tmp_path, stray_image
+):
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
+    context.runtime_value_store = RuntimeValueStore()
+    context.metadata_cache = {}
+    context.tiff_config = None
+    plan = function_step_plan("Declared image exports")
+    plan.streaming_configs = {}
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(tmp_path / "results")
+    plan.create_openhcs_metadata = True
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    context.step_plans = {plan.step_index: plan}
+    components = {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    pixels = np.arange(20, dtype=np.uint16).reshape(4, 5)
+    payload = ImageMetadataPayload(
+        pixels,
+        ImagePayloadMetadata(
+            source_component_metadata=components,
+            source_dtype="uint16",
+        ),
+    )
+    for name, directory in (("Copy", "nested/copies"), ("Review", "review")):
+        output_plan = ArtifactOutputPlan(
+            name=name,
+            path=f"/memory/{name}.pkl",
+            artifact_type=ImageArtifactType,
+            materialization=MaterializationSpec(
+                ImageFileOptions(
+                    filename_suffix=".tif",
+                    filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                    relative_path_template=f"{directory}/A01_s001_w2_z001_t001.tif",
+                )
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+    RuntimeArtifactMaterializationAuthority.materialize(context, plan)
+    OpenHCSMetadataWriter.write(context, plan)
+    context.runtime_value_store.clear()
+    if stray_image:
+        tifffile.imwrite(tmp_path / "images/review/unowned.tif", pixels)
+        with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+            OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
+        return
+    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
+    subdirectories = json.loads((tmp_path / "openhcs_metadata.json").read_text())[
+        FIELDS.SUBDIRECTORIES
+    ]
+    assert set(subdirectories) == {"images/nested/copies", "images/review"}
+    for directory, subdirectory in subdirectories.items():
+        path = f"{directory}/A01_s001_w2_z001_t001.tif"
+        assert subdirectory[FIELDS.IMAGE_FILES] == [path]
+        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectory
+        ).entries
+        assert set(entries) == {path}
+        projection = entries[path]
+        assert projection.component_value(AllComponents.CHANNEL) == "2"
+        assert projection.source_metadata["site"] == "1"
+        np.testing.assert_array_equal(tifffile.imread(tmp_path / path), pixels)

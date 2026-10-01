@@ -6,7 +6,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import ClassVar
 
@@ -83,6 +83,8 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
+    OpenHCSMetadataSubdirectories,
+    VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -722,8 +724,21 @@ class OpenHCSMetadataWriter:
             return tuple(
                 target
                 for declaration in cls.__registry__.values()
-                if (target := declaration.from_execution(context, plan)) is not None
+                if (owner := declaration.from_execution(context, plan)) is not None
+                for target in owner.production_targets(context, plan)
             )
+
+        def production_targets(
+            self, context: ProcessingContext, plan: CompiledStepPlan
+        ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
+            """Project this declaration's exact storage destinations for the step."""
+            return (self,)
+
+        def reconciliation_targets(
+            self, context: ProcessingContext
+        ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
+            """Resolve destinations after runtime values have been released."""
+            return (self,)
 
         def produced_records(
             self, context: ProcessingContext, plan: CompiledStepPlan
@@ -805,7 +820,7 @@ class OpenHCSMetadataWriter:
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
             target = type(self).from_plan(plan)
-            if target != self:
+            if target is None or self not in target.production_targets(context, plan):
                 raise ValueError(
                     "Produced metadata plan does not own this output target."
                 )
@@ -905,10 +920,9 @@ class OpenHCSMetadataWriter:
                     context,
                     output_path_filter=ImageFileFormat.is_image_path,
                 ):
-                    if (
-                        not ImageFileFormat.is_image_path(output.path)
-                        or Path(output.path).parent != Path(self.output_dir)
-                    ):
+                    if not ImageFileFormat.is_image_path(output.path) or Path(
+                        output.path
+                    ).parent != Path(self.output_dir):
                         continue
                     if output.metadata is None:
                         raise ValueError(
@@ -1022,9 +1036,10 @@ class OpenHCSMetadataWriter:
                 for target in cls.OutputTarget.for_plan(plan):
                     target_contexts.setdefault(target, context)
 
-        for target, context in target_contexts.items():
-            if target.contains_images(context):
-                target.write(context)
+        for owner, context in target_contexts.items():
+            for target in owner.reconciliation_targets(context):
+                if target.contains_images(context):
+                    target.write(context)
 
 
 class ProducedImageMetadataCapability:
@@ -1108,14 +1123,51 @@ class MaterializedImageMetadataTarget(
 class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
     """Image artifacts persist independently of main-flow image/checkpoint storage."""
 
-    @classmethod
-    def from_execution(
-        cls, context: ProcessingContext, plan: CompiledStepPlan
-    ) -> RuntimeArtifactMetadataTarget | None:
-        target = super().from_execution(context, plan)
-        if target is None or not target.contains_images(context):
-            return None
-        return target
+    def production_targets(
+        self, context: ProcessingContext, plan: CompiledStepPlan
+    ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
+        """Derive directories from the same writer outputs used to save artifacts."""
+        directories = dict.fromkeys(
+            Path(output.path).parent
+            for materialization in runtime_artifact_materializations(plan, context)
+            if materialization.spec.participates_in_persistent_materialization()
+            for output in materialization.outputs(
+                plan, context, output_path_filter=ImageFileFormat.is_image_path
+            )
+            if ImageFileFormat.is_image_path(output.path)
+        )
+        return tuple(
+            target
+            for directory in directories
+            for target in (self.for_directory(directory),)
+            if target.contains_images(context)
+        )
+
+    def reconciliation_targets(
+        self, context: ProcessingContext
+    ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
+        """Use durable typed projections, without reloading cleaned artifact values."""
+        subdirectories = OpenHCSMetadataSubdirectories.from_path(
+            METADATA_CONFIG.metadata_path(self.plate_root)
+        )
+        directories = tuple(
+            Path(self.plate_root) / Path(path).parent
+            for _name, subdirectory in subdirectories.items()
+            for path, projection in VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                subdirectory
+            ).entries.items()
+            if isinstance(projection, SourceArtifactProjection)
+            and projection.ref.backend == self.backend
+        )
+        return tuple(
+            self.for_directory(directory)
+            for directory in dict.fromkeys((self.output_dir, *directories))
+        )
+
+    def for_directory(self, directory: Path) -> RuntimeArtifactMetadataTarget:
+        """Retain the compiled plate/backend while projecting one declared directory."""
+        sub_dir = directory.relative_to(self.plate_root)
+        return replace(self, output_dir=directory, sub_dir=str(sub_dir))
 
     @classmethod
     def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:

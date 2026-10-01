@@ -161,6 +161,39 @@ measurement. Any measurement operation must preserve source pixels and report
 its coordinates, axes, units and sampling conventions; a native layer scale of1
 does not verify physical calibration.
 
+## Current processing intensity units
+
+Before choosing a threshold or prominence, identify the **current consumed
+alias**, its producer/channel/axes, dtype, numeric range and processing history.
+Raw-source samples establish acquisition values, not the units of a later
+processed alias. Viewer contrast limits, gamma and colours change presentation,
+not analytical pixels or callable bounds. Inspect the exact registered contract
+and current-alias values together; a data maximum is not a threshold-unit scale.
+
+CellProfiler-compatible image conversion scales integer inputs by their
+applicable codebook but preserves floating values. `float32` therefore does not
+prove unit-interval data. Acquisition dtype/maximum metadata describes source
+provenance, not whether current floats still need conversion; using it blindly
+can double-normalise a processed image. CP threshold bounds declared in `0..1`
+are normalised processing units, not an invitation to substitute the observed
+raw maximum. Do not generalise those bounds to other callable contracts.
+
+If conversion is justified, preserve raw and untreated measurement routes and
+compose a distinct processing alias through the existing registered intensity
+owner, such as registry ID `openhcs:cellprofiler_rescale_intensity` (Python
+`rescale_intensity`). Discover and describe the returned ID's current contract,
+including typed mode and input/output semantics; choose a scale only from justified acquisition
+or processing evidence. Do not infer `255` from a float dtype, silently auto-minmax,
+or rescale already-normalised pixels again. If the scale is unknown, retain that
+limitation rather than manufacture comparable units. Verify the resulting alias
+values and earliest threshold-support artifact before interpreting objects.
+
+The float-preservation and threshold-bound distinctions follow the
+[CP Image conversion](https://github.com/CellProfiler/core/blob/v4.2.8/cellprofiler_core/image/_image.py)
+and [CP Threshold settings](https://github.com/CellProfiler/CellProfiler/blob/v4.2.8/cellprofiler/modules/threshold.py)
+contracts; they do not prescribe a scientific normalisation or establish parity
+for every out-of-range input.
+
 ## Detection pixels versus measurement pixels
 
 Thresholding, CLAHE, nonlinear gamma, high-end clipping, denoising and

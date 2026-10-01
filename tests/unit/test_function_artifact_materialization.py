@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 from polystore.base import DataSink, ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.napari_stream import NapariStreamingBackend
@@ -61,7 +62,6 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
-from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
@@ -619,7 +619,6 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     assert dict(runtime_value.data.source_component_metadata or {}) == {
         "well": "A02",
         "channel": 1,
-        "extension": ".tif",
     }
     assert runtime_value.data.source_image_names == ()
     assert runtime_value.data.source_image_provenance_planes == (
@@ -3668,7 +3667,9 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
     )
 
 
-def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_plan():
+def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_plan(
+    viewer_ack_return_route,
+):
     output_plan = ArtifactOutputPlan(
         name="Nuclei",
         path="/memory/Nuclei.pkl",
@@ -3721,6 +3722,7 @@ def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_pl
     streamed_item = StreamingBatchMessageBuilder.build(
         napari_backend,
         StreamingBatchMessageRequest(
+            return_route=viewer_ack_return_route,
             data_list=[roi_content],
             file_paths=[roi_path],
             stream_request=stream_request,

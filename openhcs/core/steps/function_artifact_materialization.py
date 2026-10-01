@@ -1201,12 +1201,11 @@ def runtime_artifact_materializations(
     """Derive actual materializations from compiled outputs and runtime values."""
 
     materializations: list[RuntimeArtifactMaterialization] = []
-    store = context.runtime_value_store
     for output_plan in plan.artifact_outputs.values():
         if output_plan.materialization is None:
             continue
         records = actual_materialization_records(
-            store=store,
+            store=context.runtime_value_store,
             plan=plan,
             output_plan=output_plan,
         )
