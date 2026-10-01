@@ -408,10 +408,15 @@ class ParameterDocumentationPolicy:
     def agent_parameter_names(
         self, func: Callable, contract: CallableContract | None = None
     ) -> tuple[str, ...]:
+        from openhcs.core.invocation_artifacts import (
+            PipelineInvocationContractProviderAuthority,
+        )
+
+        contract = contract or CallableContract.from_callable(func)
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         hidden_names = parameter_exclusions(func)
-        return tuple(
+        ordinary = tuple(
             (
                 name
                 for name, parameter in sig.parameters.items()
@@ -419,6 +424,17 @@ class ParameterDocumentationPolicy:
                 and supplied_by[name] is FunctionParameterSource.AGENT
             )
         )
+        runtime_names = (
+            contract.runtime_owned_parameter_names
+            | hidden_names
+            | {contract.primary_input_parameter_name}
+        )
+        compile_only = tuple(
+            name
+            for name in PipelineInvocationContractProviderAuthority.compile_time_parameter_names(contract)
+            if name not in runtime_names
+        )
+        return tuple(dict.fromkeys((*ordinary, *compile_only)))
 
     def supplied_by(
         self, func: Callable, contract: CallableContract | None = None
