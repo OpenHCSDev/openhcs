@@ -122,8 +122,64 @@ the existing observation and supplies the real path owner only when available.
 Original 41-pass/one-failure service shard is retained. No legacy reader/fallback
 or duplicate diagnostic store was introduced; existing warning receipts survive.
 
-Original R0 at 3b03785, integrated f24 -> initial coherent source3c7240016:
-PASS 17.69s/87552 KiB, no exception/increased measure. Final source recheck and
-unchanged full-context R1 remain pending; original inputs/roots will be preserved.
+Current pinned source and unchanged guards
+-----------------------------------------
+
+Current tested source: 42ebd233c2bcbd0bb9baa52febda284df0885188. Normally
+integrated356 at9bb5e9aaa, then merged parent-shipped334/main
+20ca4f82526974f16017021e313e4e6cf265b547 without conflict. The five owned production
+files and tests have zero diff across the latter merge; base356 and base20ca also
+have zero diff in those production files. No scientific/installed slot was used.
+
+Production deletion first: 224 lines deleted,152 added, net72 deleted in five
+production files versus main20ca. Original microscope census6920 ->6882 code
+lines; ImageXpress alone489 ->391. No added string-key reads, literal gets, type
+checks/switches, string dispatch, foreign absence probes or broad exceptions.
+Three nominal classes added: actual path ancestor and two independent acquisition
+capabilities. Five new None identity checks are explicit owned optional/parser
+and unmatched-path facts, not foreign probes or hidden absence. No metric waiver.
+All microscope files parsed; exact before/diff/after census is archived.
+
+Final tests at42ebd233: 42 service/path tests PASS,6.38s/302296 KiB; 45 existing
+inventory/handler/producer/static-browser controls PASS,11.35s/310860 KiB.
+87 distinct cases, CPU0/timeout60, under512MiB RSS, existing Python/dependencies.
+Actual inspect-plate generated CLI --help exits0,5.10s/249008 KiB, no MCP launch.
+Correctness Ruff E9/F63/F7/F82 and git diff --check PASS. Existing UI assertions
+were only migrated to the single handler API; no GUI/viewer was started.
+
+Unchanged original R0 at3b03785: f24 ->3c7240016 PASS17.69s/87552 KiB; final
+356910557 ->9bb5e9aaa PASS17.64s/87560 KiB, zero exceptions/increased measures.
+After normal20ca merge the exact before/after selected production bytes are
+unchanged; original measured comparison is retained, not relabelled as another run.
+Scripts/benchmark have no owned Python diff, so no extra empty-scope pass claimed.
+
+Unchanged full-context R1 at NRA0844525 and original scripts/check_refactor_r1.py:
+base356910557 ->9bb5e9aaa, original roots openhcs/scripts/benchmark plus ALL
+recorded dependency Python context. One CPU,512MiB address-space ceiling,
+original55s deadline and bounded Git pack mapping8m/128m. INCOMPLETE,exit1,
+ScanDeadlineExceeded during parse_python_module55.000s/55.000s, wall56.19s,
+264000 KiB RSS. Source materialization completed but parsing did not; no
+before/after/descent certificate, scoped substitute or global proof. Later20ca
+context was not rescanned; this omission is explicit. The tool cleaned its owned
+snapshot directory. Incomplete unrelated NRA tooling did not block implementation.
+
+Authoritative archive SHA256 reverified:
+100fbe8ef89664b866777e87b2c8640a3432e8a10e9188dff81c97942d551bf6.
+Actual antipattern review is confirmed by the source witnesses/removed mechanisms
+above and behavioral extension evidence, not by an incomplete analyzer pass.
+
+Archive: receipts/S1-imagexpress-readonly-inventory-337-20261001.tar.gz, complete
+logs/XML/census including original failures, subsequent repairs and both normal
+merge logs. Fresh extraction/content comparison must succeed before cleanup.
+Named disposable scratch and source-only build binaries, plus owned pytest caches
+in both S1 worktrees, are moved to recoverable trash after archival. Persistent
+source/worktrees and all recorded evidence remain. No installed/package/skill or
+managed blind instruction change. Upcoming H003g candidate/runtime is untouched.
+
+This completes the source fix checkpoint for337, NOT all S1/ZIP. Named remaining
+S1 includes plate rendering, config/knowledge/function/authoring, object-state,
+viewer/runtime, UI/code-document/state-surface. Separately owned339 generated
+connection input projection has an issue/reproducer but no implementation yet;
+it will have its own visible draft, not an expansion of334 or338.
 Parent owns final installed public generate-inspect-initialize-reinspect journey
 before merge. Neither source checks nor incomplete NRA evidence establish that.
