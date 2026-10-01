@@ -928,9 +928,7 @@ class ObjectLabelPayload(ObjectLabelValue):
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_object_label_metadata("ObjectLabelPayload")
 
 
@@ -994,9 +992,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.validate_artifact_name()
         if self.source_image_name == "":
             raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")

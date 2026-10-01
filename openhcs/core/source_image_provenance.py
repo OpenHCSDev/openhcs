@@ -1775,8 +1775,17 @@ class SourceImageProvenanceFields:
 
     def absorb_explicit_source_provenance(
         self,
-        explicit: SourceImageProvenance,
+        values: SourceProvenanceInitValues,
     ) -> None:
+        """Decode authored aliases once, leaving absent constructor facts absent."""
+        if all(
+            value is default
+            for value, default in zip(
+                values, SourceImageProvenance.__init__.__defaults__, strict=True
+            )
+        ):
+            return
+        explicit = SourceImageProvenance.from_init_values(values)
         if not explicit.has_values:
             return
         self.source_provenance = explicit.with_missing_from(self.source_provenance)
