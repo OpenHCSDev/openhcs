@@ -17,6 +17,7 @@ from collections.abc import Callable, Mapping, Sequence, Sized
 from dataclasses import dataclass, field, is_dataclass, replace
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import numpy as np
@@ -1651,7 +1652,8 @@ class BackendSaver:
     def save_all(
         self,
         outputs: Sequence[Output],
-    ) -> None:
+    ) -> Mapping[str, tuple[Output, ...]]:
+        saved_outputs: dict[str, tuple[Output, ...]] = {}
         for backend in self.backends:
             backend_instance = self.filemanager._get_backend(backend)
             output_acceptance = tuple(
@@ -1690,6 +1692,8 @@ class BackendSaver:
                     backend,
                     **kwargs,
                 )
+            saved_outputs[backend] = supported_outputs
+        return saved_outputs
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
         if not backend_instance.requires_filesystem_validation:
@@ -4129,28 +4133,69 @@ class AllowedBackendsAuthority:
             )
 
 
-def _materialization_output_groups(
-    spec: MaterializationSpec,
-    data: MaterializationValue,
-    context: MaterializationContext,
-    *,
-    output_path_filter: Callable[[Path], bool] | None = None,
-) -> tuple[tuple[WriterSpec, tuple[Output, ...]], ...]:
-    """Render requested outputs through each writer's declared path projection."""
+@dataclass(frozen=True)
+class SavedMaterializationOutputs:
+    """Backend-indexed outputs from completed saves, independent of artifact kind."""
 
-    return tuple(
-        (
-            writer,
-            tuple(
-                output.with_source_identity_fallback(
-                    context.artifact_source_identity
-                ).with_variable_components(context.variable_components)
-                for output in writer.outputs(data, options, context, output_path_filter)
-            ),
+    outputs_by_backend: Mapping[str, tuple[Output, ...]]
+
+    def outputs_for_backend(self, backend: str) -> tuple[Output, ...]:
+        return self.outputs_by_backend.get(backend, ())
+
+
+@dataclass(frozen=True)
+class MaterializationBatch:
+    """One rendered writer batch shared by saving and immediate publication."""
+
+    context: MaterializationContext
+    output_groups: tuple[tuple[WriterSpec, tuple[Output, ...]], ...]
+    primary: int
+
+    @classmethod
+    def render(
+        cls,
+        spec: MaterializationSpec,
+        data: MaterializationValue,
+        context: MaterializationContext,
+        *,
+        output_path_filter: Callable[[Path], bool] | None = None,
+    ) -> MaterializationBatch:
+        groups = tuple(
+            (
+                writer,
+                tuple(
+                    output.with_source_identity_fallback(
+                        context.artifact_source_identity
+                    ).with_variable_components(context.variable_components)
+                    for output in writer.outputs(
+                        data, options, context, output_path_filter
+                    )
+                ),
+            )
+            for options in spec.outputs
+            for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
         )
-        for options in spec.outputs
-        for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
-    )
+        return cls(context=context, output_groups=groups, primary=spec.primary)
+
+    @property
+    def outputs(self) -> tuple[Output, ...]:
+        return tuple(
+            output for _writer, outputs in self.output_groups for output in outputs
+        )
+
+    @property
+    def primary_path(self) -> str:
+        writer, outputs = self.output_groups[self.primary]
+        return writer.primary_path(list(outputs))
+
+    def save(self) -> SavedMaterializationOutputs:
+        """Return only outputs accepted and successfully saved by each backend."""
+        saved: dict[str, tuple[Output, ...]] = {}
+        saver = self.context.saver
+        for _writer, outputs in self.output_groups:
+            for backend, saved_outputs in saver.save_all(outputs).items():
+                saved[backend] = (*saved.get(backend, ()), *saved_outputs)
+        return SavedMaterializationOutputs(MappingProxyType(saved))
 
 
 def materialization_outputs(
@@ -4190,19 +4235,15 @@ def materialization_outputs(
         pipeline_position=pipeline_position,
         output_plan=output_plan,
     )
-    return tuple(
-        output
-        for _writer, outputs in _materialization_output_groups(
-            spec,
-            data,
-            materialization_context,
-            output_path_filter=output_path_filter,
-        )
-        for output in outputs
-    )
+    return MaterializationBatch.render(
+        spec,
+        data,
+        materialization_context,
+        output_path_filter=output_path_filter,
+    ).outputs
 
 
-def materialize(
+def prepare_materialization(
     spec: MaterializationSpec,
     data: MaterializationValue,
     path: str,
@@ -4218,8 +4259,8 @@ def materialize(
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
     output_plan: ArtifactOutputPlan | None = None,
-) -> str:
-    """Materialize data to one or more backends."""
+) -> MaterializationBatch:
+    """Prepare one exact batch for saving and immediate publication."""
 
     normalized_backends = BackendSequenceAuthority.normalize(backends)
     AllowedBackendsAuthority.validate(spec, normalized_backends)
@@ -4245,11 +4286,42 @@ def materialize(
         output_plan=output_plan,
     )
 
-    primary_path = ""
+    return MaterializationBatch.render(spec, data, ctx)
 
-    for i, (writer, outs) in enumerate(_materialization_output_groups(spec, data, ctx)):
-        ctx.saver.save_all(outs)
-        if i == spec.primary:
-            primary_path = writer.primary_path(list(outs))
 
-    return primary_path
+def materialize(
+    spec: MaterializationSpec,
+    data: MaterializationValue,
+    path: str,
+    filemanager: FileManager,
+    backends: Sequence[str] | str,
+    backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
+    context: ProcessingContext | None = None,
+    extra_inputs: dict | None = None,
+    *,
+    artifact_source_identity: SourceImageIdentity | None = None,
+    artifact_filename_identity: SourceImageIdentity | None = None,
+    variable_components: Sequence[VariableComponents] = (),
+    source_paths: Sequence[str] = (),
+    pipeline_position: int | None = None,
+    output_plan: ArtifactOutputPlan | None = None,
+) -> str:
+    """Materialize data and return the primary path derived from its writer batch."""
+    batch = prepare_materialization(
+        spec,
+        data,
+        path,
+        filemanager,
+        backends,
+        backend_kwargs,
+        context=context,
+        extra_inputs=extra_inputs,
+        artifact_source_identity=artifact_source_identity,
+        artifact_filename_identity=artifact_filename_identity,
+        variable_components=variable_components,
+        source_paths=source_paths,
+        pipeline_position=pipeline_position,
+        output_plan=output_plan,
+    )
+    batch.save()
+    return batch.primary_path
