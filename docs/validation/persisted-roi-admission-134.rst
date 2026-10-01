@@ -7,7 +7,10 @@ remain closed; their ordinary saved-image reader/reopen acceptance is unchanged.
 This checkpoint is a source investigation, not a native ROI or biological pass.
 Visible draft: https://github.com/OpenHCSDev/openhcs/pull/404.
 The active implementation proposal below supersedes the initial diagnostic-only
-checkpoint. The shared production file remains unapplied pending named ownership.
+checkpoint. The shared production files remain unapplied pending named ownership.
+The combined ROI-only owner-hook proposal supersedes the historical three-hunk
+proposal below. Its exact ownership/evidence receipt is
+``persisted-roi-only-owner-134.rst`` in this directory.
 
 Original public witness
 -----------------------
@@ -261,10 +264,10 @@ Released only
 failures, raw receipts and reconstruction inputs remain recoverable in the archive;
 tracked receiving source/history and all foreign/scientific data remain intact.
 
-The named PR 394 integration owner must take/release these three hunks. The tested
+The named PR 394 integration owner must take/release the combined proposal. This first
 checkpoint repairs the actual mixed-label/checkpoint/ROI witness. ROI-only
-participation and the empty-image publication transaction still need the coordinated
-saved-output-owner extension; the older graph ROI source-metadata omission remains
+participation and the empty-image transaction now have the independently tested
+saved-output-owner proposal documented in the linked receipt; the older graph ROI source-metadata omission remains
 its separate crossing. Neither is hidden behind relaxed reader guards, guessed
 paths, fabricated receipts or a biological replay. Parent's ten viewer-QA lines,
 manifest tags and query checks remain disjoint and untouched.
