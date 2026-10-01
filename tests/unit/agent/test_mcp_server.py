@@ -5348,6 +5348,7 @@ def test_mcp_dev_client_query_plate_files_command_projects_tool_arguments():
     assert call.name == "openhcs_query_plate_files"
     assert call.arguments == {
         "plate_path": "/tmp/example-plate",
+        "result_directory": None,
         "microscope_type": "openhcsdata",
         "pattern_format": None,
         "kind": "all",
@@ -6465,6 +6466,7 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
         "fresh_viewer": True,
         "source_receipt": None,
         "plate_path": "/tmp/example-plate-openhcs",
+        "result_directory": None,
     }
 
     query_args = parser.parse_args(("stream-plate-files", "/tmp/example-plate-openhcs"))
@@ -12964,7 +12966,14 @@ def test_mcp_viewer_close_binding_requires_confirmation_and_projects_result():
     )
     payload = json.loads(_direct_tool_text(result))
 
-    assert payload == {"succeeded": True, "endpoint_terminated": True}
+    assert payload == {
+        "succeeded": True,
+        "endpoint_terminated": True,
+        "process_identity": None,
+        "process_exited": None,
+        "request_attempted": False,
+        "acknowledged": False,
+    }
     assert len(viewer_window_service.close_requests) == 1
     request = viewer_window_service.close_requests[0]
     assert request.connection.port == 5555
