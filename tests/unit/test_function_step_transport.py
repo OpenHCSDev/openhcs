@@ -391,7 +391,7 @@ def test_module_objects_are_rejected_as_function_specs() -> None:
         FunctionStepTransportAuthority.normalize_function_spec(crop_module)
 
 
-def test_generated_source_imports_catalog_owned_cellprofiler_callable() -> None:
+def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None:
     source = FunctionStepTransportAuthority.source_from_pipeline(
         [FunctionStep(func=cellprofiler_backend.crop, name="Crop")]
     )
@@ -400,10 +400,16 @@ def test_generated_source_imports_catalog_owned_cellprofiler_callable() -> None:
         node.module for node in module.body if isinstance(node, ast.ImportFrom)
     }
 
-    assert "openhcs.processing.backends.cellprofiler.crop" in imported_modules
+    assert "openhcs.processing.func_registry" in imported_modules
     assert (
         "openhcs.interop.cellprofiler.runtime.module_execution" not in imported_modules
     )
+    namespace: dict[str, object] = {}
+    exec(compile(source, "<cellprofiler-pipeline>", "exec"), namespace)
+    restored = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
+    assert len(restored) == 1
+    assert restored[0].name == "Crop"
+    assert restored[0].func is RegistryService.registered_callable(cellprofiler_backend.crop)
 
 
 def test_registered_custom_function_is_function_step_picklable() -> None:
