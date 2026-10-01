@@ -8,6 +8,10 @@ acceptance. Independent follow-up worktree:
 This branch is stacked on that exact checkpoint, not a competing decoder/source
 implementation. No other owner's tree, installed environment or mutation is used.
 
+Follow-up draft: https://github.com/OpenHCSDev/openhcs/pull/367.
+Qualified production source: 9a0dfc9a5d3c2ce945bc0d232a31f887dd8dec90.
+Subsequent delivery changes are evidence/docs only.
+
 Original witnesses and relation
 -------------------------------
 
@@ -74,6 +78,27 @@ checked without executing the numerical function.
 
 Qualification boundary
 -----------------------
+
+Complete decoder/source/formatter/authoring suite: 53 passed,
+7.41s / 396.36MiB. Fourteen are new compile-selector/default cases, with
+no deselection. Adjacent activation/cardinality declarations: all19 passed,
+4.32s / 300.37MiB, including unchanged plain three-image RGB inference.
+Original PINNED R0 on six changed production paths against frozen PR365:
+PASS, 16.83s / 82.68MiB, 5188 measures, increased[]. The original tool runs
+under actual Python3.14 with read-only metaclass backing; no detector copy.
+Ruff F/I and git diff checks pass.
+
+The full adjacent invocation-provider suite is NOT passing: 25 pass and
+test_classification_rules_remain_public_while_declaring_prior_measurements
+fails measurement-subject validation. Together with the fourteen new cases,
+the retained receipt reports 39 passed / 1 failed, 7.54s / 387.90MiB.
+The exact same original test fails against frozen PR365 production source:
+25 passed / 1 failed, 6.80s / 383.46MiB. Its source is unchanged, and no
+assertion is removed or waived. Out-of-scope interface:
+ClassifyObjectsSingleMeasurementModule measurement output declarations ->
+MeasurementsArtifactType.require_output_subject in compile_function_pattern.
+Named handoff: parent/release scientific declaration owner for disposition;
+this sidecar does not modify classification, artifacts or the scientific test.
 
 Source checks only: CPU0, combined command RSS512MiB, wall60s, thread pools1,
 read-only parent interpreter/dependencies and explicit own Python source.
