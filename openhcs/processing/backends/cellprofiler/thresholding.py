@@ -1035,32 +1035,36 @@ class NumbaNumpyThresholdDiagnosticsBackendStrategy(
             self.diagnostics(
                 image[None, ...], partial_mask[None, ...], binary[None, ...]
             )
-        quantized_image = np.rint(image32 * np.float32(255)) / np.float32(255)
-        quantized_binary = quantized_image > 0.5
-        self.diagnostics(
-            quantized_image,
-            None,
-            quantized_binary,
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image,
-            partial_mask,
-            quantized_binary,
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image[None, ...],
-            None,
-            quantized_binary[None, ...],
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image[None, ...],
-            partial_mask[None, ...],
-            quantized_binary[None, ...],
-            proven_unit_interval_scale=255,
-        )
+        for image in (image64, image32):
+            for code_dtype in (np.uint8, np.uint16):
+                scale = int(np.iinfo(code_dtype).max)
+                producer_scale = image.dtype.type(scale)
+                quantized_image = np.rint(image * producer_scale) / producer_scale
+                quantized_binary = quantized_image > 0.5
+                self.diagnostics(
+                    quantized_image,
+                    None,
+                    quantized_binary,
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image,
+                    partial_mask,
+                    quantized_binary,
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image[None, ...],
+                    None,
+                    quantized_binary[None, ...],
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image[None, ...],
+                    partial_mask[None, ...],
+                    quantized_binary[None, ...],
+                    proven_unit_interval_scale=scale,
+                )
 
     def diagnostics(
         self,

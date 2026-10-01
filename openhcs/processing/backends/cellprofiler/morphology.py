@@ -2241,6 +2241,9 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
         self.connected_components(mask, connectivity=2)
         self.fill_labeled_holes(labels)
         self.erode_labeled_objects(labels, footprint)
+        self.erode_labeled_objects(
+            np.stack((labels, labels)), np.ones((3, 3, 3), dtype=np.bool_)
+        )
         self.local_maxima_by_label(image, labels, footprint)
         self.smooth_image_for_declumping(image, mask, 1.0)
         self.smooth_image_for_declumping(
