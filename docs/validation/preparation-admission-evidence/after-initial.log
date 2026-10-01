@@ -1,0 +1,63 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0 -- /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python
+rootdir: /home/ts/wt/openhcs-gui-cold-connect-355-20261001
+configfile: pytest.ini
+collecting ... collected 20 items
+
+tests/unit/test_preparation_admission.py::test_default_budget_does_not_spawn_implicit_four_worker_pool PASSED [  5%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-1-8-0] PASSED [ 10%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-1-0] PASSED [ 15%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-2-8-2] PASSED [ 20%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-2-2] PASSED [ 25%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-3-3] PASSED [ 30%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-1-8-0] PASSED [ 35%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-1-0] PASSED [ 40%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-2-8-2] PASSED [ 45%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-2-2] PASSED [ 50%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-3-3] PASSED [ 55%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[0] PASSED [ 60%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[-1] PASSED [ 65%]
+tests/unit/test_preparation_admission.py::test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does PASSED [ 70%]
+tests/unit/test_preparation_admission.py::test_selected_hook_failure_is_not_admitted_as_completed PASSED [ 75%]
+tests/unit/test_execution_server_startup_preparation.py::test_direct_server_start_warms_main_thread_before_bind_and_reuses_future PASSED [ 80%]
+tests/unit/test_execution_server_startup_preparation.py::test_startup_warm_failure_cannot_bind_or_report_catalogue_ready PASSED [ 85%]
+tests/unit/test_execution_server_startup_preparation.py::test_cancelled_startup_cannot_warm_or_bind PASSED [ 90%]
+tests/unit/test_execution_server_startup_preparation.py::test_cancellation_during_warm_preserves_same_cancelled_future PASSED [ 95%]
+tests/unit/test_execution_server_startup_preparation.py::test_startup_observer_receives_live_kernel_progress_before_binding PASSED [100%]
+
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 20 passed, 2 warnings in 5.01s ========================
+	Command being timed: "timeout --signal=TERM --kill-after=3s 60s taskset -c 0 /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -I -B -c import sys;sys.path.insert(0,"/home/ts/wt/openhcs-gui-cold-connect-355-20261001");import openhcs.core;openhcs.core.__path__.append("/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core");import pytest;raise SystemExit(pytest.main(["-v","-o","addopts=","-p","no:cacheprovider","--noconftest","--basetemp=/home/ts/.cache/agent-scratch/openhcs-preparation-admission-355-20261001/pytest-green","tests/unit/test_preparation_admission.py","tests/unit/test_execution_server_startup_preparation.py"]))"
+	User time (seconds): 5.41
+	System time (seconds): 0.29
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.72
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 234212
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 46668
+	Voluntary context switches: 29
+	Involuntary context switches: 38
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
