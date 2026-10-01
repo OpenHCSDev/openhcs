@@ -56,11 +56,12 @@ bounds remain incomplete. Parent coordinates a distinct exact live slot later.
 Status
 ------
 
-Deleted the leaf's copied 18-line axis projection algorithm; its small hook now
+Deleted 17 lines of copied leaf projection; its small hook now
 delegates to ViewerComponentAxisSemantics.for_display_layout, also inherited by
 NapariPendingLayerUpdate. SourceIdentityResolutionContext inherits the exact
-workspace projection from SourcePatternResolutionContext; SourceBindingMatched-
-ImageSet retains its one-position admission proof. ViewerComponentLayout derives
+workspace projection from SourcePatternResolutionContext;
+SourceBindingMatchedImageSet retains its one-position admission proof.
+ViewerComponentLayout derives
 native STACK slots from mounted declarations, while each original display config
 still owns grouping. NapariDimensionLayerState owns optional participation.
 No new independent capability or registry is introduced: existing declaration
@@ -75,5 +76,32 @@ to the frozen installed environment, not newly built or installed artifacts.
 Provider-free source results: 51 source-binding tests, 49 selected viewer/shared-
 axis tests and 15 selected pipeline source-projection tests pass. The original
 collection failure, two original defect failures and incomplete global audit
-are retained under receipts/. Applicable committed R0/R1 gates are pending.
-Draft PR351 is visible. No installed/native/MCP/UI acceptance or biology claim.
+are retained under receipts/. Source checkpoint017642ff0 is published in draft
+PR351 (https://github.com/OpenHCSDev/openhcs/pull/351).
+
+R0 unavailable: original agent-comms3b037 package fails on InputDocument's
+annotation during import under required frozen Python3.12, before measuring.
+No copied detector, package patch or different interpreter is substituted.
+R1 incomplete: original NRA0844525 consumer rejects uninitialized recorded
+external/ObjectState, before findings. No dependency init or context omissions.
+The original audit census completes; its +1 quoted Sequence type annotation is
+not runtime record access, and +1 self.presentation-is-None belongs to that
+optional-state owner. Dispatch/foreign-probe counts do not grow. Full overlay
+ends exit143 without counts/time footer; initiating cause is unqualified.
+Ruff E9/F63/F7/F82 and git diff --check pass. None of these results replaces the
+original R0/R1 or complete global ownership audit. No installed/native/MCP/UI
+acceptance or biological claim; the source repair is not declared fully done.
+
+Parent-owned next acceptance
+----------------------------
+
+After the installed349 gate, parent schedules the exact serialized validation
+slot, installed build and isolated display/endpoints. Use small synthetic
+engineering data, not a scientific replay: manual raw STACK channel1+channel2,
+identity gamma1/gain1 streamed as LAYER, then native GrayToColor bound to staged
+DAPI/FITC aliases. Verify settlement, retained producer identities, exact source
+positions and both channels' native coordinates. Personally open same-coordinate
+raw/result/combined captures and retain receipts before calling live acceptance.
+No slot has been acquired and no native/MCP/UI process has been launched here.
+Original guard qualification also needs its supported interpreter and complete
+recorded dependency sources; current bounded failures must remain visible.

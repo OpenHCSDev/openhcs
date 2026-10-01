@@ -26,7 +26,14 @@ openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so ->
 SHA256469297bdce4f4605eb7f7fe0c7703cb520acb5d549352c2784abe980c588adde
 These source-test links are not shipped or claimed as a newly built artifact.
 Owned disposable path: worktree/.validation (caches and pytest-generated fixtures).
-Cleanup disposition will be recorded after all local processes have exited.
+Cleanup completed after all retained execution sessions exited and a process
+check found no active owned ratchet/R1/overlay scanner. Removed exact owned
+/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/.validation (1.6MiB caches and
+synthetic pytest fixtures), and unlinked only the two dependency symlinks above.
+Their frozen installed binary targets remain present with identical SHA256.
+Receipts and source commits are retained; disposable caches/fixtures can be
+regenerated from the committed tests. No source/user state or scientific output
+was removed. Worktree has no other ignored task artifacts at handoff.
 
 Original pre-fix source tests reproduced both issue350 failures. Initial clean
 source collection lacked native extensions; its failure is retained separately.
