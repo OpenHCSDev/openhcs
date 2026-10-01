@@ -472,26 +472,40 @@ def test_shared_optional_presentation_preserves_native_absence(value):
     assert observed == ([] if value is None else [value])
 
 
-def test_cooperative_diamond_renderer_identity_is_visited_once():
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
+    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
+
     @dataclass(frozen=True, slots=True)
     class NewResult:
         value: str
 
     events = []
 
-    class Left(McpDevTypedOutputRenderer):
+    class ValueRenderer(McpDevTypedOutputRenderer):
+        @classmethod
+        def render_payload(cls, payload: NewResult, options):
+            events.append("ancestor")
+            return payload.value
+
+    class Left(ValueRenderer):
         @classmethod
         def render_payload(cls, payload, options):
             events.append("left")
             return super().render_payload(payload, options)
 
-    class Right(McpDevTypedOutputRenderer):
+    class Right(ValueRenderer):
         @classmethod
         def render_payload(cls, payload, options):
             events.append("right")
-            return payload.value
+            return super().render_payload(payload, options)
 
-    class Diamond(Left, Right):
+    bases = (Right, Left) if reverse_order else (Left, Right)
+    Diamond = type("Diamond", bases, {"output_contract": NewResult})
+
+    class DiamondCapability(InspectPipelineSourceArtifactPlanCapability):
+        name = f"openhcs_s1_diamond_{int(reverse_order)}"
+        cli_command = f"s1-diamond-{int(reverse_order)}"
         output_contract = NewResult
 
     binding = McpDevOutputRenderer.for_output_contract(NewResult)
@@ -502,7 +516,14 @@ def test_cooperative_diamond_renderer_identity_is_visited_once():
         )
         == "one-declaration"
     )
-    assert events == ["left", "right"]
+    expected = ["right", "left"] if reverse_order else ["left", "right"]
+    assert events == [*expected, "ancestor"]
+    events.clear()
+    response = batch(DiamondCapability.to_spec(), value)
+    command = CapabilityBackedCommandSpec.for_capability_name(DiamondCapability.name)
+    assert command.render_result(response, command.call_render_args({})) == value.value
+    assert events == [*expected, "ancestor"]
+    assert Diamond.__mro__.count(ValueRenderer) == 1
     assert tuple(McpDevOutputRenderer.declaration_types()).count(Diamond) == 1
     # Registry views are projections of declaration identity, not a second roster.
     assert McpDevOutputRenderer.__registry__[NewResult] is Diamond
