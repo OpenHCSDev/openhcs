@@ -9,6 +9,9 @@ cb12a2acd91061d60cb6ec65981a9f5c01e18963. Final child4939979978439a6f38145788df9
 adds only its canonical receipt to that tested production source. This checkpoint
 adopts that final child gitlink; the other seven dependencies remain unchanged.
 
+Tested paired production candidate is72a9607cb2e562e0ef4c73c2942dcc4fdd24f75f;
+subsequent receipt updates do not change its tested production source.
+
 Actual source validation uses Python3.12 and the existing shared interpreter's
 third-party dependencies, not its installed OpenHCS/PolyStore sources. Own exact
 external worktrees are populated from existing local Git objects; no package,
@@ -67,3 +70,19 @@ pytest and profile output is tracked under the parent's named input-parent-20261
 scratch directory. Active independent H003f's source, skills, runtime handles,
 scientific inputs/settings and protected user viewers are untouched. Neither
 issue132 nor172 is closed by this source-only checkpoint.
+
+Unchanged original structural guard
+----------------------------------
+
+Actual packaged ratchet implementation SHA256e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562
+matches the original CI-pinned agent-comms tool. Against main74eac059 and the
+exact paired candidate72a9607, scripts passes; OpenHCS fails with
+GodClassExcess:MicroscopeHandler+10 and benchmark fails with StringSubscript+2.
+Full JSONs remain in the parent ledger. These are failures, not waivers or a
+global architectural pass. Parent owns their correction through existing PR206:
+factor the actual detection capability and use proper parent-label ownership in
+the developer profile, without moving code outside the guard to hide it, replacing
+string literals with constants merely to evade measurement, or compressing
+documentation to game class size. Existing feature remains a visible draft.
+Installed acceptance is pending the independent blind trial's terminal release;
+the incomplete structural/full-NRA review is separate from that live boundary.
