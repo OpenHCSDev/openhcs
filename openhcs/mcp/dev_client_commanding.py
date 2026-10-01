@@ -209,6 +209,21 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         del args
         return json.dumps(payload, indent=2, sort_keys=True)
 
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        """Render a framed production result without requiring a JSON round trip."""
+        from openhcs.serialization.json import to_jsonable
+
+        return self.render_response(to_jsonable(response), args)
+
+
+class TypedCompositeCommandSpec(McpDevCommandSpec):
+    """Composite commands consume the same decoded batch as their wire ingress."""
+
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        if args.json:
+            return super().render_result(response, args)
+        return self.render_response(response, args)
+
 
 class CapabilityBackedCommandSpec(McpDevCommandSpec):
     """Command whose primary MCP tool capability is declared on the command."""
@@ -260,7 +275,9 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
     def output_renderer_binding(self):
         output_contract = self.capability.output_contract
         return McpDevOutputRenderer.for_output_contract(
-            output_contract if isinstance(output_contract, type) else None
+            None
+            if output_contract is None
+            else require_agent_type_contract(output_contract)
         )
 
     def configure_reflected_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -277,6 +294,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
             payload,
             self.call_render_args(tool_arguments),
         )
+
+    def render_call_result(
+        self, response, tool_arguments: Mapping[str, JsonValue]
+    ) -> str:
+        """Generic calls use the same nominal command contract as named calls."""
+        return self.render_result(response, self.call_render_args(tool_arguments))
 
     def renderer_options(
         self,
@@ -300,6 +323,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
         return renderer_binding.render_with_options(
             payload, self.renderer_options(args)
         )
+
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        binding = self.output_renderer_binding()
+        if args.json or binding is None:
+            return super().render_result(response, args)
+        return binding.render_result(response, self.renderer_options(args))
 
 
 class ToolsCommandSpec(McpDevCommandSpec):

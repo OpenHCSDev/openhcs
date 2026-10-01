@@ -13,8 +13,9 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
+from functools import singledispatch
 from pathlib import Path
 from typing import ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
 
@@ -390,12 +391,82 @@ class McpDevTransportFailure:
 
 
 @dataclass(frozen=True, slots=True)
+class McpDevPayloadFailure:
+    """Rejected response contract, retaining the complete external receipt."""
+
+    receipt: JsonValue
+    errors: tuple[AgentError, ...]
+
+
+@to_jsonable.register(McpDevPayloadFailure)
+def _jsonable_payload_failure(value: McpDevPayloadFailure) -> JsonValue:
+    return value.receipt
+
+
+@dataclass(frozen=True, slots=True)
 class McpDevToolResult:
     """JSON-facing result for one MCP tool call."""
 
     tool: str
     mcp_error: bool
-    payloads: tuple[JsonValue, ...]
+    payloads: tuple[object, ...]
+
+    def decoded_for_rendering(self) -> "McpDevToolResult":
+        """Descend through the capability's existing renderer/output binding."""
+        from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
+
+        try:
+            capability = get_agent_capability(self.tool)
+        except KeyError:
+            return self
+        bindings = tuple(
+            McpDevOutputRenderer.for_output_contract(contract)
+            for contract in capability.output_contract_types
+        )
+        if not bindings or any(binding is None for binding in bindings):
+            return self
+        return replace(
+            self,
+            payloads=tuple(
+                self._decode_payload(payload, bindings) for payload in self.payloads
+            ),
+        )
+
+    @staticmethod
+    def _decode_payload(payload, bindings):
+        if isinstance(payload, McpDevPayloadFailure):
+            return payload
+        rejections: list[AgentError] = []
+        for binding in bindings:
+            try:
+                return binding.decode_payload(payload)
+            except (TypeError, ValueError) as error:
+                rejections.append(
+                    AgentError.from_exception("mcp_payload_invalid", error)
+                )
+        return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
+
+    def first_decoded_payload(self):
+        """A missing or rejected payload is not a successful empty record."""
+        if not self.payloads:
+            return None
+        payload = self.payloads[0]
+        return None if isinstance(payload, McpDevPayloadFailure) else payload
+
+    def diagnostic_errors(self) -> tuple[AgentError, ...]:
+        errors = tuple(
+            error for payload in self.payloads for error in _agent_errors(payload)
+        )
+        if self.mcp_error and not errors:
+            return (AgentError(code="mcp_tool_error", message=f"{self.tool} failed."),)
+        if not self.payloads and not errors:
+            return (
+                AgentError(
+                    code="mcp_payload_missing",
+                    message=f"{self.tool} returned no payload.",
+                ),
+            )
+        return errors
 
     @classmethod
     def from_payload(
@@ -407,20 +478,16 @@ class McpDevToolResult:
             tool=tool_name,
             mcp_error=result.get("isError") is True,
             payloads=_content_payloads(result),
-        )
+        ).decoded_for_rendering()
 
     def has_errors(self) -> bool:
         """Return whether the tool or any structured agent payload failed."""
-        return self.mcp_error or any(
-            _contains_agent_error(payload) for payload in self.payloads
-        )
+        return bool(self.diagnostic_errors())
 
     def agent_error_codes(self) -> tuple[str, ...]:
         """Project structured agent error codes without interpreting their domain."""
 
-        return tuple(
-            code for payload in self.payloads for code in _agent_error_codes(payload)
-        )
+        return tuple(error.code for error in self.diagnostic_errors())
 
     def has_only_agent_error_code(self, code: str) -> bool:
         """Return whether every structured failure carries one declared code."""
@@ -645,6 +712,9 @@ class McpDevResponse(ABC):
     server: McpDevServerIdentity
     errors: tuple[McpDevTransportFailure, ...] = ()
 
+    def has_errors(self) -> bool:
+        return bool(self.errors)
+
     @classmethod
     def from_transport_failure(
         cls,
@@ -671,6 +741,39 @@ class McpDevToolBatchResponse(McpDevResponse):
     """JSON-facing payload for one or more MCP tool calls."""
 
     results: tuple[McpDevToolResult, ...] = ()
+
+    def has_errors(self) -> bool:
+        return super(McpDevToolBatchResponse, self).has_errors() or any(
+            result.has_errors() for result in self.results
+        )
+
+    @classmethod
+    def for_rendering(
+        cls,
+        response: "McpDevToolBatchResponse | JsonObject",
+    ) -> "McpDevToolBatchResponse":
+        """Decode the external framing and selected DTOs once at view ingress."""
+        framed = (
+            response
+            if isinstance(response, cls)
+            else dataclass_from_mapping(cls, response)
+        )
+        return replace(
+            framed,
+            results=tuple(result.decoded_for_rendering() for result in framed.results),
+        )
+
+    def payload_for(self, capability: AgentCapabilitySpec):
+        result = next(
+            (result for result in self.results if result.tool == capability.name), None
+        )
+        return None if result is None else result.first_decoded_payload()
+
+    def diagnostic_errors(self) -> tuple[AgentError | McpDevTransportFailure, ...]:
+        return (
+            *self.errors,
+            *(error for result in self.results for error in result.diagnostic_errors()),
+        )
 
     @classmethod
     def from_results(
@@ -1039,37 +1142,61 @@ def require_json_object_payload(value: JsonValue) -> JsonObject:
     return cast(JsonObject, value)
 
 
-def _contains_agent_error(value: JsonValue) -> bool:
-    if isinstance(value, Mapping):
-        errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
-        if errors:
-            return True
-        return any(_contains_agent_error(child) for child in value.values())
-    if isinstance(value, list):
-        return any(_contains_agent_error(child) for child in value)
-    return False
-
-
-def _agent_error_codes(value: JsonValue) -> tuple[str, ...]:
-    """Recursively project declared error codes from one JSON-facing payload."""
-
-    if isinstance(value, Mapping):
-        projected: list[str] = []
-        errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
-        if errors is not None:
-            for error in errors:
-                if not isinstance(error, Mapping):
-                    continue
-                code = AgentError.code_from_serialized_mapping(error)
-                if code is not None:
-                    projected.append(code)
-        for child in value.values():
-            if child is not errors:
-                projected.extend(_agent_error_codes(child))
-        return tuple(projected)
-    if isinstance(value, list):
-        return tuple(code for child in value for code in _agent_error_codes(child))
+@singledispatch
+def _agent_errors(value: object) -> tuple[AgentError, ...]:
+    """One diagnostic descent mechanism over actual declared and JSON values."""
+    if is_dataclass(value) and not isinstance(value, type):
+        return tuple(
+            error
+            for declaration in fields(value)
+            for error in _agent_errors(getattr(value, declaration.name))
+        )
     return ()
+
+
+@_agent_errors.register(AgentError)
+def _declared_agent_error(value: AgentError) -> tuple[AgentError, ...]:
+    return (value,)
+
+
+@_agent_errors.register(McpDevPayloadFailure)
+def _failed_payload_errors(value: McpDevPayloadFailure) -> tuple[AgentError, ...]:
+    return value.errors
+
+
+@_agent_errors.register(Mapping)
+def _boundary_agent_errors(value: Mapping) -> tuple[AgentError, ...]:
+    """JSON extension bags and unmigrated wire payloads remain real mappings."""
+    errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
+    projected: list[AgentError] = []
+    for error in errors or ():
+        try:
+            projected.append(dataclass_from_mapping(AgentError, error))
+        except (TypeError, ValueError) as exception:
+            projected.append(
+                AgentError.from_exception("mcp_diagnostic_invalid", exception)
+            )
+    projected.extend(
+        error
+        for child in value.values()
+        if child is not errors
+        for error in _agent_errors(child)
+    )
+    return tuple(projected)
+
+
+@_agent_errors.register(list)
+@_agent_errors.register(tuple)
+def _sequence_agent_errors(value) -> tuple[AgentError, ...]:
+    return tuple(error for child in value for error in _agent_errors(child))
+
+
+def _contains_agent_error(value: object) -> bool:
+    return bool(_agent_errors(value))
+
+
+def _agent_error_codes(value: object) -> tuple[str, ...]:
+    return tuple(error.code for error in _agent_errors(value))
 
 
 def _command_failed(payload: JsonObject) -> bool:
