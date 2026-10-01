@@ -94,10 +94,83 @@ source process group exited, with no surviving owned test/Java process observed.
 Final agent-service qualification separates that path from the CPU-only source
 scope instead of raising the bound or modifying its assertions.
 
-Qualification still to publish with this checkpoint
----------------------------------------------------
+Original changed-path qualification and owner correction
+--------------------------------------------------------
 
-Fresh whole-changed-production-path original R0, precise scoped R1 disposition,
-current-main merge and remaining bounded adjacent source controls. Installed
-source8d0480ef failure is NOT replayed or accepted by this source checkpoint.
-Parent owns serialized installed acceptance; biological records stay frozen.
+Ordinary current-main merges6e8bbc28 and32d7a6ec are retained. Final source revision
+32d7a6ec49e4a7b995586f9d464353ddb2e00d60 includes main
+e3765e3534b009f09413c7c5bfc35d072030a704 (merged399). Original pinned R0
+e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562
+first FAILED against c4be/6e8: the only positive among5177 comparisons was
+ForeignAbsenceProbe +1 at the new request's metadata.plane_axis absence check.
+r0-current.json/stderr/resources preserve that original failure, not a waiver.
+
+Parent-directed, PR394-coordinated original-owner correction moves the exact
+singleton declaration/provenance proof construction onto ImagePayloadMetadata.
+ImageStreamingRequest.image_plane_projection delegates to its rich nominal
+singleton_plane_projection hook. Its inherited project_image algorithm and
+original RuntimeSliceProjection remain unchanged. No absence check is renamed,
+aliased, hidden in a local, or replaced with ndarray inference. Two identical,
+overwritten definitions of from_mapping and retained_plane_component_values are
+reduced to one unchanged implementation each on their original metadata owner.
+That removes duplicate authority without a new metadata carrier or facade.
+
+r0-owner-final PASS: all THREE current-main production paths (projected_image_output,
+runtime_image_values, viewer_streaming_service),5177 comparisons, zero positive
+deltas. ImagePayloadMetadata GodClassExcess decreases14; StringSubscript decreases2.
+Original GodClass scope also inventories unchanged production declarations, as
+the unmodified packaged ratchet requires; this is a structural guard, not a
+formal semantic equivalence proof. Original policy and measurement authority
+were not patched. CPU100%,512MiB cgroup,60s outer bound; elapsed15.07s.
+
+New owner-hook-controls:104passes/307184KiB aggregate RSS/8.359s, comprising the
+complete request, persisted-metadata, image-plane and runtime-slice modules.
+Independent CalibratedMetadata leaf composes ObservedProof and PhysicalProof
+with ImagePayloadMetadata; actual cooperative super hooks execute in order
+through the unchanged shared request, preserving exact pixels/masks/FITC/1.3556.
+The earlier independent request-capability/full-native-window control remains.
+Original remaining agent-service CPU-only scope:14pass/2deselected,262256KiB/5.450s.
+The exact exclusions are test_inventory_source_projection_loads_exact_ome_stack_planes
+and test_inventory_source_projection_loads_exact_ordinary_tiff, which enter existing
+Java-backed autodetection; they are not reported as qualified or weakened.
+Original whole12-output/real-SHM module:12pass/445912KiB/7.983s on current-main6e8.
+Completed unique controls now218, with overlaps counted only once; later source
+owner correction additionally requires final public disk/SHM receiver confirmation.
+
+Fresh canonical NRA83b05d1f exact policy still failed before analysis at its missing
+RedundantTypeCheckDetector export. No detector/policy stub or compatibility import
+was introduced. Its separate three-path CLI attempt with full OpenHCS context
+hit the strict512MiB aggregate RSS bound at525588KiB/19.108s, before a completed
+JSON report. Those are retained failure receipts, not zero findings or full R1.
+Parent identified existing original-API baseline NRA673c062fc656e9c74f1eddcab30f036c9befbc1f;
+read-only imports of both original detector declarations succeed with the existing
+interpreter. Unmodified exact policy then reaches its original source-owner
+validation and refuses this worker's uninitialized external/ObjectState; that
+separate failure is retained (211200KiB/3.549s), with no initialization or install.
+The complete-context policy run uses existing read-only initialized Git source
+owner /home/ts/wt/openhcs-input-parent-integration-20261001, with the same Git common
+directory and exact same committed base/head, writing only this worker's declared
+scratch. All eight exact head gitlink commits are present in their original
+child repositories; no source/environment/package metadata was changed there.
+Original policy roots are openhcs/scripts/benchmark plus recursive recorded Git
+dependencies, and report selection is exactly the three changed production paths.
+The strict source-group watchdog ended that unmodified policy at its58s execution
+allowance (2s reserved for shutdown):212036KiB aggregate RSS, process group exited.
+No before/after NRA count, detector finding report or completed descent certificate
+was emitted. R1 therefore remains BLOCKED at bounded complete-context preparation,
+not a pass, waiver, API workaround or complete scoped audit. The earlier canonical
+API failure is now independently distinguished from this API-correct source run.
+
+Installed boundary
+------------------
+
+Parent reports fresh installed229 transport and bitmap acceptance with original
+channel2/FITC/1.3556, uint8[1024,1024], then an explicit binary0..1 display window.
+Parent evidence: PR397 issuecomment5941295091 and retained
+paired397-388-installed-20261001/reopen399-projected-binary-review/REVIEW.json.
+That installed acceptance belongs to exact229 bytes, not the later source-only
+metadata-owner correction. Parent's handed-off viewer2339091/create1790890853.17
+and subsequent assisted science remain parent/Dalton-owned. No private install,
+native/viewer launch, scientific callable change or biological replay by Lorentz.
+Original007 failure and frozen/rejected biological records remain unchanged;
+this source receipt establishes no biological acceptance or autonomous success.
