@@ -70,9 +70,10 @@ object-label image. Public author/validate/render (both modes)/parse/declaration
 reconstruction is exercised continuously. Unknown, labels, runtime vectors
 and undeclared image-index kwargs remain rejected by the public authoring API.
 
-Source-qualified production/test head:
-``30eeea4e55dc076a938f986a5094d400f1bc0099``. Subsequent delivery changes only
-this receipt and its archive, not production or tests.
+Initial source-qualified production/test head:
+``30eeea4e55dc076a938f986a5094d400f1bc0099``. Delivery ``324f682ad`` added only
+this receipt/archive. The owner-review correction below supersedes that source
+for mode behavior closure; these earlier behavioral receipts remain valid history.
 
 Focused receipt ``two-vector-focused-v4.json``: 48 cases passed, 7.82s wall,
 420.94MiB combined RSS. Final ``two-vector-integrated-final.json``: all 143
@@ -84,7 +85,7 @@ no deselection. Two existing unknown-async-config warnings do not change scope.
 Explicit empty rules preserve scalar defaults; unknown external modes and
 untyped rule declarations reject.
 
-Original pinned R0: frozen382 ``be2f7faa`` to source head ``30eeea4e`` passed
+Initial original pinned R0: frozen382 ``be2f7faa`` to source head ``30eeea4e`` passed
 14.58s wall, 74.79MiB combined RSS, 5166 measured entries, increased ``[]``.
 ``GodClassExcess`` for the original module decreases 55; ``StringSubscript``
 decreases one. Exact Python3.14 tool and readonly metaclass backing paths are
@@ -107,3 +108,64 @@ Draft PR388 is based on frozen382 until parent integration. Issue386 owns this
 bug; issue384 is separately owned runtime-plumbing performance work. Singer
 lookup379 coordination is issuecomment-5936826187. Do not replay original
 mutations, broaden provenance or claim installed classification readiness.
+
+Owner-review correction: case-owned mode behavior
+------------------------------------------------
+
+Audited prior PR388 head ``324f682ad86955cdc05d36480207df0b3f974a5e``.
+The owner correctly identified remaining IMPL-2/IMPL-5 debt: three original
+enum methods each switched on ``self.TWO_MEASUREMENTS``. The previous new
+paired callable test demonstrated callable/capability extension, not a new
+mode's behavior closure. Moving those switches into the enum was insufficient.
+
+Corrected production/test head:
+``40806a6ea34cd43462c20fe2b747f3eca98055c1``.
+The original ``ClassificationMethod.__new__`` now accepts one typed
+``_ClassificationMethodBehavior`` selected directly in each original member
+declaration. No second enum, registry, parallel roster or string/getattr
+dispatch is introduced. All three switches are deleted. Original external
+``.value`` and the complete CellProfiler literal tuples are unchanged.
+
+The original enum's shared ``finalize_module_blocks`` template emits the
+member-owned literal once, then calls that member's ``finalize_mode_blocks``
+hook. The scalar member behavior owns the moved scalar/repeated-rule tail;
+the pair behavior owns its no-scalar-tail result. Setting and image projections
+use the member's behavior hooks, which still call the concrete module's
+original overrideable hooks. No copied algorithm or compatibility facade
+remains beside these implementations.
+
+The site guard seals the three exact generic projection methods against case
+branches/comparisons, dict dispatch, named member references and string/type
+reflection. It failed on all three reviewed original sites before this fix:
+``two-vector-mode-ownership-original-red.json``, 11.86s/318.97MiB. This is
+structural red evidence, separate from the preserved original behavioral reds.
+
+The stronger new-case test constructs an additional original-typed enum member
+using Python Enum's preserved original member constructor. Its declared behavior
+composes an independent projection capability with the original pair behavior.
+Every hook executes cooperative ``super()``: settings gain a distinct contribution,
+image outputs project a distinct rule index through the original concrete module
+override, and the tail verifies shared literal emission happened before adding
+its own setting. No generic consumer edit, second enum or registry mutation is
+needed. This tests behavior closure, not production membership or native/science
+acceptance of an additional mode. Separate tests pin the actual external values,
+literal aliases and original enum lookup for both production members.
+
+All 149 integrated source cases passed, retaining all previous 143 without
+weakened assertions: 20.58s wall, 438.98MiB combined RSS, unchanged oneCPU/60s/
+512MiB bounds and subprocess guard. Original pinned Python3.14 R0 frozen382
+``be2f7faa`` to corrected head ``40806a6ea`` passed 16.54s/82.78MiB,
+5169 entries, increased ``[]``. Original module GodClassExcess remains down55
+and StringSubscript down one. Ruff F and diff checks passed.
+
+Additional immutable archive:
+``receipts/classification-two-vector-mode-ownership-386-source-20261001.tar.gz``.
+SHA256 ``2106b6113282fa8652ab1a0c6b3a7aad4ffebf27c5e9798552838adcbe50a682``;
+136KiB, only this correction's six command/receipt/log files. Comparison against
+every source member passed without extraction. The original 276KiB archive,
+143/R0 receipts and all original failures are unchanged.
+
+Frozen382 remains exact ``be2f7faa26aaba53c7360ce7ae7130920842873e``. Parent
+now owns science/native validation; the last read-only slot check found flock
+PID1957532 holding the canonical validation.lock. No lock acquisition, package/
+environment mutation, installation, native launch or scientific output change.
