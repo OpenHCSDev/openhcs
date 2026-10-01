@@ -40,6 +40,7 @@ from pydantic import WithJsonSchema
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping
 from zmqruntime.config import TransportMode
+from zmqruntime.startup import EndpointStartupStatus
 
 import openhcs as openhcs_package
 from openhcs.agent.capabilities import (
@@ -445,29 +446,66 @@ async def _await_with_declared_progress(
     mcp_context,
     operation: Awaitable[object],
 ) -> object:
-    """Await one declared long operation while emitting MCP liveness progress."""
+    """Relay original endpoint statuses while awaiting one declared operation."""
 
     heartbeat_seconds = capability.progress_heartbeat_seconds
     if heartbeat_seconds is None:
         return await operation
-    elapsed_seconds = 0.0
     await _report_progress_if_available(
         mcp_context,
-        elapsed_seconds,
+        0.0,
         message=f"{capability.title}: started",
     )
-    task = asyncio.ensure_future(operation)
-    while True:
-        completed, _ = await asyncio.wait({task}, timeout=heartbeat_seconds)
-        if completed:
-            # An operation's own TimeoutError is terminal, not a heartbeat.
-            return task.result()
-        elapsed_seconds += heartbeat_seconds
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    statuses: asyncio.Queue[EndpointStartupStatus] = asyncio.Queue()
+    active = True
+
+    def publish(status: EndpointStartupStatus) -> None:
+        # A cancelled to_thread await cannot stop its worker. Late callbacks
+        # must not report into a terminal MCP request or a closed event loop.
+        if active:
+            loop.call_soon_threadsafe(statuses.put_nowait, status)
+
+    message = capability.title
+
+    async def report_status(status: EndpointStartupStatus) -> None:
+        nonlocal message
+        message = f"{capability.title}: {status.phase.value}: {status.message}"
         await _report_progress_if_available(
-            mcp_context,
-            elapsed_seconds,
-            message=f"{capability.title}: still running",
+            mcp_context, loop.time() - started, message=message
         )
+
+    with EndpointStartupStatus.callback_scope(publish):
+        task = asyncio.ensure_future(operation)
+        next_status = asyncio.create_task(statuses.get())
+        try:
+            while True:
+                completed, _ = await asyncio.wait(
+                    {task, next_status},
+                    timeout=heartbeat_seconds,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                if next_status in completed:
+                    await report_status(next_status.result())
+                    next_status = asyncio.create_task(statuses.get())
+                if task in completed:
+                    # Flush already emitted terminal statuses before returning
+                    # the original result/error. No endpoint observation here.
+                    while not statuses.empty():
+                        await report_status(statuses.get_nowait())
+                    return task.result()
+                if not completed:
+                    await _report_progress_if_available(
+                        mcp_context,
+                        loop.time() - started,
+                        message=f"{message}: still running",
+                    )
+        finally:
+            active = False
+            next_status.cancel()
+            task.cancel()
+            await asyncio.gather(next_status, task, return_exceptions=True)
 
 
 async def _report_progress_if_available(

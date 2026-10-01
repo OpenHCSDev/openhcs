@@ -144,7 +144,7 @@ class FunctionCatalogExecutionServer(ExecutionServer):
         self,
         status_callback: EndpointStartupStatusCallback | None = None,
     ) -> None:
-        """Warm every registered obligation before physical endpoint readiness."""
+        """Prepare catalog metadata before physical endpoint readiness."""
         self._function_catalog_preparation.prepare_before_serving(status_callback)
 
     def start(self) -> None:
