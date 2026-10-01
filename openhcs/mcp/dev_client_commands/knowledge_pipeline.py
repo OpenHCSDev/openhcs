@@ -24,7 +24,10 @@ from openhcs.agent.dto.pipeline import (
     PipelineSourceRenderRequest,
     PipelineValidationRequest,
 )
-from openhcs.mcp.dev_client_commanding import McpDevCommandSpec, SingleToolCommandSpec
+from openhcs.mcp.dev_client_commanding import (
+    SingleToolCommandSpec,
+    TypedCompositeCommandSpec,
+)
 from openhcs.mcp.dev_client_core import (
     DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
     McpDevCliUsageError,
@@ -38,9 +41,7 @@ from openhcs.mcp.dev_client_core import (
     execute_source_session_tool_arguments,
     execute_source_submit_timeout_seconds,
     execute_source_submit_tool_arguments,
-    first_mapping_payload,
     optional_int,
-    optional_str,
     parse_optional_json_object,
     parse_required_axis_labels,
     pipeline_source_from_args,
@@ -216,13 +217,17 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
         )
         for connection_field in fields(ExecutionConnectionSpec):
             add_request_factory_option(
-                parser, CustomFunctionRegistrationRequest.from_fields,
-                connection_field.name, f"--{connection_field.name.replace('_', '-')}",
+                parser,
+                CustomFunctionRegistrationRequest.from_fields,
+                connection_field.name,
+                f"--{connection_field.name.replace('_', '-')}",
             )
         for field_name in ("function_name", "storage_dir"):
             add_request_factory_option(
-                parser, CustomFunctionRegistrationRequest.from_fields,
-                field_name, f"--{field_name.replace('_', '-')}",
+                parser,
+                CustomFunctionRegistrationRequest.from_fields,
+                field_name,
+                f"--{field_name.replace('_', '-')}",
             )
         parser.add_argument(
             "--json",
@@ -237,10 +242,12 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
         source_code = args.source_code
         if source_code is None:
             source_code = Path(args.source_file).read_text(encoding="utf-8")
-        connection = ExecutionConnectionSpec(**{
-            connection_field.name: vars(args)[connection_field.name]
-            for connection_field in fields(ExecutionConnectionSpec)
-        })
+        connection = ExecutionConnectionSpec(
+            **{
+                connection_field.name: vars(args)[connection_field.name]
+                for connection_field in fields(ExecutionConnectionSpec)
+            }
+        )
         connection.require_port("Custom function registration")
         return McpToolArgumentAuthority.from_payload(
             {
@@ -321,7 +328,7 @@ class AuthoringContextCommandSpec(SingleToolCommandSpec):
         )
 
 
-class DraftPipelineStepCommandSpec(McpDevCommandSpec):
+class DraftPipelineStepCommandSpec(TypedCompositeCommandSpec):
     command = "draft-pipeline-step"
     help = (
         "Create, add one FunctionStep, validate, and render a draft in one MCP session."
@@ -380,11 +387,9 @@ class DraftPipelineStepCommandSpec(McpDevCommandSpec):
             timeout_seconds,
         )
         results = [create_result]
-        create_payload = first_mapping_payload(create_result)
-        pipeline_id = (
-            None if create_payload is None else create_payload.get("pipeline_id")
-        )
-        if isinstance(pipeline_id, str):
+        create_payload = create_result.first_decoded_payload()
+        pipeline_id = None if create_payload is None else create_payload.pipeline_id
+        if pipeline_id is not None:
             add_arguments: dict[str, JsonValue] = {
                 "pipeline_id": pipeline_id,
                 "function_id": args.function_id,
@@ -499,7 +504,7 @@ class ArtifactPlanCommandSpec(SingleToolCommandSpec):
         )
 
 
-class ExecuteSourceCommandSpec(McpDevCommandSpec):
+class ExecuteSourceCommandSpec(TypedCompositeCommandSpec):
     command = "execute-source"
     help = "Create and submit a source-backed headless execution session."
     default_timeout_seconds: ClassVar[float] = 120.0
@@ -574,12 +579,8 @@ class ExecuteSourceCommandSpec(McpDevCommandSpec):
             timeout_seconds,
         )
         results = [create_result]
-        create_payload = first_mapping_payload(create_result)
-        session_id = (
-            optional_str(create_payload.get("session_id"))
-            if create_payload is not None
-            else None
-        )
+        create_payload = create_result.first_decoded_payload()
+        session_id = create_payload.session_id if create_payload is not None else None
         if session_id is not None:
             results.append(
                 await call_mcp_tool(

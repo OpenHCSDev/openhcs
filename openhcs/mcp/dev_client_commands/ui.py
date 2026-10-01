@@ -172,6 +172,12 @@ class CallCommandSpec(McpDevCommandSpec):
             args.arguments,
         )
 
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        command_spec = CapabilityBackedCommandSpec.for_capability_name(args.tool_name)
+        if args.json or command_spec is None:
+            return super().render_result(response, args)
+        return command_spec.render_call_result(response, args.arguments)
+
 
 class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_selected_plate_workflow
@@ -478,6 +484,13 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             widget_id=PlateManagerWidgetIdentity.value,
             action_id=workflow,
         )
+
+    def render_call_result(self, response, tool_arguments: Mapping[str, JsonValue]) -> str:
+        # This distinct workflow presentation is still in the named pending
+        # UI/state family. Preserve its existing action view at that boundary.
+        from openhcs.serialization.json import to_jsonable
+
+        return self.render_call_response(to_jsonable(response), tool_arguments)
 
     @staticmethod
     def _poll_summary_payload(payload: JsonObject) -> Mapping[str, JsonValue] | None:
