@@ -30,7 +30,8 @@ SOURCE_PLANE_COUNT_FIELD = "source_plane_count"
 SOURCE_VOXEL_SPACING_FIELD = "OpenHCSSourceVoxelSpacingZYX"
 SOURCE_VOXEL_SPACING_UNIT_FIELD = "OpenHCSSourceVoxelSpacingUnit"
 
-SourceMetadataScalar: TypeAlias = str | int | float | bool | None
+SourceMetadataNonNullScalar: TypeAlias = str | int | float | bool
+SourceMetadataScalar: TypeAlias = SourceMetadataNonNullScalar | None
 SourceMetadataValue: TypeAlias = (
     SourceMetadataScalar | Mapping[str, SourceMetadataScalar]
 )
@@ -499,7 +500,7 @@ class DurableSourceMetadata(OwnedSourceMetadataFields):
 
     @staticmethod
     def normalized_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
-        if value is None or isinstance(value, (str, int, float, bool)):
+        if value is None or isinstance(value, SourceMetadataNonNullScalar):
             return value
         if isinstance(value, Mapping) or (
             isinstance(value, Sequence) and not isinstance(value, str)
@@ -547,7 +548,7 @@ def source_metadata_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
 
     if value is None:
         return None
-    if not isinstance(value, (str, int, float, bool)):
+    if not isinstance(value, SourceMetadataNonNullScalar):
         raise TypeError(
             "Source metadata scalar values must be str, int, float, bool, or None, "
             f"got {type(value).__name__}."

@@ -1,7 +1,7 @@
 """Owned metadata lifetime and its production provenance consumers."""
 
 import pickle
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import cloudpickle
 from types import MappingProxyType
@@ -41,6 +41,7 @@ from openhcs.core.source_metadata import (
     ResolvedSourceMetadataRecord,
     SourceMetadataRecord,
     SourceMetadataFields,
+    source_metadata_scalar,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -488,3 +489,119 @@ def test_durable_tuple_birth_uses_mapping_last_value_policy():
         SourceImageIdentity(component_metadata=metadata).identity
         == SourceImageIdentity(component_metadata={"well": "A02"}).identity
     )
+
+
+def test_scalar_admission_preserves_primitives_subclasses_and_scalar_container_precedence():
+    class Integer(int):
+        pass
+
+    class Real(float):
+        pass
+
+    class TextMapping(str, Mapping):
+        pass
+
+    values = (
+        None,
+        False,
+        True,
+        0,
+        -3,
+        1.25,
+        "literal",
+        Integer(7),
+        Real(2.5),
+        TextMapping("literal"),
+    )
+    for value in values:
+        assert DurableSourceMetadata.normalized_scalar(value) is value
+        assert source_metadata_scalar(value) is value
+    assert isinstance(values[-1], Mapping)
+    assert isinstance(values[-1], Sequence)
+
+
+def test_durable_scalar_admission_preserves_rejected_container_and_scalar_errors():
+    class MappingSequence(Mapping, Sequence):
+        def __getitem__(self, key):
+            raise KeyError(key)
+
+        def __iter__(self):
+            return iter(())
+
+        def __len__(self):
+            return 0
+
+    container_error = (
+        "virtual_workspace source metadata supports scalar values and "
+        "one-level scalar mappings only."
+    )
+    scalar_error = (
+        "virtual_workspace source metadata scalar values must be strings, "
+        "numbers, booleans, or null."
+    )
+    for value in (
+        {},
+        [],
+        (),
+        range(1),
+        b"bytes",
+        bytearray(b"bytes"),
+        MappingSequence(),
+    ):
+        with pytest.raises(RuntimeError) as caught:
+            DurableSourceMetadata.normalized_scalar(value)
+        assert str(caught.value) == container_error
+    for value in (set(), frozenset(), 1j, object()):
+        with pytest.raises(RuntimeError) as caught:
+            DurableSourceMetadata.normalized_scalar(value)
+        assert str(caught.value) == scalar_error
+
+
+def test_scalar_admission_keeps_none_identity_and_reported_class_read_order():
+    class ReportedClass:
+        def __init__(self, reports):
+            self.reports = reports
+            self.reads = []
+
+        @property
+        def __class__(self):
+            reported = self.reports[min(len(self.reads), len(self.reports) - 1)]
+            self.reads.append(reported)
+            return reported
+
+    reported_none = ReportedClass((type(None),))
+    with pytest.raises(RuntimeError) as caught:
+        DurableSourceMetadata.normalized_scalar(reported_none)
+    assert str(caught.value) == (
+        "virtual_workspace source metadata scalar values must be strings, "
+        "numbers, booleans, or null."
+    )
+    assert reported_none.reads == [type(None)] * 6
+
+    reported_none = ReportedClass((type(None),))
+    with pytest.raises(TypeError, match="Source metadata scalar values must be"):
+        source_metadata_scalar(reported_none)
+    assert reported_none.reads == [type(None)] * 4
+
+    reported_integer = ReportedClass((object, int, object))
+    assert DurableSourceMetadata.normalized_scalar(reported_integer) is reported_integer
+    assert reported_integer.reads == [object, int]
+
+    changing_class = ReportedClass(
+        (object, object, object, object, object, Sequence, str)
+    )
+    with pytest.raises(RuntimeError) as caught:
+        DurableSourceMetadata.normalized_scalar(changing_class)
+    assert str(caught.value) == (
+        "virtual_workspace source metadata scalar values must be strings, "
+        "numbers, booleans, or null."
+    )
+    assert changing_class.reads == [
+        object,
+        object,
+        object,
+        object,
+        object,
+        Sequence,
+        str,
+    ]
