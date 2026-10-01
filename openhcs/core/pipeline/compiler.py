@@ -1453,7 +1453,8 @@ class PipelineCompiler:
                     ):
                         if (
                             plan.source_binding_plan.binding_declarations
-                            and not plan.main_input_dependency.kind.has_predecessor
+                            and plan.main_input_dependency.predecessor_step_index()
+                            is None
                         ):
                             failures.append(
                                 f"{owner}: no exact primary source-binding "
@@ -1616,7 +1617,7 @@ class PipelineCompiler:
                 return producer, current_source_binding_plan
             if (
                 producer.source_binding_plan.binding_declarations
-                and not producer.main_input_dependency.kind.has_predecessor
+                and producer.main_input_dependency.predecessor_step_index() is None
             ):
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} has no "
