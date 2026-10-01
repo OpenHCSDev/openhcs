@@ -532,13 +532,24 @@ def test_pipeline_guard_forbids_raw_reader_reintroduction():
 
 
 def test_submission_declaration_preserves_advertised_external_contract():
+    from typing import get_type_hints
     from openhcs.agent.capabilities import require_agent_type_contract
+    from openhcs.agent.services.execution_session_service import ExecutionSessionService
     from openhcs.mcp.server import _mcp_tool_meta
 
     for capability in (
         agent_capabilities.submit_compile,
         agent_capabilities.submit_pipeline_execution,
     ):
+        assert (
+            capability.output_contract.producer is ExecutionSessionService._submit_job
+        )
+        assert (
+            capability.output_contract.result_type
+            == get_type_hints(ExecutionSessionService._submit_job, include_extras=True)[
+                "return"
+            ]
+        )
         assert capability.output_contract_types == (ExecutionJobRef, ExecutionJobStatus)
         assert (
             require_agent_type_contract(capability.output_contract) is ExecutionJobRef
@@ -627,14 +638,30 @@ def test_generic_call_cli_uses_nominal_typed_contract_without_json_roundtrip(
     assert "Owned step" in capsys.readouterr().out
 
 
-def test_generic_call_preserves_pending_workflow_action_presentation(
-    monkeypatch, capsys
-):
+def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, capsys):
+    from openhcs.agent.dto.ui_bridge import (
+        UiActionIdentity,
+        UiActionInvokeResult,
+        UiMutationReceipt,
+        UiMutationRequestToken,
+        UiSelectedPlateWorkflowKind,
+        UiSelectedPlateWorkflowResult,
+    )
+
+    native = UiSelectedPlateWorkflowResult(
+        SCHEMA_VERSION,
+        UiSelectedPlateWorkflowKind("run_plate"),
+        UiActionInvokeResult(
+            SCHEMA_VERSION,
+            UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
+            "accepted",
+            UiMutationReceipt(UiMutationRequestToken(), accepted=True),
+            target_scope_ids=("scope-1",),
+        ),
+    )
     response = batch(
         agent_capabilities.ui_selected_plate_workflow,
-        {
-            "action_result": {"status": "accepted", "target_scope_ids": ["scope-1"]},
-        },
+        native,
     )
 
     async def controlled_entry(args):
@@ -646,6 +673,7 @@ def test_generic_call_preserves_pending_workflow_action_presentation(
             [
                 "call",
                 agent_capabilities.ui_selected_plate_workflow.name,
+                "--json",
                 "--arguments",
                 '{"workflow":"run_plate"}',
             ]
@@ -654,3 +682,43 @@ def test_generic_call_preserves_pending_workflow_action_presentation(
     )
     rendered = capsys.readouterr().out
     assert "run_plate" in rendered and "accepted" in rendered and "scope-1" in rendered
+    assert json.loads(rendered) == to_jsonable(response)
+
+
+@pytest.mark.parametrize("malformed", [False, True])
+def test_persistent_client_execute_uses_real_command_boundary_without_runtime(
+    monkeypatch, malformed
+):
+    from io import StringIO
+
+    receipt = to_jsonable(plan_fixture())
+    if malformed:
+        receipt["axis_count"] = True
+    peer = ControlledWireSession((receipt,))
+
+    def forbidden_raw_failure_scan(value):
+        raise AssertionError("Production execute must query typed diagnostics")
+
+    monkeypatch.setattr(dev_client, "_command_failed", forbidden_raw_failure_scan)
+    client = dev_client.McpDevClient(server_stderr=StringIO())
+    # Only the peer is controlled. No process/session is launched; execute,
+    # run_session, framing, decoding, rendering and exit status are production.
+    client._session = peer
+    client._session_started = True
+    try:
+        execution = client.execute(
+            [
+                "artifact-plan",
+                "source-only-plate",
+                "--source-text",
+                "pipeline_steps = []",
+            ]
+        )
+    finally:
+        client.close()
+    assert execution.returncode == int(malformed)
+    assert execution.payload["results"][0]["payloads"][0] == receipt
+    assert (
+        "mcp_payload_invalid" if malformed else "Owned step"
+    ) in execution.rendered_output
+    assert len(peer.calls) == 1

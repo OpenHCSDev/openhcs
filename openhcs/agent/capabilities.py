@@ -12,10 +12,12 @@ from importlib.metadata import distributions
 from inspect import getdoc
 from math import isfinite
 from types import UnionType
-from typing import ClassVar, Generic, Self, TypeAlias, TypeVar, get_args
+from typing import ClassVar, Generic, Self, TypeAlias, TypeVar, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.client import EndpointShutdownResult
+
+from openhcs.agent.services.execution_session_service import ExecutionSessionService
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
@@ -46,7 +48,6 @@ from openhcs.agent.dto.execution import (
     ExecutionJobCancellationResult,
     ExecutionJobRef,
     ExecutionJobStatus,
-    ExecutionSubmissionResult,
     ExecutionStatusRequest,
     OrchestratorSession,
     OrchestratorSessionCreationRequest,
@@ -623,7 +624,11 @@ class AgentResultFamilyContract:
     """
 
     advertised_contract: type
-    result_type: UnionType
+    producer: Callable[..., object]
+
+    @property
+    def result_type(self) -> UnionType:
+        return get_type_hints(self.producer, include_extras=True)["return"]
 
     @property
     def result_types(self) -> tuple[type, ...]:
@@ -2746,7 +2751,7 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
     side_effects = ("submits_zmq_compile_job",)
     input_contract = CompileSubmissionRequest
     output_contract = AgentResultFamilyContract(
-        ExecutionJobRef, ExecutionSubmissionResult
+        ExecutionJobRef, ExecutionSessionService._submit_job
     )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
@@ -2779,7 +2784,7 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
     side_effects = ("submits_zmq_execution_job",)
     input_contract = PipelineExecutionSubmissionRequest
     output_contract = AgentResultFamilyContract(
-        ExecutionJobRef, ExecutionSubmissionResult
+        ExecutionJobRef, ExecutionSessionService._submit_job
     )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,

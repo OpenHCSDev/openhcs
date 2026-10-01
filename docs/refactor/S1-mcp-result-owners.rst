@@ -60,11 +60,14 @@ ExecutionJobRecord.status at execution_session_service.py:537-558 returns the
 existing richer ExecutionJobStatus. _submit_job at :1210-1265 returns
 ExecutionJobRef or ExecutionJobStatus (wait and submission failure), despite
 capabilities.py:2712/:2743 advertising only ExecutionJobRef. S1 owns a reproducer
-and full-receipt decoding for this source presentation mismatch. The implemented
-ExecutionSubmissionResult union belongs to the existing execution declaration;
-AgentResultFamilyContract extends existing capability output declarations with
-that actual family and keeps the original advertised ExecutionJobRef metadata.
-No presentation-only alternatives or replacement submission DTO. Native producer
+and full-receipt decoding for this source presentation mismatch. Current
+AgentResultFamilyContract derives its members directly from the existing actual
+return owner ExecutionSessionService._submit_job using get_type_hints with
+include_extras. Its Ref|Status annotation is the decode family authority; the
+extra ExecutionSubmissionResult alias was deleted following parent's review.
+No service-file edit, shared-owner collision, duplicate union or presentation
+alternative roster. Original advertised ExecutionJobRef metadata remains exact.
+Native producer
 bytes and advertised metadata remain unchanged. Both real siblings render through
 ExecutionJobRenderer's ExecutionJobIdentity-owned common procedure.
 
@@ -101,6 +104,15 @@ Parent's three concrete pre-checkpoint ownership risks were reviewed against
 source, not treated as a completed parent review. The presentation-only Status
 retry binding was deleted; producer union membership is now the capability fact.
 Status no longer inherits the Ref renderer. Both share the actual identity owner.
+
+Fourth parent review risk: the first union alias still paralleled three existing
+producer annotations (:1018/:1039/:1219). Resolved by deleting the new alias and
+deriving the contract from the existing common _submit_job return declaration,
+not editing shared service source. Both submission capabilities point to that
+same callable. A source behavioral test checks actual callable identity and
+resolved return annotation together with unchanged advertised external metadata.
+Source import of this declaration relation passes, 4.32s/242684 KiB. This is
+source-only import, no submission/runtime/server invocation.
 has_errors/agent_error_codes no longer convert typed results to JSON and rescan
 raw records: one declaration-driven diagnostic traversal handles typed AgentError
 identity, typed dataclass fields and genuine external JSON extension metadata.
@@ -123,6 +135,26 @@ ArtifactPlanInspection behavior with its extra fact retained. A declared Diamond
 renderer composes two independent cooperative presentation capabilities; each
 executes once, identity occurs once in the hierarchy view, and AutoRegisterMeta
 contains its declared output key. No consumer, dispatcher or field roster edits.
+
+Generic call closure: CallCommandSpec now delegates render_call_result to the
+nominal capability command. Migrated pipeline compact calls no longer serialize
+and re-decode their batch; the actual CLI main test forbids serialization while
+rendering a nested artifact plan. The pending selected-workflow leaf retains its
+existing separate action presentation; it is not claimed typed or closed here.
+Its typed-batch poll presentation is checked equal to the existing source view.
+Existing generic plate/widget-tree/field-help/window-snapshot cases also pass.
+
+Named remaining defect, owner Codex S1: pending selected-workflow compact call
+currently passes a nested action_result receipt to a raw UiActionInvokeRenderer
+that expects top-level action fields. The new exploratory compact assertion
+failed with missing status/selection; preserved in pipeline-final-integrated.log
+and XML. This is existing pending UI BOUND-2 debt, not pipeline closure. The
+checkpoint's native-receipt test uses the actual declared DTOs and --json, keeps
+all run_plate/accepted/scope assertions and adds exact full external receipt
+equality. It does not assert UI compact acceptance. Reproducer and acceptance
+for the remaining UI family: actual UiSelectedPlateWorkflowResult through call
+must expose action identity/status/receipt/targets without raw fallback. No UI
+family adapter or schema-shape mirror was introduced to conceal that debt.
 
 Validation and resource ownership
 ---------------------------------
