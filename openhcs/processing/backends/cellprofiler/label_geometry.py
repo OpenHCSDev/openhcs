@@ -858,13 +858,9 @@ def _numpy124_label_maximum_retention(
     retained = np.zeros(values.size, dtype=np.bool_)
     for index in range(values.size):
         label = labels[index]
-        if (
-            0 <= label <= max_label
-            and needed[label]
-            and seen[label]
-            and values[index] == maxima[label]
-        ):
-            retained[index] = True
+        if label < 0 or label > max_label or not needed[label]:
+            continue
+        retained[index] = values[index] == maxima[label]
     return retained
 
 
