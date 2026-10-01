@@ -18,6 +18,7 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
 )
 from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.virtual_workspace_metadata import (
     FIELDS, VirtualWorkspaceSourceProjectionEntries, component_metadata_field,
     AtomicMetadataWriter, get_metadata_path,
@@ -195,6 +196,29 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         self.assertEqual(parser.construct_acquisition_filename(components),
                          "r04c12f17p99-ch7sk1fk1fl1.tiff")
 
+    def test_raw_native_acquisition_calibration_and_source_units_are_identical(self):
+        for format in ("ImageXpress", "OperaPhenix"):
+            for z_levels in (1, 2):
+                with self.subTest(format=format, z_levels=z_levels):
+                    raw_generator, raw_plate = self.generate(format, native=False, z_levels=z_levels)
+                    native_generator, native_plate = self.generate(format, native=True, z_levels=z_levels)
+                    acquisition = type(raw_generator.microscope_handler)(
+                        FileManager({"disk": DiskStorageBackend()})).metadata_handler
+                    raw_spacing = acquisition.source_voxel_spacing(raw_plate)
+                    native_reader = OpenHCSMetadataHandler(FileManager({"disk": DiskStorageBackend()}))
+                    self.assertEqual(native_reader.source_voxel_spacing(native_plate), raw_spacing)
+                    self.assertEqual(native_reader.get_pixel_size(native_plate), acquisition.get_pixel_size(raw_plate))
+                    projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                        self.document(native_plate)).entries
+                    for projection in projections.values():
+                        self.assertEqual(SourceVoxelSpacing.from_source_metadata(projection.source_metadata), raw_spacing)
+                    raw_files = {path.relative_to(raw_plate) for path in raw_plate.rglob("*.tif*")}
+                    native_files = {path.relative_to(native_plate) for path in native_plate.rglob("*.tif*")}
+                    self.assertEqual(raw_files, native_files)
+                    for path in raw_files:
+                        np.testing.assert_array_equal(tifffile.imread(raw_plate / path),
+                                                      tifffile.imread(native_plate / path))
+
     def test_new_nominal_capabilities_cooperate_through_real_parser_diamond(self):
         # Independent behaviors, not sibling format implementations: one records
         # physical acquisitions; the other scopes their names. Both cooperate
@@ -275,6 +299,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                 str(plate), format="RecordedScopedImageXpress", grid_size=(1, 1),
                 tile_size=(32, 32), wavelengths=1, num_cells=4, wells=["D12"],
                 overlap_percent=0, stage_error_px=0, random_seed=7)
+            generator.generate_htd_file()
             # Plane emission and metadata are the assigned identity surface;
             # this does not certify new-family HTD/grid-layout generation.
             generator._write_plane(np.full((32, 32), 172, dtype=np.uint16),

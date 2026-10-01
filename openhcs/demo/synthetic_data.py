@@ -25,6 +25,7 @@ Usage:
 """
 
 from datetime import datetime
+from dataclasses import replace
 from pathlib import Path
 from typing import Optional, Tuple, List, Dict, Any
 
@@ -38,8 +39,11 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
 )
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, get_metadata_path
+from openhcs.core.source_metadata import SourceVoxelSpacing, source_metadata_dict
 from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
 from polystore.constants import Backend
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 
 
@@ -162,7 +166,9 @@ class SyntheticMicroscopyGenerator:
         )
         if handler_type is None:
             raise ValueError(f"No declared microscope handler for format {format!r}")
-        self.microscope_handler = handler_type(None)
+        self.microscope_handler = handler_type(
+            FileManager({Backend.DISK.value: DiskStorageBackend()})
+        )
         self.parser = self.microscope_handler.parser
         self._source_planes: list[SourcePlaneProjection] = []
 
@@ -985,7 +991,7 @@ class SyntheticMicroscopyGenerator:
 
         # If OpenHCS format requested, generate metadata file
         if self.openhcs_format:
-            self.generate_openhcs_metadata(sub_dir=self.timepoint_dir.name, pixel_size=0.65)
+            self.generate_openhcs_metadata(sub_dir=self.timepoint_dir.name)
 
     def _plane_components(self, well: str, site: int, channel: int, z_index: int):
         """Bind the complete acquisition address before physical spelling."""
@@ -1023,9 +1029,7 @@ class SyntheticMicroscopyGenerator:
         ))
         print(f"  Saved tile: {filepath}")
 
-    def generate_openhcs_metadata(
-        self, sub_dir: str = "images", pixel_size: float = 0.65
-    ):
+    def generate_openhcs_metadata(self, sub_dir: str = "images"):
         """
         Generate OpenHCS metadata file for the synthetic dataset.
 
@@ -1034,12 +1038,21 @@ class SyntheticMicroscopyGenerator:
 
         Args:
             sub_dir: Subdirectory name where images are located (default: "images")
-            pixel_size: Pixel size in microns (default: 0.65)
+
+        Calibration is decoded by the declared acquisition metadata owner, not
+        supplied independently of the generated HTD/XML.
         """
         print("\nGenerating OpenHCS metadata...")
 
         # Serialize one typed authority: only planes actually written by this run.
-        projections = SourceProjectionSet(tuple(self._source_planes))
+        spacing = self.microscope_handler.metadata_handler.source_voxel_spacing(self.output_dir)
+        pixel_size = SourceVoxelSpacing.require_physical_pixel_size((spacing,))
+        calibrated_planes = []
+        for plane in self._source_planes:
+            source_metadata = source_metadata_dict(plane.source_metadata)
+            spacing.merge_into(source_metadata, path=plane.ref.backend_address)
+            calibrated_planes.append(replace(plane, source_metadata=source_metadata))
+        projections = SourceProjectionSet(tuple(calibrated_planes))
         metadata = SourceProjectionMetadataSerializer(
             self.parser, image_extension=self.parser.DEFAULT_EXTENSION, path_prefix=sub_dir
         ).metadata_dict(

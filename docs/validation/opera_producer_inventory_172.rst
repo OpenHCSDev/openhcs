@@ -1,5 +1,5 @@
-Synthetic acquisition identity closure, issue 172
-================================================
+Synthetic acquisition identity/calibration, issues 172/335
+=========================================================
 
 Source owner: Averroes. Parent owns integration, installation and actual MCP
 qualification. This new task explicitly transfers the former parent-owned
@@ -71,7 +71,7 @@ distinct, with an exact reference to each physical file. Metadata membership
 comes only from saved planes, including skip-file controls. Labels cannot add
 another well. All five AllComponents members and source fields move together.
 
-Planned new cases: D12/Z99 Opera wells, non-contiguous site subsets, omitted acquisition
+Executed new cases: D12/Z99 Opera wells, non-contiguous site subsets, omitted acquisition
 tokens, multiple channels/Z, Bio-Formats physical naming, explicit custom virtual
 subdirectory and repeat generation. The projection serializer handles these
 without adding metadata cases or another identity formatter.
@@ -85,6 +85,8 @@ R0/R1/census evidence. Reuse the prior archived disposable supervisor rather
 than create another process mechanism. One CPU, 512 MiB process-group RSS,
 60 seconds per shard, 256 MiB scratch. Resource guard before tests: RAM 19.2 GiB,
 home 22.5 GiB; historical swap 12.5 GiB warning, not a veto under these bounds.
+Latest archived guard: RAM 19.3 GiB, home 20.8 GiB, historical swap 12.4 GiB,
+exit 2/warning. No guard failure is rewritten as success.
 No dependency/environment downloads, installation, MCP, native pipeline, JVM,
 Fiji, science slot/lock or biological dataset use. Existing Python 3.12 packages
 and shared read-only source dependencies only; assert product source origins.
@@ -118,3 +120,169 @@ PolyStore read-only source from the earlier qualified namespace worktree at
 91fd7e854ca760a16e7472d8d558b4012e89b6ba (same production source/tests as merged
 PR 16/84f322). Existing other Python 3.12 dependencies are read-only. No source
 or dependency pins are changed outside this new worktree.
+
+Cooperative inheritance and actual new-case proof
+------------------------------------------------
+
+The binding owner requirement to maximize inheritance/polymorphism is applied
+within this assigned surface. GenericFilenameParser owns the shared acquisition
+operation and complete declaration binding. FilenameParser already composes the
+viewer parser ABC and that generic ancestor. Existing ImageXpress/Opera leaves
+own physical spelling variation; the generator calls their nominal contract.
+There is no new production class, alternative roster, sibling-as-subtype,
+capability priority table, consumer conversion or stored compatibility path.
+
+The concrete regression test
+test_new_nominal_capabilities_cooperate_through_real_parser_diamond adds two
+independent test capabilities deriving from the real GenericFilenameParser ABC:
+RecordedAcquisition owns a per-instance physical-name call ledger;
+ScopedAcquisition owns a physical acquisition prefix. Both call super(), compose
+with ImageXpressFilenameParser and share the genuine existing ancestor diamond.
+Neither implements or copies component decoding/formatting or metadata logic.
+
+Both RecordedScopedImageXpressParser and ScopedRecordedImageXpressParser execute
+the capabilities once. Their different cooperative orders produce the same
+physical name scope172_D12_s017_w7.tif; the ledger records the scoped/unscoped
+result at the correct MRO position. GenericFilenameParser occurs once in both
+MROs, its declaration initialization supplies tuple(AllComponents), and its
+canonical operation yields D12_s017_w7_z099_t003.tif with every axis preserved.
+Automatic AutoRegisterMeta registration resolves both new parser classes.
+Unchanged SourceProjectionMetadataSerializer, persisted projection decoder and
+fresh real disk metadata reader retain exact refs, Z=99 and timepoint=3.
+
+An additional declared RecordedScopedImageXpressHandler inherits the genuine
+ImageXpress handler and binds the new composed parser. Its existing automatic
+handler registry accepts the declaration. The unchanged generator constructor
+selects it; unchanged _write_plane and generate_openhcs_metadata emit/reopen the
+scoped physical source and complete inventory. There are zero consumer or
+registry edits for this new case. This proves the assigned plane-emission and
+metadata boundary, not arbitrary new-family HTD or spatial-layout generation.
+All five test-only declarations stay in the regression file; none is a new
+production wrapper or alternate registry.
+
+Qualified source, original guards and exact coverage
+---------------------------------------------------
+
+Draft PR 333: https://github.com/OpenHCSDev/openhcs/pull/333 . Issue 172 OPEN.
+Normally merged parent-qualified PR 329/main
+2cbfc4a0771bf24d153b076bff4a5e321ac039f4 at working checkpoint
+6d81dfd9f420970172d4e379d7cbed34c3d9fa01. No conflict or edits to frozen XML
+parser: its bytes equal current main. The four owned production files are
+unchanged by that merge. External gitlinks, scripts and benchmark equal main.
+
+Twenty-three source-contract methods pass after the merge: this task's twelve
+(sixteen family subcases plus the additional controls and genuine MI/MRO
+experiment) and PR 329's eleven unchanged XML geometry controls. 2.68 s,
+94.27 MiB combined process-group RSS. Existing regression shard: 34 passed,
+14.09 s, 385.61 MiB, covering zero geometry, MT19937 byte parity/caller isolation,
+Bio-Formats lexical names, source projections and real tiny-disk virtual
+workspace loads. No scientific pipeline, JVM or installed entrypoint is used.
+No process group hits a resource limit.
+
+Public import evidence asserts all four owned source module origins in this
+worktree, and the qualified read-only PolyStore origin; other dependencies come
+from the existing Python 3.12 installation. Read-only Git comparison confirms
+PolyStore 91fd versus merged 84f322 has identical src/tests. Baseline reproducer
+uses its own clean detached Git worktree at b31807d9, one 32x32 physical plane,
+and the actual original producer. Its persisted A01 and parsed R01C01 yield two
+combined keys and the preserved failing assertion. Its XML/TIFF/JSON and
+traceback are archived. Parent's original installed raw Opera XML retains
+SHA256 b3f2c03c8e7b6e7e3196535b934f01f65c7c6b6f6bb22cf6fd6fd308e54db276.
+Original parent fixtures and frozen blind trial remain untouched.
+
+Unchanged CI R0 ratchet from agent-comms
+3b03785f45df2ef5dc62ba6aed99294192ecbb01 passes openhcs/scripts/benchmark
+against merged main 2cbfc4a0 and working head 6d81dfd9. Tool SHA256
+e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562.
+Root shards: openhcs 23.28 s/74.99 MiB; scripts 2.47 s/53.61 MiB;
+benchmark 3.22 s/51.23 MiB; all exit 0. The only nonzero guard delta is
+SyntheticMicroscopyGenerator GodClassExcess -140; every other guard delta zero.
+This is deletion in place, not relocation, detector changes or exemptions.
+
+Current archive's untouched focused census measures all four changed production
+files with no exclusions and zero unparsed files. String equality -6, optional
+None checks +7, long function -1, code lines -52; all dispatch/type-switch/raw-key
+and other measures have zero delta. Optional acquisition spelling parameters
+and fail-closed parser admission explain the new None checks; they are reported,
+not hidden. AST evidence parses original/current source, hashes all four files,
+proves metadata/plane operations have no format dispatch and the obsolete
+generator filename helper is deleted. This is not semantic descent proof.
+
+Original R1 policy consumer attempted unchanged, using its workflow-pinned NRA
+0844525ecaba93e090a064a4ae4914466b2dae60 from a new read-only tool worktree,
+full default production roots and 50 s budget. It exits 1 in 5.23 s/338.38 MiB
+before analysis: Recorded source repository is not initialized:
+external/ObjectState. The exact traceback is preserved. All eight new source
+worktree gitlinks remain deliberately uninitialized; no dependency context is
+excluded, invented, borrowed as Git metadata or downloaded to fabricate a pass.
+Global R1 schema/descent certificates are unresolved. Focused evidence is not a
+full NRA scan, R1 pass, waiver or installed readiness claim.
+
+Remaining acceptance and owned cleanup
+-------------------------------------
+
+Parent reports actual installed PR 329 singleton MCP journey passed and merged.
+That is parent evidence, separate from the source checks above. Parent now owns
+building/installing this producer checkpoint and the first-class raw/native
+Opera generation -> complete empty-step initialization -> sample -> persisted
+reopen -> combined inventory journey. Require one R01C01 semantic well and
+coherent site/channel/Z/time membership and exact source refs. Keep issue 172
+open until that producer acceptance; this source owner takes no science/native
+slot. No live-readiness or biological/calibration correctness claim is made.
+Unrelated existing HTD/grid layout branches are unchanged. The independent
+native pixel-size default is removed by the issue 335 addition below.
+
+Evidence archive: opera_producer_inventory_172_source_evidence.tgz retains
+negative/working/final source logs, tiny original-baseline plate, original R0/R1,
+complete focused census/AST, import identities, resource summaries, the original
+archive census scripts and disposable supervisor/evidence driver. Fresh-extract
+byte comparison must pass before cleanup. Own scratch is about 5.2 MiB (far
+below 256 MiB). Own clean detached base-proof, R0-tool and NRA-tool worktrees
+are disposable and removed after their processes terminate; the source/branch
+worktree, original fixtures and all foreign worktrees remain persistent.
+
+Issue 335: acquisition-owned calibration closure
+------------------------------------------------
+
+Parent additionally assigned the demonstrated raw/native calibration defect;
+read issue 335 body/comments completely and the complete
+SYNTHETIC-OPERA-CALIBRATION-20261001.rst parent witness before edits. Existing
+live evidence proves the raw installed route only. The same producer previously
+wrote Opera XML ImageResolutionX/Y=1.1867525298988041e-6 m while independently
+passing 0.65 micrometers to native metadata. This predates this branch.
+
+BOUND-2 / IDEN-6 / IMPL-1 / TIME-5: traced actual acquisition metadata handlers,
+MetadataHandler.source_voxel_spacing and the complete existing SourceVoxelSpacing
+physical-unit/scalar/merge contract. The richer authority is the handler's
+decoded HTD/XML acquisition calibration, not a new format roster or constant.
+Instantiate the already selected handler with a real local disk FileManager.
+Native serialization reads that owner's typed spacing once, requires physical
+isotropic calibration through its existing contract, and merges it into each
+retained typed plane using the existing source-metadata/projection machinery.
+SourceProjectionMetadataSerializer publishes those fields and the scalar from
+the same typed spacing. The shared algorithm stays on the producer; format
+decoding remains on the existing metadata-handler ancestor/leaf contracts.
+
+Deleted the unconditional 0.65 native argument and the independent public
+pixel_size metadata-writer parameter. Migrated the one remaining integration
+fixture-helper caller after confirming no active compiler/runtime/renderer PR
+owns it. No compatibility argument/alias, silent override, XML input tweak,
+calibration lookup map, consumer correction or fallback is added. Raw acquisition
+HTD/XML declarations remain unchanged and authoritative. A missing or relative
+physical calibration cannot pass SourceVoxelSpacing.require_physical_pixel_size.
+The new-capability test now generates its real HTD before the same plane-emission
+and calibrated metadata boundary; no fake reader/calibration is supplied.
+
+Before this addition the new paired control fails in four format/Z subcases:
+Opera scalar/XY 0.65 versus 1.1867525298988042; both formats also lacked per-plane
+persisted coordinate spacing. Preserve calibration-negative.log. Afterward,
+24 combined source-contract methods pass in 2.79 s/94.18 MiB, including the new
+paired raw/native ImageXpress and Opera flat/stack test. It proves exact fresh
+reader scalar/XY/unit equality, every persisted source projection's typed
+spacing, identical physical file membership and TIFF pixel-array parity. No
+scientific data or actual installed paired comparison is inferred from that.
+
+Both issues remain open for parent-owned new-candidate installation, raw/native
+initialize/inspect/sample/reopen and combined-inventory acceptance after Hubble's
+scientific slot. Original failures, fixtures and frozen H001d installation are
+unchanged. PR 333 owns this addition too; no untracked follow-up branch.
