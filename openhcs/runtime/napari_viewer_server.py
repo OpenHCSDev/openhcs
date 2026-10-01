@@ -2487,10 +2487,16 @@ class NapariLayerDisplayPipeline:
             items,
             display_payload,
         )
+        display_layout = ViewerObjectDisplayConfigInput(
+            display_payload.display_config
+        ).layout().with_shared_stack_axes(tuple(
+            layout
+            for _route, state in self.server.layer_route_state.mounted_dimension_states()
+            for layout in state.display_layouts
+        ))
+        projection_semantics = display_payload.for_display_layout(display_layout)
         preview_values = self.server.component_values.shared_values_for(
-            ViewerObjectDisplayConfigInput(display_payload.display_config)
-            .layout()
-            .components_for_mode(ViewerComponentMode.STACK),
+            display_layout.components_for_mode(ViewerComponentMode.STACK),
             replacement_route=layer_key,
             additional_component_values=display_payload.component_values(),
         )
@@ -2501,7 +2507,7 @@ class NapariLayerDisplayPipeline:
         )
         axis_projection = self.display_axis_projection(
             layer_key,
-            display_payload,
+            projection_semantics,
             items,
             aggregate_axis_bindings,
             publish=False,
@@ -2512,9 +2518,7 @@ class NapariLayerDisplayPipeline:
                 items=items,
                 presentation=NapariAxisPresentation(
                     entries=display_payload.entries,
-                    layout=ViewerObjectDisplayConfigInput(
-                        display_payload.display_config
-                    ).layout(),
+                    layout=display_layout,
                     route_key=layer_key,
                     projection=axis_projection,
                     aggregate_axis_bindings=aggregate_axis_bindings,

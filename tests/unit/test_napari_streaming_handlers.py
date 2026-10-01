@@ -1960,6 +1960,71 @@ def test_napari_display_pipeline_aligns_scalar_and_stack_routes_by_semantic_valu
     assert server.viewer.dims.nsteps == (1, 2, 1, 1, 1, 4, 4)
 
 
+@pytest.mark.parametrize(
+    "component, mode_field", [("channel", "channel_mode"), ("site", "site_mode")]
+)
+def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates(
+    component, mode_field
+):
+    from napari.components import ViewerModel
+    from openhcs.core.config import NapariDimensionMode
+    from openhcs.runtime.napari_viewer_server import NapariLayerDisplayPipeline
+    from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
+
+    server = _FakeNapariServer()
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.viewer = ViewerModel()
+    pipeline = NapariLayerDisplayPipeline(server)
+    for origin, config, producer in (
+        (
+            "raw", NapariDisplayConfig(),
+            StreamProducerIdentity("manual", "image", "raw", "raw"),
+        ),
+        (
+            "pipeline", NapariDisplayConfig(**{mode_field: NapariDimensionMode.LAYER}),
+            None,
+        ),
+    ):
+        for channel in (1, 2):
+            route = f"{origin}-{channel}"
+            item = _layer_item(
+                {"site": 1, "channel": 1, "z_index": 1,
+                 "timepoint": 1, "well": "A01", component: channel},
+                data=np.full((4, 4), channel, dtype=np.uint16),
+                producer=producer,
+            )
+            semantics = ViewerComponentAxisSemantics(
+                entries=_component_value_domain({
+                    component: [value] for component, value in item.address.components.items()
+                }).entries,
+                layout=ViewerObjectDisplayConfigInput(config).layout(),
+            )
+            server.layer_route_state.set_title(route, route)
+            work = pipeline.display_layer_batch(
+                layer_key=route, items=[item],
+                display_payload=NapariPendingLayerUpdate.from_semantics(
+                    timer=_FakeTimer(), data_type=StreamingDataType.IMAGE,
+                    semantics=semantics, display_config=config,
+                ),
+                component_names_metadata=ViewerComponentNameMetadata.empty(),
+            )
+            assert work.advance()
+            assert ViewerObjectDisplayConfigInput(config).layout() == semantics.layout
+    for channel in (1, 2):
+        raw = server.layer_route_state.dimension_state_for(f"raw-{channel}").presentation
+        result = server.layer_route_state.dimension_state_for(f"pipeline-{channel}").presentation
+        axis = raw.display_axis_components.index(component)
+        assert result.display_axis_components == raw.display_axis_components
+        assert raw.viewer_step(0, axis) == result.viewer_step(0, axis) == channel - 1
+        assert raw.projection.routed_component_values[component] == [channel]
+        assert result.projection.routed_component_values[component] == [channel]
+        assert np.max(server.layer_route_state.layer(f"raw-{channel}").data) == channel
+        assert np.max(server.layer_route_state.layer(f"pipeline-{channel}").data) == channel
+        assert tuple(server.layer_route_state.layer(f"raw-{channel}").translate) == tuple(
+            server.layer_route_state.layer(f"pipeline-{channel}").translate
+        )
+
+
 def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_rematerialization():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     ViewerModel = pytest.importorskip("napari.components").ViewerModel

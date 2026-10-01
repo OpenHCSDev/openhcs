@@ -1040,6 +1040,13 @@ class NapariDimensionLayerState:
         return cls(labels={})
 
     @property
+    def display_layouts(self) -> tuple[ViewerComponentLayout, ...]:
+        """Return the mounted presentation's participating layout, if any."""
+        if self.presentation is None:
+            return ()
+        return (self.presentation.layout,)
+
+    @property
     def stack_axes(self) -> tuple[str, ...]:
         if self.presentation is None:
             return ()
@@ -1141,23 +1148,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
 
     def axis_projection_semantics(self) -> ViewerComponentAxisSemantics:
         """Derive the route-addressable axes from its declared value domain."""
-
-        declared_components = self.component_values()
-        component_order = tuple(
-            component
-            for component in self.layout.component_order
-            if component in declared_components
-        )
-        return ViewerComponentAxisSemantics(
-            entries=self.entries,
-            layout=ViewerComponentLayout.from_parts(
-                component_modes={
-                    component: self.layout.component_modes[component]
-                    for component in component_order
-                },
-                component_order=component_order,
-            ),
-        )
+        return self.for_display_layout(self.layout)
 
     @property
     def projected_display_axis_indices(self) -> tuple[int, ...]:

@@ -43,8 +43,10 @@ Proofs and gates
 One family-level canonical source identity test, equivalent spellings and
 distinct-position negative cases. A mixed STACK/LAYER production display test
 using the existing native ViewerModel proves both channel identities and exact
-coordinate placement; reverse admission and other component axes exercise the
-same owner. No consumer dispatch/heuristics or mirrored rosters.
+coordinate placement; the site-axis case exercises the same owner without a
+channel special case. Reverse admission is not a claim of this checkpoint;
+the existing fail-closed rematerialization guard remains. No consumer
+dispatch/heuristics or mirrored rosters.
 OneCPU/thread pools1,512MiB and60seconds per local shard. Installed frozen
 Python supplies read-only dependencies, source imports come from this worktree.
 Original failures and bounded R0/R1 outcomes are retained, never relabelled as
@@ -54,6 +56,24 @@ bounds remain incomplete. Parent coordinates a distinct exact live slot later.
 Status
 ------
 
-Diagnosis established from source and immutable engineering repro receipts.
-Implementation/tests and applicable R0/R1 are in progress. Draft publication
-does not mean accepted installed/native/viewer behaviour or biological accuracy.
+Deleted the leaf's copied 18-line axis projection algorithm; its small hook now
+delegates to ViewerComponentAxisSemantics.for_display_layout, also inherited by
+NapariPendingLayerUpdate. SourceIdentityResolutionContext inherits the exact
+workspace projection from SourcePatternResolutionContext; SourceBindingMatched-
+ImageSet retains its one-position admission proof. ViewerComponentLayout derives
+native STACK slots from mounted declarations, while each original display config
+still owns grouping. NapariDimensionLayerState owns optional participation.
+No new independent capability or registry is introduced: existing declaration
+inheritance, registered handlers and polymorphic display work remain authoritative.
+There is no artificial new mixin or replacement dispatch table.
+
+Persisted formats changed: none. Numeric processing/CellProfiler interop changed:
+none; no parity or performance claim. Source-authored bug repair, not a claim of
+NRA-certified behavioural equivalence. Dependency binaries are read-only links
+to the frozen installed environment, not newly built or installed artifacts.
+
+Provider-free source results: 51 source-binding tests, 49 selected viewer/shared-
+axis tests and 15 selected pipeline source-projection tests pass. The original
+collection failure, two original defect failures and incomplete global audit
+are retained under receipts/. Applicable committed R0/R1 gates are pending.
+Draft PR351 is visible. No installed/native/MCP/UI acceptance or biology claim.

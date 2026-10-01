@@ -1,0 +1,19 @@
+Provider-free committed-source projection shard, 2026-10-01.
+Frozen interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python
+Production source: /home/ts/wt/openhcs-paired-raw-bootstrap-20261001
+Native extensions: read-only frozen binary links; no installation/build.
+PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1
+PYTHONPATH=/home/ts/wt/openhcs-paired-raw-bootstrap-20261001
+XDG_CACHE_HOME=/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/.validation/cache
+systemd-run --user --scope --quiet -p MemoryMax=512M -p MemorySwapMax=0 -p CPUQuota=100%
+/usr/bin/time -v timeout 60s taskset -c 0 <frozen interpreter> -m pytest
+--noconftest -o addopts='' -p no:cacheprovider tests/unit/test_function_runtime_source_projection.py
+-k 'virtual_workspace_source_filters or bundle_payload_context or callable_contract_source_inputs or first_step_prepares_raw_source_anchors or runtime_scope_projects_bindings or component_selected_source_bindings or cross_component_runtime_binding_scope or auxiliary_source or excludes_auxiliary or variable_stack_axis or scoped_bindings or alias_only_workspace_filter'
+-q --basetemp=.validation/pytest-projection
+
+Result: 15 passed, 84 deselected, 2 warnings in 4.93s; exit0.
+Warnings: disabled asyncio plugin leaves asyncio_default_fixture_loop_scope and asyncio_mode unknown.
+Measured wall5.55s, CPU99%, user5.27s/system0.25s, maximum RSS236692KiB.
+No transport/server/UI launch or scientific corpus decoding.
+Root conftest is excluded to prevent global viewer/client cleanup against foreign processes.
