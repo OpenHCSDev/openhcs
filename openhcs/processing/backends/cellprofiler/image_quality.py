@@ -81,9 +81,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdAssignment,
@@ -679,7 +677,7 @@ class MeasureImageQualityModule(
 
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 @dataclass(frozen=True)

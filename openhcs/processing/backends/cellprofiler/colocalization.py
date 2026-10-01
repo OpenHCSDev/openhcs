@@ -158,9 +158,7 @@ from openhcs.processing.backends.cellprofiler.colocalization_costes import (
     object_colocalization_threshold_reductions,
     thresholded_colocalization_metrics,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -1226,7 +1224,7 @@ class MeasureColocalizationModule(
 
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 _COLOCALIZATION_MEASUREMENT_FUNCTION = "_colocalization_measurement"
 ColocalizationDenseLabelProjectionIdentity = tuple[tuple[str, Hashable], ...]
 

@@ -60,9 +60,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
     CellProfilerBackendAuthority,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     minimum_enclosing_circle_from_labels,
 )
@@ -72,7 +70,7 @@ from openhcs.core.measurement_row_materialization import (
 
 _INTENSITY_DEBUG_TRACE_DIR_ENV = "OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR"
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 ZernikeMomentIndexes: TypeAlias = tuple[tuple[int, int], ...]

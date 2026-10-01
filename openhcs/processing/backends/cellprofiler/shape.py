@@ -474,16 +474,14 @@ from openhcs.processing.backends.cellprofiler.label_geometry import (
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _edt_1d_numba,
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 ShapeFeatureArrays = tuple[dict[str, np.ndarray], np.ndarray]
 ShapeFeatureRows = tuple[dict[str, np.ndarray], np.ndarray, tuple[int, ...]]
 RegionpropsBackendProviderInput: TypeAlias = Annotated[

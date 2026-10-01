@@ -68,9 +68,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     CellProfilerLabelHull,
 )
@@ -601,7 +599,7 @@ NDIMAGE_CONSTANT_MODE = "constant"
 ROBUST_FACTOR = 0.02
 CORRECT_ILLUMINATION_CALCULATE_NAME = "correct_illumination_calculate"
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 def illumination_gaussian_filter(

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from openhcs.core.runtime_profile import RuntimeProfiler
+
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, fields as dataclass_fields
 import hashlib
 import logging
-import os
 import re
 import time
 from types import MappingProxyType
@@ -47,7 +48,6 @@ from openhcs.core.process_local_cache import (
     RegisteredProcessLocalBoundedCache,
     SynchronizedBoundedCache,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -325,29 +325,10 @@ class MeasureGranularityModule(
         )
 
 
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
 
 
-def profile_enabled() -> bool:
-    """Return whether per-function granularity runtime profiling is enabled."""
-    return os.environ.get(_PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-@dataclass(frozen=True, slots=True)
-class CellProfilerRuntimeProfiler:
-    """Shared CellProfiler runtime-profile emitter bound to a module logger."""
-
-    logger: logging.Logger
-
-    def enabled(self) -> bool:
-        return profile_enabled()
-
-    def log(self, label: str, seconds: float, **fields: object) -> None:
-        RuntimeProfileLogger.log(self.logger, label, seconds, **fields)
-
-
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 def log_profile(label: str, seconds: float, **fields: object) -> None:
