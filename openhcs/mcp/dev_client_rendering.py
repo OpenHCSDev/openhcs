@@ -284,6 +284,15 @@ class McpDevOutputRendererBinding:
 class McpDevTypedOutputRenderer(McpDevOutputRenderer):
     """Shared contract descent for typed presentation members, never raw readers."""
 
+    @staticmethod
+    def optional_lines(value, render_lines):
+        """Compose a nullable declared fact without repeating omission policy.
+
+        None is the native absence fact; false, zero and empty strings remain
+        present. Members own only the presentation of a present value.
+        """
+        return () if value is None else render_lines(value)
+
     @classmethod
     def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
         return cls.render_with_options(response, options)

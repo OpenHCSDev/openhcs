@@ -269,20 +269,23 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
             lines.append(
                 f"- {step.step_index}: {step.step_name} axis={step.axis_id} groups={_sequence_text(step.execution_groups)}"
             )
-            if step.main_flow_axis_persistence_enabled is not None:
-                lines.append(
-                    "  main-flow axis persistence: "
-                    + (
-                        "enabled"
-                        if step.main_flow_axis_persistence_enabled
-                        else "runtime-only"
-                    )
+            lines.extend(
+                cls.optional_lines(
+                    step.main_flow_axis_persistence_enabled,
+                    lambda enabled: (
+                        "  main-flow axis persistence: "
+                        + ("enabled" if enabled else "runtime-only"),
+                    ),
                 )
-            checkpoint = step.main_flow_materialization
-            if checkpoint is not None:
-                lines.append(
-                    f"  main-flow checkpoint: backend={checkpoint.backend} output_dir={checkpoint.output_dir} sub_dir={checkpoint.sub_dir}"
+            )
+            lines.extend(
+                cls.optional_lines(
+                    step.main_flow_materialization,
+                    lambda checkpoint: (
+                        f"  main-flow checkpoint: backend={checkpoint.backend} output_dir={checkpoint.output_dir} sub_dir={checkpoint.sub_dir}",
+                    ),
                 )
+            )
             for viewer in step.viewer_streaming:
                 line = f"  viewer stream: viewer={viewer.viewer_type.value} config={viewer.config_key} backend={viewer.backend}"
                 if viewer.effective_config:
@@ -294,8 +297,11 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
                 lines.append(
                     f"  artifact {artifact.name}: kind={artifact.kind} path={artifact.path} groups={_sequence_text(artifact.group_keys)}"
                 )
-                if artifact.materialization is not None:
-                    lines.extend(cls._materialization_lines(artifact.materialization))
+                lines.extend(
+                    cls.optional_lines(
+                        artifact.materialization, cls._materialization_lines
+                    )
+                )
             if step.truncated_artifact_input_count > 0:
                 lines.append(
                     f"  artifact input ... truncated={step.truncated_artifact_input_count}"
@@ -306,18 +312,25 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
                 )
         return lines
 
-    @staticmethod
-    def _artifact_input_line(artifact: ArtifactInputPlanSummary) -> str:
+    @classmethod
+    def _artifact_input_line(cls, artifact: ArtifactInputPlanSummary) -> str:
         source_parts: list[str] = []
-        if artifact.source_step_id is not None:
-            source_parts.append(f"source_step={artifact.source_step_id}")
-        if artifact.source_step_scope_id is not None:
-            source_parts.append(f"source_scope={artifact.source_step_scope_id}")
+        source_parts.extend(
+            cls.optional_lines(
+                artifact.source_step_id, lambda value: (f"source_step={value}",)
+            )
+        )
+        source_parts.extend(
+            cls.optional_lines(
+                artifact.source_step_scope_id, lambda value: (f"source_scope={value}",)
+            )
+        )
         suffix = f" {' '.join(source_parts)}" if source_parts else ""
         return f"  artifact input {artifact.name}: kind={artifact.kind} path={artifact.path} groups={_sequence_text(artifact.group_keys)}{suffix}"
 
-    @staticmethod
+    @classmethod
     def _materialization_lines(
+        cls,
         materialization: ArtifactMaterializationPlanSummary,
     ) -> list[str]:
         mode = (
@@ -328,10 +341,17 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
             else "explicit"
         )
         parts = [mode, f"persistent={materialization.persistent_enabled}"]
-        if materialization.persistent_backend is not None:
-            parts.append(f"backend={materialization.persistent_backend}")
-        if materialization.analysis_output_dir is not None:
-            parts.append(f"analysis_dir={materialization.analysis_output_dir}")
+        parts.extend(
+            cls.optional_lines(
+                materialization.persistent_backend, lambda value: (f"backend={value}",)
+            )
+        )
+        parts.extend(
+            cls.optional_lines(
+                materialization.analysis_output_dir,
+                lambda value: (f"analysis_dir={value}",),
+            )
+        )
         if materialization.filename_uses_source_identity:
             parts.append("source-identity-filenames")
         if materialization.runtime_metadata_can_refine_paths:
@@ -345,8 +365,11 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
             lines.append(
                 f"      candidates ... truncated={len(materialization.paths) - 3}"
             )
-        if materialization.note is not None:
-            lines.append(f"      note: {materialization.note}")
+        lines.extend(
+            cls.optional_lines(
+                materialization.note, lambda value: (f"      note: {value}",)
+            )
+        )
         return lines
 
 
@@ -391,8 +414,9 @@ class ExecutionJobStatusRenderer(ExecutionJobRenderer):
                 "Response: "
                 + " ".join(f"{key}={value}" for key, value in payload.response.items())
             )
-        if payload.progress is not None:
-            lines.append(f"Progress: {payload.progress}")
+        lines.extend(
+            cls.optional_lines(payload.progress, lambda value: (f"Progress: {value}",))
+        )
         _append_messages(lines, (), payload.warnings)
         return "\n".join(lines)
 
