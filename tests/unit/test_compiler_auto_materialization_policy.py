@@ -5,7 +5,6 @@ from types import SimpleNamespace
 import pytest
 
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
-from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
@@ -15,7 +14,7 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     ROIOptions,
 )
-
+from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 
 def test_disabling_automatic_materialization_keeps_only_declared_exports(
     monkeypatch,

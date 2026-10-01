@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from collections.abc import Mapping, Sequence
@@ -353,6 +354,14 @@ class OpenHCSMetadataSubdirectories:
     """Typed view over OpenHCS metadata subdirectory payloads."""
 
     metadata: OpenHCSMetadataPayload
+
+    @classmethod
+    def from_path(cls, path: Path) -> OpenHCSMetadataSubdirectories:
+        """Load the durable projection document for completed-plate reconciliation."""
+        if not path.is_file():
+            return cls({})
+        with path.open(encoding="utf-8") as stream:
+            return cls(json.load(stream))
 
     def items(self) -> tuple[tuple[str, OpenHCSSubdirectoryPayload], ...]:
         subdirectories = self.metadata.get(FIELDS.SUBDIRECTORIES)

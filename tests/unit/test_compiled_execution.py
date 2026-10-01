@@ -44,9 +44,8 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
-
+from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
     return CompiledRuntimeEnvironmentPlan(

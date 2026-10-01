@@ -34,6 +34,10 @@ from openhcs.processing.materialization.path_scopes import (
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,
 )
+from openhcs.processing.materialization.persistence import (
+    StreamingOnlyMaterializationSpec,
+    TerminalMaterializationSpec,
+)
 from openhcs.processing.materialization.presets import (
     csv_dataclass_materializer,
     csv_materializer,
@@ -51,6 +55,8 @@ __all__ = [
     "MaterializationFormat",
     "WriteMode",
     "MaterializationSpec",
+    "TerminalMaterializationSpec",
+    "StreamingOnlyMaterializationSpec",
     "MaterializationContext",
     "Output",
     "PathHelper",

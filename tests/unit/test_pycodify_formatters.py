@@ -29,7 +29,13 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
-
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    StreamingOnlyMaterializationSpec,
+    TerminalMaterializationSpec,
+    WriteMode,
+)
 
 def configurable_test_function(image, threshold: int = 3, enabled: bool = True):
     return image
@@ -40,6 +46,33 @@ def _source(value, *, clean_mode: bool = True) -> str:
         Assignment("config", value),
         clean_mode=clean_mode,
     )
+
+
+@pytest.mark.parametrize(
+    "spec_type, exports, persists",
+    (
+        (MaterializationSpec, True, True),
+        (TerminalMaterializationSpec, False, True),
+        (StreamingOnlyMaterializationSpec, False, False),
+    ),
+)
+def test_materialization_source_roundtrip_preserves_nominal_intent(
+    spec_type, exports, persists
+):
+    original = spec_type(
+        ImageFileOptions(filename_suffix=".tif"),
+        allowed_backends=["disk"],
+        write_mode=WriteMode.ERROR,
+    )
+    namespace = {}
+    exec(_source(original), namespace)
+    restored = namespace["config"]
+    assert type(restored) is spec_type
+    assert restored.outputs == original.outputs
+    assert restored.allowed_backends == original.allowed_backends
+    assert restored.write_mode is WriteMode.ERROR
+    assert restored.participates_in_runtime_export_observation() is exports
+    assert restored.participates_in_persistent_materialization() is persists
 
 
 def test_function_reference_formats_from_declared_identity_without_resolution(
