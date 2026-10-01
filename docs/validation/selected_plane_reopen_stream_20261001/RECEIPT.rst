@@ -134,8 +134,14 @@ The exact exclusions are test_inventory_source_projection_loads_exact_ome_stack_
 and test_inventory_source_projection_loads_exact_ordinary_tiff, which enter existing
 Java-backed autodetection; they are not reported as qualified or weakened.
 Original whole12-output/real-SHM module:12pass/445912KiB/7.983s on current-main6e8.
-Completed unique controls now218, with overlaps counted only once; later source
-owner correction additionally requires final public disk/SHM receiver confirmation.
+Completed unique controls now218, with overlaps counted only once. Final production
+32d7 source confirmation: owner-public-native3pass/521860KiB/9.514s;
+owner-plain-tiff1pass/521164KiB/10.346s; owner-all12 module12pass/446120KiB/8.960s.
+These confirmations do not add duplicate identities to the218-control total.
+The original public disk/SHM/packet/strict-receiver path, independent native TIFF
+declaration and all12 public artifact outputs/five exact QA streams remain working
+after metadata-owner promotion. No further source controls or native run are needed
+for this finite checkpoint.
 
 Fresh canonical NRA83b05d1f exact policy still failed before analysis at its missing
 RedundantTypeCheckDetector export. No detector/policy stub or compatibility import
@@ -157,9 +163,37 @@ dependencies, and report selection is exactly the three changed production paths
 The strict source-group watchdog ended that unmodified policy at its58s execution
 allowance (2s reserved for shutdown):212036KiB aggregate RSS, process group exited.
 No before/after NRA count, detector finding report or completed descent certificate
-was emitted. R1 therefore remains BLOCKED at bounded complete-context preparation,
-not a pass, waiver, API workaround or complete scoped audit. The earlier canonical
-API failure is now independently distinguished from this API-correct source run.
+was emitted. There was no phase-completion marker; this receipt does not infer
+whether staging/preparation or analysis held the process at shutdown. R1 remains
+BLOCKED at the bounded complete-context attempt, not a pass, waiver, API workaround
+or complete scoped audit. The earlier canonical API failure is independently
+distinguished from this API-correct source run. Parent retains the broader bounded
+R1 preparation/tooling follow-up; issue395's finite materialization/display defect
+does not turn into a global NRA qualification or a biological acceptance claim.
+
+Final artifacts and reproducibility
+----------------------------------
+
+Production is frozen at32d7a6ec49e4a7b995586f9d464353ddb2e00d60; subsequent commits
+contain evidence/documentation only. Actual SHA256 values:
+
+* projected_image_output.py: ae17fab8b22e216c23a3d3b55bcba5d7a8fdbc504a4435c82b0ba8d9380e9c3f
+* runtime_image_values.py: 356f4ffa469383fa0989a4da4f59c9c1ea07591ad9d4c7e8dac8efca691e5665
+* viewer_streaming_service.py: 6bec8b5cb7052d118d7d44fd308721bc055dd48c998565728bf09ad0c1fb556a
+
+All72 raw logs/XML/JSON/resource receipts, including every rejected fixture/resource
+attempt and both original failed/final passing R0 runs, are byte-exact members of
+raw-evidence.tar.gz. Archive SHA256:
+e9a10347805e3e334c0783b742136328430389ff2abd9932ace08779bbfe28b8.
+RAW_EVIDENCE_SHA256.txt indexes each member's original complete worker-relative path
+and SHA256. ARCHIVE_COMPARE.txt records successful native tar byte comparison,
+exit0. ARCHIVE_SHA256.txt authenticates the archive. Versioned raw duplicates were
+removed only after comparison; originals remain on this worker's disk and in prior
+Git commits. No raw evidence whitespace or assertion was edited. Extract the archive
+into a separate persistent review directory; member names are workspace-relative.
+Original selected_plane_stream_materialization_20261001 evidence, biological freeze,
+storage_cleanup_20261001 receipts and parent/Singer sources remain protected.
+MANIFEST.json records exact source/tool authorities and finite acceptance boundaries.
 
 Installed boundary
 ------------------
@@ -169,7 +203,9 @@ channel2/FITC/1.3556, uint8[1024,1024], then an explicit binary0..1 display wind
 Parent evidence: PR397 issuecomment5941295091 and retained
 paired397-388-installed-20261001/reopen399-projected-binary-review/REVIEW.json.
 That installed acceptance belongs to exact229 bytes, not the later source-only
-metadata-owner correction. Parent's handed-off viewer2339091/create1790890853.17
+metadata-owner correction. Final9a3/32d owner promotion installed byte/live acceptance
+is explicitly PENDING the next parent-owned safe milestone. Parent's handed-off
+viewer2339091/create1790890853.17
 and subsequent assisted science remain parent/Dalton-owned. No private install,
 native/viewer launch, scientific callable change or biological replay by Lorentz.
 Original007 failure and frozen/rejected biological records remain unchanged;

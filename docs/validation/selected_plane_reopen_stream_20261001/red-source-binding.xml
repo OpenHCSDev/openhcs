@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="6.626" timestamp="2026-10-01T17:22:09.374111-04:00" hostname="desktop"><testcase classname="tests.unit.agent.test_selected_plane_reopen_stream" name="test_public_declared_saved_image_reaches_strict_receiver[source_binding]" time="0.083"><failure message="AssertionError: assert (AgentError(c...ma0/native'),) == ()&#10;  &#10;  Left contains one more item: AgentError(code='plate_file_stream_failed', message='Napari aggregate payload axes require an exact plane_component_va...1001/storage_cleanup_20261001/selected-plane-reopen-red-source-binding-scratch/test_public_declared_saved_ima0/native')&#10;  Use -v to get more diff">tests/unit/agent/test_selected_plane_reopen_stream.py:158: in test_public_declared_saved_image_reaches_strict_receiver
-    assert result.errors == ()
-E   AssertionError: assert (AgentError(c...ma0/native'),) == ()
-E     
-E     Left contains one more item: AgentError(code='plate_file_stream_failed', message='Napari aggregate payload axes require an exact plane_component_va...1001/storage_cleanup_20261001/selected-plane-reopen-red-source-binding-scratch/test_public_declared_saved_ima0/native')
-E     Use -v to get more diff</failure></testcase></testsuite></testsuites>

@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/scripts/check_refactor_r1.py", line 27, in <module>
-    from nominal_refactor_advisor.detectors import (
-ImportError: cannot import name 'RedundantTypeCheckDetector' from 'nominal_refactor_advisor.detectors' (/home/ts/code/projects/nominal-refactor-advisor/nominal_refactor_advisor/detectors/__init__.py)
-BOUNDED_SOURCE peak_aggregate_rss_kib=76692 elapsed_seconds=2.191 returncode=1 reason=None
