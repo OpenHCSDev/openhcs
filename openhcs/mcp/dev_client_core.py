@@ -82,6 +82,7 @@ MCP_TOOL_TIMEOUT_MARGIN_SECONDS = 5.0
 DEFAULT_WORKFLOW_POLL_INTERVAL_SECONDS = 0.5
 DEFAULT_WORKFLOW_POLL_TIMEOUT_SECONDS = 30.0
 AliasValueT = TypeVar("AliasValueT")
+DeclaredPayloadT = TypeVar("DeclaredPayloadT")
 MCP_DEV_TRANSPORT_FAILURE_HINT = (
     "The fresh OpenHCS MCP subprocess did not complete the requested stdio "
     "exchange. The dev client captures a bounded server stderr tail on "
@@ -455,6 +456,13 @@ class McpDevToolResult:
             return None
         payload = self.payloads[0]
         return None if isinstance(payload, McpDevPayloadFailure) else payload
+
+    def decoded_payload_as(
+        self, output_contract: type[DeclaredPayloadT]
+    ) -> DeclaredPayloadT | None:
+        """Require the requested nominal member, not an external raw receipt."""
+        payload = self.decoded_for_rendering().first_decoded_payload()
+        return payload if isinstance(payload, output_contract) else None
 
     def diagnostic_errors(self) -> tuple[AgentError, ...]:
         errors = tuple(
@@ -2381,10 +2389,7 @@ def workflow_result_payload(
     result: McpDevToolResult,
 ) -> UiSelectedPlateWorkflowResult | None:
     """Consume the same nominal result already descended at wire ingress."""
-    return cast(
-        UiSelectedPlateWorkflowResult | None,
-        result.decoded_for_rendering().first_decoded_payload(),
-    )
+    return result.decoded_payload_as(UiSelectedPlateWorkflowResult)
 
 
 def workflow_poll_skip_reason(result: McpDevToolResult) -> WorkflowPollSkipReason:
@@ -2402,10 +2407,7 @@ def ui_bridge_operation_result(
     result: McpDevToolResult,
 ) -> UiBridgeOperationRef | None:
     """Consume the bridge-operation contract already decoded at ingress."""
-    return cast(
-        UiBridgeOperationRef | None,
-        result.decoded_for_rendering().first_decoded_payload(),
-    )
+    return result.decoded_payload_as(UiBridgeOperationRef)
 
 
 def workflow_operation_receipt_skip_reason(
@@ -2429,10 +2431,7 @@ def workflow_operation_receipt_skip_reason(
 
 def state_surface_document(result: McpDevToolResult) -> UiStateSurfaceDocument | None:
     """Retain the declared envelope; only its dynamic document body is JSON."""
-    return cast(
-        UiStateSurfaceDocument | None,
-        result.decoded_for_rendering().first_decoded_payload(),
-    )
+    return result.decoded_payload_as(UiStateSurfaceDocument)
 
 
 def state_surface_payload(result: McpDevToolResult) -> Mapping[str, JsonValue]:
