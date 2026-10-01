@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import GroupBy
-from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.constants.input_source import InputSource
+from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -20,6 +20,8 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+
+_ClaimValue = TypeVar("_ClaimValue")
 
 PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
     "__openhcs_pipeline_input", ImageArtifactType
@@ -351,6 +353,18 @@ class InvocationContractProviderFactory(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "__name__"
 
     @classmethod
+    def compile_time_parameter_names(cls, contract: "CallableContract") -> tuple[str, ...]:
+        """Declare authored parameters consumed outside the public callable ABI."""
+        return ()
+
+    @classmethod
+    def normalize_authoring_kwargs(
+        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+    ) -> Mapping[str, object] | None:
+        """Project declaration defaults, or leave an unowned callable unclaimed."""
+        return None
+
+    @classmethod
     @abstractmethod
     def provider_for_session(
         cls,
@@ -427,27 +441,59 @@ class CompositeInvocationContractProvider:
                 )
         object.__setattr__(self, "providers", providers)
 
+    @staticmethod
+    def require_single_claim(
+        claims: tuple[tuple[str, _ClaimValue], ...], *, subject: str,
+    ) -> _ClaimValue | None:
+        """Share exact owner admission across compile and authoring projections."""
+        if len(claims) > 1:
+            raise ValueError(
+                f"Multiple invocation contract providers claimed {subject}: "
+                f"{tuple(owner for owner, _value in claims)!r}."
+            )
+        return claims[0][1] if claims else None
+
     def __call__(
         self,
         invocation: "NormalizedFunctionItem",
         step_context: ArtifactDeclarationStepContext,
     ) -> InvocationContractPlan | None:
         claims = tuple(
-            (provider, plan)
+            (type(provider).__name__, plan)
             for provider in self.providers
             for plan in (provider(invocation, step_context),)
             if plan is not None
         )
-        if len(claims) > 1:
-            raise ValueError(
-                "Multiple invocation contract providers claimed one callable: "
-                f"{tuple(type(provider).__name__ for provider, _plan in claims)!r}."
-            )
-        return claims[0][1] if claims else None
+        return self.require_single_claim(claims, subject="one callable")
 
 
 class PipelineInvocationContractProviderAuthority:
     """Resolve all registered compile-time invocation-contract providers."""
+
+    @classmethod
+    def compile_time_parameter_names(cls, contract: "CallableContract") -> tuple[str, ...]:
+        """Derive admission from the original provider declarations, not a roster."""
+        return tuple(dict.fromkeys(
+            name
+            for factory in InvocationContractProviderFactory.__registry__.values()
+            for name in factory.compile_time_parameter_names(contract)
+        ))
+
+    @classmethod
+    def normalize_authoring_kwargs(
+        cls, contract: "CallableContract", kwargs: Mapping[str, object],
+    ) -> dict[str, object]:
+        """Require one declaration owner for an authored invocation projection."""
+        claims = tuple(
+            (factory.__name__, values)
+            for factory in InvocationContractProviderFactory.__registry__.values()
+            for values in (factory.normalize_authoring_kwargs(contract, kwargs),)
+            if values is not None
+        )
+        values = CompositeInvocationContractProvider.require_single_claim(
+            claims, subject="authoring kwargs",
+        )
+        return dict(kwargs if values is None else values)
 
     @classmethod
     def provider_for_session(

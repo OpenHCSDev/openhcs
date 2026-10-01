@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -17,6 +18,7 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ObjectLocationMeasurementRows,
 )
+from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
     RelationshipMeasurementRows,
 )
@@ -59,6 +61,11 @@ def test_object_location_rows_are_schema_bearing_columnar_rows() -> None:
 
     assert isinstance(rows, ColumnarRows)
     assert rows.row_count() == 6
+    assert set(rows.column_values("feature_name")) == {
+        "Location_Center_X",
+        "Location_Center_Y",
+        "Location_Center_Z",
+    }
     assert tuple(field.name for field in rows.fields) == (
         MeasurementRowAxisField.OBJECT_NAME.value,
         MeasurementRowAxisField.OBJECT_LABEL.value,
@@ -66,6 +73,48 @@ def test_object_location_rows_are_schema_bearing_columnar_rows() -> None:
         MeasurementRowAxisField.FEATURE_NAME.value,
         "result_value",
     )
+
+
+@pytest.mark.parametrize(
+    "module_name, embeds_2d_z",
+    (
+        ("IdentifyObjectsInGrid", False),
+        ("ExpandOrShrinkObjects", False),
+        ("MaskObjects", False),
+        ("SplitOrMergeObjects", False),
+        ("IdentifyTertiaryObjects", False),
+        ("IdentifyObjectsManually", False),
+        ("StraightenWorms", False),
+        ("UntangleWorms", False),
+        ("Combineobjects", False),
+        ("IdentifyPrimaryObjects", True),
+        ("IdentifySecondaryObjects", True),
+    ),
+)
+@pytest.mark.parametrize("dimensions", (2, 3))
+def test_module_location_contract_preserves_native_coordinates(
+    module_name, embeds_2d_z, dimensions
+) -> None:
+    labels = np.zeros((3,) * dimensions, dtype=np.int32)
+    labels[(1,) * dimensions] = 1
+    labels[(2,) * dimensions] = 2
+    payload = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+    )
+    module = CellProfilerModule.require_module(module_name)
+    rows = module.object_location_measurement_row_type()(payload, "Objects").rows()
+    features = {"Location_Center_X", "Location_Center_Y"}
+    if dimensions == 3 or embeds_2d_z:
+        features.add("Location_Center_Z")
+    assert set(rows.column_values("feature_name")) == features
+    for row in rows.iter_row_mappings():
+        expected = (
+            0.0
+            if row["feature_name"] == "Location_Center_Z" and dimensions == 2
+            else float(row["object_label"])
+        )
+        assert row["result_value"] == expected
 
 
 def test_image_intensity_producer_and_projector_are_columnar() -> None:

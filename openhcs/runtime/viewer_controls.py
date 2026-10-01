@@ -18,6 +18,7 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 
 if TYPE_CHECKING:
     import numpy as np
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
@@ -234,6 +235,16 @@ class ViewerPayloadControlOptions:
     include_shape_payloads: bool = True
     max_shape_payloads: int = 256
 
+    def sample_axis_indices(
+        self,
+        data: np.ndarray,
+        image_metadata: ImagePayloadMetadata | None,
+        source_data: np.ndarray,
+        removed_leading_axes: int,
+    ) -> tuple[int, ...]:
+        """Raw array slices retain their existing trailing-dimension contract."""
+        return tuple(range(data.ndim - len(self.array_slices), data.ndim))
+
     def __post_init__(self) -> None:
         if self.route_key is not None and (
             not isinstance(self.route_key, str) or not self.route_key
@@ -268,7 +279,7 @@ class ViewerPayloadControlOptions:
         include_shape_payloads: bool | None = None,
         max_shape_payloads: int | None = None,
     ) -> Self:
-        defaults = cls()
+        defaults = cls(array_slices=array_slices)
         return cls(
             route_key=route_key,
             axis_indices=(
@@ -349,6 +360,33 @@ class ViewerPayloadControlOptions:
             raise TypeError(f"Viewer payload {field_name} must be an integer.")
         if value < 0:
             raise ValueError(f"Viewer payload {field_name} must be nonnegative.")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerImageSpatialSampleControls(ViewerPayloadControlOptions):
+    """Semantic Y/X bounds; metadata, not payload rank or size, owns layout."""
+
+    def __post_init__(self) -> None:
+        super(ViewerImageSpatialSampleControls, self).__post_init__()
+        if self.array_slices is None or len(self.array_slices) != 2:
+            raise ValueError("Spatial image sampling requires exactly Y/X bounds.")
+
+    def sample_axis_indices(
+        self,
+        data: np.ndarray,
+        image_metadata: ImagePayloadMetadata | None,
+        source_data: np.ndarray,
+        removed_leading_axes: int,
+    ) -> tuple[int, ...]:
+        if image_metadata is None:
+            raise ValueError("Spatial image sampling requires image metadata.")
+        axes = image_metadata.spatial_axes_yx(source_data)
+        if axes is None:
+            raise ValueError("Image metadata does not declare a spatial Y/X layout.")
+        projected = tuple(axis - removed_leading_axes for axis in axes)
+        if any(axis < 0 or axis >= data.ndim for axis in projected):
+            raise ValueError("Spatial Y/X axes were removed by the payload projection.")
+        return projected
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

@@ -111,9 +111,11 @@ class CsvScalarNormalization {
 
 static PyObject *render_csv(PyObject *, PyObject *args) {
     PyObject *rows, *columns, *real_class;
+    PyObject *header_rows = Py_None;
     const char *delimiter;
     int null_nonfinite;
-    if (!PyArg_ParseTuple(args, "OOsOp", &rows, &columns, &delimiter, &real_class, &null_nonfinite))
+    if (!PyArg_ParseTuple(args, "OOsOp|O", &rows, &columns, &delimiter, &real_class,
+                          &null_nonfinite, &header_rows))
         return nullptr;
     if (!PyTuple_Check(rows) || !PyTuple_Check(columns)) {
         PyErr_SetString(PyExc_TypeError, "Rows and columns must be tuples");
@@ -126,17 +128,34 @@ static PyObject *render_csv(PyObject *, PyObject *args) {
     Py_ssize_t column_count = PyTuple_Size(columns), row_count = PyTuple_Size(rows);
     if (column_count == 0)
         return PyUnicode_FromString("");
+    if (header_rows != Py_None) {
+        if (!PyTuple_Check(header_rows)) {
+            PyErr_SetString(PyExc_TypeError, "CSV header rows must be tuples");
+            return nullptr;
+        }
+        for (Py_ssize_t index = 0; index < PyTuple_Size(header_rows); ++index) {
+            PyObject *header = PyTuple_GetItem(header_rows, index);
+            if (!PyTuple_Check(header) || PyTuple_Size(header) != column_count) {
+                PyErr_SetString(PyExc_ValueError, "CSV header width must match columns");
+                return nullptr;
+            }
+        }
+    }
     try {
         std::string output;
         output.reserve(static_cast<size_t>(row_count) * static_cast<size_t>(column_count) * 10);
-        for (Py_ssize_t col = 0; col < column_count; ++col) {
-            if (col)
-                output.push_back(delimiter[0]);
-            if (!append_csv_cell(output, PyTuple_GetItem(columns, col), delimiter[0],
-                                 column_count == 1))
-                return nullptr;
+        Py_ssize_t header_count = header_rows == Py_None ? 1 : PyTuple_Size(header_rows);
+        for (Py_ssize_t index = 0; index < header_count; ++index) {
+            PyObject *header = header_rows == Py_None ? columns : PyTuple_GetItem(header_rows, index);
+            for (Py_ssize_t col = 0; col < column_count; ++col) {
+                if (col)
+                    output.push_back(delimiter[0]);
+                if (!append_csv_cell(output, PyTuple_GetItem(header, col), delimiter[0],
+                                     column_count == 1))
+                    return nullptr;
+            }
+            output.push_back('\n');
         }
-        output.push_back('\n');
         CsvScalarNormalization normalization(real_class, null_nonfinite);
         if (!normalization.ready())
             return nullptr;

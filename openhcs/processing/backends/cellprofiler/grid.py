@@ -60,7 +60,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     PlaneRuntimeArtifactModule,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -589,13 +589,14 @@ class IdentifyObjectsInGridModule(
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     CellProfilerModule,
 ):
     module_name = "IdentifyObjectsInGrid"
     function_name = "identify_objects_in_grid"
     validated = True
     confidence = 1.0
+
     grid_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
         "Select the defined grid"
     )

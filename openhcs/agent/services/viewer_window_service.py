@@ -14,7 +14,10 @@ import zmq
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
 from polystore.streaming.identity import StreamProducerIdentity
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+from pyqt_reactive.services.window_snapshot import (
+    WindowSnapshotCaptureSpec,
+    WindowVisualObservation,
+)
 from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
@@ -1124,6 +1127,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         self._context_factory = context_factory
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
+        request = request.start_operation()
         message = {
             ViewerControlResponseField.TYPE.value: ViewerControlMessageType.SCREENSHOT.value,
             ViewerControlResponseField.PAYLOAD.value: request,
@@ -1227,6 +1231,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         request: ViewerWindowControlRequest,
         message: Mapping[str, object],
     ) -> JsonObject:
+        deadline = request.control_deadline()
         connection = request.connection
         control_url = connection.zmq_control_url(OPENHCS_ZMQ_CONFIG)
         context = self._context_factory()
@@ -1239,13 +1244,14 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             socket.connect(control_url)
             socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
             poller.register(socket, zmq.POLLIN)
-            events = dict(poller.poll(request.timeout_ms))
+            events = dict(poller.poll(deadline.remaining_milliseconds()))
             if events.get(socket) != zmq.POLLIN:
                 raise TimeoutError(
                     "Viewer control request timed out after "
                     f"{request.timeout_ms}ms waiting for {control_url}."
                 )
             response = pickle.loads(socket.recv(flags=zmq.DONTWAIT))
+            deadline.remaining_seconds()
         finally:
             socket.close(linger=0)
             context.destroy(linger=0)
@@ -1329,6 +1335,7 @@ class ViewerWindowService:
         request: ViewerWindowSnapshotRequest,
         response: JsonObject,
     ) -> ViewerWindowSnapshotResult:
+        observation = self._optional_typed(response, "observation", WindowVisualObservation)
         status = self._required_scalar(
             response, ViewerControlResponseField.STATUS, str, "a string"
         )
@@ -1339,6 +1346,7 @@ class ViewerWindowService:
             return ViewerWindowSnapshotResult.from_request_error(
                 request=request,
                 error=AgentError(code="viewer_window_snapshot_failed", message=message),
+                observation=observation,
             )
         response_snapshot = response.get(ViewerControlField.SNAPSHOT.value)
         if not isinstance(response_snapshot, WindowSnapshotCaptureSpec):
@@ -1357,24 +1365,16 @@ class ViewerWindowService:
                 ),
             )
 
+        request.frame_condition.validate_observation(observation)
         viewer_payload = self._required_mapping(response, ViewerControlField.VIEWER)
         resource_payload = self._required_mapping(response, ViewerControlField.RESOURCE)
         return ViewerWindowSnapshotResult(
             schema_version=SCHEMA_VERSION,
             connection=connection,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
+            **request.capture_fields(),
             captured=True,
-            resource=AgentResourceRef(
-                uri=self._required_scalar(resource_payload, "uri", str, "a string"),
-                title=self._required_scalar(resource_payload, "title", str, "a string"),
-                mime_type=self._required_scalar(
-                    resource_payload, "mime_type", str, "a string"
-                ),
-                path=self._optional_typed(resource_payload, "path", str),
-                size_bytes=self._optional_typed(resource_payload, "size_bytes", int),
-                sha256=self._optional_typed(resource_payload, "sha256", str),
-            ),
+            observation=observation,
+            resource=dataclass_from_mapping(AgentResourceRef, resource_payload),
             viewer=ViewerWindowDescriptor.from_wire_fields(
                 viewer_wire_value=self._required_scalar(
                     viewer_payload,

@@ -12,7 +12,10 @@ from polystore.virtual_workspace import SourcePixelRef
 from pyqt_reactive.services.parameter_help_service import (
     dataclass_parameter_descriptions,
 )
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from pyqt_reactive.services.window_snapshot import (
+    WindowSnapshotCaptureScope,
+    WindowSnapshotFrameCondition,
+)
 from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionProgressObservation
@@ -1377,7 +1380,8 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert result.reachable is False
     assert result.errors[0].code == "viewer_window_state_failed"
     assert "timed out after 25ms" in result.errors[0].message
-    assert poller.poll_timeouts == [25]
+    assert len(poller.poll_timeouts) == 1
+    assert 0 < poller.poll_timeouts[0] <= 25
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
     assert socket.closed is True
     assert context.destroy_linger == 0
@@ -2020,7 +2024,7 @@ def test_function_catalog_search_finds_tile_assembler_by_stitch_vocabulary(monke
     assert "Stitch/assemble overlapping image tiles" in (page.items[0].summary or "")
 
 
-def test_viewer_window_service_snapshots_running_viewer():
+def test_viewer_window_service_snapshots_running_viewer_explicitly_immediate():
     gateway = _FakeViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)
 
@@ -2029,10 +2033,12 @@ def test_viewer_window_service_snapshots_running_viewer():
             connection=_viewer_connection(),
             output_dir_path="/tmp/openhcs-mcp-window-snapshots",
             capture_scope=WindowSnapshotCaptureScope.WINDOW,
+            frame_condition=WindowSnapshotFrameCondition.IMMEDIATE,
         ),
     )
 
     assert result.captured is True
+    assert result.frame_condition is WindowSnapshotFrameCondition.IMMEDIATE
     assert result.connection.port == 5584
     assert result.viewer is not None
     assert result.viewer.viewer_type is ViewerType.NAPARI
@@ -3142,7 +3148,8 @@ def test_execution_session_observation_export_uses_ordinary_submission(
 
     assert job.server_execution_id == _ExecutionTestId.EXECUTE
     assert fake_client.execution_submissions[0].config_params == {
-        "runtime_observation_export_path": str(export_path)
+        "runtime_observation_export_path": str(export_path),
+        "runtime_observation_export_scope": "values",
     }
 
     outcome_path = tmp_path / "evidence" / "outcomes.pkl"
@@ -3540,9 +3547,9 @@ def test_compile_inspection_rejects_escaping_metadata_transaction(
         # The metadata target is admitted, but staging would still write outside.
         filename = str(outside / "metadata.json")
         (outside / "metadata.json").symlink_to(plate / "admitted.json")
-        metadata_module.LOCK_CONFIG.lock_path(outside / "metadata.json").symlink_to(
-            plate / "admitted.lock"
-        )
+        config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+        _, lock = config.managed_paths(plate)
+        lock.symlink_to(plate / "admitted.lock")
     config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
     monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
     monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
