@@ -202,6 +202,22 @@ class GenericFilenameParser(ABC):
         """Construct a filename from one nominal component result."""
         pass
 
+    def construct_acquisition_filename(
+        self,
+        components: FilenameParseResult,
+        *,
+        include_all_components: bool = False,
+        plate_name: str | None = None,
+        include_site: bool = True,
+        include_channel: bool = True,
+    ) -> str:
+        """Spell a physical acquisition name; semantic identity stays complete.
+
+        Formats with folder-encoded axes or acquisition-specific spelling own
+        those conventions in their existing parser, not in the producer.
+        """
+        return self.construct_filename(components)
+
     def get_component_names(self) -> tuple[str, ...]:
         """Get all component names for this parser."""
         return AllComponents.ordered_names()

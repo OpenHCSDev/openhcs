@@ -416,6 +416,10 @@ class ImageXpressFilenameParser(FilenameParser):
         site_padding: int = 3,
         z_padding: int = 3,
         timepoint_padding: int = 3,
+        *,
+        plate_name: str | None = None,
+        include_site: bool = True,
+        include_channel: bool = True,
     ) -> str:
         """Construct an ImageXpress filename from nominal component values."""
 
@@ -425,13 +429,13 @@ class ImageXpressFilenameParser(FilenameParser):
         z_index = components.value_for(AllComponents.Z_INDEX)
         timepoint = components.value_for(AllComponents.TIMEPOINT)
 
-        parts = [well]
+        parts = [f"{plate_name}_{well}" if plate_name is not None else well]
 
-        # Always add site
-        parts.append(f"_s{format_filename_component(site, site_padding)}")
+        if include_site:
+            parts.append(f"_s{format_filename_component(site, site_padding)}")
 
-        # Always add channel
-        parts.append(f"_w{format_filename_component(channel)}")
+        if include_channel:
+            parts.append(f"_w{format_filename_component(channel)}")
 
         if z_index is not None:
             parts.append(f"_z{format_filename_component(z_index, z_padding)}")
@@ -441,6 +445,28 @@ class ImageXpressFilenameParser(FilenameParser):
 
         base_name = "".join(parts)
         return f"{base_name}{components.extension}"
+
+    def construct_acquisition_filename(
+        self,
+        components: FilenameParseResult,
+        *,
+        include_all_components: bool = False,
+        plate_name: str | None = None,
+        include_site: bool = True,
+        include_channel: bool = True,
+    ) -> str:
+        """Own MetaXpress acquisition spelling, including folder-only Z axes."""
+        if not include_all_components or plate_name is not None:
+            components = components.with_values(
+                ((AllComponents.Z_INDEX, None), (AllComponents.TIMEPOINT, None))
+            )
+        return self.construct_filename(
+            components,
+            site_padding=0 if plate_name is not None else 3,
+            plate_name=plate_name,
+            include_site=include_site if plate_name is not None else True,
+            include_channel=include_channel if plate_name is not None else True,
+        )
 
 
 class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):

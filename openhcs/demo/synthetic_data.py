@@ -24,7 +24,6 @@ Usage:
     generator.generate_dataset()
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple, List, Dict, Any
@@ -34,8 +33,12 @@ import tifffile
 from skimage import draw, filters
 
 from openhcs.constants.constants import AllComponents
-from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.opera_phenix import OperaPhenixFilenameParser
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
+    SourceProjectionMetadataSerializer,
+)
+from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, get_metadata_path
+from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
 from polystore.constants import Backend
 from polystore.virtual_workspace import SourcePixelRef
 
@@ -151,9 +154,17 @@ class SyntheticMicroscopyGenerator:
         self.imagexpress_bioformats_compatible = imagexpress_bioformats_compatible
         self.openhcs_format = openhcs_format
 
-        # Create parser instances for filename construction
-        self.imagexpress_parser = ImageXpressFilenameParser()
-        self.operaphenix_parser = OperaPhenixFilenameParser()
+        # Decode the external format once through the registered declaration.
+        handler_type = next(
+            (owner for owner in MICROSCOPE_HANDLERS.values()
+             if owner.__name__ == f"{format}Handler"),
+            None,
+        )
+        if handler_type is None:
+            raise ValueError(f"No declared microscope handler for format {format!r}")
+        self.microscope_handler = handler_type(None)
+        self.parser = self.microscope_handler.parser
+        self._source_planes: list[SourcePlaneProjection] = []
 
         # Always auto-calculate image size from grid and tile parameters
         self.image_size = self._calculate_image_size(
@@ -609,9 +620,10 @@ class SyntheticMicroscopyGenerator:
         # Convert well names like 'A01' to row and column indices
         well_indices = []
         for well in self.wells:
-            row = ord(well[0]) - ord("A") + 1  # A -> 1, B -> 2, etc.
-            col = int(well[1:3])
-            well_indices.append((row, col))
+            row_name, column_name = self.parser.extract_component_coordinates(well)
+            row = ord(row_name) - ord("A") + 1
+            col = int(column_name)
+            well_indices.append((well, row, col))
 
         # Calculate pixel size in meters (for ImageResolutionX/Y)
         # Default is 0.65 µm, but we'll use a more realistic value for Opera Phenix
@@ -636,13 +648,13 @@ class SyntheticMicroscopyGenerator:
       <PlateColumns>12</PlateColumns>"""
 
         # Add wells
-        for row, col in well_indices:
+        for well, row, col in well_indices:
             xml_content += f'\n      <Well id="{row:02d}{col:02d}" />'
 
         xml_content += "\n    </Plate>\n  </Plates>\n  <Wells>"
 
         # Add well details
-        for row, col in well_indices:
+        for well, row, col in well_indices:
             xml_content += f"\n    <Well>\n      <id>{row:02d}{col:02d}</id>\n      <Row>{row}</Row>\n      <Col>{col}</Col>"
 
             # Add images for each site and channel
@@ -731,7 +743,7 @@ class SyntheticMicroscopyGenerator:
         )
 
         # Add detailed image information for each image
-        for row, col in well_indices:
+        for well, row, col in well_indices:
             for site in range(1, self.grid_size[0] * self.grid_size[1] + 1):
                 # Get grid position for this field ID using Opera Phenix pattern
                 site_row, site_col = field_pattern[site]
@@ -758,7 +770,9 @@ class SyntheticMicroscopyGenerator:
                         image_id = f"{row:02d}{col:02d}K1F{site}P{z}R{channel}"
 
                         # Create URL (filename)
-                        url = f"r{row:02d}c{col:02d}f{site}p{z:02d}-ch{channel}sk1fk1fl1.tiff"
+                        url = self.parser.construct_acquisition_filename(
+                            self._plane_components(well, site, channel, z)
+                        )
 
                         # Add image element
                         xml_content += f"""
@@ -838,6 +852,7 @@ class SyntheticMicroscopyGenerator:
 
     def generate_dataset(self):
         """Generate the complete dataset."""
+        self._source_planes = []
         print(f"Generating synthetic microscopy dataset in {self.output_dir}")
         print(f"Grid size: {self.grid_size[0]}x{self.grid_size[1]}")
         print(f"Wavelengths: {self.wavelengths}")
@@ -933,38 +948,9 @@ class SyntheticMicroscopyGenerator:
                                     x_pos : x_pos + self.tile_size[0],
                                 ]
 
-                                # Create filename based on format
-                                if self.format == "ImageXpress":
-                                    filename = self.imagexpress_filename(
-                                        well=well,
-                                        site=site_index,
-                                        channel=wavelength,
-                                        z_index=z_level,
-                                    )
-                                else:  # OperaPhenix
-                                    # Opera Phenix format: rXXcYYfZZZpWW-chVskNfkNflN.tiff
-                                    # Extract row and column from well ID (e.g., 'A01' -> row=1, col=1)
-                                    row = ord(well[0]) - ord("A") + 1
-                                    col = int(well[1:3])
-                                    filename = f"r{row:02d}c{col:02d}f{site_index}p{z_level:02d}-ch{wavelength}sk1fk1fl1.tiff"
-                                filepath = target_dir / filename
-
-                                # Skip this file if it's in the skip list
-                                if filename in self.skip_files:
-                                    print(
-                                        f"  Skipped tile: {filename} (simulating missing image)"
-                                    )
-                                    site_index += 1
-                                    continue
-
-                                # Save image without compression
-                                tifffile.imwrite(filepath, tile, compression=None)
-
-                                # Print progress with full path for debugging
-                                print(
-                                    f"  Saved tile: {target_dir.name}/{filename} (position: {x_pos}, {y_pos})"
+                                self._write_plane(
+                                    tile, target_dir, well, site_index, wavelength, z_level
                                 )
-                                print(f"  Full path: {filepath.resolve()}")
                                 site_index += 1
             else:
                 # For single Z level (no Z-stack), just save files directly in TimePoint_1
@@ -990,36 +976,8 @@ class SyntheticMicroscopyGenerator:
                                 x_pos : x_pos + self.tile_size[0],
                             ]
 
-                            # Create filename based on format
-                            if self.format == "ImageXpress":
-                                filename = self.imagexpress_filename(
-                                    well=well,
-                                    site=site_index,
-                                    channel=wavelength,
-                                    z_index=1,
-                                )
-                            else:  # OperaPhenix
-                                # Opera Phenix format: rXXcYYfZZZpWW-chVskNfkNflN.tiff
-                                # Extract row and column from well ID (e.g., 'A01' -> row=1, col=1)
-                                row = ord(well[0]) - ord("A") + 1
-                                col = int(well[1:3])
-                                filename = f"r{row:02d}c{col:02d}f{site_index}p01-ch{wavelength}sk1fk1fl1.tiff"
-                            filepath = self.timepoint_dir / filename
-
-                            # Skip this file if it's in the skip list
-                            if filename in self.skip_files:
-                                print(
-                                    f"  Skipped tile: {filename} (simulating missing image)"
-                                )
-                                site_index += 1
-                                continue
-
-                            # Save image without compression
-                            tifffile.imwrite(filepath, tile, compression=None)
-
-                            # Print progress
-                            print(
-                                f"  Saved tile: {filename} (position: {x_pos}, {y_pos})"
+                            self._write_plane(
+                                tile, self.timepoint_dir, well, site_index, wavelength, 1
                             )
                             site_index += 1
 
@@ -1027,49 +985,43 @@ class SyntheticMicroscopyGenerator:
 
         # If OpenHCS format requested, generate metadata file
         if self.openhcs_format:
-            # Determine subdirectory based on format
-            if self.format == "ImageXpress":
-                sub_dir = "TimePoint_1"
-            else:  # OperaPhenix
-                sub_dir = "Images"
+            self.generate_openhcs_metadata(sub_dir=self.timepoint_dir.name, pixel_size=0.65)
 
-            self.generate_openhcs_metadata(sub_dir=sub_dir, pixel_size=0.65)
-
-    def imagexpress_filename(
-        self,
-        *,
-        well: str,
-        site: int,
-        channel: int,
-        z_index: int,
-    ) -> str:
-        """Return an ImageXpress synthetic filename for the configured compatibility mode."""
-        if self.imagexpress_bioformats_compatible:
-            plate_name = self.output_dir.name
-            parts = [f"{plate_name}_{well}"]
-            if self.grid_size[0] * self.grid_size[1] > 1:
-                parts.append(f"_s{site}")
-            if self.wavelengths > 1:
-                parts.append(f"_w{channel}")
-            return "".join(parts) + ".tif"
-        return self.imagexpress_parser.construct_filename(
-            self.imagexpress_parser.bind_declared_values(
-                (
-                    (AllComponents.WELL, well),
-                    (AllComponents.SITE, site),
-                    (AllComponents.CHANNEL, channel),
-                    (
-                        AllComponents.Z_INDEX,
-                        z_index if self.include_all_components else None,
-                    ),
-                    (
-                        AllComponents.TIMEPOINT,
-                        1 if self.include_all_components else None,
-                    ),
-                ),
-                extension=".tif",
-            )
+    def _plane_components(self, well: str, site: int, channel: int, z_index: int):
+        """Bind the complete acquisition address before physical spelling."""
+        return self.parser.bind_declared_values(
+            ((AllComponents.WELL, well), (AllComponents.SITE, site),
+             (AllComponents.CHANNEL, channel), (AllComponents.Z_INDEX, z_index),
+             (AllComponents.TIMEPOINT, 1))
         )
+
+    def _write_plane(self, tile, target_dir: Path, well: str, site: int,
+                     channel: int, z_index: int) -> None:
+        components = self._plane_components(well, site, channel, z_index)
+        # The parser owns normalization (e.g. A01 input -> Opera R01C01).
+        canonical_name = self.parser.construct_filename(components)
+        parsed = self.parser.parse_filename(canonical_name)
+        if parsed is None:
+            raise ValueError(f"Declared parser cannot reopen {canonical_name!r}")
+        address = OpenHCSPlaneAddress.from_component_values(parsed.declared_values())
+        filename = self.parser.construct_acquisition_filename(
+            components,
+            include_all_components=self.include_all_components,
+            plate_name=self.output_dir.name if self.imagexpress_bioformats_compatible else None,
+            include_site=self.grid_size[0] * self.grid_size[1] > 1,
+            include_channel=self.wavelengths > 1,
+        )
+        if filename in self.skip_files:
+            print(f"  Skipped tile: {filename} (simulating missing image)")
+            return
+        filepath = target_dir / filename
+        tifffile.imwrite(filepath, tile, compression=None)
+        self._source_planes.append(SourcePlaneProjection(
+            address=address,
+            ref=SourcePixelRef(backend=Backend.DISK.value,
+                               backend_address=filepath.relative_to(self.output_dir).as_posix()),
+        ))
+        print(f"  Saved tile: {filepath}")
 
     def generate_openhcs_metadata(
         self, sub_dir: str = "images", pixel_size: float = 0.65
@@ -1086,112 +1038,23 @@ class SyntheticMicroscopyGenerator:
         """
         print("\nGenerating OpenHCS metadata...")
 
-        # Collect all image files
-        image_files = []
-        workspace_mapping: Dict[str, SourcePixelRef] = {}
-        if self.format == "ImageXpress":
-            # ImageXpress stores images in TimePoint_1/ZStep_X/ or TimePoint_1/ for flat plates
-            timepoint_dir = self.output_dir / "TimePoint_1"
-            if self.z_stack_levels > 1:
-                # Z-stack: images in ZStep folders
-                for z in range(1, self.z_stack_levels + 1):
-                    zstep_dir = timepoint_dir / f"ZStep_{z}"
-                    if zstep_dir.exists():
-                        for img_file in sorted(zstep_dir.glob("*.tif")):
-                            virtual_path = f"{sub_dir}/{img_file.name}"
-                            image_files.append(virtual_path)
-                            workspace_mapping[virtual_path] = SourcePixelRef(
-                                backend=Backend.DISK.value,
-                                backend_address=img_file.relative_to(
-                                    self.output_dir
-                                ).as_posix(),
-                            )
-            else:
-                # Flat: images directly in TimePoint_1
-                if timepoint_dir.exists():
-                    for img_file in sorted(timepoint_dir.glob("*.tif")):
-                        rel_path = f"{sub_dir}/{img_file.name}"
-                        image_files.append(rel_path)
-        else:  # OperaPhenix
-            # OperaPhenix stores images in Images/ folder
-            images_dir = self.output_dir / "Images"
-            if images_dir.exists():
-                for img_file in sorted(images_dir.glob("*.tiff")):
-                    rel_path = f"{sub_dir}/{img_file.name}"
-                    image_files.append(rel_path)
-
-        # Build component metadata dictionaries
-        channels = {str(i): str(i) for i in range(1, self.wavelengths + 1)}
-        wells = {well: well for well in self.wells}
-
-        # Calculate number of sites from grid
-        num_sites = self.grid_size[0] * self.grid_size[1]
-        sites = {str(i): str(i) for i in range(1, num_sites + 1)}
-
-        # Z-indexes
-        z_indexes = (
-            {str(i): str(i) for i in range(1, self.z_stack_levels + 1)}
-            if self.z_stack_levels > 1
-            else None
+        # Serialize one typed authority: only planes actually written by this run.
+        projections = SourceProjectionSet(tuple(self._source_planes))
+        metadata = SourceProjectionMetadataSerializer(
+            self.parser, image_extension=self.parser.DEFAULT_EXTENSION, path_prefix=sub_dir
+        ).metadata_dict(
+            projections,
+            microscope_handler_name=self.microscope_handler.microscope_type,
+            source_filename_parser_name=type(self.parser).__name__,
+            grid_dimensions=list(self.grid_size),
+            pixel_size=pixel_size,
+            available_backends={Backend.DISK.value: True, Backend.VIRTUAL_WORKSPACE.value: True},
+            main=True,
         )
-
-        # Timepoints (always 1 for synthetic data)
-        timepoints = {"1": "1"}
-
-        # Determine parser name based on format
-        parser_name = (
-            "ImageXpressFilenameParser"
-            if self.format == "ImageXpress"
-            else "OperaPhenixFilenameParser"
-        )
-        microscope_handler = (
-            "imagexpress" if self.format == "ImageXpress" else "operaphenix"
-        )
-
-        # Build metadata structure
-        metadata = {
-            "subdirectories": {
-                sub_dir: {
-                    "microscope_handler_name": microscope_handler,
-                    "source_filename_parser_name": parser_name,
-                    "grid_dimensions": list(self.grid_size),
-                    "pixel_size": pixel_size,
-                    "image_files": image_files,
-                    "channels": channels,
-                    "wells": wells,
-                    "sites": sites,
-                    "z_indexes": z_indexes,
-                    "timepoints": timepoints,
-                    "available_backends": {
-                        "disk": True,
-                        **({"virtual_workspace": True} if workspace_mapping else {}),
-                    },
-                    **(
-                        {
-                            "workspace_mapping": {
-                                virtual_path: source_ref.to_workspace_mapping()
-                                for virtual_path, source_ref in workspace_mapping.items()
-                            }
-                        }
-                        if workspace_mapping
-                        else {}
-                    ),
-                    "main": True,
-                }
-            }
-        }
-
-        # Write metadata file
-        metadata_path = self.output_dir / "openhcs_metadata.json"
-        with open(metadata_path, "w") as f:
-            json.dump(metadata, f, indent=2)
+        metadata_path = get_metadata_path(self.output_dir)
+        AtomicMetadataWriter().replace_subdirectory_metadata(metadata_path, sub_dir, metadata)
 
         print(f"✓ Generated OpenHCS metadata: {metadata_path}")
-        print(f"  - {len(image_files)} image files")
-        print(f"  - {len(wells)} wells")
-        print(f"  - {len(channels)} channels")
-        print(f"  - {len(sites)} sites")
-        if z_indexes:
-            print(f"  - {len(z_indexes)} z-levels")
+        print(f"  - {len(projections.projections)} source planes")
 
         return metadata_path
