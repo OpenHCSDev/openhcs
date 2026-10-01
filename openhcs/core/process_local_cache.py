@@ -90,6 +90,12 @@ class SynchronizedBoundedCache(BoundedCache[CacheKey, CachedValue]):
 class ProcessLocalBoundedCache(BoundedCache[CacheKey, CachedValue]):
     """Bounded values with one process-local singleton per concrete subclass."""
 
+    def __init_subclass__(cls, **kwargs) -> None:
+        # slots=True replaces the dataclass; name its final class for cooperative super.
+        super(ProcessLocalBoundedCache, cls).__init_subclass__(**kwargs)
+        cls._process_cache = None
+        cls._process_cache_lock = Lock()
+
     @classmethod
     def process_cache(cls) -> "ProcessLocalBoundedCache[CacheKey, CachedValue]":
         cache = cls._process_cache

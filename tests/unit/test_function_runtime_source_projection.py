@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
@@ -26,6 +27,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
@@ -1975,8 +1977,16 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
     }
 
 
+@pytest.fixture
+def preserve_global_pipeline_context():
+    context = GlobalContextValues.capture(GlobalPipelineConfig)
+    yield
+    context.apply()
+
+
 def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     tmp_path: Path,
+    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
@@ -1985,7 +1995,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.constants import Microscope
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
     from openhcs.core.source_bindings import LazyStepSourceBindingsConfig
@@ -2968,6 +2978,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
 
 def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     tmp_path: Path,
+    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
@@ -2978,7 +2989,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.config import (
-        GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,
     )
