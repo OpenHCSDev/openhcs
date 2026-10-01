@@ -65,6 +65,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     ClassifiedImageSourceRelation,
     ClassifyObjectsSingleMeasurementModule,
     _ClassificationMeasurementVectorRuntimeParameter,
+    _ClassifiedImageRuleIndicesRuntimeParameter,
     _SingleClassifiedImageOutputRuntimeBinding,
     classification_rgb_image,
     classify_objects_single_measurement,
@@ -509,7 +510,9 @@ def test_new_runtime_declaration_is_discovered_and_cooperatively_binds_vector_an
 
 
 @special_inputs("labels")
-@runtime_bound_parameters(_IndependentVectorRuntimeParameter)
+@runtime_bound_parameters(
+    _IndependentVectorRuntimeParameter, _ClassifiedImageRuleIndicesRuntimeParameter
+)
 def _independent_runtime_callable(
     image,
     labels,
