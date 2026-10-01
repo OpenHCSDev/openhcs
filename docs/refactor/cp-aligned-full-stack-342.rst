@@ -125,7 +125,7 @@ Disposable baseline source snapshot: owner H003g runtime repair worker,
 purpose unchanged-main fixture control. It contains no scientific data and is
 recoverable from Git; logs are retained here before removing that owned scratch.
 
-Remaining gate: original structural/R1 guard disposition, parent integration
+Remaining gate: original R1 environment disposition, parent integration
 and scheduled fresh installed entrypoint acceptance with synthetic inputs.
 This source checkpoint is not live readiness or biological success. H003g
 stays FAILED and is not a validation dataset for this repair.
@@ -146,3 +146,46 @@ uninitialized, so full-context source materialization is not yet qualified.
 No detector substitution, narrowed context, script modification, download or
 dependency installation has been used to manufacture a passing result. Parent
 integration must disposition/qualify the original R1 environment separately.
+
+Merged-main source gate (2026-10-01)
+-----------------------------------
+
+Main 7b0ec3f5ab5a35a586d77c480fb7d5d6b1c85ba0 was merged normally, without
+rebase, force push, runtime install or frozen trial modification. Merge commit
+b770266428c5faac96069011c636fe93a1712acc is the original R0 head; the only
+subsequent source changes add source tests (no production changes).
+
+Original R0 compared exactly against main 7b0ec3f5: openhcs, scripts and
+benchmark roots all PASS, respectively 17.65 / 2.52 / 3.37 seconds wall and
+88244 / 59028 / 57892 KiB RSS. No detector or threshold was modified. All
+shards retained one CPU, 512 MiB / no swap and a 60-second bound.
+
+111 family controls PASS after this merge (3.33 seconds pytest / 4.10 seconds
+wall, 322492 KiB RSS), including a direct full-stack identity test for object
+labels, measurement tables/columnar rows, spatial graphs, aligned non-image
+tokens and already-dense image/array carriers. 45 consumer controls PASS
+(4.01 seconds pytest / 5.27 seconds wall, 372736 KiB RSS), including the
+declaration-derived diagnostic ABI fixture correction. These 156 source cases
+supersede the initial 33-case checkpoint, but are not fresh installed numeric
+or native acceptance.
+
+The two MRO cases contain real independent TEST capabilities: one changes
+pixels, the other adds validity masks. Both use cooperative super through the
+actual AlignedImageStack composition owner, and both orderings check exact
+pixels AND masks. This proves that extension seam, not a new production MI
+family or a complete NRA equivalence certificate.
+
+Raw receipts, unsuccessful attempts and source/artifact SHA256 manifests are
+retained in docs/refactor/receipts/cp-aligned-full-stack-342-20261001.tar.gz;
+diagnostics/README.rst indexes their interpretation and replay commands.
+The worker's 31 MiB disposable unchanged-main source snapshot was removed
+after its processes completed and failure receipts were retained; it can be
+recreated from the recorded Git commit. No H003g scratch, source, environment,
+input, harness, logs or sealed data was changed.
+
+Next acceptance belongs to the parent after #338: reviewed source must be
+installed into a separately isolated candidate, then the actual installed
+user entrypoint must execute matched synthetic aligned primary and auxiliary
+images, retain exact typed outputs/masks/provenance and satisfy the raw
+callable's dense ABI. Neither source tests nor old frozen H003g are substitutes
+for that gate. Original R1 remains explicitly unqualified as described above.

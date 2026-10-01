@@ -12,6 +12,13 @@ from openhcs.core.aligned_image_payload import (
     compose_aligned_image_payload,
 )
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+)
+from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -24,6 +31,8 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
+from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -203,6 +212,44 @@ def test_ragged_aligned_images_fail_before_dense_callable():
     aligned = AlignedImageStack((np.zeros((2, 3)), np.zeros((3, 3))))
     with pytest.raises(ValueError, match="one exact shape"):
         RuntimeSliceProjection.full_stack_value(aligned)
+
+
+def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
+    rows = MeasurementSparseColumnarRows.from_rows(
+        ({"object_label": 1, "value": 2.5},),
+        fields=(FieldSpec("object_label", int), FieldSpec("value", float)),
+    )
+    table = MeasurementTable(
+        name="Measurements",
+        rows=rows,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, name="Objects"),
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.zeros((2, 3), dtype=np.int32)),
+    )
+    graph = SpatialGraph(
+        name="graph",
+        nodes=(SpatialGraphNode(1, (2.0, 3.0)),),
+        edges=(),
+    )
+    array = np.ones((2, 3), dtype=np.float32)
+    image = ImagePayloadMetadata(source_path="/synthetic/source.tif").payload_with(
+        array, array > 0
+    )
+    aligned_tokens = RuntimeSliceAlignedValues((labels, table))
+    kwargs = {
+        "rows": rows,
+        "table": table,
+        "labels": labels,
+        "graph": graph,
+        "tokens": aligned_tokens,
+        "array": array,
+        "image": image,
+    }
+    materialized = RuntimeSliceProjection.full_stack_kwargs(kwargs)
+    assert materialized is not kwargs
+    for name, value in kwargs.items():
+        assert materialized[name] is value
 
 
 @pytest.mark.parametrize("reverse", (False, True))
