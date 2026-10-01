@@ -98,8 +98,6 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
 
     registry_catalog_module: ClassVar[str | None] = None
     __registry__: ClassVar[LazyDiscoveryDict]
-    function_name: ClassVar[str | None] = None
-    function_variants: ClassVar[tuple[str, ...]] = ()
 
     @classmethod
     def discover_source_declarations(
@@ -144,11 +142,9 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
         )
 
     @classmethod
+    @abstractmethod
     def declared_function_names(cls) -> tuple[str, ...]:
         """Return the local callable names owned by this declaration."""
-        if cls.function_name is None:
-            return ()
-        return (cls.function_name, *cls.function_variants)
 
     @classmethod
     def for_backend_function_name(cls, function_name: str) -> type | None:

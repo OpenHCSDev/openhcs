@@ -159,7 +159,9 @@ class CellProfilerModule(
     __registry_key__ = "module_name"
     __skip_if_no_key__ = True
     module_name: ClassVar[str | None] = None
+    function_name: ClassVar[str | None] = None
     aliases: ClassVar[tuple[str, ...]] = ()
+    function_variants: ClassVar[tuple[str, ...]] = ()
     registry_catalog_module: ClassVar[str] = _CELLPROFILER_BACKEND_PACKAGE
     confidence: ClassVar[float] = 0.5
     validated: ClassVar[bool] = False
@@ -377,6 +379,13 @@ class CellProfilerModule(
         CellProfilerModule.calculated_measurement_feature_prefix_declarations.__func__.cache_clear()
         CellProfilerModule.numbered_measurement_feature_prefix_alias_declarations.__func__.cache_clear()
         CellProfilerModule.scale_qualified_measurement_feature_prefix_declarations.__func__.cache_clear()
+
+    @classmethod
+    def declared_function_names(cls) -> tuple[str, ...]:
+        """Project this module's primary/variant declaration into catalog names."""
+        if cls.function_name is None:
+            return ()
+        return (str(cls.function_name), *cls.function_variants)
 
     @classmethod
     def contribute_source_bindings(
