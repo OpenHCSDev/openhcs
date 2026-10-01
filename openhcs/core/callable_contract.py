@@ -829,14 +829,9 @@ class CallableContract(ArtifactPlanKeySelector):
 
         from openhcs.core.vfs_protocol import PlatePathDeclaration
 
-        raw_callable = self.resolve_canonical_raw_callable()
-        signature = inspect.signature(raw_callable)
-        annotations = get_type_hints(raw_callable, include_extras=True)
         declarations = {
             parameter_name: declaration
-            for parameter_name in signature.parameters
-            for annotation in (annotations.get(parameter_name),)
-            if annotation is not None
+            for parameter_name, annotation in self.canonical_parameter_annotations.items()
             for declaration in (PlatePathDeclaration.from_annotation(annotation),)
             if declaration is not None
         }
@@ -851,12 +846,9 @@ class CallableContract(ArtifactPlanKeySelector):
         signature = inspect.signature(self.resolve_canonical_raw_callable())
         values: dict[str, tuple["PlatePathDeclaration", object]] = {}
         for parameter_name, declaration in self.declared_path_parameters.items():
-            if parameter_name in kwargs:
-                value = kwargs[parameter_name]
-            else:
-                value = signature.parameters[parameter_name].default
-                if value is inspect.Parameter.empty:
-                    continue
+            value = kwargs.get(parameter_name, signature.parameters[parameter_name].default)
+            if parameter_name not in kwargs and value is inspect.Parameter.empty:
+                continue
             if value is not None:
                 values[parameter_name] = (declaration, value)
         return MappingProxyType(values)
@@ -938,10 +930,7 @@ class CallableContract(ArtifactPlanKeySelector):
 
         if self.runtime_adapter is not None:
             return source_payload
-        raw_callable = self.resolve_canonical_raw_callable()
-        annotation = get_type_hints(raw_callable, include_extras=True).get(
-            self.primary_input_parameter_name,
-        )
+        annotation = self.canonical_parameter_annotations.get(self.primary_input_parameter_name)
         if isinstance(annotation, type) and issubclass(annotation, ArrayPayload):
             return source_payload
         return image_payload_data(source_payload)
@@ -1109,22 +1098,14 @@ class CallableContract(ArtifactPlanKeySelector):
         }
 
     def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
-        """Descend JSON enum scalars before authoring projection, not at execution.
-
-        Callable admission remains owned by the authoring policy. Compile-only
-        selectors and non-enum values retain their original declaration owners;
-        direct/Annotated/optional enums use the original annotation codec.
-        """
+        """Descend declared scalar enums at authoring, before source projection."""
 
         decoded = dict(kwargs)
-        annotations = self.canonical_parameter_annotations
-        for name, value in kwargs.items():
-            annotation = annotations.get(name)
-            if enum_member_type(resolve_annotated(annotation)) is None:
+        for name, annotation in self.canonical_parameter_annotations.items():
+            if name not in kwargs or enum_member_type(resolve_annotated(annotation)) is None:
                 continue
-            decoded[name] = (
-                value if value is None else coerce_enum_member(annotation, value)
-            )
+            value = kwargs[name]
+            decoded[name] = value if value is None else coerce_enum_member(annotation, value)
             validate_annotation_value(
                 annotation, decoded[name], path=f"{self.function_name}.{name}",
             )
@@ -1142,23 +1123,20 @@ class CallableContract(ArtifactPlanKeySelector):
             raise TypeError(
                 "CallableContract.validate_public_kwargs requires a mapping."
             )
-        raw_callable = self.resolve_canonical_raw_callable()
-        signature = inspect.signature(raw_callable)
+        signature = inspect.signature(self.resolve_canonical_raw_callable())
         runtime_owned_value = object()
         call_kwargs = dict(kwargs)
         runtime_loaded_parameters = frozenset(runtime_loaded_artifact_parameter_names)
 
         def bind_runtime_owned(parameter_name: str) -> None:
-            if parameter_name not in signature.parameters:
+            parameter = signature.parameters.get(parameter_name)
+            if parameter is None:
                 return
-            if parameter_name in call_kwargs:
-                if call_kwargs[parameter_name] is runtime_owned_value:
-                    return
+            if parameter_name in call_kwargs and call_kwargs[parameter_name] is not runtime_owned_value:
                 raise TypeError(
                     f"Callable {self.function_name!r} public kwargs cannot set "
                     f"runtime-owned parameter {parameter_name!r}."
                 )
-            parameter = signature.parameters[parameter_name]
             if parameter.kind is inspect.Parameter.POSITIONAL_ONLY:
                 raise TypeError(
                     f"Callable {self.function_name!r} runtime-owned parameter "
@@ -1166,24 +1144,18 @@ class CallableContract(ArtifactPlanKeySelector):
                 )
             call_kwargs[parameter_name] = runtime_owned_value
 
-        runtime_adapter = self.runtime_adapter
-        for parameter_name in self.artifact_input_parameter_names:
-            if (
-                parameter_name in call_kwargs
-                and parameter_name not in runtime_loaded_parameters
-            ):
-                continue
-            bind_runtime_owned(parameter_name)
-        if self.runtime_context_parameter is not None:
-            bind_runtime_owned(self.runtime_context_parameter)
-        if runtime_adapter is not None:
-            bind_runtime_owned(runtime_adapter.require_parameter_name())
-        for parameter_type in self.runtime_bound_parameter_types:
-            if parameter_type.is_semantic_control:
-                continue
-            bind_runtime_owned(parameter_type.require_parameter_name())
-        for parameter_name in self.config_bound_parameter_names:
-            bind_runtime_owned(parameter_name)
+        for parameter_name in (
+            *(name for name in self.artifact_input_parameter_names
+              if name not in call_kwargs or name in runtime_loaded_parameters),
+            self.runtime_context_parameter,
+            self.runtime_adapter.require_parameter_name() if self.runtime_adapter is not None else None,
+            *(parameter_type.require_parameter_name()
+              for parameter_type in self.runtime_bound_parameter_types
+              if not parameter_type.is_semantic_control),
+            *self.config_bound_parameter_names,
+        ):
+            if parameter_name is not None:
+                bind_runtime_owned(parameter_name)
 
         primary_input = self.primary_input_parameter_name
         call_args = () if primary_input is None else (runtime_owned_value,)
@@ -1196,10 +1168,7 @@ class CallableContract(ArtifactPlanKeySelector):
             ) from exc
         resolved_annotations = self.canonical_parameter_annotations
         for parameter_name, value in kwargs.items():
-            parameter = signature.parameters.get(parameter_name)
-            if parameter is None:
-                continue
-            annotation = resolved_annotations[parameter_name]
+            annotation = resolved_annotations.get(parameter_name)
             if declared_enum_type(annotation) is None:
                 continue
             try:

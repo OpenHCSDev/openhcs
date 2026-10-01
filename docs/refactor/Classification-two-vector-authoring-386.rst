@@ -226,3 +226,23 @@ its original 4096-label identity and discriminating quadrant/row assertions are
 unchanged. Prior failures, fixture, receipts and scientific outputs are untouched.
 The branch normally merged main ``c4be92335``; pinned R0 for this correction is
 pending at this first published working checkpoint, not silently inherited.
+
+Pinned guard correction at the same callable owner
+------------------------------------------------
+
+First published production ``5c233590b`` passed behavior but the original pinned
+R0 rejected CallableContract GodClassExcess +30 (17.00s/75.07MiB). That red is
+retained in ``public-enum-388-pinned-r0.json/.log`` without a waiver. The same
+canonical annotation owner now replaces duplicated path and primary-payload
+introspection as well as public enum validation. Runtime keyword injection
+iterates the existing declaration contributions in their original order instead
+of separate repeated binding loops. No new ancestor/facade, category roster,
+cache, suppressed measurement or format-only blank-line deletion was used.
+The original shared owner is one measured line smaller than main c4be.
+
+``public-enum-388-owner-deduplicated-controls.json`` passes all 248 source cases,
+15.98s/491.29MiB combined, unchanged oneCPU/60s/512MiB and subprocess guard.
+This retains all 224 and adds the existing path and runtime-payload controls;
+compiler raw enum strings remain rejected. Original declared enum values/names
+and already typed members descend, invalid/required-null members reject.
+New owner-projection tests do not claim an installed/native plan or execution.
