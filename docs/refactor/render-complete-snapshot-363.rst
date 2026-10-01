@@ -4,7 +4,7 @@ Managed render-complete snapshots and spatial QA, issues363/366
 Integration owner: Singer/Codex managed-viewer QA sidecar. Source base791650087.
 Persistent source: /home/ts/wt/openhcs-render-complete-snapshot-20261001 and
 /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001. Paired dependency
-a9e6745 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
+8cf7282 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
 OpenHCS draft364 closes363 and366; neither draft is installed or live accepted.
 Closes #363. Closes #366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
 
@@ -16,6 +16,22 @@ prove completion of the requested native canvas render. A render-complete
 capture must arm before requesting a new native frame and capture only after
 the renderer's own completion event, or fail with its bounded observation
 evidence. The timeout is a failure bound, never a settling heuristic.
+
+The original operation deadline also bounds dispatch, observation and artifact
+publication. The old5s observation/5000ms transport equality was contradictory:
+the socket poll started before Qt dispatch. Snapshot defaults now derive the
+native upper bound (2.5s at5000ms) from the capture owner's declared equal phase
+budget, not a guessed renderer settling delay. Explicit observation>=transport
+is rejected once at ViewerWindowSnapshotRequest construction. The gateway
+arms the original ZMQRuntime OperationDeadline before transport and the request
+supplies it polymorphically to Qt; queue time consumes that same deadline.
+The one original timer uses min(requested observation, remaining phase budget).
+No socket/MCP timeout is increased, no second timer engine is introduced.
+The original persistence owner uses QSaveFile and rechecks the same deadline;
+late work fails once without retaining a newly created PNG. Receipts preserve
+the actual observation budget and original operation deadline. These monotonic
+deadline source checks cover managed local processes sharing a clock domain;
+cross-host clock transfer is not qualified by this fixture or receipt.
 
 Semantic image Y/X bounds must address the axes declared by the original
 ImagePayloadMetadata.spatial_axes_yx(source_data), projected through the
@@ -108,6 +124,7 @@ runtime/napari_viewer_server.py; external/pyqt-reactive gitlink.
 Tests: unit/agent/test_viewer_render_snapshot.py; unit/agent/test_agent_services.py
 (the original fake immediate contract now requests immediate explicitly);
 unit/test_napari_render_snapshot.py; unit/test_viewer_spatial_sample.py.
+unit/test_snapshot_deadline.py covers the original queue/gateway deadline journey.
 PyQT-reactive: services/window_snapshot.py; tests/test_window_snapshot.py;
 docs/architecture/window_snapshot.rst.
 
@@ -125,27 +142,36 @@ archive evidence here before removing that exact owned directory.
 Latest bounded shards, all plugin/provider-free with CPU0 affinity, CPUQuota100%,
 MemoryMax512M and MemorySwapMax0, shell timeout60s:
 
-* qt-final-selected.log:13 passed,1.45s elapsed,127876KiB peak. Existing real
+* qt-deadline-fixed.log:15 passed,1.46s elapsed,127968KiB peak. Existing real
   qapp/rendered_canvas and observed_form fixtures, including original flash
-  painter, late native completion, deadline, destruction and MI/new-case.
+  painter, late native completion, deadline, destruction and MI/new-case;
+  expired queued operation and late real PNG commit are rejected without an
+  artifact. qt-operation-final.log rechecks the declaration-owned phase policy.
 * spatial-final.log:16 passed,8.90s elapsed,482548KiB peak. Real ViewerModel,
   asymmetric nonzero gray/RGB crops, clipping/empty bounds, original two
   streaming-handler sampling tests, missing layout, color-axis retention and
   max bound. Semantic expected16x64x3; raw expected64x16x3.
-* queued-final.log:4 passed,7.16s elapsed,502964KiB peak. Original accepted
+* deadline-final.log:6 passed,7.10s elapsed,503236KiB peak. Original accepted
   control queue, canonical pickle serializer, registered action, real Qt paint
-  and ViewerModel; no socket or server/application startup.
-* contracts-schema.log:14 passed,5.43s elapsed,289568KiB peak. Nominal MCP
+  and ViewerModel; no socket or server/application startup. Source transport
+  fixture substitutes only the socket/poller; the original gateway, registered
+  Qt queue, Qt timer, serializer and no-frame receipt execute. The receipt
+  arrives within the caller bound, and later real painting yields neither
+  another reply nor an artifact. Defaults/explicit contradictions are checked.
+* contracts-deadline.log:15 passed,11.26s elapsed,289680KiB peak. Nominal MCP
   input contract/signature, capture-field projection, missing/stale/foreign
   receipt rejection, error receipt retention, DTO roundtrip, real Qt managed
   reply, original immediate/malformed service contracts, and strict original
-  AgentResourceRef schema decoding (wrong types and unknown fields rejected).
+  AgentResourceRef schema decoding (wrong types and unknown fields rejected),
+  and original silent gateway teardown bounded by the remaining deadline.
 
 First failures are archived, not overwritten: contracts-first (missing reused
 native extension), contracts-checkpoint (wrong source dependency import path),
 spatial-first (factory default validation and missing fixture title), queued
 first/second/third (fixture endpoint initialization and teardown), qt-final
 (overbroad selector included four qtbot cases without the forbidden plugin).
+qt-deadline's missing fixture render owner is preserved before its corrected
+run; no production code bypassed the required nominal render owner.
 The explicit plugin-free selector passes; those qtbot cases remain unexecuted.
 An early pair of small shards overlapped on CPU0; their conservative summed
 peak395MiB stayed below512MiB. Subsequent shards ran sequentially.
@@ -164,6 +190,10 @@ but still exposed service growth, which prompted the schema-owned correction.
 The pinned original detector is3b03785f45df2ef5dc62ba6aed99294192ecbb01,
 with a clean read-only worktree. Full production deltas include all five changed
 OpenHCS Python paths and the paired pyqt-reactive source change; no path omitted.
+Both pre-deadline full production ratchets passed: e16575464 OpenHCS against
+791650087 in23.27s/87692KiB (r0-openhcs-schema.log), and a9e6745 pyqt against
+3437d1c in3.42s/58192KiB (r0-pyqt-first.log). Revised end-to-end deadline
+production is subject to fresh pinned R0 on both actual deltas before handoff.
 
 This receipt is a focused source/ownership review, not a completed global NRA
 scan or equivalence proof. The user's source-only limits govern validation;

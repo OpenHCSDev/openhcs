@@ -1127,6 +1127,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         self._context_factory = context_factory
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
+        request = request.start_operation()
         message = {
             ViewerControlResponseField.TYPE.value: ViewerControlMessageType.SCREENSHOT.value,
             ViewerControlResponseField.PAYLOAD.value: request,
@@ -1230,6 +1231,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         request: ViewerWindowControlRequest,
         message: Mapping[str, object],
     ) -> JsonObject:
+        deadline = request.control_deadline()
         connection = request.connection
         control_url = connection.zmq_control_url(OPENHCS_ZMQ_CONFIG)
         context = self._context_factory()
@@ -1242,13 +1244,14 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             socket.connect(control_url)
             socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
             poller.register(socket, zmq.POLLIN)
-            events = dict(poller.poll(request.timeout_ms))
+            events = dict(poller.poll(deadline.remaining_milliseconds()))
             if events.get(socket) != zmq.POLLIN:
                 raise TimeoutError(
                     "Viewer control request timed out after "
                     f"{request.timeout_ms}ms waiting for {control_url}."
                 )
             response = pickle.loads(socket.recv(flags=zmq.DONTWAIT))
+            deadline.remaining_seconds()
         finally:
             socket.close(linger=0)
             context.destroy(linger=0)

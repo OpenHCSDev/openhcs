@@ -1380,7 +1380,8 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert result.reachable is False
     assert result.errors[0].code == "viewer_window_state_failed"
     assert "timed out after 25ms" in result.errors[0].message
-    assert poller.poll_timeouts == [25]
+    assert len(poller.poll_timeouts) == 1
+    assert 0 < poller.poll_timeouts[0] <= 25
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
     assert socket.closed is True
     assert context.destroy_linger == 0

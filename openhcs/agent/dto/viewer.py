@@ -18,6 +18,7 @@ from pyqt_reactive.services.window_snapshot import (
 )
 from python_introspect import dataclass_from_mapping
 from pydantic import StrictFloat, StrictInt
+from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
     ViewerImageIntensityControlOptions,
     ViewerNativeImageIntensityPresentation,
@@ -89,6 +90,11 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
 
     timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
     include_response: bool = True
+
+    def control_deadline(self) -> OperationDeadline:
+        return OperationDeadline.after_milliseconds(
+            self.timeout_ms, operation="viewer control request",
+        )
 
     @classmethod
     def factory_injected_field_names(cls) -> frozenset[str]:
@@ -177,6 +183,51 @@ class ViewerWindowSnapshotRequest(
     frame_condition: WindowSnapshotFrameCondition = (
         WindowSnapshotFrameCondition.RENDER_COMPLETE
     )
+    observation_timeout_s: float | None = None
+    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.timeout_ms, bool)
+            or not isinstance(self.timeout_ms, int)
+            or self.timeout_ms <= 0
+        ):
+            raise ValueError(
+                "Snapshot transport timeout_ms must be a positive integer."
+            )
+        if self.observation_timeout_s is None:
+            object.__setattr__(
+                self,
+                "observation_timeout_s",
+                min(
+                    WindowSnapshotCaptureSpec.observation_timeout_s,
+                    self.observation_phase_budget(self.timeout_ms / 1000),
+                ),
+            )
+        super(ViewerWindowSnapshotRequest, self).__post_init__()
+        if self.observation_timeout_s * 1000 >= self.timeout_ms:
+            raise ValueError(
+                "Snapshot observation timeout must be less than transport timeout."
+            )
+
+    def start_operation(self) -> Self:
+        from dataclasses import replace
+
+        return replace(
+            self,
+            operation_deadline=super(
+                ViewerWindowSnapshotRequest, self
+            ).control_deadline(),
+        )
+
+    def control_deadline(self) -> OperationDeadline:
+        return (
+            self.operation_deadline
+            or super(ViewerWindowSnapshotRequest, self).control_deadline()
+        )
+
+    def snapshot_operation_deadline(self) -> OperationDeadline | None:
+        return self.operation_deadline
 
     @classmethod
     def from_connection(
@@ -187,7 +238,7 @@ class ViewerWindowSnapshotRequest(
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
         frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
-        observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
+        observation_timeout_s: float | None = None,
     ) -> "ViewerWindowSnapshotRequest":
         if output_dir_path is None:
             output_dir_path = str(DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR)
@@ -209,7 +260,7 @@ class ViewerWindowSnapshotRequest(
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
         frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.RENDER_COMPLETE,
-        observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
+        observation_timeout_s: float | None = None,
     ) -> "ViewerWindowSnapshotRequest":
         return cls.from_connection(
             connection=connection,

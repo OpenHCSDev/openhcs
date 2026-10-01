@@ -5738,6 +5738,7 @@ class NapariScreenshotControlMessageAction(
             capture=capture_spec,
             subject_id=f"{ViewerType.NAPARI.wire_value}_{server.port}",
             title=server.napari_window_title,
+            operation_deadline=capture_spec.snapshot_operation_deadline(),
             render_owner=OpenGLWidgetSnapshotRenderOwner(
                 server.viewer.window.qt_viewer.canvas.native
             ),
