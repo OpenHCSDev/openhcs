@@ -589,6 +589,24 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
         return frozenset(object_refs), frozenset(source_refs)
 
     @classmethod
+    def prior_measurement_matches_lineage(
+        cls,
+        spec: ArtifactSpec,
+        *,
+        object_refs: frozenset[ArtifactSpecRef],
+        source_refs: frozenset[ArtifactSpecRef],
+    ) -> bool:
+        """Compare producer subjects in the consumer role using the reference owner."""
+        lineage_refs = frozenset(
+            relation.source.for_plan_type(ArtifactInputPlan)
+            for relation in spec.relations
+        )
+        return all(
+            not required or not required.isdisjoint(lineage_refs)
+            for required in (object_refs, source_refs)
+        )
+
+    @classmethod
     def prior_measurement_artifact_inputs(
         cls,
         module: "ModuleBlock",
@@ -617,19 +635,10 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 and producer.spec.measurement_feature_owner.owns_measurement_feature_name(
                     feature_name
                 )
-                and (
-                    not object_refs
-                    or any(
-                        relation.source in object_refs
-                        for relation in producer.spec.relations
-                    )
-                )
-                and (
-                    not source_refs
-                    or any(
-                        relation.source in source_refs
-                        for relation in producer.spec.relations
-                    )
+                and cls.prior_measurement_matches_lineage(
+                    producer.spec,
+                    object_refs=object_refs,
+                    source_refs=source_refs,
                 )
             )
             if not feature_matches:
@@ -641,9 +650,9 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
             for producer in feature_matches:
                 measurement_input = producer.spec.for_plan_type(ArtifactInputPlan)
                 lineage_sources = tuple(
-                    source
+                    source.for_plan_type(ArtifactInputPlan)
                     for source in producer.spec.group_scope_sources()
-                    if source in group_lineage_refs
+                    if source.for_plan_type(ArtifactInputPlan) in group_lineage_refs
                 )
                 if len(lineage_sources) > 1:
                     raise ValueError(

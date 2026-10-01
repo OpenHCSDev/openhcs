@@ -16,7 +16,6 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import AllComponents
 from polystore.formats import get_format_from_extension
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.process_local_cache import IdentityBoundProcessCache
 from openhcs.core.source_bindings import (
     MetadataExtractionRule,
     MetadataSource,
@@ -981,15 +980,9 @@ def source_metadata_component(field: str) -> AllComponents | None:
     return SourceComponentProjectionStrategy.component_for_metadata_field(field)
 
 
-class SourceMetadataLookupProjectionCache(IdentityBoundProcessCache):
-    """Process-local source metadata lookup cache keyed by metadata object identity."""
-
-    registry_key = "source_metadata_lookup_projection"
-
-
 @dataclass(frozen=True, slots=True)
 class SourceMetadataLookupProjection:
-    """Cached lookup projection over one source metadata mapping."""
+    """Lookup projection over the current contents of one source metadata mapping."""
 
     scalar_items: tuple[tuple[str, SourceMetadataScalar], ...]
     original_items: tuple[tuple[str, SourceMetadataScalar], ...]
@@ -1024,17 +1017,12 @@ class SourceMetadataLookupProjection:
 def _source_metadata_lookup_projection(
     metadata: SourceMetadataMapping,
 ) -> SourceMetadataLookupProjection:
-    """Return the cached lookup projection for one metadata mapping."""
-    cache = SourceMetadataLookupProjectionCache.process_cache()
-    cached = cache.get_bound(metadata)
-    if cached is not None:
-        return cached
+    """Derive a lookup projection from the current nominal metadata role view."""
     role_view = SourceMetadataRoleView(metadata)
-    projection = SourceMetadataLookupProjection(
+    return SourceMetadataLookupProjection(
         scalar_items=role_view.scalar_items(),
         original_items=role_view.original_items(),
     )
-    return cache.put_bound(metadata, projection)
 
 
 def _require_filter_value(clause: SourceFilterClause) -> str:
