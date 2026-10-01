@@ -1,19 +1,18 @@
 """Shared CellProfiler color literal semantics."""
 
 from __future__ import annotations
-from openhcs.core.artifacts import ArtifactInputPlan
 
 import re
-
-from openhcs.interop.cellprofiler.setting_names import normalized_symbol_name
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar
-from metaclass_registry import AutoRegisterMeta
+
 import numpy as np
 from matplotlib.colors import CSS4_COLORS, to_rgb
+from metaclass_registry import AutoRegisterMeta
+
 from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -21,6 +20,7 @@ from openhcs.core.aligned_image_payload import (
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts import (
+    ArtifactInputPlan,
     ArtifactSpecCollection,
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
@@ -31,32 +31,32 @@ from openhcs.core.callable_contract import (
     requires_primary_image_carrier,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     required_variable_components,
 )
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisValueProjection,
-)
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
     with_image_payload_data,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.interop.cellprofiler.module_settings import (
-    BoundModuleSettings,
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
 )
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
+)
+from openhcs.interop.cellprofiler.module_settings import (
+    BoundModuleSettings,
 )
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
+    normalized_symbol_name,
     optional_setting_value,
     repeating_setting_blocks,
     required_setting_value,
@@ -70,12 +70,13 @@ from openhcs.interop.cellprofiler.settings_binder import (
     normalize_cellprofiler_setting_name,
     parse_cellprofiler_bool,
 )
+from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
+    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 
@@ -794,7 +795,9 @@ class GrayToColorModule(
             )
         channels = cls.indexed_channels(scheme)
         if not any(
-            channel.channel_parameter in explicit_kwargs for channel in channels
+            channel.channel_parameter in explicit_kwargs
+            or channel.image_binding.require_parameter_name() in explicit_kwargs
+            for channel in channels
         ):
             return super().module_blocks_for_invocation(
                 invocation=invocation,
@@ -803,10 +806,12 @@ class GrayToColorModule(
 
         reconstructed_kwargs = dict(explicit_kwargs)
         for channel in channels:
-            if explicit_kwargs.get(channel.channel_parameter, -1) < 0:
-                reconstructed_kwargs[channel.image_binding.require_parameter_name()] = (
-                    None
-                )
+            selector = channel.image_binding.require_parameter_name()
+            if (
+                selector not in explicit_kwargs
+                and explicit_kwargs.get(channel.channel_parameter, -1) < 0
+            ):
+                reconstructed_kwargs[selector] = None
         blocks, consumed = super().module_blocks_for_invocation(
             invocation=replace(
                 invocation,
@@ -816,6 +821,21 @@ class GrayToColorModule(
         )
         explicit_names = frozenset(explicit_kwargs)
         return blocks, tuple(name for name in consumed if name in explicit_names)
+
+    @classmethod
+    def authoring_default_kwargs(cls, module, *, authored_kwargs):
+        """Use the existing setting projection for named channel defaults."""
+        from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
+
+        inherited = super().authoring_default_kwargs(
+            module, authored_kwargs=authored_kwargs,
+        )
+        if not any(
+            binding.require_parameter_name() in authored_kwargs
+            for binding in cls.declared_artifact_bindings(plan_type=ArtifactInputPlan)
+        ):
+            return inherited
+        return {**inherited, **cls._gray_to_color_kwargs(module, SettingsBinder())}
 
     @dataclass(frozen=True, slots=True)
     class StackChannel:

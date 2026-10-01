@@ -12,7 +12,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     NormalizedFunctionGroup,
@@ -28,10 +28,10 @@ from openhcs.core.invocation_artifacts import (
     InvocationContractProviderFactory,
     unnamed_main_flow_artifact_name,
 )
-from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
 )
+from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.steps.function_step import FunctionStep
 
 
@@ -112,6 +112,22 @@ class CellProfilerInvocationContractProvider(InvocationContractProvider):
 
 class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFactory):
     """Compile exact CellProfiler invocation contracts from public snapshots."""
+
+    @classmethod
+    def compile_time_parameter_names(cls, contract: CallableContract) -> tuple[str, ...]:
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        owner = CellProfilerModule.for_callable_contract(contract)
+        return () if owner is None else owner.compile_time_parameter_names(contract)
+
+    @classmethod
+    def normalize_authoring_kwargs(
+        cls, contract: CallableContract, kwargs: Mapping[str, object],
+    ) -> Mapping[str, object] | None:
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        owner = CellProfilerModule.for_callable_contract(contract)
+        return None if owner is None else owner.normalize_authoring_kwargs(contract, kwargs)
 
     @classmethod
     def provider_for_session(
