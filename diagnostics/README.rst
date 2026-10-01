@@ -14,8 +14,8 @@ zero swap, 60-second timeout, OPENHCS_CPU_ONLY=true, numerical threads 1,
 and PYTEST_DISABLE_PLUGIN_AUTOLOAD=1. Two unknown asyncio configuration
 warnings are expected because optional pytest plugins are disabled.
 
-Final receipt interpretation
-----------------------------
+Predecessor receipt interpretation (public 34203beb1)
+---------------------------------------------------
 
 merged-main-final-family-controls: 111 PASS, including 15 added full-stack
 tests plus 96 existing executor/projection/alignment/device/registry controls.
@@ -23,7 +23,7 @@ merged-main-consumer-regressions: 45 PASS, including the unchanged-main ABI
 fixture corrected using the real diagnostic declaration owner.
 r0-merged-main-openhcs/scripts/benchmark: all PASS. Base main 7b0ec3f5,
 head b7702664, exact three changed production paths. Subsequent edits affect
-only tests/documentation/receipt packaging, not production sources.
+only tests/documentation/receipt packaging until the subsequent a14 correction.
 
 r1-original: import failure BEFORE scanning. The existing current NRA
 environment does not export RedundantTypeCheckDetector at the original
@@ -32,6 +32,38 @@ No passing R1 certificate or complete dependency-context audit is claimed.
 nra-before-corrected: deadline_incomplete structured report with null counts,
 20-second CLI deadline, parsing unfinished. Its admitted candidate external
 directory is uninitialized. This is NOT a successful no-findings report.
+
+Current source correction (a14d471e3)
+------------------------------------
+
+nominal-review-opaque-controls: 117 PASS (21 full-stack cases plus 96 existing
+family controls), 3.36 seconds pytest, 322644 KiB RSS. New calibrated subtype,
+real runtime-plane named bundle and opaque kwargs across all four contracts.
+a14-consumer-controls: 45 PASS, 3.96 seconds pytest, 372732 KiB RSS.
+a14-r0-openhcs/scripts/benchmark: exact original CI-pinned packaged ratchet,
+base main 7b0ec3f5, head a14d471e3, all PASS. Root wall times 16.93/1.88/2.45
+seconds, RSS 88124/59020/57732 KiB. Optional-neutral nominal resolution is
+the only additional production change after 34203beb1; opaque values keep
+identity at FULL_STACK while slice-mode registration remains strict.
+
+engineering-document-separate-planes: 1 PASS, source authoring only, 1.95
+seconds pytest / 2.55 seconds wall / 277676 KiB RSS. The initial
+decorator-wrapper object-identity failure and corrected
+nominal/raw-callable identity receipt remain in the supplemental archive.
+No compile, fixture pixels, MCP/native/viewer or installed check was run here.
+The complete document and identity/path/metadata acceptance gates are under
+docs/refactor/344-engineering-acceptance.rst and examples/.
+
+Parent independently retains the original installed opaque-kwargs failure;
+those predecessor receipts are not relabelled. Parent owns the normal main
+integration, paired rebuilt wheel and fresh installed/native numeric gate.
+Original R1 remains unqualified for the previously recorded environment and
+dependency-context limits; no new R1 completeness claim is made.
+
+Supplement: docs/refactor/receipts/cp-aligned-full-stack-342-a14-supplement.tar.gz.
+NOMINAL_REVIEW_SHA256SUMS authenticates the current three production files,
+test/document sources and new byte-preserved raw receipts. The original
+cp-aligned-full-stack-342-20261001.tar.gz and SHA256SUMS are unchanged.
 
 Unsuccessful receipts remain in the archive: first-repair slotted-dataclass
 super error; family-controls fixture argument and named bundle failure;
