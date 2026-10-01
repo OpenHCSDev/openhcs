@@ -1,0 +1,114 @@
+Running as unit: run-p826798-i13431838.scope; invocation ID: 30883a82c95d448b9b09644ea8306b6d
+source root: /home/ts/.cache/agent-scratch/h003g-runtime-repair-baseline-20261001
+native artifact: /home/ts/wt/openhcs-s1-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots _________
+
+    def test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots() -> None:
+        source = ArtifactSpec.input("Input", ImageArtifactType)
+        measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+        labels = ArtifactSpec.output(
+            "Objects",
+            ObjectLabelsArtifactType,
+            relations=(GroupLineageSourceRelation(source=source.ref()),),
+        )
+    
+        for func in (identify_primary_objects, watershed_cellprofiler4):
+            contract = _contract(func, (source,))
+            contract = replace(
+                contract,
+                metadata=replace(
+                    contract.metadata,
+                    artifact_outputs=(measurements, labels),
+                ),
+            )
+    
+>           CellProfilerModuleCallableABI.validate_callable_artifact_abi(func, contract)
+
+../../.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/tests/unit/test_cellprofiler_runtime_input_binding_contract.py:675: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'openhcs.interop.cellprofiler.module_callable_abi.CellProfilerModuleCallableABI'>
+func = <function identify_primary_objects at 0x7f8de0a260c0>
+contract = CallableContract(func=<function identify_primary_objects at 0x7f8de0a260c0>, function_name='identify_primary_objects',...imary_image_carrier_requirement=None, primary_image_carrier_transition=None), runtime_batch_executors=mappingproxy({}))
+
+    @classmethod
+    def validate_callable_artifact_abi(
+        cls,
+        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
+    ) -> None:
+        """Validate one raw callable ABI against its callable artifact declarations."""
+    
+        from openhcs.core.aligned_image_payload import AlignedImageStack
+    
+        module_name = contract.module_name
+        if not isinstance(module_name, str) or not module_name:
+            raise ValueError("CellProfiler callable contract requires a module name.")
+        declared_outputs = contract.artifact_outputs
+        invalid_source_context_outputs = tuple(
+            (spec.ref(), sources)
+            for spec in declared_outputs
+            for sources in (spec.source_context_sources(),)
+            if spec.artifact_type.carries_source_image_context and len(sources) != 1
+        )
+        if invalid_source_context_outputs:
+            raise ValueError(
+                f"CellProfiler module {module_name!r} image/object outputs "
+                "must declare exactly one runtime-context source: "
+                f"{invalid_source_context_outputs!r}."
+            )
+        return_annotation = get_type_hints(func).get("return", inspect.Signature.empty)
+        return_variants = _callable_return_slot_variants(return_annotation)
+        canonical_outputs = contract.canonical_return_output_specs
+        trailing_outputs = contract.trailing_return_output_specs
+        expected_slot_count = len(trailing_outputs) + 1
+        matching_variants = tuple(
+            slots for slots in return_variants if len(slots) == expected_slot_count
+        )
+        if not matching_variants:
+>           raise ValueError(
+                f"callable {func.__name__!r} return annotation "
+                f"{return_annotation!r} does not declare the canonical return "
+                f"followed by exactly {len(trailing_outputs)} trailing "
+                "artifact-output slot(s)."
+            )
+E           ValueError: callable 'identify_primary_objects' return annotation typing.Tuple[numpy.ndarray, openhcs.core.measurement_row_materialization.DataclassMeasurementColumnarRows, openhcs.core.runtime_object_labels.ObjectLabelPayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload] does not declare the canonical return followed by exactly 2 trailing artifact-output slot(s).
+
+../../.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/openhcs/interop/cellprofiler/module_callable_abi.py:300: ValueError
+=============================== warnings summary ===============================
+../../.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/openhcs/processing/backends/numpy_runtime.py:7
+../../.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/openhcs/processing/backends/numpy_runtime.py:7
+  /home/ts/.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/openhcs/processing/backends/numpy_runtime.py:7: DeprecationWarning: numpy.core is deprecated and has been renamed to numpy._core. The numpy._core namespace contains private NumPy internals and its use is discouraged, as NumPy internals can change without warning in any release. In practice, most real-world usage of numpy.core is to access functionality in the public NumPy API. If that is the case, use the public NumPy API. If not, you are using NumPy internals. If you would still like to access an internal attribute, use numpy._core._multiarray_umath.
+    from numpy.core import _multiarray_umath
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ts/wt/openhcs-cp-aligned-materialization-20261001/diagnostics/unchanged-main-abi-fixture.xml -
+=========================== short test summary info ============================
+FAILED ../../.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/tests/unit/test_cellprofiler_runtime_input_binding_contract.py::test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots
+1 failed, 11 deselected, 2 warnings in 9.61s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-s1-installed-parent-20261001/.venv/bin/python diagnostics/run_source_tests.py -q /home/ts/.cache/agent-scratch/h003g-runtime-repair-baseline-20261001/tests/unit/test_cellprofiler_runtime_input_binding_contract.py -k callable_abi_keeps --junitxml=diagnostics/unchanged-main-abi-fixture.xml"
+	User time (seconds): 5.98
+	System time (seconds): 0.37
+	Percent of CPU this job got: 55%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:11.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 381476
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9
+	Minor (reclaiming a frame) page faults: 62873
+	Voluntary context switches: 11
+	Involuntary context switches: 1930
+	Swaps: 0
+	File system inputs: 248
+	File system outputs: 20968
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

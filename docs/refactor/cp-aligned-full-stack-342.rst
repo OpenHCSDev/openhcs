@@ -25,7 +25,10 @@ call is rescale_intensity, at RescaleIntensityContext.from_settings,
 ``source_data.astype(np.float32, copy=False)``: float(AlignedImageStack).
 
 The synthetic two-runtime-plane/two-input composition reproduces this exact
-stack. It does not read the trial images or scientific outputs. The executor's
+stack with EMPTY kwargs: the primary image is the immediate root, not an
+auxiliary binding. It does not read trial images or scientific outputs. Aligned
+image kwargs have the same unmaterialized boundary and are covered separately.
+The executor's
 unchanged contract suite passed 32 cases while this added case failed.
 The raw full-stack pass-through exists in 9110b10479 (June 2026); PR326 changes
 neither this executor nor aligned_image_payload. This is an existing uncovered
@@ -53,8 +56,8 @@ flattened into guessed arrays. The existing PURE_3D rejection of slice-aligned
 non-image kwargs remains active. No callable-name branch, second registry,
 numeric wrapper, alternate executor or installation change is introduced.
 
-Initial working gate
---------------------
+Source checkpoints
+------------------
 
 33 source cases passed, 2.35 seconds pytest / 3.08 seconds wall,
 305672 KiB RSS. One CPU and a 512 MiB cgroup with no swap, 60-second timeout.
@@ -69,6 +72,52 @@ is claimed. Manual ownership evidence and source behavior tests are distinct.
 The initial slotted-dataclass zero-argument super failure is retained and fixed
 with explicit cooperative super(AlignedImageStack, self), not suppressed.
 
-Remaining gate: broaden family/metadata/mask/projection controls and regression
-consumers, then parent integration and scheduled fresh installed acceptance.
-This working source checkpoint is not live readiness or biological success.
+Expanded checkpoint: 110 cases PASS, 3.38 seconds pytest / 4.19 seconds wall,
+322736 KiB RSS, under the same one CPU / 512 MiB / no swap / 60-second bound.
+The 14 new cases cover the real rescale callable, all four ProcessingContract
+families with singleton and two-slice image/auxiliary inputs, exact contributor
+identities and slice projections, voxel calibration, masked source-binding
+planes composed into a runtime stack, named output bundles, ragged-input
+rejection before dispatch, and independent pixel/mask capabilities composed in
+both cooperative MRO orders. The other 96 are unchanged executor and nominal
+projection/alignment/device/registry controls. The named bundle strategy now
+inherits the aligned-image strategy's full-stack hook; its own source-binding
+projection/count behavior stays separate. Shared input validation uses
+cooperative super; metadata composition stays in the ABC with a small
+per-input provenance hook, not a direct jump around an ancestor algorithm.
+
+The masked 4D control found that stacking shared 2D masks produces a 3D mask
+outside the outer runtime axis's domain. The existing mask owner now consults
+the composed ImageMaskDomain and uses its declared broadcast authority only
+when required. Pixel values and exact masks are checked; no relaxed domain
+check or ndarray coercion is used. Intermediate failed attempts remain in
+diagnostics alongside the working logs and JUnit receipts.
+
+A broader metadata/artifact-consumer shard had 44 PASS / 1 FAIL. The failure,
+test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots, declares only
+two outputs although identify_primary_objects now has seven diagnostic image
+slots in addition to the canonical slots. The exact same test fails on a
+complete unchanged production source snapshot of main 0c0563e65, not merely
+an executor substitution. No production ABI assertion or fixture was weakened.
+This pre-existing fixture mismatch is separately recorded under parent
+integration; the shard is not claimed fully passing.
+
+Affected nominal owners: aligned runtime image stacks and their named-output
+bundle subtype require materialization; already-dense image metadata/masked
+payloads and arrays keep their own domains. Object labels, aligned non-image
+values, measurement tables/columnar rows, relationships, sparse labels,
+projectable identities and spatial graphs retain their registered strategies.
+PURE_3D's prohibition on non-image slice-aligned kwargs is preserved. FULL_STACK
+is shared by all processing contracts; ordinary slice modes are unchanged.
+This is source evidence, not a claim that every backend/input combination was
+executed or that GPU/device coverage is complete.
+
+Disposable baseline source snapshot: owner H003g runtime repair worker,
+/home/ts/.cache/agent-scratch/h003g-runtime-repair-baseline-20261001, 31 MiB,
+purpose unchanged-main fixture control. It contains no scientific data and is
+recoverable from Git; logs are retained here before removing that owned scratch.
+
+Remaining gate: original structural/R1 guard disposition, parent integration
+and scheduled fresh installed entrypoint acceptance with synthetic inputs.
+This source checkpoint is not live readiness or biological success. H003g
+stays FAILED and is not a validation dataset for this repair.

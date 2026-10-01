@@ -1,0 +1,92 @@
+Running as unit: run-p804421-i13390833.scope; invocation ID: 4407f7635b2d4259b50ccbc37953c19d
+source root: /home/ts/wt/openhcs-cp-aligned-materialization-20261001
+native artifact: /home/ts/wt/openhcs-s1-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so
+F................................                                        [100%]
+=================================== FAILURES ===================================
+______ test_real_rescale_full_stack_materializes_composed_runtime_sources ______
+
+    def test_real_rescale_full_stack_materializes_composed_runtime_sources():
+        data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+        source = ImagePayloadMetadata(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        ).payload_with(data, None)
+        composition = compose_aligned_image_payload("synthetic source inputs", (source, source))
+        assert isinstance(composition.payload, AlignedImageStack)
+        contract = CallableContract.from_callable(rescale_intensity)
+>       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            contract.resolve_canonical_raw_callable(),
+            composition.payload,
+            {},
+            execution_mode=contract.runtime_image_execution_mode,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:894: in full_stack_value
+    return RuntimeSliceProjectionStrategy.strategy_for_value(value).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:436: in compose
+    source_metadata=self.composition_source_metadata(),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(ImageMetadataPayload(data=array([[[ 0.,  1.,  2.,  3.],
+        [ 4.,  5.,  6.,  7.],
+      ...r=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>))), slice_contexts=())
+
+    def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
+        """Inner image bundles contribute provenance, not an outer slice axis."""
+        return tuple(
+            metadata.with_source_provenance(
+                metadata.source_provenance.with_runtime_planes_as_contributors()
+            )
+>           for metadata in super().composition_source_metadata()
+        )
+E       TypeError: super(type, obj): obj must be an instance or subtype of type
+
+openhcs/core/aligned_image_payload.py:1120: TypeError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ts/wt/openhcs-cp-aligned-materialization-20261001/diagnostics/first-repair.xml -
+=========================== short test summary info ============================
+FAILED tests/unit/test_cellprofiler_full_stack_materialization.py::test_real_rescale_full_stack_materializes_composed_runtime_sources
+1 failed, 32 passed, 2 warnings in 2.90s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-s1-installed-parent-20261001/.venv/bin/python diagnostics/run_source_tests.py -q tests/unit/test_cellprofiler_full_stack_materialization.py tests/unit/test_cellprofiler_function_contract_execution.py --junitxml=diagnostics/first-repair.xml"
+	User time (seconds): 3.07
+	System time (seconds): 0.28
+	Percent of CPU this job got: 87%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.82
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 308204
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 49335
+	Voluntary context switches: 4
+	Involuntary context switches: 201
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 224
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

@@ -1,0 +1,14 @@
+{
+  "findings": [],
+  "plans": [],
+  "finding_payload_mode": "deadline_incomplete",
+  "finding_count": null,
+  "finding_counts": null,
+  "scan_status": {
+    "complete": false,
+    "deadline_exceeded": true,
+    "stage": "parse_python_module",
+    "budget_seconds": 20.0,
+    "elapsed_seconds": 20.0
+  }
+}

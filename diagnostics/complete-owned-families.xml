@@ -1,0 +1,934 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="13" skipped="0" tests="110" time="4.350" timestamp="2026-10-01T03:01:32.767737-04:00" hostname="desktop"><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_real_rescale_full_stack_materializes_composed_runtime_sources" time="0.003"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">def test_real_rescale_full_stack_materializes_composed_runtime_sources():
+        data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+        source = ImagePayloadMetadata(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        ).payload_with(data, None)
+        composition = compose_aligned_image_payload(
+            "synthetic source inputs", (source, source)
+        )
+        assert isinstance(composition.payload, AlignedImageStack)
+        contract = CallableContract.from_callable(rescale_intensity)
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            contract.resolve_canonical_raw_callable(),
+            composition.payload,
+            {},
+            execution_mode=contract.runtime_image_execution_mode,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(ImageMetadataPayload(data=array([[[ 0.,  1.,  2.,  3.],
+        [ 4.,  5.,  6.,  7.],
+      ...r=None, source_channel_axis=None, plane_axis=&lt;RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'&gt;))), slice_contexts=())
+composed = array([[[[ 0.,  1.,  2.,  3.],
+         [ 4.,  5.,  6.,  7.],
+         [ 8.,  9., 10., 11.]],
+
+        [[ 0.,  1.,  2.... 23.]],
+
+        [[12., 13., 14., 15.],
+         [16., 17., 18., 19.],
+         [20., 21., 22., 23.]]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[1-ProcessingContract.PURE_3D]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.PURE_3D: 'Pure3DProcessingContract'&gt;
+slice_count = 1
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+&gt;               CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32),), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[1-ProcessingContract.PURE_2D]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.PURE_2D: 'Pure2DProcessingContract'&gt;
+slice_count = 1
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32),), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[1-ProcessingContract.FLEXIBLE]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.FLEXIBLE: 'FlexibleProcessingContract'&gt;
+slice_count = 1
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32),), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[1-ProcessingContract.VOLUMETRIC_TO_SLICE]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.VOLUMETRIC_TO_SLICE: 'VolumetricToSliceProcessingContract'&gt;
+slice_count = 1
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32),), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[2-ProcessingContract.PURE_3D]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.PURE_3D: 'Pure3DProcessingContract'&gt;
+slice_count = 2
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+&gt;               CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32), array([[1., 1., 1., 1.],
+       [1., 1., 1., 1.],
+       [1., 1., 1., 1.]], dtype=float32)), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]],
+
+       [[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1., 1., 1.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[2-ProcessingContract.PURE_2D]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.PURE_2D: 'Pure2DProcessingContract'&gt;
+slice_count = 2
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32), array([[1., 1., 1., 1.],
+       [1., 1., 1., 1.],
+       [1., 1., 1., 1.]], dtype=float32)), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]],
+
+       [[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1., 1., 1.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[2-ProcessingContract.FLEXIBLE]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.FLEXIBLE: 'FlexibleProcessingContract'&gt;
+slice_count = 2
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32), array([[1., 1., 1., 1.],
+       [1., 1., 1., 1.],
+       [1., 1., 1., 1.]], dtype=float32)), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]],
+
+       [[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1., 1., 1.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_every_full_stack_processing_family_materializes_image_and_image_kwargs[2-ProcessingContract.VOLUMETRIC_TO_SLICE]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">processing_contract = &lt;ProcessingContract.VOLUMETRIC_TO_SLICE: 'VolumetricToSliceProcessingContract'&gt;
+slice_count = 2
+
+    @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+    @pytest.mark.parametrize("slice_count", (1, 2))
+    def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
+        processing_contract, slice_count
+    ):
+        planes = tuple(
+            np.full((3, 4), index, dtype=np.float32) for index in range(slice_count)
+        )
+        aligned = AlignedImageStack(planes)
+        opaque = RuntimeSliceAlignedValues(("not an image",))
+        calls = []
+    
+        def dense_callable(image, *, reference, token):
+            calls.append((image, reference, token))
+            assert not isinstance(image, AlignedImageStack)
+            assert not isinstance(reference, AlignedImageStack)
+            assert token is opaque
+            np.testing.assert_array_equal(image_payload_data(image), np.stack(planes))
+            np.testing.assert_array_equal(image_payload_data(reference), np.stack(planes))
+            return image
+    
+        contract = CallableContract(
+            func=dense_callable,
+            function_name="dense_callable",
+            module_name="DenseProbeModule",
+            metadata=CallableMetadata(processing_contract=processing_contract),
+        )
+        kwargs = {"reference": aligned, "token": opaque}
+        # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
+        if processing_contract is ProcessingContract.PURE_3D:
+            with pytest.raises(ValueError, match="runtime-slice-aligned kwargs.*token"):
+                CellProfilerFunctionContractExecutor().execute(
+                    contract,
+                    dense_callable,
+                    aligned,
+                    kwargs,
+                    execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+                )
+            assert calls == []
+            kwargs["token"] = None
+            opaque = None
+&gt;       result = CellProfilerFunctionContractExecutor().execute(
+            contract,
+            dense_callable,
+            aligned,
+            kwargs,
+            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        )
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:148: in execute
+    result = executor.execute_pure_3d(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:308: in execute_pure_3d
+    projected_image = RuntimeSliceProjection.full_stack_value(image)
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(array([[0., 0., 0., 0.],
+       [0., 0., 0., 0.],
+       [0., 0., 0., 0.]], dtype=float32), array([[1., 1., 1., 1.],
+       [1., 1., 1., 1.],
+       [1., 1., 1., 1.]], dtype=float32)), slice_contexts=())
+composed = array([[[0., 0., 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]],
+
+       [[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1., 1., 1.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_aligned_materialization_retains_masks_calibration_and_exact_contributors" time="0.005"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">def test_aligned_materialization_retains_masks_calibration_and_exact_contributors():
+        spacing = SourceVoxelSpacing((1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS)
+        sources = []
+        expected_paths = []
+        for channel, alias in ((1, "DNA"), (2, "actin")):
+            paths = tuple(f"/synthetic/A01_s{site}_w{channel}.tif" for site in (1, 2))
+            expected_paths.extend(paths)
+            metadata = ImagePayloadMetadata(
+                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                source_image_names=(alias,),
+                source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                    paths=paths,
+                    component_metadata=tuple(
+                        {"well": "A01", "site": str(site), "channel": str(channel)}
+                        for site in (1, 2)
+                    ),
+                ),
+                source_voxel_spacing=spacing,
+                source_dtype="uint8",
+                intensity_scale=255.0,
+                source_spatial_domain=SourceSpatialDomain(
+                    source_shape_yx=(3, 4), origin_yx=(0, 0)
+                ),
+            )
+            pixels = np.full((2, 3, 4), channel, dtype=np.float32)
+            mask = np.ones_like(pixels, dtype=bool)
+            mask[0, 0, 0] = False
+            sources.append(metadata.payload_with(pixels, mask))
+        composed = compose_aligned_image_payload(
+            "matched synthetic inputs", tuple(sources)
+        ).payload
+&gt;       dense = RuntimeSliceProjection.full_stack_value(composed)
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AlignedImageStack(slices=(MaskedImagePayload(data=array([[[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1.,...r=None, source_channel_axis=None, plane_axis=&lt;RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'&gt;))), slice_contexts=())
+composed = array([[[[1., 1., 1., 1.],
+         [1., 1., 1., 1.],
+         [1., 1., 1., 1.]],
+
+        [[2., 2., 2., 2.],
+        ... [1., 1., 1., 1.]],
+
+        [[2., 2., 2., 2.],
+         [2., 2., 2., 2.],
+         [2., 2., 2., 2.]]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_named_output_bundle_materializes_its_own_source_binding_axis" time="0.002"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">def test_named_output_bundle_materializes_its_own_source_binding_axis():
+        planes = tuple(np.full((3, 4), index, dtype=np.float32) for index in (1, 2))
+        bundle = ImageOutputBundle(
+            planes,
+            tuple(
+                AlignedImageSliceContext.main_flow(name, artifact_kind="image")
+                for name in ("red", "green")
+            ),
+        )
+&gt;       dense = RuntimeSliceProjection.full_stack_value(bundle)
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ImageOutputBundle(slices=(array([[1., 1., 1., 1.],
+       [1., 1., 1., 1.],
+       [1., 1., 1., 1.]], dtype=float32), ...age'), AlignedImageSliceContext(output_kind='main', output_key='green', projection_key='main', artifact_kind='image')))
+composed = array([[[1., 1., 1., 1.],
+        [1., 1., 1., 1.],
+        [1., 1., 1., 1.]],
+
+       [[2., 2., 2., 2.],
+        [2., 2., 2., 2.],
+        [2., 2., 2., 2.]]], dtype=float32)
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_ragged_aligned_images_fail_before_dense_callable" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_independent_composition_capabilities_cooperate_in_both_mro_orders[False]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">reverse = False
+
+    @pytest.mark.parametrize("reverse", (False, True))
+    def test_independent_composition_capabilities_cooperate_in_both_mro_orders(reverse):
+        calls = []
+    
+        class PixelCapability:
+            def compose_unmasked(self, payloads):
+                calls.append("pixels")
+                return super().compose_unmasked(payloads) + 1
+    
+        class MaskCapability:
+            def compose_mask(self, composed, metadata):
+                calls.append("mask")
+                return super().compose_mask(composed, metadata)
+    
+        bases = (
+            (MaskCapability, PixelCapability)
+            if reverse
+            else (PixelCapability, MaskCapability)
+        )
+        probe_type = type("IndependentCompositionProbe", (*bases, AlignedImageStack), {})
+        probe = probe_type((np.zeros((2, 3)), np.ones((2, 3))))
+        assert isinstance(probe, ImagePayloadStackComposition)
+&gt;       dense = RuntimeSliceProjection.full_stack_value(probe)
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+tests/unit/test_cellprofiler_full_stack_materialization.py:220: in compose_mask
+    return super().compose_mask(composed, metadata)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = IndependentCompositionProbe(slices=(array([[0., 0., 0.],
+       [0., 0., 0.]]), array([[1., 1., 1.],
+       [1., 1., 1.]])), slice_contexts=())
+composed = array([[[1., 1., 1.],
+        [1., 1., 1.]],
+
+       [[2., 2., 2.],
+        [2., 2., 2.]]])
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_full_stack_materialization" name="test_independent_composition_capabilities_cooperate_in_both_mro_orders[True]" time="0.001"><failure message="UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value">reverse = True
+
+    @pytest.mark.parametrize("reverse", (False, True))
+    def test_independent_composition_capabilities_cooperate_in_both_mro_orders(reverse):
+        calls = []
+    
+        class PixelCapability:
+            def compose_unmasked(self, payloads):
+                calls.append("pixels")
+                return super().compose_unmasked(payloads) + 1
+    
+        class MaskCapability:
+            def compose_mask(self, composed, metadata):
+                calls.append("mask")
+                return super().compose_mask(composed, metadata)
+    
+        bases = (
+            (MaskCapability, PixelCapability)
+            if reverse
+            else (PixelCapability, MaskCapability)
+        )
+        probe_type = type("IndependentCompositionProbe", (*bases, AlignedImageStack), {})
+        probe = probe_type((np.zeros((2, 3)), np.ones((2, 3))))
+        assert isinstance(probe, ImagePayloadStackComposition)
+&gt;       dense = RuntimeSliceProjection.full_stack_value(probe)
+
+tests/unit/test_cellprofiler_full_stack_materialization.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/runtime_slice_projection.py:898: in full_stack_value
+    ).full_stack_value(value)
+openhcs/core/runtime_slice_projection.py:514: in full_stack_value
+    return cast(AlignedImageStack, value).compose()
+openhcs/core/aligned_image_payload.py:441: in compose
+    return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+tests/unit/test_cellprofiler_full_stack_materialization.py:220: in compose_mask
+    return super().compose_mask(composed, metadata)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = IndependentCompositionProbe(slices=(array([[0., 0., 0.],
+       [0., 0., 0.]]), array([[1., 1., 1.],
+       [1., 1., 1.]])), slice_contexts=())
+composed = array([[[1., 1., 1.],
+        [1., 1., 1.]],
+
+       [[2., 2., 2.],
+        [2., 2., 2.]]])
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -&gt; Any | None:
+        del metadata
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+&gt;           output_mask_domain=metadata.mask_domain(composed),
+        )
+E       UnboundLocalError: cannot access local variable 'metadata' where it is not associated with a value
+
+openhcs/core/aligned_image_payload.py:456: UnboundLocalError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_morphological_skeleton_executes_one_planar_runtime_image" time="0.103" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.NATURAL-1-ProcessingContract.PURE_3D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.NATURAL-1-ProcessingContract.PURE_2D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.NATURAL-1-ProcessingContract.FLEXIBLE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.NATURAL-1-ProcessingContract.VOLUMETRIC_TO_SLICE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.FULL_STACK-1-ProcessingContract.PURE_3D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.FULL_STACK-1-ProcessingContract.PURE_2D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.FULL_STACK-1-ProcessingContract.FLEXIBLE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.FULL_STACK-1-ProcessingContract.VOLUMETRIC_TO_SLICE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK-2-ProcessingContract.PURE_3D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK-2-ProcessingContract.PURE_2D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK-2-ProcessingContract.FLEXIBLE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_executor_owns_the_closed_mode_processing_contract_matrix[ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK-2-ProcessingContract.VOLUMETRIC_TO_SLICE]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_pure_2d_consumes_unique_declared_source_binding_plane" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_execution_preserves_each_slice_inner_source_binding_axis[ProcessingContract.PURE_2D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_execution_preserves_each_slice_inner_source_binding_axis[ProcessingContract.PURE_3D]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_type_mismatch_fails_before_raw_invocation" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_requires_exact_compiled_runtime_slice_projection" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_projects_runtime_plane_projection_kwarg_nominally" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_declared_output_axis_contextualizes_multiple_canonical_outputs[ImagePayloadExecutionMode.NATURAL]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_declared_output_axis_contextualizes_multiple_canonical_outputs[ImagePayloadExecutionMode.FULL_STACK]" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_multi_canonical_output_rejects_undeclared_array_axis" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_multi_canonical_output_requires_exact_projection_cardinality" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_transposes_multiple_canonical_outputs_across_runtime_slices[1]" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_transposes_multiple_canonical_outputs_across_runtime_slices[2]" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_preserves_one_scalar_output_per_declared_surface" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_aggregates_one_canonical_output_for_one_runtime_slice" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_unwraps_one_declared_surface_after_slice_transpose" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_aligned_stack_rejects_canonical_output_surface_count_mismatch" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_raw_callable_mismatch_fails_before_invocation" time="0.000" /><testcase classname="tests.unit.test_cellprofiler_function_contract_execution" name="test_full_stack_pure_3d_rejects_slice_aligned_kwargs_before_invocation" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_cellprofiler_runtime_parameter_types_declare_slice_projection" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_rejects_undeclared_value_type" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_accepts_arraybridge_payloads" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_spatial_graph_declares_scalar_pass_through_projection" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_object_label_payload_selects_nominal_object_label_projection" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_preserves_nominal_dtype_config" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_projects_all_columnar_row_carriers" time="0.002" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_selects_runtime_plane_projection_parameter" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_does_not_infer_high_rank_array_axis" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_projects_declared_color_image_stack" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_preserves_device_array_without_host_conversion" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_aligned_image_stack_projects_inner_source_axis_across_runtime_slices" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_image_output_bundle_projects_shared_runtime_axis_not_output_count" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_image_output_bundle_uses_outer_axis_without_inner_declaration" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_selected_image_projection_stays_consumed_on_derived_output" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_validates_declared_image_cardinality" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_plane_projection_owns_dense_axis_shape_validation[1-shape0-False]" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_plane_projection_owns_dense_axis_shape_validation[1-shape1-True]" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_plane_projection_owns_dense_axis_shape_validation[2-shape2-True]" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_plane_projection_owns_dense_axis_shape_validation[2-shape3-False]" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_projects_aligned_kwargs_from_one_coordinate" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_rejects_aligned_kwarg_cardinality_mismatch" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_projects_declared_object_label_plane" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_runtime_slice_projection_preserves_image_mask_and_plane_metadata" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_variable_component_projection_requires_declared_plane_provenance" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_variable_component_projection_validates_declared_cardinality" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_variable_component_projection_rejects_expanded_source_provenance" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_variable_component_projection_uses_declared_plane_axis" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_source_binding_projection_projects_object_labels_through_same_axis" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_source_identity_request_projects_explicit_source_binding_label_planes" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_measurement_row_names_and_order_do_not_declare_slice_count" time="0.001" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_axisless_object_measurement_is_not_runtime_slice_projected" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_measurement_table_source_provenance_declares_slice_count" time="0.000" /><testcase classname="tests.unit.test_runtime_slice_projection" name="test_measurement_table_scalar_source_provenance_is_already_projected" time="0.000" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_aligns_with_nominal_singleton_owner[False-aligned_stack]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_aligns_with_nominal_singleton_owner[False-runtime_payload]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_aligns_with_nominal_singleton_owner[True-aligned_stack]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_aligns_with_nominal_singleton_owner[True-runtime_payload]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_still_requires_owner_for_multi_slice_alignment[aligned_stack]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_scalar_image_still_requires_owner_for_multi_slice_alignment[runtime_payload]" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_same_shaped_scalar_images_do_not_invent_runtime_alignment" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together" time="0.001" /><testcase classname="tests.unit.test_runtime_image_singleton_alignment" name="test_singleton_runtime_projection_rejects_multi_slice_payload" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_same_source_output_siblings_own_independent_projections" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_distinct_source_outputs_require_compiled_disjoint_coordinate_proof" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_disjoint_compiled_output_coordinates_share_component_projection" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_single_declared_output_uses_ordinary_main_projection" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_precompiled_multi_output_contexts_never_infer_projection_from_sources" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_aligned_carrier_projects_exact_compiled_ref" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_untyped_context_does_not_match_typed_artifact_ref" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_non_main_context_does_not_match_main_flow_artifact_ref" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_runtime_binding_rejects_missing_exact_carrier_ref" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_aligned_carrier_rejects_duplicate_exact_context" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_generic_aligned_composition_preserves_shared_exact_contexts" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_generic_aligned_composition_rejects_conflicting_exact_contexts" time="0.000" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_named_output_transformation_preserves_base_carrier_for_later_exact_input" time="0.001" /><testcase classname="tests.unit.test_aligned_main_flow_projection" name="test_active_publisher_uses_exact_canonical_artifact_kind" time="0.003" /><testcase classname="tests.unit.test_aligned_output_projection" name="test_runtime_projects_mixed_output_planes_once_with_their_contexts" time="0.002" /><testcase classname="tests.unit.test_aligned_output_projection" name="test_shared_projection_retains_nesting_and_fresh_metadata_snapshots" time="0.001" /><testcase classname="tests.unit.test_aligned_output_projection" name="test_aligned_projection_preserves_strict_context_cardinality" time="0.000" /><testcase classname="tests.unit.test_aligned_image_payload_device" name="test_image_bundle_stacks_on_the_payload_framework_device" time="0.001" /><testcase classname="tests.unit.test_aligned_image_payload_registry" name="test_existing_aligned_kwarg_strategies_register_automatically" time="0.000" /><testcase classname="tests.unit.test_aligned_image_payload_registry" name="test_dynamic_aligned_kwarg_strategy_registers_at_class_definition" time="0.001" /><testcase classname="tests.unit.test_aligned_image_payload_registry" name="test_aligned_kwarg_strategy_resolution_follows_exact_value_mro" time="0.001" /></testsuite></testsuites>

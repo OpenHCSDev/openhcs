@@ -546,7 +546,9 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         return len(cast(AlignedImageStack, value).slices)
 
 
-class ImageOutputBundleRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
+class ImageOutputBundleRuntimeSliceProjectionStrategy(
+    AlignedImageStackRuntimeSliceProjectionStrategy
+):
     """Project each named output through its shared declared runtime axis."""
 
     value_type = ImageOutputBundle

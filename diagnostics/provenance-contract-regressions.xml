@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="45" time="4.711" timestamp="2026-10-01T02:59:56.047604-04:00" hostname="desktop"><testcase classname="tests.unit.test_source_image_provenance" name="test_source_provenance_projects_scalar_image_set_identity" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance" name="test_source_provenance_preserves_plane_positions_before_axis_deduplication" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance" name="test_source_provenance_axis_retains_distinct_image_sets" time="0.000" /><testcase classname="tests.unit.test_source_image_provenance" name="test_declared_source_projection_resolves_singleton_plane_contributor" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance" name="test_complete_source_identity_accepts_nested_contributor" time="0.000" /><testcase classname="tests.unit.test_source_image_provenance" name="test_complete_source_identity_requires_multi_plane_axis_declaration" time="0.000" /><testcase classname="tests.unit.test_source_image_provenance" name="test_derived_singleton_runtime_plane_retains_declared_source_name" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance" name="test_declared_source_projection_selects_ordered_repeated_alias_planes" time="0.002" /><testcase classname="tests.unit.test_source_image_provenance" name="test_declared_source_projection_drops_axis_for_single_selected_plane" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance" name="test_declared_source_projection_validates_runtime_plane_cardinality" time="0.001" /><testcase classname="tests.unit.test_source_image_provenance_hotpath" name="test_empty_explicit_provenance_reuses_authoritative_value" time="0.000" /><testcase classname="tests.unit.test_source_image_provenance_hotpath" name="test_populated_explicit_provenance_preserves_merge_precedence" time="0.000" /><testcase classname="tests.unit.test_source_image_provenance_hotpath" name="test_replace_fields_preserves_final_provenance_copy_isolation" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_image_artifact_normalization_applies_declared_scalar_identity" time="0.001" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_image_artifact_normalization_names_each_aligned_image_payload" time="0.001" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_derived_singleton_runtime_plane_projects_by_output_name" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_declared_singleton_name_owns_projection_over_nested_source_name" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_one_derived_name_applies_to_every_declared_runtime_plane" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_named_source_projection_selects_one_contributor_per_runtime_plane" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_source_name_projects_one_exact_named_runtime_slice" time="0.001" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_contributor_missing_identity_does_not_import_runtime_plane_topology" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_derived_plane_names_require_exact_declared_cardinality" time="0.000" /><testcase classname="tests.unit.test_derived_runtime_image_provenance" name="test_scalar_contributors_survive_runtime_plane_projection" time="0.000" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_binding_request_requires_contract_on_runtime_adapter_owner" time="0.000" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_binding_request_rejects_edges_from_another_callable_contract" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_runtime_adapter_contract_owns_active_input_selection" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_declared_input_occurrence_owns_callable_parameter_binding" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_stack_broadcast_input_projects_selected_plane_and_preserves_stack" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_stack_broadcast_input_collapses_singleton_for_larger_source_stack" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_artifact_availability_accepts_one_exact_input_occurrence" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_artifact_availability_preserves_repeated_exact_role_occurrences" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_compiled_edges_preserve_postponed_sequence_parameter_type" time="0.002" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_callable_abi_consumes_callable_contract_without_partition_wrapper" time="0.001" /><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots" time="0.001"><failure message="ValueError: callable 'identify_primary_objects' return annotation typing.Tuple[numpy.ndarray, openhcs.core.measurement_row_materialization.DataclassMeasurementColumnarRows, openhcs.core.runtime_object_labels.ObjectLabelPayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload] does not declare the canonical return followed by exactly 2 trailing artifact-output slot(s).">def test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots() -&gt; None:
+        source = ArtifactSpec.input("Input", ImageArtifactType)
+        measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+        labels = ArtifactSpec.output(
+            "Objects",
+            ObjectLabelsArtifactType,
+            relations=(GroupLineageSourceRelation(source=source.ref()),),
+        )
+    
+        for func in (identify_primary_objects, watershed_cellprofiler4):
+            contract = _contract(func, (source,))
+            contract = replace(
+                contract,
+                metadata=replace(
+                    contract.metadata,
+                    artifact_outputs=(measurements, labels),
+                ),
+            )
+    
+&gt;           CellProfilerModuleCallableABI.validate_callable_artifact_abi(func, contract)
+
+tests/unit/test_cellprofiler_runtime_input_binding_contract.py:675: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class 'openhcs.interop.cellprofiler.module_callable_abi.CellProfilerModuleCallableABI'&gt;
+func = &lt;function identify_primary_objects at 0x7f8f189c6ca0&gt;
+contract = CallableContract(func=&lt;function identify_primary_objects at 0x7f8f189c6ca0&gt;, function_name='identify_primary_objects',...imary_image_carrier_requirement=None, primary_image_carrier_transition=None), runtime_batch_executors=mappingproxy({}))
+
+    @classmethod
+    def validate_callable_artifact_abi(
+        cls,
+        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
+    ) -&gt; None:
+        """Validate one raw callable ABI against its callable artifact declarations."""
+    
+        from openhcs.core.aligned_image_payload import AlignedImageStack
+    
+        module_name = contract.module_name
+        if not isinstance(module_name, str) or not module_name:
+            raise ValueError("CellProfiler callable contract requires a module name.")
+        declared_outputs = contract.artifact_outputs
+        invalid_source_context_outputs = tuple(
+            (spec.ref(), sources)
+            for spec in declared_outputs
+            for sources in (spec.source_context_sources(),)
+            if spec.artifact_type.carries_source_image_context and len(sources) != 1
+        )
+        if invalid_source_context_outputs:
+            raise ValueError(
+                f"CellProfiler module {module_name!r} image/object outputs "
+                "must declare exactly one runtime-context source: "
+                f"{invalid_source_context_outputs!r}."
+            )
+        return_annotation = get_type_hints(func).get("return", inspect.Signature.empty)
+        return_variants = _callable_return_slot_variants(return_annotation)
+        canonical_outputs = contract.canonical_return_output_specs
+        trailing_outputs = contract.trailing_return_output_specs
+        expected_slot_count = len(trailing_outputs) + 1
+        matching_variants = tuple(
+            slots for slots in return_variants if len(slots) == expected_slot_count
+        )
+        if not matching_variants:
+&gt;           raise ValueError(
+                f"callable {func.__name__!r} return annotation "
+                f"{return_annotation!r} does not declare the canonical return "
+                f"followed by exactly {len(trailing_outputs)} trailing "
+                "artifact-output slot(s)."
+            )
+E           ValueError: callable 'identify_primary_objects' return annotation typing.Tuple[numpy.ndarray, openhcs.core.measurement_row_materialization.DataclassMeasurementColumnarRows, openhcs.core.runtime_object_labels.ObjectLabelPayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload, openhcs.core.runtime_image_values.MaskedImagePayload] does not declare the canonical return followed by exactly 2 trailing artifact-output slot(s).
+
+openhcs/interop/cellprofiler/module_callable_abi.py:300: ValueError</failure></testcase><testcase classname="tests.unit.test_cellprofiler_runtime_input_binding_contract" name="test_owned_binding_files_do_not_restore_partition_or_special_input_mirrors" time="0.000" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_illumination_apply_derives_both_routine_inputs_and_output" time="0.003" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_illumination_calculate_behavior_controls_unnamed_retained_outputs[False-False-1]" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_illumination_calculate_behavior_controls_unnamed_retained_outputs[True-False-2]" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_illumination_calculate_behavior_controls_unnamed_retained_outputs[False-True-2]" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_illumination_calculate_behavior_controls_unnamed_retained_outputs[True-True-3]" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_gray_to_color_callable_channels_derive_omitted_image_identities" time="0.006" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_invert_for_printing_modes_derive_only_enabled_unnamed_ports" time="0.004" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_resize_dimensions_image_activation_uses_behavior_not_identity" time="0.000" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_guided_grid_derives_required_guide_without_an_identity_kwarg" time="0.005" /><testcase classname="tests.unit.test_cellprofiler_artifact_activation_identity" name="test_neighbors_derives_measured_and_neighbor_occurrences_from_one_identity" time="0.005" /></testsuite></testsuites>
