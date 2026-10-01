@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from itertools import islice
 from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
+from pathlib import Path
 from threading import Lock
 from typing import ClassVar
 
@@ -23,6 +24,30 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+
+class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
+    """Admit persistent Numba work only for an empty explicit CPU cache."""
+
+    @classmethod
+    def requires_persistent_kernel_cache(cls) -> bool:
+        """Declared pure kernel operations require a persistent Numba cache."""
+        return True
+
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        if not OpenHCSProcessEnvironment.cpu_only_mode():
+            return False
+        if not cls.requires_persistent_kernel_cache():
+            return False
+        from numba import config as numba_config
+
+        cache_directory = numba_config.CACHE_DIR
+        return (
+            bool(cache_directory)
+            and next(Path(cache_directory).rglob("*.nbi"), None) is None
+        )
 
 
 class PreparationOperation(ABC):
@@ -64,6 +89,33 @@ class PreparationOperation(ABC):
         with cls._lock:
             cls._completed.clear()
         AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+
+
+class RegisteredNumbaKernelPreparation(
+    PersistentNumbaKernelPreparation, PreparationOperation
+):
+    """Derive independent pure-kernel obligations from each declared registry.
+
+    This abstract parent has no registry. Concrete AutoRegisterMeta declarations
+    own their registries; the common parent owns identity, operation derivation
+    and successful parent preparation.
+    """
+
+    __registry_key__ = "__name__"
+    __registry__: ClassVar[dict[str, type[RegisteredNumbaKernelPreparation]]]
+
+    @property
+    def identity(self) -> Hashable:
+        return type(self)
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        return tuple(declaration() for declaration in cls.__registry__.values())
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
 
 
 @dataclass(frozen=True, slots=True)
