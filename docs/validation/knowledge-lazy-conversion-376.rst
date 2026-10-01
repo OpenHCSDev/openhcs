@@ -172,3 +172,46 @@ original pinned R0 over every actual changed production file, not a copied
 detector or positive-delta waiver. Parent owns original installed10s acceptance.
 Current next work is selected declaration discovery/lookup ownership; the
 timeout's exact installed timing remains unqualified, not silently fixed.
+
+Additional installed witness
+-----------------------------
+
+Parent engineering evidence now records a second exact generated-source section
+timing out: knowledge-document openhcs_official30_benchmark_recipes,
+section examplehuman-openhcs-python, max_chars50000. It remains issue376 under
+this same PR377 owner, not a second feature or a case-name-specific workaround.
+
+Retained root:
+/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output.
+mcp.stdin line29 is the exact request; mcp.stdout2704..2726 contains the
+mcp_transport_failed/TimeoutError reply. author-record.rst's Example retrieval
+section explicitly keeps the timed-out read pending disposition, not replayed
+and not proof that conversion did no work. No retrieval parity is claimed.
+
+SHA256 of the byte-exact stdin line29, including its original line ending:
+20cdfc6bb9aec372d469ce527ab2aca32428ffdf5f1f62f8bf0df8e0f2d20cf4.
+SHA256 of the byte-exact stdout2704..2726 slice, including original CRLF:
+f1028363754d76ff325376032d79d22544276179b599c2131751d6912676018b.
+These hashes identify the original slices, not a complete/final session archive.
+No redundant snapshot, copied corpus or new archive was created for this update.
+
+The distinct subsequent corpus-map request at stdin30 succeeded:
+document openhcs_example_corpus_map, section
+openhcs-processing-presets-pipelines-loose-operaphenix-neurite-outgrowth-py,
+max_chars50000. stdout2727..2734 records the exact selection, installed Python
+source path and Lines included487; the parent's author record reports no
+truncation. It is a mechanism reference, not case-specific biological/parity
+acceptance, and does not dispose of or repair the failed ExampleHuman read.
+
+The timeout's captured stderr tail also includes earlier Inspect plate path
+progress and a BigStitcher jar message. That mixed tail is retained evidence,
+not a demonstrated causal stack for knowledge conversion. Do not attribute
+this timeout to Fiji startup, catalogue discovery or the content-size bound
+without further source evidence. Both official30 selections use the existing
+manifest-case conversion owner; MEMB-1/2 still prohibit a case roster, parallel
+registry or selective deadline widening. No new production diagnosis is claimed.
+
+This receipt-only follow-up used the existing WT; no tests, native launches,
+installation, download, timeout change, restart or pending-read replay. Parent
+logs, original failure archives, scientific output and frozen paired installation
+remain untouched. No new disposable build/test/cache directory was created.
