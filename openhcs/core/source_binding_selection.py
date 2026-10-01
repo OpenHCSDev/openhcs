@@ -150,7 +150,7 @@ class SourceMetadataRecord(Mapping[str, SourceMetadataValue]):
         return self.fields == other.fields
 
     def __hash__(self) -> int:
-        return hash(self.fields)
+        return hash((self.fields,))
 
 
 @dataclass(frozen=True, slots=True, eq=False)

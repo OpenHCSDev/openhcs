@@ -224,6 +224,7 @@ def test_declared_and_resolved_records_preserve_family_value_identity():
     )
     assert declared == resolved
     assert hash(declared) == hash(resolved)
+    assert hash(declared) == hash((declared.fields,))
     assert declared != SourceMetadataRecord.from_mapping({"site": 2, "well": "A01"})
     nested = {ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}}
     with pytest.raises(TypeError):
