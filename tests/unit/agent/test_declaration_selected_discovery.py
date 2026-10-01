@@ -10,6 +10,7 @@ import pytest
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
+from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
 @pytest.mark.parametrize("audit_first", [True, False])
@@ -41,6 +42,10 @@ def test_independent_declaration_is_selected_with_cooperative_capability(
     (package / "__init__.py").write_text("")
     (package / "arbitrary_location.py").write_text(
         "from selected_declaration_support import Root\n"
+        "from openhcs.core.memory import numpy\n"
+        "@numpy\n"
+        f"def independent_selected_function_{audit_first}(image):\n"
+        "    raise AssertionError('lookup must not execute processing')\n"
         "class IndependentDeclaration(Root):\n"
         + (f"    module_name = 'IndependentSelection' + str({audit_first})\n"
          if computed_name else f"    module_name = 'IndependentSelection{audit_first}'\n")
@@ -69,6 +74,10 @@ def test_independent_declaration_is_selected_with_cooperative_capability(
         assert declaration is root.for_backend_function_name(
             f"independent_selected_function_{audit_first}"
         )
+        implementation = declaration.require_callable()
+        assert implementation is vars(sys.modules[declaration.__module__])[
+            f"independent_selected_function_{audit_first}"
+        ]
         assert events == [
             ("before", "IndependentDeclaration"),
             ("after", "IndependentDeclaration"),
@@ -101,6 +110,12 @@ def test_examplehuman_selected_source_uses_same_declaration_owner(monkeypatch):
         raise AssertionError("selected example requested whole-family discovery")
 
     monkeypatch.setattr(CellProfilerModule.__registry__, "_discover", forbid_full_discovery)
+
+    def forbid_runtime_preparation(*args, **kwargs):
+        raise AssertionError("source retrieval attempted runtime preparation")
+
+    monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", forbid_runtime_preparation)
+    monkeypatch.setattr(RegistryService, "prepare_in_current_process", forbid_runtime_preparation)
     document = KnowledgeBaseService().get_document(
         KnowledgeBaseDocumentRequest.from_fields(
             document_id="openhcs_official30_benchmark_recipes",
