@@ -234,6 +234,11 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
         assert events == (["ephemeral", "host"] if reverse else ["host", "ephemeral"])
         assert len(decoded) == 1 and type(decoded[0]) is ExtendedConnection
         assert decoded[0].request_tag == "retained"
+        # CLI input retains the subclass's fields; the distinct credential-free
+        # execution projection still carries only the public connection owner.
+        assert decoded[0].tool_arguments() == ExecutionConnectionSpec(
+            port=5993, persistent=False
+        ).tool_arguments()
         assert ExtendedConnection.__mro__.count(AgentDataclassCliRequest) == 1
         assert ExtendedConnection.__mro__.count(ExecutionConnectionSpec) == 1
     finally:
