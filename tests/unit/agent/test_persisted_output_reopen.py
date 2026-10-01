@@ -229,3 +229,55 @@ def test_no_main_output_rejects_incompatible_backend_owners(tmp_path):
         "disagree on 'microscope_handler_name'" in item.message
         for item in (*result.errors, *result.warnings)
     )
+
+
+def test_metadata_projection_uses_one_document_loader_and_writer_invalidation(
+    tmp_path, monkeypatch
+):
+    inspection, declarations = declared_output(tmp_path / "output", ("one", "two"))
+    root = declarations[0][0].parent.parent
+    context, errors, _warnings = inspection.open_context(
+        PlatePathInspectionRequest(plate_path=str(root))
+    )
+    assert errors == ()
+    owner = type(context.handler.metadata_handler)(context.filemanager)
+    original_load = context.filemanager.load
+    loaded = []
+
+    def observe(path, backend, *args, **kwargs):
+        loaded.append(path)
+        return original_load(path, backend, *args, **kwargs)
+
+    monkeypatch.setattr(context.filemanager, "load", observe)
+    document = owner.source_workspace_metadata_document(root)
+    assert owner.get_pixel_size(root) == 1
+    assert len(owner.get_image_files(root, all_subdirs=True)) == 2
+    assert owner.source_workspace_metadata_document(root) is document
+    assert loaded == [str(root / "openhcs_metadata.json")]
+    owner.update_available_backends(root, {"disk": True})
+    assert owner.get_pixel_size(root) == 1
+    assert len(loaded) == 2
+    assert owner.source_workspace_metadata_document(root) is not document
+
+
+def test_unbound_explicit_result_image_still_requires_a_receipt(tmp_path, monkeypatch):
+    inspection, declarations = declared_output(tmp_path / "output", ("one", "two"))
+    root = declarations[0][0].parent.parent
+    results = root / "undeclared-results"
+    results.mkdir()
+    # A real saved image is not itself proof of the acquisition it represents.
+    path = results / "looks-like-A01-w2.tif"
+    ImageFileFormat.require_path(path).write(path, np.zeros((2, 3), dtype=np.uint16))
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_fields: pytest.fail("Unbound image must not launch a viewer"),
+    )
+    result = PlateStreamingService(inspection, NoRuntimeBridge()).stream_files(
+        PlateFileStreamRequest.from_fields(
+            plate_path=str(root), kind="result", result_directory=str(results),
+            file_paths=[str(path)],
+        )
+    )
+    assert len(result.errors) == 1
+    assert "exact source receipt" in result.errors[0].message
+    assert result.streamed_image_paths == ()

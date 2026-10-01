@@ -134,40 +134,17 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if self._metadata_cache is not None and self._plate_path_cache == current_path:
             return self._metadata_cache
 
-        metadata_file_path = self.find_metadata_file(current_path)
-        if not self.filemanager.exists(str(metadata_file_path), Backend.DISK.value):
-            raise MetadataNotFoundError(
-                f"Metadata file '{self.METADATA_FILENAME}' not found in {plate_path}"
-            )
-
-        try:
-            content = self.filemanager.load(str(metadata_file_path), Backend.DISK.value)
-            # Backend may return already-parsed dict (disk backend auto-parses JSON)
-            if isinstance(content, dict):
-                metadata_dict = content
-            else:
-                # Otherwise parse raw bytes/string
-                metadata_dict = json.loads(
-                    content.decode("utf-8") if isinstance(content, bytes) else content
-                )
-
-            # Handle subdirectory-keyed format
-            subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
-            base_metadata = self._metadata_projection(subdirs, plate_path)
-            base_metadata[FIELDS.IMAGE_FILES] = [
-                image_file
-                for subdir_name, subdir in subdirs.items()
-                for image_file in self._image_files(subdir_name, subdir)
-            ]
-            self._metadata_cache = base_metadata
-
-            self._plate_path_cache = current_path
-            return self._metadata_cache
-
-        except json.JSONDecodeError as e:
-            raise MetadataNotFoundError(
-                f"Error decoding JSON from '{metadata_file_path}': {e}"
-            ) from e
+        metadata_dict = self._load_metadata_dict(current_path)
+        subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
+        base_metadata = self._metadata_projection(subdirs, plate_path)
+        base_metadata[FIELDS.IMAGE_FILES] = [
+            image_file
+            for subdir_name, subdir in subdirs.items()
+            for image_file in self._image_files(subdir_name, subdir)
+        ]
+        self._metadata_cache = base_metadata
+        self._plate_path_cache = current_path
+        return self._metadata_cache
 
     def determine_main_subdirectory(self, plate_path: Union[str, Path]) -> str:
         """Determine main input subdirectory from metadata."""
