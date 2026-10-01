@@ -68,7 +68,10 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.constants import AllComponents
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor
-from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
+from openhcs.runtime.viewer_snapshot import (
+    ViewerWindowSnapshotFailureReply,
+    ViewerWindowSnapshotService,
+)
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
@@ -2577,9 +2580,12 @@ class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMe
 
     @staticmethod
     def _failed_observation(server, completed, failure) -> None:
-        response = server.control_error_response(failure.error).to_dict()
-        response["observation"] = failure.observation
-        completed(response)
+        completed(
+            ViewerWindowSnapshotFailureReply.from_control_error(
+                server.control_error_response(failure.error),
+                failure,
+            )
+        )
 
     @classmethod
     def for_message_type(cls, message_type: str | None) -> "NapariControlMessageAction":

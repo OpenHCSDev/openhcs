@@ -6,6 +6,7 @@ Persistent source: /home/ts/wt/openhcs-render-complete-snapshot-20261001 and
 /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001. Paired dependency
 a9e6745 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
 OpenHCS draft364 closes363 and366; neither draft is installed or live accepted.
+Closes #363. Closes #366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
 
 Required relation
 -----------------
@@ -73,6 +74,9 @@ with cooperative initialization. These bases supply behavior, not markers.
 MEMB-1/2/5: existing AutoRegisterMeta owns control discovery and the existing
 capability input_contract owns MCP discovery; capture-field projections derive
 from dataclass declarations rather than enumerated field copies.
+The failure reply inherits ControlErrorResponse's fields and canonical wire
+projection, extending it via cooperative super() with the typed observation.
+It replaces raw error-record mutation rather than hiding it behind a facade.
 
 PR358 startup/connect excluded. Dewey's PR365 owns general DTO serialization,
 pipeline and render authoring; server.py and those files are untouched.
@@ -128,7 +132,7 @@ MemoryMax512M and MemorySwapMax0, shell timeout60s:
   asymmetric nonzero gray/RGB crops, clipping/empty bounds, original two
   streaming-handler sampling tests, missing layout, color-axis retention and
   max bound. Semantic expected16x64x3; raw expected64x16x3.
-* queued-fourth.log:4 passed,7.92s elapsed,498852KiB peak. Original accepted
+* queued-final.log:4 passed,7.16s elapsed,502964KiB peak. Original accepted
   control queue, canonical pickle serializer, registered action, real Qt paint
   and ViewerModel; no socket or server/application startup.
 * contracts-final.log:11 passed,5.51s elapsed,283604KiB peak. Nominal MCP
@@ -144,6 +148,13 @@ first/second/third (fixture endpoint initialization and teardown), qt-final
 The explicit plugin-free selector passes; those qtbot cases remain unexecuted.
 An early pair of small shards overlapped on CPU0; their conservative summed
 peak395MiB stayed below512MiB. Subsequent shards ran sequentially.
+
+R0's first committed-source review (r0-final.log,23.76s/87632KiB) found one
+new raw string-key subscript at error-receipt mutation. The replacement is a
+nominal ControlErrorResponse subclass with declaration-derived inherited
+fields and cooperative wire projection; the actual queued-destruction check
+passes through the existing canonical serializer. Raw evidence logs retain
+their original pytest whitespace; source-only diff whitespace checks pass.
 
 This receipt is a focused source/ownership review, not a completed global NRA
 scan or equivalence proof. The user's source-only limits govern validation;

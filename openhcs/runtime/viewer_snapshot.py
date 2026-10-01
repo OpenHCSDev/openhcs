@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, fields
 from functools import partial
 
 from pyqt_reactive.services.window_snapshot import (
@@ -10,11 +11,37 @@ from pyqt_reactive.services.window_snapshot import (
     QtWindowSnapshotRequest,
     QtWindowSnapshotService,
     WindowSnapshotObservationFailure,
+    WindowVisualObservation,
 )
+from zmqruntime.messages import ControlErrorResponse
 
 from openhcs.agent.dto.common import AgentResourceRef
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor
 from openhcs.serialization.json import to_jsonable
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerWindowSnapshotFailureReply(ControlErrorResponse):
+    """Native observation evidence on the existing canonical control error."""
+
+    observation: WindowVisualObservation
+
+    @classmethod
+    def from_control_error(
+        cls,
+        error: ControlErrorResponse,
+        failure: WindowSnapshotObservationFailure,
+    ) -> ViewerWindowSnapshotFailureReply:
+        return cls(
+            **{
+                declared.name: getattr(error, declared.name)
+                for declared in fields(ControlErrorResponse)
+            },
+            observation=failure.observation,
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {**super().to_dict(), "observation": self.observation}
 
 
 class ViewerWindowSnapshotService(QtWindowSnapshotService):
