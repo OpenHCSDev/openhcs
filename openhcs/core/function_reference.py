@@ -50,6 +50,17 @@ class FunctionReference(ABC):
 
         return self.import_identity.module_name
 
+    @property
+    def source_import_identity(self) -> CallableImportIdentity:
+        """Import authority used to reconstruct this declaration in Python."""
+
+        return self.import_identity
+
+    def source_expression(self, imported_name: str) -> str:
+        """Render through the source authority, including pycodify name aliases."""
+
+        return imported_name
+
     @abstractmethod
     def resolve(self) -> Callable:
         """Resolve this reference through its nominal transport authority."""
@@ -108,6 +119,16 @@ class RegistryFunctionReference(FunctionReference):
         """Return the registry owner derived from the canonical composite key."""
 
         return self.composite_key.partition(":")[0]
+
+    @property
+    def source_import_identity(self) -> CallableImportIdentity:
+        return CallableImportIdentity(
+            module_name="openhcs.processing.func_registry",
+            function_name="get_function",
+        )
+
+    def source_expression(self, imported_name: str) -> str:
+        return f"{imported_name}({self.composite_key!r})"
 
     def resolve(self) -> Callable:
         from openhcs.processing.backends.lib_registry.registry_service import (

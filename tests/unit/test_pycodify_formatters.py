@@ -95,8 +95,9 @@ def test_function_reference_formats_from_declared_identity_without_resolution(
 
     source = _source(reference)
 
-    assert "from remote_backend.filters import gpu_filter" in source
-    assert "config = gpu_filter" in source
+    assert "from openhcs.processing.func_registry import get_function" in source
+    assert "config = get_function('remote_gpu:gpu_filter')" in source
+    assert "remote_backend.filters" not in source
 
 
 def test_clean_pipeline_config_omits_empty_inherited_lazy_config_groups():

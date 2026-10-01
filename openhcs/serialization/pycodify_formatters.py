@@ -17,46 +17,9 @@ from openhcs.core.callable_contract import CallableContract, CallableImportIdent
 from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
+    ImportableFunctionReference,
 )
 from openhcs.core.steps.function_step import FunctionStep
-
-
-@dataclass(frozen=True)
-class CallableExportIdentity:
-    import_identity: CallableImportIdentity | None
-
-    @classmethod
-    def from_callable(cls, func) -> "CallableExportIdentity":
-        if isinstance(func, type):
-            return cls(
-                import_identity=CallableImportIdentity(
-                    module_name=func.__module__,
-                    function_name=func.__name__,
-                ),
-            )
-        if not (inspect.isfunction(func) or inspect.isbuiltin(func)):
-            return cls(import_identity=None)
-        try:
-            reference = FunctionReferenceTransportAuthority.function_reference(func)
-        except RuntimeError:
-            return cls(import_identity=None)
-        return cls(import_identity=reference.import_identity)
-
-    @property
-    def is_importable(self) -> bool:
-        return self.import_identity is not None
-
-    @property
-    def import_module(self) -> str:
-        if self.import_identity is None:
-            raise ValueError("Callable identity has no importable module.")
-        return self.import_identity.module_name
-
-    @property
-    def import_name(self) -> str:
-        if self.import_identity is None:
-            raise ValueError("Callable identity has no importable name.")
-        return self.import_identity.function_name
 
 
 class NameMappingLookup:
@@ -81,18 +44,21 @@ class OpenHCSCallableFormatter(SourceFormatter):
         if inspect.ismethod(value):
             return SourceFragment(repr(value), frozenset())
 
-        identity = CallableExportIdentity.from_callable(value)
-        if not identity.is_importable:
+        if isinstance(value, type):
+            reference = ImportableFunctionReference(
+                import_identity=CallableImportIdentity(
+                    module_name=value.__module__, function_name=value.__name__,
+                ),
+                composite_key=f"{value.__module__}.{value.__name__}",
+            )
+        elif inspect.isfunction(value) or inspect.isbuiltin(value):
+            try:
+                reference = FunctionReferenceTransportAuthority.function_reference(value)
+            except RuntimeError:
+                return SourceFragment(repr(value), frozenset())
+        else:
             return SourceFragment(repr(value), frozenset())
-
-        import_pair = (identity.import_module, identity.import_name)
-        mapped = NameMappingLookup.resolve(context, import_pair, identity.import_name)
-        imports = (
-            frozenset()
-            if identity.import_module == "builtins"
-            else frozenset([import_pair])
-        )
-        return SourceFragment(mapped, imports)
+        return to_source(reference, context)
 
 
 class FunctionReferenceFormatter(SourceFormatter):
@@ -112,13 +78,15 @@ class FunctionReferenceFormatter(SourceFormatter):
         value: FunctionReference,
         context: FormatContext,
     ) -> SourceFragment:
-        import_pair = (value.original_module, value.function_name)
+        identity = value.source_import_identity
+        import_pair = (identity.module_name, identity.function_name)
         mapped = NameMappingLookup.resolve(
             context,
             import_pair,
-            value.function_name,
+            identity.function_name,
         )
-        return SourceFragment(mapped, frozenset((import_pair,)))
+        imports = frozenset() if identity.module_name == "builtins" else frozenset((import_pair,))
+        return SourceFragment(value.source_expression(mapped), imports)
 
 
 class PythonSourceLiteralFormatter(SourceFormatter):
@@ -298,7 +266,7 @@ class FunctionPatternTupleFormatter(SourceFormatter):
             }
 
         if not args and context.clean_mode:
-            return to_source(public_func, context)
+            return to_source(func, context)
 
         final_args = callable_declaration_kwargs(
             public_func,
@@ -308,7 +276,7 @@ class FunctionPatternTupleFormatter(SourceFormatter):
         )
 
         if not final_args and context.clean_mode:
-            return to_source(public_func, context)
+            return to_source(func, context)
 
         declared_paths = CallableContract.from_callable(
             public_func
@@ -322,7 +290,7 @@ class FunctionPatternTupleFormatter(SourceFormatter):
             for name, arg_value in final_args.items()
         }
 
-        func_frag = to_source(public_func, context)
+        func_frag = to_source(func, context)
         args_frag = to_source(final_args, context.indented())
         code = f"({func_frag.code}, {args_frag.code})"
         imports = func_frag.imports | args_frag.imports
