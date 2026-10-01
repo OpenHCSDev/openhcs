@@ -1,0 +1,51 @@
+{
+  "server": {
+    "command": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_start_owned_runtime",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "schema_version": "openhcs.agent.v1",
+          "errors": [],
+          "warnings": [],
+          "handle": {
+            "connection": {
+              "host": "127.0.0.1",
+              "port": 5993,
+              "transport_mode": "tcp",
+              "persistent": true
+            },
+            "process_identity": {
+              "pid": 2153942,
+              "create_time": 1790885239.3
+            },
+            "launch_plan": {
+              "runtime_dir": "/home/ts/.cache/agent-scratch/paired397-388-installed-20261001/data/openhcs",
+              "log_file": "/home/ts/.cache/agent-scratch/paired397-388-installed-20261001/data/openhcs/logs/openhcs_zmq_server_port_5993_1790885240102978884.log",
+              "startup_status_file": "/home/ts/.cache/agent-scratch/paired397-388-installed-20261001/data/openhcs/logs/openhcs_zmq_server_port_5993_1790885240102978884.startup.jsonl",
+              "storage_dir": "/home/ts/.cache/agent-scratch/paired397-388-installed-20261001/data/openhcs/custom_functions",
+              "registry_cache_dir": "/home/ts/.cache/agent-scratch/paired397-388-installed-20261001/cache/metaclass-registry",
+              "transport_write_paths": [
+                "/home/ts/.openhcs/tcp/6993.startup.lock",
+                "/home/ts/.openhcs/tcp/5993.startup.lock"
+              ]
+            }
+          },
+          "progress": {
+            "phase": "starting_process",
+            "message": "Native child spawned; retain this exact handle",
+            "sequence": 0,
+            "timestamp": 0.0
+          },
+          "ready": false,
+          "process_alive": true
+        }
+      ]
+    }
+  ]
+}
