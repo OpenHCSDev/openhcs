@@ -104,7 +104,9 @@ Qualified production/test commit410164878ee4c075fbbd7f4be30518004d63a062:
   conflict, not a #368 regression. No legacy compatibility reader was added and
   no assertion was skipped/relaxed. Parent integration owner receives its exact
   reproducer for separate triage; no overlapping source patch is authorized here.
-* git diff --check: clean.
+* git diff --check base..HEAD -- openhcs tests: clean. The unrestricted evidence
+  diff check flags trailing spaces inside pytest-generated traceback XML. Those
+  original receipts remain byte-for-byte intact, not cosmetically rewritten.
 
 Original packaged R0 at /home/ts/wt/openhcs-s1-original-ratchet-20261001,
 detached3b03785f45df2ef5dc62ba6aed99294192ecbb01, runs its original CLI through
