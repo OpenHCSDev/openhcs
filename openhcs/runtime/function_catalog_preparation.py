@@ -31,7 +31,7 @@ class FunctionCatalogPreparation:
     def prepare_persistent_catalog(
         *, status_callback: Callable[[str], None] | None = None
     ) -> None:
-        """Prepare registry caches under cooperative owned-process cancellation."""
+        """Prepare catalog metadata under owned-process cancellation."""
 
         from openhcs.processing.backends.lib_registry.registry_service import (
             RegistryService,
@@ -108,7 +108,7 @@ class FunctionCatalogPreparation:
         """Use the registry owner and project its already-prepared catalogue."""
         if cancellation.requested():
             raise CancelledError
-        status_callback("Warming registered function kernels in the execution server")
+        status_callback("Preparing function catalog metadata in the execution server")
         self.prepare_persistent_catalog(status_callback=status_callback)
         if cancellation.requested():
             raise CancelledError

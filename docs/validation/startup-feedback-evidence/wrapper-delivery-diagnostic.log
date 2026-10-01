@@ -1,0 +1,149 @@
+Running as unit: run-p2362678-i14952161.scope; invocation ID: f03460d45f644c09838fe110c2007a57
+Python: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+OpenHCS: /home/ts/wt/openhcs-gui-cold-connect-355-20261001/openhcs/__init__.py
+ZMQRuntime: /home/ts/wt/zmqruntime-cold-start-355-20261001/src/zmqruntime/client.py
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb240b64ad0>
+
+    def test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch(monkeypatch):
+        """Real generated binding/service/client loop; only native I/O is synthetic."""
+        ui, requests, workers = [], [], []
+        published = []
+        original_publish = EndpointStartupStatus.publish
+    
+        def record_publish(status, callback=None):
+            published.append((status, EndpointStartupStatus._callback.get()))
+            return original_publish(status, callback)
+    
+        monkeypatch.setattr(EndpointStartupStatus, "publish", record_publish)
+        page = FunctionCatalogPage(SCHEMA_VERSION, "synthetic-revision", (), 0, 50)
+        ready = threading.Event()
+        pending = FunctionCatalogPreparationControlResponse(
+            EndpointStartupStatus(
+                EndpointStartupPhase.PREPARING_CAPABILITIES,
+                "Preparing exact child",
+                sequence=1,
+            ),
+            retry_after_seconds=0.01,
+        )
+    
+        class SyntheticControlClient(ZMQExecutionClient):
+            def is_connected(self):
+                return True
+    
+            def _send_control_request(self, request, **kwargs):
+                assert EndpointStartupStatus._callback.get() is not None, "Worker lost request status scope"
+                if ui:
+                    assert type(ui[-1])._callback is EndpointStartupStatus._callback, (
+                        type(ui[-1]), EndpointStartupStatus, client._emit_connection_status.__func__.__code__.co_filename
+                    )
+                workers.append(threading.get_ident())
+                requests.append(request)
+                return (
+                    FunctionCatalogControlResponse(page).to_control_response()
+                    if ready.is_set()
+                    else pending.to_control_response()
+                )
+    
+            def _spawn_server_process(self):
+                raise AssertionError("Source journey must never launch native")
+    
+        client = SyntheticControlClient(port=5555, connection_status_callback=ui.append)
+        service = ZMQFunctionCatalogService(
+            lambda: OpenHCSZMQConfig(default_port=5555),
+            client_factory=lambda config: client,
+        )
+        built = build_server(SimpleNamespace(function_catalog=service))
+    
+        async def exercise():
+            context = RecordingContext()
+            tool = built._tool_manager.get_tool("openhcs_search_functions")
+            task = asyncio.create_task(tool.fn(mcp_context=context, query="source-only"))
+            try:
+                preparation = asyncio.create_task(context.preparing.wait())
+                completed, _ = await asyncio.wait({preparation, task}, timeout=0.5)
+                assert preparation in completed, (
+                    context.messages, task.result() if task.done() else "still pending",
+                    [(status.message, repr(callback)) for status, callback in published],
+                )
+                assert not task.done(), "Preparing is not a ready result"
+                ready.set()
+                result = await task
+                return result, context
+            finally:
+                ready.set()
+                preparation.cancel()
+                await asyncio.gather(preparation, return_exceptions=True)
+                if not task.done():
+                    task.cancel()
+                    await asyncio.gather(task, return_exceptions=True)
+    
+>       result, context = asyncio.run(exercise())
+
+tests/unit/agent/test_mcp_startup_feedback.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def exercise():
+        context = RecordingContext()
+        tool = built._tool_manager.get_tool("openhcs_search_functions")
+        task = asyncio.create_task(tool.fn(mcp_context=context, query="source-only"))
+        try:
+            preparation = asyncio.create_task(context.preparing.wait())
+            completed, _ = await asyncio.wait({preparation, task}, timeout=0.5)
+>           assert preparation in completed, (
+                context.messages, task.result() if task.done() else "still pending",
+                [(status.message, repr(callback)) for status, callback in published],
+            )
+E           AssertionError: ([(0.0, 'Search processing functions: started')], 'still pending', [('Preparing exact child', '<function _await_with_declared_progress.<locals>.publish at 0x7fb23cb3f100>')])
+E           assert <Task pending name='Task-3' coro=<Event.wait() running at /home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/locks.py:212> wait_for=<Future pending cb=[Task.task_wakeup()]>> in set()
+
+tests/unit/agent/test_mcp_startup_feedback.py:170: AssertionError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_mcp_startup_feedback.py::test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch
+1 failed, 8 deselected, 2 warnings in 8.86s
+Command exited with non-zero status 1
+	Command being timed: "timeout --signal=TERM --kill-after=3s 60s taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 XDG_CACHE_HOME=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/cache TMPDIR=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/tmp NUMBA_CACHE_DIR=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/numba /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -I -B docs/validation/startup-feedback-evidence/source_tests.py tests/unit/agent/test_mcp_startup_feedback.py -k registered_catalog -q"
+	User time (seconds): 6.75
+	System time (seconds): 0.38
+	Percent of CPU this job got: 71%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:09.98
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 291092
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 65861
+	Voluntary context switches: 88
+	Involuntary context switches: 1588
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

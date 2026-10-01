@@ -1,0 +1,337 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0 -- /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python
+rootdir: /home/ts/wt/openhcs-gui-cold-connect-355-20261001
+configfile: pytest.ini
+collecting ... collected 15 items
+
+tests/unit/test_preparation_admission.py::test_default_budget_does_not_spawn_implicit_four_worker_pool FAILED [  6%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-1-8-0] FAILED [ 13%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-1-0] FAILED [ 20%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-2-8-2] FAILED [ 26%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-2-2] FAILED [ 33%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-3-3] FAILED [ 40%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-1-8-0] FAILED [ 46%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-1-0] FAILED [ 53%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-2-8-2] FAILED [ 60%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-2-2] FAILED [ 66%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-3-3] FAILED [ 73%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[0] FAILED [ 80%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[-1] FAILED [ 86%]
+tests/unit/test_preparation_admission.py::test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does FAILED [ 93%]
+tests/unit/test_preparation_admission.py::test_selected_hook_failure_is_not_admitted_as_completed PASSED [100%]
+
+=================================== FAILURES ===================================
+_________ test_default_budget_does_not_spawn_implicit_four_worker_pool _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4564587260>
+
+    def test_default_budget_does_not_spawn_implicit_four_worker_pool(monkeypatch):
+        events = []
+        started, _, _ = simulated_workers(monkeypatch, 1)
+        operations = tuple(DeclaredCache(str(index), events) for index in range(7))
+        PreparationCacheBatch(operations).populate_child_caches()
+>       assert not started and not events
+E       AssertionError: assert (not ['0', '1', '2', '3', '4', '5', ...])
+
+tests/unit/test_preparation_admission.py:105: AssertionError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-1-8-0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f45645872c0>
+affinity = 1, budget = 8, expected = 0
+declaration = <class 'test_preparation_admission.AuditBefore'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-1-0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461f7a0>
+affinity = 8, budget = 1, expected = 0
+declaration = <class 'test_preparation_admission.AuditBefore'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-2-8-2] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461d4c0>
+affinity = 2, budget = 8, expected = 2
+declaration = <class 'test_preparation_admission.AuditBefore'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-2-2] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461e150>
+affinity = 8, budget = 2, expected = 2
+declaration = <class 'test_preparation_admission.AuditBefore'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-3-3] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f45644747d0>
+affinity = 8, budget = 3, expected = 3
+declaration = <class 'test_preparation_admission.AuditBefore'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-1-8-0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4564477fb0>
+affinity = 1, budget = 8, expected = 0
+declaration = <class 'test_preparation_admission.AuditAfter'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-1-0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4564476db0>
+affinity = 8, budget = 1, expected = 0
+declaration = <class 'test_preparation_admission.AuditAfter'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-2-8-2] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461f890>
+affinity = 2, budget = 8, expected = 2
+declaration = <class 'test_preparation_admission.AuditAfter'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-2-2] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461f980>
+affinity = 8, budget = 2, expected = 2
+declaration = <class 'test_preparation_admission.AuditAfter'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_ test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-3-3] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f456461f9e0>
+affinity = 8, budget = 3, expected = 3
+declaration = <class 'test_preparation_admission.AuditAfter'>
+
+    @pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+    @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
+    def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
+        monkeypatch, affinity, budget, expected, declaration,
+    ):
+        events = []
+        started, peak, closed = simulated_workers(monkeypatch, affinity)
+        operations = tuple(declaration(str(index), events) for index in range(7))
+>       PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
+E       TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:116: TypeError
+_______________ test_invalid_budget_cannot_discover_or_launch[0] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f45645876b0>
+budget = 0
+
+    @pytest.mark.parametrize("budget", [0, -1])
+    def test_invalid_budget_cannot_discover_or_launch(monkeypatch, budget):
+        with pytest.raises(ValueError, match="positive"):
+>           PreparationCacheBatch(()).populate_child_caches(max_workers=budget)
+E           TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:139: TypeError
+______________ test_invalid_budget_cannot_discover_or_launch[-1] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f45645873b0>
+budget = -1
+
+    @pytest.mark.parametrize("budget", [0, -1])
+    def test_invalid_budget_cannot_discover_or_launch(monkeypatch, budget):
+        with pytest.raises(ValueError, match="positive"):
+>           PreparationCacheBatch(()).populate_child_caches(max_workers=budget)
+E           TypeError: PreparationCacheBatch.populate_child_caches() got an unexpected keyword argument 'max_workers'
+
+tests/unit/test_preparation_admission.py:139: TypeError
+__ test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4564476240>
+
+    def test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does(
+        monkeypatch,
+    ):
+        events = []
+        module = ModuleType("_admitted_preparation_source")
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+    
+        def selected(image):
+            return image
+    
+        def unselected(image):
+            return image
+    
+        for function in (selected, unselected):
+            function.__module__ = module.__name__
+    
+        selected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("selected")
+        unselected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: pytest.fail("unselected preparation")
+        metadata = {"selected": SimpleNamespace(func=selected), "unselected": SimpleNamespace(func=unselected)}
+        monkeypatch.setattr(RegistryService, "_metadata_cache", None)
+        monkeypatch.setattr(RegistryService, "_available_registry_instances", classmethod(lambda cls: ()))
+        monkeypatch.setattr(RegistryService, "_metadata_from_instances", classmethod(lambda cls, instances: metadata))
+        monkeypatch.setattr(AutoRegisterRegistryPreparation, "module_registry_families", staticmethod(lambda module: ()))
+>       assert RegistryService.prepare_in_current_process() is metadata
+
+tests/unit/test_preparation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/backends/lib_registry/registry_service.py:127: in prepare_in_current_process
+    preparation.prepare()
+openhcs/core/processing_preparation.py:227: in prepare
+    operation.prepare()
+openhcs/core/processing_preparation.py:82: in prepare
+    self.execute()
+openhcs/core/processing_preparation.py:171: in execute
+    self.hook()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   unselected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: pytest.fail("unselected preparation")
+E   Failed: unselected preparation
+
+tests/unit/test_preparation_admission.py:159: Failed
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_preparation_admission.py::test_default_budget_does_not_spawn_implicit_four_worker_pool
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-1-8-0]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-1-0]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-2-8-2]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-2-2]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-3-3]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-1-8-0]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-1-0]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-2-8-2]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-2-2]
+FAILED tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-3-3]
+FAILED tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[0]
+FAILED tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[-1]
+FAILED tests/unit/test_preparation_admission.py::test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does
+=================== 14 failed, 1 passed, 2 warnings in 1.64s ===================
+Command exited with non-zero status 1
+	Command being timed: "timeout --signal=TERM --kill-after=3s 60s taskset -c 0 /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -I -B -c import sys;sys.path.insert(0,"/home/ts/wt/openhcs-gui-cold-connect-355-20261001");import openhcs.core;openhcs.core.__path__.append("/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core");import pytest;raise SystemExit(pytest.main(["-v","-o","addopts=","-p","no:cacheprovider","--noconftest","--basetemp=/home/ts/.cache/agent-scratch/openhcs-preparation-admission-355-20261001/pytest-red-native-dependency","tests/unit/test_preparation_admission.py"]))"
+	User time (seconds): 1.90
+	System time (seconds): 0.11
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 89320
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 21550
+	Voluntary context switches: 26
+	Involuntary context switches: 11
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 48
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
