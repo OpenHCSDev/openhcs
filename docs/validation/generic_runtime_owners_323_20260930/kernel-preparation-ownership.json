@@ -1,0 +1,366 @@
+{
+  "source_revision": "01e8994018c62cb4ea8a57d6786ed3f4f2e8b262",
+  "authorization": "User requests all optimization behavior at incorrect layers to move to nominal platform owners. Pure intrinsic provider algorithms remain provider-owned.",
+  "domain": "Persistent Numba cache preparation admission and nominal registry family consumption",
+  "source_witnesses": [
+    {
+      "path": "openhcs/core/callable_contract.py",
+      "line": 148,
+      "name": "CompilerPreparedAutoRegisterFamily",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.callable_contract.CompilerPreparedAutoRegisterFamily",
+      "bases": [
+        "ABC"
+      ],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "prepare_registered_family",
+        "cache_preparation_operations",
+        "can_prepare_in_child"
+      ],
+      "abstract_methods": [
+        "prepare_registered_family"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/processing_preparation.py",
+      "line": 28,
+      "name": "PreparationOperation",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.processing_preparation.PreparationOperation",
+      "bases": [
+        "ABC"
+      ],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "identity",
+        "execute",
+        "cache_operations",
+        "can_prepare_in_child",
+        "prepare",
+        "reset"
+      ],
+      "abstract_methods": [
+        "execute",
+        "identity"
+      ],
+      "is_abstract": true,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/processing_preparation.py",
+      "line": 70,
+      "name": "RegistryFamilyPreparation",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.processing_preparation.RegistryFamilyPreparation",
+      "bases": [
+        "PreparationOperation"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.processing_preparation.PreparationOperation"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "identity",
+        "execute",
+        "can_prepare_in_child"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/processing_preparation.py",
+      "line": 261,
+      "name": "PreparationCacheBatch",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.processing_preparation.PreparationCacheBatch",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_callables",
+        "populate_child_caches"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_backend.py",
+      "line": 283,
+      "name": "CellProfilerBackendStrategyMixin",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._backend.CellProfilerBackendStrategyMixin",
+      "bases": [
+        "CellProfilerKernelCachePreparationMixin",
+        "CompilerPreparedAutoRegisterFamily"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._preparation.CellProfilerKernelCachePreparationMixin",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.callable_contract.CompilerPreparedAutoRegisterFamily"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "requires_persistent_kernel_cache",
+        "prepare_registered_family",
+        "prepare_backend",
+        "requires_explicit_prepare_backend",
+        "for_memory_type",
+        "for_callable",
+        "available_backend_providers",
+        "_resolve_backend_class"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_preparation.py",
+      "line": 15,
+      "name": "CellProfilerKernelCachePreparationMixin",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._preparation.CellProfilerKernelCachePreparationMixin",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "requires_persistent_kernel_cache",
+        "can_prepare_in_child"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/processing/backends/cellprofiler/_preparation.py",
+      "line": 38,
+      "name": "CellProfilerCallableKernelPreparation",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._preparation.CellProfilerCallableKernelPreparation",
+      "bases": [
+        "CellProfilerKernelCachePreparationMixin",
+        "PreparationOperation",
+        "CompilerPreparedAutoRegisterFamily"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.processing.backends.cellprofiler._preparation.CellProfilerKernelCachePreparationMixin",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.processing_preparation.PreparationOperation",
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.callable_contract.CompilerPreparedAutoRegisterFamily"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "can_prepare_in_child",
+        "identity",
+        "cache_preparation_operations",
+        "prepare_registered_family"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    }
+  ],
+  "determining_owners": {
+    "CPU_and_persistent_cache_admission": "Existing algorithm moved into core PersistentNumbaKernelPreparation, a CompilerPreparedAutoRegisterFamily child",
+    "provider_kernel_requirement": "Existing CellProfilerBackendStrategyMixin provider declarations",
+    "fixture_effects": "Existing CellProfilerCallableKernelPreparation fixture-capture policy",
+    "scheduling_and_readiness": "Existing PreparationOperation/RegistryFamilyPreparation/PreparationCacheBatch",
+    "standalone_kernel_registry_identity_and_derivation": "RegisteredNumbaKernelPreparation in core.processing_preparation"
+  },
+  "required_pairs": [
+    "The core persistent Numba family owns CPU-only admission, explicit cache-directory admission and existing cache-index detection.",
+    "Backend families derive this policy and retain their declaration-derived kernel requirement.",
+    "Callable kernel families derive this policy and retain fixture-capture effect admission.",
+    "Core uses the existing compiler family and preparation contracts; all old provider imports migrate to the actual core owner.",
+    "Registered standalone Numba kernel declarations share type identity, registry-derived operations and successful parent preparation through RegisteredNumbaKernelPreparation. CellProfiler retains only its independent fixture-capture overrides."
+  ],
+  "forbidden_pairs": [
+    "Core imports CellProfiler preparation classes.",
+    "CellProfiler modules copy the generic CPU/cache algorithm.",
+    "The old CellProfilerKernelCachePreparationMixin or a forwarding alias remains after consumer migration.",
+    "Unrelated backend families automatically opt into persistent Numba work.",
+    "Provider-local identity and operation-derivation loops duplicate the generic registered-kernel contract."
+  ],
+  "counterevidence": [
+    "Fixture capture has CellProfiler numerical-input meaning and stays provider-owned.",
+    "The algorithm is Numba-specific, so it is an opt-in specialization of the generic compiler family, not a universal operation default.",
+    "The existing any-.nbi cache admission is retained. Mandatory parent preparation still fills missing specializations before readiness.",
+    "The move has zero direct pipeline-clock saving because mandatory preparation precedes those clocks; this is explicitly requested ownership cleanup."
+  ],
+  "OPEN": {
+    "unprojected_original_classes": [
+      {
+        "path": "openhcs/components/framework.py",
+        "line": 198,
+        "name": "_ComponentTemplate",
+        "lexical_scope": [
+          "ComponentConfigurationFactory",
+          "create_openhcs_default_configuration"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 481,
+        "name": "_EventBridge",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 485,
+        "name": "_StartupWindow",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 612,
+        "name": "_StartupWindowPresentation",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/mcp/http.py",
+        "line": 76,
+        "name": "OpenHCSHostedFastMCP",
+        "lexical_scope": [
+          "create_hosted_fastmcp_type"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+        "line": 107,
+        "name": "_RegistrationCNN_torch",
+        "lexical_scope": [],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+        "line": 102,
+        "name": "_ClientDisconnected",
+        "lexical_scope": [
+          "ExecutionSubmissionService",
+          "start_completion_poller"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2618,
+        "name": "DimensionScrollbarListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "decorators": [
+          "jpype.JImplements('java.awt.event.AdjustmentListener')"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2696,
+        "name": "WindowCloseListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "decorators": [
+          "jpype.JImplements('java.awt.event.WindowListener')"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 3064,
+        "name": "FijiUiWorkUnit",
+        "lexical_scope": [
+          "FijiRoiManagerProvider",
+          "invoke_on_event_dispatch_thread"
+        ],
+        "decorators": [
+          "JImplements('java.lang.Runnable')"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/import_utils.py",
+        "line": 67,
+        "name": "Placeholder",
+        "lexical_scope": [
+          "create_placeholder_class"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/pipeline_migration.py",
+        "line": 358,
+        "name": "MigratingGroupBy",
+        "lexical_scope": [
+          "LegacyGroupByUnpickler",
+          "_create_migrating_groupby_class"
+        ],
+        "decorators": [],
+        "status": "OPEN-unprojected"
+      }
+    ],
+    "external_dynamic_imports_of_removed_private_mixin": "Not inferred from source; no compatibility alias is retained."
+  },
+  "proof_limits": [
+    "Declaration rename/move/base preflights check supported source dependencies and bindings, not native metaclass execution.",
+    "Final consumer/import closure uses exact source patches checked against the projected state. Native registry/MRO/effects need existing real declaration, fork preparation and readiness tests.",
+    "The registry algorithm extraction is an authored semantic source patch against the source selected by NRA; this is not claimed as a native equivalence theorem."
+  ]
+}

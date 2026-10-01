@@ -1,0 +1,130 @@
+import ast
+import difflib
+import json
+import subprocess
+from pathlib import Path
+
+from nominal_refactor_advisor.codemod import (
+    AddClassBaseOperation,
+    CodemodPlanDocument,
+    CodemodPlanSequence,
+    CodemodSourceSnapshot,
+    MoveSymbolsToModuleOperation,
+    PatchTargetOperation,
+    RefactorRecipe,
+    RenameTopLevelDeclarationAuthorityOperation,
+    SourceRewriteTarget,
+    SourceTextReplacement,
+)
+from nominal_refactor_advisor.ast_tools import SourceModule, module_syntax_index
+
+root = Path('/home/ts/code/projects/openhcs-compile-perf')
+runs = root.parent / 'openhcs-benchmark-runs'
+revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+census = json.loads((runs / 'perf-generic-runtime-owners-synced-before-census-20260930.json').read_text())
+assert revision == census['source_revision']
+assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=root, text=True).strip()
+source = str(root / 'openhcs/processing/backends/cellprofiler/_preparation.py')
+destination = str(root / 'openhcs/core/processing_preparation.py')
+backend = str(root / 'openhcs/processing/backends/cellprofiler/_backend.py')
+sources = {str(path): path.read_text() for path in (root / 'openhcs').rglob('*.py')}
+sources[str(root / 'setup.py')] = (root / 'setup.py').read_text()
+snapshot = CodemodSourceSnapshot.from_source_mapping(sources, analysis_roots=(root,))
+operations = (
+    RenameTopLevelDeclarationAuthorityOperation(
+        target=SourceRewriteTarget(file_path=source, qualname='CellProfilerKernelCachePreparationMixin'),
+        new_name='PersistentNumbaKernelPreparation',
+        rationale='The CPU/cache eligibility contract has no CellProfiler semantics.'),
+    MoveSymbolsToModuleOperation(
+        target=SourceRewriteTarget(file_path=source),
+        symbol_qualnames=('PersistentNumbaKernelPreparation',),
+        destination_path=destination,
+        rationale='Move the existing algorithm; retain its temporary source binding until consumer migration closes.'),
+    AddClassBaseOperation(
+        target=SourceRewriteTarget(file_path=destination, qualname='PersistentNumbaKernelPreparation'),
+        base_name='CompilerPreparedAutoRegisterFamily',
+        rationale='The generic preparation capability is a declared compiler-prepared family.'),
+)
+documents = tuple(CodemodPlanDocument(recipes=(RefactorRecipe(
+    recipe_id=f'generic-numba-preparation-owner-{index}',
+    reason='Existing family declarations consume one generic CPU/persistent-cache policy.',
+    operations=(operation,)),)) for index, operation in enumerate(operations))
+sequence = CodemodPlanSequence(documents=documents)
+projected = sequence.simulate(snapshot)
+(runs / 'perf-generic-numba-owner-initial-simulation-20260930.json').write_text(json.dumps(projected.simulation_payload(), indent=2) + '\n')
+assert projected.is_clean, 'Initial nominal move/rename/base preflight failed; retained complete report.'
+after = projected.final_snapshot.sources_by_file_path
+Path('/tmp/openhcs-generic-numba-projected-20260930.json').write_text(json.dumps({path: after[path] for path in (source, destination, backend)}, indent=2))
+print('Initial declaration-selected rename/move/base simulation passed; no source applied.')
+
+def replace_once(text, old, new):
+    assert text.count(old) == 1, old
+    return text.replace(old, new, 1)
+
+provider = after[source]
+syntax = module_syntax_index(SourceModule.from_source_path(Path(source), provider).parse().module)
+owner, = [node for _, node in syntax.indexed_nodes_of_type(ast.ClassDef)
+          if node.name == 'CellProfilerCallableKernelPreparation']
+lines = provider.splitlines(keepends=True)
+def member_source(name):
+    member, = [node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == name]
+    start = min([member.lineno, *(d.lineno for d in member.decorator_list)])
+    return ''.join(lines[start - 1:member.end_lineno])
+
+identity = member_source('identity')
+operations_source = member_source('cache_preparation_operations')
+prepare = member_source('prepare_registered_family')
+common_prepare = replace_once(prepare, '        if capture_enabled():\n            return\n', '')
+generic = '''class RegisteredNumbaKernelPreparation(
+    PersistentNumbaKernelPreparation, PreparationOperation
+):
+    """Derive independent pure-kernel obligations from each declared registry.
+
+    This abstract parent has no registry. Concrete AutoRegisterMeta declarations
+    own their registries; the common parent owns identity, operation derivation
+    and successful parent preparation.
+    """
+
+    __registry_key__ = "__name__"
+    __registry__: ClassVar[dict[str, type[RegisteredNumbaKernelPreparation]]]
+
+''' + identity + '\n\n' + operations_source + '\n\n' + common_prepare
+core = replace_once(after[destination], '@dataclass(frozen=True, slots=True)\nclass RegistryFamilyPreparation', generic + '\n\n\n@dataclass(frozen=True, slots=True)\nclass RegistryFamilyPreparation')
+provider = replace_once(provider, identity + '\n', '')
+provider = replace_once(provider, operations_source + '\n', '')
+provider = replace_once(provider, prepare,
+    replace_once(prepare, '        for operation in cls.cache_preparation_operations():\n            operation.prepare()\n', '        super().prepare_registered_family()\n'))
+provider = replace_once(provider, '    __registry_key__ = "__name__"\n    __registry__: ClassVar[dict[str, type[CellProfilerCallableKernelPreparation]]]\n\n', '')
+provider = replace_once(provider, 'class CellProfilerCallableKernelPreparation(\n    PersistentNumbaKernelPreparation,\n    PreparationOperation,\n    CompilerPreparedAutoRegisterFamily,\n):', 'class CellProfilerCallableKernelPreparation(RegisteredNumbaKernelPreparation):')
+provider = replace_once(provider, 'from collections.abc import Hashable\nfrom typing import ClassVar\n\nfrom openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily\nfrom openhcs.core.processing_preparation import PreparationOperation\n', 'from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation\n')
+provider = replace_once(provider, '\nfrom ....core.processing_preparation import PersistentNumbaKernelPreparation as PersistentNumbaKernelPreparation\n', '')
+provider = replace_once(provider, '    """Own pure kernel work; concrete declarations own independent registries.\n\n    This abstract protocol has no registry. AutoRegisterMeta creates one on\n    each direct concrete declaration, deriving child work from the existing\n    module registry discovery without inspecting callable or module hooks.\n    Parent registry preparation owns kernel readiness. Generic callable hooks\n    retain their independent completion and effect phase.\n    """', '    """Keep CellProfiler fixture capture in the parent processing hook."""')
+backend_source = replace_once(after[backend], 'from openhcs.core.callable_contract import (\n    CallableContract,\n    CompilerPreparedAutoRegisterFamily,\n)\n', 'from openhcs.core.callable_contract import CallableContract\nfrom openhcs.core.processing_preparation import PersistentNumbaKernelPreparation\n')
+backend_source = replace_once(backend_source, '\nfrom ....core.processing_preparation import PersistentNumbaKernelPreparation\n', '')
+backend_source = replace_once(backend_source, 'class CellProfilerBackendStrategyMixin(\n    PersistentNumbaKernelPreparation, CompilerPreparedAutoRegisterFamily\n):', 'class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):')
+changes = {source: provider, destination: core, backend: backend_source}
+for path, text in changes.items():
+    ranges = [(max(1, j1 - 2), j2 + 3)
+              for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=sources[path].splitlines(), b=text.splitlines()).get_opcodes()
+              if tag != 'equal' and j2 > j1]
+    command = ['/home/ts/code/projects/openhcs/.venv/bin/python', '-m', 'black', '--quiet', '--target-version', 'py311']
+    for start, end in ranges:
+        command.extend(['--line-ranges', f'{start}-{end}'])
+    command.extend(['--stdin-filename', path, '-'])
+    changes[path] = subprocess.check_output(command, input=text, text=True)
+closure_operations = tuple(PatchTargetOperation(
+    target=SourceRewriteTarget(file_path=path),
+    replacements=(SourceTextReplacement(old_source=after[path], new_source=text),),
+    rationale='Move the existing pure registry algorithm and close every provider import. The provider retains only its fixture effect policy; no compatibility alias remains.')
+    for path, text in changes.items())
+closure = CodemodPlanDocument(recipes=(RefactorRecipe(
+    recipe_id='close-generic-numba-family-and-provider-effects',
+    reason='Standalone declared kernel operations own one generic registry algorithm; provider-specific capture vetoes are substitutable overrides.',
+    operations=closure_operations),))
+complete = CodemodPlanSequence(documents=(*documents, closure)).simulate(snapshot)
+(runs / 'perf-generic-numba-owner-complete-simulation-20260930.json').write_text(json.dumps(complete.simulation_payload(), indent=2) + '\n')
+assert complete.is_clean, 'Full owner migration preflight failed.'
+(runs / 'perf-generic-numba-owner-transaction-20260930.diff').write_text(complete.unified_diff(sources))
+assert 'CellProfilerKernelCachePreparationMixin' not in ''.join(complete.final_snapshot.sources_by_file_path.values())
+assert 'processing.backends.cellprofiler' not in complete.final_snapshot.sources_by_file_path[destination]
+print(complete.apply())

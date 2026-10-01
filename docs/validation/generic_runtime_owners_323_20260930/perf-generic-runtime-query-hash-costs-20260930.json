@@ -1,0 +1,22 @@
+{
+  "main": {
+    "RuntimeValueStore._mark_mutated": [
+      57,
+      0.00012560700997710228
+    ]
+  },
+  "candidate": {
+    "BoundedCache.cached_value": [
+      1623,
+      0.0013636727817356586
+    ],
+    "BoundedCache.store_value": [
+      587,
+      0.0006533032283186913
+    ],
+    "RuntimeValueStore._mark_mutated": [
+      57,
+      0.00012847688049077988
+    ]
+  }
+}
