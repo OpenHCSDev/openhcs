@@ -13,6 +13,8 @@ from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotCaptureSpec,
+    WindowSnapshotFrameCondition,
+    WindowVisualObservation,
 )
 from python_introspect import dataclass_from_mapping
 from pydantic import StrictFloat, StrictInt
@@ -179,6 +181,8 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.IMMEDIATE,
+        observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
     ) -> "ViewerWindowSnapshotRequest":
         if output_dir_path is None:
             output_dir_path = str(DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR)
@@ -187,6 +191,8 @@ class ViewerWindowSnapshotRequest(
             timeout_ms=timeout_ms,
             output_dir_path=output_dir_path,
             capture_scope=WindowSnapshotCaptureScope(capture_scope),
+            frame_condition=WindowSnapshotFrameCondition(frame_condition),
+            observation_timeout_s=observation_timeout_s,
         )
 
     @classmethod
@@ -197,23 +203,23 @@ class ViewerWindowSnapshotRequest(
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
+        frame_condition: WindowSnapshotFrameCondition = WindowSnapshotFrameCondition.IMMEDIATE,
+        observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
     ) -> "ViewerWindowSnapshotRequest":
         return cls.from_connection(
             connection=connection,
             timeout_ms=timeout_ms,
             output_dir_path=output_dir_path,
             capture_scope=capture_scope,
+            frame_condition=frame_condition,
+            observation_timeout_s=observation_timeout_s,
         )
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
-        payload = self.connection_tool_arguments()
-        payload.update(
-            {
-                "output_dir_path": self.output_dir_path,
-                "capture_scope": self.capture_scope.value,
-            }
-        )
-        return payload
+        return {
+            **self.connection_tool_arguments(),
+            **to_jsonable(self.capture_fields()),
+        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -925,9 +931,9 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
         return cls(
             schema_version=SCHEMA_VERSION,
             connection=context.connection,
-            output_dir_path=context.output_dir_path,
-            capture_scope=context.capture_scope,
+            **context.capture_fields(),
             captured=False,
+            observation=context.observation,
             errors=(context.error,),
         )
 
@@ -937,11 +943,13 @@ class ViewerWindowSnapshotErrorResultMixin(ViewerWindowErrorResultFactory):
         *,
         request: "ViewerWindowSnapshotRequest",
         error: AgentError,
+        observation: WindowVisualObservation | None = None,
     ) -> Self:
         return cls.from_error_context(
             ViewerWindowSnapshotErrorContext.from_request_error(
                 request=request,
                 error=error,
+                observation=observation,
             )
         )
 
@@ -989,6 +997,7 @@ class ViewerWindowSnapshotResult(
     registry_key: ClassVar[str] = "snapshot"
 
     captured: bool
+    observation: WindowVisualObservation | None = None
     resource: AgentResourceRef | None = None
     viewer: ViewerWindowDescriptor | None = None
     width: int | None = None
@@ -1431,18 +1440,21 @@ class ViewerWindowSnapshotErrorContext(
 ):
     """Viewer snapshot error context plus the requested capture contract."""
 
+    observation: WindowVisualObservation | None = None
+
     @classmethod
     def from_request_error(
         cls,
         *,
         request: ViewerWindowSnapshotRequest,
         error: AgentError,
+        observation: WindowVisualObservation | None = None,
     ) -> Self:
         return cls(
             connection=request.connection,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
+            **request.capture_fields(),
             error=error,
+            observation=observation,
         )
 
 

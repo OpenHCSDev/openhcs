@@ -14,7 +14,10 @@ import zmq
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
 from polystore.streaming.identity import StreamProducerIdentity
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+from pyqt_reactive.services.window_snapshot import (
+    WindowSnapshotCaptureSpec,
+    WindowVisualObservation,
+)
 from zmqruntime.client import (
     EndpointShutdownMode,
     EndpointShutdownResult,
@@ -1329,6 +1332,9 @@ class ViewerWindowService:
         request: ViewerWindowSnapshotRequest,
         response: JsonObject,
     ) -> ViewerWindowSnapshotResult:
+        observation = response.get("observation")
+        if observation is not None and not isinstance(observation, WindowVisualObservation):
+            raise TypeError("Viewer snapshot observation must carry its nominal render receipt.")
         status = self._required_scalar(
             response, ViewerControlResponseField.STATUS, str, "a string"
         )
@@ -1339,6 +1345,7 @@ class ViewerWindowService:
             return ViewerWindowSnapshotResult.from_request_error(
                 request=request,
                 error=AgentError(code="viewer_window_snapshot_failed", message=message),
+                observation=observation,
             )
         response_snapshot = response.get(ViewerControlField.SNAPSHOT.value)
         if not isinstance(response_snapshot, WindowSnapshotCaptureSpec):
@@ -1357,14 +1364,15 @@ class ViewerWindowService:
                 ),
             )
 
+        request.frame_condition.validate_observation(observation)
         viewer_payload = self._required_mapping(response, ViewerControlField.VIEWER)
         resource_payload = self._required_mapping(response, ViewerControlField.RESOURCE)
         return ViewerWindowSnapshotResult(
             schema_version=SCHEMA_VERSION,
             connection=connection,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
+            **request.capture_fields(),
             captured=True,
+            observation=observation,
             resource=AgentResourceRef(
                 uri=self._required_scalar(resource_payload, "uri", str, "a string"),
                 title=self._required_scalar(resource_payload, "title", str, "a string"),
