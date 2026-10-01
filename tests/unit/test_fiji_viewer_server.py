@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
+from zmqruntime.messages import AckReturnRoute, ImageTransferIdentity, ProcessIdentity
 
 from openhcs.core.config import (
     FijiDisplayConfig,
@@ -14,6 +15,7 @@ from openhcs.core.config import (
     NapariDisplayConfig,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
@@ -55,6 +57,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerObjectDisplayConfigInput,
 )
 from openhcs.runtime.viewer_protocol import (
+    OpenHCSViewerControlMessageType,
     ViewerControlMessageType,
     ViewerControlResponse,
     ViewerSettlePhase,
@@ -72,6 +75,9 @@ PRODUCER_IDENTITY = {
     "invocation_key": None,
     "artifact_kind": None,
 }
+
+ACK_ROUTE = AckReturnRoute("tcp://127.0.0.1:8111", "00000000-0000-0000-0000-000000000001",
+                          ProcessIdentity.current())
 
 
 def _component_value_domain(payload: dict) -> ViewerComponentValueDomainPayload:
@@ -218,6 +224,18 @@ def test_fiji_control_dispatch_registry_is_module_local_and_eager() -> None:
     assert registry[ViewerControlMessageType.SETTLE.value] is FijiSettleControlPlan
 
 
+def test_fiji_process_launch_control_reports_server_owned_declaration() -> None:
+    active = ViewerProcessLaunchConfig(listen_host="*")
+    response = FijiControlMessageAuthority(
+        FijiControlRequestContext(
+            FijiWindowRegistry(), object(), FijiBatchSettlementState(), active
+        )
+    ).response_for({"type": OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value})
+    wire = response.to_wire_mapping()
+    assert wire["status"] == "success"
+    assert ViewerProcessLaunchConfig.from_wire_mapping(wire["process_launch"]) == active
+
+
 def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
     response = FijiControlMessageAuthority(
         FijiControlRequestContext(
@@ -315,7 +333,7 @@ def test_fiji_window_registry_owns_window_state_and_group_identity() -> None:
     image = FijiImagePayload(
         data=np.zeros((2, 2), dtype=np.uint8),
         metadata={"well": "A14"},
-        image_id="first",
+        transfer=ImageTransferIdentity("first", ACK_ROUTE),
     )
 
     registry.store_hyperstack("A14", image_plus, [image])
@@ -414,6 +432,8 @@ def test_fiji_batch_message_normalizes_wire_items() -> None:
                 {
                     "data_type": "image",
                     "image_id": "img-1",
+                    "return_route": ACK_ROUTE.to_dict(),
+                    "producer": ACK_ROUTE.owner.to_dict(),
                     "metadata": {"channel": 1},
                     "data": np.zeros((2, 2), dtype=np.uint8),
                 }
@@ -453,6 +473,8 @@ def test_fiji_batch_message_preserves_scoped_wire_component_layout() -> None:
                 {
                     "data_type": "image",
                     "image_id": "img-1",
+                    "return_route": ACK_ROUTE.to_dict(),
+                    "producer": ACK_ROUTE.owner.to_dict(),
                     "metadata": {
                         "channel": 1,
                         "z_index": 0,
@@ -496,6 +518,8 @@ def test_fiji_shared_memory_copy_leaves_sender_allocation_owned(monkeypatch) -> 
         {
             "data_type": "image",
             "image_id": "fiji-copy",
+            "return_route": ACK_ROUTE.to_dict(),
+            "producer": ACK_ROUTE.owner.to_dict(),
             "shm_name": shm.name,
             "shape": source.shape,
             "dtype": str(source.dtype),
@@ -957,8 +981,9 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
             self.windows = FijiWindowRegistry()
             self.acknowledgments = []
 
-        def _send_ack(self, image_id, status="success", error=None) -> None:
-            self.acknowledgments.append((image_id, status, error))
+        def send_ack(self, transfer, status="success", error=None) -> None:
+            assert transfer.return_route == ACK_ROUTE
+            self.acknowledgments.append((transfer.image_id, status, error))
 
     conversion_sizes = []
 
@@ -993,6 +1018,8 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
         {
             "data_type": "rois",
             "image_id": "roi-batch",
+            "return_route": ACK_ROUTE.to_dict(),
+            "producer": ACK_ROUTE.owner.to_dict(),
             "path": "/tmp/cells.tif",
             "metadata": {"channel": 1, "z_index": 0, "timepoint": 0},
             "rois": [{"index": index} for index in range(257)],

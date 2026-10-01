@@ -1,0 +1,12 @@
+R1 a2858341a30675688b13ababdca50bdeb6a1503a: NRA cache=miss, projections=3020, prepare=50.467s, analysis=3.080s
+R1 cf1f5a4025d8de5c5adbe94a98854965e0cc4d93: NRA cache=miss, projections=3020, prepare=50.485s, analysis=3.079s
+{
+  "base": "a2858341a30675688b13ababdca50bdeb6a1503a",
+  "head": "cf1f5a4025d8de5c5adbe94a98854965e0cc4d93",
+  "changed": [
+    "openhcs/core/image_file_serialization.py"
+  ],
+  "before": [],
+  "after": [],
+  "increased": []
+}

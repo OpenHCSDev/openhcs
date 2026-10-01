@@ -45,7 +45,7 @@ from zmqruntime.startup import (
     EndpointStartupStatusCallback,
     EndpointStartupStatusMonitor,
 )
-from zmqruntime.transport import wait_for_endpoint_ready
+from zmqruntime.transport import TransportEndpoint, wait_for_endpoint_ready
 
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -70,10 +70,14 @@ from openhcs.runtime.zmq_execution_signature import (
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationDestination,
+        CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
         FunctionCatalogControlRequest,
+        FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
+        FunctionCatalogPreparationState,
         FunctionDetail,
         FunctionDetailControlRequest,
         FunctionReferenceControlRequest,
@@ -82,6 +86,119 @@ if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionRuntimeLaunchPlan:
+    """Canonical native launch destinations, projected before any write."""
+
+    runtime_dir: Path
+    log_file: Path
+    startup_status_file: Path
+    storage_dir: Path
+    registry_cache_dir: Path
+    transport_write_paths: tuple[Path, ...]
+
+    @classmethod
+    def resolve(
+        cls, endpoint: TransportEndpoint, config: OpenHCSZMQConfig
+    ) -> ExecutionRuntimeLaunchPlan:
+        """Project existing destination owners without writing or warming."""
+        from metaclass_registry.cache import get_cache_file_path
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        log_file = get_openhcs_log_dir(create=False) / (
+            f"openhcs_zmq_server_port_{endpoint.port}_{time.time_ns()}.log"
+        )
+        declaration = endpoint.transport_mode.declaration
+        ports = endpoint.port_pair(config).ports
+        sockets = tuple(
+            path
+            for port in ports
+            if (path := declaration.socket_path(port, config)) is not None
+        )
+        return cls(
+            runtime_dir=get_openhcs_data_dir(create=False),
+            log_file=log_file,
+            startup_status_file=log_file.with_suffix(".startup.jsonl"),
+            storage_dir=CustomFunctionManager.default_storage_directory(),
+            registry_cache_dir=get_cache_file_path("", create=False),
+            transport_write_paths=(
+                *(declaration.startup_lock_path(port, config) for port in ports),
+                *sockets,
+            ),
+        )
+
+    def writable_paths(self) -> tuple[Path, ...]:
+        return (
+            self.runtime_dir,
+            self.log_file,
+            self.startup_status_file,
+            self.storage_dir,
+            self.registry_cache_dir,
+            *self.transport_write_paths,
+        )
+
+    def spawn(
+        self,
+        endpoint: TransportEndpoint,
+        config: OpenHCSZMQConfig,
+        *,
+        persistent: bool,
+    ) -> subprocess.Popen:
+        """Materialize this admitted plan through the canonical process policy.
+
+        Reservation and child-incarnation publication remain with the native
+        ExecutionClient. This operation consumes its selected paths; it does
+        not resolve another launch plan or acquire another transport owner.
+        """
+        self.runtime_dir.mkdir(parents=True, exist_ok=True)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        self.startup_status_file.unlink(missing_ok=True)
+        server_config = replace(
+            config,
+            default_port=endpoint.port,
+            persistent=persistent,
+            transport_mode=endpoint.transport_mode,
+        )
+        launch_policy = BackgroundProcessLaunchPolicy.current(detached=persistent)
+        # The execution server is a multiprocessing parent. Preserve the
+        # interpreter identity used by its worker bootstrap; Windows window
+        # suppression belongs to the launch policy's creation flags.
+        cmd = [
+            sys.executable,
+            "-B",
+            "-X",
+            "faulthandler",
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                "openhcs.runtime.zmq_execution_server_launcher"
+            ),
+            "--log-file-path",
+            str(self.log_file),
+            "--startup-status-path",
+            str(self.startup_status_file),
+            "--config-source",
+            _pycodify_config_source(server_config),
+        ]
+        root_logger = logging.getLogger()
+        current_log_level = root_logger.getEffectiveLevel()
+        log_level_name = logging.getLevelName(current_log_level)
+        logger.debug(
+            "Spawning ZMQ server with log level: %s (numeric: %s)",
+            log_level_name,
+            current_log_level,
+        )
+        cmd.extend(["--log-level", log_level_name])
+        with self.log_file.open("w", encoding="utf-8") as log_stream:
+            return subprocess.Popen(
+                cmd,
+                stdout=log_stream,
+                stderr=subprocess.STDOUT,
+                cwd=self.runtime_dir,
+                env=MemoryType.subprocess_environment(),
+                **launch_policy.popen_arguments(),
+            )
+
 
 _COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
 
@@ -566,15 +683,17 @@ class ZMQExecutionClient(
         config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
         connection_status_callback: EndpointStartupStatusCallback | None = None,
     ):
+        endpoint = config.client_endpoint(
+            port, host=host, transport_mode=transport_mode
+        )
         self._startup_status_path: Path | None = None
+        self._runtime_launch_plan: ExecutionRuntimeLaunchPlan | None = None
         super().__init__(
-            config.default_port if port is None else port,
-            config.client_host if host is None else host,
+            endpoint.port,
+            endpoint.host,
             config.persistent if persistent is None else persistent,
             progress_callback=progress_callback,
-            transport_mode=(
-                config.transport_mode if transport_mode is None else transport_mode
-            ),
+            transport_mode=endpoint.transport_mode,
             config=config,
             connection_status_callback=connection_status_callback,
         )
@@ -894,22 +1013,101 @@ class ZMQExecutionClient(
     def register_custom_function(
         self,
         request: CustomFunctionRegistrationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
     ) -> CustomFunctionRegistrationResult:
-        """Register custom source through this execution endpoint's catalog."""
+        """Send one mutation; readiness belongs to preceding read-only discovery.
+
+        Never poll/resend a source-bearing request, including when the server
+        reports preparation pending. A missing mutation receipt is uncertain.
+        """
 
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationControlResponse,
             FunctionCatalogControlPayload,
         )
 
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom function registration",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
+        ):
+            raise RuntimeError(
+                "Custom registration requires an existing execution endpoint."
+            )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
         )
         return CustomFunctionRegistrationControlResponse.from_control_response(
             response
         ).result
+
+    def custom_function_registration_destination(
+        self,
+        request: CustomFunctionRegistrationDestinationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationDestination:
+        """Require the selected endpoint's native admission contract before mutation."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+            FunctionCatalogControlPayload,
+        )
+
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="custom registration destination",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0),
+        ):
+            raise RuntimeError(
+                "Registration destination requires an existing execution endpoint."
+            )
+        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
+        response = self._send_control_request(
+            payload,
+            timeout_ms=deadline.remaining_milliseconds(),
+        )
+        return (
+            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+                response
+            ).destination
+        )
+
+    def function_catalog_preparation(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> FunctionCatalogPreparationState:
+        """One responsive start/status/cancel exchange on an existing endpoint."""
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogControlPayload,
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms,
+            operation="function catalog preparation observation",
+        )
+        if not self.is_connected() and not self.connect_existing(
+            timeout=deadline.cap_seconds(1.0)
+        ):
+            raise RuntimeError(
+                "Function catalog preparation requires an existing execution endpoint."
+            )
+        response = self._send_control_request(
+            FunctionCatalogControlPayload.from_request(request).to_dict(),
+            timeout_ms=deadline.remaining_milliseconds(),
+        )
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
 
     def _send_function_catalog_control_request(
         self,
@@ -917,7 +1115,7 @@ class ZMQExecutionClient(
         *,
         cancellation: OperationCancellation | None = None,
     ) -> dict:
-        """Poll a responsive endpoint while its catalog preparation is active."""
+        """Poll read-only discovery while endpoint catalog preparation is active."""
 
         from openhcs.agent.dto.functions import (
             FunctionCatalogPreparationControlResponse,
@@ -1021,63 +1219,19 @@ class ZMQExecutionClient(
         return DebugArtifactExportResponse.from_control_response(response)
 
     @override
-    def _spawn_server_process(self):
-        import logging
+    def _spawn_server_process(self) -> subprocess.Popen:
+        plan = self.runtime_launch_plan()
+        self._runtime_launch_plan = None
+        self._startup_status_path = plan.startup_status_file
+        return plan.spawn(self.endpoint, self.config, persistent=self.persistent)
 
-        runtime_dir = get_openhcs_data_dir()
-        log_dir = get_openhcs_log_dir()
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = (
-            log_dir
-            / f"openhcs_zmq_server_port_{self.port}_{int(time.time() * 1000000)}.log"
-        )
-        self._startup_status_path = log_file_path.with_suffix(".startup.jsonl")
-        self._startup_status_path.unlink(missing_ok=True)
-        server_config = replace(
-            self.config,
-            default_port=self.port,
-            persistent=self.persistent,
-            transport_mode=self.transport_mode,
-        )
-        launch_policy = BackgroundProcessLaunchPolicy.current(detached=self.persistent)
-        # The execution server is a multiprocessing parent. Preserve the
-        # interpreter identity used by its worker bootstrap; Windows window
-        # suppression belongs to the launch policy's creation flags.
-        cmd = [
-            sys.executable,
-            "-X",
-            "faulthandler",
-            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
-                "openhcs.runtime.zmq_execution_server_launcher"
-            ),
-        ]
-        cmd.extend(["--log-file-path", str(log_file_path)])
-        cmd.extend(["--startup-status-path", str(self._startup_status_path)])
-        cmd.extend(["--config-source", _pycodify_config_source(server_config)])
-
-        # Pass the current process's logging level to the server
-        # Get the root logger's effective level
-        root_logger = logging.getLogger()
-        current_log_level = root_logger.getEffectiveLevel()
-        log_level_name = logging.getLevelName(current_log_level)
-
-        # Log what we're passing to help debug
-        logger = logging.getLogger(__name__)
-        logger.debug(
-            f"Spawning ZMQ server with log level: {log_level_name} (numeric: {current_log_level})"
-        )
-
-        cmd.extend(["--log-level", log_level_name])
-
-        with log_file_path.open("w", encoding="utf-8") as log_stream:
-            return subprocess.Popen(
-                cmd,
-                stdout=log_stream,
-                stderr=subprocess.STDOUT,
-                cwd=runtime_dir,
-                env=MemoryType.subprocess_environment(),
-                **launch_policy.popen_arguments(),
+    def runtime_launch_plan(self) -> ExecutionRuntimeLaunchPlan:
+        """Resolve owner defaults without creating directories or warming."""
+        if self._runtime_launch_plan is None:
+            self._runtime_launch_plan = ExecutionRuntimeLaunchPlan.resolve(
+                self.endpoint, self.config
             )
+        return self._runtime_launch_plan
 
     @override
     def _wait_for_endpoint_ready(

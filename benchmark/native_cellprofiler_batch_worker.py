@@ -208,7 +208,8 @@ def main() -> None:
             report_path = Path(request.report_path)
             report_path.parent.mkdir(parents=True, exist_ok=True)
             report_path.write_text(json.dumps(report, indent=2))
-        print(json.dumps(report))
+        else:
+            print(json.dumps(report))
     finally:
         stop_java()
 

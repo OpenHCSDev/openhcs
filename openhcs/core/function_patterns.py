@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
 
 from pyqt_reactive.pattern_metadata import PatternScopeToken
@@ -26,6 +27,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecAccumulator,
+    ArtifactSpecCollection,
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
@@ -227,6 +229,46 @@ class InvocationArtifactInputEdgePlan:
     projection: ArtifactInputProjectionPlan | None
     consumes_main_flow: bool = False
     main_flow_projection: MainFlowInputProjection | None = None
+
+    @classmethod
+    def from_source_declarations(
+        cls,
+        *,
+        key: InvocationArtifactInputProjectionKey,
+        spec: ArtifactSpec,
+        main_flow_artifacts: ArtifactSpecCollection,
+        invocation_sources: ArtifactSpecCollection,
+    ) -> "InvocationArtifactInputEdgePlan":
+        """Project one unstored source occurrence from its exact declarations."""
+
+        main_flow_refs = main_flow_artifacts.ref_set()
+        consumes_main_flow = (
+            spec.ref() in main_flow_refs and spec.ref() in invocation_sources.ref_set()
+        )
+        return cls(
+            key=key,
+            spec=spec,
+            storage_plan=None,
+            projection=None,
+            consumes_main_flow=consumes_main_flow,
+            main_flow_projection=(
+                MainFlowInputProjection.COMPLETE_PAYLOAD
+                if consumes_main_flow and len(main_flow_refs) == 1
+                else (
+                    MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+                    if consumes_main_flow
+                    else None
+                )
+            ),
+        )
+
+    def uses_runtime_storage(self) -> bool:
+        """Return whether an exact producer storage plan supplies this edge."""
+        return self.storage_plan is not None
+
+    def requires_callable_binding(self) -> bool:
+        """Admit parameter-bearing sources and validate every stored argument."""
+        return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
 
     def __post_init__(self) -> None:
         if type(self.consumes_main_flow) is not bool:
@@ -550,8 +592,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         """Return whether this invocation's adapter records selected outputs."""
         return bool(
             self.artifact_output_plans
-            and self.contract.runtime_adapter is not None
-            and self.contract.runtime_adapter.manages_artifact_outputs
+            and self.contract.artifact_output_policy.records_outputs
         )
 
     @property
@@ -698,6 +739,37 @@ class CompiledFunctionGroup:
             elif not invocation.contract.preserves_input_main_flow():
                 owner = invocation
         return owner
+
+    def unwrapped_main_flow_output_context(
+        self,
+        output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+    ) -> AlignedImageSliceContext | None:
+        """Resolve this chain's producer semantics, not its input's artifact kind.
+
+        None retains the input producer only for a declared passthrough. An
+        unnamed replacement owns a new anonymous image flow, while named
+        outputs retain their exact component-projected output declaration.
+        """
+        from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+
+        declared_refs = frozenset(
+            plan.ref() for plan in self.resulting_main_flow_output_plans()
+        )
+        refs = tuple(ref for ref in output_plans if ref in declared_refs)
+        if not refs:
+            if self.resulting_implicit_main_flow_invocation() is not None:
+                return AlignedImageSliceContext.anonymous_main_flow()
+            return None
+        if len(refs) != 1:
+            raise ValueError(
+                "Multiple named main-flow outputs require AlignedImageStack "
+                f"contexts; got {tuple(refs)!r}."
+            )
+        ref = refs[0]
+        return AlignedImageSliceContext.main_flow(
+            output_key=ref.name,
+            artifact_kind=ref.artifact_type.value,
+        )
 
     def preserves_input_main_flow(self) -> bool:
         """Return whether every invocation leaves the group's input flow unchanged."""
@@ -1223,6 +1295,8 @@ def _compile_invocation(
         )
         item = replace(item, contract=contract_plan.contract)
     artifact_selector = declaration_provider(item, step_context)
+    item.contract.validate_artifact_input_parameter_bindings()
+    artifact_selector.validate_artifact_output_declarations()
     artifact_input_plans = artifact_selector.select_plans(
         ArtifactInputPlan,
         input_plans,

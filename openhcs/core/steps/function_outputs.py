@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import logging
 import time
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
+from metaclass_registry import (
+    AutoRegisterMeta,
+    RegistryFamily,
+    extract_key_from_class_name,
+)
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 from polystore.virtual_workspace import SourcePixelRef
@@ -666,68 +673,72 @@ class StreamOutputsAuthority:
 
 
 class OpenHCSMetadataWriter:
-    """Writes OpenHCS metadata sidecars for primary and materialized outputs."""
+    """Publish the declared storage targets' durable source projections."""
 
-    @dataclass(frozen=True, slots=True)
-    class OutputTarget:
+    @dataclass(frozen=True)
+    class OutputTarget(ABC, metaclass=AutoRegisterMeta):
         """One compiled output location projected into OpenHCS metadata."""
+
+        __registry_family__ = RegistryFamily("declaration_key")
+        __key_extractor__ = staticmethod(extract_key_from_class_name)
+        declaration_key: ClassVar[str | None] = None
+        is_main: ClassVar[bool] = False
 
         output_dir: Path
         backend: str
-        is_main: bool
         plate_root: str
         sub_dir: str
         results_dir: str | None
 
         @classmethod
-        def primary(
+        @abstractmethod
+        def from_plan(
             cls, plan: CompiledStepPlan
         ) -> OpenHCSMetadataWriter.OutputTarget | None:
-            if plan.write_backend in [Backend.OMERO_LOCAL.value, Backend.MEMORY.value]:
-                return None
-            if plan.write_backend is None:
-                raise ValueError(
-                    f"Step {plan.step_index} ({plan.step_name}) has no write backend."
-                )
-            if plan.output_dir is None:
-                raise ValueError(
-                    f"Step {plan.step_index} ({plan.step_name}) has no output directory."
-                )
-            if plan.output_plate_root is None or plan.sub_dir is None:
-                raise ValueError(
-                    f"Step {plan.step_index} ({plan.step_name}) has incomplete "
-                    "OpenHCS metadata output identity."
-                )
-            return cls(
-                output_dir=plan.output_dir,
-                backend=plan.write_backend,
-                is_main=True,
-                plate_root=plan.output_plate_root,
-                sub_dir=plan.sub_dir,
-                results_dir=plan.analysis_results_dir,
+            """Resolve this declaration's independently compiled storage target."""
+
+        @classmethod
+        def for_plan(
+            cls, plan: CompiledStepPlan
+        ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
+            """Derive targets from their declarations, without a consumer roster."""
+            return tuple(
+                target
+                for declaration in cls.__registry__.values()
+                if (target := declaration.from_plan(plan)) is not None
             )
 
         @classmethod
-        def materialized(
-            cls,
-            plan: CompiledStepPlan,
+        def from_execution(
+            cls, context: ProcessingContext, plan: CompiledStepPlan
         ) -> OpenHCSMetadataWriter.OutputTarget | None:
-            materialized_output = plan.materialized_output
-            if materialized_output is None:
-                return None
-            if materialized_output.backend in [
-                Backend.OMERO_LOCAL.value,
-                Backend.MEMORY.value,
-            ]:
-                return None
-            return cls(
-                output_dir=materialized_output.output_dir,
-                backend=materialized_output.backend,
-                is_main=False,
-                plate_root=materialized_output.plate_root,
-                sub_dir=materialized_output.sub_dir,
-                results_dir=materialized_output.analysis_results_dir,
+            """Resolve the target participating in this step's publication."""
+            return cls.from_plan(plan)
+
+        @classmethod
+        def for_execution(
+            cls, context: ProcessingContext, plan: CompiledStepPlan
+        ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
+            return tuple(
+                target
+                for declaration in cls.__registry__.values()
+                if (target := declaration.from_execution(context, plan)) is not None
             )
+
+        def produced_records(
+            self, context: ProcessingContext, plan: CompiledStepPlan
+        ) -> tuple[ProducedOutputSemantics, ...]:
+            """Targets without main-flow image storage have no produced records."""
+            return ()
+
+        def runtime_artifact_projection_paths(
+            self, context: ProcessingContext, plan: CompiledStepPlan
+        ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
+            """Publish artifacts persisted in this declared storage target."""
+            materialization = plan.runtime_artifact_materialization
+            if materialization.persists_to_backend(self.backend):
+                return self.project_runtime_artifacts(context, plan)
+            return ()
 
         def contains_images(self, context: ProcessingContext) -> bool:
             """Return whether the completed target contains image outputs."""
@@ -751,26 +762,36 @@ class OpenHCSMetadataWriter:
         ) -> None:
             """Project the target's current storage state into plate metadata."""
 
-            from openhcs.microscopes.openhcs import OpenHCSMetadataGenerator
-
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
-            OpenHCSMetadataGenerator(context.filemanager).create_metadata(
-                context,
-                str(self.output_dir),
-                self.backend,
-                is_main=self.is_main,
-                plate_root=self.plate_root,
-                sub_dir=self.sub_dir,
-                results_dir=self.results_dir,
-            )
+            if context.metadata_cache is None:
+                raise ValueError(
+                    "Produced metadata requires declared component labels."
+                )
             structured_metadata = self.produced_projection_metadata(
                 context, produced_plan
             )
-            AtomicMetadataWriter().merge_source_projection_metadata(
+            parser_context = FunctionOutputParserContext.from_processing_context(
+                context
+            )
+            saved_image_paths = tuple(
+                str(Path(path).relative_to(self.plate_root))
+                for path in context.filemanager.list_image_files(
+                    str(self.output_dir), self.backend
+                )
+            )
+            AtomicMetadataWriter().publish_source_projection_metadata(
                 METADATA_CONFIG.metadata_path(self.plate_root),
                 self.sub_dir,
                 structured_metadata,
+                serializer=SourceProjectionMetadataSerializer(parser_context.parser),
+                saved_image_paths=saved_image_paths,
+                microscope_handler_name=parser_context.microscope_type,
+                source_filename_parser_name=parser_context.parser_name,
+                component_labels=context.metadata_cache,
+                backend=self.backend,
+                is_main=self.is_main,
+                results_dir=(Path(self.results_dir).name if self.results_dir else None),
             )
 
         def produced_projection_metadata(
@@ -783,16 +804,12 @@ class OpenHCSMetadataWriter:
                 return None  # Plate reconciliation must not reload cleaned step memory.
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
-            target = self.primary(plan) if self.is_main else self.materialized(plan)
+            target = type(self).from_plan(plan)
             if target != self:
                 raise ValueError(
                     "Produced metadata plan does not own this output target."
                 )
-            records = tuple(
-                record
-                for record in step_output_manifest(context).produced_records_for(plan)
-                if record.is_image_payload
-            )
+            records = self.produced_records(context, plan)
             payloads = (
                 context.filemanager.load_batch(
                     [
@@ -812,11 +829,6 @@ class OpenHCSMetadataWriter:
             for record, payload in zip(records, payloads, strict=True):
                 destination = record.path_under(self.output_dir)
                 virtual_path = str(Path(destination).relative_to(self.plate_root))
-                parsed = parser_context.parser.parse_filename(Path(destination).name)
-                if parsed is None:
-                    raise ValueError(
-                        f"Produced image has no declared filename address: {destination}."
-                    )
                 metadata = self.persisted_image_metadata(
                     context,
                     destination=destination,
@@ -828,7 +840,7 @@ class OpenHCSMetadataWriter:
                 metadata.source_voxel_spacing.merge_into(
                     source_metadata, path=destination
                 )
-                address = OpenHCSPlaneAddress(parsed.components.items())
+                address = record.filename_address
                 if address not in declared_addresses:
                     declared_addresses.add(address)
                     projection_paths.append(
@@ -875,26 +887,13 @@ class OpenHCSMetadataWriter:
                 projection_paths=tuple(projection_paths),
             )
 
-        def runtime_artifact_projection_paths(
+        def project_runtime_artifacts(
             self,
             context: ProcessingContext,
             plan: CompiledStepPlan,
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Project persisted image artifacts into the target source authority."""
 
-            if not plan.runtime_artifact_materialization.has_persistent_target:
-                return ()
-            artifact_target = self.materialized(plan) or self.primary(plan)
-            if artifact_target != self:
-                return ()
-            if (
-                plan.runtime_artifact_materialization.require_persistent_backend()
-                != self.backend
-            ):
-                raise ValueError(
-                    "Runtime artifact backend does not match its materialized "
-                    "metadata target."
-                )
             projection_paths = []
             for materialization in runtime_artifact_materializations(plan, context):
                 if (
@@ -906,7 +905,10 @@ class OpenHCSMetadataWriter:
                     context,
                     output_path_filter=ImageFileFormat.is_image_path,
                 ):
-                    if not ImageFileFormat.is_image_path(output.path):
+                    if (
+                        not ImageFileFormat.is_image_path(output.path)
+                        or Path(output.path).parent != Path(self.output_dir)
+                    ):
                         continue
                     if output.metadata is None:
                         raise ValueError(
@@ -990,13 +992,8 @@ class OpenHCSMetadataWriter:
         context: ProcessingContext,
         plan: CompiledStepPlan,
     ) -> None:
-        if not plan.create_openhcs_metadata:
-            for target in (
-                cls.OutputTarget.primary(plan),
-                cls.OutputTarget.materialized(plan),
-            ):
-                if target is None:
-                    continue
+        for target in cls.OutputTarget.for_execution(context, plan):
+            if not plan.create_openhcs_metadata:
                 structured_metadata = target.produced_projection_metadata(context, plan)
                 if structured_metadata is None:
                     continue
@@ -1005,9 +1002,8 @@ class OpenHCSMetadataWriter:
                     target.sub_dir,
                     structured_metadata,
                 )
-            return
-        cls.write_primary_metadata(context, plan)
-        cls.write_materialized_metadata(context, plan)
+            else:
+                target.write(context, produced_plan=plan)
 
     @classmethod
     def finalize_completed_plate(
@@ -1023,38 +1019,118 @@ class OpenHCSMetadataWriter:
             for plan in context.step_plans.values():
                 if not plan.create_openhcs_metadata:
                     continue
-                for target in (
-                    cls.OutputTarget.primary(plan),
-                    cls.OutputTarget.materialized(plan),
-                ):
-                    if target is not None:
-                        target_contexts.setdefault(target, context)
+                for target in cls.OutputTarget.for_plan(plan):
+                    target_contexts.setdefault(target, context)
 
         for target, context in target_contexts.items():
             if target.contains_images(context):
                 target.write(context)
 
-    @staticmethod
-    def write_primary_metadata(
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> None:
-        if not ProducedMemoryPathsAuthority.paths(context, plan):
-            return
-        target = OpenHCSMetadataWriter.OutputTarget.primary(plan)
-        if target is None:
-            return
-        target.write(context, produced_plan=plan)
 
-    @staticmethod
-    def write_materialized_metadata(
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> None:
-        target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
-        if target is None:
-            return
-        target.write(context, produced_plan=plan)
+class ProducedImageMetadataCapability:
+    """Main-flow and checkpoint targets share the typed image-record projection."""
+
+    def produced_records(
+        self, context: ProcessingContext, plan: CompiledStepPlan
+    ) -> tuple[ProducedOutputSemantics, ...]:
+        return tuple(
+            record
+            for record in step_output_manifest(context).produced_records_for(plan)
+            if record.is_image_payload
+        )
+
+
+class PrimaryImageMetadataTarget(
+    ProducedImageMetadataCapability, OpenHCSMetadataWriter.OutputTarget
+):
+    """The persistent main-flow image directory owns primary plate identity."""
+
+    is_main = True
+
+    @classmethod
+    def from_execution(
+        cls, context: ProcessingContext, plan: CompiledStepPlan
+    ) -> PrimaryImageMetadataTarget | None:
+        if not ProducedMemoryPathsAuthority.paths(context, plan):
+            return None
+        return cls.from_plan(plan)
+
+    @classmethod
+    def from_plan(cls, plan: CompiledStepPlan) -> PrimaryImageMetadataTarget | None:
+        if plan.write_backend in (Backend.OMERO_LOCAL.value, Backend.MEMORY.value):
+            return None
+        if plan.write_backend is None:
+            raise ValueError(
+                f"Step {plan.step_index} ({plan.step_name}) has no write backend."
+            )
+        if plan.output_dir is None:
+            raise ValueError(
+                f"Step {plan.step_index} ({plan.step_name}) has no output directory."
+            )
+        if plan.output_plate_root is None or plan.sub_dir is None:
+            raise ValueError(
+                f"Step {plan.step_index} ({plan.step_name}) has incomplete "
+                "OpenHCS metadata output identity."
+            )
+        return cls(
+            output_dir=plan.output_dir,
+            backend=plan.write_backend,
+            plate_root=plan.output_plate_root,
+            sub_dir=plan.sub_dir,
+            results_dir=plan.analysis_results_dir,
+        )
+
+
+class MaterializedImageMetadataTarget(
+    ProducedImageMetadataCapability, OpenHCSMetadataWriter.OutputTarget
+):
+    """Explicit main-flow checkpoints retain their own compiled storage identity."""
+
+    @classmethod
+    def from_plan(
+        cls, plan: CompiledStepPlan
+    ) -> MaterializedImageMetadataTarget | None:
+        output = plan.materialized_output
+        if output is None or output.backend in (
+            Backend.OMERO_LOCAL.value,
+            Backend.MEMORY.value,
+        ):
+            return None
+        return cls(
+            output_dir=output.output_dir,
+            backend=output.backend,
+            plate_root=output.plate_root,
+            sub_dir=output.sub_dir,
+            results_dir=output.analysis_results_dir,
+        )
+
+
+class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+    """Image artifacts persist independently of main-flow image/checkpoint storage."""
+
+    @classmethod
+    def from_execution(
+        cls, context: ProcessingContext, plan: CompiledStepPlan
+    ) -> RuntimeArtifactMetadataTarget | None:
+        target = super().from_execution(context, plan)
+        if target is None or not target.contains_images(context):
+            return None
+        return target
+
+    @classmethod
+    def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:
+        materialization = plan.runtime_artifact_materialization
+        if not materialization.has_persistent_target:
+            return None
+        output_dir = plan.artifact_analysis_output_dir
+        plate_root = plan.artifact_output_plate_root
+        return cls(
+            output_dir=output_dir,
+            backend=materialization.require_persistent_backend(),
+            plate_root=plate_root,
+            sub_dir=str(output_dir.relative_to(plate_root)),
+            results_dir=None,
+        )
 
 
 class RuntimeArtifactMaterializationAuthority:

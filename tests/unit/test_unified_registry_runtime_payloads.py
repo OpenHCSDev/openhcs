@@ -17,9 +17,10 @@ from python_introspect import (
     parameter_exclusions,
 )
 
-from openhcs.core.callable_contract import callable_request
+from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.memory import MEMORY_TYPE_NUMPY
+from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -218,6 +219,43 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
     assert image_payload_metadata(result).source_image_provenance_planes.paths == (
         "z0.tif",
         "z1.tif",
+    )
+
+
+@pytest.mark.parametrize("slice_by_slice", (True, False))
+def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
+    slice_by_slice: bool,
+) -> None:
+    stack = np.arange(40, dtype=np.float32).reshape(2, 4, 5)
+    payload = ImageMetadataPayload(
+        data=stack,
+        metadata=ImagePayloadMetadata(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=("z0.tif", "z1.tif"),
+            ),
+        ),
+    )
+    seen_shapes: list[tuple[int, ...]] = []
+
+    @numpy
+    def add_one(image: np.ndarray) -> np.ndarray:
+        assert isinstance(image, np.ndarray)
+        seen_shapes.append(image.shape)
+        return image + 1
+
+    wrapped = MinimalRegistry("minimal").apply_contract_wrapper(
+        add_one, ProcessingContract.FLEXIBLE,
+    )
+    contract = CallableContract.from_callable(wrapped)
+    call_argument = contract.main_flow_call_argument(payload)
+    assert call_argument is payload
+    result = wrapped(call_argument, slice_by_slice=slice_by_slice)
+    assert seen_shapes == ([(4, 5), (4, 5)] if slice_by_slice else [(2, 4, 5)])
+    np.testing.assert_array_equal(image_payload_data(result), stack + 1)
+    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert image_payload_metadata(result).source_image_provenance_planes.paths == (
+        "z0.tif", "z1.tif",
     )
 
 

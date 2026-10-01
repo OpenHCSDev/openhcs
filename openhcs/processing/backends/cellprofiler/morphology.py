@@ -11,6 +11,9 @@ from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING
 import numpy as np
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerCallableKernelPreparation,
+)
 from openhcs.core.artifacts import (
     ImageArtifactType,
     ArtifactSpecCollection,
@@ -4953,13 +4956,28 @@ def _skeletonize_labels(labels: np.ndarray) -> np.ndarray:
     return result
 
 
+class ExpandOrShrinkObjectsKernelPreparation(
+    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Own the persistent kernel cache work for expand_or_shrink_objects."""
+
+    def execute(self) -> None:
+        """Compile kernels used by common object expansion/shrink modes."""
+        labels = np.zeros((16, 16), dtype=np.int32)
+        labels[2:5, 3:7] = 1
+        labels[8:12, 9:14] = 2
+        points = np.zeros_like(labels)
+        points[3, 5] = 1
+        points[10, 12] = 2
+        for strategy_type in ExpandShrinkOperationStrategy.__registry__.values():
+            strategy = strategy_type()
+            for fixture in (labels, points):
+                strategy.apply(fixture, iterations=2, fill_holes=False)
+
+
 def prepare_expand_or_shrink_objects() -> None:
-    """Compile kernels used by common object expansion/shrink modes."""
-    labels = np.zeros((16, 16), dtype=np.int32)
-    labels[2:5, 3:7] = 1
-    labels[8:12, 9:14] = 2
-    points = ShrinkToPointStrategy().shrink_to_point(labels, False)
-    ExpandDefinedPixelsStrategy().expand_defined_pixels(points, 2)
+    """Prepare the kernels through their declared registry obligation."""
+    ExpandOrShrinkObjectsKernelPreparation().execute()
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)

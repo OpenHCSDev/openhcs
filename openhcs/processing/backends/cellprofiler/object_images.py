@@ -200,7 +200,7 @@ def convert_image_to_objects(
     """
     from skimage.measure import label
 
-    working_image = image.copy()
+    working_image = np.asarray(image).copy()
     if cast_to_bool:
         working_image = (working_image != background).astype(np.uint8)
     if preserve_label:

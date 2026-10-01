@@ -7,6 +7,7 @@ import pytest
 from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
+    ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSidecarRole,
@@ -15,9 +16,11 @@ from openhcs.core.artifacts import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
+    ObjectMeasurementSubjectRelation,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
@@ -76,6 +79,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerValidationStage,
 )
 from openhcs.core.pipeline.step_snapshot import StepSnapshot
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_stores import RuntimeArtifactBatch
@@ -448,11 +452,13 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
         "Measurements",
         MeasurementsArtifactType,
         sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        relations=(ArtifactMeasurementSubjectRelation(),),
     )
     image_copy_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
         sidecar_role=ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY,
+        relations=(ArtifactMeasurementSubjectRelation(),),
     )
     base_contract = CallableContract.from_callable(identify)
     contracts = tuple(
@@ -812,10 +818,15 @@ def test_artifact_output_source_lookup_combines_repeated_main_flow_inputs():
     assert outputs[output.ref()].variable_components == (AllComponents.Z_INDEX,)
 
 
-def test_compiled_source_edges_only_consume_relation_owned_main_flow():
-    source_specs = tuple(
-        ArtifactSpec.input(name, ImageArtifactType)
-        for name in ("DNA", "Membrane", "Mitochondria")
+@pytest.mark.parametrize("stored_main_flow", [False, True])
+@pytest.mark.parametrize("stored_secondary", [False, True])
+def test_compiled_source_edges_only_consume_relation_owned_main_flow(
+    stored_main_flow, stored_secondary,
+):
+    source_specs = (
+        ArtifactSpec.input("DNA", ImageArtifactType),
+        ArtifactSpec.input("Membrane", ImageArtifactType, parameter_name="secondary"),
+        ArtifactSpec.input("Mitochondria", ImageArtifactType),
     )
     output_spec = ArtifactSpec.output_preserving_source_stack_scope(
         "Combined",
@@ -831,7 +842,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
 
     @artifact_inputs(*source_specs)
     @artifact_outputs(output_spec)
-    def combine_sources(image):
+    def combine_sources(image, secondary=None):
         return image
 
     compiled = compile_function_pattern(
@@ -839,9 +850,19 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
         {},
         {plan.ref(): plan for plan in (output_plan,)},
     )
+    stored_inputs = {
+        spec.ref(): ArtifactInputPlan(
+            name=spec.name,
+            path=f"/memory/previous-step/{spec.name}.pkl",
+            artifact_type=ImageArtifactType,
+            source_step_id=0,
+        )
+        for spec, stored in zip(source_specs[:2], (stored_main_flow, stored_secondary))
+        if stored
+    }
     compiled = _artifact_planner_stub().artifacts.compile_invocation_input_edges(
         compiled,
-        artifact_inputs={},
+        artifact_inputs=stored_inputs,
         relation_source_scopes={},
         execution_group_scope=PathPlannerGroupScope.ungrouped(),
         consumer_variable_components=ComponentSet((AllComponents.Z_INDEX,)),
@@ -851,6 +872,11 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow():
     edges = next(compiled.iter_invocations()).artifact_input_edges
     assert tuple(edge.spec for edge in edges) == source_specs
     assert tuple(edge.consumes_main_flow for edge in edges) == (True, False, False)
+    assert edges[0].storage_plan is None
+    assert edges[0].projection is None
+    assert edges[1].storage_plan is stored_inputs.get(source_specs[1].ref())
+    assert (edges[1].projection is not None) is stored_secondary
+    assert edges[1].spec.parameter_name == "secondary"
 
 
 def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
@@ -1256,7 +1282,9 @@ def test_artifact_lineage_projects_exact_source_binding_component():
                     ),
                 ),
             ),
-            main_flow_artifacts=ArtifactSpecCollection((aligned_input,)),
+            # Stain1 is the stored auxiliary operand whose projection is tested.
+            # It must not also be declared as already carried in the main payload.
+            main_flow_artifacts=ArtifactSpecCollection(()),
         )
     )
     _record_declared_output(
@@ -2322,12 +2350,12 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     blue_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(blue.ref()),),
+        relations=(GroupLineageSourceRelation(blue.ref()), ArtifactMeasurementSubjectRelation()),
     )
     green_measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(green.ref()),),
+        relations=(GroupLineageSourceRelation(green.ref()), ArtifactMeasurementSubjectRelation()),
     )
 
     @artifact_inputs(blue)
@@ -2335,7 +2363,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_blue(image, *, runtime):
         del runtime
@@ -2346,7 +2374,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     def measure_green(image, *, runtime):
         del runtime
@@ -2414,6 +2442,123 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         "1": ("measure_blue",),
         "2": ("measure_green",),
     }
+
+
+@pytest.mark.parametrize("measurement_group", ["1", "2", DEFAULT_GROUP_KEY])
+def test_real_object_measurement_preserves_selected_labels_group_scope(
+    measurement_group,
+):
+    """An exact label selector does not rewrite an explicitly authored group."""
+    from openhcs.core.function_patterns import normalize_function_pattern
+    from openhcs.interop.cellprofiler.compile_time_contracts import (
+        CellProfilerInvocationContractProvider,
+    )
+    from openhcs.processing.backends.cellprofiler.shape import (
+        MeasureObjectSizeShapeModule,
+        measure_object_size_shape,
+    )
+
+    planner = _artifact_planner_stub()
+    labels_plan = _record_declared_output(
+        planner,
+        ArtifactOutputPlan(
+            name="Cells",
+            path="/memory/Cells.pkl",
+            artifact_type=ObjectLabelsArtifactType,
+            group_keys=("2",),
+            group_component=AllComponents.CHANNEL,
+            variable_components=(AllComponents.SITE,),
+            paths_by_group={"2": "/memory/Cells_2.pkl"},
+        ),
+    )
+    selector = (
+        MeasureObjectSizeShapeModule.object_measurement_binding.require_parameter_name()
+    )
+    invocation_pattern = (measure_object_size_shape, {selector: "Cells"})
+    pattern = (
+        invocation_pattern
+        if measurement_group == DEFAULT_GROUP_KEY
+        else {measurement_group: [invocation_pattern]}
+    )
+    snapshot = _snapshot(name="MeasureCells", func=pattern)
+    labels_input = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    step_context = ArtifactDeclarationStepContext(
+        step_name=snapshot.step.name,
+        step_index=snapshot.index,
+        group_by=GroupBy.CHANNEL,
+        available_artifacts=ArtifactSpecCollection((labels_input,)),
+        available_artifact_producers=(
+            ArtifactProducer(
+                ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+                groups=labels_plan.group_keys,
+                invocation_keys=(),
+                producer_step_index=2,
+            ),
+        ),
+    )
+    authored = next(normalize_function_pattern(pattern).iter_items())
+    blocks, consumed_names = MeasureObjectSizeShapeModule.module_blocks_for_invocation(
+        invocation=authored,
+        step_context=step_context,
+    )
+    (numbered_blocks,), _ = MeasureObjectSizeShapeModule.number_step_invocation_blocks(
+        (blocks,), first_module_num=4
+    )
+    contract, consumed_names = MeasureObjectSizeShapeModule.invocation_callable_contract(
+        invocation=authored,
+        numbered_module_blocks=numbered_blocks,
+        consumed_kwarg_names=consumed_names,
+        step_context=step_context,
+    )
+    provider = CellProfilerInvocationContractProvider(
+        {(snapshot.index, authored.key): InvocationContractPlan(contract, consumed_names)}
+    )
+    declarations = extract_artifact_declarations(
+        pattern,
+        invocation_contract_provider=provider,
+        step_context=step_context,
+    )
+    (measurement,) = contract.artifact_outputs.of_artifact_type(MeasurementsArtifactType)
+    (object_input,) = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert object_input.ref() == labels_input.ref()
+    assert object_input.parameter_name == "labels"
+    assert measurement.measurement_feature_owner is MeasureObjectSizeShapeModule
+    assert measurement.name == "MeasureCells_4_measurements"
+    assert measurement.group_scope_sources() == (labels_input.ref(),)
+    assert (
+        MeasurementsArtifactType.require_output_subject(measurement)
+        == ObjectMeasurementSubjectRelation(labels_input.ref()).measurement_subject()
+    )
+    assert selector in consumed_names
+    group_scope = PathPlannerGroupScope.from_raw(
+        ("1", "2"), component=AllComponents.CHANNEL
+    )
+
+    if measurement_group == "1":
+        with pytest.raises(
+            ValueError,
+            match="MeasureCells_4_measurements.*group '1' has no declared group-scope source",
+        ):
+            planner.artifacts.compile_plan_maps(snapshot, 3, declarations, group_scope)
+        return
+
+    maps = planner.artifacts.compile_plan_maps(snapshot, 3, declarations, group_scope)
+    measurement_plan = maps.outputs[measurement.ref()]
+    assert maps.inputs[labels_input.ref()].group_keys == labels_plan.group_keys
+    assert measurement_plan.group_keys == ("2",)
+    assert measurement_plan.group_scope_sources_by_group == {
+        "2": (labels_input.ref(),),
+    }
+    compiled = compile_function_pattern(
+        pattern,
+        maps.inputs,
+        maps.outputs,
+        invocation_contract_provider=provider,
+        step_context=step_context,
+    )
+    (invocation,) = tuple(compiled.iter_invocations())
+    assert selector not in dict(invocation.kwargs)
+    assert invocation.contract is contract
 
 
 def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
@@ -3464,7 +3609,7 @@ def test_module_special_outputs_preserve_existing_main_flow_component_scopes():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(measurement_spec)
     def measurement_only(image, *, runtime):
@@ -3719,7 +3864,10 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     measurements = ArtifactSpec.output(
         "Measurements",
         MeasurementsArtifactType,
-        relations=(GroupLineageSourceRelation(source.ref()),),
+        relations=(
+            GroupLineageSourceRelation(source.ref()),
+            ImageMeasurementSubjectRelation(source.ref()),
+        ),
     )
 
     @artifact_inputs(source)
@@ -5340,7 +5488,7 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(measurement_spec)
     def measure(image, *, runtime):

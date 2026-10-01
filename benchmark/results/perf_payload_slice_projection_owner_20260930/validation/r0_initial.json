@@ -1,0 +1,17 @@
+{
+  "base_revision": "702b2c2c9563da2636db251f8b734cff215596b8",
+  "head_revision": "131842c81f2ff6ab27dbf7d338e35ad69fa67dc1",
+  "paths": [
+    "openhcs/core/aligned_image_payload.py",
+    "openhcs/core/runtime_image_values.py",
+    "openhcs/processing/backends/cellprofiler/colocalization.py"
+  ],
+  "metric_count": 5140,
+  "increases": {
+    "ForeignAbsenceProbe:openhcs/core/runtime_image_values.py": 1
+  },
+  "decreases": {
+    "ForeignAbsenceProbe:openhcs/core/aligned_image_payload.py": -1
+  },
+  "status": "Initial scoped ratchet failed on an existing probe transferred across module boundaries; one unreachable second absent-axis validation was then deleted on the actual owning contract. Final gates are separate; this initial failure is retained."
+}

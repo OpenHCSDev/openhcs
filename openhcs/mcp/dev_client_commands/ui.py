@@ -137,6 +137,7 @@ class CallCommandSpec(McpDevCommandSpec):
         parser.add_argument(
             "--arguments",
             default="{}",
+            type=parse_json_object,
             help="JSON object passed as the MCP tool arguments.",
         )
         parser.add_argument(
@@ -152,7 +153,7 @@ class CallCommandSpec(McpDevCommandSpec):
         return (
             McpDevToolCall(
                 args.tool_name,
-                parse_json_object(args.arguments),
+                args.arguments,
             ),
         )
 
@@ -168,7 +169,7 @@ class CallCommandSpec(McpDevCommandSpec):
             return super().render_response(payload, args)
         return command_spec.render_call_response(
             payload,
-            parse_json_object(args.arguments),
+            args.arguments,
         )
 
 

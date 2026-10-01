@@ -1,0 +1,54 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/_preparation.py
+@@ -68,5 +68,7 @@
+ 
+     @classmethod
+     def prepare_registered_family(cls) -> None:
++        if capture_enabled():
++            return
+         for operation in cls.cache_preparation_operations():
+             operation.prepare()
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/grid.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/grid.py
+@@ -1597,7 +1597,7 @@
+ 
+ def prepare_identify_objects_in_grid() -> None:
+     """Prepare the kernels through their declared registry obligation."""
+-    IdentifyObjectsInGridKernelPreparation().prepare()
++    IdentifyObjectsInGridKernelPreparation().execute()
+ 
+ 
+ identify_objects_in_grid.__openhcs_prepare__ = prepare_identify_objects_in_grid
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/morphology.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/morphology.py
+@@ -4977,7 +4977,7 @@
+ 
+ def prepare_expand_or_shrink_objects() -> None:
+     """Prepare the kernels through their declared registry obligation."""
+-    ExpandOrShrinkObjectsKernelPreparation().prepare()
++    ExpandOrShrinkObjectsKernelPreparation().execute()
+ 
+ 
+ @numpy_decorator(contract=ProcessingContract.PURE_2D)
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/primary_objects.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/primary_objects.py
+@@ -836,7 +836,7 @@
+ 
+ 
+ identify_primary_objects.__openhcs_prepare__ = (
+-    IdentifyPrimaryObjectsKernelPreparation().prepare
++    IdentifyPrimaryObjectsKernelPreparation().execute
+ )
+ __all__ = public_names_from_objects(
+     ExcessObjectHandling,
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/shape.py
+@@ -1260,7 +1260,7 @@
+ 
+ 
+ measure_object_size_shape.__openhcs_prepare__ = (
+-    ObjectSizeShapeKernelPreparation().prepare
++    ObjectSizeShapeKernelPreparation().execute
+ )
+ 
+ 

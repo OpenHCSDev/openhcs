@@ -51,7 +51,11 @@ from openhcs.core.source_matching import (
     source_metadata_value,
     source_metadata_values_equal,
 )
-from openhcs.core.source_path_identity import source_paths_equal
+from openhcs.core.source_path_identity import (
+    source_path_identity,
+    source_path_identity_key,
+    source_paths_equal,
+)
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import get_all_image_paths
@@ -71,20 +75,6 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
 
     path = Path(pattern_path)
     return tuple(dict.fromkeys((pattern_path, path.as_posix(), path.name)))
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_is_absolute(path: str) -> bool:
-    """Return whether a candidate virtual path is absolute."""
-
-    return Path(path).is_absolute()
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_name(path: str) -> str:
-    """Return the filename component for candidate matching."""
-
-    return Path(path).name
 
 
 @dataclass(frozen=True, slots=True)
@@ -303,8 +293,8 @@ class SourcePatternResolutionContext:
         return tuple(
             virtual_path
             for virtual_path in self.source_paths_by_virtual_path
-            if not _cached_path_is_absolute(virtual_path)
-            and matcher.matches(_cached_path_name(virtual_path))
+            if not source_path_identity(virtual_path).is_absolute()
+            and matcher.matches(source_path_identity(virtual_path).name)
         )
 
     def candidate_metadata(
@@ -1066,8 +1056,90 @@ class MetadataMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPol
         return tuple(values)
 
 
+class SourceIdentityResolutionContext(SourcePatternResolutionContext):
+    """Resolve exact provenance identities through declared source paths and metadata."""
+
+    __slots__ = ()
+
+    def _candidate_matches_source_identity(
+        self,
+        candidate: SourceCandidatePath,
+        source_identity: SourceImageIdentity,
+    ) -> bool:
+        """Return whether one candidate has the exact declared source identity."""
+
+        if not source_identity.addressable:
+            return False
+        if source_identity.path is not None:
+            declared_paths = self._identity_paths_for_candidate(candidate)
+            if not any(
+                source_paths_equal(declared_path, source_identity.path)
+                for declared_path in declared_paths
+            ):
+                return False
+        component_items = source_component_metadata_items(
+            source_identity.component_metadata or {}
+        )
+        if not component_items:
+            return source_identity.path is not None
+        return any(
+            all(
+                (
+                    candidate_value := source_component_metadata_value(
+                        metadata, component
+                    )
+                )
+                is not None
+                and source_metadata_values_equal(candidate_value, expected_value)
+                for component, expected_value in component_items
+            )
+            for metadata in self.candidate_metadata(candidate)
+        )
+
+    def _identity_paths_for_candidate(
+        self,
+        candidate: SourceCandidatePath,
+    ) -> tuple[str, ...]:
+        return (
+            self.source_path_for(candidate),
+            *self.runtime_paths_for_candidate(candidate),
+        )
+
+    def matching_candidates_for_source_identities(
+        self,
+        identities: Sequence[SourceImageIdentity],
+        candidates: Sequence[SourceCandidatePath],
+    ) -> tuple[tuple[SourceCandidatePath, ...], ...]:
+        """Resolve a batch without rescanning unrelated paths for each identity."""
+
+        candidates_by_path: dict[str, list[SourceCandidatePath]] = {}
+        for candidate in candidates:
+            path_keys = dict.fromkeys(
+                source_path_identity_key(path)
+                for path in self._identity_paths_for_candidate(candidate)
+            )
+            for path_key in path_keys:
+                candidates_by_path.setdefault(path_key, []).append(candidate)
+        matches_by_identity: list[tuple[SourceCandidatePath, ...]] = []
+        for identity in identities:
+            identity_path = identity.path
+            identity_candidates = (
+                candidates
+                if identity_path is None
+                else candidates_by_path.get(source_path_identity_key(identity_path), ())
+            )
+            matches_by_identity.append(
+                tuple(
+                    candidate
+                    for candidate in identity_candidates
+                    if self._candidate_matches_source_identity(candidate, identity)
+                )
+            )
+        return tuple(matches_by_identity)
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class SourceBindingMatchedImageSet(SourcePatternResolutionContext):
+class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
     """Resolve all declared source aliases for one matched image-set anchor."""
 
     bindings: tuple[NamedSourceBinding, ...]
@@ -1201,15 +1273,11 @@ class SourceBindingMatchedImageSet(SourcePatternResolutionContext):
             dict.fromkeys((*self.source_paths_by_virtual_path, *source_universe))
         )
         anchors: list[SourceCandidatePath] = []
-        for anchor_identity in anchor_identities:
-            matches = tuple(
-                candidate
-                for candidate in declared_candidates
-                if self._candidate_matches_source_identity(
-                    candidate,
-                    anchor_identity,
-                )
-            )
+        matches_by_identity = self.matching_candidates_for_source_identities(
+            anchor_identities,
+            declared_candidates,
+        )
+        for anchor_identity, matches in zip(anchor_identities, matches_by_identity):
             if len(matches) != 1:
                 raise ValueError(
                     "Source binding requires one exact declared source-set position "
@@ -1221,44 +1289,7 @@ class SourceBindingMatchedImageSet(SourcePatternResolutionContext):
             tuple(dict.fromkeys(anchors)),
             binding=binding,
             source_universe=source_universe,
-        )
-
-    def _candidate_matches_source_identity(
-        self,
-        candidate: SourceCandidatePath,
-        source_identity: SourceImageIdentity,
-    ) -> bool:
-        """Return whether one candidate has the exact declared source identity."""
-
-        if not source_identity.addressable:
-            return False
-        if source_identity.path is not None:
-            declared_paths = (
-                self.source_path_for(candidate),
-                *self.runtime_paths_for_candidate(candidate),
-            )
-            if not any(
-                source_paths_equal(declared_path, source_identity.path)
-                for declared_path in declared_paths
-            ):
-                return False
-        component_items = source_component_metadata_items(
-            source_identity.component_metadata or {}
-        )
-        if not component_items:
-            return source_identity.path is not None
-        return any(
-            all(
-                (
-                    candidate_value := source_component_metadata_value(
-                        metadata, component
-                    )
-                )
-                is not None
-                and source_metadata_values_equal(candidate_value, expected_value)
-                for component, expected_value in component_items
-            )
-            for metadata in self.candidate_metadata(candidate)
+            compatible_source_candidates=candidates,
         )
 
     def _expand_single_alias(
@@ -1267,6 +1298,7 @@ class SourceBindingMatchedImageSet(SourcePatternResolutionContext):
         *,
         binding: NamedSourceBinding,
         source_universe: Sequence[SourceCandidatePath],
+        compatible_source_candidates: Sequence[SourceCandidatePath] | None = None,
     ) -> tuple[SourceCandidatePath, ...]:
         compatible_anchors = SourceBindingCandidateMatcher.compatible_candidates(
             anchors,
@@ -1281,13 +1313,17 @@ class SourceBindingMatchedImageSet(SourcePatternResolutionContext):
         anchor_identities = frozenset(
             self._source_image_set_identity(anchor) for anchor in anchors
         )
+        if compatible_source_candidates is None:
+            compatible_source_candidates = (
+                SourceBindingCandidateMatcher.compatible_candidates(
+                    source_universe,
+                    bindings=(binding,),
+                    source_context=self,
+                )
+            )
         return tuple(
             candidate
-            for candidate in SourceBindingCandidateMatcher.compatible_candidates(
-                source_universe,
-                bindings=(binding,),
-                source_context=self,
-            )
+            for candidate in compatible_source_candidates
             if SourceImageSetIdentityCompatibility.any_match(
                 frozenset((self._source_image_set_identity(candidate),)),
                 anchor_identities,

@@ -1,0 +1,11 @@
+{
+  "command": "/home/ts/bin/agent-resource-check --assert-headroom",
+  "exit_code": 2,
+  "actual_result": {"free_gib": {"/": 8.2, "/dev/shm": 15.5, "/home": 12.5, "/tmp": 11.3}, "level": "warning", "ram_available_gib": 15.6, "reasons": ["/home free 12.5 GiB", "swap used 8.7 GiB"], "swap_used_gib": 8.7},
+  "admission": "20GiB warning only; bounded source worker/scratch",
+  "worker_memory_limit_bytes": 536870912,
+  "cpu_quota_percent": 100,
+  "numeric_threads": 1,
+  "owned_scratch_limit_bytes": 268435456,
+  "owned_scratch": "/home/ts/.cache/agent-scratch/issue314-russell"
+}

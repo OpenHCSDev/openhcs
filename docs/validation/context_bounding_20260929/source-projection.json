@@ -1,0 +1,83 @@
+{
+  "imports": {
+    "openhcs": "/home/ts/wt/openhcs-context-bounding-20260929/openhcs/__init__.py",
+    "polystore": "/home/ts/wt/openhcs-context-bounding-20260929/external/PolyStore/src/polystore/__init__.py",
+    "zmqruntime": "/home/ts/wt/openhcs-context-bounding-20260929/external/zmqruntime/src/zmqruntime/__init__.py"
+  },
+  "contexts": [
+    {
+      "kind": "first_use",
+      "chars": 5570,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "ui_visible_workflow",
+      "chars": 6995,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "domain_expert_assisted_setup",
+      "chars": 1497,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "folder_onboarding",
+      "chars": 12527,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "pipeline",
+      "chars": 11329,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "image_analysis_workflow",
+      "chars": 15895,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "custom_function",
+      "chars": 4758,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "headless_execution",
+      "chars": 13124,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "debugging",
+      "chars": 4894,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "viewer_review",
+      "chars": 8724,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "objectstate_editing",
+      "chars": 3895,
+      "default_bound": 16000,
+      "complete": true
+    },
+    {
+      "kind": "cellprofiler_translation",
+      "chars": 7097,
+      "default_bound": 16000,
+      "complete": true
+    }
+  ],
+  "full_typed_qa_chars": 11962,
+  "full_typed_qa_preserved": true
+}

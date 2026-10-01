@@ -217,7 +217,7 @@ def test_primary_object_border_filter_preserves_unedited_variant() -> None:
     image[0, :2] = 1.0
     image[3:5, 3:5] = 1.0
 
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=1,
         max_diameter=20,

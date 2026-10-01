@@ -232,6 +232,10 @@ class RuntimeArtifactMaterializationPlan:
     def has_persistent_target(self) -> bool:
         return self.persistent_enabled
 
+    def persists_to_backend(self, backend: str) -> bool:
+        """Own admission of a storage target to persistent artifact publication."""
+        return self.has_persistent_target and self.require_persistent_backend() == backend
+
     def require_persistent_backend(self) -> str:
         if self.persistent_backend is None:
             raise RuntimeError(
@@ -444,6 +448,18 @@ class CompiledStepPlan:
     def execution_group_value(self) -> str | None:
         component = self.execution_group_scope.component
         return None if component is None else component.value
+
+    @property
+    def artifact_output_plate_root(self) -> str:
+        """Resolve artifact plate identity alongside its compiled directories."""
+        plate_root = self.output_plate_root
+        if self.materialized_output is not None:
+            plate_root = self.materialized_output.plate_root
+        if plate_root is None:
+            raise ValueError(
+                f"Step {self.step_index} ({self.step_name}) has no artifact output plate root."
+            )
+        return plate_root
 
     @property
     def artifact_analysis_output_dir(self) -> Path:

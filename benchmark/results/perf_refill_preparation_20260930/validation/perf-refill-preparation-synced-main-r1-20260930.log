@@ -1,0 +1,12 @@
+R1 7d0ce5e68b8263346849ddb7ac82fdbef3876a0b: NRA cache=miss, projections=2992, prepare=49.957s, analysis=3.071s
+R1 e16c0be41e386d5a37a10c5e7c54f49817e5e9ee: NRA cache=miss, projections=2992, prepare=49.527s, analysis=3.061s
+{
+  "base": "7d0ce5e68b8263346849ddb7ac82fdbef3876a0b",
+  "head": "e16c0be41e386d5a37a10c5e7c54f49817e5e9ee",
+  "changed": [
+    "openhcs/core/processing_preparation.py"
+  ],
+  "before": [],
+  "after": [],
+  "increased": []
+}

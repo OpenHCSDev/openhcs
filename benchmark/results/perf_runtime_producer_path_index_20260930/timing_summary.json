@@ -1,0 +1,34 @@
+{
+  "scope": "Ready-server pipeline; excludes server startup/shutdown",
+  "affinity": {
+    "cpu": 5,
+    "applied_to": "benchmark subprocess and its inherited server/worker children",
+    "actual_command_prefix": [
+      "/usr/bin/taskset",
+      "-c",
+      "5"
+    ]
+  },
+  "order": [
+    "main",
+    "candidate",
+    "candidate",
+    "main"
+  ],
+  "observations_per_version": 2,
+  "mean_seconds": {
+    "main": {
+      "compile_seconds": 1.7410157918930054,
+      "execute_seconds": 10.950681805610657,
+      "total_seconds": 13.42474789894186
+    },
+    "candidate": {
+      "compile_seconds": 1.7194948196411133,
+      "execute_seconds": 10.195472598075867,
+      "total_seconds": 12.634750936180353
+    }
+  },
+  "unfixed_first_pass": "Preserved; timing variance did not establish end-to-end gain",
+  "numerics": "Processing arithmetic unchanged; strict byte/pixel parity",
+  "native": "No new native CP timing in this change"
+}

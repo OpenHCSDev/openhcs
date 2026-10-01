@@ -1,0 +1,116 @@
+SUMMARY
+  string_dispatch           6  
+  isinstance_switch        33  
+  raw_shape                33  (bypassing an existing class: 28; hand-mapped into one: 1)
+  exact_key_set             0  
+  named_attribute          13  (most probed: __key_extractor__ x2, _identity x2, variable_component_stack_requirement x1, all x1, __name__ x1, __doc__ x1)
+  long_condition            4  (leads by dominant term: IDEN-1 1, IDEN-3 1, IMPL-1 1, IMPL-10 1)
+  god_class                14  
+  god_function             46  
+  legacy_marker           367  
+  positional_insert         0  
+  column_insert             0  
+  embedded_script           0  
+  child_process_site        0  
+  literal_roster            1  
+  dead_module             160  
+
+STRING DISPATCH: one subject compared against several string literals
+    6  openhcs/core/runtime_array_values.py::runtime_array_ufunc_result  on method  ['__call__', 'accumulate', 'at', 'outer', 'reduce', 'reduceat']
+    3  openhcs/core/equivalence/keys.py::semantic_core_parts  on self.parts[1]  ['x', 'y', 'z']
+    3  openhcs/core/pipeline/funcstep_contract_validator.py::_add_module_if_external  on module_name  ['__builtins__', 'builtins', 'openhcs']
+    3  openhcs/core/runtime_profile.py::enabled  on os.environ.get(PROFILE_RUNTIME_ENV, '').  ['1', 'true', 'yes']
+    3  openhcs/core/steps/function_execution.py::from_environment  on raw_enabled.lower()  ['1', 'true', 'yes']
+    3  openhcs/core/steps/function_runtime.py::enabled  on raw_value.lower()  ['1', 'true', 'yes']
+
+ISINSTANCE SWITCHES: several type checks on one subject
+   11  openhcs/core/debug.py::from_value  on value
+    8  openhcs/core/equivalence/cells.py::update_measurement_table_cell_hash  on value
+    7  openhcs/core/equivalence/cells.py::measurement_table_cell_payload  on value
+    6  openhcs/core/debug_view_models.py::debug_view_jsonable  on value
+    6  openhcs/core/debug_views.py::_debug_table_jsonable  on value
+    5  openhcs/core/debug_view_models.py::debug_view_cell_text  on value
+    5  openhcs/core/debug_views.py::_debug_table_cell_text  on value
+    5  openhcs/core/function_patterns.py::get_core_callable  on func_pattern
+    5  openhcs/core/function_step_transport.py::normalize_function_spec  on func_spec
+    4  openhcs/core/aligned_image_payload.py::payload_slices_for_alignment  on payload
+
+RAW SHAPES: one subject read by several string keys
+   18  openhcs/core/progress/types.py::from_dict  data  ['completed', 'component', 'context', 'error', 'message', 'owned_wells']  -> MATCHES openhcs/core/progress/types.py::ProgressEvent: a bypass, unless the data is copied into it elsewhere
+   14  openhcs/core/debug.py::from_json_dict  data  ['axis_id', 'callable_name', 'cursor', 'exception', 'input_artifact_refs', 'invocation_parameters']  -> MATCHES openhcs/core/debug.py::DebugBoundaryState: a bypass, unless the data is copied into it elsewhere
+   12  openhcs/core/runtime_spatial_grid.py::from_mapping  data  ['columns', 'ordering', 'origin', 'rows', 'slice_index', 'spot_table']  -> MATCHES openhcs/core/runtime_spatial_grid.py::SpatialGrid: a bypass, unless the data is copied into it elsewhere
+   11  openhcs/core/progress/types.py::to_dict  result  ['component', 'context', 'error', 'message', 'owned_wells', 'pattern']  -> MATCHES openhcs/core/progress/types.py::ProgressEvent: a bypass, unless the data is copied into it elsewhere
+   10  openhcs/core/debug.py::from_json_dict  data  ['content_digest', 'cursor', 'dtype', 'identity', 'kind', 'name']  -> MATCHES openhcs/core/debug.py::DebugArtifactRef: a bypass, unless the data is copied into it elsewhere
+    9  openhcs/core/debug.py::from_payload  payload  ['command_type', 'debug_session_id', 'pause_step_indices', 'replay_mode', 'selected_source_group', 'snapshot_store_backend']  -> MATCHES openhcs/core/debug.py::DebugExecutionConfig: a bypass, unless the data is copied into it elsewhere
+    9  openhcs/core/progress/live_measurements.py::from_dict  data  ['address', 'columns', 'materialized_locations', 'object_name', 'row_count', 'rows']  -> MATCHES openhcs/core/progress/live_measurements.py::LiveMeasurementTablePreview: a bypass, unless the data is copied into it elsewhere
+    7  openhcs/core/debug.py::from_json_dict  data  ['group_keys', 'kind', 'name', 'producer_step_index', 'producer_step_name', 'producer_step_scope_id']  -> MATCHES openhcs/core/debug.py::DebugArtifactIdentity: a bypass, unless the data is copied into it elsewhere
+    7  openhcs/core/utils.py::analyze_thread_activity  activity  ['action', 'active_threads', 'duration', 'function', 'thread_name', 'time']  -> unmodeled
+    7  openhcs/core/utils.py::print_thread_activity_report  overlap  ['duration', 'function1', 'function2', 'thread1', 'thread2', 'well1']  -> unmodeled
+
+LONG CONDITIONS: syntactic ownership leads, verify before choosing a target
+   14 terms  openhcs/core/debug_view_models.py:463  [literal 13, predicate 1] -> lead: IMPL-1
+    9 terms  openhcs/core/source_bindings.py:1973  [flag 8, absence 1] -> lead: IMPL-10
+    7 terms  openhcs/core/debug.py:590  [same_value 7] -> lead: IDEN-1
+    6 terms  openhcs/core/debug_session_projection.py:275  [absence 6] -> lead: IDEN-3
+
+GOD CLASSES (over 500 lines)
+   1806  openhcs/core/pipeline/compiler.py::PipelineCompiler
+   1430  openhcs/core/pipeline/path_planner.py::PathPlannerArtifactStage
+   1053  openhcs/core/runtime_image_values.py::ImagePayloadMetadata
+    990  openhcs/core/steps/function_runtime.py::PatternGroupRuntime
+    965  openhcs/core/orchestrator/orchestrator.py::PipelineOrchestrator
+    914  openhcs/core/pipeline/funcstep_contract_validator.py::FuncStepContractValidator
+    760  openhcs/core/equivalence/policy.py::RuntimeMeasurementDialect
+    717  openhcs/core/equivalence/measurement_rows.py::RuntimeRowProjectionContext
+    694  openhcs/core/callable_contract.py::CallableContract
+    691  openhcs/core/steps/function_output_identity.py::FunctionOutputIdentityAuthority
+
+GOD FUNCTIONS (over 100 lines)
+    324  openhcs/core/measurement_row_materialization.py::add
+    246  openhcs/core/equivalence/policy.py::__post_init__
+    224  openhcs/core/pipeline/path_planner.py::process_artifact_outputs
+    196  openhcs/core/aligned_image_payload.py::compose_aligned_image_payload
+    190  openhcs/core/viewer_streaming_service.py::stream_rois
+    176  openhcs/core/pipeline/compiler.py::compile_pipelines
+    164  openhcs/core/steps/function_runtime.py::_save_outputs
+    152  openhcs/core/steps/function_runtime.py::_load_input_stack
+    150  openhcs/core/equivalence/relationships.py::object_measurement_values_by_label
+    149  openhcs/core/source_binding_workspace.py::_matched_source_sets
+
+LITERAL ROSTERS: one set of string literals written in several places
+    3x  ['1', 'true', 'yes']
+
+DEAD MODULES: imported by nothing in the package
+     44  openhcs/core/alias_property.py
+   1566  openhcs/core/aligned_image_payload.py
+    218  openhcs/core/artifact_inspection.py
+    120  openhcs/core/artifact_key_selection.py
+   3172  openhcs/core/artifacts.py
+    121  openhcs/core/autoregister_preparation.py
+     88  openhcs/core/axis_filter.py
+   2313  openhcs/core/callable_contract.py
+    226  openhcs/core/compiled_execution.py
+    480  openhcs/core/compiled_step_plan.py
+	Command being timed: "env PYTHONDONTWRITEBYTECODE=1 /home/ts/code/projects/openhcs/.venv/bin/python -B .issue314/refactor-audit/scripts/overlay.py --repo . --root openhcs/core --rev 702b2c2c9563da2636db251f8b734cff215596b8 --json docs/validation/paired_field_csv_314_20260930/core-overlay.json"
+	User time (seconds): 19.87
+	System time (seconds): 0.52
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:20.50
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 164228
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 110887
+	Voluntary context switches: 758
+	Involuntary context switches: 182
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

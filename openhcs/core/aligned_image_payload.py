@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, ClassVar, Mapping
@@ -29,11 +29,11 @@ from openhcs.core.registry_strategies import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
+    ImagePayloadSliceProjector,
     ImagePayloadMetadataCarrier,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
-    image_payload_mask_for_slice,
     image_payload_metadata,
     preserved_image_plane_projection,
     with_image_payload_data,
@@ -396,95 +396,6 @@ class AlignedImageStackKwargResolver:
         return adapter.value_in_payload_domain(reference)
 
 
-@dataclass(frozen=True, slots=True)
-class ImagePayloadSliceProjector:
-    """Project payload context from a parent image into one child image slice."""
-
-    mask: RuntimeArrayData | None
-    metadata: ImagePayloadMetadata
-
-    def payloads_for_slices(
-        self,
-        slices: Sequence[RuntimeArrayData],
-    ) -> list[RuntimeArrayData]:
-        """Return payloads for every child slice using one projection pass."""
-        if self.metadata.plane_axis is None:
-            if len(slices) != 1:
-                raise ValueError(
-                    "Image payload produced multiple slices without a declared "
-                    "plane axis."
-                )
-            return [self.metadata.payload_with(slices[0], self.mask)]
-        metadata = self.metadata.with_indexed_source_plane_provenance(len(slices))
-        masks = self._masks_for_slices(slices) if self.mask is not None else None
-        return [
-            metadata.for_leading_source_plane(index).payload_with(
-                slice_data,
-                None if masks is None else masks[index],
-            )
-            for index, slice_data in enumerate(slices)
-        ]
-
-    def _masks_for_slices(
-        self,
-        slices: Sequence[RuntimeArrayData],
-    ) -> tuple[RuntimeArrayData, ...]:
-        """Project masks after an explicit slice owner has fixed cardinality."""
-        if self.mask is None:
-            raise ValueError("Masked slice projection requires a mask payload.")
-        mask_array = np.asarray(self.mask, dtype=bool)
-        if mask_array.ndim == 0 or mask_array.shape[0] != len(slices):
-            raise ValueError(
-                "Image payload mask cardinality must exactly match the declared "
-                f"plane axis: {mask_array.shape!r} for {len(slices)} slice(s)."
-            )
-        candidates = tuple(mask_array[index] for index in range(len(slices)))
-        masks: list[RuntimeArrayData] = []
-        for index, slice_data in enumerate(slices):
-            metadata = self.metadata.for_leading_source_plane(index)
-            if not metadata.mask_domain(slice_data).accepts(
-                tuple(np.shape(candidates[index]))
-            ):
-                raise ValueError(
-                    "Image payload mask shape must match the selected slice "
-                    f"domain; got {tuple(np.shape(candidates[index]))!r} for "
-                    f"{tuple(np.shape(slice_data))!r}."
-                )
-            masks.append(candidates[index])
-        return tuple(masks)
-
-    def payload_for_slice(
-        self,
-        data_slice: RuntimeArrayData,
-        index: int,
-    ) -> RuntimeArrayData:
-        """Return a slice payload with mask and metadata in the slice domain."""
-        metadata = self.metadata_for_slice(data_slice, index)
-        mask = self.mask_for_slice(data_slice, index)
-        payload: RuntimeArrayData = metadata.payload_with(data_slice, mask)
-        return payload
-
-    def metadata_for_slice(
-        self,
-        data_slice: RuntimeArrayData,
-        index: int,
-    ) -> ImagePayloadMetadata:
-        """Return metadata for one explicitly selected child image slice."""
-        del data_slice
-        return self.metadata.for_leading_source_plane(index)
-
-    def mask_for_slice(
-        self,
-        data_slice: RuntimeArrayData,
-        index: int,
-    ) -> RuntimeArrayData | None:
-        """Return the parent mask projected into ``data_slice``'s domain."""
-        return image_payload_mask_for_slice(
-            mask=self.mask,
-            metadata=self.metadata,
-            data_slice=data_slice,
-            plane_index=index,
-        )
 
 
 def stack_image_payload_context(
@@ -1195,6 +1106,15 @@ class AlignedImageStack:
 
         return type(self)(tuple(slices), self.slice_contexts)
 
+    def projected_output_slices(
+        self,
+    ) -> Iterator[tuple[Any, AlignedImageSliceContext | None]]:
+        """Project each output once together with its declaration-owned context."""
+        contexts = self.slice_contexts or (None,) * len(self.slices)
+        for payload, context in zip(self.slices, contexts, strict=True):
+            for output_slice in payload_slices_for_alignment(payload):
+                yield output_slice, context
+
     def output_payload(
         self,
         artifact_ref: ArtifactSpecRef,
@@ -1526,31 +1446,12 @@ def payload_slices_for_alignment(payload: Any) -> tuple[Any, ...]:
 
 
 def flatten_aligned_image_payload_slices(payload: Any) -> tuple[Any, ...]:
-    """Return scalar image payload slices represented by an aligned output carrier."""
+    """Derive scalar image payloads from the nominal aligned-output owner."""
     if isinstance(payload, AlignedImageStack):
         return tuple(
-            output_slice
-            for aligned_slice in payload.slices
-            for output_slice in payload_slices_for_alignment(aligned_slice)
+            output_slice for output_slice, _context in payload.projected_output_slices()
         )
     return payload_slices_for_alignment(payload)
-
-
-def flatten_aligned_image_slice_contexts(
-    payload: Any,
-) -> tuple[AlignedImageSliceContext, ...]:
-    """Return per-output semantic context for flattened aligned image slices."""
-    if not isinstance(payload, AlignedImageStack) or not payload.slice_contexts:
-        return ()
-    return tuple(
-        slice_context
-        for aligned_slice, slice_context in zip(
-            payload.slices,
-            payload.slice_contexts,
-            strict=True,
-        )
-        for _output_slice in payload_slices_for_alignment(aligned_slice)
-    )
 
 
 def aligned_image_stack_kwargs(

@@ -16,6 +16,7 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
+    ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
     ArtifactSidecarRole,
     ArtifactSpec,
@@ -43,6 +44,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -100,6 +102,7 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
+    ProducedPathRecordIndex,
     StepOutputManifestStore,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
@@ -689,17 +692,26 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
     )
 
 
-def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> None:
+@pytest.mark.parametrize("extension", (None, ".tif", ".png"))
+def test_bundle_payload_context_preserves_source_binding_plane_metadata(
+    extension: str | None,
+) -> None:
+    # Consensus preserves declared metadata; it must not parse the TIFF paths.
+    extension_metadata = {} if extension is None else {"extension": extension}
     first = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w1_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 1},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+            ),
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
     second = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w2_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 2},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
+            ),
         )
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
 
@@ -714,13 +726,13 @@ def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> Non
         dict(item)
         for item in metadata.source_image_provenance_planes.component_metadata
     ) == (
-        {"well": "A01", "site": 1, "channel": 1},
-        {"well": "A01", "site": 1, "channel": 2},
+        {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+        {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
     )
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": 1,
-        "extension": ".tif",
+        **extension_metadata,
     }
 
 
@@ -1556,7 +1568,8 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         relations=tuple(
             GroupLineageSourceRelation(source=binding.input_spec().ref())
             for binding in bindings
-        ),
+        )
+        + (ArtifactMeasurementSubjectRelation(),),
     )
 
     @artifact_inputs(*(binding.input_spec() for binding in bindings))
@@ -2453,7 +2466,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(first_spec)
     def record_first_labels(image, *, runtime):
@@ -2463,7 +2476,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(second_spec)
     def record_second_labels(image, *, runtime):
@@ -3229,7 +3242,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(outline_spec, first_labels_spec, second_labels_spec)
     def record_mixed_outputs(image, *, runtime):
@@ -5311,3 +5324,107 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         == "1"
     )
     assert records[0].component_values["site"] == 1
+
+
+@pytest.fixture
+def qualified_producer_manifest(tmp_path):
+    parser = SourceSchemaFilenameParser()
+    producer = SimpleNamespace(
+        step_scope_id="producer", step_name="Producer", pipeline_position=0,
+        axis_id="A01", output_dir=tmp_path,
+    )
+    consumer = SimpleNamespace(
+        axis_id="A01",
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0, source_step_scope_id="producer"
+        ),
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+    )
+    records = []
+    for plane in (1, 2):
+        parsed = parser.parse_filename(f"A01_s001_w2_z{plane:03d}_t001.tif")
+        identity = FunctionOutputIdentity(
+            component_values=dict(parsed.component_wire_mapping()),
+            extension=".tif", source="test", filename_qualifier=f"Output{plane}",
+        )
+        records.append(ProducedOutputSemantics.from_output(
+            producer, tmp_path / FunctionOutputPathAuthority.filename_for_identity(parser, identity),
+            identity, output_context=AlignedImageSliceContext.main_flow(
+                output_key=f"Output{plane}", artifact_kind=ImageArtifactType.value,
+            ),
+        ))
+    store = StepOutputManifestStore()
+    store.begin_step(producer)
+    store.record_outputs(producer, records)
+    return store, producer, consumer, tuple(records), parser
+
+
+def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicates(
+    qualified_producer_manifest, monkeypatch,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    calls = []
+    original = FunctionOutputPathAuthority.filename_for_identity
+
+    def count_filename(parser, identity):
+        calls.append(identity)
+        return original(parser, identity)
+
+    monkeypatch.setattr(FunctionOutputPathAuthority, "filename_for_identity", count_filename)
+    paths = (
+        records[1].output_path,
+        "A01_s001_w2_z001_t001.tif",
+        records[1].relative_output_path,
+        "A01_s001_w2_z001_t001.tif",
+    )
+    result = store.producer_output_contexts_for_paths(consumer, paths, parser)
+    assert tuple(context.output_key for context in result) == (
+        "Output2", "Output1", "Output2", "Output1",
+    )
+    assert len(calls) == len(records)
+
+
+def test_step_output_manifest_batch_lookup_template_deduplicates_record_aliases(
+    qualified_producer_manifest,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    path = "{anything}z001{suffix}.tif"
+    assert store.producer_output_contexts_for_paths(consumer, (path,), parser) == (
+        records[0].output_context,
+    )
+    index = ProducedPathRecordIndex.from_records(records, parser)
+    assert index.contains(path)
+    assert index.matching_records(path) == (records[0],)
+
+
+@pytest.mark.parametrize("path, count", [
+    ("missing.tif", 0),
+    ("A01_s001_w2_z{plane}_t001.tif", 2),
+])
+def test_step_output_manifest_batch_lookup_rejects_missing_and_ambiguous_templates(
+    qualified_producer_manifest, path, count,
+):
+    store, _producer, consumer, _records, parser = qualified_producer_manifest
+    with pytest.raises(NoStepOutputManifestMatch, match=f"found {count}"):
+        store.producer_output_contexts_for_paths(consumer, (path,), parser)
+
+
+def test_step_output_manifest_batch_lookup_rejects_shared_basename(
+    qualified_producer_manifest,
+):
+    store, producer, consumer, records, parser = qualified_producer_manifest
+    alias = records[0].relative_output_path
+    other = ProducedOutputSemantics.from_output(
+        producer, producer.output_dir / "another" / alias,
+        FunctionOutputIdentity(
+            component_values=records[1].component_values,
+            extension=".tif", source="test",
+        ),
+        output_context=records[1].output_context,
+    )
+    store.record_outputs(producer, (other,))
+    with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
+        store.producer_output_contexts_for_paths(consumer, (alias,), parser)
+    assert store.producer_output_contexts_for_paths(
+        consumer, (records[0].output_path, other.output_path), parser
+    ) == (records[0].output_context, other.output_context)

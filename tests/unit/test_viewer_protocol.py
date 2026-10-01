@@ -360,6 +360,7 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
             viewer_type=ViewerType.NAPARI,
         )
     )
+    monkeypatch.setattr(viewer, "active_process_launch", lambda: viewer.process_launch)
     observed_application = OPENHCS_ENDPOINT_APPLICATION
 
     def compatibility(_endpoint, *, timeout_ms, require_ready=True):
@@ -375,15 +376,15 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
 
     monkeypatch.setattr(
         viewer,
-        "existing_viewer_matches_process_launch",
-        lambda: False,
+        "matches_requested_process_launch",
+        lambda _requested: False,
     )
     assert not viewer.existing_viewer_is_ready()
 
     monkeypatch.setattr(
         viewer,
-        "existing_viewer_matches_process_launch",
-        lambda: True,
+        "matches_requested_process_launch",
+        lambda _requested: True,
     )
 
     observed_application = EndpointApplication(
@@ -667,7 +668,7 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
 
 
 def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
-    config = ViewerProcessLaunchConfig(qt_font_dpi=96)
+    config = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="192.0.2.1")
 
     assert (
         ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
@@ -679,6 +680,22 @@ def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
         ViewerProcessLaunchConfig.from_wire_mapping({"qt_font_dpi": True})
     with pytest.raises(ValueError):
         ViewerProcessLaunchConfig(qt_font_dpi=0)
+
+    with pytest.raises(TypeError, match="listen host must be a string"):
+        ViewerProcessLaunchConfig.from_wire_mapping(
+            {"qt_font_dpi": None, "listen_host": True}
+        )
+    with pytest.raises(ValueError, match="listen host must not be blank"):
+        ViewerProcessLaunchConfig(listen_host=" ")
+
+
+def test_listener_match_respects_existing_process_ownership():
+    requested = ViewerProcessLaunchConfig(qt_font_dpi=96)
+    externally_bound = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="*")
+    assert requested.matches_existing_viewer(externally_bound, owns_process=False)
+    assert not requested.matches_existing_viewer(externally_bound, owns_process=True)
+    different_dpi = ViewerProcessLaunchConfig(qt_font_dpi=120, listen_host="*")
+    assert not requested.matches_existing_viewer(different_dpi, owns_process=False)
 
 
 def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():

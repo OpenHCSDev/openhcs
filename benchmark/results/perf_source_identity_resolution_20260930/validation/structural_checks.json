@@ -1,0 +1,17 @@
+{
+  "base": "d3a99c0d46dea979bba3f9076da87386e49cbed3",
+  "production_head": "6faadd267b9d4b8e0d40fee8c2396e7c2591f0ec",
+  "r0_metric_count": 5115,
+  "r0_positive_deltas": {},
+  "r1": "No increases; full context prepared at both revisions, 3008 projections/version; selected production path reported. This is a scoped structural screen, not full semantic proof.",
+  "class_census": {
+    "source_revision": "6faadd267b9d4b8e0d40fee8c2396e7c2591f0ec",
+    "module_count": 702,
+    "original_class_count": 5110,
+    "projected_count": 5098
+  },
+  "OPEN_originals": 12,
+  "tests": "777 consumer checks passed; source-binding suite reran after one additional template regression test: 49 passed. No tests skipped/deselected.",
+  "black": "Both changed Python files pass",
+  "nra_limit": "Native decorated class capture promotion preflight unsupported. Authored exact source movement/revision transaction is syntax checked, not native equivalence proof; executed inheritance/constructor/pickle and runtime gates retained."
+}

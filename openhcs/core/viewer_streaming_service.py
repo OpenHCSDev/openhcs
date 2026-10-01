@@ -42,7 +42,6 @@ from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -93,6 +92,37 @@ class ImageStreamingRequest(ViewerStreamingContext):
     read_backend: str
     source_projection: VirtualWorkspaceSourceProjection | None = None
     producer: ViewerStreamProducer | None = None
+
+    def require_image_window(
+        self,
+        source: ViewerStreamingSource,
+        filename: str,
+        image,
+        projection: VirtualWorkspaceSourceProjection,
+    ) -> None:
+        """Admit the original source window, including a declared bounded crop."""
+        metadata = image_payload_metadata(image)
+        shape_yx = metadata.spatial_shape_yx(image)
+        if shape_yx is None:
+            raise ValueError("Streamed image requires declared spatial Y/X axes.")
+        metadata.source_spatial_domain.require_image_window(shape_yx)
+
+
+@dataclass(frozen=True, slots=True)
+class FullWindowImageStreamingRequest(ImageStreamingRequest):
+    """Receipt replay additionally requires its exact full native plane window."""
+
+    def require_image_window(
+        self,
+        source: ViewerStreamingSource,
+        filename: str,
+        image,
+        projection: VirtualWorkspaceSourceProjection,
+    ) -> None:
+        super(FullWindowImageStreamingRequest, self).require_image_window(
+            source, filename, image, projection
+        )
+        source.require_projected_image_window(filename, image, projection)
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,6 +201,7 @@ class StreamingViewerLifecycle:
         from openhcs.runtime.viewer_protocol import (
             ViewerGraphicalSessionUnavailableError,
             ViewerLaunchContext,
+            ViewerProcessLaunchAdmission,
         )
 
         resolved_launch_context = (
@@ -187,25 +218,6 @@ class StreamingViewerLifecycle:
                 stop=True,
                 force=True,
             )
-        else:
-            managed_viewer = manager.get_viewer(
-                config.viewer_type.wire_value,
-                config.port,
-            )
-            if managed_viewer is not None:
-                return managed_viewer
-
-            external_viewer = StreamingViewerLifecycle._create_managed_visualizer(
-                filemanager=filemanager,
-                config=config,
-                visualizer_config=visualizer_config,
-                transport_config=transport_config,
-                launch_context=resolved_launch_context,
-            )
-            if external_viewer.existing_viewer_is_ready():
-                external_viewer.lifecycle_state.mark_connected_external()
-                return external_viewer
-
         created_viewer: ManagedViewerLifecycleMixin | None = None
 
         def create_viewer() -> ManagedViewerLifecycleMixin:
@@ -217,6 +229,8 @@ class StreamingViewerLifecycle:
                 transport_config=transport_config,
                 launch_context=resolved_launch_context,
             )
+            if not fresh and created_viewer.existing_viewer_is_ready():
+                created_viewer.lifecycle_state.mark_connected_external()
             return created_viewer
 
         try:
@@ -226,6 +240,9 @@ class StreamingViewerLifecycle:
                 factory=create_viewer,
                 wait_for_ready=True,
                 ready_timeout=ready_timeout,
+                reuse_admission=ViewerProcessLaunchAdmission(
+                    config.viewer_process_launch_config()
+                ),
             )
         except ViewerGraphicalSessionUnavailableError:
             raise
@@ -330,11 +347,10 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
 
     def plate_image_metadata(self) -> ImagePayloadMetadata:
         """Return acquisition-owned calibration for source-pixel coordinates."""
-        pixel_size = float(
-            self.microscope_handler.metadata_handler.get_pixel_size(self.plate_path)
-        )
         return ImagePayloadMetadata(
-            source_voxel_spacing=SourceVoxelSpacing((pixel_size, pixel_size))
+            source_voxel_spacing=self.microscope_handler.metadata_handler.source_voxel_spacing(
+                self.plate_path
+            )
         )
 
     def calibrated_metadata(
@@ -679,16 +695,9 @@ class StreamingService:
                     source_projection=source_projection,
                     component_metadata=all_metadata_by_path[filename],
                 )
-                lookup = VirtualWorkspacePathLookup.from_paths(
-                    filename, str(Path(self.source.plate_path) / filename)
+                request.require_image_window(
+                    self.source, filename, image_data, source_projection
                 )
-                if (
-                    request.source_projection is not None
-                    and source_projection.source_projection_for(lookup) is not None
-                ):
-                    self.source.require_projected_image_window(
-                        filename, image_data, source_projection
-                    )
                 image_data_list.append(image_data)
                 file_paths.append(filename)
 

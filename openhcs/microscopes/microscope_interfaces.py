@@ -18,6 +18,11 @@ from openhcs.core.components.parser_metaprogramming import (
     GenericFilenameParser,
 )
 from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.source_metadata import (
+    SourceMetadataValue,
+    SourceVoxelSpacing,
+    source_metadata_dict,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.viewer_transport import (
     ViewerFilenameParserABC,
@@ -27,7 +32,10 @@ from polystore.streaming.viewer_transport import (
 from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
-    from openhcs.core.source_projection import SourcePlaneDataset
+    from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
     from openhcs.microscopes.openhcs import OpenHCSMetadata
 
 
@@ -127,6 +135,36 @@ class AnalysisResultDirectory:
 
     subdirectory_name: str
     path: Path
+    source_projection: VirtualWorkspaceSourceProjection | None = None
+
+    @classmethod
+    def from_declared_path(
+        cls,
+        subdirectory_name: str,
+        path: Path,
+        source_projection: VirtualWorkspaceSourceProjection | None = None,
+    ) -> AnalysisResultDirectory | None:
+        """Admit existing declared directories without inventing missing results."""
+        if not path.exists():
+            return None
+        if not path.is_dir():
+            raise NotADirectoryError(
+                f"Analysis metadata subdirectory {subdirectory_name!r} "
+                f"declares a non-directory results path: {path}"
+            )
+        return cls(subdirectory_name, path, source_projection)
+
+    def source_binding_for(
+        self, virtual_path: str, full_path: str
+    ) -> SourceProjection | None:
+        """Resolve a file through this directory's metadata-owned source authority."""
+        if self.source_projection is None:
+            return None
+        from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+
+        return self.source_projection.source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)
+        )
 
 
 class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
@@ -463,6 +501,37 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         view without supplying the physical scalar artifact.
         """
         return self.get_pixel_size(plate_path)
+
+    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+        """Project this acquisition's physical calibration into source coordinates."""
+
+        pixel_size = self.get_pixel_size(plate_path)
+        return SourceVoxelSpacing((pixel_size, pixel_size))
+
+    def source_metadata_by_path(
+        self,
+        plate_path: Union[str, Path],
+        parser: FilenameParser,
+        source_paths: Iterable[str],
+    ) -> dict[str, dict[str, SourceMetadataValue]]:
+        """Publish parsed source identities with acquisition-owned calibration.
+
+        The filename parser owns component interpretation; this metadata owner
+        supplies physical coordinates. Explicit source spacing remains authoritative.
+        """
+
+        acquisition_spacing = self.source_voxel_spacing(plate_path)
+        sources = {}
+        for path in source_paths:
+            parsed = parser.parse_filename(Path(path).name)
+            if parsed is None:
+                continue
+            values = source_metadata_dict(parsed.wire_mapping())
+            SourceVoxelSpacing.from_source_metadata(values).with_missing_from(
+                acquisition_spacing
+            ).merge_into(values, path=path)
+            sources[path] = values
+        return sources
 
     @abstractmethod
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:

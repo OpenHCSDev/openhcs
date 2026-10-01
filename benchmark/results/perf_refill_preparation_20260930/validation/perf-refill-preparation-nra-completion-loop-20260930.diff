@@ -1,0 +1,43 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
+@@ -10,6 +10,7 @@
+ from collections.abc import Callable, Hashable, Iterable, Iterator
+ from contextlib import ExitStack
+ from dataclasses import dataclass, field
++from itertools import islice
+ from multiprocessing.connection import Connection, wait
+ from multiprocessing.process import BaseProcess
+ from threading import Lock
+@@ -288,18 +289,19 @@
+         if len(children) < 2:
+             return
+         context = multiprocessing.get_context("fork")
++        pending = iter(children)
+         with ExitStack() as resources:
+             workers: list[PreparationCacheWorker] = []
+-            for operation in children:
+-                if len(workers) == 4:
+-                    ready = wait(tuple(worker.result_connection for worker in workers))
+-                    for worker in tuple(workers):
+-                        if worker.result_connection in ready:
+-                            worker.wait()
+-                            worker.close()
+-                            workers.remove(worker)
+-                worker = PreparationCacheWorker.start(context, operation)
+-                resources.callback(worker.close)
+-                workers.append(worker)
+-            for worker in workers:
+-                worker.wait()
++            while True:
++                for operation in islice(pending, 4 - len(workers)):
++                    worker = PreparationCacheWorker.start(context, operation)
++                    resources.callback(worker.close)
++                    workers.append(worker)
++                if not workers:
++                    break
++                ready = wait(tuple(worker.result_connection for worker in workers))
++                for worker in tuple(workers):
++                    if worker.result_connection in ready:
++                        worker.wait()
++                        worker.close()
++                        workers.remove(worker)

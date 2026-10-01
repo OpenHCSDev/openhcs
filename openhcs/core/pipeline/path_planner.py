@@ -35,7 +35,6 @@ from openhcs.core.function_patterns import (
     FunctionPatternSyntax,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
-    MainFlowInputProjection,
     RuntimeParameterBinding,
     compile_function_pattern,
     inject_artifact_input_values,
@@ -1221,8 +1220,8 @@ class PathPlannerArtifactStage:
         for group in compiled_pattern.groups:
             invocations: list[CompiledFunctionInvocation] = []
             for invocation in group.invocations:
-                invocation_main_flow_refs = (
-                    invocation.contract.group_scope_inputs.ref_set()
+                relation_owned_main_flow_refs = main_flow_refs.intersection(
+                    invocation.contract.output_group_scope_sources
                 )
                 if compiled_pattern.is_grouped:
                     if execution_group_scope.is_ungrouped:
@@ -1250,7 +1249,6 @@ class PathPlannerArtifactStage:
                     ArtifactInputPlan,
                     artifact_inputs,
                 )
-                invocation.contract.validate_artifact_input_parameter_bindings()
                 input_edge_keys = InvocationArtifactInputProjectionKey.for_input_count(
                     invocation.key,
                     len(invocation.contract.artifact_inputs),
@@ -1262,29 +1260,20 @@ class PathPlannerArtifactStage:
                     invocation.contract.artifact_inputs,
                     strict=True,
                 ):
-                    storage_plan = selected_plans_by_ref.get(input_spec.ref())
-                    consumes_main_flow = (
-                        storage_plan is None
-                        and input_spec.ref() in main_flow_refs
-                        and input_spec.ref() in invocation_main_flow_refs
+                    # A declared lineage source already travels in the primary
+                    # payload; its producer storage is not a second ABI argument.
+                    storage_plan = (
+                        None
+                        if input_spec.ref() in relation_owned_main_flow_refs
+                        else selected_plans_by_ref.get(input_spec.ref())
                     )
                     if storage_plan is None:
                         edges.append(
-                            InvocationArtifactInputEdgePlan(
+                            InvocationArtifactInputEdgePlan.from_source_declarations(
                                 key=input_edge_key,
                                 spec=input_spec,
-                                storage_plan=None,
-                                projection=None,
-                                consumes_main_flow=consumes_main_flow,
-                                main_flow_projection=(
-                                    MainFlowInputProjection.COMPLETE_PAYLOAD
-                                    if consumes_main_flow and len(main_flow_refs) == 1
-                                    else (
-                                        MainFlowInputProjection.DECLARED_SOURCE_IMAGE
-                                        if consumes_main_flow
-                                        else None
-                                    )
-                                ),
+                                main_flow_artifacts=main_flow_artifacts,
+                                invocation_sources=invocation.contract.group_scope_inputs,
                             )
                         )
                         continue
@@ -1299,7 +1288,7 @@ class PathPlannerArtifactStage:
                             consumer_variable_components=consumer_variable_components,
                             source_bindings=source_bindings,
                             available_artifacts=available_artifacts,
-                            consumes_main_flow=consumes_main_flow,
+                            consumes_main_flow=False,
                         )
                     )
                 invocations.append(invocation.with_artifact_input_edges(tuple(edges)))
@@ -2896,8 +2885,6 @@ def _cached_results_path(
 ) -> str:
     """Return the artifact results path for one normalized path config."""
     results_path = Path(materialization_results_path)
-    if results_path.is_absolute():
-        return str(results_path)
     output_plate_root = Path(
         _cached_output_plate_root(
             plate_path,
@@ -2905,7 +2892,17 @@ def _cached_results_path(
             output_dir_suffix,
         )
     )
-    return str(output_plate_root / results_path)
+    results_path = (output_plate_root / results_path).resolve()
+    try:
+        relative_results = results_path.relative_to(output_plate_root.resolve())
+    except ValueError as error:
+        raise ValueError(
+            "materialization_results_path must be inside the output plate root "
+            f"{output_plate_root}; got {results_path}."
+        ) from error
+    # Preserve the compiled plate spelling, including a symlinked ancestor:
+    # persistence projects addresses relative to that same lexical authority.
+    return str(output_plate_root / relative_results)
 
 
 @lru_cache(maxsize=131072)

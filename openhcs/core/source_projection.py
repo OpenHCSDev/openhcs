@@ -1053,15 +1053,7 @@ class SourceProjectionMetadataSerializer:
                 for projection, path in projection_paths
                 if projection in execution_anchors
             ],
-            **{
-                SourceComponentProjectionStrategy.for_enum_member(
-                    component
-                ).metadata_collection_field: self._component_values(
-                    projection_set,
-                    component,
-                )
-                for component in AllComponents
-            },
+            **self.component_metadata(projection_set),
             self.AVAILABLE_BACKENDS_FIELD: dict(
                 available_backends
                 if available_backends is not None
@@ -1078,6 +1070,27 @@ class SourceProjectionMetadataSerializer:
                 dict(diagnostic.metadata_payload())
                 for diagnostic in projection_set.diagnostics
             ]
+        return metadata
+
+    def component_metadata(
+        self,
+        projection_set: SourceProjectionSet,
+        *,
+        labels: Mapping[AllComponents, Mapping[str, str | None] | None] | None = None,
+    ) -> dict[str, dict[str, str | None]]:
+        """Project inventory keys from typed addresses; labels cannot add keys."""
+        metadata = {}
+        for component in AllComponents:
+            values = self._component_values(projection_set, component)
+            component_labels = (labels or {}).get(component) or {}
+            metadata[
+                SourceComponentProjectionStrategy.for_enum_member(
+                    component
+                ).metadata_collection_field
+            ] = {
+                value: label if label is not None else component_labels.get(value)
+                for value, label in values.items()
+            }
         return metadata
 
     def projection_fields(

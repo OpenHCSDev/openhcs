@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 225, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/ts/wt/openhcs-refactor-r0-20260930/scripts/check_refactor_r1.py", line 217, in main
+    print(json.dumps(json_report_object(result), indent=2))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/json_reports.py", line 256, in json_report_object
+    return type(report).project_json_object(report)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'R1Comparison' has no attribute 'project_json_object'
+Command exited with non-zero status 1
+	Command being timed: "timeout 165s /home/ts/code/projects/openhcs/.venv/bin/python -m scripts.check_refactor_r1 --base openhcsdev/main --head HEAD --scratch-root /home/ts/.cache/agent-scratch/openhcs-r0-r1-20260930 --budget-seconds 160"
+	User time (seconds): 87.89
+	System time (seconds): 2.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:30.00
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 256704
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 212598
+	Voluntary context switches: 3709
+	Involuntary context switches: 549
+	Swaps: 0
+	File system inputs: 32
+	File system outputs: 103264
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

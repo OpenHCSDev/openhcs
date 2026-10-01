@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping
+from dataclasses import fields
 from pathlib import Path
 from typing import ClassVar
 
@@ -14,7 +15,11 @@ from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.common import JsonObject, JsonValue
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.dto.functions import FunctionDetailRequest, FunctionSearchRequest
+from openhcs.agent.dto.functions import (
+    CustomFunctionRegistrationRequest,
+    FunctionDetailRequest,
+    FunctionSearchRequest,
+)
 from openhcs.agent.dto.pipeline import (
     PipelineSourceRenderRequest,
     PipelineValidationRequest,
@@ -28,6 +33,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolCall,
     McpToolArgumentAuthority,
     add_pipeline_source_options,
+    add_request_factory_option,
     call_mcp_tool,
     execute_source_session_tool_arguments,
     execute_source_submit_timeout_seconds,
@@ -200,7 +206,7 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
         parser.add_argument(
             "--no-persist",
             action="store_true",
-            help="Register for this MCP process only; do not write to the custom function directory.",
+            help="Register on the explicitly selected execution endpoint without persisting a source file.",
         )
         parser.add_argument(
             "--full-signature",
@@ -208,6 +214,16 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
             action="store_false",
             default=True,
         )
+        for connection_field in fields(ExecutionConnectionSpec):
+            add_request_factory_option(
+                parser, CustomFunctionRegistrationRequest.from_fields,
+                connection_field.name, f"--{connection_field.name.replace('_', '-')}",
+            )
+        for field_name in ("function_name", "storage_dir"):
+            add_request_factory_option(
+                parser, CustomFunctionRegistrationRequest.from_fields,
+                field_name, f"--{field_name.replace('_', '-')}",
+            )
         parser.add_argument(
             "--json",
             action="store_true",
@@ -221,11 +237,19 @@ class RegisterCustomFunctionCommandSpec(SingleToolCommandSpec):
         source_code = args.source_code
         if source_code is None:
             source_code = Path(args.source_file).read_text(encoding="utf-8")
+        connection = ExecutionConnectionSpec(**{
+            connection_field.name: vars(args)[connection_field.name]
+            for connection_field in fields(ExecutionConnectionSpec)
+        })
+        connection.require_port("Custom function registration")
         return McpToolArgumentAuthority.from_payload(
             {
                 "source_code": source_code,
                 "persist": not args.no_persist,
                 "compact_signature": args.compact_signature,
+                "function_name": args.function_name,
+                "storage_dir": args.storage_dir,
+                **connection.tool_arguments(),
             }
         )
 

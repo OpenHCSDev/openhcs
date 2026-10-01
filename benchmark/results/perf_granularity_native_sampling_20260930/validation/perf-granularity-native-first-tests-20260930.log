@@ -1,0 +1,99 @@
+........................................................................ [ 25%]
+....................................................................FF.. [ 51%]
+........................................................................ [ 77%]
+................................................................         [100%]
+=================================== FAILURES ===================================
+_ test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts[strided-complex64] _
+
+dtype = <class 'numpy.complex64'>, layout = 'strided'
+
+    @pytest.mark.parametrize("dtype", [np.float32, np.float64, np.complex64, np.complex128])
+    @pytest.mark.parametrize("layout", ["strided", "readonly", "non_native_endian"])
+    def test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts(
+        dtype, layout
+    ):
+        from scipy.ndimage import map_coordinates
+
+        image = np.arange(48, dtype=np.float64).reshape(6, 8).astype(dtype)
+        image[2, 2] = np.nan
+        image[3, 3] = np.inf
+        if np.issubdtype(dtype, np.complexfloating):
+            image.imag[:] = np.arange(48, dtype=np.float64).reshape(image.shape)
+            image.imag[1, 1] = np.nan
+            image.imag[4, 4] = np.inf
+        if layout == "strided":
+            image = image[:, ::2]
+        elif layout == "readonly":
+            image.setflags(write=False)
+        else:
+            image = image.astype(image.dtype.newbyteorder(">"))
+        before = image.tobytes()
+        rows, columns = np.mgrid[:7, :9].astype(float)
+        expected = map_coordinates(image, (rows * 0.75, columns * 0.5), order=1)
+        actual = GranularitySamplingGrid((7, 9)).sample_pixels(
+            image, coordinate_scales=(0.75, 0.5)
+        )
+        if np.iscomplexobj(image):
+            np.testing.assert_array_equal(actual.real, expected.real)
+>           np.testing.assert_array_equal(actual.imag, expected.imag)
+E           AssertionError:
+E           Arrays are not equal
+E
+E           nan location mismatch:
+E            ACTUAL: array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  0.,  0.],
+E                  [ 6.,  7.,  8.,  9., 10., 11., 12.,  0.,  0.],
+E                  [12., 13., 14., 15., 16., 17., 18.,  0.,  0.],...
+E            DESIRED: array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  0.,  0.],
+E                  [ 6.,  7.,  8.,  9., 10., 11., 12.,  0.,  0.],
+E                  [12., 13., 14., 15., 16., 17., 18.,  0.,  0.],...
+
+tests/unit/test_measuregranularity.py:111: AssertionError
+_ test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts[strided-complex128] _
+
+dtype = <class 'numpy.complex128'>, layout = 'strided'
+
+    @pytest.mark.parametrize("dtype", [np.float32, np.float64, np.complex64, np.complex128])
+    @pytest.mark.parametrize("layout", ["strided", "readonly", "non_native_endian"])
+    def test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts(
+        dtype, layout
+    ):
+        from scipy.ndimage import map_coordinates
+
+        image = np.arange(48, dtype=np.float64).reshape(6, 8).astype(dtype)
+        image[2, 2] = np.nan
+        image[3, 3] = np.inf
+        if np.issubdtype(dtype, np.complexfloating):
+            image.imag[:] = np.arange(48, dtype=np.float64).reshape(image.shape)
+            image.imag[1, 1] = np.nan
+            image.imag[4, 4] = np.inf
+        if layout == "strided":
+            image = image[:, ::2]
+        elif layout == "readonly":
+            image.setflags(write=False)
+        else:
+            image = image.astype(image.dtype.newbyteorder(">"))
+        before = image.tobytes()
+        rows, columns = np.mgrid[:7, :9].astype(float)
+        expected = map_coordinates(image, (rows * 0.75, columns * 0.5), order=1)
+        actual = GranularitySamplingGrid((7, 9)).sample_pixels(
+            image, coordinate_scales=(0.75, 0.5)
+        )
+        if np.iscomplexobj(image):
+            np.testing.assert_array_equal(actual.real, expected.real)
+>           np.testing.assert_array_equal(actual.imag, expected.imag)
+E           AssertionError:
+E           Arrays are not equal
+E
+E           nan location mismatch:
+E            ACTUAL: array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  0.,  0.],
+E                  [ 6.,  7.,  8.,  9., 10., 11., 12.,  0.,  0.],
+E                  [12., 13., 14., 15., 16., 17., 18.,  0.,  0.],...
+E            DESIRED: array([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  0.,  0.],
+E                  [ 6.,  7.,  8.,  9., 10., 11., 12.,  0.,  0.],
+E                  [12., 13., 14., 15., 16., 17., 18.,  0.,  0.],...
+
+tests/unit/test_measuregranularity.py:111: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_measuregranularity.py::test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts[strided-complex64]
+FAILED tests/unit/test_measuregranularity.py::test_owned_granularity_grid_preserves_nonfinite_values_and_array_layouts[strided-complex128]
+2 failed, 278 passed in 40.79s

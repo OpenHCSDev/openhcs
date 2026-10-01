@@ -1,0 +1,36 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/label_geometry.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/label_geometry.py
+@@ -316,8 +316,12 @@
+ 
+ @njit(cache=True)
+ def _requested_outline_points_numba(
+-    labels, sorted_labels, sorted_positions, object_count
+-):
++    labels: np.ndarray,
++    sorted_labels: np.ndarray,
++    sorted_positions: np.ndarray,
++    object_count: int,
++) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
++    """Group requested outlines directly in their original row-major order."""
+     counts = np.zeros(object_count, np.int64)
+     offsets = np.zeros(object_count + 1, np.int64)
+     if sorted_labels.size == 0:
+@@ -353,9 +357,16 @@
+ 
+ 
+ @njit(cache=True)
+-def _cellprofiler_hull_vertices_numba(indexes, offsets, point_y, point_x):
++def _cellprofiler_hull_vertices_numba(
++    indexes: np.ndarray,
++    offsets: np.ndarray,
++    point_y: np.ndarray,
++    point_x: np.ndarray,
++) -> tuple[np.ndarray, np.ndarray]:
++    """Project column envelopes through the exact CP ordered stack walk."""
+     hull_counts = np.zeros(indexes.size, np.int32)
+-    output = np.empty((point_y.size, 3), np.int32)
++    # Each occupied column contributes at most two input candidates.
++    output = np.empty((2 * point_y.size, 3), np.int32)
+     output_count = 0
+     for object_index in range(indexes.size):
+         start = offsets[object_index]

@@ -1,0 +1,5 @@
+{
+  "path": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-image-target-installed-acceptance-20260930/ExampleImagingFlowCytometryObjectsInGrid/wells_1/workers_1/images_ExampleImagingFlowCytometryObjectsInGrid_source_workspace_well_throughput/results/BF_cells_on_grid.csv",
+  "complete_csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+  "byte_identical_to_saved_main": true
+}

@@ -1,0 +1,73 @@
+{
+  "fixtures": [
+    {
+      "fixture": "manifest-step-20-b345a25b37b3.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07691230392083526,
+      "prepared": 0.0030008498579263687,
+      "indexed": 0.0013491800054907799
+    },
+    {
+      "fixture": "manifest-step-25-62580ba6c75c.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07776650181040168,
+      "prepared": 0.0029713851399719715,
+      "indexed": 0.0013463450595736504
+    },
+    {
+      "fixture": "manifest-step-27-90e01bfbf4c7.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07843055203557014,
+      "prepared": 0.0029792990535497665,
+      "indexed": 0.0013389107771217823
+    },
+    {
+      "fixture": "manifest-step-29-4aa0b9a34c83.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07736875303089619,
+      "prepared": 0.0029897489584982395,
+      "indexed": 0.0013357237912714481
+    },
+    {
+      "fixture": "manifest-step-5-45af051c9474.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07751644216477871,
+      "prepared": 0.0030230917036533356,
+      "indexed": 0.0013540987856686115
+    },
+    {
+      "fixture": "manifest-step-6-45af051c9474.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07825200585648417,
+      "prepared": 0.0031158672645688057,
+      "indexed": 0.0013492200523614883
+    },
+    {
+      "fixture": "manifest-step-7-45af051c9474.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07772607589140534,
+      "prepared": 0.003069810103625059,
+      "indexed": 0.0013621947728097439
+    },
+    {
+      "fixture": "manifest-step-8-45af051c9474.pickle",
+      "records": 60,
+      "paths": 60,
+      "original": 0.07808374892920256,
+      "prepared": 0.0030585392378270626,
+      "indexed": 0.0013273591175675392
+    }
+  ],
+  "totals": {
+    "original": 0.622056383639574,
+    "prepared": 0.02420859131962061,
+    "indexed": 0.010763032361865044
+  }
+}

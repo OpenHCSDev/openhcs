@@ -1,0 +1,150 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/image_file_serialization.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/image_file_serialization.py
+@@ -5,8 +5,9 @@
+ import logging
+ from abc import ABC, abstractmethod
+ from dataclasses import dataclass
++from functools import lru_cache
+ from pathlib import Path
+-from typing import Any, ClassVar, Sequence
++from typing import Any, Callable, ClassVar, Sequence
+ 
+ import numpy as np
+ from metaclass_registry import AutoRegisterMeta
+@@ -106,6 +107,30 @@
+         )
+ 
+ 
++@dataclass(frozen=True, slots=True)
++class ImageFileRevision:
++    """Physical file identity and timestamps determining header reuse."""
++
++    path: Path
++    device: int
++    inode: int
++    size: int
++    modified_ns: int
++    changed_ns: int
++
++    @classmethod
++    def from_path(cls, path: Path) -> "ImageFileRevision":
++        stat = path.stat()
++        return cls(
++            path=path,
++            device=stat.st_dev,
++            inode=stat.st_ino,
++            size=stat.st_size,
++            modified_ns=stat.st_mtime_ns,
++            changed_ns=stat.st_ctime_ns,
++        )
++
++
+ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
+     """Nominal owner of image-file source and serialization semantics."""
+ 
+@@ -171,6 +196,25 @@
+             return ImageFileSourceMetadata()
+ 
+     def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
++        """Read or reuse complete header facts for the current file revision."""
++
++        return self._source_metadata_for_revision(
++            ImageFileRevision.from_path(path),
++            self._read_source_metadata,
++        )
++
++    @staticmethod
++    @lru_cache(maxsize=4096)
++    def _source_metadata_for_revision(
++        revision: ImageFileRevision,
++        reader: Callable[[Path], ImageFileSourceMetadata],
++    ) -> ImageFileSourceMetadata:
++        """Cache successful immutable headers; exceptions retain read semantics."""
++
++        return reader(revision.path)
++
++    @classmethod
++    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
+         """Read complete format-owned header metadata or fail closed."""
+ 
+         import imageio.v3 as iio
+@@ -179,10 +223,10 @@
+         return ImageFileSourceMetadata(
+             source_dtype=dtype,
+             intensity_scale=(
+-                self.declared_intensity_scale(path)
++                cls.declared_intensity_scale(path)
+                 or image_intensity_scale_for_dtype(dtype)
+             ),
+-            pixel_semantics=self.require_pixel_semantics(path),
++            pixel_semantics=cls.require_pixel_semantics(path),
+         )
+ 
+     def preserves_pixel_values(self, source_dtype: Any) -> bool:
+@@ -207,7 +251,8 @@
+         del path
+         return False
+ 
+-    def declared_intensity_scale(self, path: Path) -> float | None:
++    @classmethod
++    def declared_intensity_scale(cls, path: Path) -> float | None:
+         """Return a container-declared intensity scale when the format has one."""
+         del path
+         return None
+@@ -224,7 +269,8 @@
+             )
+             return SourceImagePixelSemantics()
+ 
+-    def require_pixel_semantics(self, path: Path) -> SourceImagePixelSemantics:
++    @classmethod
++    def require_pixel_semantics(cls, path: Path) -> SourceImagePixelSemantics:
+         """Read complete pixel-band header semantics or fail closed."""
+ 
+         from PIL import Image
+@@ -257,6 +303,12 @@
+         np.save(path, self.prepare(payload), allow_pickle=False)
+ 
+     def source_metadata(self, path: Path) -> ImageFileSourceMetadata:
++        """NumPy source reads retain their strict failure policy."""
++
++        return self.require_source_metadata(path)
++
++    @classmethod
++    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
+         array = np.load(path, mmap_mode="r", allow_pickle=False)
+         return ImageFileSourceMetadata(
+             source_dtype=array.dtype,
+@@ -283,7 +335,8 @@
+         with tifffile.TiffFile(path) as tif:
+             return bool(tif.is_ome)
+ 
+-    def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
++    @classmethod
++    def _read_source_metadata(cls, path: Path) -> ImageFileSourceMetadata:
+         """Read complete TIFF header semantics through one container context."""
+ 
+         import tifffile
+@@ -292,7 +345,7 @@
+         with tif:
+             series = tif.series[0]
+             dtype = series.dtype
+-            declared_scale = self._declared_intensity_scale_from_page(tif.pages[0])
++            declared_scale = cls._declared_intensity_scale_from_page(tif.pages[0])
+             sample_axis = series.axes.find("S")
+             sample_count = int(series.shape[sample_axis]) if sample_axis >= 0 else None
+             pixel_semantics = SourceImagePixelSemantics()
+@@ -309,11 +362,12 @@
+             pixel_semantics=pixel_semantics,
+         )
+ 
+-    def declared_intensity_scale(self, path: Path) -> float | None:
++    @classmethod
++    def declared_intensity_scale(cls, path: Path) -> float | None:
+         import tifffile
+ 
+         with tifffile.TiffFile(path) as tif:
+-            return self._declared_intensity_scale_from_page(tif.pages[0])
++            return cls._declared_intensity_scale_from_page(tif.pages[0])
+ 
+     @staticmethod
+     def _declared_intensity_scale_from_page(page: Any) -> float | None:

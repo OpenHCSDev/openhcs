@@ -1,0 +1,414 @@
+{
+  "base_commit": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+  "source_commit": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+  "cold": {
+    "control": {
+      "observations": 2,
+      "cli_process_wall_seconds": 48.66219591209665,
+      "ordinary": {
+        "compile_seconds": 28.85189425945282,
+        "execute_seconds": 12.59363603591919,
+        "total_seconds": 44.345427533145994
+      },
+      "step_sums": {
+        "DefineGrid": 0.04517221450805664,
+        "IdentifyObjectsInGrid": 0.2750527858734131,
+        "MeasureObjectIntensity": 1.324427843093872,
+        "FilterObjects": 0.7247596979141235,
+        "MaskImage": 0.03136134147644043,
+        "Smooth": 0.12969982624053955,
+        "EnhanceEdges": 0.04151129722595215,
+        "Closing": 0.4691721200942993,
+        "IdentifyPrimaryObjects": 0.7821784019470215,
+        "MeasureObjectSizeShape": 0.5280461311340332,
+        "ExpandOrShrinkObjects": 0.4458411931991577,
+        "RelateObjects": 0.04417860507965088,
+        "OverlayOutlines": 0.3490641117095947,
+        "MeasureGranularity": 2.906766176223755,
+        "MeasureTexture": 0.7870041131973267,
+        "MeasureObjectIntensityDistribution": 1.908059000968933,
+        "ExportToSpreadsheet": 1.4806345701217651
+      }
+    },
+    "candidate": {
+      "observations": 2,
+      "cli_process_wall_seconds": 41.9534548104275,
+      "ordinary": {
+        "compile_seconds": 22.02278733253479,
+        "execute_seconds": 12.870044589042664,
+        "total_seconds": 37.637614839943126
+      },
+      "step_sums": {
+        "DefineGrid": 0.04541027545928955,
+        "IdentifyObjectsInGrid": 0.28259706497192383,
+        "MeasureObjectIntensity": 1.315955638885498,
+        "FilterObjects": 0.7364084720611572,
+        "MaskImage": 0.030477166175842285,
+        "Smooth": 0.13466012477874756,
+        "EnhanceEdges": 0.04124939441680908,
+        "Closing": 0.47116684913635254,
+        "IdentifyPrimaryObjects": 0.7949789762496948,
+        "MeasureObjectSizeShape": 0.6715699434280396,
+        "ExpandOrShrinkObjects": 0.45670926570892334,
+        "RelateObjects": 0.04657185077667236,
+        "OverlayOutlines": 0.3303595781326294,
+        "MeasureGranularity": 3.0283197164535522,
+        "MeasureTexture": 0.8078064918518066,
+        "MeasureObjectIntensityDistribution": 1.8910161256790161,
+        "ExportToSpreadsheet": 1.470780849456787
+      }
+    }
+  },
+  "warm": {
+    "warm-1w": {
+      "control": {
+        "observations": 2,
+        "cli_process_wall_seconds": 23.098148210905492,
+        "ordinary": {
+          "compile_seconds": 3.231958270072937,
+          "execute_seconds": 12.822380185127258,
+          "total_seconds": 18.862285256851465
+        },
+        "step_sums": {
+          "DefineGrid": 0.04559183120727539,
+          "IdentifyObjectsInGrid": 0.2776024341583252,
+          "MeasureObjectIntensity": 1.3352220058441162,
+          "FilterObjects": 0.7292280197143555,
+          "MaskImage": 0.032189011573791504,
+          "Smooth": 0.1326446533203125,
+          "EnhanceEdges": 0.041768789291381836,
+          "Closing": 0.47228705883026123,
+          "IdentifyPrimaryObjects": 0.7925912141799927,
+          "MeasureObjectSizeShape": 0.5282342433929443,
+          "ExpandOrShrinkObjects": 0.45084846019744873,
+          "RelateObjects": 0.04371166229248047,
+          "OverlayOutlines": 0.3953430652618408,
+          "MeasureGranularity": 3.0824904441833496,
+          "MeasureTexture": 0.7583403587341309,
+          "MeasureObjectIntensityDistribution": 1.8679252862930298,
+          "ExportToSpreadsheet": 1.4669075012207031
+        },
+        "public_preparation_seconds": [
+          40.325367903802544,
+          16.940364609938115
+        ],
+        "no_new_or_modified_numba_indexes": true
+      },
+      "candidate": {
+        "observations": 2,
+        "cli_process_wall_seconds": 22.92389716114849,
+        "ordinary": {
+          "compile_seconds": 3.1955740451812744,
+          "execute_seconds": 12.735669612884521,
+          "total_seconds": 18.66426431410946
+        },
+        "step_sums": {
+          "DefineGrid": 0.04353976249694824,
+          "IdentifyObjectsInGrid": 0.2761991024017334,
+          "MeasureObjectIntensity": 1.2805742025375366,
+          "FilterObjects": 0.7327098846435547,
+          "MaskImage": 0.031077980995178223,
+          "Smooth": 0.13467299938201904,
+          "EnhanceEdges": 0.04214894771575928,
+          "Closing": 0.4701230525970459,
+          "IdentifyPrimaryObjects": 0.7917248010635376,
+          "MeasureObjectSizeShape": 0.5316962003707886,
+          "ExpandOrShrinkObjects": 0.4534180164337158,
+          "RelateObjects": 0.04369843006134033,
+          "OverlayOutlines": 0.37504124641418457,
+          "MeasureGranularity": 2.9836901426315308,
+          "MeasureTexture": 0.755418062210083,
+          "MeasureObjectIntensityDistribution": 1.8931732177734375,
+          "ExportToSpreadsheet": 1.4667515754699707
+        },
+        "public_preparation_seconds": [
+          16.991937824059278,
+          16.99059767788276
+        ],
+        "no_new_or_modified_numba_indexes": true
+      },
+      "native_analysis_over_candidate_execution": 5.176316183430711
+    },
+    "warm-16w": {
+      "control": {
+        "observations": 1,
+        "cli_process_wall_seconds": 103.9430197593756,
+        "ordinary": {
+          "compile_seconds": 10.213462829589844,
+          "execute_seconds": 86.0064959526062,
+          "total_seconds": 99.24415606586263
+        },
+        "step_sums": {
+          "DefineGrid": 1.0887863636016846,
+          "IdentifyObjectsInGrid": 12.45608139038086,
+          "MeasureObjectIntensity": 26.23799967765808,
+          "FilterObjects": 29.5000581741333,
+          "MaskImage": 1.1127707958221436,
+          "Smooth": 4.442602872848511,
+          "EnhanceEdges": 1.475724220275879,
+          "Closing": 9.43108868598938,
+          "IdentifyPrimaryObjects": 28.619560718536377,
+          "MeasureObjectSizeShape": 10.099046468734741,
+          "ExpandOrShrinkObjects": 28.647205352783203,
+          "RelateObjects": 1.2424962520599365,
+          "OverlayOutlines": 13.1288423538208,
+          "MeasureGranularity": 25.910226106643677,
+          "MeasureTexture": 14.080933094024658,
+          "MeasureObjectIntensityDistribution": 16.66202402114868,
+          "ExportToSpreadsheet": 24.42304491996765
+        },
+        "public_preparation_seconds": [
+          17.039816494099796
+        ],
+        "no_new_or_modified_numba_indexes": true
+      },
+      "candidate": {
+        "observations": 1,
+        "cli_process_wall_seconds": 100.38843636121601,
+        "ordinary": {
+          "compile_seconds": 10.25531816482544,
+          "execute_seconds": 82.33645486831665,
+          "total_seconds": 95.67879989882931
+        },
+        "step_sums": {
+          "DefineGrid": 1.1367902755737305,
+          "IdentifyObjectsInGrid": 11.2202889919281,
+          "MeasureObjectIntensity": 27.059982299804688,
+          "FilterObjects": 27.347699403762817,
+          "MaskImage": 0.9797427654266357,
+          "Smooth": 4.51240086555481,
+          "EnhanceEdges": 1.392127513885498,
+          "Closing": 9.361436367034912,
+          "IdentifyPrimaryObjects": 26.794023513793945,
+          "MeasureObjectSizeShape": 10.20706820487976,
+          "ExpandOrShrinkObjects": 22.581453561782837,
+          "RelateObjects": 1.1713030338287354,
+          "OverlayOutlines": 11.720178604125977,
+          "MeasureGranularity": 23.590237617492676,
+          "MeasureTexture": 15.338435411453247,
+          "MeasureObjectIntensityDistribution": 16.281073093414307,
+          "ExportToSpreadsheet": 24.405951976776123
+        },
+        "public_preparation_seconds": [
+          17.092775081750005
+        ],
+        "no_new_or_modified_numba_indexes": true
+      },
+      "native_analysis_over_candidate_execution": 4.423679633250241
+    }
+  },
+  "exports": [
+    {
+      "name": "cold_control_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_control_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_candidate_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "cold_candidate_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-1w_control_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-1w_control_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-1w_candidate_1",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-1w_candidate_2",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-16w_control_1",
+      "mode": "16w",
+      "sha256": "da017d79eaeeae997ee5e385cb8aafae08a40a8d907eb7d3c77640c64537d566",
+      "byte_identical": true
+    },
+    {
+      "name": "warm-16w_candidate_1",
+      "mode": "16w",
+      "sha256": "da017d79eaeeae997ee5e385cb8aafae08a40a8d907eb7d3c77640c64537d566",
+      "byte_identical": true
+    },
+    {
+      "name": "installed_cold",
+      "mode": "1w",
+      "sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c",
+      "byte_identical": true
+    }
+  ],
+  "installed_cold_journey": {
+    "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+    "mode_name": "1w_1t",
+    "worker_count": "1",
+    "well_count": "1",
+    "compile_seconds": "22.029466152191162",
+    "prepare_seconds": "0.0",
+    "execute_seconds": "13.136841535568237",
+    "total_seconds": "37.93141896510497",
+    "wells_per_second": "0.07612179817290798",
+    "successful_wells": "1",
+    "native_single_sample_execution_seconds": "",
+    "projected_native_execution_seconds": "",
+    "projected_execution_speedup": "",
+    "peak_memory_mb": "2272.26171875",
+    "status": "success",
+    "memory_limit_mb": "",
+    "error_message": "",
+    "execution_route": "ordinary-zmq-outcomes-v1",
+    "server_lifecycle": "fresh-per-observation",
+    "run_input_sha256": "82fea3600395ecd8f471da8bc99e33ae9e4e5d90ca15a37d83e4e152b381ce65"
+  },
+  "export_rows": {
+    "1w": 1801,
+    "16w": 28801
+  },
+  "ratchet": {
+    "openhcs": {
+      "paths": [
+        "openhcs/core/callable_contract.py",
+        "openhcs/core/processing_preparation.py",
+        "openhcs/processing/backends/cellprofiler/_backend.py",
+        "openhcs/processing/backends/cellprofiler/_preparation.py",
+        "openhcs/processing/backends/cellprofiler/grid.py",
+        "openhcs/processing/backends/cellprofiler/morphology.py",
+        "openhcs/processing/backends/cellprofiler/primary_objects.py",
+        "openhcs/processing/backends/cellprofiler/shape.py"
+      ],
+      "increased": {},
+      "full_receipt": "validation/ratchet_openhcs_full.json.gz"
+    },
+    "scripts": {
+      "paths": [],
+      "increased": {},
+      "full_receipt": "validation/ratchet_scripts_full.json.gz"
+    },
+    "benchmark": {
+      "paths": [],
+      "increased": {},
+      "full_receipt": "validation/ratchet_benchmark_full.json.gz"
+    }
+  },
+  "census": {
+    "before": {
+      "source_revision": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+      "module_count": 700,
+      "original_class_count": 5089,
+      "projected_count": 5077
+    },
+    "after": {
+      "source_revision": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+      "module_count": 701,
+      "original_class_count": 5095,
+      "projected_count": 5083
+    }
+  },
+  "installed_provenance": {
+    "source_commit": "100f40c69ce1d2a957935d05856ecab8fdfb60b8",
+    "base_commit": "65b2ed1017f36db193b6f48b8f9b46495cc915aa",
+    "wheel_sha256": "1d35daa35d0b802c07aea7b99ca954fbedc6f7f6b86dc7f6eb53746a58e53d06",
+    "module_paths": [
+      {
+        "module": "openhcs.core.callable_contract",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/callable_contract.py",
+        "sha256": "bf59a55063f221d8352af6b1e187eb6c130a6f9d6f7a0c2a9a75b83dcfbab256"
+      },
+      {
+        "module": "openhcs.core.processing_preparation",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/core/processing_preparation.py",
+        "sha256": "9504dcb96224ea75b6999ba07f3cf3f1cb1dafe56fc5076bebdd7cdd69b90614"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler._backend",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/_backend.py",
+        "sha256": "192628f103c054713126f3cb71b8061b401c539643aa6526a303bf0e19905d62"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler._preparation",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/_preparation.py",
+        "sha256": "916c79eae5b2ba33266feac611521b352435a0e917e47eecbfe9af27ddf78bba"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler.grid",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/grid.py",
+        "sha256": "01b4fca478344f5f1f3fa548c7a0749b8349c1733a99627856c5c9117bdbd8c2"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler.morphology",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/morphology.py",
+        "sha256": "f5164e90016a6714f32631ceb33188e442f76e1632e55779aa2b9bec3dd91612"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler.primary_objects",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/primary_objects.py",
+        "sha256": "7513ab3daa6383e35718bb23d29ea3ab1a73a84fe64f8a2ce199ba0351583971"
+      },
+      {
+        "module": "openhcs.processing.backends.cellprofiler.shape",
+        "path": "/tmp/openhcs-declared-kernel-integrated-installed-20260930/openhcs/processing/backends/cellprofiler/shape.py",
+        "sha256": "f533d4fb0ba16d4bbd63fafbf780b1671232c41708e6828f69ee0ef12f3493af"
+      }
+    ],
+    "child_import_root": "/tmp/openhcs-declared-kernel-integrated-installed-20260930",
+    "extensions": [
+      "openhcs/core/_tabular_native.abi3.so",
+      "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so"
+    ],
+    "python": "3.12.14",
+    "versions": {
+      "openhcs": "0.8.6",
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "numba": "0.67.0",
+      "arraybridge": "0.3.4",
+      "metaclass-registry": "0.2.1",
+      "zmqruntime": "0.2.24"
+    },
+    "gitlinks": {
+      "external/ObjectState": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+      "external/PolyStore": "1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7",
+      "external/arraybridge": "409b1e0831f815fa9ef91d4ecc04989f9fbb89c5",
+      "external/metaclass-registry": "ca0a87e873f929b311a87a4d60cd3bfba315dbcf",
+      "external/pycodify": "792b03413331fdf107e369c924c257a2f0b16126",
+      "external/pyqt-reactive": "a51c3d965f8ffdefe95a2b4b37347a85341d483a",
+      "external/python-introspect": "4e8f8bde5f750d9a50eacac80acd3806123addd8",
+      "external/zmqruntime": "0f9e840a9ed526f0a2b87a660393f5b7c34fc9eb"
+    }
+  },
+  "native_reference": {
+    "analysis_seconds": {
+      "1w": 65.9238527240009,
+      "16w": 364.230098475
+    },
+    "rerun_for_this_patch": false,
+    "scope": "Earlier physical CP4.2.8.1/Python3.9.25/JDK11 warm analysis including CSV close, excluding startup/full warmup/shutdown. Original recovered 16w controller exit remains unobserved. Repeated pixels are not biological scaling evidence."
+  }
+}

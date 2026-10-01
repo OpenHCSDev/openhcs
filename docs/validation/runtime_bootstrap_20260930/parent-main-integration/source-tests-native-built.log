@@ -1,0 +1,27 @@
+source openhcs: /home/ts/wt/openhcs-bootstrap-integration-20260930/openhcs/__init__.py
+source objectstate: /home/ts/wt/openhcs-context-bounding-20260929/external/ObjectState/src/objectstate/__init__.py
+source polystore: /home/ts/wt/openhcs-context-bounding-20260929/external/PolyStore/src/polystore/__init__.py
+source arraybridge: /home/ts/wt/openhcs-context-bounding-20260929/external/arraybridge/src/arraybridge/__init__.py
+source metaclass_registry: /home/ts/wt/openhcs-context-bounding-20260929/external/metaclass-registry/src/metaclass_registry/__init__.py
+source pycodify: /home/ts/wt/openhcs-context-bounding-20260929/external/pycodify/src/pycodify/__init__.py
+source pyqt_reactive: /home/ts/wt/openhcs-context-bounding-20260929/external/pyqt-reactive/src/pyqt_reactive/__init__.py
+source python_introspect: /home/ts/wt/openhcs-context-bounding-20260929/external/python-introspect/src/python_introspect/__init__.py
+source zmqruntime: /home/ts/wt/openhcs-context-bounding-20260929/external/zmqruntime/src/zmqruntime/__init__.py
+........................................................................ [ 36%]
+........................................................................ [ 73%]
+.....................................................                    [100%]
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ts/wt/openhcs-bootstrap-integration-20260930/docs/validation/runtime_bootstrap_20260930/parent-main-integration/source-tests-native-built.xml -
+197 passed, 2 warnings in 6.51s
+elapsed=7.30 max_rss_kib=265044 exit=0

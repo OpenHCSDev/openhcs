@@ -18,7 +18,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def get_openhcs_data_dir() -> Path:
+def get_openhcs_data_dir(*, create: bool = True) -> Path:
     """
     Get the OpenHCS data directory following XDG Base Directory Specification.
 
@@ -27,7 +27,8 @@ def get_openhcs_data_dir() -> Path:
     """
     data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
     data_dir = data_home / "openhcs"
-    data_dir.mkdir(parents=True, exist_ok=True)
+    if create:
+        data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
 
@@ -55,10 +56,10 @@ def get_openhcs_config_dir() -> Path:
     return config_dir
 
 
-def get_openhcs_log_dir() -> Path:
+def get_openhcs_log_dir(*, create: bool = True) -> Path:
     """Return the shared OpenHCS log directory without creating it."""
 
-    return get_openhcs_data_dir() / "logs"
+    return get_openhcs_data_dir(create=create) / "logs"
 
 
 def get_legacy_openhcs_dir() -> Path:
@@ -263,7 +264,9 @@ def get_config_file_path(filename: str, legacy_filename: Optional[str] = None) -
     return new_path
 
 
-def get_data_file_path(filename: str, legacy_filename: Optional[str] = None) -> Path:
+def get_data_file_path(
+    filename: str, legacy_filename: Optional[str] = None, *, create: bool = True
+) -> Path:
     """
     Get path for a data file, with automatic migration from legacy location.
 
@@ -274,7 +277,9 @@ def get_data_file_path(filename: str, legacy_filename: Optional[str] = None) -> 
     Returns:
         Path to the data file in XDG location
     """
-    new_path = get_openhcs_data_dir() / filename
+    new_path = get_openhcs_data_dir(create=create) / filename
+    if not create:
+        return new_path
 
     # Check if we need to migrate from legacy location
     if not new_path.exists():

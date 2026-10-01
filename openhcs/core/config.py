@@ -166,7 +166,8 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     Directory for materialized named analysis artifacts such as CSV and JSON files.
 
     A relative path is resolved inside the compiled output plate root; an
-    absolute path is used unchanged. This pipeline-wide destination is separate
+    absolute path must also remain inside that root. Unsupported root geometry
+    is rejected during planning before dispatch. This destination is separate
     from ordinary image outputs and per-step main-flow checkpoints.
     """
 
@@ -1003,6 +1004,14 @@ class StreamingDefaults(Enableable, StepWellFilterConfig):
     IPC transports remain local regardless of this value.
     """
 
+    listen_host: Annotated[NonBlankString, abbreviation("listen")] = "127.0.0.1"
+    """Interface for a locally launched viewer's TCP data and control sockets.
+
+    The default keeps managed viewers local. Set an explicit interface or
+    ``*`` to permit remote clients. This does not change the connection host
+    above, rebind an externally owned viewer, or affect IPC transport.
+    """
+
     transport_mode: Annotated[TransportMode, abbreviation("transport")] = (
         get_default_transport_mode()
     )
@@ -1167,7 +1176,10 @@ class NapariStreamingConfig(
     def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
         """Project Napari's process-global Qt setting onto viewer launch."""
 
-        return ViewerProcessLaunchConfig(qt_font_dpi=self.font_dpi)
+        return ViewerProcessLaunchConfig(
+            qt_font_dpi=self.font_dpi,
+            listen_host=self.listen_host,
+        )
 
 
 @abbreviation("fiji")

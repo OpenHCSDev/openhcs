@@ -37,6 +37,7 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
+    SourceIdentityResolutionContext,
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
@@ -1187,6 +1188,117 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
         anchor_provenance=provenance,
         source_universe=(virtual_path,),
     ) == (virtual_path,)
+
+
+def test_source_identity_batch_preserves_planes_ambiguity_and_query_order():
+    paths = {
+        "A01_s001_w1_z001_t001.tif": "/source/shared.tif",
+        "A01_s001_w1_z002_t001.tif": "/source/shared.tif",
+        "A01_s001_w1_z003_t001.tif": "/source/other.tif",
+    }
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=paths,
+    )
+    candidates = tuple(paths)
+    identities = (
+        SourceImageIdentity("/source/shared.tif", {"z_index": "2"}),
+        SourceImageIdentity("/source/shared.tif"),
+        SourceImageIdentity(None, {"z_index": "3"}),
+        SourceImageIdentity("/source/absent.tif"),
+        SourceImageIdentity(candidates[0]),
+        SourceImageIdentity(),
+    )
+
+    expected = (
+        (candidates[1],),
+        candidates[:2],
+        (candidates[2],),
+        (),
+        (candidates[0],),
+        (),
+    )
+    assert (
+        context.matching_candidates_for_source_identities(identities, candidates)
+        == expected
+    )
+    restored = pickle.loads(pickle.dumps(context))
+    assert (
+        restored.matching_candidates_for_source_identities(identities, candidates)
+        == expected
+    )
+    # A later query must observe changed declarations, rather than a stale index.
+    paths[candidates[1]] = "/source/replaced.tif"
+    assert context.matching_candidates_for_source_identities(
+        (identities[0], identities[1]), candidates
+    ) == ((), (candidates[0],))
+
+
+def test_source_identity_batch_keeps_components_on_one_metadata_record():
+    candidate = "A01_s001_w1_z001_t001.tif"
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path={candidate: "/source/shared.tif"},
+        source_metadata_by_path={
+            candidate: {"channel": "1", "z_index": "1"},
+            "/source/shared.tif": {"channel": "2", "z_index": "2"},
+        },
+    )
+    identities = (
+        SourceImageIdentity("/source/shared.tif", {"channel": "1", "z_index": "2"}),
+        SourceImageIdentity("/source/shared.tif", {"channel": "2", "z_index": "2"}),
+    )
+    assert context.matching_candidates_for_source_identities(
+        identities, (candidate,)
+    ) == ((), (candidate,))
+
+
+def test_source_identity_batch_preserves_template_source_path_projection():
+    virtual_paths = (
+        "A01_s001_w1_z001_t001.tif",
+        "A01_s001_w1_z002_t001.tif",
+    )
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=dict(
+            zip(virtual_paths, ("/source/first.tif", "/source/second.tif"))
+        ),
+    )
+    pattern = "A01_s001_w1_z{iii}_t001.tif"
+    identities = tuple(
+        SourceImageIdentity(path)
+        for path in ("/source/first.tif", *virtual_paths, "/source/second.tif")
+    )
+    # Existing template projection uses the first physical path and every
+    # matching virtual path; the index must not broaden physical membership.
+    assert context.matching_candidates_for_source_identities(
+        identities, (pattern,)
+    ) == ((pattern,), (pattern,), (pattern,), ())
+
+
+def test_source_identity_batch_avoids_unrelated_metadata_reads(monkeypatch):
+    candidates = tuple(f"/source/image_{index}.tif" for index in range(180))
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path={},
+    )
+    identities = tuple(SourceImageIdentity(path) for path in candidates[:60])
+    calls = []
+    original = SourceIdentityResolutionContext._candidate_matches_source_identity
+
+    def record_match(self, candidate, identity):
+        calls.append(candidate)
+        return original(self, candidate, identity)
+
+    monkeypatch.setattr(
+        SourceIdentityResolutionContext,
+        "_candidate_matches_source_identity",
+        record_match,
+    )
+    assert context.matching_candidates_for_source_identities(
+        identities, candidates
+    ) == tuple((path,) for path in candidates[:60])
+    assert calls == list(candidates[:60])
 
 
 def test_virtual_workspace_projection_filters_source_metadata_by_axis():

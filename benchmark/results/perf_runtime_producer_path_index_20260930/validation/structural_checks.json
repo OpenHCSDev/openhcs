@@ -1,0 +1,382 @@
+{
+  "base": "7b169084dee9962b09a6fdf3945cfbe7b10b647e",
+  "head": "3118846ef7df0fb71e2f8002114f026414a340be",
+  "paths": [
+    "openhcs/core/steps/function_output_manifest.py"
+  ],
+  "increased": {},
+  "metric_count": 5105,
+  "ratchet_artifact": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-ratchet-20260930.json",
+  "ratchet_sha256": "2c963641a23c85b2cb1e1b69024a271aeb0c81f9e5d5dea2e250c18e7fb1dee6",
+  "original_class_census": {
+    "source_revision": "3118846ef",
+    "module_count": 701,
+    "original_class_count": 5100,
+    "projected_count": 5088
+  },
+  "OPEN_unprojected": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2630,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2708,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3077,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "bounded_owners": [
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 56,
+      "name": "StepOutputManifestKey",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.StepOutputManifestKey",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 63,
+      "name": "NoStepOutputManifestMatch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.NoStepOutputManifestMatch",
+      "bases": [
+        "RuntimeError"
+      ],
+      "resolved_bases": [],
+      "base_resolution_complete": false,
+      "methods": [],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 68,
+      "name": "FunctionStepOutputProducerIdentityRequest",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.FunctionStepOutputProducerIdentityRequest",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_main_flow",
+        "from_artifact"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 108,
+      "name": "FunctionStepOutputProducerIdentityAuthority",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.FunctionStepOutputProducerIdentityAuthority",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "build"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": false,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 127,
+      "name": "ProducedOutputSemantics",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.ProducedOutputSemantics",
+      "bases": [
+        "FunctionOutputIdentity"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_identity.FunctionOutputIdentity"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "contextualize_image_payload",
+        "path_under",
+        "output_context",
+        "main_flow_address",
+        "is_image_payload",
+        "from_output",
+        "from_existing_main_flow_path"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 262,
+      "name": "StepOutputManifestStore",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.StepOutputManifestStore",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "begin_step",
+        "record_outputs",
+        "_invalidate_record_selection_caches",
+        "producer_records_for",
+        "_main_input_producer_key",
+        "producer_paths_for",
+        "producer_patterns_by_execution_group",
+        "produced_records_for",
+        "produced_paths_for",
+        "producer_output_contexts_for_paths",
+        "filter_to_producer_paths",
+        "producer_paths_matching_pattern",
+        "_selected_unique_producer_records_for",
+        "_unique_output_path_records",
+        "_select_requested_producer_records",
+        "_requested_producer_outputs",
+        "records_for_key",
+        "allowed_path_tokens",
+        "key_for_producer",
+        "relative_output_path"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 632,
+      "name": "ProducedPathSet",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.ProducedPathSet",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_records",
+        "contains"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 662,
+      "name": "ProducedPathRecordIndex",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.ProducedPathRecordIndex",
+      "bases": [
+        "ProducedPathSet"
+      ],
+      "resolved_bases": [
+        "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.ProducedPathSet"
+      ],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_records",
+        "matching_records"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    },
+    {
+      "path": "openhcs/core/steps/function_output_manifest.py",
+      "line": 699,
+      "name": "ProducedPathPatternSelector",
+      "lexical_scope": [],
+      "decorators": [
+        "dataclass(frozen=True, slots=True)"
+      ],
+      "status": "projected",
+      "symbol": "home.ts.code.projects.openhcs-compile-perf.openhcs.core.steps.function_output_manifest.ProducedPathPatternSelector",
+      "bases": [],
+      "resolved_bases": [],
+      "base_resolution_complete": true,
+      "methods": [
+        "from_pattern",
+        "matches",
+        "matching_tokens"
+      ],
+      "abstract_methods": [],
+      "is_abstract": false,
+      "is_dataclass": true,
+      "is_enum": false,
+      "metaclasses": []
+    }
+  ],
+  "scope": "Original class census plus scoped structural checks; not full semantic proof"
+}

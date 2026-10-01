@@ -67,12 +67,13 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
         popen_call["stdout"].close()
 
     command = popen_call["command"]
-    assert command[:3] == [
+    assert command[:4] == [
         sys.executable,
+        "-B",
         "-X",
         "faulthandler",
     ]
-    assert command[3:5] == list(
+    assert command[4:6] == list(
         OpenHCSRuntimeImportAuthority.current().module_process_arguments(
             "openhcs.runtime.zmq_execution_server_launcher"
         )
@@ -84,8 +85,10 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
     assert Path(popen_call["stdout"].name).parent == data_home / "openhcs" / "logs"
 
 
-def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> None:
-    """The endpoint becomes ready before on-demand catalog preparation."""
+def test_execution_server_launcher_prepares_before_binding_and_ready(
+    monkeypatch,
+) -> None:
+    """Every cold endpoint prepares its registry before it can accept requests."""
 
     events: list[str] = []
 
@@ -115,7 +118,7 @@ def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> 
         server_runner=serve_forever,
     )
 
-    assert events == ["construct", "start", "ready", "serve"]
+    assert events == ["construct", "prepare_runtime", "start", "ready", "serve"]
 
 
 def test_execution_server_launcher_projects_endpoint_overrides_into_config(

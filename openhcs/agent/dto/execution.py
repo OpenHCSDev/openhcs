@@ -21,7 +21,11 @@ from zmqruntime.messages import (
     QueuedExecutionInfo,
     RunningExecutionInfo,
     WorkerState,
+    ProcessIdentity,
+    ServerRole,
 )
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
+from zmqruntime.client import EndpointShutdownMode, EndpointShutdownResult
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -41,6 +45,7 @@ from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
 
 MAX_EXECUTION_STATUS_TRACEBACK_CHARS = 3000
 
@@ -616,6 +621,118 @@ class RuntimeServerInfoRequest(
                 else timeout_ms
             ),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapStartRequest(RuntimeServerInfoRequest):
+    """Explicit startup at a caller-selected local execution endpoint."""
+
+    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.server_info_timeout_ms
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
+        self.connection.require_port("Explicit runtime bootstrap")
+        if (
+            self.timeout_ms <= 0
+            or self.timeout_ms > OPENHCS_ZMQ_CONFIG.control_timeout_ms
+        ):
+            raise ValueError(
+                "Bootstrap observation must use the existing control budget"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapHandle:
+    """Exact spawned child and its pre-admitted native launch artifacts."""
+
+    connection: ExecutionConnectionSpec
+    process_identity: ProcessIdentity
+    launch_plan: ExecutionRuntimeLaunchPlan
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapObserveRequest:
+    handle: RuntimeBootstrapHandle
+
+
+@dataclass(frozen=True, kw_only=True)
+class RuntimeBootstrapState(AgentResultEnvelope):
+    handle: RuntimeBootstrapHandle
+    progress: EndpointStartupStatus
+    ready: bool
+    process_alive: bool | None
+
+    @classmethod
+    def from_observation(
+        cls,
+        handle: RuntimeBootstrapHandle,
+        *,
+        process_alive: bool | None,
+        statuses: tuple[EndpointStartupStatus, ...],
+        pong: PongResponse | None,
+    ) -> RuntimeBootstrapState:
+        """Derive the public state from already-typed native observations.
+
+        The journal describes startup activity, not endpoint ownership or
+        readiness. Only a heartbeat from this exact execution incarnation can
+        establish readiness; neither this projection nor its caller retries.
+        """
+        progress = (
+            statuses[-1]
+            if statuses
+            else EndpointStartupStatus(
+                EndpointStartupPhase.STARTING_PROCESS,
+                "No child readiness receipt observed",
+            )
+        )
+        ready = False
+        if pong is not None:
+            if (
+                pong.process_identity != handle.process_identity
+                or pong.server_role is not ServerRole.EXECUTION
+            ):
+                raise RuntimeError(
+                    "Bootstrap endpoint has a different native owner; no takeover"
+                )
+            ready = pong.ready
+            if ready:
+                progress = EndpointStartupStatus(
+                    EndpointStartupPhase.CONNECTED,
+                    "Exact execution child accepts controls",
+                )
+        elif process_alive is False:
+            progress = EndpointStartupStatus(
+                EndpointStartupPhase.FAILED,
+                "Exact spawned child is terminal; do not replay startup",
+            )
+        return cls(
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            progress=progress,
+            ready=ready,
+            process_alive=process_alive,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeBootstrapCloseRequest:
+    """One explicit lifecycle request for the retained native bootstrap owner."""
+
+    handle: RuntimeBootstrapHandle
+    mode: EndpointShutdownMode = EndpointShutdownMode.FORCE
+    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
+        self.handle.connection.require_port("Owned runtime close")
+        if self.timeout_ms > OPENHCS_ZMQ_CONFIG.control_timeout_ms:
+            raise ValueError("Owned close must use the existing control budget")
+
+
+@dataclass(frozen=True, kw_only=True)
+class RuntimeBootstrapCloseResult(AgentResultEnvelope):
+    handle: RuntimeBootstrapHandle
+    outcome: EndpointShutdownResult
 
 
 @dataclass(frozen=True, slots=True)

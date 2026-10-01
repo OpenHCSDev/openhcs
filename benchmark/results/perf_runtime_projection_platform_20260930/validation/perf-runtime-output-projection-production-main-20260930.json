@@ -1,0 +1,47 @@
+[
+  {
+    "step": 1,
+    "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-1-cb8f69f6b1ae-_validate_and_unstack.pickle",
+    "exact_saved_output_parity": true,
+    "samples": [
+      0.03012644173577428,
+      0.029067447874695063,
+      0.06736644404008985,
+      0.028786118142306805,
+      0.028777793049812317,
+      0.02885349513962865,
+      0.031878912821412086
+    ],
+    "median_seconds": 0.029067447874695063
+  },
+  {
+    "step": 13,
+    "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-13-cb8f69f6b1ae-_validate_and_unstack.pickle",
+    "exact_saved_output_parity": true,
+    "samples": [
+      0.01755779003724456,
+      0.016488115303218365,
+      0.016883859876543283,
+      0.016539011150598526,
+      0.017213181126862764,
+      0.017226445954293013,
+      0.016472736839205027
+    ],
+    "median_seconds": 0.016883859876543283
+  },
+  {
+    "step": 17,
+    "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-current-runtime-profile-20260930/step-17-cb8f69f6b1ae-_validate_and_unstack.pickle",
+    "exact_saved_output_parity": true,
+    "samples": [
+      0.031068506184965372,
+      0.030210150871425867,
+      0.029802100732922554,
+      0.030036574229598045,
+      0.03004990890622139,
+      0.029908172320574522,
+      0.029999803751707077
+    ],
+    "median_seconds": 0.030036574229598045
+  }
+]

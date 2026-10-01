@@ -798,8 +798,8 @@
       "document_id": "openhcs_measurement_interpretation",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/measurement-interpretation.md",
-      "summary": "Measurement-image choice, calibrated 2-D versus 3-D quantities, anisotropic Z spacing, Pearson/Manders and colocalisation controls, randomisation-statistic interpretation, biological replicate hierarchy and comparable figures.",
-      "tags": ["measurement interpretation", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
+      "summary": "Empirical native viewer feature measurements to justify diameter, separation, smoothing, background and shape parameters; pixel sampling and ROI limitations, coordinate transforms and uncertainty. Measurement-image choice, calibrated 2-D/3-D quantities, colocalisation controls, replicate hierarchy and comparable figures.",
+      "tags": ["measurement interpretation", "empirical parameter selection", "napari feature measurement", "diameter radius seed separation", "line profile geometry", "native coordinates uncertainty", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
       "title": "Choose valid microscopy measurements and comparisons"
     },
     {
@@ -822,8 +822,8 @@
       "document_id": "openhcs_custom_function_workflow",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md",
-      "summary": "Add a missing analysis operation through existing typed custom-function owners: discover contracts, scope catalog and persistence, verify fresh-process imports, compile artifacts, inspect bounded outputs and separate technical reuse from biological recipe acceptance.",
-      "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
+      "summary": "Add a missing operation through typed custom-function owners: explicit endpoint/name/store admission, responsive native catalogue preparation with an incarnation-bound start/status/cancel handle, single source dispatch only after readiness, postdispatch uncertainty without replay, stable imports, compilation and bounded outputs; separate technical reuse from biological acceptance.",
+      "tags": ["missing analysis operation", "custom function workflow", "typed artifact authoring", "isolated catalog endpoint", "catalog preparation readiness cancellation", "persisted custom import", "registration timeout reconcile", "ColumnarRows", "3D centres"],
       "title": "Add a missing analysis operation as a typed custom function"
     },
     {

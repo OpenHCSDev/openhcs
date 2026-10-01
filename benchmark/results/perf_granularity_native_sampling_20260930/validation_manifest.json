@@ -1,0 +1,55 @@
+{
+  "common_timed_revision": "fb5fea4f1aa7cc4f195d25a0122b13ded4ffde16",
+  "production_revision": "49d9920d2533fca2ee18c96f77f99da69ec742a4",
+  "pytest_commands": {
+    "consumer_890": [
+      "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/unit/test_measuregranularity.py",
+      "tests/unit/test_cellprofiler_processing_backend.py",
+      "tests/unit/test_library_registry_discovery.py",
+      "tests/unit/test_cellprofiler_module_execution.py",
+      "tests/unit/test_cellprofiler_conditional_analysis_images.py",
+      "tests/unit/test_runtime_equivalence.py"
+    ],
+    "main259_608": [
+      "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/unit/agent/test_callable_artifact_reference.py",
+      "tests/unit/test_unified_registry_runtime_payloads.py",
+      "tests/unit/test_runtime_equivalence.py",
+      "tests/unit/test_cellprofiler_module_execution.py"
+    ],
+    "main205_793": [
+      "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/unit/test_measuregranularity.py",
+      "tests/integration/test_measurement_declaration_journey.py",
+      "tests/unit/test_artifact_output_ownership.py",
+      "tests/unit/test_runtime_equivalence.py",
+      "tests/unit/test_cellprofiler_module_execution.py"
+    ],
+    "strict_boundary_180": [
+      "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/unit/test_measuregranularity.py"
+    ]
+  },
+  "suite_counts_overlap": true,
+  "pip_check": "No broken requirements found.",
+  "final_dtype_fixtures": 366,
+  "source_digests_rechecked": 12,
+  "complete_export_pairs": {
+    "1w": 2,
+    "16w": 2
+  },
+  "sampling_compilation": "Declared stable-ABI build-time native extension; no new JIT signatures."
+}

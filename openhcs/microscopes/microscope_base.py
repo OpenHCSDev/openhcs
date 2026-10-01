@@ -15,7 +15,6 @@ from typing import List, Optional, Tuple, Union, Type, TYPE_CHECKING
 
 # Import constants
 from openhcs.constants.constants import AllComponents, Backend, Microscope
-from openhcs.core.source_metadata import source_metadata_dict
 
 # Import generic metaclass infrastructure from external package
 from metaclass_registry import (
@@ -425,12 +424,9 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
                 virtual_path: source_ref.to_workspace_mapping()
                 for virtual_path, source_ref in workspace_mapping.items()
             },
-            FIELDS.SOURCE_METADATA: {
-                virtual_path: source_metadata_dict(parsed.wire_mapping())
-                for virtual_path in workspace_mapping
-                if (parsed := self.parser.parse_filename(Path(virtual_path).name))
-                is not None
-            },
+            FIELDS.SOURCE_METADATA: self.metadata_handler.source_metadata_by_path(
+                plate_path, self.parser, workspace_mapping
+            ),
             FIELDS.AVAILABLE_BACKENDS: {
                 Backend.DISK.value: True,
                 Backend.VIRTUAL_WORKSPACE.value: True,

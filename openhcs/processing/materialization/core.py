@@ -29,6 +29,7 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
+from openhcs.core.source_path_identity import source_path_identity
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
@@ -827,7 +828,9 @@ class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolution
         filename_identity: SourceImageIdentity | None,
     ) -> str:
         del authority, filename_identity
-        return _cached_path_stem(metadata.source_provenance.scalar_source_identity.path)
+        return source_path_identity(
+            metadata.source_provenance.scalar_source_identity.path
+        ).stem
 
 
 @dataclass(frozen=True, slots=True)
@@ -914,20 +917,14 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
             and self.parsed_components_match_metadata(parsed, component_metadata)
         )
 
-    @staticmethod
-    def path_parse_extensions(metadata: ImagePayloadMetadata) -> tuple[str, ...]:
+    def path_parse_extensions(self, metadata: ImagePayloadMetadata) -> tuple[str, ...]:
         source_identity = metadata.source_provenance.scalar_source_identity
-        component_metadata = source_identity.component_metadata
-        if component_metadata is not None and "extension" in component_metadata:
-            return (str(component_metadata["extension"]),)
-
-        source_path = source_identity.path
-        if source_path is None:
-            return ()
-        suffixes = "".join(Path(source_path).suffixes)
-        if not suffixes:
-            return ()
-        return (suffixes,)
+        extension = source_identity.filename_extension
+        if extension is None:
+            extension = source_identity.with_parsed_path_components(
+                self.parser
+            ).filename_extension
+        return () if extension is None else (extension,)
 
     @staticmethod
     def parsed_components_match_metadata(
@@ -1009,7 +1006,7 @@ class ROIMaterializationArchiveIdentity:
             return None
         source_path = self.source_identity.path
         if source_path:
-            return _cached_path_stem(source_path)
+            return source_path_identity(source_path).stem
         return None
 
     @property
@@ -1397,19 +1394,6 @@ class PathHelper:
 
 
 @lru_cache(maxsize=65536)
-def _cached_path_stem(path: str) -> str:
-    """Return the filename stem for a frequently reused materialization path."""
-    return Path(path).stem
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_parent(path: str) -> str:
-    """Return the parent directory for a materialization output path."""
-
-    return str(Path(path).parent)
-
-
-@lru_cache(maxsize=65536)
 def _cached_stripped_materialization_path(
     path: str,
     strip_pkl: bool,
@@ -1711,7 +1695,9 @@ class BackendSaver:
         if not backend_instance.requires_filesystem_validation:
             return
 
-        self.filemanager.ensure_directory(_cached_path_parent(path), backend)
+        self.filemanager.ensure_directory(
+            str(source_path_identity(path).parent), backend
+        )
 
         if not self.filemanager.exists(path, backend):
             return

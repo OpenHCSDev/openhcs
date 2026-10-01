@@ -1,0 +1,31 @@
+{
+  "pattern_count": 32,
+  "pattern_seconds": 8.053711743559688,
+  "totals": {
+    "PatternGroupRuntime._load_input_stack": [
+      32,
+      1.2381714242510498
+    ],
+    "SourceImageIdentity.component_metadata_with_missing_from": [
+      26821,
+      0.8988473853096366
+    ],
+    "PatternGroupRuntime._execute_pattern": [
+      32,
+      5.470690558198839
+    ],
+    "ImagePayloadMetadata.for_leading_source_plane": [
+      6540,
+      0.7934979111887515
+    ],
+    "PatternGroupRuntime._validate_and_unstack": [
+      28,
+      0.47736326791346073
+    ],
+    "PatternGroupRuntime._save_outputs": [
+      28,
+      0.8330912520177662
+    ]
+  },
+  "limits": "Thread-local explicit timers. Inclusive nested scopes must not be summed. No cProfile; no overlapping benchmarks/tests/builds/audits. Diagnostic instrumentation included."
+}

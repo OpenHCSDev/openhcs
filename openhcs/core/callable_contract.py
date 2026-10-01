@@ -7,15 +7,13 @@ compiler has one source of truth for memory and artifact declarations.
 from __future__ import annotations
 
 import dataclasses
-import importlib
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from enum import Enum
-from functools import lru_cache, wraps
+from functools import wraps
 from pathlib import Path
-from threading import Lock
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -40,7 +38,11 @@ from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.image_payload_execution_mode import (
     ImagePayloadExecutionMode,
 )
-from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
+from openhcs.core.artifact_key_selection import (
+    ArtifactOutputPolicy,
+    ArtifactPlanKeySelector,
+    NativeReturnArtifactOutputPolicy,
+)
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -56,6 +58,7 @@ if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
+    from openhcs.core.processing_preparation import PreparationOperation
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
     from openhcs.core.vfs_protocol import PlatePathDeclaration
@@ -66,8 +69,6 @@ if TYPE_CHECKING:
 
 CallableNamespace = Mapping[str, Any]
 _EnumT = TypeVar("_EnumT", bound=Enum)
-_prepared_callable_keys: set[tuple[str, str, Hashable]] = set()
-_prepared_callable_lock = Lock()
 
 CallableRuntimeCacheKey = int
 
@@ -151,6 +152,13 @@ class CompilerPreparedAutoRegisterFamily(ABC):
     @abstractmethod
     def prepare_registered_family(cls) -> None:
         """Prepare registered implementations before timed callable execution."""
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Project cache work independently of process-local readiness."""
+        from openhcs.core.processing_preparation import RegistryFamilyPreparation
+
+        return (RegistryFamilyPreparation(cls),)
 
     @classmethod
     def can_prepare_in_child(cls) -> bool:
@@ -283,6 +291,14 @@ class CallableMetadata:
     prepare: Callable[..., object] | None = None
     primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None
     primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None
+
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Project recording ownership from this callable's adapter declaration."""
+        adapter = self.runtime_adapter
+        if adapter is None:
+            return NativeReturnArtifactOutputPolicy
+        return adapter.artifact_output_policy
 
     def __post_init__(self) -> None:
         """Normalize the generic artifact-fed callable parameter declaration."""
@@ -912,6 +928,27 @@ class CallableContract(ArtifactPlanKeySelector):
             )
         return processing_contract
 
+    def raw_main_flow_call_argument(self, source_payload: Any) -> Any:
+        """Project this callable's ABI without discarding an adapter's context."""
+        from arraybridge import ArrayPayload
+        from openhcs.core.runtime_image_values import image_payload_data
+
+        if self.runtime_adapter is not None:
+            return source_payload
+        raw_callable = self.resolve_canonical_raw_callable()
+        annotation = get_type_hints(raw_callable, include_extras=True).get(
+            self.primary_input_parameter_name,
+        )
+        if isinstance(annotation, type) and issubclass(annotation, ArrayPayload):
+            return source_payload
+        return image_payload_data(source_payload)
+
+    def main_flow_call_argument(self, source_payload: Any) -> Any:
+        """Let the processing declaration retain context needed before raw calls."""
+        return self.require_processing_contract().declaration.main_flow_call_argument(
+            self, source_payload,
+        )
+
     @property
     def collapses_input_plane_axis(self) -> bool:
         """Whether the nominal processing declaration reduces the stack axis."""
@@ -968,12 +1005,6 @@ class CallableContract(ArtifactPlanKeySelector):
         return ArtifactSpecCollection(
             (*self.metadata.artifact_inputs, *self.metadata.artifact_outputs)
         )
-
-    @property
-    def artifact_key_specs(self) -> ArtifactSpecCollection:
-        """Return declarations owned by this callable's effective artifact contract."""
-
-        return self.artifact_specs
 
     @property
     def primary_input_parameter_name(self) -> str | None:
@@ -1150,6 +1181,11 @@ class CallableContract(ArtifactPlanKeySelector):
                     f"for {parameter_name!r}: {exc}"
                 ) from exc
         return tuple(kwargs.items())
+
+    @property
+    def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
+        """Project the output policy from the callable's adapter declaration."""
+        return self.metadata.artifact_output_policy
 
     def validate_artifact_input_parameter_bindings(self) -> None:
         """Validate exact artifact occurrences against the normalized callable ABI."""
@@ -1667,80 +1703,24 @@ def preserves_primary_image_carrier(func: Any) -> Any:
 
 
 def prepare_processing_callable(func: Any) -> None:
-    """Run an optional callable preparation hook before timed data processing."""
-    projection = CallableProjection.from_callable(func)
-    if projection.module_name is not None:
-        prepare_module_autoregister_families(projection.module_name)
-        _prepare_processing_module(projection.module_name)
+    """Prepare declarations through their shared process-local operation contract."""
+    from openhcs.core.processing_preparation import CallablePreparation
 
-    prepare = projection.namespace.get(FunctionContractAttribute.processing_prepare)
-    if prepare is None:
-        return
-    if not callable(prepare):
-        raise TypeError(
-            f"{projection.name!r}.{FunctionContractAttribute.processing_prepare} must be "
-            f"callable, got {type(prepare).__name__}."
-        )
-    if projection.module_name is None:
-        module_label = "<unknown>"
-    else:
-        module_label = projection.module_name
-    prepare_key = (
-        "callable",
-        f"{module_label}.{projection.name}",
-        _prepare_callable_identity(prepare),
-    )
-    with _prepared_callable_lock:
-        if prepare_key in _prepared_callable_keys:
-            return
-    prepare()
-    with _prepared_callable_lock:
-        _prepared_callable_keys.add(prepare_key)
+    CallablePreparation.from_callable(func).prepare()
 
 
 def reset_processing_callable_preparation_cache() -> None:
     """Clear process-local preparation caches for deterministic tests and tooling."""
-    with _prepared_callable_lock:
-        _prepared_callable_keys.clear()
-    prepare_module_autoregister_families.cache_clear()
-    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+    from openhcs.core.processing_preparation import PreparationOperation
 
-    AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+    PreparationOperation.reset()
 
 
-def _prepare_callable_identity(prepare: Callable[..., Any]) -> tuple[str, str]:
-    """Return a stable identity for process-local prepare-hook caching."""
-    return str(prepare.__module__), str(prepare.__qualname__)
-
-
-def _prepare_processing_module(module_name: str) -> None:
-    """Run an optional module-level preparation hook exactly once."""
-    module = importlib.import_module(module_name)
-    prepare = vars(module).get(FunctionContractAttribute.processing_prepare)
-    if prepare is None:
-        return
-    if not callable(prepare):
-        raise TypeError(
-            f"Module {module_name!r}.{FunctionContractAttribute.processing_prepare} "
-            "must be callable, "
-            f"got {type(prepare).__name__}."
-        )
-    prepare_key = ("module", module_name, id(prepare))
-    with _prepared_callable_lock:
-        if prepare_key in _prepared_callable_keys:
-            return
-    prepare()
-    with _prepared_callable_lock:
-        _prepared_callable_keys.add(prepare_key)
-
-
-@lru_cache(maxsize=None)
 def prepare_module_autoregister_families(module_name: str) -> None:
-    """Prepare AutoRegisterMeta families imported by a callable module."""
-    module = importlib.import_module(module_name)
-    from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+    """Prepare the module's declared registry obligation once in this process."""
+    from openhcs.core.processing_preparation import ModuleRegistryPreparation
 
-    AutoRegisterRegistryPreparation.prepare_module_registered_families((module,))
+    ModuleRegistryPreparation(module_name).prepare()
 
 
 def _is_function_reference(func: Any) -> bool:

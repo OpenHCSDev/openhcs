@@ -4,26 +4,36 @@ from __future__ import annotations
 
 import logging
 import threading
+from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from concurrent.futures import CancelledError, Future
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from zmqruntime import OperationCancellation
+from zmqruntime import OperationCancellation, OperationDeadline
 
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
+    CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogControlRequest,
     FunctionCatalogEntry,
     FunctionCatalogPage,
+    FunctionCatalogPreparationCancelRequest,
+    FunctionCatalogPreparationHandle,
+    FunctionCatalogPreparationStartRequest,
+    FunctionCatalogPreparationState,
+    FunctionCatalogPreparationStatusRequest,
     FunctionDetail,
     FunctionDetailControlRequest,
     FunctionReferenceControlRequest,
     FunctionSearchRequest,
 )
+from openhcs.agent.exceptions import AgentFacingErrorMixin
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
@@ -32,6 +42,19 @@ if TYPE_CHECKING:
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
 logger = logging.getLogger(__name__)
+
+
+class CustomFunctionRegistrationUncertainError(AgentFacingErrorMixin, RuntimeError):
+    agent_error_code = "custom_function_registration_uncertain"
+    agent_error_hint = "Preserve this request and endpoint receipt. Do not replay or fall back; persistence may have completed."
+
+    def __init__(self, request: CustomFunctionRegistrationRequest):
+        super().__init__(
+            f"Registration observation failed after invoking {request.connection.transport_endpoint()}; "
+            f"destination={request.storage_dir}, function={request.function_name!r}. "
+            f"Selected server={request.server_identity!r}. "
+            "Outcome is uncertain; source or registry mutation may have completed."
+        )
 
 
 FunctionCatalogClientFactory = Callable[
@@ -158,7 +181,29 @@ class FunctionCatalogPreparation:
             self.thread.join()
 
 
-class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
+class EndpointFunctionCatalogServiceABC(FunctionCatalogServiceABC):
+    """Endpoint catalog with responsive access to its native preparation owner."""
+
+    @abstractmethod
+    def start_catalog_preparation(
+        self, connection: ExecutionConnectionSpec
+    ) -> FunctionCatalogPreparationState:
+        """Start/coalesce the selected endpoint's existing preparation future."""
+
+    @abstractmethod
+    def catalog_preparation_status(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        """Observe the exact native incarnation without starting or waiting."""
+
+    @abstractmethod
+    def cancel_catalog_preparation(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        """Signal the exact native preparation owner without joining its child."""
+
+
+class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
     """Use one execution endpoint as the authoring callable-catalog authority."""
 
     def __init__(
@@ -166,8 +211,10 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         config_provider: Callable[[], OpenHCSZMQConfig],
         *,
         client_factory: FunctionCatalogClientFactory | None = None,
+        path_policy: AgentPathPolicy | None = None,
     ) -> None:
         self._config_provider = config_provider
+        self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._client_factory = client_factory or self._new_client
         self._client_session: FunctionCatalogClientSession | None = None
         self._endpoint_state: FunctionCatalogEndpointState | None = None
@@ -350,21 +397,107 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
     ) -> CustomFunctionRegistrationResult:
         """Register source at the endpoint and project ephemeral source locally."""
 
-        endpoint = self._config_provider()
-        result = self._client_for(endpoint).register_custom_function(request)
-        if not request.persist:
-            from openhcs.processing.custom_functions.manager import (
-                CustomFunctionManager,
+        request = request.admitted(self._path_policy)
+        endpoint = self._endpoint_for_connection(request.connection)
+        deadline = OperationDeadline.after_milliseconds(
+            endpoint.control_timeout_ms,
+            operation="custom function registration",
+        )
+        client = self._client_for(endpoint)
+        destination = client.custom_function_registration_destination(
+            CustomFunctionRegistrationDestinationRequest(
+                function_name=request.function_name
+            ),
+            operation_deadline=deadline,
+        )
+        destination.require_request(request)
+        if request.persist:
+            self._path_policy.assert_writable(destination.storage_dir)
+            self._path_policy.assert_writable(destination.source_file_path)
+        request = replace(request, server_identity=destination.server_identity)
+        self.invalidate()
+        self._config_provider = lambda: endpoint
+        # Observe the existing future once, never inline-poll a cold warmup.
+        handle = FunctionCatalogPreparationHandle(
+            request.connection, destination.server_identity
+        )
+        state = client.function_catalog_preparation(
+            FunctionCatalogPreparationStatusRequest(handle),
+            operation_deadline=deadline,
+        )
+        state.require_handle(handle)
+        state.require_ready()
+        deadline.remaining_seconds()
+        try:
+            result = client.register_custom_function(
+                request, operation_deadline=deadline
             )
+            destination.require_result(request, result)
+            if not request.persist:
+                from openhcs.processing.custom_functions.manager import (
+                    CustomFunctionManager,
+                )
 
-            CustomFunctionManager().register_from_code(
-                request.source_code,
-                persist=False,
-                clear_caches=False,
-                emit_signal=False,
+                CustomFunctionManager(create_storage=False).register_from_code(
+                    request.source_code,
+                    persist=False,
+                    clear_caches=False,
+                    emit_signal=False,
+                )
+            self.invalidate()
+        except Exception as error:
+            raise CustomFunctionRegistrationUncertainError(request) from error
+        return result
+
+    def _endpoint_for_connection(
+        self, connection: ExecutionConnectionSpec
+    ) -> OpenHCSZMQConfig:
+        """Use the explicit typed route, never a companion endpoint registry."""
+        config = self._config_provider()
+        return replace(
+            config,
+            default_port=connection.require_port("Function catalog operation"),
+            client_host=connection.host,
+            transport_mode=connection.transport_endpoint(config).transport_mode,
+            persistent=connection.persistent,
+        )
+
+    def start_catalog_preparation(
+        self, connection: ExecutionConnectionSpec
+    ) -> FunctionCatalogPreparationState:
+        endpoint = self._endpoint_for_connection(connection)
+        state = self._client_for(endpoint).function_catalog_preparation(
+            FunctionCatalogPreparationStartRequest(connection),
+        )
+        if state.handle.connection != connection:
+            raise RuntimeError(
+                "Catalog preparation response changed the explicit connection."
             )
         self.invalidate()
-        return result
+        self._config_provider = lambda: endpoint
+        return state
+
+    def catalog_preparation_status(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        state = self._client_for(
+            self._endpoint_for_connection(handle.connection)
+        ).function_catalog_preparation(
+            FunctionCatalogPreparationStatusRequest(handle),
+        )
+        state.require_handle(handle)
+        return state
+
+    def cancel_catalog_preparation(
+        self, handle: FunctionCatalogPreparationHandle
+    ) -> FunctionCatalogPreparationState:
+        state = self._client_for(
+            self._endpoint_for_connection(handle.connection)
+        ).function_catalog_preparation(
+            FunctionCatalogPreparationCancelRequest(handle),
+        )
+        state.require_handle(handle)
+        return state
 
     def invalidate(self) -> None:
         """Discard the derived page; the next read requests the endpoint again."""

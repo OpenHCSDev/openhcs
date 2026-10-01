@@ -1,0 +1,138 @@
+[
+  {
+    "index": 0,
+    "label": "main",
+    "source": "/home/ts/code/projects/openhcs",
+    "source_revision": "2b7969f700c33eb7f73f891d975afd1efc0628bb",
+    "runtime_import": "/home/ts/code/projects/openhcs/openhcs/core/runtime_image_values.py",
+    "runtime_sha256": "c91c6dde42d1dfdb345ee384ff109898e7dd21b4f3f746954cc11dd2d891b72f",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-0-main-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.8368608951568604",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "9.150973320007324",
+        "total_seconds": "11.711222634185106",
+        "wells_per_second": "0.10927799317408562",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1429.6875",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "810d9e03704790841e7fe179f90ac1858c7fa66a33d6d226c42fc728aecd2f10"
+      }
+    ],
+    "cli_seconds": 20.324429207947105
+  },
+  {
+    "index": 1,
+    "label": "candidate",
+    "source": "/home/ts/code/projects/openhcs-compile-perf",
+    "source_revision": "3d23d960275b43d03395d86c2e63d3bc85098a2a",
+    "runtime_import": "/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_image_values.py",
+    "runtime_sha256": "f5bedceb53b365dafd32dafa73269a9195305f835c160be715d632c50c116782",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-1-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.6596710681915283",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "10.413227319717407",
+        "total_seconds": "12.776960799004883",
+        "wells_per_second": "0.09603170749057822",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2202.99609375",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "b9f55c7eed6ca5d3a8e901f04d4d7637c1a89d5a41f677682abbb4c5257db6fb"
+      }
+    ],
+    "cli_seconds": 101.639296235051
+  },
+  {
+    "index": 2,
+    "label": "candidate",
+    "source": "/home/ts/code/projects/openhcs-compile-perf",
+    "source_revision": "3d23d960275b43d03395d86c2e63d3bc85098a2a",
+    "runtime_import": "/home/ts/code/projects/openhcs-compile-perf/openhcs/core/runtime_image_values.py",
+    "runtime_sha256": "f5bedceb53b365dafd32dafa73269a9195305f835c160be715d632c50c116782",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-2-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.7915880680084229",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "8.40794849395752",
+        "total_seconds": "10.917100474704057",
+        "wells_per_second": "0.11893507681673632",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1407.359375",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "b9f55c7eed6ca5d3a8e901f04d4d7637c1a89d5a41f677682abbb4c5257db6fb"
+      }
+    ],
+    "cli_seconds": 19.486772947013378
+  },
+  {
+    "index": 3,
+    "label": "main",
+    "source": "/home/ts/code/projects/openhcs",
+    "source_revision": "2b7969f700c33eb7f73f891d975afd1efc0628bb",
+    "runtime_import": "/home/ts/code/projects/openhcs/openhcs/core/runtime_image_values.py",
+    "runtime_sha256": "c91c6dde42d1dfdb345ee384ff109898e7dd21b4f3f746954cc11dd2d891b72f",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-payload-slice-projection-public-abba-3-main-20260930",
+    "rows": [
+      {
+        "case_name": "cp_tutorial_3d_monolayer",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.7010743618011475",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "9.451323986053467",
+        "total_seconds": "11.882000716868788",
+        "wells_per_second": "0.10580528204044395",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1571.47265625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "810d9e03704790841e7fe179f90ac1858c7fa66a33d6d226c42fc728aecd2f10"
+      }
+    ],
+    "cli_seconds": 32.976477462332696
+  }
+]

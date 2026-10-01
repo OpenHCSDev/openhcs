@@ -1,0 +1,20 @@
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - ============================================================
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - ZMQ Execution Server
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - ============================================================
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - Log level: INFO (from --log-level=INFO)
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - Port: 15993 (control: 16993)
+2026-09-29 19:06:58,195 - openhcs.runtime.zmq_execution_server_launcher - INFO - Host: 127.0.0.1
+2026-09-29 19:06:58,196 - openhcs.runtime.zmq_execution_server_launcher - INFO - Transport mode: tcp
+2026-09-29 19:06:58,196 - openhcs.runtime.zmq_execution_server_launcher - INFO - Persistent: True
+2026-09-29 19:06:58,196 - openhcs.runtime.zmq_execution_server_launcher - INFO - Log file: /home/ts/wt/openhcs-custom-function-admission-20260929/tests/runtime_diagnostics/registration_live_20260929_attempt01/unsupported.log
+2026-09-29 19:06:58,196 - openhcs.runtime.zmq_execution_server_launcher - INFO - ============================================================
+2026-09-29 19:06:58,883 - zmqruntime.server - INFO - ZMQ Server started on tcp://127.0.0.1:15993 (PUB), control tcp://127.0.0.1:16993
+2026-09-29 19:06:58,883 - zmqruntime.execution.server - INFO - Queue worker thread started - will process executions sequentially
+2026-09-29 19:06:58,883 - zmqruntime.execution.server - INFO - Started execution queue worker thread
+2026-09-29 19:06:58,883 - openhcs.runtime.zmq_execution_server_launcher - INFO - Server ready - waiting for requests...
+2026-09-29 19:06:59,056 - zmqruntime.server - INFO - Server ready
+2026-09-29 19:08:22,324 - zmqruntime.execution.server - INFO - No live worker processes found to kill
+2026-09-29 19:08:22,325 - zmqruntime.execution.server - INFO - Workers killed (0), server shutting down
+2026-09-29 19:08:22,335 - zmqruntime.server - INFO - ZMQ Server stopped
+2026-09-29 19:08:22,335 - polystore.backend_registry - INFO - Backend connections cleaned up (including process resources)
+2026-09-29 19:08:22,336 - openhcs.runtime.zmq_execution_server_launcher - INFO - Server stopped

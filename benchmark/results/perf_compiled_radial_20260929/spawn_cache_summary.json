@@ -1,0 +1,21 @@
+{
+  "start_method": "spawn",
+  "fresh_processes": 2,
+  "joint_spawn_wall_seconds": 1.9609097363427281,
+  "workers": [
+    {
+      "pid": 3064736,
+      "preparation_seconds": 0.23791931895539165,
+      "geometry_index_data_loads": 3,
+      "normalization_data_loads": 2,
+      "any_cache_data_saves": 0
+    },
+    {
+      "pid": 3064737,
+      "preparation_seconds": 0.24178627273067832,
+      "geometry_index_data_loads": 3,
+      "normalization_data_loads": 2,
+      "any_cache_data_saves": 0
+    }
+  ]
+}
