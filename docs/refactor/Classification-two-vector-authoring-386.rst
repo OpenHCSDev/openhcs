@@ -238,7 +238,7 @@ introspection as well as public enum validation. Runtime keyword injection
 iterates the existing declaration contributions in their original order instead
 of separate repeated binding loops. No new ancestor/facade, category roster,
 cache, suppressed measurement or format-only blank-line deletion was used.
-The original shared owner is one measured line smaller than main c4be.
+The corrected shared owner has no measured class-line increase over main c4be.
 
 ``public-enum-388-owner-deduplicated-controls.json`` passes all 248 source cases,
 15.98s/491.29MiB combined, unchanged oneCPU/60s/512MiB and subprocess guard.
@@ -246,3 +246,11 @@ This retains all 224 and adds the existing path and runtime-payload controls;
 compiler raw enum strings remain rejected. Original declared enum values/names
 and already typed members descend, invalid/required-null members reject.
 New owner-projection tests do not claim an installed/native plan or execution.
+
+The intermediate ``61758894e`` guard retained ForeignAbsenceProbe +1 from a
+new negation of ``parameter_type.is_semantic_control``. Final runtime selection
+derives from the existing ``overridable_runtime_parameter_names`` owner instead;
+config contributions remain explicitly bound by their original declarations.
+No predicate/detector rewrite or waiver. All 248 final cases pass again in
+``public-enum-388-final-owner-controls.json``: 25.44s/491.24MiB. Original class
+growth/probe reds are kept as failed measurements, not passing qualification.

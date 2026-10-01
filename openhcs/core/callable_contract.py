@@ -1144,6 +1144,7 @@ class CallableContract(ArtifactPlanKeySelector):
                 )
             call_kwargs[parameter_name] = runtime_owned_value
 
+        overridable_parameters = self.overridable_runtime_parameter_names
         for parameter_name in (
             *(name for name in self.artifact_input_parameter_names
               if name not in call_kwargs or name in runtime_loaded_parameters),
@@ -1151,7 +1152,7 @@ class CallableContract(ArtifactPlanKeySelector):
             self.runtime_adapter.require_parameter_name() if self.runtime_adapter is not None else None,
             *(parameter_type.require_parameter_name()
               for parameter_type in self.runtime_bound_parameter_types
-              if not parameter_type.is_semantic_control),
+              if parameter_type.require_parameter_name() not in overridable_parameters),
             *self.config_bound_parameter_names,
         ):
             if parameter_name is not None:
