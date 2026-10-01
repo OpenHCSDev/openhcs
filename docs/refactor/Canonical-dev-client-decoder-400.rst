@@ -97,10 +97,31 @@ Every source test uses one CPU, unchanged 60s / 512MiB combined process-group
 limits, readonly existing dependency interpreter, own source explicitly and
 a subprocess guard. No worker native/MCP/UI process, lock, installation,
 download, model/provider call, parent environment/fixture edit or mutation
-replay. Original pinned R0 will be recorded separately. Installed public
-author/compile/execute, exact
+replay. Installed public author/compile/execute, exact
 labels/rows/persistence and process closure remain parent-owned and pending.
 No biological, snapshot or global NRA FULL qualification is implied.
+
+Original pinned R0: **PASS**, 15.49s / 85.28MiB, main49a95 to source/test
+head efa51897d27be16653723d837b3abe3f217a525a, 5170 entries, no positive
+delta; ForeignAbsenceProbe on the shared ingress decreases by one. Actual
+Python3.14 original pinned tool and readonly metaclass backing paths were
+asserted, no copied detector/engine change. R0 command/log:
+``validation/canonical-decoder-400-pinned-r0``. This is the source debt
+guard, not global NRA FULL acceptance or installed/runtime qualification.
+
+Ruff F checks pass for both production files and all dedicated modified
+decoder tests; diff whitespace checks pass. The shared server-test file has
+two unchanged pre-existing F401 viewer imports, independently reproduced
+from base49a95. They are outside the decoder changes and remain explicit;
+no lint cleanup of another viewer owner's imports is bundled here.
+
+Immutable source archive (20 command/receipt/log files including every
+original/intermediate failure and final controls/R0, no redundant source
+snapshot/environment):
+``docs/refactor/receipts/canonical-dev-client-decoder-400-source-20261001.tar.gz``;
+SHA256 06d9c73a82ae7e1c58eb1213da3398a3e1a349ec939bc69bf1e1992145f4c351,
+156KiB allocated. Tar comparison against the retained originals passed
+without extraction. No new build/install/cache directory was needed.
 
 Driver checkpoint
 -----------------
