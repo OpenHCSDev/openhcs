@@ -90,8 +90,18 @@ The full CLI family is now split by exact test-node identity in50-function
 shards, not by omitting cases or increasing limits. Shards0/1 pass50 checks each;
 shard2 passes64 including all new action/MI/CLI/declared-state-negative checks.
 Their respective peak RSS is280.80/283.63/284.58MiB, each under11seconds.
-Final shard, R0/R1 and installed actual UI acceptance remain to be completed.
-All original failed commands and corrected checks remain in owned receipts.
+Final non-live shard passes36 checks in8.74seconds/290.17MiB. The four shards
+total200 passing checks, including every CLI case except the separately assigned
+real MCP startup test. That test's combined pytest/child process crossed512MiB;
+the original full/final-shard failures remain retained and it is not waived or
+claimed passing. Real installed MCP startup/affected UI acceptance is still due.
+
+Original pinned R0 entrypoint on production b6cdef197 versus main094425c8 passes
+in17.66seconds/83.68MiB, Python3.14, allfour changed production paths. It reports
+5175 metric projections, all deltas zero; these include full class inventory and
+are not5175 NRA detectors. No copied measures, exceptions or consumer registry.
+Global/full R1 and installed actual UI acceptance remain incomplete. All original
+failed commands and corrected checks remain in owned receipts.
 
 Schrodinger's original scientific trial is now terminal technical abstention,
 with zero scientific admissions. Original processes and listeners exited and
