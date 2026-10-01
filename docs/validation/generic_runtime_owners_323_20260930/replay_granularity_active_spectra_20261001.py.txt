@@ -1,0 +1,64 @@
+import ctypes
+import hashlib
+import json
+import statistics
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+from skimage.morphology import disk
+
+sys.path.insert(0,'/home/ts/code/projects/openhcs-compile-perf')
+from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.processing.backends.cellprofiler.granularity import (
+    granularity_grey_erosion, CppGranularityReconstructionBackendStrategy,
+)
+
+configure_native_thread_count(1)
+library=ctypes.CDLL('/tmp/prototype_granularity_active_spectra_20261001.so')
+function=library.reconstruct_five
+array=np.ctypeslib.ndpointer(flags='C_CONTIGUOUS')
+function.argtypes=[array,array,array,ctypes.c_uint32,ctypes.c_uint32,array,array,array]
+function.restype=None
+reference=CppGranularityReconstructionBackendStrategy()
+root=Path('/home/ts/code/projects/openhcs-benchmark-runs')
+
+last_counts=[]
+
+def candidate(pixels):
+    eroded=pixels.copy();seeds=[]
+    footprint=disk(1,dtype=np.uint8)
+    for _ in range(5):
+        eroded=granularity_grey_erosion(eroded,footprint)
+        seeds.append(eroded)
+    packed=np.stack(seeds,axis=-1)
+    output=np.empty_like(packed)
+    counters=np.zeros(2,np.uint64)
+    function(packed,pixels,output,*pixels.shape,
+             np.empty(pixels.size,np.uint32),np.empty(pixels.size,np.uint16),counters)
+    last_counts[:]=[int(value) for value in counters]
+    return tuple(np.ascontiguousarray(output[:,:,k]) for k in range(5))
+
+def control(pixels):
+    return reference.reconstruct_series(pixels,5)
+
+records=[]
+for path in sorted((root/'perf-post-hull-granularity-frontier-20260930').glob('*.npy')):
+    pixels=np.load(path);assert pixels.dtype==np.float32
+    digest=hashlib.sha256(pixels.tobytes()).hexdigest()
+    expected=control(pixels);actual=candidate(pixels)
+    for x,y in zip(expected,actual,strict=True):
+        np.testing.assert_array_equal(x,y)
+        assert x.dtype==y.dtype and y.flags.c_contiguous
+    samples={'control':[],'candidate':[]};cpu={'control':[],'candidate':[]}
+    for variant in ('control','candidate','candidate','control')*2:
+        started=time.perf_counter();cpu_started=time.thread_time()
+        (control if variant=='control' else candidate)(pixels)
+        cpu[variant].append(time.thread_time()-cpu_started)
+        samples[variant].append(time.perf_counter()-started)
+    assert digest==hashlib.sha256(pixels.tobytes()).hexdigest()
+    row=dict(source=path.name,sha256=digest,all_outputs_exact=True,queue_pops=last_counts[0],active_field_visits=last_counts[1],all_fields_visits=5*last_counts[0],samples=samples,cpu=cpu,
+             medians={k:statistics.median(v) for k,v in samples.items()},cpu_medians={k:statistics.median(v) for k,v in cpu.items()})
+    records.append(row);print(json.dumps(row),flush=True)
+    (root/'perf-granularity-active-spectra-production-replay-20261001.json').write_text(json.dumps(records,indent=2)+'\n')

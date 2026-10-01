@@ -199,3 +199,54 @@ Granularity's reconstruction is still a large intrinsic numerical term (about
 small. The ownership migration intentionally leaves that numerical algorithm
 with its provider. Further runtime optimization, fresh native CP timings and
 scaling figures remain outstanding under the continuing performance goal.
+
+
+Further October 1 diagnostics use the same production source (95a98b008); no
+performance algorithm, GC policy, clock owner or export parser was added.
+The normal public ImagingFlow +0.992s concern above remains unresolved.
+In the minimal global-GC ABBA, execution is 16.476s / 16.868s / 24.282s / 16.122s
+(main / candidate / candidate / main). The 24.282s outlier includes about 6.7s
+in OverlayOutlines and its following gap; overlapping GC is only 0.231s.
+Thus the earlier GC explanation does not generalize to all observations.
+
+A separate owner-thread timeline has candidate/main execution 16.200s/16.039s.
+Its 23 numerical steps total 13.494s/13.354s wall and 12.066s/11.951s owner-thread
+CPU, with 1.375s/1.355s Linux scheduler run-queue wait. No Numba dispatcher
+compilation is observed during those step/progress windows. These are diagnostic
+clocks, not neutrality or speedup proof. The IPO progress-context path accounts
+for about 0.4s; ordinary worker emits total only 6–8ms. Step sums do not include
+the entire execution job. The native extension instruction and data sections
+match main exactly; whole shared-object hashes differ in build-location metadata.
+No cause for the scheduler wait is asserted.
+
+Two exact-output reconstruction prototypes are rejected rather than promoted.
+Against all six saved production float32 frontiers, the constant-five-spectrum
+queue saves about 0.347s and the active-field queue about 0.340s across per-input
+medians. The active-field version retains 64% of full field visits, insufficient
+collapse to close the execution target gap. Constructing a component tree alone
+costs 9.069s for the first input, versus about 0.54s for its current complete
+reconstruction series; that route is rejected immediately. Task-only source and
+replay receipts are retained, with no installed prototype or production claim.
+
+Fresh native CellProfiler 4.2.8.1 uses the existing native synthetic-well batch
+driver and native batch clock. One well owns six source planes and two image
+sets, one native process, one native thread, CPU 5. One full warm-up batch precedes
+two observed batches. First-module through post-run completion is 73.065s and
+64.415s; invocation through completion is 73.194s and 64.524s. Python/JVM startup
+is excluded; the worker separately records 1.004s startup after imports. No other
+task benchmark, test or audit overlaps these runs. Provenance retains exact input
+hashes, versions, thread policy, revisions and command-request membership.
+
+Directly comparing raw exported tables was the wrong comparison scope: native
+uses contextual headers while ordinary OpenHCS combined CSV uses flattened
+headers (528 versus 595 columns). Both failed diagnostic attempts are retained;
+neither is evidence of a measurement regression. The existing production
+OpenHCSAdapter reference path instead compares native's contextual reference
+with typed OpenHCS measurement artifacts and passes with **zero differences**
+under the existing strict 1e-6 policy. No parser workaround, ignored measurement
+field or relaxed tolerance was introduced. This adapter run retains value
+observations for parity, whereas the normal throughput runs retain outcomes;
+its 25.473s execution / 30.669s server job is a different observation scope and
+must not replace the normal single-lane clocks or be claimed as a refactor
+regression. Equivalence comparison (32.703s) occurs after the pipeline job.
+Native image/ROI parity and the full scaling-figure refresh remain outstanding.
