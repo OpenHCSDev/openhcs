@@ -244,7 +244,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> Mapping[str, Any] | None:
-        """Return the unambiguous subdirectory that owns a workspace mapping."""
+        """Return the metadata-owned mapping for input or read-only output."""
 
         metadata_document = self.source_workspace_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(
@@ -261,13 +261,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if len(mapped_subdirectories) == 1:
             return next(iter(mapped_subdirectories.values()))
 
-        main_subdirectory = self._main_subdirectory_name(subdirectories, plate_path)
-        if main_subdirectory not in mapped_subdirectories:
+        projected_metadata = self._metadata_projection(subdirectories, plate_path)
+        if not projected_metadata.get(FIELDS.WORKSPACE_MAPPING):
             raise ValueError(
-                f"OpenHCS main subdirectory {main_subdirectory!r} for {plate_path} "
+                f"OpenHCS selected metadata for {plate_path} "
                 "does not own one of the declared workspace mappings."
             )
-        return mapped_subdirectories[main_subdirectory]
+        return projected_metadata
 
     def build_metadata_view_document(
         self,
@@ -508,6 +508,14 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 },
                 plate_path,
                 "available_backends",
+            ),
+            FIELDS.WORKSPACE_MAPPING: self._merge_subdirectory_mapping(
+                {
+                    subdirectory_name: metadata.workspace_mapping
+                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                },
+                plate_path,
+                "workspace_mapping",
             ),
         }
 
