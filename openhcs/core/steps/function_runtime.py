@@ -2821,7 +2821,7 @@ class PatternGroupRuntime:
                     metadata_mode=metadata_mode,
                 ).compose()
         else:
-            main_data_stack = cached_stack.stack
+            main_data_stack = cached_stack
 
         return PatternGroupData(
             matching_files=matching_files,
