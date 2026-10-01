@@ -29,6 +29,10 @@ class WidgetTreeOutputFormat(str, Enum):
     JSON = "json"
     OUTLINE = "outline"
 
+    @property
+    def is_json(self) -> bool:
+        return self is WidgetTreeOutputFormat.JSON
+
     @classmethod
     def choices(cls) -> tuple[str, ...]:
         return tuple(output_format.value for output_format in cls)
