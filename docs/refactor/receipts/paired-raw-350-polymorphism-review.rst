@@ -86,8 +86,11 @@ No validation.lock, native/MCP/UI launch or live-slot acquisition occurs.
 Proof limits
 -------------
 
-Original R0 bootstrap and R1 dependency-context failures remain preserved and
-unqualified. The earlier global audit and overlay did not complete; this manual
+Local frozen3.12 R0 bootstrap and R1 dependency-context failures remain preserved
+and unqualified. Parent verified original R0 in its Python3.14 owner environment
+and now owns both original R0/R1 qualification after checkpoint freeze. The
+frozen3.12 scientific/source-test environment stays unchanged. The earlier
+global audit and overlay did not complete; this manual
 diff review and its source tests do not supply global semantic proof. The initial
 MI fixture expected the wrong label capitalization; its complete failure receipt
 is retained, with exact expectations corrected to the existing title-case format.

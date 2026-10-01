@@ -89,9 +89,11 @@ axis tests and15 selected pipeline source-projection tests pass, including two
 focused inherited-owner guards. Full original failures and the corrected MI label
 fixture expectation are preserved beside the latest measured receipts.
 
-R0 unavailable: original agent-comms3b037 package fails on InputDocument's
+Local3.12 R0 unavailable: original agent-comms3b037 package fails on InputDocument's
 annotation during import under required frozen Python3.12, before measuring.
-No copied detector, package patch or different interpreter is substituted.
+No copied detector, package patch or different interpreter is substituted here.
+Parent verified original R0 with its Python3.14 owner and readonly metaclass
+backing, and owns original R0/R1 qualification after this checkpoint freeze.
 R1 incomplete: original NRA0844525 consumer rejects uninitialized recorded
 external/ObjectState, before findings. No dependency init or context omissions.
 The original audit census completes; its +1 quoted Sequence type annotation is
@@ -104,6 +106,12 @@ acceptance or biological claim; the source repair is not declared fully done.
 
 Parent-owned next acceptance
 ----------------------------
+
+Reviewed source checkpoint:e34fb4d6ebbe20ad96500c44f178ff718854f9b2, unchanged
+main094425c8 base. Source hashes and exact cleanup are frozen in
+receipts/paired-raw-350-owner-review-freeze.txt. Metadata-only evidence commits
+do not change the reviewed source. Parent retains validation.lock; no launch
+or further source mutation occurs in this checkpoint handoff.
 
 After the installed349 gate, parent schedules the exact serialized validation
 slot, installed build and isolated display/endpoints. Use small synthetic
