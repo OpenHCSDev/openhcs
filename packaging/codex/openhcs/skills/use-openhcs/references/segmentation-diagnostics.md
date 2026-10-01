@@ -55,6 +55,11 @@ with its own primary area and inspect zero-growth or implausibly large objects
 on raw body signal. At a crowded boundary, check whether two seeds grow into
 distinct supported bodies or divide one diffuse field arbitrarily.
 
+DAPI candidate count does not establish cell-body count. Require independent
+body-channel boundary support before admitting or splitting a second cell;
+another overlapping nuclear candidate alone is insufficient. Do not assume a
+universal one-nucleus-to-one-cell relation.
+
 Change the failed support/growth parameter rather than compensating with more
 primary seeds. If the stain shows only a subcellular structure, record that a
 whole-cell boundary is unsupported instead of manufacturing cytoplasm masks.
