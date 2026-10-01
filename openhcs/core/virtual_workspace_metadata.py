@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -97,7 +97,12 @@ class AtomicMetadataWriter:
                         }
                     else:
                         subdirectory[key] = value
-                self._update_projection_geometry(subdirectory)
+                self._update_projection_geometry(
+                    subdirectory,
+                    VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                        subdirectory
+                    ).entries.values(),
+                )
             return data
 
         self._execute_update(
@@ -139,7 +144,12 @@ class AtomicMetadataWriter:
                 subdirectory_name, {}
             )
             self._merge_source_projection_fields(subdirectory, projection_metadata)
-            self._update_projection_geometry(subdirectory)
+            self._update_projection_geometry(
+                subdirectory,
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                    subdirectory
+                ).entries.values(),
+            )
             return data
 
         self._execute_update(metadata_path, update)
@@ -238,21 +248,25 @@ class AtomicMetadataWriter:
                 subdirectory[serializer.MAIN_FIELD] = True
             if results_dir is not None:
                 subdirectory[serializer.RESULTS_DIR_FIELD] = results_dir
-            self._update_projection_geometry(subdirectory)
+            self._update_projection_geometry(
+                subdirectory,
+                (projection for projection, _path in retained_paths),
+            )
             return data
 
         self._execute_update(metadata_path, update)
 
     @staticmethod
-    def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:
-        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-            subdirectory
-        ).entries
-        if not entries:
-            return
+    def _update_projection_geometry(
+        subdirectory: dict[str, Any],
+        source_projections: Iterable[SourceProjection],
+    ) -> None:
+        """Derive geometry from the transaction's current nominal projections."""
         unique_projections: dict[tuple[object, ...], SourceProjection] = {}
-        for projection in entries.values():
+        for projection in source_projections:
             unique_projections.setdefault(projection.identity_key, projection)
+        if not unique_projections:
+            return
         projections = SourceProjectionSet(tuple(unique_projections.values()))
         subdirectory[FIELDS.GRID_DIMENSIONS] = (
             SourceTileLayout.metadata_grid_dimensions(projections)
