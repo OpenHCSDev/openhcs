@@ -14,7 +14,7 @@ Observed boundary and required relation
 ---------------------------------------
 
 Before-source config.py has204 lines,19 get calls and5 isinstance calls.
-After-source has141 lines, zero get calls and zero isinstance calls. These are
+Final production config.py has145 lines, zero get calls and zero isinstance calls. These are
 direct AST/source measurements, not a global architecture proof.
 
 BOUND-2: ConfigSchemaRenderer declares ConfigSchema while reading its fields,
@@ -93,10 +93,66 @@ custom labels; shared generic headings and config-specific headings stay exact.
 
 Receipt logs currently in owned scratch:
 /home/ts/.cache/agent-scratch/mcp-contract-fixtures-340-20261001/config-*.log
-These will be retained persistently before scratch retirement. R0/full-context R1
-and installed real config-schema/generic-call acceptance are NOT yet assessed.
+These are retained persistently in the adjacent receipt archive before scratch
+retirement. Final source50PASS8.53s wall272.32MiB. Original packaged R0 at
+main0c0563e ->684d0f36a PASS13.66s83.95MiB, no measure increases or exceptions.
+Ruff passes on the config leaf and changed tests; shared renderer has six
+pre-existing UP037 quoted-annotation warnings outside the five added/three
+removed lines. No unrelated lint rewrite is included.
 
-Done when: config raw readers and repeated validation are deleted; existing
-diagnostic heading preserved through the shared owner; family and new-case checks,
-unchanged R0/R1 evidence and installed user entrypoint validated at the final head.
-Do not claim a passed complete architecture audit from the local AST guard.
+Installed acceptance at production head684d0f36a
+-----------------------------------------------
+
+Built the actual wheel without isolation/dependency downloads in6.48s250.09MiB:
+openhcs-0.8.7-cp311-abi3-linux_x86_64.whl, SHA256
+c062a06ce1ac5781858238294e4f8100d9effd2455a03b6aee7e0395d41ed838.
+Fresh own venv at acceptance/venv, sharing existing read-only dependency paths.
+No global, existing candidate, frozen blind environment or harness changed.
+Installed package origin is acceptance/venv/lib/python3.12/site-packages/openhcs;
+both changed production files compare byte-for-byte with the reviewed source.
+
+Nonblocking validation.lock admitted a single fresh stdio shell, one CPU/native
+thread pools1, own XDG cache, DISPLAY91, no native execution or viewer launch.
+Health reports0.8.7, packaged_resources_ready, no stale source or reconnect flag.
+First-use context plus generated config-schema pipeline --contains lazy --limit3
+and generic call describe_config_schema complete0 in13.62s,537.81MiB peak.
+Pipeline schema has27 real reflected fields;20 match lazy,3 shown; generic call
+shows20 of27. Lazy flags, inherited fields, source authoring and nominal type
+inheritance are visible through the actual installed user entrypoint.
+
+A separate fresh shell read health, first_use, pipeline context, capability search,
+nested napari_display_config schema and an intentional invalid-schema control.
+Nested schema8 fields/2 shown. Invalid schema retains the original
+Config schema: unavailable heading plus native mcp_tool_failed diagnostic, and
+the shared typed boundary also records why that error receipt is not ConfigSchema.
+Expected exit1,10.73s537.27MiB. These are read-only CLI acceptance, not biological
+analysis, viewer QA or evidence of resolved inherited configuration values.
+
+Initial shell JSON quoting error caused local argparse exit2 after healthy MCP;
+retained unchanged. Original process816261 exited before corrected requests.
+Successful/read-only shell processes818734 and823412 are gone; validation.lock
+released. No timeout restart, scientific candidate replay or foreign process kill.
+
+Full-context R1 status remains separately recorded. Original check first stopped
+before analysis because main's PolyStore object database lacked recorded commit
+84f322e; fetched that exact existing fork Git object only, without checkout,
+dependency installation or source edits. All eight recorded root dependency
+objects then available. A second unchanged original check uses pinned NRA0844525,
+original roots openhcs/scripts/benchmark and all recorded dependency source,
+bounded55s512MiB. Its outcome is not replaced by the R0/local AST result.
+
+Actual second R1 outcome: INCOMPLETE. Source scan reaches its original deadline
+inside parse_python_module at55.000s/55.000s. No baseline/head assessment or
+finding comparison was produced. No complete architecture-audit pass is claimed.
+The administrative resource supervisor also hit a disappearing temporary
+directory during scan cleanup, so no final peak-RSS summary exists for that
+attempt; its original traceback is retained. The owned supervisor now tolerates
+file disappearance during output retirement. The R1 child and supervisor are
+terminal; no orphan scan is running. No rerun with weakened roots/detectors,
+increased timeout or suppression is used to turn this into a pass.
+
+Locally/live-qualified shipment and full-scope completion remain distinct.
+Source/new-case checks, original R0 and installed affected CLI path are validated;
+full-context R1 remains incomplete and is retained as unfinished full-goal scope.
+No numeric processing changed, so no new CellProfiler numerical-parity assertion
+is made. Hosted CI is not a waiting gate under the explicit owner override.
