@@ -195,7 +195,11 @@ def _require_compared_output_inventory(
                 "Matched output inventory contains files without a value comparison: "
                 f"{tuple(sorted(files - compared_files))!r}."
             )
-        count = len(files) - sum(table.is_metadata_table for table in snapshot.tables)
+        count = (
+            len(files)
+            - len(snapshot.tables)
+            + sum(table.participates_in_comparison for table in snapshot.tables)
+        )
         if count < 1:
             raise RuntimeError("Matched batch has no compared scientific output files.")
         counts.append(count)
@@ -217,7 +221,7 @@ def _require_compared_output_inventory(
                 len(table.rows),
             )
             for table in snapshot.tables
-            if not table.is_metadata_table
+            if table.participates_in_comparison
         )
         for snapshot in (reference_snapshot, candidate_snapshot)
     )
@@ -875,7 +879,7 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
                 f"{len(result['database_differences'])} database and "
-                f"{len(result['csv_differences'])} CSV and "
+                f"{len(csv_report.differences)} CSV and "
                 f"{len(result['image_differences'])} image differences.",
                 flush=True,
             )
@@ -890,7 +894,7 @@ def main(argv: list[str] | None = None) -> int:
                 or result["unexpected_output_files"]
                 or result["missing_declared_output_files"]
                 or result["database_differences"]
-                or result["csv_differences"]
+                or csv_report.differences
                 or result["image_differences"]
             ):
                 raise RuntimeError(

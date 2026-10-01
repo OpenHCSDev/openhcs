@@ -218,7 +218,7 @@ def _tables_by_schema(
 def _comparable_table_snapshots(
     tables: tuple[RuntimeTableSnapshot, ...],
 ) -> tuple[RuntimeTableSnapshot, ...]:
-    return tuple(table for table in tables if not table.is_metadata_table)
+    return tuple(table for table in tables if table.participates_in_comparison)
 
 
 def _image_snapshots_equivalent(

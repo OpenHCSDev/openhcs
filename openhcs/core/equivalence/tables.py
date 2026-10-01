@@ -79,14 +79,14 @@ class RuntimeTableSnapshot:
     column_context: tuple[str | None, ...] = ()
 
     @property
-    def is_metadata_table(self) -> bool:
-        """Identify the engine's Experiment key/value receipt table."""
+    def participates_in_comparison(self) -> bool:
+        """Compare output tables except the engine's Experiment key/value receipt."""
         if normalize_runtime_identifier(self.path.stem) != "experiment":
-            return False
+            return True
         normalized_header = frozenset(
             normalize_runtime_identifier(column) for column in self.header
         )
-        return normalized_header == frozenset(("key", "value"))
+        return normalized_header != frozenset(("key", "value"))
 
     @classmethod
     def from_csv(cls, path: Path) -> "RuntimeTableSnapshot":

@@ -7,6 +7,7 @@ from subprocess import CompletedProcess
 
 import pytest
 from objectstate.context_manager import config_context
+from objectstate.global_config import GlobalContextValues
 
 import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.matched_cellprofiler_batch import (
@@ -20,7 +21,11 @@ from benchmark.matched_cellprofiler_batch import (
     _source_input_inventory,
     _worker_axis_evidence,
 )
-from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    MultiprocessingStartMethod,
+    PipelineConfig,
+)
 from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_equivalence import (
@@ -29,6 +34,14 @@ from openhcs.core.runtime_equivalence import (
     RuntimeTableSnapshot,
     runtime_measurement_equivalence,
 )
+
+
+@pytest.fixture(autouse=True)
+def restore_benchmark_global_context():
+    """Restore both saved and live projections changed by config rebuilding."""
+    previous = GlobalContextValues.capture(GlobalPipelineConfig)
+    yield
+    previous.apply()
 
 
 @pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))
@@ -111,7 +124,9 @@ def test_engine_metadata_classification_preserves_scientific_tables(
     header: tuple[str, ...],
     expected: bool,
 ) -> None:
-    assert RuntimeTableSnapshot(Path(path), header, ()).is_metadata_table is expected
+    assert RuntimeTableSnapshot(Path(path), header, ()).participates_in_comparison is (
+        not expected
+    )
 
 
 @pytest.mark.parametrize(
