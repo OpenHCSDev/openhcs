@@ -285,6 +285,8 @@ class McpDevOutputRendererBinding:
 class McpDevTypedOutputRenderer(McpDevOutputRenderer):
     """Shared contract descent for typed presentation members, never raw readers."""
 
+    unavailable_summary: ClassVar[str] = "Result: <unavailable>"
+
     @staticmethod
     def optional_lines(
         value: PresentationValue | None,
@@ -314,7 +316,7 @@ class McpDevTypedOutputRenderer(McpDevOutputRenderer):
             (result.first_decoded_payload() for result in decoded.results), None
         )
         lines = [
-            "Result: <unavailable>"
+            cls.unavailable_summary
             if payload is None
             else cls.render_payload_value(payload, options)
         ]
@@ -424,9 +426,9 @@ class McpDevPayloadProjection:
         return tuple(item for item in value if isinstance(item, Mapping))
 
     @staticmethod
-    def text(value: JsonValue) -> str:
+    def text(value: JsonValue, *, absent_text: str = "<none>") -> str:
         if value is None:
-            return "<none>"
+            return absent_text
         return str(value)
 
     @staticmethod

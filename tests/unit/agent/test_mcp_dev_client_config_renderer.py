@@ -14,6 +14,7 @@ from openhcs.mcp.dev_client_core import (
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     McpDevOutputRenderer,
+    McpDevPayloadProjection,
 )
 
 
@@ -151,7 +152,7 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
         CatalogRenderOptions(),
     )
 
-    assert rendered.startswith("Result: <unavailable>\n")
+    assert rendered.startswith("Config schema: unavailable\n")
     assert (
         "- mcp_server_stale: The OpenHCS MCP server source changed after this "
         'process started. hint="Restart the MCP client/server process."'
@@ -175,7 +176,7 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
         },
         CatalogRenderOptions(),
     )
-    assert transport_rendered.startswith("Result: <unavailable>\n")
+    assert transport_rendered.startswith("Config schema: unavailable\n")
     assert (
         "- mcp_transport_failed: MCP stdio exchange ended during source reload. "
         'hint="Retry with a fresh server process."'
@@ -360,9 +361,39 @@ def test_config_schema_rejects_incomplete_nested_record() -> None:
     binding = McpDevOutputRenderer.for_output_contract(ConfigSchema)
     assert binding is not None
     rendered = binding.render_with_options(response, CatalogRenderOptions())
-    assert rendered.startswith("Result: <unavailable>\n")
+    assert rendered.startswith("Config schema: unavailable\n")
     assert "mcp_payload_invalid" in rendered
     assert "Fields: total=" not in rendered
+
+
+def test_shared_nullable_text_policy_preserves_present_values() -> None:
+    for value, expected in ((None, "<none>"), ("", ""), (0, "0"), (False, "False")):
+        assert McpDevPayloadProjection.text(value) == expected
+        assert McpDevPayloadProjection.text(value, absent_text="<root>") == (
+            "<root>" if value is None else expected
+        )
+
+    schema = (
+        McpDevToolBatchResponse.for_rendering(_config_schema_response())
+        .results[0]
+        .first_decoded_payload()
+    )
+    binding = McpDevOutputRenderer.for_output_contract(ConfigSchema)
+    assert binding is not None
+    for prefix, expected in ((None, "<root>"), ("", ""), ("children", "children")):
+        changed = replace(schema, path_prefix=prefix)
+        response = McpDevToolBatchResponse(
+            server=McpDevServerIdentity(command="python", module="openhcs.mcp"),
+            results=(
+                McpDevToolResult(
+                    tool="openhcs_describe_config_schema",
+                    mcp_error=False,
+                    payloads=(changed,),
+                ),
+            ),
+        )
+        rendered = binding.render_result(response, CatalogRenderOptions())
+        assert f"path={expected} authoring=ConfigPatch.values" in rendered
 
 
 def test_config_schema_renderer_has_no_raw_payload_reader() -> None:

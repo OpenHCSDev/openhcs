@@ -11,6 +11,7 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
+    McpDevPayloadProjection,
     McpDevTypedOutputRenderer,
 )
 
@@ -20,6 +21,7 @@ class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
 
     output_contract = ConfigSchema
     render_options_type = CatalogRenderOptions
+    unavailable_summary = "Config schema: unavailable"
 
     @classmethod
     def render_payload(
@@ -30,7 +32,9 @@ class ConfigSchemaRenderer(McpDevTypedOutputRenderer):
         all_fields = payload.fields
         matched_fields = cls._matching_fields(all_fields, options.contains)
         visible_fields = matched_fields[: max(options.limit, 0)]
-        path_text = "<root>" if payload.path_prefix is None else payload.path_prefix
+        path_text = McpDevPayloadProjection.text(
+            payload.path_prefix, absent_text="<root>"
+        )
         lines = [
             (
                 "Config schema: "
