@@ -189,3 +189,38 @@ user entrypoint must execute matched synthetic aligned primary and auxiliary
 images, retain exact typed outputs/masks/provenance and satisfy the raw
 callable's dense ABI. Neither source tests nor old frozen H003g are substitutes
 for that gate. Original R1 remains explicitly unqualified as described above.
+
+Binding nominal review / opaque-kwarg correction
+------------------------------------------------
+
+The current NRA skill and authoritative refactor-audit ZIP main, pattern
+README, implementation, membership, boundaries and surface-receipt references
+were reread personally. IMPL-12/13 and BOUND-2 still identify the actual shared
+composition/projection owners; no new copied procedure or mirror is needed.
+
+The review tightened two witnesses. A new CalibratedAlignedImageStack supplies
+only a cooperative per-input calibration hook; the existing registered MRO
+projection and real rescale executor consume it with no dispatcher/executor
+edit. Exact pixels, runtime axis, spacing and original source identities pass.
+A named bundle now includes real inner runtime-plane provenance and asserts
+the exact outer SOURCE_BINDING aliases and contributor paths after selection.
+The bundle's identity metadata hook is an alternative axis policy: it must not
+clear the named outer alias by applying the runtime-stack contributor promotion.
+Both use the ancestor's actual compose algorithm, not a leaf copy or direct
+ancestor jump. The older bare-array bundle test alone did not prove this.
+
+Full-stack projection must not impose the slice-mode registration requirement
+on opaque kwargs. The facade now asks the existing nominal registry's optional
+for_nominal_value resolver and preserves an unregistered whole-stack value
+unchanged. Registered image owners still materialize through their hooks;
+slice-mode strategy_for_value remains strict. Four added actual executor
+controls prove opaque kwarg identity for every ProcessingContract, alongside
+the typed non-image/image identity control. This fixes a regression risk in
+published 34203beb1, not a new scientific input requirement or fallback reader.
+
+Local corrected source: 117 family cases PASS, 3.36 seconds pytest / 4.15
+seconds wall, 322644 KiB RSS, under the existing one CPU / 512 MiB / no swap /
+60-second shard. The original 34203beb1 source/installed receipts are retained
+and are not relabelled as acceptance of this correction. Parent explicitly
+dispositioned that prepared predecessor before publication/rebuild. Original
+R1 remains unqualified; updated exact-production R0 is recorded separately.

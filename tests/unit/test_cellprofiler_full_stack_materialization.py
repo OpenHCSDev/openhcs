@@ -208,6 +208,87 @@ def test_named_output_bundle_materializes_its_own_source_binding_axis():
     assert bundle.slices == planes
 
 
+def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance():
+    spacing = SourceVoxelSpacing((1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS)
+    payloads = []
+    for channel, alias in enumerate(("red", "green"), start=1):
+        metadata = ImagePayloadMetadata(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            source_image_names=(alias,),
+            source_voxel_spacing=spacing,
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=tuple(f"/synthetic/{alias}_s{site}.tif" for site in (1, 2)),
+                component_metadata=tuple(
+                    {"site": str(site), "channel": str(channel)} for site in (1, 2)
+                ),
+            ),
+        )
+        payloads.append(metadata.payload_with(np.full((2, 3, 4), channel), None))
+    bundle = ImageOutputBundle(
+        tuple(payloads),
+        tuple(AlignedImageSliceContext.main_flow(alias) for alias in ("red", "green")),
+    )
+    dense = RuntimeSliceProjection.full_stack_value(bundle)
+    metadata = image_payload_metadata(dense)
+    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.source_image_names == ("red", "green")
+    assert metadata.source_provenance.source_plane_count == 2
+    assert metadata.source_voxel_spacing == spacing
+    for index, alias in enumerate(("red", "green")):
+        selected = RuntimeSliceProjection.value_for_slice(
+            dense,
+            RuntimePlaneAxisValueProjection.from_selected_plane(
+                axis=RuntimePlaneAxis.SOURCE_BINDING, plane_index=index, axis_size=2
+            ),
+        )
+        np.testing.assert_array_equal(
+            image_payload_data(selected), image_payload_data(payloads[index])
+        )
+        selected_metadata = image_payload_metadata(selected)
+        assert selected_metadata.source_image_names == (alias,)
+        assert {
+            identity.path
+            for identity in selected_metadata.source_provenance.represented_source_identities
+        } == {f"/synthetic/{alias}_s{site}.tif" for site in (1, 2)}
+
+
+def test_new_calibrated_nominal_stack_reaches_real_callable_without_dispatch_edits():
+    spacing = SourceVoxelSpacing((1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS)
+
+    class CalibratedAlignedImageStack(AlignedImageStack):
+        """A generated acquisition grid owns one additional metadata fact."""
+
+        def composition_payload_metadata(self, metadata):
+            return super().composition_payload_metadata(metadata).replace_fields(
+                source_voxel_spacing=spacing
+            )
+
+    data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+    payloads = tuple(
+        ImagePayloadMetadata(source_path=f"/synthetic/site_{index}.tif").payload_with(
+            plane, None
+        )
+        for index, plane in enumerate(data)
+    )
+    aligned = CalibratedAlignedImageStack(payloads)
+    contract = CallableContract.from_callable(rescale_intensity)
+    result = CellProfilerFunctionContractExecutor().execute(
+        contract,
+        contract.resolve_canonical_raw_callable(),
+        aligned,
+        {},
+        execution_mode=contract.runtime_image_execution_mode,
+    )
+    np.testing.assert_allclose(image_payload_data(result), data / 23.0)
+    metadata = image_payload_metadata(result)
+    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.source_voxel_spacing == spacing
+    assert {
+        identity.path
+        for identity in metadata.source_provenance.represented_source_identities
+    } == {"/synthetic/site_0.tif", "/synthetic/site_1.tif"}
+
+
 def test_ragged_aligned_images_fail_before_dense_callable():
     aligned = AlignedImageStack((np.zeros((2, 3)), np.zeros((3, 3))))
     with pytest.raises(ValueError, match="one exact shape"):
@@ -237,6 +318,7 @@ def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
         array, array > 0
     )
     aligned_tokens = RuntimeSliceAlignedValues((labels, table))
+    opaque = object()
     kwargs = {
         "rows": rows,
         "table": table,
@@ -245,11 +327,40 @@ def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
         "tokens": aligned_tokens,
         "array": array,
         "image": image,
+        "opaque": opaque,
     }
     materialized = RuntimeSliceProjection.full_stack_kwargs(kwargs)
     assert materialized is not kwargs
     for name, value in kwargs.items():
         assert materialized[name] is value
+
+
+@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
+def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contract):
+    opaque = object()
+    image = np.ones((2, 3, 4), dtype=np.float32)
+    calls = []
+
+    def consume(image, *, options):
+        calls.append(options)
+        assert options is opaque
+        return image
+
+    contract = CallableContract(
+        func=consume,
+        function_name="consume",
+        module_name="OpaqueFullStackProbe",
+        metadata=CallableMetadata(processing_contract=processing_contract),
+    )
+    result = CellProfilerFunctionContractExecutor().execute(
+        contract,
+        consume,
+        image,
+        {"options": opaque},
+        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+    )
+    assert calls == [opaque]
+    assert image_payload_data(result) is image
 
 
 @pytest.mark.parametrize("reverse", (False, True))
