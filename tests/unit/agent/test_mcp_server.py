@@ -11044,6 +11044,18 @@ def test_mcp_dev_client_workflow_poll_terminal_state_policy():
     )
 
 
+def _state_surface_dev_wire(dev_client):
+    """Declare the complete wire envelope; each poll test supplies its body."""
+    return dev_client.to_jsonable(UiStateSurfaceDocument(
+        schema_version=SCHEMA_VERSION,
+        summary=UiStateSurfaceSummary(
+            SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+            "Plate Manager", True, widget_id="plate_manager",
+        ),
+        payload_schema="openhcs.ui.plate_manager_state.v1", payload={},
+    ))
+
+
 def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
     import openhcs.mcp.dev_client as dev_client
 
@@ -11052,6 +11064,7 @@ def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11097,6 +11110,7 @@ def test_mcp_dev_client_workflow_poll_waits_for_manager_finalization():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "running",
                     "rows": [
@@ -11139,6 +11153,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11158,6 +11173,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "payload": {
                     "manager_execution_state": "idle",
                     "rows": [
@@ -11223,6 +11239,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if compiled else "running"),
@@ -11349,6 +11366,7 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
                     "payload": {"object_state_token": 1, "rows": []},
                 },
@@ -11426,6 +11444,7 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
                     "payload": {"object_state_token": 1, "rows": []},
                 },
@@ -11469,6 +11488,7 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "prior-completed-run",
                 "payload": {
                     "manager_execution_state": "idle",
@@ -11543,6 +11563,7 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
         mcp_error=False,
         payloads=(
             {
+                **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "already-initialized",
                 "payload": {
                     "manager_execution_state": "idle",
@@ -11654,6 +11675,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if compiled else "running"),
@@ -11761,6 +11783,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "terminal",
                     "payload": {
                         "manager_execution_state": "idle",
@@ -11852,6 +11875,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
                 mcp_error=False,
                 payloads=(
                     {
+                        **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "baseline",
                         "payload": {"object_state_token": 1, "rows": []},
                     },
@@ -11942,6 +11966,7 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
             mcp_error=False,
             payloads=(
                 {
+                    **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
                     "payload": {
                         "manager_execution_state": ("idle" if failed else "running"),
@@ -12029,6 +12054,7 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
                 mcp_error=False,
                 payloads=(
                     {
+                        **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "rev-1",
                         "payload": {
                             "object_state_token": 1,
