@@ -221,7 +221,9 @@ class TypedCompositeCommandSpec(McpDevCommandSpec):
 
     def render_result(self, response, args: argparse.Namespace) -> str:
         if args.json:
-            return super().render_result(response, args)
+            from openhcs.serialization.json import to_jsonable
+
+            return super().render_response(to_jsonable(response), args)
         return self.render_response(response, args)
 
 

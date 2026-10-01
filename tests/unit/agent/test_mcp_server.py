@@ -9105,6 +9105,7 @@ def test_mcp_dev_client_invoke_action_renders_receipt_and_polling():
     parser = dev_client._build_parser()
     args = parser.parse_args(("invoke-action", "plate_manager", "compile_plate"))
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -9112,6 +9113,11 @@ def test_mcp_dev_client_invoke_action_renders_receipt_and_polling():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "test",
+                        "identity": {
+                            "widget_id": "plate_manager",
+                            "action_id": "compile_plate",
+                        },
                         "status": "rejected",
                         "receipt": {
                             "accepted": False,
@@ -11288,7 +11294,7 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11374,7 +11380,7 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
     if receipt_status is not None:
         expected_call_names.append("openhcs_ui_wait_for_operation_receipt")
     assert [call.name for call in calls] == expected_call_names
-    assert response.results[-1].payloads[0] == {
+    assert dev_client.to_jsonable(response.results[-1].payloads[0]) == {
         "poll_status": expected_poll_status,
         "poll_requested": True,
         "poll_completed": False,
@@ -11443,10 +11449,9 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
         "openhcs_ui_selected_plate_workflow",
         "openhcs_ui_wait_for_operation_receipt",
     ]
-    assert response.results[-1].payloads[0]["poll_status"] == "failed"
-    assert response.results[-1].payloads[0]["skip_reason"] == (
-        "operation_receipt_failed"
-    )
+    assert response.results[-1].payloads[0].status is dev_client.WorkflowPollSummaryStatus.FAILED
+    from openhcs.mcp.dev_client_core import WorkflowPollSkipReason
+    assert response.results[-1].payloads[0].skip_reason is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
 
 
 def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
@@ -11519,8 +11524,8 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
     ]
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0]["poll_status"] == "timeout"
-    assert summary.payloads[0]["poll_count"] == 1
+    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.TIMEOUT
+    assert summary.payloads[0].poll_count == 1
 
 
 def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state(
@@ -11597,8 +11602,8 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
     ]
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0]["poll_status"] == "completed"
-    assert summary.payloads[0]["poll_count"] == 1
+    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.COMPLETED
+    assert summary.payloads[0].poll_count == 1
 
 
 def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_timeout(
@@ -11697,7 +11702,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11802,7 +11807,7 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
     )
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "completed",
         "poll_requested": True,
         "poll_completed": True,
@@ -11894,7 +11899,7 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
     assert response.results[-2].has_errors()
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,
@@ -11982,7 +11987,7 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -12074,7 +12079,7 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "failed",
         "poll_requested": True,
         "poll_completed": False,
@@ -12099,62 +12104,53 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
             "--poll-state",
         )
     )
-    response = {
-        "errors": [],
-        "results": [
-            {
-                "tool": "openhcs_ui_selected_plate_workflow",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "action_result": {
-                            "status": "accepted",
-                            "target_scope_ids": ["scope-a"],
-                        }
-                    }
-                ],
-            },
-            {
-                "tool": "openhcs_ui_get_state_surface",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "payload": {
-                            "rows": [
-                                {
-                                    "name": "plate-a",
-                                    "orchestrator_state": "completed",
-                                    "status_prefix": "Complete",
-                                    "terminal_status": "complete",
-                                    "selected": True,
-                                },
-                                {
-                                    "name": "plate-a_openhcs",
-                                    "orchestrator_state": "created",
-                                    "status_prefix": "",
-                                    "terminal_status": None,
-                                    "selected": False,
-                                },
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "tool": "mcp_dev_selected_workflow_poll",
-                "mcp_error": False,
-                "payloads": [
-                    {
-                        "workflow": "run_plate",
-                        "action_status": "accepted",
-                        "poll_status": "completed",
-                        "poll_count": 4,
-                        "target_scope_ids": ["scope-a"],
-                    }
-                ],
-            },
-        ],
-    }
+    from dataclasses import replace
+    from openhcs.agent.dto.ui_bridge import (
+        UiPlateManagerRowState, UiPlateManagerState, UiStateSurfaceDocument,
+        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+    )
+
+    row = UiPlateManagerRowState(
+        plate_scope_id="scope-a", name="plate-a", plate_root="/plate-a",
+        cppipe_path=None, selected=True, initialized=True, compiled=True,
+        init_pending=False, compile_pending=False, execution_active=False,
+        status_prefix="Complete", orchestrator_state="completed",
+        execution_id="execution-a", terminal_status="complete",
+        runtime_state=None, runtime_percent=None, queue_position=None,
+    )
+    output_row = replace(
+        row, plate_scope_id="scope-output", name="plate-a_openhcs", selected=False,
+        status_prefix="", orchestrator_state="created", terminal_status=None,
+    )
+    surface_summary = UiStateSurfaceSummary(
+        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager", True, widget_id="plate_manager",
+    )
+    native_state = UiPlateManagerState(
+        schema_version="test", summary=surface_summary, object_state_token=2,
+        manager_execution_state="idle", rows=(row, output_row),
+    )
+    state = UiStateSurfaceDocument(
+        schema_version="test",
+        summary=surface_summary,
+        payload_schema="openhcs.ui.plate_manager_state.v1",
+        payload=dev_client.to_jsonable(native_state),
+    )
+    response = dev_client.McpDevToolBatchResponse.from_results(
+        dev_client.McpDevServerSpec(sys.executable),
+        (
+            _accepted_workflow_dev_result(dev_client, workflow="run_plate"),
+            dev_client.McpDevToolResult(
+                tool="openhcs_ui_get_state_surface", mcp_error=False,
+                payloads=(dev_client.to_jsonable(state),),
+            ),
+            dev_client.workflow_poll_summary_result(
+                workflow="run_plate", status=dev_client.WorkflowPollSummaryStatus.COMPLETED,
+                poll_requested=True, poll_completed=True, poll_count=4,
+                target_scope_ids=("scope-a",), action_status="accepted",
+            ),
+        ),
+    )
 
     rendered = dev_client.McpDevCommandSpec.for_name(
         "selected-workflow"
@@ -12171,13 +12167,8 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
 
     # The production entrypoint now retains a batch. The pending workflow's
     # distinct composite view must not be replaced by its primary tool view.
-    from python_introspect import dataclass_from_mapping
-    from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
-
-    response["server"] = _dev_client_server_fixture()
-    framed = dataclass_from_mapping(McpDevToolBatchResponse, response)
     assert dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(
-        framed, args
+        response, args
     ) == rendered
 
 
@@ -12189,6 +12180,24 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
 
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
+    from openhcs.agent.dto.ui_bridge import (
+        UiPlateManagerState, UiStateSurfaceDocument,
+        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+    )
+
+    surface_summary = UiStateSurfaceSummary(
+        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager", True, widget_id="plate_manager",
+    )
+    baseline = UiPlateManagerState(
+        schema_version="test", summary=surface_summary, object_state_token=1,
+        manager_execution_state="idle", rows=(), current_revision_token="rev-1",
+    )
+    baseline_document = UiStateSurfaceDocument(
+        schema_version="test", summary=surface_summary,
+        payload_schema="openhcs.ui.plate_manager_state.v1",
+        payload=dev_client.to_jsonable(baseline), current_revision_token="rev-1",
+    )
 
     calls: list[dev_client.McpDevToolCall] = []
 
@@ -12198,15 +12207,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
             return dev_client.McpDevToolResult(
                 tool=call.name,
                 mcp_error=False,
-                payloads=(
-                    {
-                        "current_revision_token": "rev-1",
-                        "payload": {
-                            "object_state_token": 1,
-                            "rows": [],
-                        },
-                    },
-                ),
+                payloads=(dev_client.to_jsonable(baseline_document),),
             )
         return _rejected_workflow_dev_result(
             dev_client,
@@ -12240,7 +12241,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     summary = response.results[-1]
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "skipped",
         "poll_requested": True,
         "poll_completed": False,
@@ -12253,7 +12254,7 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
 
     rendered = dev_client.McpDevCommandSpec.for_name(
         "selected-workflow"
-    ).render_response(dev_client.to_jsonable(response), args)
+    ).render_result(response, args)
 
     assert "Workflow: compile_plate" in rendered
     assert "Skip reason: workflow_not_accepted" in rendered
@@ -12276,7 +12277,7 @@ def test_mcp_dev_client_workflow_poll_timeout_summary_is_error():
 
     assert summary.tool == "mcp_dev_selected_workflow_poll"
     assert summary.mcp_error is True
-    assert summary.payloads[0] == {
+    assert dev_client.to_jsonable(summary.payloads[0]) == {
         "poll_status": "timeout",
         "poll_requested": True,
         "poll_completed": False,

@@ -638,6 +638,7 @@ class WorkflowStatePollPolicy:
 class WorkflowPollSummary:
     """Structured selected-workflow polling summary for agent recovery logic."""
 
+    tool_name: ClassVar[str] = "mcp_dev_selected_workflow_poll"
     workflow: str | None
     status: WorkflowPollSummaryStatus
     poll_requested: bool
@@ -669,6 +670,12 @@ class WorkflowPollSummary:
         if self.transient_poll_error_count:
             payload["transient_poll_error_count"] = self.transient_poll_error_count
         return payload
+
+
+@to_jsonable.register(WorkflowPollSummary)
+def _jsonable_workflow_poll_summary(value: WorkflowPollSummary) -> JsonValue:
+    """The owning summary preserves its existing external CLI projection."""
+    return value.as_payload()
 
 
 @dataclass(frozen=True, slots=True)
@@ -2576,9 +2583,9 @@ def workflow_poll_summary_result(
         transient_poll_error_count=transient_poll_error_count,
     )
     return McpDevToolResult(
-        tool="mcp_dev_selected_workflow_poll",
+        tool=WorkflowPollSummary.tool_name,
         mcp_error=summary.mcp_error,
-        payloads=(summary.as_payload(),),
+        payloads=(summary,),
     )
 
 

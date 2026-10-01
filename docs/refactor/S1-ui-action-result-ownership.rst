@@ -39,7 +39,7 @@ corrected the fixture without changing production or weakening an assertion.
 Both original failures and corrected output retained. Optional pytest plugin
 configuration warnings are not hidden. No source tests stand in for live UI QA.
 
-This is a DRAFT, not merge-ready. Existing named selected-workflow --wait is a
+Historical failing checkpoint: existing named selected-workflow --wait is a
 distinct composite presentation. Its current raw summary/state projection is
 not closed by the new primary-action binding. Need preserve/migrate that real
 production poll path and prove its existing behavioral controls before merge;
@@ -54,7 +54,49 @@ Its fixture also omits required action DTO fields; restore a full nominal
 fixture without weakening any summary/row expectations, then fix the real
 composite owner rather than adding serialization or raw decode fallbacks.
 
-Scientific native slot is currently owned by Schrodinger's frozen neurite task.
-No live native/UI test or private install update may compete with it. Parent
-continues this source family and serializes affected installed acceptance after
-the original scientific handles close. Full ZIP/goal scope remains active.
+Typed poll migration checkpoint
+-------------------------------
+
+Deleted the partial poll-summary reader, raw result/first-payload descent,
+duplicate workflow error traversal and text quoting helpers. The original
+WorkflowPollSummary now remains the producer-owned result until the explicit
+JSON output boundary; its original encoder owns that projection. No synthetic
+MCP capability or parallel schema registry is introduced. SelectedWorkflowCommandSpec
+composes TypedCompositeCommandSpec and CapabilityBackedCommandSpec through MI.
+The shared composite ancestor delegates JSON framing to the original ancestor
+without recursively dispatching the typed compact hook on a serialized record.
+
+The selected workflow's dynamic state document descends once into the existing
+UiPlateManagerState. Its rows are UiPlateManagerRowState, not partial records or
+a second schema. Missing required row facts fail closed. Other UI state-surface
+renderers/controllers remain unmigrated S1 work; this is not global S1 closure.
+The internal summary and action schemas are not advertised as new public formats.
+
+Real CLI/controller/codec source checks, with only the MCP wire controlled,
+cover dispatch, operation receipt, state polling, terminal row presentation,
+compact output without serialization, JSON output, malformed receipt/nonzero
+exit and original invalid-wire preservation. Existing stale-terminal, missing/
+failed receipt, transient timeout, rejection and failure controls retain their
+assertions. Full native fixtures replace incomplete hand-written records; no
+permissive decoder was added. Independent MI capability hooks are checked in
+both base orders, including the actual declaration-derived renderer binding.
+
+The focused family passed30 checks in8.81seconds/276.48MiB before adding the
+declared-state negative. A broader one-process CLI run stopped at the unchanged
+512MiB limit (514.24MiB observed,22.48seconds); it is not a passing run. Its
+first failing direct-action fixture omitted native schema/identity and framing.
+Those facts were restored without weakening receipt/poll/error assertions.
+The full CLI family is now split by exact test-node identity in50-function
+shards, not by omitting cases or increasing limits. Shards0/1 pass50 checks each;
+shard2 passes64 including all new action/MI/CLI/declared-state-negative checks.
+Their respective peak RSS is280.80/283.63/284.58MiB, each under11seconds.
+Final shard, R0/R1 and installed actual UI acceptance remain to be completed.
+All original failed commands and corrected checks remain in owned receipts.
+
+Schrodinger's original scientific trial is now terminal technical abstention,
+with zero scientific admissions. Original processes and listeners exited and
+the serialized native slot is independently verified released. Issue350 owns
+the separate channel-domain/provenance engineering repair; its worktree never
+changes this command/action family or the frozen trial. Parent owns PR349 source
+and release/live acceptance. This PR remains DRAFT, not merged/installed/live
+verified. No hosted CI wait. Full expanded ZIP/goal scope remains ACTIVE.
