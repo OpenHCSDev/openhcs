@@ -703,6 +703,12 @@ class SourceSelector:
             ),
         )
 
+    def path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match store-owned path provenance, without guessing decoded identity."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(source_filters_match(path, self.filters) for path in identities)
+
 
 def source_alias_measurement_names(alias: str) -> tuple[str, ...]:
     """Return measurement source-name tokens represented by a source alias."""
@@ -953,6 +959,26 @@ class NamedSourceBinding(SourceAssignmentBase):
             source_channel_counts = normalized_counts
         object.__setattr__(self, "source_channel_axis", source_channel_axis)
         object.__setattr__(self, "source_channel_counts", source_channel_counts)
+
+    def physical_path_matches(
+        self,
+        source_root: Path,
+        source_path: str | Path,
+        path_identities: tuple[str, ...],
+    ) -> bool:
+        """Admit one physical source using exact identity and path provenance.
+
+        Companion identities may satisfy selector filters, but do not replace
+        the exact source URI. Metadata/components require subsequent decoding.
+        """
+        if self.explicit_source is not None:
+            explicit_path = Path(self.explicit_source.resolved(source_root).uri)
+            candidate_path = Path(source_path)
+            if not candidate_path.is_absolute():
+                candidate_path = source_root / candidate_path
+            if candidate_path.resolve() != explicit_path.resolve():
+                return False
+        return self.selector.path_filters_match(path_identities)
 
     def source_channel_axis_for_shape(
         self,
@@ -1829,6 +1855,36 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         """Source filters explicitly declared on this plan."""
 
         return tuple(self.source_filters or ())
+
+    def source_path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match the declared source universe against physical path identities."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(
+            source_filters_match(identity, self.source_filter_declarations)
+            for identity in identities
+        )
+
+    def discovery_path_matches(self, root: Path, path: Path) -> bool:
+        """Apply known physical-path selections before decoding a source store.
+
+        Metadata and component selectors still belong to plane projection. An
+        unrestricted binding keeps discovery unrestricted, not just the first
+        filtered alias. All matching uses the existing source-filter owners.
+        """
+        root = root.resolve(strict=False)
+        resolved = path.resolve(strict=False)
+        identities = (resolved.as_posix(),)
+        if root.is_file():
+            identities = (resolved.name, *identities)
+        elif resolved.is_relative_to(root):
+            identities = (resolved.relative_to(root).as_posix(), *identities)
+        if not self.source_path_filters_match(identities):
+            return False
+        return not self.binding_declarations or any(
+            binding.physical_path_matches(root, resolved, identities)
+            for binding in self.binding_declarations
+        )
 
     def declaration_identity(self) -> str:
         """Return a stable identity for this complete source declaration."""
