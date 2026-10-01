@@ -1127,8 +1127,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
         self, context: ProcessingContext, plan: CompiledStepPlan
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Derive directories from the same writer outputs used to save artifacts."""
-        if not plan.artifact_outputs:
-            return ()
         directories = dict.fromkeys(
             Path(output.path).parent
             for materialization in runtime_artifact_materializations(plan, context)
