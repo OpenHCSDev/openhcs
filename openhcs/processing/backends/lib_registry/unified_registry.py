@@ -1309,11 +1309,9 @@ class FunctionMetadata:
 
 
 class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
-    """
-    Minimal ABC for all library registries.
+    """ABC for declared library registries.
 
-    Provides only essential contracts that all registries must implement,
-    regardless of whether they use runtime testing or explicit contracts.
+    Catalog projection, cache identity and runtime contracts live on this owner.
 
     Registry auto-created and stored as LibraryRegistryBase.__registry__.
     Subclasses auto-register by setting _registry_name class attribute.
