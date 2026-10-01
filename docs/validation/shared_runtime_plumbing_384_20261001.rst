@@ -194,6 +194,36 @@ External evidence: shared-runtime-plumbing-repaired-qualified-abba-summary-
 20261001.json and every corresponding source/input/observation receipt in the
 openhcs-benchmark-runs evidence directory.
 
+Existing-owner follow-up ordinary ABBA
+-------------------------------------
+
+The synchronized follow-up compares main 76a2d392 against candidate d9c9f8fe4.
+The candidate's production source is the locally qualified 84057fb revision;
+subsequent changes only retain the qualification receipt. Two observations per
+side use the same ordinary public path and retain every sample. In seconds:
+
+========================= ======================= =======================
+Case                      Mean execution          Mean pipeline total
+========================= ======================= =======================
+3D monolayer              11.173033 -> 9.979570    13.166303 -> 11.915196
+Imaging Flow Cytometry    16.847054 -> 18.891492   19.058024 -> 21.417949
+Advanced segmentation     8.802229 -> 8.616838     11.271471 -> 11.113117
+========================= ======================= =======================
+
+3D execution improves 10.68% and advanced execution 2.11%, while Imaging Flow
+Cytometry regresses 12.14%. Its candidate observations are 17.371243 and 20.411741
+seconds, compared with 17.554674 and 16.139433 for main. Compilation is also
+inflated in the slower candidate sweep. These samples establish mixed evidence,
+not a statistical significance or causal attribution; PR394 remains draft.
+
+All 24 ordered Imaging Flow Cytometry step occurrences align. Most of the extra
+time is inside steps, distributed across the slower candidate sweep. Between-step
+gaps remain about 0.017-0.023 seconds; execution outside the complete step span
+does not explain the regression. Existing output comparisons and shared metadata
+ownership investigation continue before promotion. Evidence:
+shared-plumbing-owner-followup-qualified-abba-20261001.json and its summary,
+source receipts and all per-step/progress observations.
+
 Fresh native qualification and next dominant route
 ------------------------------------------------
 
