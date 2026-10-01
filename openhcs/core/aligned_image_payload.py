@@ -32,6 +32,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadSliceProjector,
     ImagePayloadMetadataCarrier,
     ImagePayloadMetadataCompositionMode,
+    ImageMaskDomain,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
@@ -396,8 +397,6 @@ class AlignedImageStackKwargResolver:
         return adapter.value_in_payload_domain(reference)
 
 
-
-
 def stack_image_payload_context(
     image_payloads: Sequence[Any],
     stack: RuntimeArrayData,
@@ -413,6 +412,78 @@ def stack_image_payload_context(
     return metadata.payload_with(stack, _stack_image_payload_mask(payloads, stack))
 
 
+class ImagePayloadStackComposition(ABC):
+    """Compose pixels, masks and provenance on one declared leading axis."""
+
+    @property
+    @abstractmethod
+    def composition_payloads(self) -> tuple[Any, ...]: ...
+
+    @property
+    @abstractmethod
+    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode: ...
+
+    def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
+        return tuple(
+            self.composition_payload_metadata(image_payload_metadata(payload))
+            for payload in self.composition_payloads
+        )
+
+    def composition_payload_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Preserve each input's declared provenance unless the axis owner projects it."""
+        return metadata
+
+    def compose(self) -> Any:
+        payloads = self.composition_payloads
+        composed = self.compose_unmasked(
+            tuple(image_payload_data(payload) for payload in payloads)
+        )
+        metadata = ImagePayloadMetadata.compose(
+            payloads,
+            mode=self.composition_metadata_mode,
+            source_metadata=self.composition_source_metadata(),
+        )
+        return metadata.payload_with(composed, self.compose_mask(composed, metadata))
+
+    def compose_unmasked(
+        self, payloads: tuple[RuntimeArrayData, ...]
+    ) -> RuntimeArrayData:
+        memory_type = detect_memory_type(payloads[0])
+        return stack_runtime_slices(
+            payloads, memory_type, MemoryType(memory_type).device_id_of(payloads[0])
+        )
+
+    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -> Any | None:
+        return _stack_image_payload_mask(
+            self.composition_payloads,
+            composed,
+            output_mask_domain=metadata.mask_domain(composed),
+        )
+
+
+@dataclass(slots=True)
+class ImagePayloadStackContext(ImagePayloadStackComposition):
+    """Explicit dense stack inputs; the ancestor owns composition."""
+
+    payloads: Sequence[RuntimeArrayData]
+    metadata_mode: ImagePayloadMetadataCompositionMode
+
+    def __post_init__(self) -> None:
+        self.payloads = tuple(self.payloads)
+        if not self.payloads:
+            raise ValueError("Cannot stack an empty image payload sequence.")
+
+    @property
+    def composition_payloads(self) -> tuple[Any, ...]:
+        return tuple(self.payloads)
+
+    @property
+    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
+        return self.metadata_mode
+
+
 def stack_image_payloads(
     image_payloads: Sequence[Any],
     *,
@@ -420,16 +491,7 @@ def stack_image_payloads(
 ) -> Any:
     """Stack image payloads in their declared memory domain with full context."""
 
-    payloads = tuple(image_payloads)
-    if not payloads:
-        raise ValueError("Cannot stack an empty image payload sequence.")
-    arrays = tuple(image_payload_data(payload) for payload in payloads)
-    memory_type = detect_memory_type(arrays[0])
-    return stack_image_payload_context(
-        payloads,
-        stack_runtime_slices(arrays, memory_type, 0),
-        metadata_mode=metadata_mode,
-    )
+    return ImagePayloadStackContext(image_payloads, metadata_mode).compose()
 
 
 def stack_image_payload_context_from_metadata(
@@ -452,6 +514,8 @@ def stack_image_payload_context_from_metadata(
 def _stack_image_payload_mask(
     image_payloads: Sequence[Any],
     stack: RuntimeArrayData,
+    *,
+    output_mask_domain: ImageMaskDomain | None = None,
 ) -> RuntimeArrayData | None:
     masks = tuple(image_payload_mask(payload) for payload in image_payloads)
     if not any(mask is not None for mask in masks):
@@ -475,6 +539,18 @@ def _stack_image_payload_mask(
             strict=True,
         )
     )
+    stacked_mask_shape = (len(payloads), *tuple(np.shape(resolved_masks[0])))
+    if output_mask_domain is not None and not output_mask_domain.accepts(
+        stacked_mask_shape
+    ):
+        resolved_masks = tuple(
+            image_payload_metadata(payload)
+            .mask_domain(slice_domain)
+            .broadcast_to_data(mask)
+            for payload, slice_domain, mask in zip(
+                payloads, output_slice_domains, resolved_masks, strict=True
+            )
+        )
     return stack_runtime_slices(
         resolved_masks,
         detect_memory_type(stack),
@@ -692,18 +768,15 @@ class ImagePayloadComposition:
 
 
 @dataclass(slots=True)
-class ImagePayloadBundleContext:
+class ImagePayloadBundleContext(ImagePayloadStackContext):
     """Compose same-slice image bundle data, masks, and metadata together."""
 
-    payloads: Sequence[RuntimeArrayData]
     metadata_mode: ImagePayloadMetadataCompositionMode = (
         ImagePayloadMetadataCompositionMode.BUNDLE
     )
 
     def __post_init__(self) -> None:
-        self.payloads = tuple(self.payloads)
-        if not self.payloads:
-            raise ValueError("ImagePayloadBundleContext.payloads cannot be empty.")
+        super(ImagePayloadBundleContext, self).__post_init__()
         declared_axes = tuple(
             (
                 index,
@@ -724,7 +797,7 @@ class ImagePayloadBundleContext:
 
     @property
     def source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
-        return tuple(image_payload_metadata(payload) for payload in self.payloads)
+        return self.composition_source_metadata()
 
     @property
     def data_payloads(self) -> tuple[RuntimeArrayData, ...]:
@@ -752,17 +825,6 @@ class ImagePayloadBundleContext:
                 payloads
             ),
             metadata_mode=metadata_mode,
-        )
-
-    def compose(self) -> Any:
-        composed = self.compose_unmasked(self.data_payloads)
-        metadata = ImagePayloadMetadata.compose(
-            self.payloads,
-            mode=self.metadata_mode,
-        )
-        return metadata.payload_with(
-            composed,
-            self.compose_mask(composed, metadata),
         )
 
     def compose_mask(
@@ -1064,11 +1126,28 @@ class AlignedImageSliceContext:
 
 
 @dataclass(slots=True)
-class AlignedImageStack:
+class AlignedImageStack(ImagePayloadStackComposition):
     """Per-slice multi-image bundles aligned to one OpenHCS stack."""
 
     slices: tuple[Any, ...]
     slice_contexts: tuple[AlignedImageSliceContext, ...] = ()
+
+    @property
+    def composition_payloads(self) -> tuple[Any, ...]:
+        return self.slices
+
+    @property
+    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
+        return ImagePayloadMetadataCompositionMode.STACK
+
+    def composition_payload_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Inner image bundles contribute provenance, not an outer slice axis."""
+        metadata = super(AlignedImageStack, self).composition_payload_metadata(metadata)
+        return metadata.with_source_provenance(
+            metadata.source_provenance.with_runtime_planes_as_contributors()
+        )
 
     def __post_init__(self) -> None:
         self.slices = tuple(self.slices)
@@ -1144,8 +1223,25 @@ class AlignedImageStack:
 class ImageOutputBundle(AlignedImageStack):
     """Named main-flow image outputs sharing one invocation context."""
 
+    @property
+    def composition_payloads(self) -> tuple[Any, ...]:
+        return tuple(
+            context.contextualize_image_payload(payload)
+            for payload, context in zip(self.slices, self.slice_contexts, strict=True)
+        )
+
+    @property
+    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
+        return ImagePayloadMetadataCompositionMode.BUNDLE
+
+    def composition_payload_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Named output surfaces remain source-binding planes, not runtime slices."""
+        return metadata
+
     def __post_init__(self) -> None:
-        AlignedImageStack.__post_init__(self)
+        super(ImageOutputBundle, self).__post_init__()
         if not self.slice_contexts or any(
             context.is_anonymous_main_flow for context in self.slice_contexts
         ):
