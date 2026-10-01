@@ -28,6 +28,7 @@ from openhcs.core.viewer_streaming_service import (
     ImageStreamingRequest,
     ViewerStreamingSource,
 )
+from openhcs.serialization.json import to_jsonable
 
 
 def image_with_declaration(axis, count=1, *, color=False, masked=False):
@@ -127,6 +128,44 @@ def test_declared_axis_without_runtime_provenance_is_not_fabricated():
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING
     ).payload_with(np.zeros((1, 5, 6)))
     assert request().project_image(original) is original
+
+
+def test_independent_metadata_capabilities_execute_original_owner_hook():
+    calls = []
+
+    class ObservedProof:
+        def singleton_plane_projection(self):
+            calls.append("observe")
+            return super().singleton_plane_projection()
+
+    class PhysicalProof:
+        def singleton_plane_projection(self):
+            calls.append("physical")
+            SourceVoxelSpacing.require_physical_pixel_size((self.source_voxel_spacing,))
+            return super().singleton_plane_projection()
+
+    class CalibratedMetadata(ObservedProof, PhysicalProof, ImagePayloadMetadata):
+        pass
+
+    original = image_with_declaration(RuntimePlaneAxis.SOURCE_BINDING, masked=True)
+    metadata = CalibratedMetadata.from_mapping(
+        to_jsonable(image_payload_metadata(original))
+    )
+    declared = metadata.payload_with(
+        image_payload_data(original), image_payload_mask(original)
+    )
+    projected = request().project_image(declared)
+    assert calls == ["observe", "physical"]
+    np.testing.assert_array_equal(
+        image_payload_data(projected), image_payload_data(original)[0]
+    )
+    np.testing.assert_array_equal(
+        image_payload_mask(projected), image_payload_mask(original)[0]
+    )
+    assert image_payload_metadata(projected).source_image_names == ("FITC",)
+    assert image_payload_metadata(projected).source_voxel_spacing == SourceVoxelSpacing(
+        (1.3556, 1.3556)
+    )
 
 
 def test_independent_capabilities_cooperate_with_full_native_window_admission(tmp_path):
