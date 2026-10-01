@@ -48,9 +48,11 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.measurement_feature_queries import (
+    RuntimeObjectLabelMeasurementQueryCache,
+)
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
-    object_label_measurement_values_cache,
 )
 
 AXIS_ID = "A01"
@@ -238,7 +240,9 @@ def test_object_label_measurements_use_store_bound_values_cache() -> None:
     )
     query = request.measurement_query(adapter)
     expected = (np.asarray([11.0], dtype=np.float64),)
-    object_label_measurement_values_cache(store)[query] = expected
+    store.query_cache(RuntimeObjectLabelMeasurementQueryCache).store_value(
+        query, expected
+    )
 
     resolved = request.values(adapter)
 

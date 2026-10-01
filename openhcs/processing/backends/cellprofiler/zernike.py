@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -59,19 +60,17 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
     CellProfilerBackendAuthority,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     minimum_enclosing_circle_from_labels,
 )
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    WideObjectMeasurementColumnarRows,
+from openhcs.core.measurement_row_materialization import (
+    ObjectMeasurementColumnarRows,
 )
 
 _INTENSITY_DEBUG_TRACE_DIR_ENV = "OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR"
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 ZernikeMomentIndexes: TypeAlias = tuple[tuple[int, int], ...]
@@ -652,7 +651,7 @@ class IntensityZernikeMeasurementRowsRequest:
 
 
 @dataclass(slots=True)
-class ObjectIntensityZernikeMeasurementColumnarRows(WideObjectMeasurementColumnarRows):
+class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRows):
     """Columnar intensity-Zernike measurement rows."""
 
     object_ids: Sequence[int]
@@ -762,11 +761,16 @@ class ObjectIntensityZernikeMeasurementColumnarRows(WideObjectMeasurementColumna
         return self._fields
 
 
-_ZERNIKE_LABEL_GEOMETRY_CACHE: OrderedDict[
-    tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
-    _ZernikeLabelGeometry,
-] = OrderedDict()
-_ZERNIKE_LABEL_GEOMETRY_CACHE_MAX_ENTRIES = 16
+@dataclass
+class ZernikeLabelGeometryCache(
+    RegisteredProcessLocalBoundedCache[
+        tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
+        _ZernikeLabelGeometry,
+    ]
+):
+    """Process-local numerical geometry with shared bounded storage."""
+
+    max_entries: int = 16
 
 
 class ShapeZernikeBackendStrategy(
@@ -857,9 +861,8 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             time.perf_counter() - key_started_at,
             objects=object_ids_array.size,
         )
-        entry = _ZERNIKE_LABEL_GEOMETRY_CACHE.get(key)
+        entry = ZernikeLabelGeometryCache.process_cache().cached_value(key)
         if entry is not None:
-            _ZERNIKE_LABEL_GEOMETRY_CACHE.move_to_end(key)
             runtime_profiler.log(
                 "zernike_geometry_cache_hit",
                 time.perf_counter() - total_started_at,
@@ -906,13 +909,7 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             label_values=np.ascontiguousarray(label_values, dtype=np.int32),
             raw_label_values=raw_label_values,
         )
-        _ZERNIKE_LABEL_GEOMETRY_CACHE[key] = geometry
-        _ZERNIKE_LABEL_GEOMETRY_CACHE.move_to_end(key)
-        while (
-            len(_ZERNIKE_LABEL_GEOMETRY_CACHE)
-            > _ZERNIKE_LABEL_GEOMETRY_CACHE_MAX_ENTRIES
-        ):
-            _ZERNIKE_LABEL_GEOMETRY_CACHE.popitem(last=False)
+        ZernikeLabelGeometryCache.process_cache().store_value(key, geometry)
         runtime_profiler.log(
             "zernike_geometry_total",
             time.perf_counter() - total_started_at,

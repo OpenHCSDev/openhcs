@@ -1,4 +1,5 @@
 from dataclasses import replace
+import pickle
 
 import numpy as np
 import pytest
@@ -43,6 +44,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.measurement_row_materialization import (
+    MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.runtime_measurements import (
@@ -55,6 +57,11 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
+from openhcs.core.measurement_feature_queries import (
+    RuntimeObjectLabelMeasurementQuery,
+    RuntimeObjectLabelMeasurementQueryCache,
+)
+from openhcs.core.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
 )
@@ -127,6 +134,103 @@ def _runtime_value(name="measurements", path="/memory/measurements.pkl"):
         ),
         axis_id="A01",
     )
+
+
+def _label_query(feature_name="AreaShape_Area"):
+    return RuntimeObjectLabelMeasurementQuery(
+        axis_id="A01",
+        group_key="DAPI",
+        object_name="Cells",
+        feature_name=feature_name,
+        label_domain=(1,),
+    )
+
+
+@pytest.mark.parametrize("mutation", ("record", "replace", "clear", "merge"))
+def test_store_mutations_invalidate_all_derived_query_domains(mutation):
+    store = RuntimeValueStore()
+    original = _runtime_value()
+    store.record(original, path="/memory/measurements.pkl", backend="memory")
+    label_cache = store.query_cache(RuntimeObjectLabelMeasurementQueryCache)
+    tables_cache = store.query_cache(RuntimeMeasurementTablesQueryCache)
+    query = _label_query()
+    label_cache.store_value(query, (np.asarray([11.0]),))
+    tables_cache.store_value(("A01", "DAPI"), (original.data,))
+
+    if mutation == "record":
+        store.record(_runtime_value("new"), path="/memory/new.pkl", backend="memory")
+    elif mutation == "replace":
+        store.replace(original, path="/memory/replacement.pkl", backend="memory")
+    elif mutation == "clear":
+        store.clear()
+    else:
+        worker = RuntimeValueStore()
+        worker.record(
+            _runtime_value("worker"), path="/memory/worker.pkl", backend="memory"
+        )
+        store.merge_observed_values(worker.observed_values)
+
+    assert label_cache.cached_value(query) is None
+    assert tables_cache.cached_value(("A01", "DAPI")) is None
+    assert store.query_cache(RuntimeObjectLabelMeasurementQueryCache) is label_cache
+    assert store.query_cache(RuntimeMeasurementTablesQueryCache) is tables_cache
+
+
+def test_store_query_values_are_bounded_and_isolated_between_stores():
+    first, second = RuntimeValueStore(), RuntimeValueStore()
+    first_cache = first.query_cache(RuntimeObjectLabelMeasurementQueryCache)
+    second_cache = second.query_cache(RuntimeObjectLabelMeasurementQueryCache)
+    first_cache.max_entries = 2
+    queries = tuple(_label_query(feature) for feature in ("a", "b", "c"))
+    values = (np.asarray([42.0]),)
+    first_cache.store_value(queries[0], values)
+    first_cache.store_value(queries[1], values)
+    assert first_cache.cached_value(queries[0]) is values
+    first_cache.store_value(queries[2], values)
+
+    assert first_cache.cached_value(queries[0]) is values
+    assert first_cache.cached_value(queries[1]) is None
+    assert first_cache.cached_value(queries[2]) is values
+    assert second_cache.cached_value(queries[0]) is None
+
+
+def test_store_transport_excludes_derived_caches_and_retains_records():
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    value.data.rows = MeasurementProjectedColumnarRows(
+        {"object_id": (1,)}, fields=(FieldSpec("object_id", int),)
+    )
+    store.record(value, path="/memory/measurements.pkl", backend="memory")
+    serialized_without_cache = pickle.dumps(store, protocol=5)
+    query = _label_query()
+    cache = store.query_cache(RuntimeObjectLabelMeasurementQueryCache)
+    values = (np.ones(100_000),)
+    cache.store_value(query, values)
+    store.query_cache(RuntimeMeasurementTablesQueryCache).store_value(
+        ("A01", "DAPI"), (value.data,)
+    )
+
+    assert pickle.dumps(store, protocol=5) == serialized_without_cache
+    restored = pickle.loads(serialized_without_cache)
+    assert restored.revision == store.revision
+    assert len(restored) == len(store) == 1
+    assert (
+        restored.observed_values[0].value.data.row_mappings()
+        == value.data.row_mappings()
+    )
+    assert (
+        restored.query_cache(RuntimeObjectLabelMeasurementQueryCache).cached_value(
+            query
+        )
+        is None
+    )
+    assert (
+        restored.query_cache(RuntimeMeasurementTablesQueryCache).cached_value(
+            ("A01", "DAPI")
+        )
+        is None
+    )
+    assert cache.cached_value(query) is values
 
 
 def test_output_plan_uses_its_single_scope_for_ungrouped_invocation():
