@@ -1,13 +1,16 @@
 Managed render-complete snapshots and spatial QA, issues363/366
-==============================================================
+===============================================================
 
 Integration owner: Singer/Codex managed-viewer QA sidecar. Source base791650087.
 Persistent source: /home/ts/wt/openhcs-render-complete-snapshot-20261001 and
 /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001. Paired dependency
-ad49487 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
-OpenHCS draft364 closes363 and366. Parent installed0585bf5/2de6bc0 and found
-snapshot acceptance FAILED; the receiving-binding repair is source-only.
-Closes #363. Closes #366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
+ad49487 (merged PyQT-reactive10), extended from the original3437d1c gitlink.
+Current status: paired fix merged; parent installed native capture and RGB
+sampling acceptance PASS. OpenHCS364 merge fe7ad23cc6ffc43eebac0e315d411142e4057364;
+PyQT-reactive10 merge bbd926a9426f972342c99a558358df156a01a10d.
+Resolved issues363/366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
+The earlier failed0585bf5/2de6bc0 checkpoint is historical evidence below,
+not the current acceptance status. This follow-up changes documentation only.
 
 Required relation
 -----------------
@@ -46,8 +49,8 @@ Original parent evidence
 Installed OpenHCS3d58912, manualraw STACK ch1+2 and registrygamma1identity
 streamed LAYER in the same viewer. Transcript/input under
 /home/ts/wt/openhcs-issue-batch-20260929/paired350-installed-20261001.
-Black immediate frames: captures/identity/ch1/result/20261001T114832886256Z_
-napari_5992_OpenHCS_Napari_Visualization.png and ch2/result/114833354026Z.
+Black immediate frames: ``captures/identity/ch1/result/20261001T114832886256Z_napari_5992_OpenHCS_Napari_Visualization.png``
+and ch2/result/114833354026Z.
 Valid later same-coordinate frame: ch1/result-settled/114930892910Z.
 Original failures and artifacts stay untouched. No scientific rerun.
 
@@ -212,16 +215,17 @@ extension and exact owned agent-scratch directory are disposable and removed
 after archival; source worktrees, original parent witnesses and installed
 packages remain untouched.
 
-This receipt is a focused source/ownership review, not a completed global NRA
-scan or equivalence proof. The user's source-only limits govern validation;
-no native application, MCP server, install, build, download or scientific run.
+The source/ownership checks above are not a completed global NRA scan or
+equivalence proof. The sidecar's source-only limits governed those checks;
+it launched no native application, MCP server, install, build, download or
+scientific run. Parent installed acceptance is separately recorded below.
 OpenHCS root conftest is intentionally excluded because it owns runtime cleanup.
-Installed acceptance must repeat the original channel isolation/navigation and
-same-coordinate snapshot journey, inspect render receipts and exact RGB samples
-through the actual MCP entrypoint, retaining the original immediate failures.
+Parent subsequently completed channel isolation/navigation, same-coordinate
+snapshots, render receipts and exact RGB samples through the actual MCP
+entrypoint, retaining the original immediate failures.
 
-Installed binding failure and source repair
-------------------------------------------
+Historical installed binding failure and source repair
+------------------------------------------------------
 
 Parent's actual healthy MCP/native trial at :91/5992 used exact OpenHCS0585bf5
 and pyqt-reactive2de6bc0 private wheels, with two streamed raw64x64 planes.
@@ -237,9 +241,10 @@ f164d21999c4f6c567770768fb4b3c6fc3fa465fb3f50cb3778ef1ce912e4b76 (stdin) and
 a930cad6b5a0406ddf1cbf0557fafe351a6b4aca37eaf9a514c882e6913095fb (stdout).
 Parent archived the runtime and reported process_exited=true/ack/endpoint
 terminal, with both original viewer and MCP absent. No process was touched by
-this sidecar. Fresh installed acceptance is a new parent-owned incarnation.
+this sidecar. The later accepted installed run was a fresh parent-owned
+incarnation, recorded below.
 Public original checkpoint: https://github.com/OpenHCSDev/openhcs/pull/364#issuecomment-5933497228.
-Exact failure is also recorded on issue363 and this draft; no merge requested.
+Exact failure was recorded on issue363 and PR364 while the repair was a draft.
 
 The wrapper diagnosis is withdrawn. Read original installed Vispy _qt.py:
 Canvas.native delegates _backend._vispy_get_native_canvas(); CanvasBackendDesktop
@@ -320,32 +325,112 @@ omitted path, increased bound or waiver. Later documentation/archive/gitlink
 publication changes no production bytes. This remains a focused ownership
 review, not a completed global NRA scan or native equivalence proof.
 
-Owned scratch is /home/ts/.cache/agent-scratch/render-complete-snapshot-363-binding-20261001,
-for source fixtures/cache/raw logs only; remove it and the reused source-test
-extension only after byte-exact archive/extraction checks. Original archive
+Owned source scratch /home/ts/.cache/agent-scratch/render-complete-snapshot-363-binding-20261001
+and the reused source-test extension were removed after byte-exact archive
+and fresh-extraction comparisons. Original archive
 issue363-source-checks-20261001.tar.gz and parent logs remain unchanged.
 New byte-exact evidence archive is
 docs/validation/issue363-binding-source-checks-20261001.tar.gz, including the
 two binding failures, resource/GLX fixture failure, unavailable qtbot selector
 failure, successful source shards and both complete original R0 logs with
-commands/resource footers. Fresh extraction must compare byte-for-byte with
-every original raw log before the owned scratch is removed. Whitespace checks
+commands/resource footers. Fresh extraction compared byte-for-byte with
+every original raw log before the owned scratch was removed. Whitespace checks
 apply to source/docs and whole PR without rewriting raw evidence.
 Archive SHA256: e20adeb454127d6f8a2bba945b44ef4a2a2a435f6fbf4e3a396c1bc511091029.
 
-Parent independently reports installed RGB technical PASS through the original
+Earlier parent acceptance independently reported RGB technical PASS through the original
 prepared metadata workspace: semantic y16/h16/x0/w64 equals fullRGB[16:32,:,:]
 as16x64x3, all3072 values, while raw [[16,32],[0,64]] equals fullRGB[:,16:32,:]
 as64x16x3, all3072 values. The initial result_directory request was correctly
-refused without source_receipt; parent preserves that original error and is
-correcting its validator's DTO route-key location, not product source.
+refused without source_receipt; parent preserved that original error and its
+validator's DTO route-key-location failure without changing product source.
 This is read-only numerical/sample acceptance, not a biological or producer
 identity claim and not snapshot acceptance.
+
+Parent installed acceptance and paired merges
+---------------------------------------------
+
+Parent's accepted source pair was OpenHCS78345a63b9e4210d8bd8f0e411e8e1446cb290e6
+and pyqt-reactivead4948775ab81180a354d4b793d17ee5ddff3972. Its private integration
+56f7e180604471dd231b5a18f36e5434cc7ff87d normally incorporated then-main
+be5eabcfcf9b9ef223304280aad6929a60eba8c5; no product change was needed for
+acceptance. The two merge commits above are independently verified on GitHub.
+Acceptance comes from the parent-owned installed run, not a sidecar rerun or
+an inference from source tests. Authoritative public receipts:
+
+* `OpenHCS364 installed acceptance <https://github.com/OpenHCSDev/openhcs/pull/364#issuecomment-5934282638>`_.
+* `PyQT-reactive10 installed acceptance <https://github.com/OpenHCSDev/PyQT-reactive/pull/10#issuecomment-5934282281>`_.
+
+The original parent receipt is
+/home/ts/wt/openhcs-issue-batch-20260929/PR364-BINDING-INSTALLED-ACCEPTANCE-20261001.rst,
+SHA256 aa083c525c9267a9983a7623a54a528b9aef26947423f9cbc277243829a12600.
+Its persistent evidence root is
+/home/ts/wt/openhcs-issue-batch-20260929/snapshot364-binding-installed-20261001.
+Installed wheel SHA256 values:
+
+* OpenHCS0.8.7: 7f3e197be7084b627b1d59b68a5648571cb2b19a7fe598e49d9c3009c6861d19.
+* pyqt-reactive0.3.25: f972c6115a4176a62367af6d95e5bdb1bede720c81c285a8b07a72991c7eed5b.
+
+The fresh private packaged MCP/viewer used unforced Qt5 on display:91/5992,
+not the source-only fixture or user's shared desktop. Parent personally opened
+all eight non-black bitmaps. The continuous journey covered initial DAPI,
+field FITC raw/result/combined, context FITC raw/result/combined and DAPI return
+at another native-coordinate crop. Two three-view sets exactly matched their
+actual native camera, dimensions, channel visibility and geometry readbacks.
+All PNG resource hashes matched. The original route offset mapped result
+local channel0 to aggregate1 and FITC raw local1 to aggregate1; DAPI returned
+on its original aggregate0 with result hidden. These were native route-state
+observations, not producer re-identification or guessed aggregate indices.
+
+All eight captures carried native frame completion with painted_frame_count=1
+and flash_start_count=0; the first original frameSwapped completion was about
+21ms. Transport remained5000ms and observation bound2.5s. The actual
+contradictory400ms/0.4s request was refused before any artifact. No timeout,
+settling delay, Qt binding environment override or product source was changed.
+Current same-viewer full RGB had12288 elements. Semantic y16/h16/x0/w64
+returned16x64x3, exactly3072 values matching fullRGB[16:32,:,:]; generic raw
+[[16,32],[0,64]] returned64x16x3, exactly3072 matching fullRGB[:,16:32,:].
+Source axes and the full color dimension remained intact.
+
+The first parent viewport verifier expected literal zoom30 and failed.
+Actual native context readbacks were all29.999999999999996. Its corrected
+verifier required those actual readbacks to match exactly, not a tolerance or
+a product edit; the original assertion failure is preserved. The final native
+journey and sample validators each passed0.15s/13.14MiB. Source/R0/new-case/MRO
+evidence above remains unchanged and distinct from this installed proof.
+
+Parent build checks used CPU0/512MiB/60s: pyqt0.68s/48.22MiB and
+OpenHCS8.01s/228.51MiB, without dependency downloads or scientific execution.
+Its separately authorised native MCP plus viewer used about1.05GiB RSS,
+cache3.7MiB and persistent output about6MiB; this is not a claim that native
+acceptance fit the sidecar's source-test512MiB limit. Terminal parent handoff
+reports viewer1593522 exited with acknowledgement/native-process evidence,
+MCP1592793 absent and PTY44467 exit1 from a retained intentional boundary
+error, not a remaining live owner. Parent archived its evidence/runtime before
+moving its3.7MiB cache to Trash. The sidecar touched no installed source,
+process, validation slot, parent cache or frozen fixture.
+
+Parent evidence archives in that persistent root:
+
+* native-acceptance-evidence.tar.gz:
+  SHA256982466a3c1204df0aa1fcb2f605cd663a6147ba4610ac1acfd9603da3b9dcc3d.
+* original-runtime-logs.tar.gz:
+  SHA25657e20918e55164051da1d067cf10dfb0d5151f13d1d7dd9cc4ff1874c7d2d2c8.
+
+These parent-owned archives and the earlier failed native/source receipts
+are unchanged. Acceptance qualifies this private installed Qt5 native capture
+and semantic/raw sampling journey, not biology, original pipeline-producer
+identity, global NRA FULL, cross-host monotonic clocks, native Qt6 GL or a
+normal shared-desktop install. The frozen blind trial is not resumed: four
+admissions remain spent, with no fifth attempt or hidden label/reference
+opened. Parent owns next calibration/engineering issue368/PR371 and the frozen
+blind boundaries; this docs-only follow-up creates no competing source patch.
 
 Status
 ------
 
-Installed snapshot acceptance FAILED at0585bf5/2de6bc0; no merge/readiness.
-Receiving-binding repair is a paired source-tested draft checkpoint only.
-Native OpenGL frame completion/composition and fresh installed MCP acceptance
-remain parent-owned; no source check claims them.
+Merged and parent-installed accepted for the recorded Qt5 managed snapshot and
+semantic/raw crop journey. Historical0585bf5/2de6bc0 failure remains preserved;
+it no longer describes the repaired pair's current status. Original source
+checks and installed proof remain separate. No further product change is
+included or required by this receiving-receipt refresh.
