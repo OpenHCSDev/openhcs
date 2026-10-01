@@ -97,16 +97,7 @@ class ImageStreamingRequest(ViewerStreamingContext):
 
     def image_plane_projection(self, image) -> RuntimePlaneAxisValueProjection | None:
         """Select only a leading axis proven singleton by its source declaration."""
-        metadata = image_payload_metadata(image)
-        plane_count = metadata.source_provenance.source_plane_count
-        if metadata.plane_axis is None or plane_count != 1:
-            return None
-        return RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=metadata.plane_axis,
-            axis_size=plane_count,
-            plane_index=0,
-            source_aliases=metadata.source_image_names,
-        )
+        return image_payload_metadata(image).singleton_plane_projection()
 
     def project_image(self, image):
         """Use the original projection owner for display pixels, masks and lineage."""

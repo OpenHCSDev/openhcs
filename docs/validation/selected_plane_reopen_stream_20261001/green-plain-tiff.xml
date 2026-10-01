@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="6.030" timestamp="2026-10-01T17:30:20.171895-04:00" hostname="desktop"><testcase classname="tests.unit.agent.test_selected_plane_reopen_stream" name="test_plain_persisted_tiff_without_saved_image_metadata_streams" time="0.306" /></testsuite></testsuites>

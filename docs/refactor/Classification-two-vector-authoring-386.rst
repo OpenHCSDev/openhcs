@@ -280,3 +280,60 @@ is not inferred from historical PIDs. No worker native/install/registration or
 startup replay. Original issue379 cache/source red stays independently owned
 and pending; it is not the cause of this observed call020 failure. No complete
 two-detector full-context R1 rescan or global85 NRA FULL claim is made here.
+
+Finite installed public checkpoint and original oracle diagnosis
+---------------------------------------------------------------
+
+The pending statement above records the earlier handoff, not today's outcome.
+Parent's actual public388-enum-fixed-fresh-owned journey now completes public
+author/validate, both canonical renders, exact-source artifact-plan, native
+compile job1 and execute job2. Original persisted measurement-row assertions
+pass: areas64/256, both calibration_um1.3556, object1 low_low and object2 high_low,
+aggregate counts1/1/0/0. Default second-vector area substitution would fail.
+Parent's independent public saved-image sampling checks all4096 final MAIN
+pixels equal the streamed calibration1.3556 image. Both exact original processes
+were positively closed via MCP with process_exited=true; no unknown jobs remain.
+
+The original frozen driver still ends FAILED at its integer-label oracle. The
+fixture's FIRST declared output is the calibration image; engineering_cells is
+auxiliary. The compiled paired module declares measurements only, no RGB or
+replacement MAIN. Original contract, graph, matcher and adapter publication
+all preserve incoming MAIN. Its standalone raw callable's int32 label return
+is not a declared canonical output in this measurement-only compiled contract.
+There is no demonstrated production int-to-float conversion defect here.
+Do not count this original run as a dense-label identity PASS.
+
+Readonly installed byte comparisons at this publication match source5ef exactly:
+callable_contract.py fc97637e1ed13a3c3db962157ab94ea61392c76580e8868564ea78666680c616;
+pipeline_authoring_service.py c966a51926e980194abc255733fdd7ed44e8de63b29520ca0dac95d72e4a317b;
+classification.py 3ca76fb8a479c2701e367bce1db1935771b818bc4be9662a958ab4e4f7912b74.
+Parent initially named its installed working checkpoint5c; that historical
+description is retained, not retrospectively rewritten. These comparisons
+read files only; the worker neither imports nor edits installed bytes.
+
+Published validation/PAIRED-MAIN-FLOW-DIAGNOSIS-20261001.rst names every owner
+and relation. Its original-fixture source probe exercises declaration graph,
+return matcher and actual adapter publication: PASS6.18s/388.34MiB combined.
+Three existing raw-paired-return/image-preservation/declared-label-replacement
+controls PASS9.75s/409.34MiB. Same oneCPU/512MiB/60s, subprocess guard and readonly
+dependencies. The initial missing-adapter harness red is preserved separately.
+
+New closure archive retains original native request/response/source receipts,
+original failed oracle, parent saved MAIN diagnosis and exact closures, plus
+the bounded probe/control logs; no registry/store/scientific arrays copied.
+``receipts/paired-main-flow-388-closure-20261001.tar.gz``: 33 unchanged members,
+28KiB allocated, SHA256
+``f20d2d7798198ace853e8e77333549b29a5d69d4e35d9823659d792b390fe310``;
+all33 compare byte-for-byte against originals without extraction.
+Earlier immutable archives and original failures remain unchanged. Source248
+and original pinned R0 at5ef remain exactly qualified; production is unchanged
+after5ef, so this docs/probe/archive checkpoint does not require another gate.
+
+Issue386's public pair mode/runtime-vector/declaration ownership scope is met.
+A separately versioned label-primary engineering fixture/journey is a follow-up
+for dense4096-label streamed/saved identity. It must reuse the original
+PublicJourney journal/readiness and strict label/measurement oracles, preserve
+calibration controls, and run only later in parent's released live slot. It
+does not block the useful enum/mode checkpoint. Whole biology/global85 FULL and
+independent source-cache issue379 remain unqualified; no production engine,
+codec, viewer, lifecycle or compatibility change is proposed by this diagnosis.
