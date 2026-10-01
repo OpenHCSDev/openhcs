@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import multiprocessing
+import os
 import signal
 import traceback
 from abc import ABC, abstractmethod
@@ -327,9 +328,23 @@ class PreparationCacheBatch:
         return cls(tuple(sources.values()))
 
     def populate_child_caches(
-        self, *, status_callback: Callable[[str], None] | None = None
+        self, *, max_workers: int = 1,
+        status_callback: Callable[[str], None] | None = None
     ) -> None:
+        """Admit optional cache parallelism, never parent process-local readiness."""
+        if max_workers < 1:
+            raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
+            return
+        if max_workers == 1:
+            return
+        try:
+            worker_capacity = min(max_workers, len(os.sched_getaffinity(0)))
+        except AttributeError:
+            # Without an affinity witness there is no admitted parallel cache
+            # work. The existing parent preparation still owns readiness.
+            return
+        if worker_capacity < 2:
             return
         operations = {
             operation.identity: operation
@@ -348,7 +363,7 @@ class PreparationCacheBatch:
         with ExitStack() as resources:
             workers: list[PreparationCacheWorker] = []
             while True:
-                for operation in islice(pending, 4 - len(workers)):
+                for operation in islice(pending, worker_capacity - len(workers)):
                     worker = PreparationCacheWorker.start(context, operation)
                     resources.callback(worker.close)
                     workers.append(worker)

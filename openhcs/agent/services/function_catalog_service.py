@@ -555,7 +555,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         status_callback: Callable[[str], None] | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Prepare kernels in the owned registry child, including cached catalogs."""
+        """Prepare metadata in the owned registry child, including cached catalogs."""
 
         RegistryService.prepare_persistent_catalog(
             status_callback=status_callback,
