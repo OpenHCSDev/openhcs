@@ -72,6 +72,7 @@ from openhcs.core.runtime_equivalence import (
     runtime_measurement_equivalence,
 )
 from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -174,13 +175,20 @@ def _require_compared_output_inventory(
     candidate_exports: RuntimeExportObservation,
     reference_snapshot: RuntimeOutputSnapshot,
     candidate_snapshot: RuntimeOutputSnapshot,
+    candidate_managed_files: frozenset[Path] = frozenset(),
 ) -> None:
     """Reject unqualified output formats and missing scientific output files."""
     counts = []
-    for files, exports, snapshot in (
-        (reference_files, reference_exports, reference_snapshot),
-        (candidate_files, candidate_exports, candidate_snapshot),
+    for files, exports, snapshot, managed_files in (
+        (reference_files, reference_exports, reference_snapshot, frozenset()),
+        (
+            candidate_files,
+            candidate_exports,
+            candidate_snapshot,
+            candidate_managed_files,
+        ),
     ):
+        files = files - managed_files
         compared_files = (
             frozenset(exports.table_outputs)
             | frozenset(exports.image_outputs)
@@ -807,6 +815,11 @@ def main(argv: list[str] | None = None) -> int:
             native_output_files = frozenset(
                 path for path in native_root.rglob("*") if path.is_file()
             )
+            managed_output_files = frozenset(
+                path
+                for output_root in completed.output_roots
+                for path in METADATA_CONFIG.managed_paths(output_root)
+            )
             _require_compared_output_inventory(
                 reference_files=native_output_files,
                 candidate_files=actual_output_files,
@@ -814,6 +827,7 @@ def main(argv: list[str] | None = None) -> int:
                 candidate_exports=candidate_exports,
                 reference_snapshot=native_snapshot,
                 candidate_snapshot=candidate_snapshot,
+                candidate_managed_files=managed_output_files,
             )
             result = {
                 "repetition": repetition,
@@ -848,7 +862,11 @@ def main(argv: list[str] | None = None) -> int:
                 "unexpected_output_files": (
                     tuple(
                         str(path)
-                        for path in sorted(actual_output_files - declared_output_files)
+                        for path in sorted(
+                            actual_output_files
+                            - declared_output_files
+                            - managed_output_files
+                        )
                     )
                     if declared_output_files is not None
                     else None
@@ -889,7 +907,8 @@ def main(argv: list[str] | None = None) -> int:
                 or len(native_images) != len(candidate_images)
                 or (
                     declared_output_files is not None
-                    and len(declared_output_files) != len(actual_output_files)
+                    and len(declared_output_files - managed_output_files)
+                    != len(actual_output_files - managed_output_files)
                 )
                 or result["unexpected_output_files"]
                 or result["missing_declared_output_files"]

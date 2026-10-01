@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 from subprocess import CompletedProcess
 
@@ -217,6 +218,51 @@ def test_matched_inventory_rejects_metadata_only_outputs(tmp_path: Path) -> None
             reference_snapshot=snapshot,
             candidate_snapshot=snapshot,
         )
+
+
+@pytest.mark.parametrize("renamed", (False, True))
+def test_matched_inventory_accepts_only_declared_workspace_managed_paths(
+    tmp_path: Path,
+    renamed: bool,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    config = (
+        replace(matched_batch.METADATA_CONFIG, METADATA_FILENAME="renamed.json")
+        if renamed
+        else matched_batch.METADATA_CONFIG
+    )
+    managed_files = frozenset(config.managed_paths(roots[1]))
+    for path in managed_files:
+        path.write_text("{}")
+
+    def validate() -> None:
+        exports = tuple(
+            RuntimeExportObservation.from_output_root(root) for root in roots
+        )
+        snapshots = tuple(
+            RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+        )
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].rglob("*")),
+            candidate_files=frozenset(
+                path for path in roots[1].rglob("*") if path.is_file()
+            ),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+            candidate_managed_files=managed_files,
+        )
+
+    validate()
+    nested = roots[1] / "unowned"
+    nested.mkdir()
+    (nested / config.METADATA_FILENAME).write_text("{}")
+    with pytest.raises(RuntimeError, match="without a value comparison"):
+        validate()
 
 
 def test_pilot_parser_requires_one_sampling_declaration() -> None:
