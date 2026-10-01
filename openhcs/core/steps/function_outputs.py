@@ -1164,6 +1164,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
             target
             for directory in directories
             for target in (self.for_directory(directory),)
+            if target.contains_images(context)
         )
 
     def reconciliation_targets(

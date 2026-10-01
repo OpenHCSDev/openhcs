@@ -54,6 +54,7 @@ from openhcs.core.source_metadata import (
     SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_VOXEL_SPACING_UNIT_FIELD,
     SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -2388,3 +2389,126 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
         assert projection.component_value(AllComponents.CHANNEL) == "2"
         assert projection.source_metadata["site"] == "1"
         np.testing.assert_array_equal(tifffile.imread(tmp_path / path), pixels)
+
+
+@pytest.mark.parametrize("with_raster", [False, True])
+def test_actual_array_exports_only_publish_declared_raster_inventory(
+    tmp_path, with_raster
+):
+    """A saved NumPy array is an actual output, without being a raster inventory."""
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
+    context.runtime_value_store = RuntimeValueStore()
+    context.metadata_cache = {}
+    context.tiff_config = None
+    plan = function_step_plan("Independent array and raster exports")
+    plan.streaming_configs = {}
+    plan.write_backend = Backend.MEMORY.value
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(tmp_path / "results")
+    plan.create_openhcs_metadata = True
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend=Backend.DISK.value,
+    )
+    context.step_plans = {plan.step_index: plan}
+    pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 7
+    payload = ImageMetadataPayload(
+        pixels,
+        ImagePayloadMetadata(
+            source_component_metadata={
+                "well": "A01",
+                "site": "1",
+                "channel": "2",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            source_dtype="float32",
+            source_voxel_spacing=SourceVoxelSpacing(
+                (0.65, 0.65), SourceVoxelSpacingUnit.MICROMETERS
+            ),
+        ),
+    )
+    declarations = [("NumericField", "exports/Illum.npy")]
+    if with_raster:
+        declarations.append(("RasterField", "exports/A01_s001_w2_z001_t001.tif"))
+    for name, relative_path in declarations:
+        output_plan = ArtifactOutputPlan(
+            name=name,
+            path=f"/memory/{name}.pkl",
+            artifact_type=ImageArtifactType,
+            materialization=MaterializationSpec(
+                ImageFileOptions(
+                    filename_suffix=Path(relative_path).suffix,
+                    relative_path_template=relative_path,
+                )
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+
+    materializations = RuntimeArtifactMaterializationAuthority.materialize(
+        context, plan
+    )
+    saved_outputs = tuple(
+        output
+        for artifact in materializations
+        for output in artifact.outputs_for_backend(Backend.DISK.value)
+    )
+    expected_paths = {
+        tmp_path / "images" / relative_path for _name, relative_path in declarations
+    }
+    assert {Path(output.path) for output in saved_outputs} == expected_paths
+    assert all(path.is_file() for path in expected_paths)
+    np.testing.assert_array_equal(
+        np.load(tmp_path / "images/exports/Illum.npy", allow_pickle=False), pixels
+    )
+    observed_locations = tuple(
+        location
+        for artifact in materializations
+        for locations in (
+            artifact.observation(plan).materialized_locations_by_address.values()
+        )
+        for location in locations
+    )
+    assert {Path(location.path) for location in observed_locations} == expected_paths
+
+    OpenHCSMetadataWriter.write(
+        context, plan, artifact_materializations=materializations
+    )
+    context.runtime_value_store.clear()
+    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    if not with_raster:
+        assert not metadata_path.exists()
+        return
+    np.testing.assert_array_equal(
+        tifffile.imread(tmp_path / "images/exports/A01_s001_w2_z001_t001.tif"), pixels
+    )
+    subdirectories = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]
+    assert set(subdirectories) == {"images/exports"}
+    subdirectory = subdirectories["images/exports"]
+    assert subdirectory[FIELDS.IMAGE_FILES] == [
+        "images/exports/A01_s001_w2_z001_t001.tif"
+    ]
+    entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        subdirectory
+    ).entries
+    raster = entries["images/exports/A01_s001_w2_z001_t001.tif"]
+    assert raster.source_alias == "RasterField"
+    assert raster.image_metadata.source_voxel_spacing.values_zyx == (0.65, 0.65)
+    assert (
+        raster.image_metadata.source_voxel_spacing.native_coordinate_unit
+        == "micrometer"
+    )
