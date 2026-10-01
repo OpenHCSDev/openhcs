@@ -339,3 +339,95 @@ owned original scratch and its verified extraction directory. Evidence is
 recoverable from this committed archive; source from its recorded Git objects.
 The implementation worktree/branch, parent worktrees, original fixtures,
 installed/frozen candidates and scientific slot are unchanged and retained.
+
+Normal main integration: 8c512d4
+--------------------------------
+
+At the parent's explicit request, normally merged current remote main
+8c512d404f8707a6a1be311406c0af2a089360f7 into this owned branch. Merge commit
+03e3315d03fe775ed57ad71c5805507c946cfcf8 has exactly two parents: the previous
+public checkpoint a339a6d20c5c2b8c04ed3fecd3bd1496e7c839cf and that main pin.
+No conflict resolution, rebase, force push or authored production change.
+The merge was published immediately after the source-contract shard passed.
+
+Re-read the full current nra-refactoring SKILL.md and installed refactor-audit
+SKILL.md, then the authoritative refactor-audit.skill ZIP entrypoint, pattern
+README, surface receipt and complete identity, boundaries, membership,
+over-time and implementation references before integration decisions.
+ZIP SHA256 remains
+100fbe8ef89664b866777e87b2c8640a3432e8a10e9188dff81c97942d551bf6.
+Considered IDEN-3/6, BOUND-2, IMPL-1/5/12, MEMB-1/4/5 and TIME-3/5/9 against
+the existing witnesses above. No new semantic owner or declaration surface is
+needed for this integration. Both reciprocal-order, genuinely new capability
+diamond controls execute through unchanged production consumers and still pass.
+The existing ancestor algorithm, declaration hooks and automatic registration
+remain exact bytes; no copied implementation, fake subtype or mirrored roster.
+
+Main contributes 32 files (737 insertions/99 deletions), principally the
+already-owned compiler/output/materialization qualification. These are upstream
+integration, not a competing implementation or edits to another owner's files.
+Reviewed the adjacent virtual_workspace_metadata and artifacts changes: durable
+subdirectory document loading and measurement row-domain validation respectively.
+None of the four assigned production modules, fixture-helper caller, assigned
+test or frozen PR 329 XML parser changes from a339. Ordinary public imports
+prove the four assigned modules resolve to this worktree and have the exact old
+Git bytes; the adjacent metadata/artifact modules have the exact new main bytes.
+The recorded PolyStore source dependency remains
+91fd7e854ca760a16e7472d8d558b4012e89b6ba, whose qualified production tree matches
+merged PolyStore main 84f322. No dependency or installed package was modified.
+
+Bounded integration evidence (same existing Python 3.12, one CPU, single-thread
+math libraries, bytecode disabled, supervised process-group RSS/time/scratch):
+
+* Public source-contract discovery: 25 methods PASS, 2.84 s, 94.39 MiB peak.
+* Existing zero-geometry/randomness/ImageXpress Bio-Formats/source-projection
+  regression shard: 34 tests PASS, 7.99 s, 388.49 MiB peak.
+* Exact merge/source/import/archive identity control: PASS, 1.42 s, 67.92 MiB
+  peak; its log records actual paths, hashes and Git authority pins.
+
+No shard exceeds 512 MiB/60 s or 256 MiB scratch. Resource guard before testing
+returned warning exit 2: 21.0 GiB available RAM, home 19.9 GiB below the user's
+warning-only 20 GiB threshold, historical swap 13.7 GiB, root 8.2 GiB. This is
+not recorded as a guard pass; bounded source-only work fits the actual resources.
+Commands/results and copied parent receipt are retained separately in
+opera_producer_inventory_172_main8c512_evidence.tgz. The original archive above
+is not regenerated: size/hash and every byte remain identical to a339, with its
+exact historical source/baseline pins. Its old R0/census evidence is not relabeled
+as a guard run on the later foreign main delta. No metric exception or gaming.
+
+Latest full-context R1 limit supersedes, without deleting, the historical local
+uninitialized-submodule failure above. Parent materialized all eight recorded
+gitlinks plus pinned NRA 0844525. Baseline completed 3068 projections; the
+original supervised group hit the enforced 512 MiB cap at 83.29 s/530.62 MiB
+peak before head comparison (original 160 s budget). R1 is INCOMPLETE, neither
+passed nor waived. No changed roots/budget/cap, substitute scan or full NRA claim.
+
+Read the entire parent producer-installed-20261001/ACCEPTANCE.rst. Parent verified
+30 original installed MCP responses, exit 0, at source
+67dbefb3caf8848901f6561d6bd274a84accee92 (a339 adds only docs/archive): four tiny
+raw/native fixtures, four complete typed addresses each, physical calibration
+parity, four pairs of equal 64-pixel samples and four persisted inventories.
+This is parent-owned installed evidence, not a repeated run by this source owner.
+It does not automatically qualify the later main compiler/runtime integration.
+Parent checks source delta and qualification applicability and owns merge/issue
+disposition. Issues 172/335 are not closed by this receipt. Separate initial
+read-only ImageXpress Z-folder inspection defect 337 belongs to Arendt; no fix
+or overlapping ImageXpress edit is included here. No native/MCP/science launch,
+lock use, installation, frozen candidate or original fixture mutation.
+
+New owned disposable scratch:
+/home/ts/.cache/agent-scratch/opera-producer-inventory-172-main8c512-20261001.
+Archive verification and removal occur only after every supervised process is
+terminal. Source worktree stays persistent; historical archives remain intact.
+
+Fresh integration archive verification: 348,147 bytes, SHA256
+df6cb051e96b6eded6860958ffecda1e3debe57412342676becffb9ba0676c4a.
+Extracted into owned persistent
+/home/ts/.cache/agent-scratch/opera-producer-inventory-172-main8c512-verify-eGIHgycX;
+recursive byte comparison against the original 631,827-byte scratch PASS.
+The copied parent ACCEPTANCE.rst has SHA256
+05f71852e64bbe3e47508c18abd48b0cf3564e55577cda156cf753e99706dd5e.
+All three supervised shards are terminal with exit 0 and limit null. Remove
+only this run's original scratch, verified extraction and temporary PR-body
+file after publication; evidence remains recoverable from the committed archive
+and public PR. No historical evidence or persistent implementation tree removed.
