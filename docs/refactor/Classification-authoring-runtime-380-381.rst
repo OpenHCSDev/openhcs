@@ -3,8 +3,10 @@ Classification authoring/runtime follow-up (#380, #381)
 
 Independent owner: Dewey. Persistent worktree:
 ``/home/ts/wt/openhcs-prior-measurement-role-projection-20261001``.
-The follow-up is stacked on PR372's frozen head 683106068; neither that
-branch nor its source-qualified #370 subject fix is changed. The initial
+The follow-up was stacked on PR372's frozen head 683106068; neither that
+branch nor its source-qualified #370 subject fix is changed. After PR372 merged
+at 66ed7ef634, current main was merged normally into the independent follow-up
+and draft PR382 retargeted to main. The initial
 isolated worktree was made from remote main 6ace576566. Separate issues:
 https://github.com/OpenHCSDev/openhcs/issues/380 and
 https://github.com/OpenHCSDev/openhcs/issues/381. Open owners/PRs were checked.
@@ -93,3 +95,42 @@ No source proof here establishes installed, viewer, biological, snapshot or
 global FULL acceptance. Parent alone owns the next installed engineering
 qualification; the original whole classification runtime journey is FAILED
 until that concrete acceptance passes. Frozen biological inputs are untouched.
+
+Integrated source/evidence closure
+---------------------------------
+
+Draft PR: https://github.com/OpenHCSDev/openhcs/pull/382.
+Initial production checkpoint: 1d374f72e98976bad2f9f7fd621c657649e82a65.
+Normal main integration: 15a8c10929d68437c58000b39a9b1627a3101bc6, against
+main 66ed7ef634e4a57151766e85adb7002b36810e4f. The relative production delta
+still contains only the two owning files described above. No engine, provider,
+native, numerical or submodule delta is contributed by this PR.
+
+Additional new-case proof executes an independent pixel_count feature through
+the full original classification declaration, real typed measurement store,
+runtime adapter and unchanged scalar callable. Exact RGB output and vector are
+checked; group-lineage role projection retains the sole source and still
+rejects two declared sources. No generic consumer edits for these new cases.
+
+Complete boundary/declaration/provider suites: 86 passed, 8.70s / 437.59MiB.
+Complete conditional-image suite separately: 18 passed, 8.04s / 442.36MiB.
+Final integrated run includes all five complete suites (the above plus the
+original subject/MI suite): 113 passed, 8.25s / 429.64MiB. No deselection or
+changed resource limit. The earlier combined 512.56MiB failure remains in the
+archive, not overwritten. Initial new tests incorrectly expected two aggregate
+ClassificationResult rows and attempted two-vector authoring without its
+explicit parsed mode; those original red receipts also remain. This follow-up
+does not claim the latter public two-vector authoring route is repaired.
+
+The original parent's exact fixture is read only at its declaration boundary:
+its full classification contract now selects engineering_object_rows owned by
+EngineeringFeatureOwner and declares engineering_class_rgb, without changing
+the original output-qualified subject. 6.43s / 388.57MiB; no fixture function,
+native process or scientific pipeline executes. Original fixture checksum is
+unchanged. This directly closes fixture-mistake versus interop ownership.
+
+Original pinned R0 against the frozen subject branch: PASS 14.74s / 80.86MiB,
+5163 measured entries, increased=[], one fewer BooleanChainTerms in the prior
+measurement owner. Actual pinned Python3.14 tool and readonly metaclass backing
+were verified; no copied detector or engine changes. Main-integrated R0 and
+immutable receipt archive are recorded below when finalized.

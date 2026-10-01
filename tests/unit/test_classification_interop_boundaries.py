@@ -14,6 +14,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
+    GroupLineageSourceRelation,
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -88,7 +89,7 @@ class _AreaRow:
     AreaShape_Area: float
 
 
-def _runtime_request(contract, kwargs):
+def _runtime_request(contract, kwargs, table=None):
     """Load real compiled inputs through the original store and runtime adapter."""
     store = RuntimeValueStore()
     edges = {}
@@ -96,11 +97,16 @@ def _runtime_request(contract, kwargs):
     objects = ObjectLabelSet(
         name="Cells", variant_data=labels.variant_data, domain=labels.domain
     )
-    table = MeasurementTable(
-        name="MeasureObjectSizeShape_1_measurements",
-        rows=DataclassMeasurementColumnarRows((_AreaRow(1, 9.0), _AreaRow(2, 300.0))),
-        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_label"),
-    )
+    if table is None:
+        table = MeasurementTable(
+            name="MeasureObjectSizeShape_1_measurements",
+            rows=DataclassMeasurementColumnarRows(
+                (_AreaRow(1, 9.0), _AreaRow(2, 300.0))
+            ),
+            subject=MeasurementSubject(
+                MeasurementScope.OBJECT, "Cells", "object_label"
+            ),
+        )
     payloads = {objects.name: objects, table.name: table}
     for index, spec in enumerate(contract.artifact_inputs):
         path = f"/memory/{spec.name}"
@@ -270,6 +276,100 @@ def test_independent_custom_producer_and_consumer_resolve_both_reference_roles(
     assert (
         rows.relations[0].source.plan_type is subject_role
     )  # The producer declaration is NOT rewritten.
+
+
+@dataclass(frozen=True)
+class _IndependentPixelRow:
+    object_label: int
+    pixel_count: int
+
+
+def test_independent_custom_feature_compiles_and_binds_real_rows_to_original_scalar_callable():
+    labels = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
+    rows = ArtifactSpec.output(
+        "IndependentRows",
+        MeasurementsArtifactType,
+        relations=(
+            ObjectMeasurementSubjectRelation(labels.ref(), id_field="object_label"),
+        ),
+        measurement_feature_owner=_IndependentFeatureOwner,
+    )
+    context = _producer_context(labels, rows)
+    authored = {**_scalar_kwargs(), "measurement_feature": "pixel_count"}
+    contract = _public_function_step_contract(
+        ClassifyObjectsSingleMeasurementModule,
+        classify_objects_single_measurement,
+        authored,
+        context,
+    )
+    assert (
+        contract.artifact_inputs.by_ref(rows.for_plan_type(ArtifactInputPlan).ref())
+        is not None
+    )
+    table = MeasurementTable(
+        name=rows.name,
+        rows=DataclassMeasurementColumnarRows(
+            (_IndependentPixelRow(1, 9), _IndependentPixelRow(2, 300))
+        ),
+        subject=MeasurementSubject(
+            MeasurementScope.OBJECT, labels.name, "object_label"
+        ),
+        measurement_feature_owner=_IndependentFeatureOwner,
+    )
+    kwargs = {
+        key: value
+        for key, value in authored.items()
+        if key not in ("select_the_object_to_be_classified", "retained_image_name")
+    }
+    request = _runtime_request(contract, kwargs, table)
+    bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
+    image, result = inspect.unwrap(classify_objects_single_measurement)(
+        request.current_image, **kwargs, **bound
+    )
+    np.testing.assert_array_equal(bound["measurement_values"], (9, 300))
+    np.testing.assert_array_equal(
+        image_payload_data(image),
+        classification_rgb_image(_object_payload().variant_data.labels),
+    )
+    assert result.rows[0].total_objects == 2
+
+
+@pytest.mark.parametrize("subject_count", (1, 2))
+def test_projected_prior_group_lineage_retains_exact_source_and_rejects_ambiguity(
+    subject_count,
+):
+    objects = tuple(
+        ArtifactSpec.output(name, ObjectLabelsArtifactType)
+        for name in ("Cells", "OtherCells")
+    )[:subject_count]
+    rows = ArtifactSpec.output(
+        "IndependentRows",
+        MeasurementsArtifactType,
+        relations=(
+            ObjectMeasurementSubjectRelation(objects[0].ref(), id_field="object_label"),
+            *(GroupLineageSourceRelation(obj.ref()) for obj in objects),
+        ),
+        measurement_feature_owner=_IndependentFeatureOwner,
+    )
+    inputs = ArtifactSpecCollection(
+        tuple(obj.for_plan_type(ArtifactInputPlan) for obj in objects)
+    )
+    if subject_count == 2:
+        with pytest.raises(ValueError, match="multiple group-lineage sources"):
+            _IndependentPriorConsumerModule.prior_measurement_artifact_inputs(
+                _feature_probe_module(),
+                step_context=_producer_context(*objects, rows),
+                direct_inputs=inputs,
+            )
+    else:
+        (selected,) = _IndependentPriorConsumerModule.prior_measurement_artifact_inputs(
+            _feature_probe_module(),
+            step_context=_producer_context(*objects, rows),
+            direct_inputs=inputs,
+        )
+        assert selected.group_scope_sources() == (
+            objects[0].for_plan_type(ArtifactInputPlan).ref(),
+        )
 
 
 @pytest.mark.parametrize(
