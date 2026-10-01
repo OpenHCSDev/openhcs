@@ -4,8 +4,9 @@ Managed render-complete snapshots and spatial QA, issues363/366
 Integration owner: Singer/Codex managed-viewer QA sidecar. Source base791650087.
 Persistent source: /home/ts/wt/openhcs-render-complete-snapshot-20261001 and
 /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001. Paired dependency
-2de6bc0 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
-OpenHCS draft364 closes363 and366; neither draft is installed or live accepted.
+ad49487 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
+OpenHCS draft364 closes363 and366. Parent installed0585bf5/2de6bc0 and found
+snapshot acceptance FAILED; the receiving-binding repair is source-only.
 Closes #363. Closes #366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
 
 Required relation
@@ -139,7 +140,7 @@ No parallel fleet or large test is started. Owned disposable scratch will be
 /home/ts/.cache/agent-scratch/render-complete-snapshot-363-20261001;
 archive evidence here before removing that exact owned directory.
 
-Latest bounded shards, all plugin/provider-free with CPU0 affinity, CPUQuota100%,
+Previous checkpoint shards, plugin/provider-free with CPU0 affinity, CPUQuota100%,
 MemoryMax512M and MemorySwapMax0, shell timeout60s:
 
 * qt-operation-final.log:15 passed,1.45s elapsed,127996KiB peak. Existing real
@@ -219,8 +220,132 @@ Installed acceptance must repeat the original channel isolation/navigation and
 same-coordinate snapshot journey, inspect render receipts and exact RGB samples
 through the actual MCP entrypoint, retaining the original immediate failures.
 
+Installed binding failure and source repair
+------------------------------------------
+
+Parent's actual healthy MCP/native trial at :91/5992 used exact OpenHCS0585bf5
+and pyqt-reactive2de6bc0 private wheels, with two streamed raw64x64 planes.
+Default render_complete returned captured=false, no artifact in captures/initial,
+and viewer_window_snapshot_failed with the exact message::
+
+    QTimer(parent: QObject|None = None): argument 1 has unexpected type 'CanvasBackendDesktop'
+
+Original byte-exact mcp.stdin/mcp.stdout and original-runtime-logs.tar.gz remain
+under /home/ts/wt/openhcs-issue-batch-20260929/snapshot364-installed-20261001.
+At the terminal parent checkpoint the transcripts' SHA256 values are
+f164d21999c4f6c567770768fb4b3c6fc3fa465fb3f50cb3778ef1ce912e4b76 (stdin) and
+a930cad6b5a0406ddf1cbf0557fafe351a6b4aca37eaf9a514c882e6913095fb (stdout).
+Parent archived the runtime and reported process_exited=true/ack/endpoint
+terminal, with both original viewer and MCP absent. No process was touched by
+this sidecar. Fresh installed acceptance is a new parent-owned incarnation.
+Public original checkpoint: https://github.com/OpenHCSDev/openhcs/pull/364#issuecomment-5933497228.
+Exact failure is also recorded on issue363 and this draft; no merge requested.
+
+The wrapper diagnosis is withdrawn. Read original installed Vispy _qt.py:
+Canvas.native delegates _backend._vispy_get_native_canvas(); CanvasBackendDesktop
+inherits QtBaseCanvasBackend and its selected QGLWidget, which is QOpenGLWidget
+for these Qt5/Qt6 branches. Napari's VispyCanvas.native returns that native
+widget. QtPy's original API_NAME/module contract selects the receiving binding.
+Parent process maps contained PyQt5 QtCore/QtWidgets and PyQt6 QtCore. The
+lightweight original-source real Vispy fixture independently reproduces the
+exact QTimer error at the original line488, and a second QSaveFile overload
+error when the original Qt5 pixmap is saved to the Qt6 device. Binding, not
+widget unwrapping, is the demonstrated defect.
+
+Required relation: renderer QWidget/QObject, observation QTimer and PNG
+QIODevice must belong to the receiving integration's original Qt binding.
+BOUND-2: do not bypass QtPy with another backend selector. BOUND-7/IMPL-3:
+reject attribute-name probes, type guesses or consumer switches. IMPL-12/13:
+keep the one observation/persistence algorithm. QtWindowSnapshotService owns
+the qt_core hook, with the original PyQt6 default for reactive forms. The small
+NapariScreenshotControlMessageAction hook returns the original QtPy.QtCore.
+Shared _WindowSnapshotObservation and _persist use that same authority for
+QTimer/PreciseTimer and QSaveFile/QIODevice. No new timer, painter, registry,
+binding roster, environment forcing, unwrapping or timeout change is added.
+Existing genuine control/capture MI and cooperative dispatch remain intact.
+A QtPySnapshotService new case declares only qt_core; original capture/observe
+methods are inherited unchanged, with no generic consumer edit.
+
+Reopened production delta is only napari_viewer_server.py's binding hook and
+pyqt-reactive services/window_snapshot.py's shared hook/device selection.
+Source tests add real Vispy CanvasBackendDesktop coverage at the registered
+Napari queue and in tests/test_window_snapshot_bindings.py. The existing
+test_napari_render_snapshot.py Qt fixture now uses its receiving QtPy binding,
+including QtPy's original isalive lifetime contract. No axis/source-binding,
+startup/connect, general DTO or sampling production source was changed.
+
+New source checks run sequentially with the original CPU0/oneCPU,512MiB,60s
+limits, plugin/provider-free. QtPy default is unforced PyQt5; PyQt6 is an
+explicit test-matrix case, not a launcher/product environment patch. PySide6
+is not installed in the read-only validation environment and is unexecuted.
+The real Vispy backend is constructed normally, not replaced by a mock canvas.
+Its original MRO is logged with the original QtPy binding diagnostic. It stays
+hidden, with DISPLAY unset for this offscreen source fixture; no GL frame is
+painted or swapped. Emitting its late signal tests cleanup only, not a render
+proof. Real QLabel pixmap persistence tests the original atomic writer.
+
+* vispy-original-binding-failure.log: original2de6bc0 source,2 failed/1 passed,
+  0.60s/109068KiB; exact QTimer parent and QSaveFile overload failures retained.
+* vispy-default-final.log:3 passed,0.53s/104348KiB, real native Qt5 backend,
+  matching parented timer, typed no-frame failure, no late artifact/duplicate
+  callback, real PNG persistence and declaration-only new binding case.
+* vispy-qt6-final.log: same3 passed,0.97s/107252KiB, real native Qt6 backend.
+* queue-deadline-default-final.log:7 passed,11.57s/490828KiB; real ViewerModel,
+  original registered accepted queue/serializer/gateway, real native Vispy
+  ownership plus real Qt painting, default/contradictory bounds, failure receipt
+  and no late artifact/duplicate reply. Existing immediate PNG success is kept.
+* queue-deadline-qt6-final.log: same7 passed,7.32s/493992KiB under Qt6.
+* qt-existing-corrected.log:16 passed,1.56s/127308KiB; existing real qapp,
+  native paint, flash observation, cooperative MI/new case, expired queue,
+  late PNG commit, headless declaration and capture-field checks.
+
+First binding-original-failure.log is an unsuccessful heavier NapariSceneCanvas
+fixture: it stopped during offscreen GLX context creation before reaching the
+binding assertion and measured539192KiB RSS, above the allowed524288KiB.
+It is not admitted as a passing bounded test. The corrected split uses the
+actual Vispy backend at the failing QObject boundary without importing the
+heavier Napari render-authoring graph; no bound was raised or assertion waived.
+qt-existing-final.log also preserves an overbroad selector's missing qtbot
+fixture (16 passed/1 error). The corrected plugin-free selector excludes that
+unavailable plugin case, retains the existing real flash fixture and changes
+no assertion or production behavior. No passing log replaces a failed log.
+
+Both complete actual production deltas pass the unchanged pinned original R0,
+3b03785f45df2ef5dc62ba6aed99294192ecbb01 (clean read-only detector worktree):
+OpenHCS8b7b7c4bf against791650087,22.67s/87636KiB, r0-openhcs-binding.log;
+pyqtad49487 against3437d1c,3.40s/58180KiB, r0-pyqt-binding.log.
+All five changed OpenHCS production Python paths and the complete paired
+window_snapshot.py delta are measured; no positive measure, detector copy,
+omitted path, increased bound or waiver. Later documentation/archive/gitlink
+publication changes no production bytes. This remains a focused ownership
+review, not a completed global NRA scan or native equivalence proof.
+
+Owned scratch is /home/ts/.cache/agent-scratch/render-complete-snapshot-363-binding-20261001,
+for source fixtures/cache/raw logs only; remove it and the reused source-test
+extension only after byte-exact archive/extraction checks. Original archive
+issue363-source-checks-20261001.tar.gz and parent logs remain unchanged.
+New byte-exact evidence archive is
+docs/validation/issue363-binding-source-checks-20261001.tar.gz, including the
+two binding failures, resource/GLX fixture failure, unavailable qtbot selector
+failure, successful source shards and both complete original R0 logs with
+commands/resource footers. Fresh extraction must compare byte-for-byte with
+every original raw log before the owned scratch is removed. Whitespace checks
+apply to source/docs and whole PR without rewriting raw evidence.
+Archive SHA256: e20adeb454127d6f8a2bba945b44ef4a2a2a435f6fbf4e3a396c1bc511091029.
+
+Parent independently reports installed RGB technical PASS through the original
+prepared metadata workspace: semantic y16/h16/x0/w64 equals fullRGB[16:32,:,:]
+as16x64x3, all3072 values, while raw [[16,32],[0,64]] equals fullRGB[:,16:32,:]
+as64x16x3, all3072 values. The initial result_directory request was correctly
+refused without source_receipt; parent preserves that original error and is
+correcting its validator's DTO route-key location, not product source.
+This is read-only numerical/sample acceptance, not a biological or producer
+identity claim and not snapshot acceptance.
+
 Status
 ------
 
-Draft source-only checkpoint. Native OpenGL swap/composition and installed MCP
-acceptance are parent-owned and outstanding; no source check claims them.
+Installed snapshot acceptance FAILED at0585bf5/2de6bc0; no merge/readiness.
+Receiving-binding repair is a paired source-tested draft checkpoint only.
+Native OpenGL frame completion/composition and fresh installed MCP acceptance
+remain parent-owned; no source check claims them.
