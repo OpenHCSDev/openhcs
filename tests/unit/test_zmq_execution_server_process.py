@@ -277,8 +277,8 @@ def test_failed_child_startup_journal_remains_available(
 
 def test_execution_client_inherits_shared_readiness_algorithm():
     assert (
-        ZMQExecutionClient._wait_for_endpoint_ready_observed
-        is ZMQClient._wait_for_endpoint_ready_observed
+        ZMQExecutionClient._wait_for_endpoint_ready
+        is ZMQClient._wait_for_endpoint_ready
     )
 
 
