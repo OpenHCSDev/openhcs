@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 from napari.components import ViewerModel
-from PyQt6.QtCore import QEvent, pyqtSignal
-from PyQt6.QtGui import QColor, QImage, QPainter
-from PyQt6.QtWidgets import QApplication, QWidget
+from qtpy.QtCore import QEvent, Signal
+from qtpy.QtGui import QColor, QImage, QPainter
+from qtpy.QtWidgets import QApplication, QWidget
 from pyqt_reactive.services.window_snapshot import WindowSnapshotFrameCondition
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import TransportEndpoint
@@ -30,7 +30,7 @@ def queued_viewer():
     app = QApplication.instance() or QApplication([])
 
     class Canvas(QWidget):
-        frameSwapped = pyqtSignal()
+        frameSwapped = Signal()
 
         def paintEvent(self, event):
             painter = QPainter(self)
@@ -56,9 +56,9 @@ def queued_viewer():
     server.napari_window_title = "Queued source snapshot"
     server.accepted_control_requests = queue.Queue()
     yield app, canvas, server
-    from PyQt6 import sip
+    from qtpy.compat import isalive
 
-    if not sip.isdeleted(canvas):
+    if isalive(canvas):
         canvas.close()
         canvas.deleteLater()
     app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
@@ -130,6 +130,54 @@ def test_queued_destroyed_owner_preserves_failure_receipt(queued_viewer, tmp_pat
     assert response["observation"].render_frame is None
     assert "destroyed" in response["message"]
     assert not tuple(tmp_path.glob("*.png"))
+
+
+def test_real_vispy_native_binding_through_original_registered_queue(
+    queued_viewer, tmp_path
+):
+    import time
+
+    from qtpy import API_NAME, QtCore
+    from vispy.app import Canvas
+
+    app, window, server = queued_viewer
+    # Original Canvas.native returns this backend, whose MRO owns the Qt widget.
+    # Keep it hidden: source acceptance tests ownership, not OpenGL rendering.
+    canvas = Canvas(parent=window, show=False, size=(64, 64))
+    from vispy.app.backends._qt import CanvasBackendDesktop, QGLWidget
+
+    native = canvas.native
+    assert isinstance(native, CanvasBackendDesktop)
+    assert isinstance(native, QGLWidget) and isinstance(native, QtCore.QObject)
+    native.hide()
+    server.viewer.window.qt_viewer.canvas = canvas
+    action = NapariControlMessageAction.for_message_type("screenshot")
+    assert action.qt_core() is QtCore
+    print(f"QtPy binding={API_NAME}; native MRO={type(native).__mro__}")
+    try:
+        request = ViewerWindowSnapshotRequest.from_fields(
+            connection=ExecutionConnectionSpec(port=5584),
+            output_dir_path=str(tmp_path),
+            timeout_ms=400,
+            observation_timeout_s=0.02,
+        ).start_operation()
+        reply = enqueue(server, request)
+        assert reply.empty(), "Observation must arm, not reject the real Qt parent"
+        timer = native.findChild(QtCore.QTimer)
+        assert timer is not None and timer.parent() is native
+        end = time.monotonic() + request.timeout_ms / 1000
+        while reply.empty() and time.monotonic() < end:
+            app.processEvents()
+        response = pickle.loads(reply.get_nowait())
+        assert response["status"] == "error" and "not observed" in response["message"]
+        assert response["observation"].render_frame is None
+        assert response["observation"].operation_deadline == request.operation_deadline
+        assert not tuple(tmp_path.glob("*.png"))
+        native.frameSwapped.emit()  # Late signal cleanup, not a fake render proof.
+        app.processEvents()
+        assert reply.empty() and not tuple(tmp_path.glob("*.png"))
+    finally:
+        canvas.close()
 
 
 def test_new_control_case_requires_only_registered_declaration_and_hook(queued_viewer):

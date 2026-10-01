@@ -5692,6 +5692,13 @@ class NapariScreenshotControlMessageAction(
 
     message_type = ViewerControlMessageType.SCREENSHOT.value
 
+    @staticmethod
+    def qt_core():
+        """Use Napari/Vispy's existing QtPy authority for timer and PNG device."""
+        from qtpy import QtCore
+
+        return QtCore
+
     def handle(
         self,
         server: "NapariViewerServer",
