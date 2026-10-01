@@ -2084,7 +2084,7 @@ class FunctionCoreExecutor(FunctionInvocationArtifactScope):
         if component is None or self.group_key is None:
             return source_payload
         metadata = image_payload_metadata(source_payload)
-        component_metadata = dict(metadata.source_component_metadata or {})
+        component_metadata = metadata.source_component_metadata or {}
         component_metadata = with_source_component_metadata(
             component_metadata,
             component,

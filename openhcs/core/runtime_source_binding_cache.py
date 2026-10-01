@@ -12,7 +12,10 @@ from openhcs.core.source_bindings import (
     SourceBindingRuntimeMetadataNormalizer,
     MetadataExtractionRule,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import (
+    ResolvedSourceMetadataRecord,
+    SourceMetadataMapping,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.source_binding_selection import (
@@ -42,8 +45,7 @@ class RuntimeSourceResolutionSnapshot:
     ) -> "RuntimeSourceResolutionSnapshot":
         """Resolve declared positions into one independently owned runtime view."""
         from openhcs.core.source_binding_selection import (
-            ResolvedSourceMetadataRecord,
-            SourceMetadataRecord,
+            DeclaredSourceMetadataRecord,
             SourcePatternResolutionContext,
         )
 
@@ -59,7 +61,7 @@ class RuntimeSourceResolutionSnapshot:
             context,
             source_metadata_by_path=MappingProxyType(
                 {
-                    path: SourceMetadataRecord.from_mapping(metadata)
+                    path: DeclaredSourceMetadataRecord.from_mapping(metadata)
                     for path, metadata in normalized_metadata.items()
                 }
             ),
@@ -77,7 +79,7 @@ class RuntimeSourceResolutionSnapshot:
         records = {}
         for path in paths:
             metadata = context.metadata_for_path(path)
-            records[path] = ResolvedSourceMetadataRecord.from_resolved_mapping(
+            records[path] = ResolvedSourceMetadataRecord.from_mapping(
                 {} if metadata is None else metadata
             )
         context = replace(context, source_metadata_by_path=MappingProxyType(records))

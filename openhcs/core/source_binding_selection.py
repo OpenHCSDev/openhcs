@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from functools import lru_cache
@@ -26,7 +25,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingRuntimeContext,
-    SourceBindingRuntimeMetadataNormalizer,
     SourceSetRole,
 )
 from openhcs.core.source_image_provenance import (
@@ -34,8 +32,9 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_metadata import (
+    SourceMetadataFields,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
+    SourceMetadataRecord,
     SourceMetadataValue,
 )
 from openhcs.core.source_matching import (
@@ -79,27 +78,16 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True, slots=True, eq=False)
-class SourceMetadataRecord(Mapping[str, SourceMetadataValue]):
-    """Normalized source metadata carried across source-binding selection."""
-
-    fields: tuple[tuple[str, SourceMetadataValue], ...]
+class DeclaredSourceMetadataRecord(SourceMetadataRecord):
+    """Live declared metadata that still requires path-specific fallbacks."""
 
     @classmethod
-    def from_mapping(cls, metadata: SourceMetadataMapping) -> "SourceMetadataRecord":
-        return DeclaredSourceMetadataRecord(
-            tuple((str(key), value) for key, value in metadata.items())
-        )
+    def from_mapping(
+        cls, metadata: SourceMetadataMapping
+    ) -> "DeclaredSourceMetadataRecord":
+        return cls(tuple((str(key), value) for key, value in metadata.items()))
 
-    @abstractmethod
     def resolve(
-        self,
-        path: str,
-        parser: "FilenameParser",
-        metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> "SourceMetadataRecord | None":
-        """Return this path's metadata through its declared resolution lifetime."""
-
-    def resolve_with_fallback(
         self,
         path: str,
         parser: "FilenameParser",
@@ -131,71 +119,6 @@ class SourceMetadataRecord(Mapping[str, SourceMetadataValue]):
                 path=path,
             )
         return self.from_mapping(metadata) if metadata else None
-
-    def __getitem__(self, key: str) -> SourceMetadataValue:
-        for field_key, value in self.fields:
-            if field_key == key:
-                return value
-        raise KeyError(key)
-
-    def __iter__(self) -> Iterator[str]:
-        return (key for key, _value in self.fields)
-
-    def __len__(self) -> int:
-        return len(self.fields)
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SourceMetadataRecord):
-            return NotImplemented
-        return self.fields == other.fields
-
-    def __hash__(self) -> int:
-        return hash((self.fields,))
-
-
-@dataclass(frozen=True, slots=True, eq=False)
-class DeclaredSourceMetadataRecord(SourceMetadataRecord):
-    """Live declared metadata that still requires path-specific fallbacks."""
-
-    def resolve(
-        self,
-        path: str,
-        parser: "FilenameParser",
-        metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> SourceMetadataRecord | None:
-        return self.resolve_with_fallback(path, parser, metadata_rules)
-
-
-@dataclass(frozen=True, slots=True, eq=False)
-class ResolvedSourceMetadataRecord(SourceMetadataRecord):
-    """Immutable path-specific metadata resolved at a runtime snapshot boundary."""
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "fields",
-            tuple(
-                (
-                    str(key),
-                    SourceBindingRuntimeMetadataNormalizer.normalized_value(value),
-                )
-                for key, value in self.fields
-            ),
-        )
-
-    @classmethod
-    def from_resolved_mapping(
-        cls, metadata: SourceMetadataMapping
-    ) -> "ResolvedSourceMetadataRecord":
-        return cls(tuple(metadata.items()))
-
-    def resolve(
-        self,
-        path: str,
-        parser: "FilenameParser",
-        metadata_rules: tuple[MetadataExtractionRule, ...],
-    ) -> SourceMetadataRecord | None:
-        return self if self.fields else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,7 +197,7 @@ class SourcePatternResolutionContext:
                 str(path): (
                     metadata
                     if isinstance(metadata, SourceMetadataRecord)
-                    else SourceMetadataRecord.from_mapping(metadata)
+                    else DeclaredSourceMetadataRecord.from_mapping(metadata)
                 )
                 for path, metadata in source_metadata_by_path.items()
             }
@@ -342,9 +265,9 @@ class SourcePatternResolutionContext:
             dict.fromkeys(
                 source_filter_path
                 for metadata in self.metadata_for_paths(resolution.metadata_paths())
-                for source_filter_path in SourceMetadataRoleView(
+                for source_filter_path in SourceMetadataFields.source_filter_paths(
                     metadata
-                ).source_filter_paths()
+                )
             )
         )
         if source_filter_paths:
@@ -518,7 +441,7 @@ class SourcePatternResolutionContext:
             if path_metadata is not None:
                 merge_source_metadata(metadata, path_metadata, path=path)
         if metadata:
-            return SourceMetadataRecord.from_mapping(metadata)
+            return DeclaredSourceMetadataRecord.from_mapping(metadata)
         return None
 
     def source_metadata_by_paths(

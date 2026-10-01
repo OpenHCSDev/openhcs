@@ -42,7 +42,7 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.source_metadata import SourceMetadataRoleView
+from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsAdapterUnavailableError,
@@ -316,9 +316,7 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     }
     for alias, (source_path, pixels) in stores.items():
         virtual_path, record = records_by_alias[alias]
-        filter_paths = SourceMetadataRoleView(
-            record.source_metadata
-        ).source_filter_paths()
+        filter_paths = SourceMetadataFields.source_filter_paths(record.source_metadata)
         assert source_path.name in filter_paths
         assert str(source_path) in filter_paths
         np.testing.assert_array_equal(
