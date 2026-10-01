@@ -1,8 +1,8 @@
 """Read-only installed synthetic fit and complete typed publication witness."""
 
+import argparse
 import hashlib
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,10 +13,11 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
-def main(root: Path) -> None:
-    output = root / "outputs" / "synthetic_openhcs"
-    receipts = root / "mcp-installed"
-    status = json.loads((receipts / "receipt-015.json").read_text())
+def main(root: Path, output_directory: str, receipt_directory: str,
+         status_receipt: int, first_sample_receipt: int) -> None:
+    output = root / output_directory / "synthetic_openhcs"
+    receipts = root / receipt_directory
+    status = json.loads((receipts / f"receipt-{status_receipt:03d}.json").read_text())
     execution = status["payload"]["results"][0]["payloads"][0]
     assert status["returncode"] == 0 and execution["status"] == "complete"
     assert execution["response"]["execution"]["error"] is None
@@ -61,7 +62,8 @@ def main(root: Path) -> None:
         max_error = max(max_error, float(np.max(np.abs(corrected - expected))))
         fractional_count += int(np.count_nonzero(corrected != np.floor(corrected)))
     assert fractional_count > 0
-    for index, expected in ((18, tifffile.imread(corrected_files[0])), (19, dark), (20, flat)):
+    for index, expected in enumerate((tifffile.imread(corrected_files[0]), dark, flat),
+                                     start=first_sample_receipt):
         receipt = json.loads((receipts / f"receipt-{index:03d}.json").read_text())
         assert receipt["returncode"] == 0
         payload = receipt["payload"]["results"][0]["payloads"][0]
@@ -76,4 +78,12 @@ def main(root: Path) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("root", type=Path)
+    parser.add_argument("--output-directory", default="outputs")
+    parser.add_argument("--receipt-directory", default="mcp-installed")
+    parser.add_argument("--status-receipt", type=int, default=15)
+    parser.add_argument("--first-sample-receipt", type=int, default=18)
+    args = parser.parse_args()
+    main(args.root, args.output_directory, args.receipt_directory,
+         args.status_receipt, args.first_sample_receipt)
