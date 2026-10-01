@@ -137,7 +137,50 @@ class BroadMicroscopeDetector:
         )
 
 
-class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterMeta):
+class MetadataMicroscopeDetector:
+    """Detect sources through their declared microscope metadata owner.
+
+    Image-container detectors override this operation; ordinary metadata-backed
+    handlers share it independently of viewer transport and workspace operations.
+    """
+
+    _metadata_handler_class: Optional[Type[MetadataHandler]] = None
+
+    @classmethod
+    def detect(
+        cls,
+        plate_folder: Path,
+        filemanager: FileManager,
+        source_bindings_config: Optional["SourceBindingsConfig"] = None,
+    ) -> bool:
+        """Detect this handler; store-backed declarations can narrow discovery.
+
+        Ordinary metadata handlers detect one plate declaration, without opening
+        its image containers. Store-backed handlers own selected discovery in
+        their implementation of this same method.
+        """
+        from polystore.exceptions import MetadataNotFoundError
+
+        metadata_handler_class = cls._metadata_handler_class
+        if metadata_handler_class is None:
+            raise RuntimeError(
+                f"{cls.__name__} missing _metadata_handler_class for detection"
+            )
+
+        metadata_handler = metadata_handler_class(filemanager)
+        try:
+            metadata_handler.find_metadata_file(plate_folder)
+        except (MetadataNotFoundError, FileNotFoundError, TypeError):
+            return False
+        return True
+
+
+class MicroscopeHandler(
+    MetadataMicroscopeDetector,
+    ViewerMicroscopeHandlerABC,
+    ABC,
+    metaclass=AutoRegisterMeta,
+):
     """
     Composed class for handling microscope-specific functionality.
 
@@ -159,9 +202,6 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
 
     DEFAULT_MICROSCOPE = "auto"
     _handlers_cache = None
-
-    # Optional class attribute for explicit metadata handler registration
-    _metadata_handler_class: Optional[Type[MetadataHandler]] = None
 
     def __init__(
         self, parser: Optional[FilenameParser], metadata_handler: MetadataHandler
@@ -235,34 +275,6 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
             "recognizes an intentionally incomplete export, select this handler "
             "explicitly and expect metadata-derived fields to remain unavailable."
         )
-
-    @classmethod
-    def detect(
-        cls,
-        plate_folder: Path,
-        filemanager: FileManager,
-        source_bindings_config: Optional["SourceBindingsConfig"] = None,
-    ) -> bool:
-        """Detect this handler; store-backed declarations can narrow discovery.
-
-        Ordinary metadata handlers detect one plate declaration, without opening
-        its image containers. Store-backed handlers own selected discovery in
-        their implementation of this same method.
-        """
-        from polystore.exceptions import MetadataNotFoundError
-
-        metadata_handler_class = cls._metadata_handler_class
-        if metadata_handler_class is None:
-            raise RuntimeError(
-                f"{cls.__name__} missing _metadata_handler_class for detection"
-            )
-
-        metadata_handler = metadata_handler_class(filemanager)
-        try:
-            metadata_handler.find_metadata_file(plate_folder)
-        except (MetadataNotFoundError, FileNotFoundError, TypeError):
-            return False
-        return True
 
     @property
     @abstractmethod

@@ -14,7 +14,7 @@ from zipfile import ZipFile
 import numpy as np
 from polystore.disk import DiskStorageBackend
 from polystore.roi import extract_rois_from_labeled_mask
-from polystore.roi_converters import FijiROIConverter
+from polystore.roi_converters import FijiROIConverter, NapariShapeMetadata
 
 
 def main():
@@ -52,9 +52,15 @@ def main():
         json.dumps(
             {
                 "shape": list(labels.shape),
-                "parent_labels": [roi.metadata["label"] for roi in rois],
+                "parent_labels": [
+                    NapariShapeMetadata.from_metadata(roi.metadata).label
+                    for roi in rois
+                ],
                 "fragments_by_parent": dict(
-                    Counter(member.metadata["label"] for member in members)
+                    Counter(
+                        NapariShapeMetadata.from_metadata(member.metadata).label
+                        for member in members
+                    )
                 ),
                 "zip_roi_members": member_count,
                 "cold_extraction_seconds": cold_extraction_seconds,
