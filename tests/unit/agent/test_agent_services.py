@@ -3148,7 +3148,8 @@ def test_execution_session_observation_export_uses_ordinary_submission(
 
     assert job.server_execution_id == _ExecutionTestId.EXECUTE
     assert fake_client.execution_submissions[0].config_params == {
-        "runtime_observation_export_path": str(export_path)
+        "runtime_observation_export_path": str(export_path),
+        "runtime_observation_export_scope": "values",
     }
 
     outcome_path = tmp_path / "evidence" / "outcomes.pkl"
@@ -3546,9 +3547,9 @@ def test_compile_inspection_rejects_escaping_metadata_transaction(
         # The metadata target is admitted, but staging would still write outside.
         filename = str(outside / "metadata.json")
         (outside / "metadata.json").symlink_to(plate / "admitted.json")
-        metadata_module.LOCK_CONFIG.lock_path(outside / "metadata.json").symlink_to(
-            plate / "admitted.lock"
-        )
+        config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+        _, lock = config.managed_paths(plate)
+        lock.symlink_to(plate / "admitted.lock")
     config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
     monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
     monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
