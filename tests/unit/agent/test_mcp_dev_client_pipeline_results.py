@@ -194,16 +194,16 @@ def test_draft_journey_decodes_once_then_renders_real_command(structured, monkey
     peer = ControlledWireSession((ref, spec, validation, source), structured=structured)
     args = args_for("draft-pipeline-step", "function-1", "--max-source-chars", "10")
     command = dev_client.McpDevCommandSpec.for_name(args.command)
-    import openhcs.mcp.dev_client_rendering as rendering
+    import openhcs.mcp.dev_client_core as ingress
 
     decoded_contracts = []
-    decode = rendering.dataclass_from_mapping
+    decode = ingress.dataclass_from_mapping
 
     def observed_decode(contract, payload):
         decoded_contracts.append(contract)
         return decode(contract, payload)
 
-    monkeypatch.setattr(rendering, "dataclass_from_mapping", observed_decode)
+    monkeypatch.setattr(ingress, "dataclass_from_mapping", observed_decode)
     response = asyncio.run(command.run_session(peer, args))
     assert [call[0] for call in peer.calls] == [
         agent_capabilities.create_pipeline.name,
@@ -431,10 +431,10 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
 
     binding = McpDevOutputRenderer.for_output_contract(ExtendedInspection)
     assert binding.renderer_type is PipelineArtifactPlanRenderer
-    value = binding.decode_payload(
+    value = McpDevToolResult._decode_payload(
         to_jsonable(
             ExtendedInspection(schema_version=SCHEMA_VERSION, plate_path="extended")
-        )
+        ), (ExtendedInspection,)
     )
     assert type(value) is ExtendedInspection and value.extension_fact == "retained"
     assert "plate=extended" in binding.renderer_type.render_payload_value(
@@ -509,7 +509,7 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
         output_contract = NewResult
 
     binding = McpDevOutputRenderer.for_output_contract(NewResult)
-    value = binding.decode_payload({"value": "one-declaration"})
+    value = McpDevToolResult._decode_payload({"value": "one-declaration"}, (NewResult,))
     assert (
         binding.renderer_type.render_payload_value(
             value, binding.renderer_type.render_options_type()

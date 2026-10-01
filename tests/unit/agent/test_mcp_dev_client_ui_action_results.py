@@ -284,7 +284,7 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
             SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
             "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         )
-        decoded = extension.decode_payload(to_jsonable(value), ExtendedAction)
+        decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))
         assert decoded.annotation == "new declared fact"
         rendered = extension.render_payload_value(decoded, McpDevOutputRenderOptions())
         assert events == (["second", "first"] if reverse else ["first", "second"])

@@ -287,11 +287,11 @@ def test_config_schema_typed_boundary_reuses_nested_values(monkeypatch) -> None:
         raise AssertionError("The decoded schema must not be reinterpreted.")
 
     monkeypatch.setattr(
-        "openhcs.mcp.dev_client_rendering.dataclass_from_mapping", unexpected_decode
+        "openhcs.mcp.dev_client_core.dataclass_from_mapping", unexpected_decode
     )
     binding = McpDevOutputRenderer.for_output_contract(ConfigSchema)
     assert binding is not None
-    assert binding.decode_payload(schema) is schema
+    assert McpDevToolResult._decode_payload(schema, (ConfigSchema,)) is schema
     rendered = binding.render_result(response, CatalogRenderOptions())
     assert "flags=optional,lazy,inheritable" in rendered
     assert "default=None" in rendered
@@ -324,7 +324,7 @@ def test_config_schema_subtype_uses_ancestor_without_registry_edits() -> None:
     parent = McpDevOutputRenderer.for_output_contract(ConfigSchema)
     assert binding is not None and parent is not None
     assert binding.renderer_type is parent.renderer_type
-    assert binding.decode_payload(schema) is schema
+    assert McpDevToolResult._decode_payload(schema, (AnnotatedConfigSchema,)) is schema
     response = McpDevToolBatchResponse(
         server=McpDevServerIdentity(
             command="python",
