@@ -5,13 +5,16 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
+import numpy as np
 import tifffile
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 import openhcs.demo.synthetic_data as producer_module
 from openhcs.constants.constants import AllComponents
 from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
 from openhcs.core.virtual_workspace_metadata import (
     FIELDS, VirtualWorkspaceSourceProjectionEntries, component_metadata_field,
     get_metadata_path,
@@ -29,13 +32,13 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         self.root = Path(self.directory.name)
 
     def generate(self, format, *, z_levels=1, explicit=False, bioformats=False,
-                 native=True, wells=("A01",), skip_files=(), grid=(1, 1)):
+                 native=True, wells=("A01",), skip_files=(), grid=(1, 1), channels=2):
         plate = self.root / str(len(tuple(self.root.iterdir())))
         with redirect_stdout(StringIO()):
             generator = SyntheticMicroscopyGenerator(
                 output_dir=str(plate), format=format, grid_size=grid,
                 tile_size=(32, 32), overlap_percent=0, stage_error_px=0,
-                wavelengths=2, z_stack_levels=z_levels, num_cells=4,
+                wavelengths=channels, z_stack_levels=z_levels, num_cells=4,
                 wells=list(wells), random_seed=7, include_all_components=explicit,
                 imagexpress_bioformats_compatible=bioformats,
                 openhcs_format=native, skip_files=list(skip_files),
@@ -139,6 +142,53 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         with redirect_stdout(StringIO()):
             generator.generate_dataset()
         self.assert_coherent(plate, self.document(plate), 4)
+
+    def test_sparse_sites_are_derived_from_saved_planes(self):
+        skipped = tuple(f"r01c01f{site}p01-ch{channel}sk1fk1fl1.tiff"
+                        for site in (1, 3) for channel in (1, 2))
+        generator, plate = self.generate("OperaPhenix", grid=(1, 4), skip_files=skipped)
+        values = self.assert_coherent(plate, self.document(plate), 4)
+        self.assertEqual(values[AllComponents.SITE], {"2", "4"})
+
+    def test_new_complete_address_needs_no_metadata_variant(self):
+        generator, plate = self.generate("OperaPhenix")
+        with redirect_stdout(StringIO()):
+            generator._write_plane(np.full((32, 32), 172, dtype=np.uint16),
+                                   plate / "Images", "D12", 17, 7, 99)
+            generator.generate_openhcs_metadata(sub_dir="Images")
+        values = self.assert_coherent(plate, self.document(plate), 3)
+        self.assertEqual(values[AllComponents.WELL], {"R01C01", "R04C12"})
+        self.assertEqual(values[AllComponents.Z_INDEX], {"1", "99"})
+        self.assertEqual(values[AllComponents.SITE], {"1", "17"})
+        self.assertEqual(values[AllComponents.CHANNEL], {"1", "2", "7"})
+        np.testing.assert_array_equal(tifffile.imread(plate / "Images/r04c12f17p99-ch7sk1fk1fl1.tiff"),
+                                      np.full((32, 32), 172, dtype=np.uint16))
+
+    def test_bioformats_scalar_tokens_can_be_absent_without_losing_identity(self):
+        generator, plate = self.generate("ImageXpress", channels=1, bioformats=True)
+        self.assertEqual({path.name for path in plate.rglob("*.tif")}, {f"{plate.name}_A01.tif"})
+        values = self.assert_coherent(plate, self.document(plate), 1)
+        for component in AllComponents:
+            if component is not AllComponents.WELL:
+                self.assertEqual(values[component], {"1"})
+
+    def test_xml_urls_and_physical_names_share_parser_owner(self):
+        generator, plate = self.generate("OperaPhenix", z_levels=2,
+                                        wells=("A01", "D12"), grid=(2, 2))
+        root = ET.parse(plate / "Images/Index.xml").getroot()
+        urls = {element.text for element in root.iter() if element.tag.endswith("}URL")}
+        self.assertEqual(urls, {path.name for path in plate.rglob("*.tiff")})
+        self.assert_coherent(plate, self.document(plate), 32)
+
+    def test_nominal_acquisition_operation_respects_existing_mro(self):
+        generator, plate = self.generate("OperaPhenix")
+        parser = generator.parser
+        self.assertIsInstance(parser, GenericFilenameParser)
+        components = generator._plane_components("D12", 17, 7, 99)
+        canonical = GenericFilenameParser.construct_acquisition_filename(parser, components)
+        self.assertEqual(canonical, parser.construct_filename(components))
+        self.assertEqual(parser.construct_acquisition_filename(components),
+                         "r04c12f17p99-ch7sk1fk1fl1.tiff")
 
 
 if __name__ == "__main__":
