@@ -1,0 +1,22 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "env",
+    "OPENHCS_CPU_ONLY=true",
+    "OPENHCS_HEADLESS=true",
+    "OPENBLAS_NUM_THREADS=1",
+    "OMP_NUM_THREADS=1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "-I",
+    "-B",
+    "-c",
+    "import sys,runpy,subprocess;from pathlib import Path;import hashlib;head=subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip();print(\"SOURCE_HEAD=\"+head,flush=True);assert head.startswith(\"45c964815\");root=Path(\"/home/ts/wt/openhcs-prior-measurement-role-projection-20261001\");sys.path.insert(0,str(root));import openhcs.core;openhcs.core.__path__.append(\"/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core\");subprocess.Popen.__init__=lambda *a,**k: (_ for _ in ()).throw(RuntimeError(\"source-only subprocess guard\"));sys.argv=[\"pytest\",\"--noconftest\",\"--import-mode=importlib\",\"-o\",\"addopts=\",\"-p\",\"no:cacheprovider\",\"--basetemp=validation/canonical-custom-379-scratch-published-head\",\"tests/unit/test_canonical_custom_source_lookup.py\",\"tests/unit/test_custom_function_lifecycle.py\",\"tests/unit/test_func_registry_projection.py\",\"tests/unit/test_function_reference_identity.py\",\"tests/unit/agent/test_custom_registration_admission.py\",\"validation/original_377_boundary_witness.py\",\"-k\",\"not selected_source_lookup\",\"-q\"];runpy.run_module(\"pytest\",run_name=\"__main__\")"
+  ],
+  "exit": 0,
+  "limit": null,
+  "peak_rss_mib": 481.93,
+  "seconds": 19.02
+}

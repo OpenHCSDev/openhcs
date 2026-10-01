@@ -95,13 +95,45 @@ Final corrected-owner controls pass 107 cases, including the unchanged PR377
 canonical witness, in 11.41 seconds / 481.94 MiB. The only deselected case is
 the original PR377 declaration-discovery witness owned by issue 376.
 
+Published checkpoint qualification
+----------------------------------
+
+Source checkpoint: ``45c964815ac6035e0fd9d115538e56624f9c28bc``, published on
+PR409. At that exact head, all 107 controls pass again in 19.02 seconds /
+481.93 MiB, with the source head printed/asserted in the retained log. Original
+pinned R0 passes against main e66500e7 in 31.25 seconds / 83.91 MiB, exit zero,
+and its complete delta has no positive entries. The exact Python3.14 tool and
+readonly metaclass backing are asserted in its command. Its corrected-layout
+intermediate +2 physical-class-line red is also retained: the final change
+corrects the original inaccurate ``Minimal ABC``/``only essential contracts``
+class description. No behavioral code is compressed to conceal that metric.
+Subsequent commits publish only documentation and evidence; production/test
+bytes remain the qualified checkpoint's bytes.
+
+``validation/canonical-custom-379-evidence.tar.gz`` retains 30 original log/JSON
+members, including original witness reds, fixture reds, both R0 reds, exact R0
+green, and failed/unqualified R1 preflights. Every archived member was compared
+byte-for-byte with its original; archive size 416916 bytes, SHA256
+``a6c1f060383e218ece3fcb4580dd59de64967067ee38e50c0051bcde4af62b93``.
+Published-head controls and the exact R0 command receipt are also directly
+tracked for review.
+
+Only verified completed worker pytest scratch was removed, under this existing
+worktree's ``validation/``: ``canonical-custom-379-scratch-controls-first``,
+``canonical-custom-379-scratch-focused-corrected``,
+``canonical-custom-379-scratch-controls-final``,
+``canonical-custom-379-scratch-controls-corrected``, and
+``canonical-custom-379-scratch-published-head``. Released 4562944 allocated
+bytes (102248 apparent bytes). Their durable test definitions and receipts
+remain; the two failed worker scratch directories, original failed/uncertain
+parent inputs, scientific outputs, driver and fixtures are preserved.
+
 Qualification limits
 --------------------
 
 All checks are source-only, one CPU, bounded to 60 seconds / 512 MiB combined,
 using readonly dependencies and explicit own-source imports with subprocess
-launch blocked. Pinned R0 and final owner controls are appended at their actual
-results. R1 preflight with the original production NRA source and interpreter
+launch blocked. R1 preflight with the original production NRA source and interpreter
 finds all eight recorded dependency repositories uninitialized in this existing
 worktree (1.76 seconds / 62.66 MiB). The first Python3.14 preflight attempt also
 retains its missing-tree-sitter import failure. A complete production/dependency
@@ -115,5 +147,7 @@ Shared-file handoff
 
 Schrodinger can integrate this checkpoint before changing the original
 declaration-local hooks for issue 376. This branch does not own those hooks.
+The OpenHCSRegistry MI/import seam is published; merge normally through main,
+not through shared worktree edits. Parent now owns notification to Schrodinger.
 The requested native ``send_input`` primitive is absent from this session's
 available tools; no substitute comms mechanism or shared-worktree edit was used.
