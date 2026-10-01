@@ -135,3 +135,42 @@ Absence verified afterward. Disposable fixtures/cache can be regenerated from
 retained recipes. Lossless R0 gzip recoveries match every uncompressed digest;
 source, original failures, diagnostics, durable PR history and scientific outputs
 remain retained. No foreign worktree/cache or environment removal.
+
+Current ordinary main and paired dependency delivery
+----------------------------------------------------
+
+Source checkpoint bbf2b7843b8add1d25aa1f30017c6a7efc413b89 normally merges
+current main33701725f5b53874c1a18c0837d2c2bb2bb3b99e (including408/411/412).
+The two issue376 production files and tests are unchanged from f1a713d19.
+Original dependency PR2 normally merges main34c3097ba449ba9501a5adb8d1e37a660652abaf
+at dc65ebe41459c2a85f2c80d84d7e238500e613d1. Its src/tests are byte-identical
+to22837a9. Published paired gitlink b27722bc71282ddd1ca1c5847208a72c800fe0b6
+adds the dependency integration receipt to that tested source checkpoint.
+
+53 focused checks pass,1deselected issue379,7.22s/344260KiB. New independent
+declaration/callable plus cooperative before/after-C3 behavior remains included.
+Original R0 unchanged tool3b03785f, Python3.14, source checksum recorded above:
+
+* OpenHCS main33701725 -> bbf2b784:5177projections,zero positive,
+  exit0,13.76s/86896KiB; only the two376production files differ.
+* Dependency main34c3097 -> dc65ebe:31projections,zero positive,
+  exit0,1.31s/44376KiB.
+
+Exact serial commands, logs, resource receipts and lossless JSON are retained
+as selected-discovery-evidence/integration-*. Each command uses original
+read-only interpreter/dependency environment, CPU0/512MiB/no swap/60s.
+Resource helper reports RAM13.1GiB, home7.2GiB, root7.7GiB, swap10.2GiB
+(critical warning). No fleet or environment was created; tests remain serial.
+
+PR409 was still OPEN at integration, not silently treated as merged. Dewey's
+canonical lookup owner remains separate; ordinary merge after409 is the remaining
+shared-file integration boundary. No379implementation or duplicate lookup added.
+NRA review IMPL-3/4/12/13, MEMB-1/2 retains ancestor shared implementation,
+minimal leaf hooks, original discovery/registration and meaningful C3 new cases.
+Original failed controls and broader ABI limits above remain unchanged.
+
+Cleanup: removed only verified task scratch
+/home/ts/.cache/agent-scratch/knowledge-selected-integration-376-20261001,
+356KiB, after all three workers exited, no matching preparation/source-test
+process, no open lsof handles and canonical no-symlink path check. Durable
+source/evidence remain. No package install or live runtime/science changes.
