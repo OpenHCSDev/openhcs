@@ -1385,7 +1385,7 @@ class ClassificationMethod(Enum):
                 setting_records=[
                     ModuleSetting(
                         module_type.classification_decision_count_setting.canonical,
-                        cellprofiler_setting_literal(self),
+                        cellprofiler_setting_literal(self.cellprofiler_literals[1]),
                     ),
                     *(
                         record for record in block.iter_settings()

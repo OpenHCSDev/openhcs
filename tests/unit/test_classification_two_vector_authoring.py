@@ -61,6 +61,20 @@ def paired_kwargs():
 
 
 def test_public_paired_vector_kwargs_reconstruct_original_mode_without_extra_selector():
+    invocation = next(
+        normalize_function_pattern(
+            (classify_objects_two_measurements, paired_kwargs())
+        ).iter_items()
+    )
+    blocks, _consumed = (
+        ClassifyObjectsSingleMeasurementModule.module_blocks_for_invocation(
+            invocation=invocation, step_context=_classification_context()
+        )
+    )
+    assert setting_values(
+        blocks[0],
+        ClassifyObjectsSingleMeasurementModule.classification_decision_count_setting,
+    ) == ("Pair of measurements",)
     contract = _public_function_step_contract(
         ClassifyObjectsSingleMeasurementModule,
         classify_objects_two_measurements,
@@ -167,6 +181,71 @@ def test_missing_and_conflicting_mode_declarations_fail_closed(parameters):
     )
     with pytest.raises(ValueError, match="one declared measurement-count mode"):
         ClassificationMethod.from_callable_contract(contract)
+
+
+def test_unknown_external_parsed_mode_remains_rejected():
+    declaration = ClassifyObjectsSingleMeasurementModule
+    module = _module_block(
+        declaration,
+        (
+            (
+                declaration.classification_decision_count_setting.canonical,
+                "Three unrelated vectors",
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="cannot be coerced"):
+        ClassificationMethod.from_module(declaration, module)
+
+
+@pytest.mark.parametrize("rules", ((),))
+def test_explicit_empty_rules_preserve_original_scalar_default(rules):
+    kwargs = {
+        "select_the_object_to_be_classified": "Cells",
+        "measurement_feature": "AreaShape_Area",
+        "classification_rules": rules,
+    }
+    contract = _public_function_step_contract(
+        ClassifyObjectsSingleMeasurementModule,
+        classify_objects_single_measurement,
+        kwargs,
+        _classification_context(),
+    )
+    request = _runtime_request(
+        contract,
+        {
+            name: value
+            for name, value in kwargs.items()
+            if name != "select_the_object_to_be_classified"
+        },
+    )
+    bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
+    np.testing.assert_array_equal(bound["measurement_values"], (9.0, 300.0))
+    assert "measurement_values_by_rule" not in bound
+    image, rows = inspect.unwrap(classify_objects_single_measurement)(
+        request.current_image,
+        measurement_feature="AreaShape_Area",
+        classification_rules=rules,
+        **bound,
+    )
+    np.testing.assert_array_equal(
+        image, request.label_payload_for(request.object_inputs[0]).variant_data.labels
+    )
+    assert rows.rows[0].total_objects == 2
+
+
+@pytest.mark.parametrize("invalid_rules", ("raw", ("raw",)))
+def test_untyped_rule_declarations_remain_rejected(invalid_rules):
+    with pytest.raises(TypeError, match="tuple of SingleMeasurementClassificationRule"):
+        _public_function_step_contract(
+            ClassifyObjectsSingleMeasurementModule,
+            classify_objects_single_measurement,
+            {
+                "select_the_object_to_be_classified": "Cells",
+                "classification_rules": invalid_rules,
+            },
+            _classification_context(),
+        )
 
 
 class _IndependentPairImageVectorParameter(
