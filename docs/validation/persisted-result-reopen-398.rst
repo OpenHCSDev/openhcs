@@ -190,3 +190,59 @@ This does not overlap Lorentz's worktree cleanup.
 PR399 is a visible source checkpoint. Parent installed public-tool acceptance
 is pending; no live-readiness, historical graph recovery, or global NRA
 completion is asserted.
+
+Installed read acceptance and stream failure
+-------------------------------------------
+
+Parent's actual private installed PUBLIC MCP inventory and resolution0 sampling
+passed: all9 records, candidate_mask/unrooted_residual exact origin(180,745),
+sample40x45, channel integer2, calibration1.3556. Retained acceptance:
+``paired397-388-installed-20261001/reopen399-installed-read-native-channel/ACCEPTANCE.json``
+under the original issue-batch worktree. The first harness incorrectly expected
+channel string2 instead of actual integer2; its failure remains separate and is
+not a product error.
+
+The subsequent original public request007 streamed one saved candidate to the
+isolated DISPLAY91/5992 endpoint, with no private bridge descriptor. It FAILED,
+not timed out: ``plate_file_stream_failed`` / failed viewer settlement, completed
+updates0 of1. Native ``NapariAggregateAxisBindingAuthority.bindings`` refused
+``Napari aggregate payload axes require an exact plane_component_values
+declaration.`` Source includes PR397 ``ad6baa4e``; parent reports artifact
+shape(1,1024,1024), native metadata retains ``plane_axis=source_binding`` and
+one exact source plane/channel2. Original viewer2263287/create1790888684.96
+remains parent-owned for observation/closure, not an authorized replay target.
+
+Original request/response are retained in
+``paired397-388-installed-20261001/reopen399-installed-viewer/``:
+
+* ``007-openhcs_stream_plate_files_to_viewer-request.json`` SHA256
+  ``99836a3641dfb66463e601ef2cb96639d29d5d4055102a56b5a32f74d3c4b86a``.
+* ``007-openhcs_stream_plate_files_to_viewer-response.json`` SHA256
+  ``3ec3bbeb8ea92a6488dee772392e84f410d714239d7caa1bac13e6dd23a2b95f``.
+
+Verified source boundary: ordinary ``StreamingService.stream_images`` calls
+``StreamImagePayloadMetadataProjector.partition_indices/item_fields`` with the
+message authority's component order. The shared projector passes
+``project_singleton=False``; ``ImagePayloadMetadata.retained_plane_component_values``
+uses the provenance owner's varying values, which returns empty for one plane.
+Thus a retained pixel axis can cross the original wire without its exact domain.
+The strict native receiver rejects that missing declaration correctly. The
+selected-output397 repair covers future materialization, but ordinary reopening
+does not invoke ``SourceProjectedImageOutput.resolve_source_context`` on saved
+artifacts.
+
+Lorentz397 owns the parent-authorized declaration-producer repair, coordinated
+at PR397 comment5940614032. BOUND-2/8 identify the owner/wire projection risk.
+Do not blindly project every fixed component, guess channel/axis from rank or
+name, add a receiver type switch, relax its guard, rewrite artifacts, or fork a
+second procedure. Qualify the original typed loaded singleton through the
+original projector AND receiver. PR399's earlier synthetic stream fixture is
+2D and intercepts the final transport endpoint: its source passes did not cover
+this retained aggregate-axis/native receiver case.
+
+Singer retains399 inventory/read ownership and the coordinated394 graph seam;
+no397 production/test file or live process was edited. This receipt-only update
+does not change399 production head6cea76331, installed packages, source axes,
+timeouts, or scientific outputs. No tests/startup/replay or new scratch were
+performed. Installed stream/capture acceptance remains FAILED pending the
+separately owned producer repair and a fresh parent-controlled qualification.
