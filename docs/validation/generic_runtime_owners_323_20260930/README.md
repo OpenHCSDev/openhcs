@@ -125,3 +125,77 @@ The validated source tree lists every committed Python blob and dependency
 gitlink. Publication adds documentation and evidence only; its source membership
 is checked against that validated tree. Hosted CI remains separate from the
 locally executed, original checks above.
+
+
+The October 1 closure is validated at
+`95a98b0083aba2384c271e224746824fc9e40ce5`, against the same current main
+`74eac059f67389ca071055c93fcbdd556ba79f1a`. Earlier source cohorts and concerns
+above remain retained; the new source is listed separately in
+`validated-source-tree-95a98b008.txt`.
+
+Four remaining numerical caches now derive LRU storage and process lifetime from
+the shared parents: granularity series, radial-label geometry, radial-spectrum
+geometry and Zernike-label geometry. Each retains its existing 16-entry capacity
+and numerical key/value calculation. The provider-owned OrderedDict globals,
+eviction loops and granularity lock global are deleted. `SynchronizedBoundedCache`
+owns granularity's individual operation locking through cooperative inheritance;
+the process parent serializes first singleton construction. The executed gate
+checks the MI constructor/MRO, singleton identity under simultaneous threads,
+LRU promotion/eviction, registration and cleanup. Registry cleanup remains an
+explicit operation, not a new automatic clearing policy between wells.
+
+The logger-bound `RuntimeProfiler` moves from granularity to core runtime profiling.
+Its eight numerical consumers now import core directly. The shared existing sink
+determines environment gating and log/file output effects, covered with enabled
+and disabled tests. The identically named CP module/function context profiler in
+measurement execution support is a different authority; it and its bridge
+consumer are byte-unchanged. NRA initially rejected the imported declaration
+rename because dynamic importer exports were unresolved. The admitted sequence
+migrates exact direct consumers in an authored, revision-checked stage before
+guarded declaration rename/movement. The dynamic numerical export declarations
+stay unchanged; this does not turn their OPEN export contract into a proved one.
+The initial failed guard log, final complete simulation and recipes are retained.
+
+The final combined execution gate passes **1,055 tests**, with the same one
+optional Napari skip and two existing watershed warnings. Original CI-pinned R0
+passes all three roots; OpenHCS has no increases and removes one StringDispatch,
+three StringDispatchArms and two StringSubscript findings. Scripts and benchmark
+are unchanged. Original NRA R1 reports no increased findings with complete
+context (3,058 base / 3,056 candidate projections; the same two configured
+detectors). The final original-ClassDef census has 5,128 original declarations,
+5,116 projected declarations, and all 12 OPEN declarations across 701 modules.
+
+Fresh normal public qualification uses the same single-lane route, dependency
+pins, CPU 5 and shared persistent kernel directory. Mandatory readiness precedes
+pipeline clocks; startup/shutdown are excluded. All four normal CLI runs report
+success and one successful well. No checks or other task replays overlap them.
+
+| Latest source / case | Main compile | Candidate compile | Main execution | Candidate execution | Main total | Candidate total |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ImagingFlow | 2.000s | 1.535s | 17.000s | 17.992s | 19.683s | 20.285s |
+| 3D | 1.677s | 1.847s | 8.486s | 8.204s | 10.887s | 10.772s |
+
+These are source/parity qualification pairs, not statistical performance proof.
+The new ImagingFlow execution difference is +0.992s and its total difference is
++0.601s; the concern remains open. No speedup or neutrality is claimed. All 14
+complete CSV comparisons and 240 persisted label checks pass exactly. The
+extended gate also matches all 128 TIFF series, pixels, dtype, shape, axes,
+calibration and source metadata, and both native ROI archives (1,256 geometries),
+using only the previously admitted run-directory normalization for source
+addresses and ignoring ZIP container timestamps.
+
+A separate minimal process-global GC diagnostic on earlier candidate 00683 and
+main 74e records overlap with actual step windows, including other threads.
+Execution GC overlap is 0.244841s on candidate versus 0.059044s on main, a
+0.185797s difference against that diagnostic pair's 0.177079s execution difference.
+This explains that trace's difference, not all historical timing differences or
+the latest source pair. GC is too small there to close the overall execution gap;
+no production GC freezing/disabling policy was added. Public process headers
+hash the embedded launch arguments; complete original traces remain in the local
+run root. GC clocks remain diagnostic rather than unprofiled performance evidence.
+
+Granularity's reconstruction is still a large intrinsic numerical term (about
+2.22s in the saved live phase trace), with generic data movement around that step
+small. The ownership migration intentionally leaves that numerical algorithm
+with its provider. Further runtime optimization, fresh native CP timings and
+scaling figures remain outstanding under the continuing performance goal.
