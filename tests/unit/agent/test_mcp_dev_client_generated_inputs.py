@@ -1,6 +1,6 @@
 """Typed input declarations through unchanged generated command consumers."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import json
 
 import pytest
@@ -236,10 +236,44 @@ def test_single_declaration_extension_and_cooperative_diamond(reverse, monkeypat
         assert decoded[0].request_tag == "retained"
         # CLI input retains the subclass's fields; the distinct credential-free
         # execution projection still carries only the public connection owner.
-        assert decoded[0].tool_arguments() == ExecutionConnectionSpec(
-            port=5993, persistent=False
-        ).tool_arguments()
+        assert (
+            decoded[0].tool_arguments()
+            == ExecutionConnectionSpec(port=5993, persistent=False).tool_arguments()
+        )
         assert ExtendedConnection.__mro__.count(AgentDataclassCliRequest) == 1
         assert ExtendedConnection.__mro__.count(ExecutionConnectionSpec) == 1
     finally:
         del AgentCapabilityDeclaration.__registry__[NewCapability.name]
+
+
+@pytest.mark.parametrize("negative", (False, True))
+def test_new_declared_default_factory_runs_only_at_typed_construction(negative):
+    constructed = []
+
+    def default_probe():
+        constructed.append("default")
+        return True
+
+    @dataclass(frozen=True, kw_only=True)
+    class FactoryConnection(ExecutionConnectionSpec):
+        probe: bool = field(default_factory=default_probe)
+
+    class FactoryCapability(StartFunctionCatalogPreparationCapability):
+        name = "openhcs_s1_generated_factory_extension"
+        cli_command = "s1-generated-factory-extension"
+        input_contract = FactoryConnection
+
+    try:
+        parser = _build_parser()
+        assert not constructed
+        observed = call(
+            parser,
+            FactoryCapability.cli_command,
+            "--port",
+            "5993",
+            *(("--no-probe",) if negative else ()),
+        )
+        assert observed.arguments["probe"] is (not negative)
+        assert constructed == ([] if negative else ["default"])
+    finally:
+        del AgentCapabilityDeclaration.__registry__[FactoryCapability.name]

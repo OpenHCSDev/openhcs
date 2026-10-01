@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from dataclasses import dataclass, fields
+from dataclasses import MISSING, dataclass, fields
 from functools import cache, wraps
 from typing import Self, cast, get_type_hints
 
@@ -72,8 +73,20 @@ class AgentDataclassCliRequest(AgentCliRequest):
 
     @classmethod
     def agent_cli_factory(cls):
+        parameters = inspect.signature(cls).parameters
+
         @wraps(cls, updated=())
         def from_cli_fields(**kwargs):
+            # Keep Python's constructor marker out of the typed wire codec.
+            # Omitting that field lets its actual declared factory run once.
+            for declared_field in fields(cls):
+                if (
+                    declared_field.init
+                    and declared_field.default_factory is not MISSING
+                    and kwargs.get(declared_field.name)
+                    is parameters[declared_field.name].default
+                ):
+                    kwargs.pop(declared_field.name)
             return cls.from_fields(**kwargs)
 
         return from_cli_fields
