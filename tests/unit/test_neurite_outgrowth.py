@@ -55,6 +55,9 @@ from openhcs.processing.materialization import (
     SWCOptions,
     materialize,
 )
+from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+    PrimaryObjectDiagnosticPlanes,
+)
 
 
 def _implementation():
@@ -257,7 +260,10 @@ def test_cell_body_minimum_area_does_not_impose_hidden_roundness(monkeypatch):
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth.identify_primary_objects",
-        lambda *_args, **_kwargs: (image, image, detected_labels),
+        lambda *_args, **_kwargs: (
+            image, image, detected_labels,
+            *(object() for _ in PrimaryObjectDiagnosticPlanes._fields),
+        ),
     )
 
     payload = _identify_cell_bodies_cellprofiler(
@@ -289,7 +295,10 @@ def test_nuclear_support_ignores_rejected_nearer_body_candidate(monkeypatch):
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth.identify_primary_objects",
-        lambda *_args, **_kwargs: (image, image, detected_labels),
+        lambda *_args, **_kwargs: (
+            image, image, detected_labels,
+            *(object() for _ in PrimaryObjectDiagnosticPlanes._fields),
+        ),
     )
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth.local_background_response",
