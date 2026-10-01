@@ -7,7 +7,15 @@ Branch: fix/mcp-generated-input-contracts-339-20261001. Base is fetched canonica
 main7b0ec3f5ab5a35a586d77c480fb7d5d6b1c85ba0, merged343. Its reviewed shared
 unavailable_summary and absent_text hooks are inherited unchanged, not copied.
 No edits to parent343 config leaf/tests/receipt,338 handlers or Darwin344 runtime.
-Parent owns the next live338 slot. This work is source-only, no native/MCP/viewer.
+Parent owned the live338 slot and now owns next344 acceptance. This work remains
+source-only, no native/MCP/viewer.
+
+Current source checkpoint: c166a4a0a43893c335825387b9686d778df137bd, normally
+integrated parent-merged338 main05c3cf2883fb2ce75c14961264dabad633e639ee at
+227df0a1e73862c19fcb3f3a054a7037f2ee1663.338 installed gate/merge is parent
+evidence in its separate receipt; this branch did not launch or own that slot.
+Source acceptance62PASS/R0PASS. Installed339 acceptance remains parent-owned.
+Historical sections below preserve original attempts; final limits are explicit.
 
 Before edits: actual antipattern review
 -------------------------------------
@@ -145,3 +153,70 @@ Python,55s parse_python_module deadline, wall57.30s/264084KiB RSS, AS512MiB/CPU0
 Materialization completed, parsing did not. No counts, descent certificate,
 global pass or silent source exclusion is inferred. Guard reruns at the corrected
 source remain pending; timeout is not a blocker for independent source delivery.
+
+Final checkpoint, guard limits and cleanup
+------------------------------------------
+
+New-case extension found a real shared-owner defect: an omitted dataclass
+default_factory value reached typed reconstruction as Python's constructor
+marker. The original one-fail/one-pass reproducer is retained. The owning CLI
+ancestor now recognizes that marker through the actual dataclass Field and
+constructor Signature; it omits only that marker before the existing codec.
+The declared factory runs once inside typed construction, never while generating
+the parser; explicit negative boolean input does not run it. No factory/default
+roster, private sentinel name, mirror, new codec or per-caller case was added.
+This behavior is on the real ancestor, not duplicated across the two actual DTOs.
+
+Final combined62 cases PASS6.11s/258808KiB RSS, CPU0/timeout60:25 new inputs,
+existing config and pipeline behavior. Both diamond orders also verify the
+distinct existing credential-free runtime projection remains base-only while
+the CLI retains new subtype fields. Two selected existing generated-profile/
+knowledge server tests PASS20.75s/280668KiB at6ed; this is separately scoped,
+not relabelled as a current full server run. No original test assertions changed.
+Normal338 merge has zero diff in the four339 production files at6ed; its focused
+60-case sanity PASS10.80s/257744KiB before the default-factory extension fix.
+
+Source-only real command: start-function-catalog-preparation --help exits0,
+4.82s/248880KiB, declares host/port/transport-mode/persistent/no-persistent.
+--port true exits2 at local argparse,4.73s/248908KiB, before MCP launch. Working
+generated status/cancel nested arguments are exercised through real consumers,
+not help-only or regex proof. These command observations precede the factory-only
+correction; their exact original logs and provenance remain retained.
+
+Unchanged original packaged R0 at3b03785, main05 ->c166:PASS15.27s/87356KiB,
+zero increases/exceptions. Earlier corrected main7b ->6ed PASS41.59s/87476KiB;
+scripts/benchmark roots exit0, no changed Python, not extra behavioral coverage.
+The earlier original failure is retained; no guard changes or metric aliasing.
+Correctness Ruff E9/F63/F7/F82 and git diff --check PASS. Production diff versus
+main05:13 lines deleted,82 added in four files; one field-free owning ancestor.
+Earlier census at6ed shows zero debt increases in every measured category and
+one added class; its +47 code-lines observation precedes the factory fix.
+
+Pinned NRA084 full original R1 main7b ->6ed:INCOMPLETE,55.000s deadline during
+parse_python_module, wall57.42s/264124KiB, AS512MiB/CPU0. Source scope requested
+unchanged openhcs/scripts/benchmark plus ALL recorded dependency Python context.
+The policy materializes and scans revisions sequentially: BASE materialization
+completed, its analysis did not, HEAD analysis was never reached. No before/after
+counts, omitted-detector certification, descent certificate or global pass exists.
+The final main05/default-factory source was not broadly rescanned, per owner's
+explicit no-duplicate-broad-audit instruction. This omission is deliberate and
+stated, not hidden behind focused source tests or the old timeout.
+
+Archive: receipts/S1-generated-input-contracts-339-20261001.tar.gz contains all
+original/current logs, XML, before/delta census, source integration and local
+native binary hashes. Fresh extraction and comparison precede cleanup. Owned
+verification scratch:
+/home/ts/.cache/agent-scratch/openhcs-mcp-generated-input-contracts-339-verify-ZuCETp.
+Named5.7MiB validation scratch, verification extraction, own pytest cache and two
+own compiled import extensions are moved to recoverable trash after archival.
+Persistent worktree/source and all versioned receipts remain. No other worktree,
+installed package, configured skill, frozen environment or runtime is modified.
+
+Done source checkpoint, NOT installed339/S1/ZIP completion. Parent must next
+qualify the installed generated start/status/cancel and generic-call route on a
+fresh exact candidate: explicit routing, exact returned incarnation-bound handle,
+preparation lifecycle, native/external JSON semantics, original missing/invalid
+receipts, and exact owned process close. Parent344 currently owns the live slot;
+this branch takes none. Remaining raw renderer families and existing other CLI
+profiles are not declared globally clean. Existing scalar-vs-request and Python
+annotation-kind boundary distinctions remain; no catalog leaf switch was added.
