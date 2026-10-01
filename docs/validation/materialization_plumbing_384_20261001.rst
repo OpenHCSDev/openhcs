@@ -95,3 +95,38 @@ are identical to the 267-test candidate.
 Combined R1 source qualification, representative ordinary unprofiled timing and
 native numerical parity remain required before promotion. No benchmark ratios or
 speedup claim are attached to this receipt.
+
+Actual array outputs and raster publication
+------------------------------------------
+
+The first combined native comparison retained 28 numerically equivalent cases
+and two illumination metadata failures. The saved illumination NumPy arrays were
+actual outputs, but their NumPy-only directory had incorrectly become eligible
+for raster image inventory publication. The existing FileManager inventory
+includes declared raster formats; NumPy array exports are outside that inventory.
+The candidate had removed OutputTarget's inherited ``contains_images`` admission
+gate while switching directory discovery to actual saved outputs.
+
+The correction restores that existing nominal gate. Actual NumPy saved outputs
+and their observation locations remain intact; publication and completed-plate
+reconciliation consume only directories with images in the existing inventory.
+No second format registry, rerendering fallback or empty source projection was
+introduced.
+
+Independent controls use a real FileManager and physical NumPy-only and mixed
+TIFF/NumPy outputs. The original candidate fails the NumPy-only control with the
+same empty SourceProjectionSet error; its mixed-directory control passes. Both
+controls pass after restoration, verifying exact saved pixels, actual observation
+paths, raster-only inventory and typed calibration. The focused red and green
+receipts are ``materialization-npy-publication-red-v3-20261001.log/xml`` and
+``materialization-npy-publication-green-20261001.log/xml`` in the external benchmark
+evidence directory. Earlier import-order and typed-unit fixture errors are also
+retained separately; they are harness failures, not the product regression.
+
+The expanded eleven-module consumer gate passes all 269 tests using only the
+original nominal viewer route fixture from the root test configuration. Two
+initial broader invocations retained 264 passes and five missing-fixture setup
+errors; the corrected fixture registration preserves those same five controls.
+The final receipt is ``materialization-npy-publication-consumers-v3-20261001.log/xml``.
+Full native parity and fresh accepted timing remain required for the corrected
+combined source; the original 28-pass/two-error receipt is not replaced.
