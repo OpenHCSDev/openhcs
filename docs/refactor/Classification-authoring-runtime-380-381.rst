@@ -134,3 +134,18 @@ Original pinned R0 against the frozen subject branch: PASS 14.74s / 80.86MiB,
 measurement owner. Actual pinned Python3.14 tool and readonly metaclass backing
 were verified; no copied detector or engine changes. Main-integrated R0 and
 immutable receipt archive are recorded below when finalized.
+
+Source-qualified revision: 502bb6481d0f3bd1d1dfe0a90a51e7737a6fb39b.
+Pinned original R0 against integrated main 66ed7ef634: PASS 17.24s / 74.66MiB,
+5171 measured entries, increased=[], one fewer BooleanChainTerms. Ruff F on
+the two production files and new tests, I on new tests, and diff check pass.
+No whole NRA/R1/FULL gate or global85 qualification is inferred.
+The final receipt-only commit does not change these source/test bytes.
+
+Immutable archive (original reds, resource stop, exact commands/logs,
+post-fix fixture probe, integrated source, original R0 and source snapshots):
+``docs/refactor/receipts/classification-authoring-runtime-380-381-source-20261001.tar.gz``
+SHA256 ``4f27a84e986968d421ba4b3011e833f8e78d3ffb1ed61142d89d883a8634589f``.
+Parent native originals remain in the parent's archived engineering evidence;
+no predecessor failure was overwritten. Small persistent validation evidence
+is retained in this worktree; no large disposable scratch is owned or left.
