@@ -3308,6 +3308,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
     assert {row["feature_name"] for row in object_rows} == {
         "Location_Center_X",
         "Location_Center_Y",
+        "Location_Center_Z",
     }
 
 
@@ -14244,6 +14245,15 @@ def test_identify_objects_in_grid_location_rows_preserve_empty_grid_slots() -> N
     _record_output(request, object_spec, payload)
     table = measurement_table_for_module(request)
 
+    assert {
+        row["feature_name"]
+        for row in table.rows.iter_row_mappings()
+        if row.get("object_name") == "GridObjects"
+    } == {
+        CellProfilerObjectCoreMeasurementFeature.CENTER_X.value,
+        CellProfilerObjectCoreMeasurementFeature.CENTER_Y.value,
+    }
+
     by_key = {
         (
             row["object_label"],
@@ -14654,12 +14664,14 @@ def test_object_location_measurements_preserve_repeated_homogeneous_planes() -> 
         object_name="GridObjects",
     ).rows()
 
-    assert len(rows) == 8
+    assert len(rows) == 12
     assert {row["slice_index"] for row in rows} == {0, 1}
-    assert {row["feature_name"] for row in rows} == {
-        CellProfilerObjectCoreMeasurementFeature.CENTER_X.value,
-        CellProfilerObjectCoreMeasurementFeature.CENTER_Y.value,
-    }
+    assert {
+        row["result_value"]
+        for row in rows
+        if row["feature_name"]
+        == CellProfilerObjectCoreMeasurementFeature.CENTER_Z.value
+    } == {0.0}
 
 
 def test_sparse_object_label_aggregation_preserves_declared_domain() -> None:

@@ -58,10 +58,11 @@ def test_object_location_rows_are_schema_bearing_columnar_rows() -> None:
     rows = ObjectLocationMeasurementRows(payload, object_name="Cells").rows()
 
     assert isinstance(rows, ColumnarRows)
-    assert rows.row_count() == 4
+    assert rows.row_count() == 6
     assert set(rows.column_values("feature_name")) == {
         "Location_Center_X",
         "Location_Center_Y",
+        "Location_Center_Z",
     }
     assert tuple(field.name for field in rows.fields) == (
         MeasurementRowAxisField.OBJECT_NAME.value,

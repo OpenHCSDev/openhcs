@@ -30,6 +30,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
     ObjectCoreMeasurementFeature,
+    ObjectLocationCoordinateValues,
     object_location_coordinate_arrays,
 )
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
@@ -408,12 +409,18 @@ class ObjectLocationCenterValues:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectLocationMeasurementRows:
-    """Emit CP object location rows from a declared object-label domain."""
+class CellProfilerObjectLocationMeasurementRows(ABC):
+    """Emit declaration-owned CP locations over an exact object-label domain."""
 
     label_payload: ObjectLabelValue
     object_name: str
     domain_scope: ObjectLabelDomainScope | None = None
+
+    @abstractmethod
+    def coordinate_is_measured(
+        self, coordinate: ObjectLocationCoordinateValues
+    ) -> bool:
+        """Select coordinates emitted by this native measurement producer."""
 
     def __post_init__(self) -> None:
         if not isinstance(self.label_payload, ObjectLabelValue):
@@ -529,9 +536,29 @@ class ObjectLocationMeasurementRows:
                     axis_centers,
                     counts,
                 )
-                if coordinate.axis_present
+                if self.coordinate_is_measured(coordinate)
             ),
         )
+
+
+class ObjectLocationMeasurementRows(CellProfilerObjectLocationMeasurementRows):
+    """Native ImageSegmentation coordinates, with zero Z embedding in 2D."""
+
+    def coordinate_is_measured(
+        self, coordinate: ObjectLocationCoordinateValues
+    ) -> bool:
+        return True
+
+
+class LabelDimensionObjectLocationMeasurementRows(
+    CellProfilerObjectLocationMeasurementRows
+):
+    """Native identify utility coordinates over actual label dimensions."""
+
+    def coordinate_is_measured(
+        self, coordinate: ObjectLocationCoordinateValues
+    ) -> bool:
+        return coordinate.axis_present
 
 
 def measurement_table_rows(rows: RuntimeCallableArgument) -> ColumnarRows:
