@@ -114,7 +114,8 @@ Source selection is explicit through this worktree and
 autoload are disabled. No provider, download, install, native, science, UI or
 MCP run is performed.
 
-The full production901e9a49/c81963475 two-scan comparison is NOT yet verified.
+At the source-only checkpoint above, the full production901e9a49/c81963475
+two-scan comparison was NOT yet verified. Parent qualification follows below.
 The parent owns ``validation.lock`` and the active installed349/paired351 lane.
 No heavy gate is dispatched ahead of that workflow. The required acceptance is
 still the original full context under160/165s and512MiB, with genuine new debt
@@ -125,3 +126,76 @@ If the production comparison remains over bound, the next owner is the existing
 NRA PR12 integration owner, at ``analysis.analyze_compact_roots_with_cache`` /
 ``BoundedCompactProjectionManifest`` and original collected-family/graph lifetime
 interfaces. This sidecar does not create a competing core repair or block OpenHCS.
+
+Parent original-case acceptance, 2026-10-01
+-----------------------------------------
+
+Parent independently reviewed and qualified the production consumer at exact
+PR359 head ``59899d30b53c43e0bd3ecfd460d3d424848addbc``. The original failing
+comparison901e9a49/c81963475 completed with exit0 in137.95s wall and284.24MiB
+sampled combined process-group RSS. Limits remained160s native,165s wall and
+512MiB. The canonical serialized validation lock was parent-owned. Prior native,
+viewer and MCP bootstrap processes were closed and verified before dispatch.
+The source sidecar did not launch another heavy gate or acquire that lock.
+
+All three original production roots and all eight recursively recorded Git
+dependency sources remained present at their exact recorded revisions. The
+engine is the original NRA0844525 production via read-only673c062f, with the
+same two detectors, report scope and full semantic schema/descent graph.
+
+The baseline completed3068 projections, preparation115.378s, analysis6.139s.
+The head completed3068 projections, preparation4.827s, analysis6.652s.
+Both original NRA ``cache_status`` values are ``miss``. This is a measured
+preparation improvement under authenticated fixed-address source staging,
+not an analysis-cache-hit claim or reuse of baseline policy counts.
+
+The independently measured immutable counts change from67 to65 mapping-read
+certificates and25 to23 unmodeled-record shapes. The per-file policy result is
+``increased=[]``. These deltas describe the901/c819 application-source change;
+they are not findings removed by the R1 consumer patch itself.
+
+The parent's full log, command/resource JSON and exact qualification shell are
+archived unchanged as ``receipts/r1-357-parent-acceptance-20261001.tar.gz``:
+
+* ``producer-installed-20261001/r1-357-parent-original-case.log``
+* ``producer-installed-20261001/r1-357-parent-original-case.command.json``
+* ``paired350-installed-20261001/run-original-case-r1-359.sh``
+
+Original parent receipts remain at their existing paths under
+``/home/ts/wt/openhcs-issue-batch-20260929``. Predecessor failure receipts and the
+earlier source archive are unchanged. Parent reports scanner1261903/05/06
+terminal and owned R1 temporary directories automatically empty.
+
+This accepts the actual user CLI R1 guard on the retained two-revision case.
+It does not establish installed GUI readiness, scientific correctness, or the
+global85-detector FULL audit. Subsequent source changes in this PR are limited
+to acceptance documentation and evidence archives; production code and tests
+remain byte-identical to the parent's qualified59899d30 head. Parent owns the
+final merge, with no hosted-CI waiting condition introduced here.
+
+Original pinned R0 closure
+--------------------------
+
+The original ``agent_comms.debt_ratchet`` entrypoint passes on ``scripts/``
+against main ``7640fd951978c0901f7911d46414e06e8b886723`` and the qualified
+head59899d30. Exit0,2.21s wall,52.18MiB sampled combined command-group RSS,
+under the60s/512MiB source bounds. All236 projected metric deltas are zero;
+there are no positive or nonzero deltas. The changed Python report path is
+``scripts/check_refactor_r1.py``. These are the original tool's projections,
+not236 detectors or an NRA global audit.
+
+The pinned original tool checkout is
+``/home/ts/wt/comms-ratchet-pinned-ui348-20261001`` at
+``3b03785f45df2ef5dc62ba6aed99294192ecbb01``. Its unchanged source is imported
+from ``src/`` by the actual Python3.14.2 interpreter
+``/home/ts/.local/share/uv/python/cpython-3.14-linux-x86_64-gnu/bin/python3.14``.
+The metaclass backing is read-only
+``/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages``.
+Both import locations are asserted and recorded in the log. No copied detector,
+engine change, installation, provider or native/UI/MCP run is involved.
+
+The full original report, exact command and resource receipt are archived as
+``receipts/r1-357-pinned-r0-20261001.tar.gz``. The final documentation/evidence
+head has the same production scripts and guardrail tests as59899d30, checked
+by empty Git diffs and matching SHA256 values. Parent owns the merge handoff;
+no additional gate is required to remeasure identical Python source.
