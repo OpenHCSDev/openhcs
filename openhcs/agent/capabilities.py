@@ -1503,6 +1503,8 @@ class ArchitectureCapability(
 class FunctionCatalogCapability(AgentCapabilityDeclaration):
     """Capability that reads or extends the processing-function catalog."""
 
+    progress_heartbeat_seconds = 5.0
+
     exposition = AgentCapabilityExposition(
         workflow_group=CapabilityWorkflowGroup.FUNCTION_AUTHORING,
         workflow_stage=CapabilityWorkflowStage.AUTHORING,
@@ -1900,7 +1902,6 @@ class SearchFunctionsCapability(
         "or an exact declaration-owned backend tag."
     )
     service = "function_catalog"
-    progress_heartbeat_seconds = 5.0
     input_contract = FunctionSearchRequest
     output_contract = FunctionCatalogPage
     request_invocation = AgentDataclassRequestServiceInvocation(
@@ -2737,6 +2738,7 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
 
 
 class SubmitCompileCapability(HeadlessExecutionCapability):
+    progress_heartbeat_seconds = 5.0
     name = "openhcs_submit_compile"
     kind = CapabilityKind.TOOL
     title = "Submit compile job"
@@ -2765,6 +2767,7 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
 
 
 class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
+    progress_heartbeat_seconds = 5.0
     name = "openhcs_submit_pipeline_execution"
     kind = CapabilityKind.TOOL
     title = "Submit pipeline execution"

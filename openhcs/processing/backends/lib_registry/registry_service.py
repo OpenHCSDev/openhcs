@@ -104,12 +104,7 @@ class RegistryService:
     def prepare_in_current_process(
         cls, *, status_callback: RegistryPreparationCallback | None = None
     ) -> Dict[str, FunctionMetadata]:
-        """Discover callables and prepare their declared persistent kernel caches."""
-
-        from openhcs.core.processing_preparation import (
-            CallablePreparation,
-            PreparationCacheBatch,
-        )
+        """Discover the catalog, leaving kernel readiness to selected compilation."""
 
         emit_status = status_callback or logger.debug
         emit_status("Discovering registered callables")
@@ -117,18 +112,7 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        functions = tuple(metadata.func for metadata in cls._metadata_cache.values())
-        emit_status("Preparing declared registry kernel caches")
-        PreparationCacheBatch.from_callables(functions).populate_child_caches(
-            status_callback=emit_status
-        )
-        for function in functions:
-            preparation = CallablePreparation.from_callable(function)
-            preparation.prepare()
-            emit_status(
-                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
-            )
-        emit_status(f"Registered kernels ready ({len(functions)} callables)")
+        emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache
 
     @classmethod
@@ -226,12 +210,12 @@ class RegistryService:
         status_callback: RegistryPreparationCallback | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Prepare catalog and kernel caches in a dedicated interpreter main thread."""
+        """Prepare catalog metadata in a dedicated interpreter main thread."""
 
         if cancellation is not None and cancellation.requested():
             raise CancelledError
         status_callback = status_callback or logger.debug
-        status_callback("Preparing function catalog and declared kernel caches")
+        status_callback("Preparing function catalog metadata")
 
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (

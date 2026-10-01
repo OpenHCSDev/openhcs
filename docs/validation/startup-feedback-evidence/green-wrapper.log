@@ -1,0 +1,207 @@
+Running as unit: run-p2353646-i14947715.scope; invocation ID: 83d8abc35a6845e0860ec210b7215e42
+Python: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+OpenHCS: /home/ts/wt/openhcs-gui-cold-connect-355-20261001/openhcs/__init__.py
+ZMQRuntime: /home/ts/wt/zmqruntime-cold-start-355-20261001/src/zmqruntime/client.py
+...........F...........                                                  [100%]
+=================================== FAILURES ===================================
+_ test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch _
+
+fut = <coroutine object Event.wait at 0x7ffafaa151c0>, timeout = 0.5
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <asyncio.locks.Event object at 0x7ffafaa09340 [unset]>
+
+    async def wait(self):
+        """Block until the internal flag is true.
+    
+        If the internal flag is true on entry, return True
+        immediately.  Otherwise, block until another coroutine calls
+        set() to set the flag to true, then return True.
+        """
+        if self._value:
+            return True
+    
+        fut = self._get_loop().create_future()
+        self._waiters.append(fut)
+        try:
+>           await fut
+E           asyncio.exceptions.CancelledError
+
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/locks.py:212: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+    def test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch():
+        """Real generated binding/service/client loop; only native I/O is synthetic."""
+        ui, requests, workers = [], [], []
+        page = FunctionCatalogPage(SCHEMA_VERSION, "synthetic-revision", (), 0, 50)
+        ready = threading.Event()
+        pending = FunctionCatalogPreparationControlResponse(
+            EndpointStartupStatus(
+                EndpointStartupPhase.PREPARING_CAPABILITIES,
+                "Preparing exact child",
+                sequence=1,
+            ),
+            retry_after_seconds=0.01,
+        )
+    
+        class SyntheticControlClient(ZMQExecutionClient):
+            def is_connected(self):
+                return True
+    
+            def _send_control_request(self, request, **kwargs):
+                workers.append(threading.get_ident())
+                requests.append(request)
+                return (
+                    FunctionCatalogControlResponse(page).to_control_response()
+                    if ready.is_set()
+                    else pending.to_control_response()
+                )
+    
+            def _spawn_server_process(self):
+                raise AssertionError("Source journey must never launch native")
+    
+        client = SyntheticControlClient(port=5555, connection_status_callback=ui.append)
+        service = ZMQFunctionCatalogService(
+            lambda: OpenHCSZMQConfig(default_port=5555),
+            client_factory=lambda config: client,
+        )
+        built = build_server(SimpleNamespace(function_catalog=service))
+    
+        async def exercise():
+            context = RecordingContext()
+            tool = built._tool_manager.get_tool("openhcs_search_functions")
+            task = asyncio.create_task(tool.fn(mcp_context=context, query="source-only"))
+            try:
+                await asyncio.wait_for(context.preparing.wait(), 0.5)
+                assert not task.done(), "Preparing is not a ready result"
+                ready.set()
+                result = await task
+                return result, context
+            finally:
+                ready.set()
+                if not task.done():
+                    task.cancel()
+                    await asyncio.gather(task, return_exceptions=True)
+    
+>       result, context = asyncio.run(exercise())
+
+tests/unit/agent/test_mcp_startup_feedback.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+tests/unit/agent/test_mcp_startup_feedback.py:155: in exercise
+    await asyncio.wait_for(context.preparing.wait(), 0.5)
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x7ffb011dd7c0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED ../zmqruntime-cold-start-355-20261001::test_registered_catalog_tool_routes_original_pending_control_statuses_without_native_launch
+1 failed, 22 passed, 288 deselected in 28.50s
+Command exited with non-zero status 1
+	Command being timed: "timeout --signal=TERM --kill-after=3s 60s taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 XDG_CACHE_HOME=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/cache TMPDIR=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/tmp NUMBA_CACHE_DIR=/home/ts/.cache/agent-scratch/startup-feedback-358-20261001/numba /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -I -B docs/validation/startup-feedback-evidence/source_tests.py /home/ts/wt/zmqruntime-cold-start-355-20261001/tests/test_startup_callback_scope.py tests/unit/agent/test_mcp_startup_feedback.py tests/unit/agent/test_mcp_server.py -k startup_feedback or callback_scope or declared_progress or source_session_progress_adapter or verbose_blocking -q"
+	User time (seconds): 8.17
+	System time (seconds): 0.45
+	Percent of CPU this job got: 28%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:29.88
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 324056
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 83359
+	Voluntary context switches: 153
+	Involuntary context switches: 770
+	Swaps: 0
+	File system inputs: 104
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

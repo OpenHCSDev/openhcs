@@ -61,7 +61,8 @@ def _processing_callable(image):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_child_preparation_deduplicates_registries_and_propagates_failure(
     monkeypatch, tmp_path
@@ -76,7 +77,7 @@ def test_child_preparation_deduplicates_registries_and_propagates_failure(
         ),
     )
     batch = PreparationCacheBatch.from_callables((_processing_callable,))
-    batch.populate_child_caches()
+    batch.populate_child_caches(max_workers=2)
     assert {path.name for path in tmp_path.iterdir()} == {
         "_FirstCacheFamily",
         "_SecondCacheFamily",
@@ -85,7 +86,7 @@ def test_child_preparation_deduplicates_registries_and_propagates_failure(
 
     monkeypatch.setattr(_SecondCacheFamily, "fail", True)
     with pytest.raises(RuntimeError, match="preparation failed"):
-        batch.populate_child_caches()
+        batch.populate_child_caches(max_workers=2)
 
 
 def test_backend_child_preparation_requires_empty_explicit_cpu_cache(
@@ -155,7 +156,8 @@ def test_compiled_context_preparation_runs_parent_hook_after_children(
         step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)}
     )
 
-    def prepare_children(batch):
+    def prepare_children(batch, *, max_workers):
+        assert max_workers == 1
         events.append(
             tuple(preparation.module_name for preparation in batch.preparations)
         )

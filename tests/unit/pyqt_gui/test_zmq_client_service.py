@@ -13,6 +13,7 @@ from zmqruntime import (
     EndpointStartupStatus,
     TransportEndpoint,
 )
+from zmqruntime.client import EndpointConnectionAttempt
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.pyqt_gui.widgets.shared.services.zmq_client_service import ZMQClientService
@@ -67,7 +68,7 @@ class SlowFakeExecutionClient:
     def new_connection_attempt(self):
         client = self
 
-        class FakeConnectionAttempt:
+        class FakeConnectionAttempt(EndpointConnectionAttempt):
             def __init__(self) -> None:
                 self.cancelled = threading.Event()
 
@@ -90,6 +91,32 @@ class SlowFakeExecutionClient:
         return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
             self.endpoint_application
         )
+
+
+def test_async_connect_cancellation_retires_same_attempt_and_releases_ownership(monkeypatch):
+    import openhcs.runtime.zmq_execution_client as client_module
+
+    SlowFakeExecutionClient.instances = []
+    monkeypatch.setattr(client_module, "ZMQExecutionClient", SlowFakeExecutionClient)
+    service = ZMQClientService(config=OpenHCSZMQConfig(default_port=7777))
+
+    async def exercise():
+        task = asyncio.create_task(service.connect())
+        while service._connection_attempt is None:
+            await asyncio.sleep(0)
+        attempt = service._connection_attempt
+        client = service._session.client
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert attempt.cancelled.is_set()
+        assert service._connection_attempt is None
+        assert service._session is None
+        assert client.disconnect_calls == 1
+        assert service._client_lock.acquire(blocking=False)
+        service._client_lock.release()
+
+    asyncio.run(exercise())
 
 
 def test_zmq_client_service_concurrent_connects_reuse_same_client(monkeypatch):
@@ -149,7 +176,9 @@ def test_disconnect_sync_cancels_an_in_progress_connection_attempt(
         attempt_cancelled = threading.Event()
 
         def new_connection_attempt(self):
-            class BlockingConnectionAttempt:
+            class BlockingConnectionAttempt(EndpointConnectionAttempt):
+                def __init__(self):
+                    pass
                 def cancel(self) -> None:
                     BlockingExecutionClient.attempt_cancelled.set()
 

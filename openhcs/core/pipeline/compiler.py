@@ -1963,7 +1963,7 @@ class PipelineCompiler:
                 prepare_compiled_context_callables,
             )
 
-            prepare_compiled_context_callables(compiled_contexts)
+            prepare_compiled_context_callables(compiled_contexts, max_workers=num_workers)
             worker_assignments = PipelineCompiler._calculate_worker_assignments(
                 list(compiled_contexts.keys()),
                 num_workers,
