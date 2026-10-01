@@ -107,9 +107,16 @@ that comparison has zero ``openhcs/`` difference from base main 791650087;
 explicit import provenance is in the receipt. This is a real decoder/render
 source reproduction, not an installed/native full workflow or a new baseline.
 
-Original PINNED R0 passes against main 791650087 at production checkpoint
-bfb2b750a (15.84 s / 82.45 MiB). It uses the original tool, actual Python3.14 and
-read-only metaclass backing; no copied detector. No measure increased.
+Original PINNED R0 passes against main 791650087 at final production checkpoint
+``131f824769ff95bf315958061db0e2f92876a747`` (14.17 s / 82.58 MiB).
+It uses the original tool, actual Python3.14 and read-only metaclass backing;
+no copied detector. Across 5176 measures, increased is empty; StringSubscript
+and pycodify ForeignAbsenceProbe each decrease by one. This is R0 source
+evidence, not R1 schema/global FULL or live application qualification.
+
+Archive: ``receipts/mcp-authoring-360-source-20261001.tar.gz`` contains exact
+commands, full logs, all predecessor failures and the owning handoff. Final
+delivery changes after the above production checkpoint are evidence/docs only.
 
 Failed local attempts remain under the owning persistent ``validation/``:
 the original real-decoder NameError; missing-extension collection failure;
