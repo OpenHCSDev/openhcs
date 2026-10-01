@@ -240,6 +240,14 @@ def test_callable_contract_validates_nominal_enum_values_from_resolved_annotatio
     with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
         contract.validate_public_kwargs({"method": "max"})
 
+    assert contract.decode_public_kwargs({"method": "max"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": "MAX"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": ProjectionMethod.MAX}) == {"method": ProjectionMethod.MAX}
+    with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
+        contract.decode_public_kwargs({"method": None})
+    with pytest.raises(ValueError, match="not a valid"):
+        contract.decode_public_kwargs({"method": "missing"})
+
 
 @pytest.mark.parametrize("slice_by_slice", [False, True])
 def test_callable_contract_preserves_declared_semantic_controls(slice_by_slice) -> None:
