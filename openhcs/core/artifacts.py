@@ -2110,6 +2110,37 @@ class ArtifactSpecCollection(Sequence[ArtifactSpec]):
     def __getitem__(self, index):
         return self.specs[index]
 
+    def stack_broadcast_source_indices(self) -> tuple[int | None, ...]:
+        """Resolve exact stack-broadcast owners from declared input relations."""
+
+        indices_by_ref: dict[ArtifactSpecRef, list[int]] = {}
+        for input_index, spec in enumerate(self.specs):
+            indices_by_ref.setdefault(spec.ref(), []).append(input_index)
+
+        result: list[int | None] = []
+        for input_index, spec in enumerate(self.specs):
+            sources = spec.stack_broadcast_sources()
+            if len(sources) > 1:
+                raise ValueError(
+                    f"Input {spec.ref()!r} declares multiple stack-broadcast "
+                    f"owners: {sources!r}."
+                )
+            if not sources:
+                result.append(None)
+                continue
+            source_indices = tuple(indices_by_ref.get(sources[0], ()))
+            if len(source_indices) != 1:
+                raise ValueError(
+                    f"Input {spec.ref()!r} requires exactly one active occurrence "
+                    f"of stack-broadcast owner {sources[0]!r}, got "
+                    f"{source_indices!r}."
+                )
+            source_index = source_indices[0]
+            if source_index == input_index:
+                raise ValueError(f"Input {spec.ref()!r} cannot broadcast from itself.")
+            result.append(source_index)
+        return tuple(result)
+
     def of_artifact_type(
         self,
         artifact_type: ArtifactTypeValue,

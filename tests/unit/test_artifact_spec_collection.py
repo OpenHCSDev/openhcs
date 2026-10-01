@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from openhcs.core.artifacts import (
@@ -9,6 +11,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputStackBroadcastSourceRelation,
     MainFlowPlaneProjectionOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -49,6 +52,45 @@ def test_artifact_spec_collection_queries_ordered_artifact_contracts() -> None:
         == objects
     )
     assert collection.by_name_and_artifact_type("Nuclei", ImageArtifactType) is None
+
+
+def test_stack_broadcast_indices_use_exact_ordered_occurrences() -> None:
+    primary = ArtifactSpec.input("Primary", ImageArtifactType)
+    secondary = ArtifactSpec.input(
+        "Secondary",
+        ImageArtifactType,
+        relations=(InputStackBroadcastSourceRelation(source=primary.ref()),),
+    )
+    unrelated = ArtifactSpec.input("Primary", ObjectLabelsArtifactType)
+
+    assert ArtifactSpecCollection(()).stack_broadcast_source_indices() == ()
+    assert ArtifactSpecCollection(
+        (secondary, unrelated, primary)
+    ).stack_broadcast_source_indices() == (2, None, None)
+
+    for specs in ((secondary,), (primary, secondary, primary)):
+        with pytest.raises(ValueError, match="exactly one active occurrence"):
+            ArtifactSpecCollection(specs).stack_broadcast_source_indices()
+
+    self_broadcast = replace(
+        primary,
+        relations=(InputStackBroadcastSourceRelation(source=primary.ref()),),
+    )
+    with pytest.raises(ValueError, match="cannot broadcast from itself"):
+        ArtifactSpecCollection((self_broadcast,)).stack_broadcast_source_indices()
+
+    other = ArtifactSpec.input("Other", ImageArtifactType)
+    multiple_owners = replace(
+        secondary,
+        relations=(
+            InputStackBroadcastSourceRelation(source=primary.ref()),
+            InputStackBroadcastSourceRelation(source=other.ref()),
+        ),
+    )
+    with pytest.raises(ValueError, match="multiple stack-broadcast owners"):
+        ArtifactSpecCollection(
+            (primary, other, multiple_owners)
+        ).stack_broadcast_source_indices()
 
 
 def test_artifact_spec_collection_deduplicates_or_fails_loudly() -> None:

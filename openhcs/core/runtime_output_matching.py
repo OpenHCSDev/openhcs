@@ -9,6 +9,7 @@ from typing import Any, TypeAlias
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
+    pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -16,6 +17,12 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.runtime_image_values import image_payload_metadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_slice_projection import (
+    RuntimeSliceProjection,
+    RuntimeSliceProjectionDeclarationError,
+)
 
 
 class RuntimeOutputBundle(ABC):
@@ -60,6 +67,75 @@ class RuntimeReturnedOutputMatcher:
         """Return the unmodified first position of the callable ABI."""
 
         return split_runtime_output(self.returned_output)[0]
+
+    def contextualize_canonical_output(
+        self,
+        *,
+        plane_projection: RuntimePlaneAxisValueProjection | None = None,
+    ) -> Any:
+        """Attach the compiled canonical ABI to one exact returned image axis."""
+
+        canonical_specs = self.callable_contract.canonical_return_output_specs.specs
+        if len(canonical_specs) <= 1:
+            return self.returned_output
+        canonical_output, trailing_outputs = split_runtime_output(self.returned_output)
+        if isinstance(canonical_output, AlignedImageStack):
+            if canonical_output.slice_contexts:
+                return self.returned_output
+            output_values = canonical_output.slices
+        else:
+            projection = plane_projection
+            function_name = self.callable_contract.function_name
+            if projection is None:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but returned a non-aligned payload without a "
+                    "compiled plane projection."
+                )
+            if projection.plane_index is not None:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs after the compiled plane projection already selected "
+                    f"plane {projection.plane_index}."
+                )
+            if projection.axis_size != len(canonical_specs):
+                raise ValueError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but its compiled plane projection declares "
+                    f"{projection.axis_size} value(s)."
+                )
+            output_axis = image_payload_metadata(canonical_output).plane_axis
+            if output_axis is not projection.axis:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but its returned payload does not declare the "
+                    f"compiled {projection.axis.value!r} plane axis; got "
+                    f"{output_axis!r}."
+                )
+            output_values = tuple(
+                RuntimeSliceProjection.value_for_slice(
+                    canonical_output,
+                    projection.selected_plane(output_index),
+                )
+                for output_index in range(projection.axis_size)
+            )
+        if len(output_values) != len(canonical_specs):
+            raise ValueError(
+                f"{self.callable_contract.function_name} returned {len(output_values)} "
+                "canonical output value(s) for "
+                f"{len(canonical_specs)} compiled output spec(s)."
+            )
+        contextualized_output = pack_aligned_image_outputs(
+            output_values,
+            slice_contexts=AlignedImageSliceContext.main_flow_for_artifact_specs(
+                canonical_specs
+            ),
+        )
+        return (
+            (contextualized_output, *trailing_outputs)
+            if trailing_outputs
+            else contextualized_output
+        )
 
     def resolve(self) -> dict[ArtifactSpecRef, Any]:
         """Resolve every output in the callable ABI."""

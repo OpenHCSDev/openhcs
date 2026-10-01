@@ -50,6 +50,7 @@ from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableMetadata,
+    ImagePayloadConsumption,
     attach_callable_contract_metadata,
     runtime_image_execution_mode,
 )
@@ -1687,6 +1688,55 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
 
     assert image_payload_data(image_request.payload).shape == (4, 5)
     assert image_payload_data(runtime_kwargs["illumination_function"]).shape == (4, 5)
+
+
+def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload() -> None:
+    image_spec = ArtifactSpec.input("DeclaredImage", ImageArtifactType)
+    contract = _compiled_callable_contract(
+        CellProfilerModule.require_module("MeasureObjectIntensity").require_callable(),
+        artifact_inputs=(image_spec,),
+    )
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            image_payload_consumption=ImagePayloadConsumption.COMPOSED,
+        ),
+    )
+    image = np.ones((4, 5), dtype=np.float32)
+    runtime = _FakeCellProfilerRuntime(
+        {image_spec.name: image},
+        artifact_input_edges=(_artifact_input_edge_for_test(image_spec),),
+    )
+    executor = _module_executor(contract)
+    _activate_runtime_contract(contract, runtime)
+    image_request = CellProfilerImageRequest(
+        payload=image,
+        source_image_name="RuntimeAlias",
+        source_aliases=("RuntimeAlias",),
+        image_count=1,
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+    )
+
+    (measurement_image,) = executor._measurement_image_inputs(
+        runtime,
+        image,
+        image_request,
+        module_type=MeasureObjectIntensityModule,
+    )
+
+    assert measurement_image.source_aliases == (image_spec.name,)
+    assert measurement_image.payload is image_request.payload
+    assert measurement_image.execution_mode is image_request.execution_mode
+    assert measurement_image.plane_projection is image_request.plane_projection
+    assert not measurement_image.align_to_labels
+    with pytest.raises(ValueError, match="requires a composed measurement image request"):
+        executor._measurement_image_inputs(
+            runtime,
+            image,
+            None,
+            module_type=MeasureObjectIntensityModule,
+        )
 
 
 def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() -> None:

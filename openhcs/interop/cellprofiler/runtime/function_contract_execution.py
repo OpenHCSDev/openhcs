@@ -8,11 +8,9 @@ from collections.abc import Callable
 import numpy as np
 
 from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
     AlignedImageStack,
     ImagePayloadExecutionMode,
     aligned_image_stack_kwargs,
-    pack_aligned_image_outputs,
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.image_shapes import ArrayShape
@@ -30,7 +28,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.core.runtime_output_matching import split_runtime_output
+from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -185,79 +183,10 @@ class CellProfilerFunctionContractExecutor:
             function=function_name,
             mode=mode.value,
         )
-        return executor._contextualize_multi_canonical_output(
+        return RuntimeReturnedOutputMatcher(
             callable_contract,
             result,
-        )
-
-    def _contextualize_multi_canonical_output(
-        self,
-        callable_contract: CallableContract,
-        result: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        """Attach the compiled canonical ABI to one exact returned image axis."""
-
-        canonical_specs = callable_contract.canonical_return_output_specs.specs
-        if len(canonical_specs) <= 1:
-            return result
-        canonical_output, trailing_outputs = split_runtime_output(result)
-        if isinstance(canonical_output, AlignedImageStack):
-            if canonical_output.slice_contexts:
-                return result
-            output_values = canonical_output.slices
-        else:
-            projection = self.plane_projection
-            function_name = callable_contract.function_name
-            if projection is None:
-                raise RuntimeSliceProjectionDeclarationError(
-                    f"{function_name} declares {len(canonical_specs)} canonical "
-                    "outputs but returned a non-aligned payload without a "
-                    "compiled plane projection."
-                )
-            if projection.plane_index is not None:
-                raise RuntimeSliceProjectionDeclarationError(
-                    f"{function_name} declares {len(canonical_specs)} canonical "
-                    "outputs after the compiled plane projection already selected "
-                    f"plane {projection.plane_index}."
-                )
-            if projection.axis_size != len(canonical_specs):
-                raise ValueError(
-                    f"{function_name} declares {len(canonical_specs)} canonical "
-                    "outputs but its compiled plane projection declares "
-                    f"{projection.axis_size} value(s)."
-                )
-            output_axis = image_payload_metadata(canonical_output).plane_axis
-            if output_axis is not projection.axis:
-                raise RuntimeSliceProjectionDeclarationError(
-                    f"{function_name} declares {len(canonical_specs)} canonical "
-                    "outputs but its returned payload does not declare the "
-                    f"compiled {projection.axis.value!r} plane axis; got "
-                    f"{output_axis!r}."
-                )
-            output_values = tuple(
-                RuntimeSliceProjection.value_for_slice(
-                    canonical_output,
-                    projection.selected_plane(output_index),
-                )
-                for output_index in range(projection.axis_size)
-            )
-        if len(output_values) != len(canonical_specs):
-            raise ValueError(
-                f"{callable_contract.function_name} returned {len(output_values)} "
-                "canonical output value(s) for "
-                f"{len(canonical_specs)} compiled output spec(s)."
-            )
-        contextualized_output = pack_aligned_image_outputs(
-            output_values,
-            slice_contexts=AlignedImageSliceContext.main_flow_for_artifact_specs(
-                canonical_specs
-            ),
-        )
-        return (
-            (contextualized_output, *trailing_outputs)
-            if trailing_outputs
-            else contextualized_output
-        )
+        ).contextualize_canonical_output(plane_projection=executor.plane_projection)
 
     def execute_pure_2d_slice_batch(
         self,
