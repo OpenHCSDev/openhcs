@@ -30,7 +30,10 @@ from arraybridge import MemoryContractAttribute, MemoryType
 from python_introspect import (
     RuntimeParameterDeclarationABC,
     add_parameter_exclusions,
+    coerce_enum_member,
     declared_enum_type,
+    enum_member_type,
+    resolve_annotated,
     validate_annotation_value,
 )
 
@@ -1094,6 +1097,39 @@ class CallableContract(ArtifactPlanKeySelector):
             )
         return resolved
 
+    @property
+    def canonical_parameter_annotations(self) -> Mapping[str, object]:
+        """Derive annotations from the original semantic signature owner."""
+
+        raw_callable = self.resolve_canonical_raw_callable()
+        annotations = get_type_hints(raw_callable, include_extras=True)
+        return {
+            name: annotations.get(name, parameter.annotation)
+            for name, parameter in inspect.signature(raw_callable).parameters.items()
+        }
+
+    def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
+        """Descend JSON enum scalars before authoring projection, not at execution.
+
+        Callable admission remains owned by the authoring policy. Compile-only
+        selectors and non-enum values retain their original declaration owners;
+        direct/Annotated/optional enums use the original annotation codec.
+        """
+
+        decoded = dict(kwargs)
+        annotations = self.canonical_parameter_annotations
+        for name, value in kwargs.items():
+            annotation = annotations.get(name)
+            if enum_member_type(resolve_annotated(annotation)) is None:
+                continue
+            decoded[name] = (
+                value if value is None else coerce_enum_member(annotation, value)
+            )
+            validate_annotation_value(
+                annotation, decoded[name], path=f"{self.function_name}.{name}",
+            )
+        return decoded
+
     def validate_public_kwargs(
         self,
         kwargs: Mapping,
@@ -1158,15 +1194,12 @@ class CallableContract(ArtifactPlanKeySelector):
                 f"Callable {self.function_name!r} has invalid public kwargs for "
                 f"canonical raw signature {signature}: {exc}"
             ) from exc
-        resolved_annotations = get_type_hints(raw_callable, include_extras=True)
+        resolved_annotations = self.canonical_parameter_annotations
         for parameter_name, value in kwargs.items():
             parameter = signature.parameters.get(parameter_name)
             if parameter is None:
                 continue
-            annotation = resolved_annotations.get(
-                parameter_name,
-                parameter.annotation,
-            )
+            annotation = resolved_annotations[parameter_name]
             if declared_enum_type(annotation) is None:
                 continue
             try:

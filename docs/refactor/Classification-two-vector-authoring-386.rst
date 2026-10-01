@@ -169,3 +169,60 @@ Frozen382 remains exact ``be2f7faa26aaba53c7360ce7ae7130920842873e``. Parent
 now owns science/native validation; the last read-only slot check found flock
 PID1957532 holding the canonical validation.lock. No lock acquisition, package/
 environment mutation, installation, native launch or scientific output change.
+
+Actual PUBLIC JSON ingress correction (call020)
+----------------------------------------------
+
+The parent-owned installed journey ``public388-reconciledfixture400`` reached
+public add/validate/render, but ORIGINAL call020 artifact-plan rejected
+``threshold1_method`` as ``str`` instead of ``ClassificationThresholdMethod``.
+Call016 supplied JSON ``"custom"`` for both methods; generated public-clean.py
+retained those strings. Canonical function lookup resolved in this journey.
+This is NOT the separately retained issue379 source/cache lookup red.
+Original registration009 remains positively persisted/catalog-reconciled but
+its acknowledgement failed/uncertain; no mutation or startup was replayed here.
+
+The original ``CallableContract`` now owns public scalar-enum descent using
+``python_introspect.coerce_enum_member`` and original resolved parameter
+annotations. The existing authoring ingress applies it after keyword admission,
+before declaration-provider normalization or source serialization. The canonical
+annotation projection is shared with strict compiler validation; its replaced
+inline projection is deleted. Compiler ``validate_public_kwargs`` still rejects
+raw enum strings, and provider-owned compile selectors remain provider-owned.
+No tool/function/classification-name branch, second enum/schema/registry/cache,
+renderer repair or compatibility reader was introduced. Scope is declared
+direct, Annotated and optional scalar enum parameters, not a new general codec.
+
+NRA/refactor-audit owner review: BOUND-2/BOUND-8 identified strings bypassing
+the already declared parameter enum. IMPL-2/IMPL-5/IMPL-12 and MEMB-1 are guarded
+by deriving parameter ownership from the original callable signature, reusing
+the original enum codec, and retaining the existing member-owned classification
+hooks without consumer dispatch or copied procedures. The independent new
+callable and original callable_request declaration require only their own
+annotations. Both roundtrip through public add/validate/clean and resolved
+render, strict ABI validation, then execute an enum's independent offset
+capability with cooperative super() and its scale behavior in declared MRO.
+No generic consumer edit is needed for either new declaration.
+
+``public-enum-388-real-original-red.json`` retains 9 failures/7 passes; two
+paired JSON cases reproduced the actual untyped methods. Earlier test-harness
+method-name/regex mistakes remain recorded separately, not called product reds.
+The clean renderer legitimately omits an optional value equal to its declared
+default; that fixture assertion was corrected without changing production.
+The unchanged older dependency environment's RENDER_COMPLETE collection error
+is retained in ``public-enum-388-full-controls.json``; no backing install was
+changed. Correct existing readonly dependencies and explicit own source passed
+all 224 cases in ``public-enum-388-current-full-controls.json``: 13.01s wall,
+475.14MiB combined RSS, one CPU, unchanged 60s/512MiB, subprocess guard.
+This includes the previous 149 cases, full callable/authoring controls, strict
+raw-string rejection, unknown/runtime kwargs negatives, and actual call016's
+pixel_count/calibration_um, 100/2 JSON values reaching strict callable ABI.
+
+This is source qualification, not installed artifact-plan/compile/execution or
+biological/global85 FULL acceptance. Parent alone owns that next live journey.
+Frozen driver SHA256 remains
+``d3f259fae72ed5f70117646befa6b68a8301e168d785a7a56159cce1726bfd23``;
+its original 4096-label identity and discriminating quadrant/row assertions are
+unchanged. Prior failures, fixture, receipts and scientific outputs are untouched.
+The branch normally merged main ``c4be92335``; pinned R0 for this correction is
+pending at this first published working checkpoint, not silently inherited.
