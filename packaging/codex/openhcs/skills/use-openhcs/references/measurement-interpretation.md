@@ -157,9 +157,12 @@ output contract and use the [custom-function route](custom-function-authoring.md
 or report the limitation. Do not infer quantitative lengths from a resized
 screenshot, inject mouse input, or substitute unregistered console/array analysis.
 Simple arithmetic on returned coordinates is distinct from a reproducible image
-measurement. Any measurement operation must preserve source pixels and report
-its coordinates, axes, units and sampling conventions; a native layer scale of1
-does not verify physical calibration.
+measurement. The read-only ruler/profile/region sampling contracts described
+here preserve their source pixels and report coordinates, axes, units and
+sampling conventions. That read-only boundary does not prohibit analytical
+preprocessing of working arrays in a pipeline. Retain acquisition source and
+processing provenance; a native layer scale of1 does not verify physical
+calibration.
 
 ## Current processing intensity units
 
@@ -178,8 +181,8 @@ can double-normalise a processed image. CP threshold bounds declared in `0..1`
 are normalised processing units, not an invitation to substitute the observed
 raw maximum. Do not generalise those bounds to other callable contracts.
 
-If conversion is justified, preserve raw and untreated measurement routes and
-compose a distinct processing alias through the existing registered intensity
+If conversion is justified, retain acquisition source/provenance and compose
+a distinct processing alias through the existing registered intensity
 owner, such as registry ID `openhcs:cellprofiler_rescale_intensity` (Python
 `rescale_intensity`). Discover and describe the returned ID's current contract,
 including typed mode and input/output semantics; choose a scale only from justified acquisition
@@ -187,6 +190,9 @@ or processing evidence. Do not infer `255` from a float dtype, silently auto-min
 or rescale already-normalised pixels again. If the scale is unknown, retain that
 limitation rather than manufacture comparable units. Verify the resulting alias
 values and earliest threshold-support artifact before interpreting objects.
+Preserve an appropriate named original or calibrated intensity route where the
+photometric claim requires it; this does not require geometry measurements to
+consume untreated intensities.
 
 The float-preservation and threshold-bound distinctions follow the
 [CP Image conversion](https://github.com/CellProfiler/core/blob/v4.2.8/cellprofiler_core/image/_image.py)
@@ -197,12 +203,26 @@ for every out-of-range input.
 ## Detection pixels versus measurement pixels
 
 Thresholding, CLAHE, nonlinear gamma, high-end clipping, denoising and
-normalisation can improve detection while changing intensity relationships.
-Use the detected mask on the aligned untreated or separately validated corrected
-measurement image. Record which image each measurement consumes; never silently
-measure fluorescence on the binary mask, label colours or detection enhancement.
-Mean, integrated intensity and area answer different questions. Background
-correction and excluded pixels alter those quantities and must be explicit.
+normalisation can legitimately improve segmentation while changing working
+analytical pixels and intensity relationships. Retain acquisition source and
+processing provenance, not pixel immutability throughout the pipeline; creating
+processed arrays does not authorise overwriting acquisition files. A display
+upper-limit clip is presentation only; an explicit analytical high clip/remap
+changes the array and must be recorded and validated.
+
+Choose inputs according to the claim. Counts, morphology, length and area may
+use labels, masks or traces derived from processed images, with validated
+boundaries/connectivity and correct geometry/calibration. They do not all
+require an untreated intensity image. Review distributed same-coordinate
+raw/processed/result views for preserved faint paths, supported boundaries and
+induced background bridges or artifacts.
+
+For original-fluorescence or photometric claims, apply the detected mask to the
+aligned, named original or appropriately calibrated intensity source. Do not
+silently substitute clipped/remapped detection values, binary masks or label
+colours. Record which image and mask/trace each measurement consumes. Mean and
+integrated intensity differ from geometric area; background correction and
+excluded pixels must be explicit for the quantities they affect.
 
 Check saturation, acquisition settings and appropriate controls before comparing
 conditions. An attractive merged figure is not evidence of equal exposure or

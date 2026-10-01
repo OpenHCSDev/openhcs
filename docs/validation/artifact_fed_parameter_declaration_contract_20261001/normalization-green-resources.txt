@@ -1,0 +1,23 @@
+	Command being timed: "/usr/bin/timeout 60s /usr/bin/env OPENHCS_SOURCE_TEST_ROOT=/home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001 PYTHONPATH=/home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001 OPENHCS_CPU_ONLY=true OPENHCS_HEADLESS=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python -B /home/ts/wt/openhcs-compiled-metadata-artifact-binding-20261001/docs/validation/compiled_metadata_artifact_binding_368_20261001/source_shard.py tests/unit/test_artifact_input_parameter_normalization.py -q -o addopts= --junitxml=docs/validation/artifact_fed_parameter_declaration_contract_20261001/normalization-green.xml"
+	User time (seconds): 4.53
+	System time (seconds): 0.48
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 422332
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 73484
+	Voluntary context switches: 260
+	Involuntary context switches: 70
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 2728
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

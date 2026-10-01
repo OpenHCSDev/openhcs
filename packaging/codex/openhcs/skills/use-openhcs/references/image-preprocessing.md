@@ -2,9 +2,12 @@
 
 Start from a failed raw biological witness, not a favourite filter. Establish
 the target channel, the structures that must survive and a specific nuisance
-model. Keep an untreated route and distinguish detection pixels, measurement
-pixels and display settings. These recipes are hypotheses, not unconditional
-steps to concatenate. Discover and describe the compatible registered OpenHCS
+model. Retain acquisition source and provenance as a reproducible reference;
+creating or modifying working analytical arrays is normal pipeline processing,
+not permission to overwrite acquisition files. Distinguish detection pixels,
+claim-appropriate measurement inputs and display settings. These recipes are
+hypotheses, not unconditional steps to concatenate. Discover and describe the
+compatible registered OpenHCS
 callable before choosing parameters; the live contract owns backend, dtype,
 axes, units and artifact flow.
 
@@ -13,12 +16,24 @@ axes, units and artifact flow.
 Choose development witnesses from the whole field before fitting a correction or
 tuning a detector. Include observed bright/dim background, centre/edge and
 sparse/dense regions, with a faint positive and a genuine close pair or thin path.
+Use [the raw-only faint-structure scan](viewer-qa.md#reveal-faint-structures-and-nuisance-variation)
+to expose faint paths, noise texture, background level and uneven illumination.
 Keep those witnesses across trials; add newly discovered failures rather than
 replacing inconvenient controls. Compare local background level/spread and
 signal-to-background contrast. A dim region may reflect additive background,
 multiplicative shading, focus, missing photons or genuine biology; do not flatten
-it simply because it differs. Saturation and lost focus are not repaired by
-normalisation.
+it simply because it differs. Saturated acquisition values and lost focus are
+not repaired by normalisation; intentionally saturated display highlights are
+a different, reversible presentation choice.
+
+Translate the observed nuisance into compatible declared operations. Depending
+on the evidence, test rolling-ball background subtraction or a white top-hat
+alone, denoising plus background subtraction, denoising plus flat-field and
+background correction, or another justified sequence. These are alternatives,
+not a mandatory stack or ordering. Distinguish additive background from
+multiplicative shading, focus loss and genuine diffuse biology before choosing
+a correction. Discover and describe each live callable's units, axes and artifact
+contracts rather than assuming a method name establishes compatibility.
 
 Review the correction field or denoising residual, raw/processed images and
 downstream labels across the same positions and scales. Record numeric display
@@ -29,13 +44,21 @@ sealed while choosing the method, fitting sample, parameters and QA criteria.
 
 ## Bright outliers and compressed display range
 
-First compare numeric display windows; a few bright objects may only make the
-viewer unhelpful. If an explicit detection transform is needed, test a bounded
-high-end clip/rescale or monotone tone curve on the development sample. Record
+First compare numeric display windows using the linked raw-only scan; a few
+bright objects may only make the viewer unhelpful. If an explicit detection
+transform is needed, test a bounded high-end clip/rescale or monotone tone curve
+on the development sample. Record
 the input percentile/value, output range and whether fitting is shared across
-fields. Inspect both bright-object boundaries and faint positives. Clipping
-can erase intensity differences, and gamma changes their relationships; use
-untreated or separately validated corrected pixels for intensity measurement.
+fields. Saturating bright somas in a suitable analytical transform is acceptable
+for segmentation if distributed raw/processed/result QA supports the required
+boundaries, faint paths and connectivity without induced background bridges or
+artifacts. Inspect both bright-object boundaries and faint positives; saturation
+alone is not a rejection gate. Analytical clipping changes working pixels,
+unlike a display-only upper limit. It can erase intensity differences, and gamma
+changes their relationships. For original-fluorescence photometry, choose the
+appropriate original or validated calibrated intensity source rather than
+silently substituting the detection transform; see
+[measurement-image choice](measurement-interpretation.md#detection-pixels-versus-measurement-pixels).
 Do not silently apply per-field normalisation to treatment comparisons.
 
 ## Slowly varying additive background
@@ -134,9 +157,12 @@ because they share a stack. Keep runtime-owned slice controls out of callable
 kwargs. Review raw-minus-denoised residuals for erased puncta, bodies and thin
 paths, plus denoised foreground/markers and downstream labels at dim and bright
 witnesses. Reject newly joined neighbours or lost weak positives even if noise
-looks lower. Keep untreated measurement pixels unless the denoised measurement
-route has separate validation. NLM reduces noise; it does not estimate a shading
-field or justify a globally tuned threshold on uneven illumination.
+looks lower. For original-fluorescence photometry, use the named original or
+validated calibrated intensity source, not silently the denoised detection image.
+Counts, morphology, area and path length may use validated processed-derived
+labels or traces; follow the linked measurement-image guidance. NLM reduces
+noise; it does not estimate a shading field or justify a globally tuned threshold
+on uneven illumination.
 
 ## Local contrast and local thresholds
 
@@ -180,11 +206,15 @@ for declared composition, grouping and reference settings.
 
 ## Compose one falsifiable change
 
-Test individual operations before their combination. Clipping before background
-estimation changes that estimate's input; smoothing before seeding changes its
-maxima. Record order as part of the pipeline. Retain only necessary diagnostic
+Test individual operations before their combination. Clipping or denoising
+before background estimation changes that estimate's input; smoothing before
+seeding changes its maxima. Record the actual operation order and each consumed
+alias as part of the pipeline. Retain only necessary diagnostic
 intermediates and compare raw/processed at matched coordinates with recorded
-windows, then review the downstream labels against raw biological signal.
+windows, then review downstream masks/traces against raw biological signal.
+Inspect residuals or correction fields for removed faint positives, biological
+structure and amplified noise. Recheck path connectivity and background-bridge
+controls at the same coordinates, not only background uniformity.
 
 Accept only when the predicted failure improves without erasing the faint
 positive or creating new splits/merges/leakage. Check that secondary objects
