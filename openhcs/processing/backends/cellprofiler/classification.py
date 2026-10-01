@@ -53,7 +53,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
-    MeasurementArtifactOutputModule,
+    ObjectMeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     PriorMeasurementArtifactInputModule,
 )
@@ -275,7 +275,7 @@ class ClassifyObjectsSingleMeasurementModule(
     ClassifyObjectsMeasurementInputPolicy,
     ObjectArtifactInputModule,
     PriorMeasurementArtifactInputModule,
-    MeasurementArtifactOutputModule,
+    ObjectMeasurementArtifactOutputModule,
 ):
     module_name = "ClassifyObjectsSingleMeasurement"
     function_name = "classify_objects_single_measurement"
