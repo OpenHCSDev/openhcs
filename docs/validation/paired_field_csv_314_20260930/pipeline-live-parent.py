@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import AllComponents, GroupBy, InputSource, Microscope, VariableComponents
 from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -58,7 +58,7 @@ pipeline_config = PipelineConfig(
         ),
     ),
     path_planning_config=LazyPathPlanningConfig(
-        global_output_folder=Path("/home/ts/wt/openhcs-issue-batch-20260929/paired-field-parent-20260930/outputs"),
+        global_output_folder=Path("/home/ts/wt/openhcs-issue-batch-20260929/paired-field-parent-20260930/outputs-input-source-fixed"),
         # This journey's durable result is the typed CSV bundle, not raw copies.
         well_filter=0,
     ),
@@ -78,6 +78,7 @@ pipeline_steps = [
     ),
     FunctionStep(
         name="KnownCells",
+        processing_config=LazyProcessingConfig(input_source=InputSource.PIPELINE_START),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=True,
             bindings=(NamedSourceBinding(alias="Actin"),),
