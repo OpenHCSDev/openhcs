@@ -240,7 +240,7 @@ class SyntheticMicroscopyGenerator:
 
             # Very strongly favor overlap regions with 80% probability
             # to ensure very high density of features in the 10% overlap region for reliable registration
-            if self._random.random() < 0.8:
+            if overlap_x > 0 and overlap_y > 0 and self._random.random() < 0.8:
                 # Position in an overlap region between tiles
                 col = self._random.randint(0, grid_size[1])
                 row = self._random.randint(0, grid_size[0])
@@ -824,6 +824,18 @@ class SyntheticMicroscopyGenerator:
 
         return (width, height)
 
+    def _site_position(self, row: int, col: int) -> tuple[int, int]:
+        """Position a tile, preserving an exact grid when stage jitter is zero."""
+        x = col * self.step_x
+        y = row * self.step_y
+        if self.stage_error_px > 0:
+            x += self._random.randint(-self.stage_error_px, self.stage_error_px)
+            y += self._random.randint(-self.stage_error_px, self.stage_error_px)
+        return (
+            max(0, min(x, self.image_size[0] - self.tile_size[0])),
+            max(0, min(y, self.image_size[1] - self.tile_size[1])),
+        )
+
     def generate_dataset(self):
         """Generate the complete dataset."""
         print(f"Generating synthetic microscopy dataset in {self.output_dir}")
@@ -860,55 +872,13 @@ class SyntheticMicroscopyGenerator:
                     # Get grid position for this field ID
                     grid_row, grid_col = field_pattern[site_index]
 
-                    # Calculate base position
-                    x = grid_col * self.step_x
-                    y = grid_row * self.step_y
-
-                    # Add random stage positioning error
-                    x_error = self._random.randint(
-                        -self.stage_error_px, self.stage_error_px
-                    )
-                    y_error = self._random.randint(
-                        -self.stage_error_px, self.stage_error_px
-                    )
-
-                    x_pos = x + x_error
-                    y_pos = y + y_error
-
-                    # Ensure we don't go out of bounds
-                    x_pos = max(0, min(x_pos, self.image_size[0] - self.tile_size[0]))
-                    y_pos = max(0, min(y_pos, self.image_size[1] - self.tile_size[1]))
-
-                    site_positions[site_index] = (x_pos, y_pos)
+                    site_positions[site_index] = self._site_position(grid_row, grid_col)
             else:
                 # ImageXpress: simple raster pattern
                 site_index = 1
                 for row in range(self.grid_size[0]):
                     for col in range(self.grid_size[1]):
-                        # Calculate base position
-                        x = col * self.step_x
-                        y = row * self.step_y
-
-                        # Add random stage positioning error
-                        x_error = self._random.randint(
-                            -self.stage_error_px, self.stage_error_px
-                        )
-                        y_error = self._random.randint(
-                            -self.stage_error_px, self.stage_error_px
-                        )
-
-                        x_pos = x + x_error
-                        y_pos = y + y_error
-
-                        # Ensure we don't go out of bounds
-                        x_pos = max(
-                            0, min(x_pos, self.image_size[0] - self.tile_size[0])
-                        )
-                        y_pos = max(
-                            0, min(y_pos, self.image_size[1] - self.tile_size[1])
-                        )
-
-                        site_positions[site_index] = (x_pos, y_pos)
+                        site_positions[site_index] = self._site_position(row, col)
                         site_index += 1
 
             # For multiple Z-stack levels
