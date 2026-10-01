@@ -73,7 +73,7 @@ import collection calls cooperative super, rather than consulting a roster.
 Focused source evidence and limitations
 ---------------------------------------
 
-Twelve provider-free tests pass in 4.96 s / 246.73 MiB combined command RSS,
+Fifteen focused provider-free tests pass in 4.96 s / 245.26 MiB combined command RSS,
 under unchanged one-CPU / 512 MiB / 60 s bounds. They exercise actual dev-client
 structured/text decoding, inherited recursive aliases, undeclared-field
 rejection, real pipeline authoring/render/parse with an actual SkimageRegistry
@@ -89,6 +89,27 @@ remain this worktree's source. The source fixture inherits FunctionCatalogServic
 and supplies the original registry's one selected declaration through its
 existing metadata store. This is not full catalog/preparation acceptance.
 The focused module hard-rejects subprocess launches.
+
+The complete existing formatter suite, focused roundtrip module and JSON
+projection tests pass together: 39 cases, 6.82 s / 372.93 MiB, same one-CPU /
+512 MiB / 60 s bounds. This includes the original clean/full CP source
+roundtrip/runtime-parameter exclusion cases, without deselection. Its fixture
+uses real metadata derived from the existing callable declarations in the
+original registry store and hard-rejects process creation; no copied wrapper or
+decoder algorithm. The old direct-import source assertion now derives its
+expected expression from the canonical reference rather than freezing a lossy
+function-name string. Ruff F/I and git diff --check pass; pre-existing broader
+UP037/security lint findings are not claimed fixed.
+
+The same focused cases against original production source record nine failures
+and three passes in 6.47 s / 254.75 MiB. The read-only PR359 source tree used for
+that comparison has zero ``openhcs/`` difference from base main 791650087;
+explicit import provenance is in the receipt. This is a real decoder/render
+source reproduction, not an installed/native full workflow or a new baseline.
+
+Original PINNED R0 passes against main 791650087 at production checkpoint
+bfb2b750a (15.84 s / 82.45 MiB). It uses the original tool, actual Python3.14 and
+read-only metaclass backing; no copied detector. No measure increased.
 
 Failed local attempts remain under the owning persistent ``validation/``:
 the original real-decoder NameError; missing-extension collection failure;
@@ -139,3 +160,17 @@ virtual metadata. Its separately authored source is
 ``/home/ts/wt/openhcs-issue-batch-20260929/paired350-installed-20261001/color-explicit-file-selectors-pipeline.py``.
 That parent success is not acceptance of the original rendered source or of
 compile-time kwargs admission; those original authoring failures remain intact.
+
+Further parent live witness: named GrayToColor selectors FITC(red)/DAPI(blue)
+compile inputs in FITC,DAPI order, although source bindings were DAPI,FITC.
+Numeric public kwargs red_channel=1/blue_channel=0 execute but swap the observed
+full MCP pixels: red=DAPI/65535, blue=FITC/65535. Removing those numeric kwargs to
+trust declaration defaults fails exact module-block reconstruction. Parent now
+tests red=0/blue=1 against actual compiled input order. Retained sources include
+``color-explicit-file-selectors-pipeline.py`` and
+``color-declaration-owned-order-pipeline.py`` under the original evidence root.
+This exposes another authoring/declaration ABI limit, not proof that decoding or
+rendering repairs exact selector admission, ordinal interpretation or default
+reconstruction. Existing declaration owners are GrayToColorModule's setting
+bindings/module-block reconstruction and its declared callable request; no
+scientific/runtime implementation change is made by this PR.

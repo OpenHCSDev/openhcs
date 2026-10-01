@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from types import ModuleType
 from typing import TYPE_CHECKING
 
+from python_introspect import Enableable
+
 from openhcs.core.callable_contract import (
     CallableImportIdentity,
     CallableMetadata,
@@ -19,7 +21,6 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.python_source_literal import PythonSourceLiteral
-from python_introspect import Enableable
 
 if TYPE_CHECKING:
     from openhcs.core.steps.abstract import AbstractStep
