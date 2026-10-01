@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -957,12 +958,18 @@ class MeasureObjectIntensityDistributionModule(
 CenterChoice = IntensityDistributionCenterChoice
 ZernikeMode = IntensityDistributionZernikeMode
 
+
 logger = logging.getLogger(__name__)
 runtime_profiler = CellProfilerRuntimeProfiler(logger)
-_RADIAL_LABEL_GEOMETRY_CACHE_LIMIT = 16
-_RADIAL_LABEL_GEOMETRY_CACHE: OrderedDict[
-    "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
-] = OrderedDict()
+@dataclass
+class RadialLabelGeometryCache(
+    RegisteredProcessLocalBoundedCache[
+        "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
+    ]
+):
+    """Process-local numerical geometry with shared bounded storage."""
+
+    max_entries: int = 16
 
 
 @dataclass(frozen=True)
@@ -1850,9 +1857,8 @@ class RadialDistributionBackendStrategy(
         """Return CP-compatible radial geometry derived only from object labels."""
         labels_array = np.ascontiguousarray(labels, dtype=np.int32)
         cache_key = RadialLabelGeometryCacheKey.from_labels(labels_array)
-        cached = _RADIAL_LABEL_GEOMETRY_CACHE.get(cache_key)
+        cached = RadialLabelGeometryCache.process_cache().cached_value(cache_key)
         if cached is not None:
-            _RADIAL_LABEL_GEOMETRY_CACHE.move_to_end(cache_key)
             runtime_profiler.log(
                 "idist_label_geometry_cache_hit",
                 0.0,
@@ -1883,10 +1889,7 @@ class RadialDistributionBackendStrategy(
                 labels_array, centers_i, centers_j
             ),
         )
-        _RADIAL_LABEL_GEOMETRY_CACHE[cache_key] = geometry
-        _RADIAL_LABEL_GEOMETRY_CACHE.move_to_end(cache_key)
-        while len(_RADIAL_LABEL_GEOMETRY_CACHE) > _RADIAL_LABEL_GEOMETRY_CACHE_LIMIT:
-            _RADIAL_LABEL_GEOMETRY_CACHE.popitem(last=False)
+        RadialLabelGeometryCache.process_cache().store_value(cache_key, geometry)
         return geometry
 
 

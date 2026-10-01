@@ -6,6 +6,8 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from collections.abc import Sequence
 from typing import Any, ClassVar, Generic, TypeVar
+from threading import Lock
+from _thread import LockType
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -65,6 +67,25 @@ class BoundedCache(Generic[CacheKey, CachedValue]):
         self.entries.clear()
 
 
+@dataclass
+class SynchronizedBoundedCache(BoundedCache[CacheKey, CachedValue]):
+    """Bounded storage whose individual mutations share one instance lock."""
+
+    _lock: LockType = field(default_factory=Lock, init=False, repr=False, compare=False)
+
+    def cached_value(self, key: CacheKey) -> CachedValue | None:
+        with self._lock:
+            return super().cached_value(key)
+
+    def store_value(self, key: CacheKey, value: CachedValue) -> CachedValue:
+        with self._lock:
+            return super().store_value(key, value)
+
+    def clear(self) -> None:
+        with self._lock:
+            super().clear()
+
+
 @dataclass(slots=True)
 class ProcessLocalBoundedCache(BoundedCache[CacheKey, CachedValue]):
     """Bounded values with one process-local singleton per concrete subclass."""
@@ -73,8 +94,11 @@ class ProcessLocalBoundedCache(BoundedCache[CacheKey, CachedValue]):
     def process_cache(cls) -> "ProcessLocalBoundedCache[CacheKey, CachedValue]":
         cache = cls._process_cache
         if cache is None:
-            cache = cls()
-            cls._process_cache = cache
+            with cls._process_cache_lock:
+                cache = cls._process_cache
+                if cache is None:
+                    cache = cls()
+                    cls._process_cache = cache
         return cache
 
     @classmethod
@@ -85,6 +109,7 @@ class ProcessLocalBoundedCache(BoundedCache[CacheKey, CachedValue]):
             cache.clear()
 
     _process_cache: ClassVar["ProcessLocalBoundedCache[object, object] | None"] = None
+    _process_cache_lock: ClassVar[LockType] = Lock()
 
 
 @dataclass(slots=True)

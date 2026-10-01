@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, fields as dataclass_fields
 import hashlib
 import logging
 import os
 import re
-from threading import Lock
 import time
 from types import MappingProxyType
 from typing import ClassVar
@@ -44,6 +42,10 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     ObjectMeasurementColumnarRows,
+)
+from openhcs.core.process_local_cache import (
+    RegisteredProcessLocalBoundedCache,
+    SynchronizedBoundedCache,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_tabular_values import (
@@ -726,12 +728,11 @@ class GranularityImageSeriesRequest:
             int(self.element_radius),
             int(self.spectrum_length),
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            entry = GRANULARITY_IMAGE_SERIES_CACHE.get(key)
-            if entry is not None:
-                GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-                self.log_profile("granularity_series_cache_hit", 0.0)
-                return entry
+        cache = GranularityImageSeriesCache.process_cache()
+        entry = cache.cached_value(key)
+        if entry is not None:
+            self.log_profile("granularity_series_cache_hit", 0.0)
+            return entry
         phase_started_at = time.perf_counter()
         pixels, grid = background_corrected_pixels(
             image_array,
@@ -756,23 +757,23 @@ class GranularityImageSeriesRequest:
         series = GranularityImageSeries(
             pixels=pixels, grid=grid, reconstructions=reconstructions
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            GRANULARITY_IMAGE_SERIES_CACHE[key] = series
-            GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-            while (
-                len(GRANULARITY_IMAGE_SERIES_CACHE)
-                > GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES
-            ):
-                GRANULARITY_IMAGE_SERIES_CACHE.popitem(last=False)
-        return series
+        return cache.store_value(key, series)
 
 
-GRANULARITY_IMAGE_SERIES_CACHE: dict[
-    tuple[str, tuple[int, ...], bytes, float, float, int, int],
-    GranularityImageSeries,
-] = OrderedDict()
-GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES = 16
-GRANULARITY_IMAGE_SERIES_CACHE_LOCK = Lock()
+@dataclass
+class GranularityImageSeriesCache(
+    SynchronizedBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+    RegisteredProcessLocalBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+):
+    """Process-local reconstructed spectra; calculation and keys stay numerical."""
+
+    max_entries: int = 16
 
 
 def granularity_array_content_key(
@@ -1816,8 +1817,7 @@ def _prepare_granularity_backend() -> None:
 
 
 __all__ = [
-    "GRANULARITY_IMAGE_SERIES_CACHE",
-    "GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES",
+    "GranularityImageSeriesCache",
     "GRANULARITY_SPECTRUM_LENGTH",
     "GranularitySamplingGrid",
     "GranularityImageSeries",
