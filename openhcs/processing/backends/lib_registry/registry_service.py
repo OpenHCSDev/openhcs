@@ -57,6 +57,20 @@ class RegistryService:
     _registry_inventory_lock = threading.RLock()
 
     @classmethod
+    def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata:
+        """Ask the original registry declaration to resolve one public identity."""
+
+        registry_name, separator, name = function_id.partition(":")
+        registry_type = LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
+        metadata = (
+            None if registry_type is None
+            else registry_type.metadata_for_canonical_key(function_id)
+        )
+        if metadata is None:
+            raise KeyError(f"Unknown canonical function ID {function_id!r}.")
+        return metadata
+
+    @classmethod
     def get_all_functions_with_metadata(
         cls,
         *,

@@ -28,7 +28,7 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable as CallableABC
+from collections.abc import Callable as CallableABC, Iterator
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import lru_cache, wraps
@@ -1260,6 +1260,9 @@ class FunctionMetadata:
 
         return f"{self.registry.library_name}:{self.name}"
 
+    def require_current_declaration(self) -> None:
+        """Validate declaration lifetimes specialized by metadata owners."""
+
     @property
     def display_name(self) -> str:
         """Human-readable function name for catalogs and selectors."""
@@ -1433,6 +1436,45 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
         del func
         return None
+
+    @classmethod
+    def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata | None:
+        """Resolve exact claims through this registry's declaration capabilities."""
+
+        claims = tuple(cls._canonical_metadata_claims(function_id))
+        for metadata in claims:
+            if metadata.composite_key != function_id:
+                raise ValueError(
+                    f"Canonical function {function_id!r} contradicts declaration "
+                    f"{metadata.composite_key!r}."
+                )
+            metadata.require_current_declaration()
+        if not claims:
+            return None
+        first = claims[0]
+        if any(
+            metadata.import_identity != first.import_identity
+            or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
+            for metadata in claims[1:]
+        ):
+            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
+        return first
+
+    @classmethod
+    def _canonical_metadata_claims(
+        cls, function_id: str, *, prepare_catalog: bool = True,
+    ) -> Iterator[FunctionMetadata]:
+        """Supply catalog-owned claims; independent capabilities compose via super."""
+
+        from .registry_service import RegistryService
+
+        catalog = (
+            RegistryService.get_all_functions_with_metadata()
+            if prepare_catalog else RegistryService.cached_metadata_snapshot()
+        )
+        metadata = catalog.get(function_id)
+        if metadata is not None:
+            yield metadata
 
     def composite_keys_for_declared_callable(
         self,
