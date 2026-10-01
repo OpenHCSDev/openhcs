@@ -155,8 +155,6 @@ class ZMQClientService:
                 return existing_session.require_admitted_client()
         if existing_session is not None:
             await self._disconnect_unlocked()
-        loop = asyncio.get_event_loop()
-
         client: ZMQExecutionClient
         session: EndpointClientSession[ZMQExecutionClient]
 
@@ -176,12 +174,14 @@ class ZMQClientService:
         self._connection_attempt = connection_attempt
 
         try:
-            connected = await loop.run_in_executor(
-                None,
-                connection_attempt.connect,
+            connected = await connection_attempt.connect_async(
                 policy,
                 (config.client_connect_timeout_seconds if timeout is None else timeout),
             )
+        except asyncio.CancelledError:
+            self._session = None
+            client.disconnect()
+            raise
         except Exception as connection_error:
             self._session = None
             try:
