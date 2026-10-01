@@ -1,6 +1,72 @@
 Function declaration help: issue390
 ==================================
 
+Latest route correction: production remains frozen
+-------------------------------------------------
+
+Parent initially reported missing field help from a fresh installed MCP query,
+then explicitly corrected its disposition: the checker did not select the new
+owned native endpoint. This is a harness routing failure/insufficient installed
+proof, NOT a demonstrated PR391 product defect. No speculative product fix is
+introduced. Product bytes remain identical to source checkpoint857288748.
+
+Original corrected-CLI witness remains at
+``/home/ts/wt/openhcs-issue-batch-20260929/s1-installed-20261001/function-help391-installed-mcp-correct-cli-20261001.log``;
+SHA256 ``73bedaf6cbb5be20924a12141b14d48dff2142b6f1ec99f5a03f4f6fc74f5730``.
+Its healthy MCP/exit0/outer-only prose prove that response, not which native
+catalog version produced it. Parent retains the earlier wrong-CLI attempt too.
+Parent owns fresh explicit5993 installed acceptance before biological execution.
+No parent installation/files or foreign server were modified by this branch.
+
+Original ``OpenHCSAgentContext.function_catalog`` uses the same
+``endpoint_function_catalog`` service. Its initial provider is captured from
+``load_cached_ui_execution_endpoint_sync``; a missing cache projects the
+declared default. ``ZMQFunctionCatalogService.start_catalog_preparation``
+validates the explicit response connection, invalidates its derived projection,
+then sets ``_config_provider`` to that endpoint. Registration also selects its
+explicit endpoint. Bootstrap uses the separate runtime-server service and
+does not select the catalog. Selection is process/service-local: a subsequent
+describe must use the same MCP service incarnation, not a new CLI-launched MCP
+that reloads a nonexistent UI cache. Status observation alone does not assign
+the provider. These are source observations, not a foreign-runtime inspection.
+
+Added registered-callable source acceptance
+-----------------------------------------
+
+``test_registered_neurite_metadata_preserves_declared_field_help`` invokes the
+original ``OpenHCSRegistry._catalog_metadata_for_function`` registration path.
+It asserts the exact canonical id and that ``FunctionMetadata.func`` is the
+real registered wrapper, not the original callable. The test populates the
+original prepared ``RegistryService`` snapshot with that real metadata and
+uses unchanged ``FunctionCatalogService.get`` lookup/full-signature/max-doc
+20000 projection. All three settings expose original field docs/units.
+There is no stub metadata or replaced catalog lookup.
+
+An initial fixture error is preserved as registered-red.log: custom-source
+synchronization invalidated the seeded snapshot and unexpectedly launched the
+original catalog preparer. That child failed its missing ABI import, returned
+nonzero and was waited/reaped by the original process owner; the test completed
+6.63s/380148KiB under its cgroup bound. This was an unintended source-only
+boundary crossing, not a product-help failure; no scientific function ran.
+The fixture now synchronizes its own empty temporary source store first and
+fails on any preparation or subprocess launch. No subsequent native launch.
+
+Guarded registered check:1 PASS,5.69s/383956KiB. Final five-test suite including
+original declaration/new-case/cooperative tests:5 PASS,6.38s/382552KiB,
+one CPU/512MiB combined cgroup/60s/plugin/provider-free. Ruff correctness and
+whole-PR diff-check pass. No product delta means the original pinned R0 below
+continues to cover the identical production bytes; no claim of new installed
+proof or global NRA/R1 qualification is made.
+
+Byte-exact registered-red/registered-guarded/registered-final logs are in
+``docs/validation/function-help391-registered-source-20261001.tar.gz``.
+The original390 archive remains unchanged. The owned scratch
+``/home/ts/.cache/agent-scratch/function-help391-registered-20261001`` contains
+only these verified archived logs and disposable test/cache directories;
+72KiB allocated (20,533 logical bytes) is released after process completion
+and successful byte comparison. Lorentz-owned cleanup and scientific outputs
+remain untouched.
+
 Owner and boundary
 ------------------
 

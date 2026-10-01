@@ -34,18 +34,53 @@ record any disagreement rather than treating a visible point as a QA pass.
 
 ## Choose a distributed, multiscale sample
 
-Inspect the whole field for illumination, tissue, focus and density variation.
+Inspect the whole field raw-only, with results hidden, for illumination, tissue,
+focus and density variation.
 Choose distinct bright/dim, central/edge, sparse/dense, tile-join and suspected
 failure positions where present. Inspect intermediate context and native object
 scale in every relevant raw channel. A thumbnail cannot decide a small split
 or a thin neurite connection.
 
-At fixed coordinates, compare numeric windows preserving faint structure and
-revealing local detail, plus full range when useful. Record applied limits,
-not labels such as "bright". Compare bounded local distributions and background
-across positions. Contrast crushing can conceal real signal; an uneven field
-does not establish the background's cause. Display contrast/gamma is not
-analytical preprocessing.
+### Reveal faint structures and nuisance variation
+
+1. At fixed coordinates, progressively **lower the numeric upper display limit**
+   on the relevant raw channel. Keep near-background values visible rather than
+   raising the lower limit to make the field black. Record both applied limits
+   and gamma, not labels such as "bright". There is no universal window for an
+   assay or intensity scale.
+2. Compare more than one window, including a less compressed view of bright
+   boundaries. Repeat the raw-only scan at full-field, context and native scales
+   across the distributed positions. Bright somas may intentionally saturate:
+   seeing or segmenting faint neurites does not require every body to retain
+   intensity detail in the diagnostic view. Aggressive low upper limits can
+   conceal paths in a uniformly bright patch or make noise look like neurites;
+   do not accept an interpretation from that window alone.
+3. Inspect supported faint paths and nearby background together. Use the scan
+   to assess noise amount/texture, background level and uneven illumination as
+   well as continuity, endpoints and crossings. Visible haze or clipped bright
+   bodies are not automatic failures in this diagnostic view. Compare bounded
+   local distributions across positions; one uneven field does not identify
+   the nuisance's cause.
+4. If signal quality needs analytical improvement, follow
+   [preprocessing selection and composition](image-preprocessing.md#establish-spatial-coverage-before-tuning):
+   interpret the nuisance and discover compatible declared operations and order.
+   Segment or trace on the chosen processed alias, then use
+   [claim-appropriate measurement inputs](measurement-interpretation.md#detection-pixels-versus-measurement-pixels):
+   processed-derived masks/traces can support geometry, count, area and length;
+   original-fluorescence photometry needs its appropriate intensity source.
+   Inspect distributed raw/processed/result witnesses and the matched sets below
+   to find missed processes or false bridges and guide the next repair. Do not
+   infer an analytical threshold from a display limit or assume a prettier
+   background preserves faint biology.
+
+Changing viewer limits/gamma changes presentation, not the working array.
+An explicit pipeline transform may legitimately clip, remap, denoise or correct
+working analytical pixels for segmentation. Retain acquisition source and
+processing provenance as the reproducible reference; this procedure does not
+authorise overwriting acquisition files. Validate the transform against raw
+support, faint-path preservation and connectivity. Choose measurement inputs
+by the [measurement claim](measurement-interpretation.md#detection-pixels-versus-measurement-pixels),
+not a blanket requirement that every analytical pixel remain unchanged.
 
 Before selecting analysis scales or thresholds, follow
 [the empirical measurement procedure](measurement-interpretation.md#measure-feature-scales-before-choosing-parameters)
@@ -70,7 +105,9 @@ At the same position, Z/time and camera scale, capture:
 3. **Raw plus result:** restore raw and result. Inspect biological support and
    alignment, with the same raw window as the first view.
 
-Toggle visibility through MCP without changing pixels or result identity.
+Toggle visibility through MCP without changing the candidate's arrays or result
+identity during the matched set. This comparison control does not prohibit
+analytical preprocessing in a subsequent candidate.
 Open all bitmaps yourself. If canvas, coordinates, axes, camera or presentation
 changed during capture, re-establish state and recapture the matched set before
 comparison. Repeat at necessary field, context and object scales; no single
@@ -85,8 +122,11 @@ Compare foreground and markers before changing watershed. For secondary objects,
 inspect body-channel support and growth beyond each object's own primary seed;
 matching counts or retained seed IDs do not prove cell bodies. For neurites,
 inspect faint supported soma-to-process continuity, endpoints, crossings,
-branches and background bridges. Triage ambiguous debris separately so it does
-not prevent review of clear supported misses.
+branches and background bridges. Reject the candidate for clear supported
+misses, erased paths or induced background bridges/artifacts; saturation of
+bright somas alone is not a diagnostic or segmentation rejection gate. Triage
+ambiguous debris separately so it does not prevent review of clear supported
+misses.
 
 Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
@@ -105,10 +145,15 @@ identity, observed differences and decision in the authorised trial log.
 
 Keep display fitting separate from detection and measurement. Compare native
 witness crops spanning faint paths, ordinary background, bright bodies and joins,
-plus the whole mosaic, before accepting a curve. A modestly elevated background
-can be preferable to erased supported paths, but reject excessive haze and
-clipped bodies too. Compare background level/spread, highlight clipping and
-path-to-nearby-background contrast; display metrics do not establish identity.
+plus the whole mosaic, before accepting a curve. State the figure's intent.
+For a publication panel claiming body detail or comparable fluorescence, reject
+a mapping that obscures the claimed detail with haze or clipped highlights.
+For a diagnostic faint-process view, elevated visible background and deliberately
+saturated somas can be appropriate; do not import that publication criterion as
+a segmentation hard gate or erase supported paths for a cleaner-looking field.
+Retain a complementary window when bright detail also matters. Compare background
+level/spread, highlight clipping and path-to-nearby-background contrast; display
+metrics do not establish biological identity or photometric validity.
 
 For comparable stitched figures, a shared percentile fit across representative
 images, a large-scale background estimate per mosaic and a gentle shared stretch
