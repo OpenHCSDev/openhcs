@@ -1,6 +1,5 @@
 """Original metadata writer/reader contracts, with no pixel or ROI content reads."""
 
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -13,7 +12,7 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ObjectLabelsArtifactType
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.compiled_step_plan import CompiledStepPlan, RuntimeArtifactMaterializationPlan
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_projection import (
@@ -24,6 +23,7 @@ from openhcs.core.source_projection import (
 from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataWriter,
     ProducedImageMetadataCapability,
+    RuntimeArtifactMetadataTarget,
 )
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter, METADATA_CONFIG
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
@@ -129,3 +129,33 @@ def test_new_declared_target_composes_original_capability_and_writer(
     finally:
         for key in set(registry) - original_keys:
             del registry[key]
+
+
+def test_runtime_directory_projection_preserves_exact_new_destination(
+    tmp_path, publication_context
+):
+    plate = tmp_path / "plate"
+    directory = plate / "separate/nested/declared_destination"
+    roi = seed_synthetic_projection(plate, directory)
+    plan = CompiledStepPlan(
+        step_index=0, step_name="independent directory projection", step_type="FunctionStep",
+        axis_id="A01", output_plate_root=str(plate),
+        analysis_results_dir=str(plate / "original_destination"),
+        runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True, persistent_backend=Backend.DISK.value
+        ),
+    )
+    owner = RuntimeArtifactMetadataTarget.from_plan(plan)
+    assert owner is not None
+    target = owner.for_directory(directory)
+    target.write(publication_context)
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(readable_roots=(plate,), writable_roots=())
+    )
+    result = service.query_files(
+        PlateFileQueryRequest.from_fields(
+            plate_path=str(plate), kind="result", include_previews=False
+        )
+    )
+    assert result.errors == ()
+    assert str(roi) in tuple(record.full_path for record in result.records)

@@ -1,7 +1,7 @@
 diff --git a/openhcs/core/steps/function_outputs.py b/openhcs/core/steps/function_outputs.py
 --- a/openhcs/core/steps/function_outputs.py
 +++ b/openhcs/core/steps/function_outputs.py
-@@ -806,7 +806,10 @@ class OpenHCSMetadataWriter:
+@@ -806,5 +806,8 @@ class OpenHCSMetadataWriter:
                  component_labels=context.metadata_cache,
                  backend=self.backend,
                  is_main=self.is_main,
@@ -11,9 +11,7 @@ diff --git a/openhcs/core/steps/function_outputs.py b/openhcs/core/steps/functio
 +                    if self.results_dir is not None else None
 +                ),
              )
- 
-         def produced_projection_metadata(
-@@ -1167,7 +1170,9 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+@@ -1167,4 +1170,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
      def for_directory(self, directory: Path) -> RuntimeArtifactMetadataTarget:
          """Retain the compiled plate/backend while projecting one declared directory."""
          sub_dir = directory.relative_to(self.plate_root)
@@ -21,15 +19,10 @@ diff --git a/openhcs/core/steps/function_outputs.py b/openhcs/core/steps/functio
 +        return replace(
 +            self, output_dir=directory, sub_dir=str(sub_dir), results_dir=str(directory)
 +        )
- 
-     @classmethod
-     def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:
-@@ -1181,7 +1186,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+@@ -1181,5 +1186,5 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
              backend=materialization.require_persistent_backend(),
              plate_root=plate_root,
              sub_dir=str(output_dir.relative_to(plate_root)),
 -            results_dir=None,
 +            results_dir=str(output_dir),
          )
- 
- 
