@@ -1,0 +1,31 @@
+changed between 702b2c2c9563da2636db251f8b734cff215596b8..HEAD (touched files, after minus before)
+
+change in counts (702b2c2c9563da2636db251f8b734cff215596b8..HEAD): read these first when code was deleted as well as added
+  type_identity_check           +0
+  long_boolean_chain            +0
+  boolean_chain_terms           +0
+  codec_subclass                +0
+  foreign_absence_probe         +0
+  string_dispatch               +0
+  type_switch                   +0
+  string_dispatch_arms          +0
+  type_switch_arms              +0
+  string_key_subscript          +0
+  literal_key_get               +0
+  string_equality               +0
+  none_identity                 +0
+  isinstance_call               +0
+  attribute_by_name             +0
+  getattr_default               +0
+  broad_except                  +0
+  json_loads                    +0
+  long_function                 +0
+  class_definition              +0
+  abstract_base                 +0
+  enum_class                    +0
+  code lines                   +16
+
+(densities omitted: under 500 net code lines, a ratio of changes to net lines is meaningless)
+
+Top 12 files by weighted debt (type_identity_check x3, long_boolean_chain x5, boolean_chain_terms x1, codec_subclass x3, foreign_absence_probe x1, string_dispatch x5, type_switch x5, string_dispatch_arms x1, type_switch_arms x1, string_key_subscript x1, literal_key_get x1, string_equality x1, none_identity x1, isinstance_call x1, attribute_by_name x3, getattr_default x3, broad_except x2):
+       0  openhcs/core/source_matching.py  (code lines +16)
