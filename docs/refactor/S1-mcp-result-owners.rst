@@ -6,6 +6,11 @@ e690c3bfc0f2042dcc2c75e6205d03fffe8aa603. Branch:
 refactor/mcp-result-owners-s1-20261001. Worktree:
 /home/ts/wt/openhcs-mcp-result-owners-s1-20261001.
 
+Current tested source pin: c4ef5f34735e3337a78801aad1dfc70f4dee737b.
+Normally integrated canonical main: 2cbfc4a0771bf24d153b076bff4a5e321ac039f4.
+Visible draft: https://github.com/OpenHCSDev/openhcs/pull/334. The original
+audited head above remains the before-source census, not today's integration base.
+
 Binding instructions read completely before decisions: S1-DISPATCH-20261001.rst,
 GOAL-SCOPE-REFRACTOR-20260930.md, canonical 00-RULES.md and 01-INDEX.md,
 OWNER-OVERRIDES.md, both NRA/refactor-audit SKILL.md files, the authoritative
@@ -131,10 +136,15 @@ subclass registration projects only its declaration, not its parent's assigned
 key. MRO lookup reuses ancestor behavior without pretending sibling DTO subtyping.
 
 New-case evidence: ExtendedInspection adds one DTO declaration and inherits
-ArtifactPlanInspection behavior with its extra fact retained. A declared Diamond
-renderer composes two independent cooperative presentation capabilities; each
-executes once, identity occurs once in the hierarchy view, and AutoRegisterMeta
-contains its declared output key. No consumer, dispatcher or field roster edits.
+ArtifactPlanInspection behavior with its extra fact retained. Its single capability
+declaration selects it at actual ingress and generated-command rendering. Diamond
+composes two independent presentation capabilities over their real value-rendering
+ancestor. Both Left/Right and Right/Left orders traverse cooperative super(): each
+capability and the ancestor execute once, including through actual transport
+framing and generated-command rendering. Ancestor MRO and derived hierarchy views
+contain each identity once; existing AutoRegisterMeta contains the declared key.
+No consumer, dispatcher or field roster edits. Existing parser implementation
+and controls are not replaced; this checkpoint extends only renderer controls.
 
 Generic call closure: CallCommandSpec now delegates render_call_result to the
 nominal capability command. Migrated pipeline compact calls no longer serialize
@@ -218,6 +228,67 @@ original failures, subsequent passing logs/XML, full guard outputs and census.
 It excludes compiler/build products. Regenerate it after further owned checks;
 owned terminal scratch is disposable once the archive is verified.
 
+Final integrated checkpoint evidence
+------------------------------------
+
+Production source at d374482c0700a15e6677281fa0c3485a1405f43a is identical to
+the current tested source pin; c4ef5f347 adds only stronger diamond behavior
+controls. Relative to integrated main, production deletes 525 lines first and
+adds 768; the pipeline renderer deletes 417 and adds 331. This is factoring and
+test coverage, not a performance claim or a global debt certificate.
+
+Final shard: 39 PASS, 286 deselected, 14.66s pytest/15.76s wall, 317360 KiB RSS.
+27 owned family/extension/boundary/CLI/client cases plus 12 existing pipeline,
+generic-call and selected-workflow poll cases. Continuous McpDevClient.execute
+journeys replace only the wire peer and retain real run_session, framing, decode,
+rendering and exit-status behavior, with nested contracts, typed diagnostics,
+malformed input and full native JSON receipts. Separate actual main rendering
+checks return a controlled typed batch from _run_async to avoid runtime startup;
+they do not prove process/transport startup. Renderers, declaration selection and
+the existing codec remain production code, not substitutes.
+Both diamond orders run through unchanged generated-command consumers. Earlier
+38-case results and the pending-UI compact failure remain archived, not erased.
+
+Recipe, from this worktree, using the existing interpreter::
+
+  env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONDONTWRITEBYTECODE=1 \
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
+    /usr/bin/time -v taskset -c 0 timeout 60 \
+    /home/ts/code/projects/openhcs/.venv/bin/python -c \
+    'import openhcs, pytest; raise SystemExit(pytest.main(["--noconftest", "-o", "addopts=", "tests/unit/agent/test_mcp_dev_client_pipeline_results.py", "tests/unit/agent/test_mcp_server.py", "-k", "pipeline_results or mcp_dev_client_draft_pipeline_step or mcp_dev_client_artifact_plan or artifact_plan_exposes_source_workspace_count or mcp_dev_client_execute_source_composes or mcp_dev_client_call_renders or mcp_dev_client_selected_workflow_poll_renders_compact_summary"]))'
+
+Pre-importing OpenHCS selects this checkout's recorded dependency objects before
+pytest imports external modules. Unknown asyncio config warnings reflect disabled
+pytest plugin autoload, not a failed assertion. No packages were installed.
+
+Unchanged original R0, base 2cbfc4a0771bf24d153b076bff4a5e321ac039f4, production
+head d374482c0700a15e6677281fa0c3485a1405f43a: PASS, 23.84s/87664 KiB, zero
+exceptions and no increased measures. Archived r0-pinned-source.log. Scripts and
+benchmark have no S1 diff against this base; their earlier empty-scope passes are
+retained. Correctness Ruff E9/F63/F7/F82 and git diff --check PASS on current source.
+
+Unchanged full-context R1 at these same revisions: INCOMPLETE, exit 1,
+ScanDeadlineExceeded during parse_python_module at 55.001s/55.000s; wall 56.55s,
+263808 KiB RSS. One CPU and 512 MiB address-space ceiling, original production
+roots and all recorded dependency Python context, bounded Git mapping windows
+8m/128m. No root, detector, descent guard, assertion or comparison input changed.
+Materialized the committed source context; parsing did not complete, so there is
+no before/after certificate or global proof. Archived r1-pinned-full-context.log.
+The owned R1 snapshot directory is empty following the tool's own cleanup.
+
+Actual source-only command ``python -m openhcs.mcp.dev_client artifact-plan --help``
+PASS, exit 0, 4.79s/248692 KiB, one CPU/60s; archived source-command-help.log.
+This checks the generated parser/entrypoint, not a live MCP/server/installed run.
+
+Authoritative archive SHA256 reverified at the checkpoint:
+100fbe8ef89664b866777e87b2c8640a3432e8a10e9188dff81c97942d551bf6.
+Actual antipattern review above influenced implementation: shared decode/optional
+composition on McpDevTypedOutputRenderer, source clipping on render options,
+common execution presentation on the real ExecutionJobIdentity owner, typed
+diagnostic descent without JSON rescans, and producer-annotation-derived family
+membership. The removed alias and replaced readers/stores are absent from the
+combined source diff; no shared execution service file was changed.
+
 Original failures remain in the owned output archive: source-first import order
 collection failure; JsonValue annotation namespace failure; scoped registry/MRO
 failures; five existing fixture failures. Existing fixture updates supply missing
@@ -233,12 +304,25 @@ Recorded submodules initialized only here at existing gitlinks; no gitlink edits
 Own compiler/build-lib scratch and two local abi3 binaries are disposable and
 must be cleaned after evidence is archived. No application native launch.
 
-Resource helper before work reports warning/exit 2: swap used 14.2 GiB, available
-RAM 20.0 GiB, /home free 23.1 GiB. No extra agents or large tests authorized while
-this persists; use only serial bounded focused checks. Owned disposable output:
+Resource helper before work reports warning/exit 2: initially swap used 14.2 GiB,
+available RAM 20.0 GiB, /home free 23.1 GiB; latest swap 13.3 GiB, available RAM
+18.5 GiB, /home free 20.6 GiB. No extra agents or large tests authorized while
+this persists; use only bounded focused checks. Owned disposable output:
 /home/ts/.cache/agent-scratch/openhcs-mcp-result-owners-s1-20261001, purpose source
-census/guard/test logs, owner Codex S1. Archive useful receipts in this worktree,
+census/guard/test logs, compiler output and archive-check fresh extraction,
+owner Codex S1. Archive useful receipts in this worktree,
 then remove that exact owned run directory after termination. No volatile source.
+
+Cleanup at checkpoint: evidence archive refreshed, freshly extracted to the owned
+archive-check child and compared byte-for-byte with every original log/XML/census.
+Moved the exact owned output/build/verification directory (14 MiB including
+the verification extraction) and only these reproducible local source-build
+binaries to recoverable desktop trash; removed the empty .s1-r1-scratch directory:
+openhcs/core/_tabular_native.abi3.so and
+openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so. Persistent
+source/guard worktrees remain. Rebuild these checkout-only extensions with the
+existing setup.py/interpreter/compiler before reproducing imports; do not install
+or change active packages. Original receipts remain recoverable in the archive.
 
 Source-context scan must include OpenHCS production and recorded dependency
 sources where safe. Any budget/tool limitation is incomplete coverage, not global
