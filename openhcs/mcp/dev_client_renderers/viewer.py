@@ -141,121 +141,117 @@ class ViewerValidationRenderer(ViewerResultRenderer):
         return McpDiagnosticRenderer.error_lines(errors)
 
 
-class ViewerStateRenderer(McpDevOutputRenderer):
+class ViewerStateRenderer(ViewerResultRenderer):
     """Compact renderer for viewer state and layer component metadata."""
 
     output_contract = ViewerWindowStateResult
+    unavailable_summary = "Viewer state: failed"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if "observed" not in payload and errors:
-            return "\n".join(
-                ("Viewer state: failed", *ViewerValidationRenderer._error_lines(errors))
-            )
-        viewer = McpDevPayloadProjection.nested_mapping(payload, "viewer")
+    def render_payload(cls, payload: ViewerWindowStateResult,
+                       options: McpDevOutputRenderOptions) -> str:
         lines = [
             (
                 "Viewer state: "
-                f"observed={McpDevPayloadProjection.text(payload.get('observed'))} "
-                f"type={McpDevPayloadProjection.text(viewer.get('viewer_type'))} "
-                f"title={McpDevPayloadProjection.quoted_text(viewer.get('title'))}"
+                f"observed={payload.observed} {cls.viewer_text(payload.viewer)}"
             ),
             (
                 "Window: "
-                f"layers={McpDevPayloadProjection.text(payload.get('layer_count'))} "
-                f"ndim={McpDevPayloadProjection.text(payload.get('viewer_ndim'))} "
-                f"axes={ViewerValidationRenderer._sequence_text(payload.get('axis_labels'))} "
-                f"current_step={cls._json_summary(payload.get('current_step'))} "
-                f"active_route={McpDevPayloadProjection.text(payload.get('active_dimension_label_route'))}"
+                f"layers={payload.layer_count} ndim={payload.viewer_ndim} "
+                f"axes={ViewerValidationRenderer._sequence_text(payload.axis_labels)} "
+                f"current_step={cls._json_summary(payload.current_step)} "
+                f"active_route={McpDevPayloadProjection.text(payload.active_dimension_label_route)}"
             ),
             (
                 "Components: "
-                f"groups={McpDevPayloadProjection.text(payload.get('component_group_count'))} "
-                f"items={McpDevPayloadProjection.text(payload.get('component_item_count'))}"
+                f"groups={payload.component_group_count} items={payload.component_item_count}"
             ),
         ]
-        if errors:
-            lines.append("Errors:")
-            lines.extend(ViewerValidationRenderer._error_lines(errors))
-        warnings = McpDevPayloadProjection.sequence_of_mappings(payload.get("warnings"))
-        if warnings:
-            lines.append("Warnings:")
-            lines.extend(ViewerValidationRenderer._error_lines(warnings))
-        layers = McpDevPayloadProjection.sequence_of_mappings(payload.get("layers"))
-        if layers:
+        lines.extend(cls.optional_lines(payload.native_viewport, cls._viewport_lines))
+        lines.extend(cls.optional_lines(payload.native_dimensions, cls._dimension_lines))
+        if payload.layers:
             lines.append("Layers:")
-            lines.extend(cls._layer_lines(layers))
+            lines.extend(cls._layer_lines(payload.layers))
         return "\n".join(lines)
+
+    @classmethod
+    def _viewport_lines(cls, viewport) -> tuple[str, ...]:
+        return (
+            "Native viewport: "
+            f"center={cls._json_summary(viewport.center)} zoom={viewport.zoom}",
+        )
+
+    @classmethod
+    def _dimension_lines(cls, dimensions) -> tuple[str, ...]:
+        return (
+            "Native dimensions: "
+            f"displayed_axes={ViewerValidationRenderer._sequence_text(dimensions.displayed_axes)} "
+            f"ndisplay={dimensions.ndisplay} order={cls._json_summary(dimensions.order)} "
+            f"point={cls._json_summary(dimensions.point)} "
+            f"camera_angles={cls._json_summary(dimensions.camera_angles)}",
+            *cls.optional_lines(dimensions.canvas_size, lambda size: (
+                f"Native canvas: width={size[0]} height={size[1]}",
+            )),
+        )
 
     @classmethod
     def _layer_lines(
         cls,
-        layers: tuple[Mapping[str, JsonValue], ...],
+        layers,
     ) -> list[str]:
         lines: list[str] = []
         for layer in layers:
             lines.append(
                 "- "
-                f"{McpDevPayloadProjection.text(layer.get('route_key'))}: "
-                f"title={McpDevPayloadProjection.quoted_text(layer.get('title'))} "
-                f"visible={McpDevPayloadProjection.text(layer.get('visible'))} "
-                f"selected={McpDevPayloadProjection.text(layer.get('selected'))} "
-                f"items={McpDevPayloadProjection.text(layer.get('item_count'))} "
-                f"types={ViewerValidationRenderer._sequence_text(layer.get('data_types'))} "
-                f"axes={ViewerValidationRenderer._sequence_text(layer.get('axis_labels'))} "
-                f"stack={ViewerValidationRenderer._sequence_text(layer.get('stack_axes'))} "
-                f"shape={cls._json_summary(layer.get('data_shape'))}"
+                f"{layer.route_key}: "
+                f"title={McpDevPayloadProjection.quoted_text(layer.title)} "
+                f"visible={layer.visible} selected={layer.selected} items={layer.item_count} "
+                f"types={ViewerValidationRenderer._sequence_text(layer.data_types)} "
+                f"axes={ViewerValidationRenderer._sequence_text(layer.axis_labels)} "
+                f"stack={ViewerValidationRenderer._sequence_text(layer.stack_axes)} "
+                f"shape={cls._json_summary(layer.data_shape)}"
             )
             lines.append(
                 "  components: "
-                f"{cls._component_values_text(layer.get('component_values'))}"
+                f"{cls._component_values_text(layer.component_values)}"
             )
-            axis_values = McpDevPayloadProjection.nested_mapping(
-                layer,
-                "axis_component_values",
-            )
-            routed_values = McpDevPayloadProjection.nested_mapping(
-                layer,
-                "routed_component_values",
-            )
+            lines.extend(cls.optional_lines(layer.native_intensity, lambda intensity: (
+                "  native intensity: "
+                f"contrast_limits={cls._json_summary(intensity.contrast_limits)} "
+                f"gamma={intensity.gamma}",
+            )))
+            if layer.native_transform.scale:
+                lines.append(
+                    "  native transform: "
+                    f"scale={cls._json_summary(layer.native_transform.scale)} "
+                    f"translate={cls._json_summary(layer.native_transform.translate)}"
+                )
+            axis_values = layer.axis_component_values
+            routed_values = layer.routed_component_values
             if axis_values:
                 lines.append(f"  axis values: {cls._mapping_text(axis_values)}")
             if routed_values:
                 lines.append(f"  routed values: {cls._mapping_text(routed_values)}")
-            payloads = McpDevPayloadProjection.sequence_of_mappings(
-                layer.get("payload_summaries")
-            )
+            payloads = layer.payload_summaries
             if payloads:
                 lines.append(
                     "  payload summaries: "
-                    f"{McpDevPayloadProjection.text(layer.get('payload_summary_count'))} "
-                    f"truncated={McpDevPayloadProjection.text(layer.get('payload_summaries_truncated'))}"
+                    f"{layer.payload_summary_count} "
+                    f"truncated={layer.payload_summaries_truncated}"
                 )
                 for payload in payloads[:3]:
-                    lines.append(
-                        "  payload "
-                        f"type={McpDevPayloadProjection.text(payload.get('data_type'))} "
-                        f"shape={cls._json_summary(payload.get('shape'))} "
-                        f"dtype={McpDevPayloadProjection.text(payload.get('dtype'))} "
-                        f"min={McpDevPayloadProjection.text(payload.get('min'))} "
-                        f"max={McpDevPayloadProjection.text(payload.get('max'))} "
-                        f"components={cls._mapping_text(McpDevPayloadProjection.nested_mapping(payload, 'components'))} "
-                        f"path={ViewerPayloadPathRenderer.render(payload.get('path'))}"
-                    )
+                    # Preserve the original bounded summary receipt whole. Its
+                    # internal schema remains a coordinated producer seam, not
+                    # another per-field decoder in the presentation consumer.
+                    lines.append(f"  payload summary: {cls._json_summary(payload)}")
         return lines
 
     @classmethod
-    def _component_values_text(cls, value: JsonValue) -> str:
-        if not isinstance(value, list) or not value:
+    def _component_values_text(cls, value: tuple[JsonObject, ...]) -> str:
+        if not value:
             return "<none>"
         merged: dict[str, list[str]] = {}
         for item in value:
-            if not isinstance(item, Mapping):
-                continue
             for key, component_value in item.items():
                 values = merged.setdefault(str(key), [])
                 text = McpDevPayloadProjection.text(component_value)
