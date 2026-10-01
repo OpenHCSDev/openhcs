@@ -3,10 +3,13 @@
 from dataclasses import dataclass
 import ast
 import inspect
+import json
+from pathlib import Path
 
 import pytest
 
 from openhcs.agent.capabilities import (
+    GetViewerWindowStateCapability,
     ProbeViewerWindowCapability,
     ValidateViewerWindowStateCapability,
 )
@@ -15,16 +18,24 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,
     ViewerWindowLayerValidationSummary,
+    ViewerWindowLayerState,
     ViewerWindowProbeResult,
     ViewerWindowValidationPolicy,
     ViewerWindowValidationSummaryResult,
+    ViewerWindowStateResult,
+)
+from openhcs.runtime.viewer_controls import ViewerNativeDimensions
+from zmqruntime.viewer_protocol import (
+    ViewerNativeImageIntensityPresentation,
+    ViewerNativeLayerTransform,
+    ViewerNativeViewportPresentation,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.dev_client import McpDevCommandSpec, _build_parser
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity, McpDevToolBatchResponse, McpDevToolResult,
 )
-from openhcs.mcp.dev_client_renderers.viewer import ViewerProbeRenderer
+from openhcs.mcp.dev_client_renderers.viewer import ViewerProbeRenderer, ViewerStateRenderer
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.mcp.dev_client_rendering import McpDevTypedOutputRenderer
 from openhcs.serialization.json import to_jsonable
@@ -117,6 +128,112 @@ def test_agent_error_missing_and_malformed_result_are_distinct():
     bad = response(ProbeViewerWindowCapability, original)
     bad["results"][0]["payloads"] = [{}]
     assert "mcp_payload_invalid" in ViewerProbeRenderer.render(bad)
+
+
+def state(**values):
+    return ViewerWindowStateResult(
+        schema_version=SCHEMA_VERSION, observed=True,
+        connection=ExecutionConnectionSpec(port=5992), **values,
+    )
+
+
+def render_state(raw):
+    decoded = McpDevToolBatchResponse.for_rendering(raw)
+    value = decoded.payload_for(GetViewerWindowStateCapability.to_spec())
+    assert value is not None
+    binding = McpDevOutputRenderer.for_output_contract(type(value))
+    assert binding.renderer_type is ViewerStateRenderer
+    return value, binding.render_result(decoded, binding.renderer_type.render_options_type())
+
+
+def test_original_installed_state_reports_native_facts_without_mutating_receipt():
+    fixture = Path(__file__).resolve().parents[3] / (
+        "docs/validation/s1_typed_viewer_20261001/post406-installed-state.json"
+    )
+    raw = json.loads(fixture.read_text())
+    before = json.dumps(raw, sort_keys=True)
+    value, rendered = render_state(raw)
+    assert type(value.native_viewport) is ViewerNativeViewportPresentation
+    assert type(value.native_dimensions) is ViewerNativeDimensions
+    assert value.native_viewport.center == (0.0, 264.342, 1043.812)
+    assert value.native_viewport.zoom == 5
+    assert value.native_dimensions.canvas_size == (962, 442)
+    assert value.native_dimensions.displayed_axes == ("y", "x")
+    assert value.native_dimensions.ndisplay == 2
+    visible = tuple(layer for layer in value.layers if layer.visible)
+    assert len(visible) == 1
+    route = visible[0]
+    assert type(route.native_intensity) is ViewerNativeImageIntensityPresentation
+    assert route.native_intensity.contrast_limits == (141, 450)
+    assert route.native_intensity.gamma == 1
+    # The saved wire receipt names this route selected_images, not calcein.
+    # Biological channel names are not reconstructed by presentation.
+    assert route.title == "selected_images"
+    for fact in ("264.342", "1043.812", "zoom=5", "width=962", "height=442",
+                 "displayed_axes=y,x", "ndisplay=2"):
+        assert fact in rendered
+    route_report = rendered.split(route.route_key + ":", 1)[1].split("\n- ", 1)[0]
+    assert "141.0" in route_report and "450.0" in route_report
+    assert "gamma=1.0" in route_report
+    assert "visible=True" in route_report
+    assert "scale=" in route_report and "1.3556" in route_report
+    assert json.dumps(raw, sort_keys=True) == before
+    assert to_jsonable(value) == raw["results"][0]["payloads"][0]
+    args = _build_parser().parse_args(("viewer-state", "5992"))
+    assert McpDevCommandSpec.for_name("viewer-state").render_response(raw, args) == rendered
+
+
+def test_native_sections_distinguish_absence_from_supplied_zero_and_empty_facts():
+    absent, rendered = render_state(response(GetViewerWindowStateCapability, state()))
+    assert absent.native_viewport is None and absent.native_dimensions is None
+    assert "Native viewport:" not in rendered
+    assert "Native dimensions:" not in rendered
+    assert "Native canvas:" not in rendered
+    original = state(
+        native_viewport=ViewerNativeViewportPresentation(center=(0, 0, 0), zoom=1),
+        native_dimensions=ViewerNativeDimensions(
+            order=(0, 1), ndisplay=2, displayed_axes=("y", "x"),
+            point=(0, 0), camera_angles=(0, 0, 0), canvas_size=(0, 0),
+        ),
+        layers=(ViewerWindowLayerState(
+            route_key="exact::route", title="", mounted=False, item_count=0,
+            visible=False, selected=False,
+            native_intensity=ViewerNativeImageIntensityPresentation((0, 1), 1),
+            native_transform=ViewerNativeLayerTransform(scale=(1.3556, 1.3556), translate=(0, 0)),
+            component_values=({"channel": 0, "note": ""},),
+            payload_summaries=tuple({"shape": [1, 2], "min": index} for index in range(4)),
+            payload_summary_count=4,
+        ),),
+    )
+    _, rendered = render_state(response(GetViewerWindowStateCapability, original))
+    assert "center=[0.0, 0.0, 0.0]" in rendered
+    assert "width=0 height=0" in rendered
+    assert "contrast_limits=[0.0, 1.0]" in rendered
+    assert "translate=[0.0, 0.0]" in rendered
+    assert 'title="" visible=False selected=False items=0' in rendered
+    assert "channel=0" in rendered
+    assert rendered.count("  payload summary:") == 3
+    assert '"min": 3' not in rendered
+    assert "payload summaries: 4" in rendered
+
+
+@pytest.mark.parametrize("member,bad", (("native_viewport", {"center": [0, 0], "zoom": 5}),
+                                       ("native_intensity", {"contrast_limits": [450, 141], "gamma": 1})))
+def test_malformed_native_declarations_remain_errors_not_absent_sections(member, bad):
+    raw = response(GetViewerWindowStateCapability, state(layers=(ViewerWindowLayerState(
+        route_key="bad", title="bad", mounted=True, item_count=1,
+    ),)))
+    original = raw["results"][0]["payloads"][0]
+    if member == "native_intensity":
+        original["layers"][0][member] = bad
+    else:
+        original[member] = bad
+    decoded = McpDevToolBatchResponse.for_rendering(raw)
+    assert decoded.payload_for(GetViewerWindowStateCapability.to_spec()) is None
+    assert decoded.results[0].payloads[0].receipt is original
+    rendered = ViewerStateRenderer.render(decoded)
+    assert "mcp_payload_invalid" in rendered
+    assert "Viewer state: failed" in rendered
 
 
 @dataclass(frozen=True, kw_only=True)

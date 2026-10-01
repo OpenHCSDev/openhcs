@@ -1,0 +1,29 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so e1e0517b3706e6f6e8de126e8c3758c3a6bbf0ca024782b795fcb27d509f3e3e
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so 9f873070c3e136dd78109a55570852981e989c1d21e3452ce214bbaa753b7308
+Source owner: /home/ts/wt/openhcs-s1-typed-viewer-presentation-20261001/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-s1-typed-viewer-presentation-20261001/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-s1-typed-viewer-presentation-20261001/openhcs/core/steps/function_runtime.py
+.....F......                                                             [100%]
+=================================== FAILURES ===================================
+_ test_original_installed_state_reports_native_facts_without_mutating_receipt __
+tests/unit/agent/test_s1_typed_viewer_rendering.py:169: in test_original_installed_state_reports_native_facts_without_mutating_receipt
+    assert "calcein" in route.title
+E   AssertionError: assert 'calcein' in 'selected_images'
+E    +  where 'selected_images' = ViewerWindowLayerState(route_key='origin_manual_kind_manual_projection_selected_images_70d8e1a6171395a89aa7cc1f64ef09b...contrast_limits=(141.0, 450.0), gamma=1.0), visible=True, selected=True, feature_row_count=0, selected_data_indices=()).title
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ts/wt/openhcs-s1-typed-viewer-presentation-20261001/docs/validation/s1_typed_viewer_20261001/state-increment.xml -
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_s1_typed_viewer_rendering.py::test_original_installed_state_reports_native_facts_without_mutating_receipt
+1 failed, 11 passed, 2 warnings in 4.21s
+BOUNDED_SOURCE peak_aggregate_rss_kib=276228 elapsed_seconds=8.002 returncode=1 reason=None
