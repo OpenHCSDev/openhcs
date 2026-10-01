@@ -10,6 +10,9 @@ Paired dependency source/gitlink: 23097e26c919b6c1b9621d009ee28f01626f1a65.
 Drafts: https://github.com/OpenHCSDev/openhcs/pull/358 and
 https://github.com/OpenHCSDev/ZMQRuntime/pull/13.
 Subsequent receipt commits do not change either reviewed source checkpoint.
+Later source continuation ffba8426c adds affinity/budget admission and removes
+eager unselected kernel warming; see preparation-admission-355.rst for its
+separate failures, current source tests, profile and installed-proof limits.
 Original installed failure remains the predecessor, not a retried acceptance.
 Authoritative reproducer:
 /home/ts/wt/openhcs-issue-batch-20260929/UI349-COLD-CONNECT-DEFECT-20261001.rst.
