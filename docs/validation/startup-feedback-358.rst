@@ -1,6 +1,9 @@
 MCP startup feedback through the original owners
 ================================================
 
+Historical feedback source receipt. Final current-main merge, exact dependency
+gitlink and original pinned R0 are in paired-feedback-integration-358.rst.
+
 Source integration owner: Schrodinger/Codex, existing PR358 and ZMQRuntime PR13.
 OpenHCS production: 4ab076890cb2ff9568e005abae2bc4d1e77997ed, following4583a1110.
 Required paired dependency: 423b1417aa1fe7971ea1023627a4a4adf3b541d3, followingaca18ea.
