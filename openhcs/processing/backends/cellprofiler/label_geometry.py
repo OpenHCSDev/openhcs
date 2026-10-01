@@ -506,8 +506,23 @@ def _numpy124_aheapsort_indices_numba(
         indices[start + parent - 1] = temporary
 
 
+@njit(cache=True, inline="always")
+def _numpy124_partition_has_retained(
+    indices: np.ndarray, retained: np.ndarray | None, left: int, right: int
+) -> bool:
+    """A full ordering retains every partition; a selection owns its interest."""
+    if retained is None:
+        return True
+    for position in range(left, right + 1):
+        if retained[indices[position]]:
+            return True
+    return False
+
+
 @njit(cache=True)
-def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
+def _numpy124_partition_indices_numba(
+    values: np.ndarray, retained: np.ndarray | None = None
+) -> np.ndarray:
     count = values.size
     indices = np.arange(count, dtype=np.int64)
     if count < 2:
@@ -520,6 +535,15 @@ def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
     right = count - 1
     current_depth = _numpy124_msb_numba(count) * 2
     while True:
+        active = _numpy124_partition_has_retained(indices, retained, left, right)
+        if not active:
+            if stack_size == 0:
+                break
+            stack_size -= 1
+            left = stack_left[stack_size]
+            right = stack_right[stack_size]
+            current_depth = stack_depth[stack_size]
+            continue
         if current_depth < 0:
             _numpy124_aheapsort_indices_numba(values, indices, left, right - left + 1)
             if stack_size == 0:
@@ -530,6 +554,9 @@ def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
             current_depth = stack_depth[stack_size]
             continue
         while right - left > 15:
+            if not _numpy124_partition_has_retained(indices, retained, left, right):
+                active = False
+                break
             middle = left + (right - left >> 1)
             if values[indices[middle]] < values[indices[left]]:
                 indices[middle], indices[left] = (indices[left], indices[middle])
@@ -575,7 +602,7 @@ def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
             current_depth -= 1
             stack_depth[stack_size - 1] = current_depth
         insertion_index = left + 1
-        while insertion_index <= right:
+        while active and insertion_index <= right:
             current_index = indices[insertion_index]
             current_value = values[current_index]
             target = insertion_index
@@ -594,9 +621,8 @@ def _numpy124_aquicksort_indices_numba(values: np.ndarray) -> np.ndarray:
         current_depth = stack_depth[stack_size]
     return indices
 
-
 def _numpy124_aquicksort_indices(values: np.ndarray) -> np.ndarray:
-    return _numpy124_aquicksort_indices_numba(np.asarray(values))
+    return _numpy124_partition_indices_numba(np.asarray(values))
 
 
 @njit(cache=True)
@@ -800,3 +826,57 @@ __all__ = [
     "feret_diameters_from_labels",
     "minimum_enclosing_circle_from_labels",
 ]
+
+
+@njit(cache=True)
+def _numpy124_label_maximum_retention(
+    values: np.ndarray,
+    labels: np.ndarray,
+    requested_labels: np.ndarray,
+    max_label: int,
+) -> np.ndarray:
+    """Retain possible winners without changing the complete-sort tie order.
+
+    NaNs do not define the legacy comparator's ordinary maximum ordering. Keep
+    that complete domain so its existing sort and last-position behavior remains.
+    """
+    needed = np.zeros(max_label + 2, dtype=np.bool_)
+    for label in requested_labels:
+        needed[label if 0 <= label <= max_label else 0] = True
+    maxima = np.empty(max_label + 2, dtype=values.dtype)
+    seen = np.zeros(max_label + 2, dtype=np.bool_)
+    for index in range(values.size):
+        value = values[index]
+        if value != value:
+            return np.ones(values.size, dtype=np.bool_)
+        label = labels[index]
+        if label < 0 or label > max_label or not needed[label]:
+            continue
+        if not seen[label] or value > maxima[label]:
+            maxima[label] = value
+            seen[label] = True
+    retained = np.zeros(values.size, dtype=np.bool_)
+    for index in range(values.size):
+        label = labels[index]
+        if label < 0 or label > max_label or not needed[label]:
+            continue
+        retained[index] = values[index] == maxima[label]
+    return retained
+
+
+def _numpy124_ordered_label_maximum_indices(
+    values: np.ndarray,
+    labels: np.ndarray,
+    requested_labels: np.ndarray,
+    max_label: int,
+) -> np.ndarray:
+    """Project requested maxima from the same partition mechanism as full sort.
+
+    Disjoint partitions without a retained position cannot change the relative
+    order of retained positions. Their sorting work may therefore be omitted.
+    """
+    retained = _numpy124_label_maximum_retention(
+        values, labels, requested_labels, max_label
+    )
+    order = _numpy124_partition_indices_numba(values, retained)
+    return order[retained[order]]

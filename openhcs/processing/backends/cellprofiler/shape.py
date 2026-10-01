@@ -470,6 +470,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     feret_diameters_from_labels,
     _numpy124_aquicksort_indices,
+    _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
@@ -1485,7 +1486,13 @@ class NumbaShapeMeasurementMixin(ABC):
         self.radius_features_from_labels(labels, label_ids)
         self.feret_diameters(labels, label_ids)
         self.distance_to_edge(labels)
-        self.maximum_position_of_labels(image, labels, label_ids)
+        for dtype in (np.float32, np.float64):
+            ordering_image = image.astype(dtype)
+            _numpy124_aquicksort_indices(ordering_image.ravel())
+            self.maximum_position_of_labels(ordering_image, labels, label_ids)
+            immutable_ids = label_ids.view()
+            immutable_ids.setflags(write=False)
+            self.maximum_position_of_labels(ordering_image, labels, immutable_ids)
         self.color_labels(labels)
 
     def form_factor_values(
@@ -2207,8 +2214,11 @@ def _maximum_position_of_labels_scipy_select(
         source_positions = np.flatnonzero(mask_array.ravel())
     max_label = int(np.max(label_array)) if label_array.size else 0
     working_values = image_array.ravel()[source_positions]
-    order = _numpy124_aquicksort_indices(working_values)
-    sorted_labels = label_array.ravel()[source_positions[order]]
+    working_labels = label_array.ravel()[source_positions]
+    order = _numpy124_ordered_label_maximum_indices(
+        working_values, working_labels, label_id_array.ravel(), max_label
+    )
+    sorted_labels = working_labels[order]
     sorted_positions = source_positions[order]
     max_positions = np.zeros(max_label + 2, dtype=np.int64)
     valid_sorted = (sorted_labels >= 0) & (sorted_labels <= max_label)
