@@ -429,6 +429,60 @@ def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_n
     assert received == [expected]
 
 
+def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime():
+    events = []
+    received = []
+
+    class PositiveMetadataValue:
+        def resolve(self, handler, plate_path):
+            value = super().resolve(handler, plate_path)
+            events.append(("validate", value))
+            if value <= 0:
+                raise ValueError("Exposure duration must be positive")
+            return value
+
+    class ResolutionReceipt:
+        def resolve(self, handler, plate_path):
+            events.append("resolve")
+            value = super().resolve(handler, plate_path)
+            events.append(("resolved", value))
+            return value
+
+    class CheckedExposureMetadataProvider(
+        ResolutionReceipt, PositiveMetadataValue,
+        _EngineeringExposureMetadataArtifactProvider,
+    ):
+        artifact_name = "engineering_checked_exposure_duration"
+
+    @numpy
+    @artifact_inputs(CheckedExposureMetadataProvider.require_artifact_name())
+    def metadata_consumer(image, engineering_checked_exposure_duration):
+        received.append(engineering_checked_exposure_duration)
+        return image
+
+    planner = _artifact_planner_stub()
+    planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
+    planner.ctx.plate_path = planner.plate_path
+    assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(
+        CheckedExposureMetadataProvider.require_artifact_name()
+    )
+    compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
+    _execute_compiled_metadata_pattern(compiled)
+    assert received == [17.25]
+    assert events == ["resolve", ("validate", 17.25), ("resolved", 17.25)]
+
+    class InvalidExposureHandler(_EngineeringMetadataHandler):
+        def get_exposure_duration(self, plate_path):
+            return -17.25
+
+    events.clear()
+    planner.ctx.microscope_handler = InvalidExposureHandler(filemanager=object())
+    with pytest.raises(ValueError, match="Exposure duration must be positive"):
+        _compile_metadata_pattern(planner, metadata_consumer)
+    assert events == ["resolve", ("validate", -17.25)]
+    assert received == [17.25]
+
+
 def test_hidden_pixel_size_reaches_callable_with_exact_source_calibration():
     received = []
 

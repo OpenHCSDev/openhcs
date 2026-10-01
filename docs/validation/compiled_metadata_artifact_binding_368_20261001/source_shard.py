@@ -1,10 +1,14 @@
 """Source-test entrypoint borrowing only the existing read-only extension ABI."""
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
 import sys
 
-ROOT = Path('/home/ts/wt/openhcs-compiled-metadata-artifact-binding-20261001')
+ROOT = Path(os.environ.get(
+    'OPENHCS_SOURCE_TEST_ROOT',
+    '/home/ts/wt/openhcs-compiled-metadata-artifact-binding-20261001',
+)).resolve()
 INSTALLED = Path('/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs')
 
 for module_name, relative in (

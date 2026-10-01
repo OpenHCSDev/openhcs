@@ -573,10 +573,39 @@ class PathPlannerExecutionGroups:
 
 
 @dataclass(frozen=True)
-class PathPlannerArtifactStage:
-    """Artifact declaration, I/O-plan, and FunctionStep injection stage."""
+class PathPlannerMetadataArtifactInjection:
+    """Shared provider selection and invocation-owned metadata injection."""
 
     planner: PathPlanner
+
+    def metadata_artifact_available(self, artifact_name: str) -> bool:
+        """Derive availability from the original microscope provider owner."""
+        return self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
+            artifact_name
+        )
+
+    def inject_metadata(
+        self,
+        pattern: FunctionPatternSyntax,
+        inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
+    ) -> FunctionPatternSyntax:
+        """Inject values once; compiled metadata edges reference these kwargs."""
+        for spec in inputs.values():
+            if (
+                spec.ref().for_plan_type(ArtifactOutputPlan) not in self.planner.declared
+                and self.metadata_artifact_available(spec.name)
+            ):
+                value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
+                    spec.name,
+                    self.planner.ctx.plate_path,
+                )
+                pattern = inject_artifact_input_values(pattern, {spec.name: value})
+        return pattern
+
+
+@dataclass(frozen=True)
+class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
+    """Artifact declaration and I/O planning with inherited metadata binding."""
 
     def prepare_step_declarations(
         self,
@@ -1209,9 +1238,7 @@ class PathPlannerArtifactStage:
             source_bindings=step_context.source_bindings,
             available_artifacts=available_artifacts,
             main_flow_artifacts=step_context.main_flow_artifacts,
-            metadata_artifact_available=(
-                self.planner.ctx.microscope_handler.can_resolve_metadata_artifact
-            ),
+            metadata_artifact_available=self.metadata_artifact_available,
         )
 
     def compile_invocation_input_edges(
@@ -1989,25 +2016,6 @@ class PathPlannerArtifactStage:
         if producer_group is not None:
             return paths_by_group.get(producer_group, producer.path)
         return producer.path
-
-    def inject_metadata(
-        self,
-        pattern: FunctionPatternSyntax,
-        inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
-    ) -> FunctionPatternSyntax:
-        """Inject metadata for artifact inputs."""
-        for spec in inputs.values():
-            if spec.ref().for_plan_type(
-                ArtifactOutputPlan
-            ) not in self.planner.declared and self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
-                spec.name
-            ):
-                value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
-                    spec.name,
-                    self.planner.ctx.plate_path,
-                )
-                pattern = inject_artifact_input_values(pattern, {spec.name: value})
-        return pattern
 
 
 @dataclass(frozen=True)
