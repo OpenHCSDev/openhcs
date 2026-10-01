@@ -464,24 +464,41 @@ class SourceImageSetIdentityPolicy:
         *,
         group_component: AllComponents | None = None,
     ) -> "SourceImageSetIdentityPolicy":
-        """Return image-plane membership declared by source and group semantics."""
+        """Return image-plane membership declared by source and group semantics.
+
+        Equal singleton coordinates across primary bindings constrain the field;
+        they do not declare another plane-member axis. Explicit stack/group axes
+        still declare membership, even when the current coordinates are equal.
+        A single binding has no cross-binding fixed-coordinate witness.
+        """
 
         if not isinstance(source_bindings, SourceBindingDeclarationsMixin):
             raise TypeError(
                 "SourceImageSetIdentityPolicy.from_source_bindings requires "
                 "SourceBindingDeclarationsMixin."
             )
+        bindings = source_bindings.primary_plane_bindings
+        shared_components = frozenset(
+            component
+            for component in AllComponents
+            if len(bindings) > 1
+            for values in (
+                tuple(binding.component_values(component) for binding in bindings),
+            )
+            if len(values[0]) == 1 and all(value == values[0] for value in values[1:])
+        )
         return cls(
             frozenset(
                 ComponentSet.collect(
                     source_bindings.source_stack_components,
                     (
                         selector.component
-                        for binding in source_bindings.primary_plane_bindings
+                        for binding in bindings
                         for selector in (
                             *binding.selector.components,
                             *binding.component_identity,
                         )
+                        if selector.component not in shared_components
                     ),
                     (group_component,),
                 )
