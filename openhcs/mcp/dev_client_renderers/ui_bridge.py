@@ -192,7 +192,7 @@ class UiSmokeRenderer:
 
         results = McpDevPayloadProjection.sequence_of_mappings(response.get("results"))
         mcp_errors = sum(1 for result in results if result.get("mcp_error") is True)
-        lines = ["UI smoke: " f"results={len(results)} mcp_errors={mcp_errors}"]
+        lines = [f"UI smoke: results={len(results)} mcp_errors={mcp_errors}"]
         lines.append(cls._health_line(response))
         lines.extend(
             UiBridgeStatusRenderer.render(
@@ -782,7 +782,7 @@ class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
             suffix = ""
             if disabled:
                 suffix = (
-                    " disabled=" f"{McpDevPayloadProjection.text(disabled.get('code'))}"
+                    f" disabled={McpDevPayloadProjection.text(disabled.get('code'))}"
                 )
             lines.append(
                 "- "
@@ -1250,19 +1250,12 @@ class CodeDocumentRenderer(McpDevOutputRenderer):
         source = payload.get("source")
         if include_source and isinstance(source, str):
             lines.append("Source:")
-            lines.append(cls._source_text(source, max_source_chars=max_source_chars))
+            lines.append(
+                CodeDocumentRenderOptions(
+                    max_source_chars=max_source_chars
+                ).source_text(source)
+            )
         return "\n".join(lines)
-
-    @staticmethod
-    def _source_text(source: str, *, max_source_chars: int) -> str:
-        if max_source_chars < 0:
-            raise ValueError("max_source_chars must be nonnegative.")
-        if len(source) <= max_source_chars:
-            return source
-        return (
-            source[:max_source_chars]
-            + f"\n...<truncated {len(source) - max_source_chars} chars>"
-        )
 
 
 class CodeDocumentValidationRenderer(McpDevOutputRenderer):

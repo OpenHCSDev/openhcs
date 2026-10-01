@@ -6,7 +6,7 @@ from abc import abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import wraps
-from typing import Self
+from typing import Self, TypeAlias
 
 from python_introspect import validate_annotated_dataclass
 from zmqruntime.config import (
@@ -308,6 +308,9 @@ class ExecutionJobStatus(ExecutionJobIdentity, AgentResultEnvelope):
 
         lifecycle_status = ExecutionStatus.from_wire(self.status)
         return lifecycle_status is not None and lifecycle_status.is_terminal
+
+
+ExecutionSubmissionResult: TypeAlias = ExecutionJobRef | ExecutionJobStatus
 
 
 @dataclass(frozen=True, slots=True)

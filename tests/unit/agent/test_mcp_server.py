@@ -4668,6 +4668,13 @@ def test_mcp_dev_client_authoring_context_renders_bounded_content():
     assert "...<truncated 8 chars>" in rendered
 
 
+def _dev_client_server_fixture():
+    from openhcs.mcp.dev_client_core import McpDevServerIdentity, McpDevServerSpec
+    from openhcs.serialization.json import to_jsonable
+
+    return to_jsonable(McpDevServerIdentity.from_spec(McpDevServerSpec(sys.executable)))
+
+
 def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
     if importlib.util.find_spec("mcp") is None:
         return
@@ -4690,6 +4697,7 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4707,7 +4715,9 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "pipeline_id": "pipeline-1",
+                        "pipeline_config_id": "config-1",
                         "steps": [
                             {
                                 "step_id": "step-1",
@@ -4722,7 +4732,6 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                                 ],
                             }
                         ],
-                        "errors": [],
                     }
                 ],
             },
@@ -4731,7 +4740,12 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "valid": True,
+                        "pipeline_ref": {
+                            "pipeline_id": "pipeline-1",
+                            "uri": "openhcs://pipelines/pipeline-1",
+                        },
                         "warnings": [{"code": "note", "message": "Pipeline is small."}],
                         "errors": [],
                     }
@@ -4742,9 +4756,9 @@ def test_mcp_dev_client_draft_pipeline_step_command_renders_composite_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "title": "Pipeline",
                         "source": "pipeline_steps = [\\n    FunctionStep(...)\\n]\\n",
-                        "errors": [],
                     }
                 ],
             },
@@ -4783,6 +4797,7 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4800,7 +4815,9 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "pipeline_id": "pipeline-1",
+                        "pipeline_config_id": "config-1",
                         "steps": [
                             {
                                 "step_id": "step-1",
@@ -4816,7 +4833,6 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                                 ],
                             }
                         ],
-                        "errors": [],
                     }
                 ],
             },
@@ -4825,7 +4841,12 @@ def test_mcp_dev_client_draft_pipeline_step_suggests_missing_kwargs_repair():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "valid": False,
+                        "pipeline_ref": {
+                            "pipeline_id": "pipeline-1",
+                            "uri": "openhcs://pipelines/pipeline-1",
+                        },
                         "warnings": [],
                         "errors": [
                             {
@@ -4918,6 +4939,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -4925,6 +4947,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "plate_path": "/tmp/example-plate",
                         "axes": ["A01"],
                         "axis_count": 1,
@@ -4938,6 +4961,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                             "files": [
                                 {
                                     "virtual_path": "A01_s001_w1_z001_t001.tif",
+                                    "full_virtual_path": "/virtual/A01_s001_w1_z001_t001.tif",
                                     "source_path": "/tmp/source/A01_w1.tif",
                                     "source_metadata": {
                                         "well": "A01",
@@ -4952,6 +4976,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                                 "step_index": 0,
                                 "step_name": "Count cells",
                                 "axis_id": "A01",
+                                "output_dir": None,
                                 "execution_groups": [None],
                                 "artifact_inputs": [
                                     {
@@ -4985,7 +5010,7 @@ def test_mcp_dev_client_artifact_plan_command_renders_compact_summary():
                                             "paths": [
                                                 {
                                                     "group_key": None,
-                                                    "base_path": (
+                                                    "shared_output_stem": (
                                                         "/tmp/example-plate_openhcs/"
                                                         "images_results/"
                                                         "A01_cell_counts_step0.roi.zip"
@@ -5073,6 +5098,7 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
         )
     )
     response = {
+        "server": _dev_client_server_fixture(),
         "errors": [],
         "results": [
             {
@@ -5080,6 +5106,7 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": "openhcs.agent.v1",
                         "plate_path": "/tmp/example-plate",
                         "axes": ["A01"],
                         "axis_count": 1,
@@ -5167,7 +5194,7 @@ def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):
                         "uri": "openhcs://execution/sessions/session-1",
                     },
                 ),
-            )
+            ).decoded_for_rendering()
         return dev_client.McpDevToolResult(
             tool=call.name,
             mcp_error=False,
@@ -5176,13 +5203,14 @@ def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):
                     "schema_version": "openhcs.agent.v1",
                     "session_id": "session-1",
                     "job_id": "job-1",
+                    "uri": "openhcs://execution/jobs/job-1",
                     "kind": "execute",
                     "status": "complete",
                     "server_execution_id": "exec-1",
                     "response": {"status": "complete", "completed": True},
                 },
             ),
-        )
+        ).decoded_for_rendering()
 
     monkeypatch.setattr(knowledge_pipeline, "call_mcp_tool", fake_call_tool)
 
