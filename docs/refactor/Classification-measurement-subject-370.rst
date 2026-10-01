@@ -46,12 +46,16 @@ Pattern review
 --------------
 
 Current NRA/refactor-audit skills and the current NRA skill archive were read.
-Applicable implementation, membership and boundary patterns were reviewed:
-IMPL-4/12/13 (one shared algorithm, behavior-owning inherited capability,
-cooperative independent MI), MEMB-1/2 (original declarations/registry remain
-the authority), and BOUND-2 (typed subject identity, not ordinary dependency
-provenance). The old algorithm is deleted from the input-policy owner in place;
-there is no parallel implementation or compatibility forwarder.
+Applicable implementation, membership, identity and boundary patterns were
+reviewed explicitly: IMPL-1/3 reject consumer string/type dispatch; IMPL-4
+rejects a half-finished family repaired only for one leaf; IMPL-12/13 reject
+copied procedures and a second mechanism with different rigor. MEMB-1/2 reject
+rosters restating the original declaration family or capability; BOUND-2
+rejects bypassing the existing typed relation owner. IDEN-1 keeps dependency
+provenance, measured object identity and row-recording policy as distinct
+facts. The old algorithm is deleted from the input-policy owner in place;
+there is no parallel implementation or compatibility forwarder. Real
+independent MI and cooperative super() extend the original owning ancestor.
 
 A new ObjectSubjectCapabilityProbe declaration uses only its own module /
 callable names and the existing capabilities. The original CellProfilerModule
@@ -74,5 +78,24 @@ All checks use CPU0, one-thread pools, a 512MiB combined RSS / 60s supervisor,
 the readonly parent dependency interpreter and explicit own source. A
 source-only subprocess guard rejects native child launches. No native,
 scientific, GUI/MCP, provider, installation or heavyweight gate was run.
-Broader source declaration regression and pinned R0 qualification follow;
-actual installed acceptance remains parent-owned and is not claimed here.
+Final reviewed source checkpoint:
+``a5a0972e481d9e5062aef8e9126806c356f25551``. The complete declaration,
+provider and new subject suites pass together: 76 passed, 7.85s,
+383.39MiB combined RSS, no deselection. This includes original object/image
+measurement relations, producer selection and source-provenance negatives.
+Pinned original R0 against main bcf5fa55 passes in 15.07s / 85.25MiB:
+5161 measured entries, increased=[] and decreased=[]. The tool is the
+readonly ``comms-ratchet-pinned-ui348-20261001/src`` with actual Python3.14
+and readonly metaclass backing, not a copied detector. Ruff F checks on
+touched production/tests and I checks on the new test, plus diff-check, pass.
+
+No generic consumers or original tests changed. Subsequent handoff/evidence
+commits change documentation only. Exact commands and full output, including
+the original red and initial fixture red, are archived with this document.
+This qualifies the real source declaration -> contract -> generic compile
+boundary, not installed classification execution or numerical correctness.
+Parent-installed acceptance remains the only remaining acceptance boundary.
+
+Tracked archive:
+``docs/refactor/receipts/classification-measurement-subject-370-source-20261001.tar.gz``
+SHA256: ``95aaa8e25c2f35cee817a3391f194733c39d66a74903e19c3f4440304c297c01``.
