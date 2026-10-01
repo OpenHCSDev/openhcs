@@ -21,7 +21,10 @@ from openhcs.core.config import (
     LazyWellFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.function_reference import RegistryFunctionReference
+from openhcs.core.function_reference import (
+    FunctionReferenceTransportAuthority,
+    RegistryFunctionReference,
+)
 from openhcs.core.function_step_document import FunctionStepDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
@@ -29,6 +32,7 @@ from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
+from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
@@ -36,6 +40,24 @@ from openhcs.processing.materialization import (
     TerminalMaterializationSpec,
     WriteMode,
 )
+
+
+@pytest.fixture(autouse=True)
+def selected_declaration_catalog(monkeypatch):
+    """Use existing declaration metadata, not a native catalog preparation."""
+    metadata = (
+        RegistryService.declared_metadata_for_callable(func)
+        for func in (count_cells_simple, measure_colocalization_objects, measure_object_size_shape)
+    )
+    monkeypatch.setattr(RegistryService, "_metadata_cache", dict(metadata))
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("formatter source tests must not launch subprocesses")
+
+    import subprocess
+
+    monkeypatch.setattr(subprocess.Popen, "__init__", forbidden)
+
 
 def configurable_test_function(image, threshold: int = 3, enabled: bool = True):
     return image
@@ -95,8 +117,9 @@ def test_function_reference_formats_from_declared_identity_without_resolution(
 
     source = _source(reference)
 
-    assert "from remote_backend.filters import gpu_filter" in source
-    assert "config = gpu_filter" in source
+    assert "from openhcs.processing.func_registry import get_function" in source
+    assert "config = get_function('remote_gpu:gpu_filter')" in source
+    assert "remote_backend.filters" not in source
 
 
 def test_clean_pipeline_config_omits_empty_inherited_lazy_config_groups():
@@ -156,7 +179,8 @@ def test_clean_function_step_omits_objectstate_reconstructed_empty_lazy_configs(
         clean_mode=True,
     )
 
-    assert "func=count_cells_simple" in source
+    reference = FunctionReferenceTransportAuthority.function_reference(count_cells_simple)
+    assert f"func={reference.source_literal()}" in source
     assert "name='count_cells'" in source
     assert "dtype_config=" not in source
     assert "processing_config=" not in source
