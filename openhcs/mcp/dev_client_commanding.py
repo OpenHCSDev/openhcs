@@ -295,6 +295,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
             self.call_render_args(tool_arguments),
         )
 
+    def render_call_result(
+        self, response, tool_arguments: Mapping[str, JsonValue]
+    ) -> str:
+        """Generic calls use the same nominal command contract as named calls."""
+        return self.render_result(response, self.call_render_args(tool_arguments))
+
     def renderer_options(
         self,
         args: argparse.Namespace,

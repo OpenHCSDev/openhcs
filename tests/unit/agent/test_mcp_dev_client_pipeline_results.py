@@ -599,3 +599,58 @@ def test_actual_cli_main_renders_without_runtime(monkeypatch, capsys, json_outpu
         assert json.loads(printed) == to_jsonable(response)
     else:
         assert "Owned step" in printed and "new_component" in printed
+
+
+def test_generic_call_cli_uses_nominal_typed_contract_without_json_roundtrip(
+    monkeypatch, capsys
+):
+    import openhcs.serialization.json as serialization
+
+    response = batch(
+        agent_capabilities.inspect_pipeline_source_artifact_plan, plan_fixture()
+    )
+
+    async def controlled_entry(args):
+        return response
+
+    def forbidden_serialization(value):
+        raise AssertionError("Compact migrated call must consume the typed result")
+
+    monkeypatch.setattr(dev_client, "_run_async", controlled_entry)
+    monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
+    assert (
+        dev_client.main(
+            ["call", agent_capabilities.inspect_pipeline_source_artifact_plan.name]
+        )
+        == 0
+    )
+    assert "Owned step" in capsys.readouterr().out
+
+
+def test_generic_call_preserves_pending_workflow_action_presentation(
+    monkeypatch, capsys
+):
+    response = batch(
+        agent_capabilities.ui_selected_plate_workflow,
+        {
+            "action_result": {"status": "accepted", "target_scope_ids": ["scope-1"]},
+        },
+    )
+
+    async def controlled_entry(args):
+        return response
+
+    monkeypatch.setattr(dev_client, "_run_async", controlled_entry)
+    assert (
+        dev_client.main(
+            [
+                "call",
+                agent_capabilities.ui_selected_plate_workflow.name,
+                "--arguments",
+                '{"workflow":"run_plate"}',
+            ]
+        )
+        == 0
+    )
+    rendered = capsys.readouterr().out
+    assert "run_plate" in rendered and "accepted" in rendered and "scope-1" in rendered

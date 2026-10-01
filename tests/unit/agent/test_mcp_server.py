@@ -12167,6 +12167,17 @@ def test_mcp_dev_client_selected_workflow_poll_renders_compact_summary():
     )
     assert '- plate-a_openhcs: state=created, status="", terminal=<none>' in rendered
 
+    # The production entrypoint now retains a batch. The pending workflow's
+    # distinct composite view must not be replaced by its primary tool view.
+    from python_introspect import dataclass_from_mapping
+    from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+
+    response["server"] = _dev_client_server_fixture()
+    framed = dataclass_from_mapping(McpDevToolBatchResponse, response)
+    assert dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(
+        framed, args
+    ) == rendered
+
 
 def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     monkeypatch,
