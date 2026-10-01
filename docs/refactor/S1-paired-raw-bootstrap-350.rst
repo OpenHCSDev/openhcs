@@ -59,6 +59,15 @@ bounds remain incomplete. Parent coordinates a distinct exact live slot later.
 Status
 ------
 
+Parent installed checkpoint on2026-10-01: see
+``S1-paired-raw-installed-350.rst`` and its complete receipt archives.
+Both native channels match identity outputs pixel-for-pixel; calibrated
+explicit DAPI/FITC GrayToColor also matches every RGB scalar and aligned
+personally opened raw/result/combined views. New source-case R1 remains
+incomplete at its165second limit, recorded under issue357; no global audit
+or biological acceptance is inferred. Earlier source receipts below remain
+historical evidence, not the current installed-boundary status.
+
 Deleted the complete20-line leaf projection method from main; both projection
 operations now belong to ViewerComponentAxisSemantics, inherited without leaf
 facades by NapariAxisPresentation, NapariPendingLayerUpdate and the existing MI
