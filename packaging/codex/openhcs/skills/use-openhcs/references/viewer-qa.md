@@ -23,6 +23,16 @@ different plates disagree, stream raw from the result's declared source and
 recheck. Reject black, wrong-channel, stale or misplaced captures; an invisible
 overlay is not evidence that the detector found nothing.
 
+When channels share an image layer, its contrast limits can remain unchanged
+when the channel axis changes. After switching channels or restoring a view,
+read back the physical source/component, visible route and applied numeric
+limits/gamma; explicitly apply the review window appropriate to that channel.
+A correct channel label with another channel's window can hide the structures
+being analysed. Do not infer the current presentation from the last request.
+If remote-desktop compression is suspected, open a native MCP PNG capture at
+the same viewport before attributing absent paths to the transport. Distinguish
+hidden raw signal from paths actually missing in a saved processing stage.
+
 For feature-bearing 3-D point results, check the persisted point coordinates
 against the viewer's native point geometry, declared Z domain, and selected
 feature row. Select a point by its data index through MCP and verify that the
