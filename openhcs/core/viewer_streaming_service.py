@@ -30,6 +30,8 @@ from zmqruntime.config import ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireMapping
 
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.runtime_image_values import (
@@ -92,6 +94,17 @@ class ImageStreamingRequest(ViewerStreamingContext):
     read_backend: str
     source_projection: VirtualWorkspaceSourceProjection | None = None
     producer: ViewerStreamProducer | None = None
+
+    def image_plane_projection(self, image) -> RuntimePlaneAxisValueProjection | None:
+        """Select only a leading axis proven singleton by its source declaration."""
+        return image_payload_metadata(image).singleton_plane_projection()
+
+    def project_image(self, image):
+        """Use the original projection owner for display pixels, masks and lineage."""
+        projection = self.image_plane_projection(image)
+        if projection is None:
+            return image
+        return RuntimeSliceProjection.value_for_slice(image, projection)
 
     def require_image_window(
         self,
@@ -698,7 +711,7 @@ class StreamingService:
                 request.require_image_window(
                     self.source, filename, image_data, source_projection
                 )
-                image_data_list.append(image_data)
+                image_data_list.append(request.project_image(image_data))
                 file_paths.append(filename)
 
             logger.info(
