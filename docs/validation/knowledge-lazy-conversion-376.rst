@@ -56,6 +56,10 @@ Resource helper reports RAM20.0GiB, home7.6GiB and swap10.7GiB: no parallel flee
 or large tests; only serial bounded source checks and small durable receipts.
 Owned scratch: /home/ts/.cache/agent-scratch/knowledge-lazy-conversion-376-20261001,
 for isolated cache/pytest fixtures and archive extraction verification only.
+Cleanup completed after every bounded source worker exited and fresh archive
+extraction matched: removed only that80KiB scratch directory and36KiB loose
+unversioned raw evidence copies. The byte-exact archived logs remain retained;
+parent evidence, source/worktrees, installed files and shared caches are intact.
 No complete global NRA/R1 claim.
 
 Done when the original selected request has focused behavioral evidence,
