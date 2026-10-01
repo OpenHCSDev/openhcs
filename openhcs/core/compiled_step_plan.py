@@ -234,7 +234,9 @@ class RuntimeArtifactMaterializationPlan:
 
     def persists_to_backend(self, backend: str) -> bool:
         """Own admission of a storage target to persistent artifact publication."""
-        return self.has_persistent_target and self.require_persistent_backend() == backend
+        return (
+            self.has_persistent_target and self.require_persistent_backend() == backend
+        )
 
     def require_persistent_backend(self) -> str:
         if self.persistent_backend is None:
@@ -312,6 +314,14 @@ class CompiledStepPlan:
     create_openhcs_metadata: bool = False
     chainbreaker: bool = False
     error: str | None = None
+
+    @property
+    def requires_terminal_source_projection(self) -> bool:
+        """Require an exact source anchor when declared bindings have no predecessor."""
+        return (
+            bool(self.source_binding_plan.binding_declarations)
+            and self.main_input_dependency.predecessor_step_index() is None
+        )
 
     def require_function_execution_ready(self) -> "CompiledStepPlan":
         """Validate the compiler-owned fields required by FunctionStep runtime."""

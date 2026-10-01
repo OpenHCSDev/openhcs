@@ -1451,11 +1451,7 @@ class PipelineCompiler:
                         source_binding_plan is None
                         or not source_binding_plan.primary_plane_bindings
                     ):
-                        if (
-                            plan.source_binding_plan.binding_declarations
-                            and plan.main_input_dependency.predecessor_step_index()
-                            is None
-                        ):
+                        if plan.requires_terminal_source_projection:
                             failures.append(
                                 f"{owner}: no exact primary source-binding "
                                 "projection represents this callable's main flow."
@@ -1615,10 +1611,7 @@ class PipelineCompiler:
                 and current_source_binding_plan.primary_plane_bindings
             ):
                 return producer, current_source_binding_plan
-            if (
-                producer.source_binding_plan.binding_declarations
-                and producer.main_input_dependency.predecessor_step_index() is None
-            ):
+            if producer.requires_terminal_source_projection:
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} has no "
                     f"exact primary source-binding projection at producer step "
