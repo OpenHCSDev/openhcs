@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import ClassVar, TypeAlias
+from typing import ClassVar, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
@@ -20,6 +20,7 @@ from openhcs.agent.capabilities import (
 from openhcs.agent.dto.common import AgentError, JsonObject, JsonValue
 
 DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
+PresentationValue = TypeVar("PresentationValue")
 
 
 class WidgetTreeOutputFormat(str, Enum):
@@ -285,7 +286,10 @@ class McpDevTypedOutputRenderer(McpDevOutputRenderer):
     """Shared contract descent for typed presentation members, never raw readers."""
 
     @staticmethod
-    def optional_lines(value, render_lines):
+    def optional_lines(
+        value: PresentationValue | None,
+        render_lines: Callable[[PresentationValue], Sequence[str]],
+    ) -> Sequence[str]:
         """Compose a nullable declared fact without repeating omission policy.
 
         None is the native absence fact; false, zero and empty strings remain

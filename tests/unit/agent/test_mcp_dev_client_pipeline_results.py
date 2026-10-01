@@ -420,6 +420,8 @@ def test_not_run_missing_transport_and_mcp_errors_are_distinct():
 
 
 def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
+    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
+
     @dataclass(frozen=True, slots=True, kw_only=True)
     class ExtendedInspection(ArtifactPlanInspection):
         extension_fact: str = "retained"
@@ -435,6 +437,32 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
     assert "plate=extended" in binding.renderer_type.render_payload_value(
         value, binding.renderer_type.render_options_type()
     )
+
+    # One capability declaration selects the new output at real wire ingress;
+    # presentation inherits the existing owner, without adding a roster entry.
+    class ExtensionCapability(InspectPipelineSourceArtifactPlanCapability):
+        name = "openhcs_s1_extension_inspection"
+        cli_command = "s1-extension-inspection"
+        output_contract = ExtendedInspection
+
+    response = batch(ExtensionCapability.to_spec(), value)
+    assert type(response.results[0].first_decoded_payload()) is ExtendedInspection
+    assert "plate=extended" in PipelineArtifactPlanRenderer.render(response)
+
+
+@pytest.mark.parametrize("value", [None, False, 0, ""])
+def test_shared_optional_presentation_preserves_native_absence(value):
+    from openhcs.mcp.dev_client_rendering import McpDevTypedOutputRenderer
+
+    observed = []
+
+    def present(fact):
+        observed.append(fact)
+        return (str(fact),)
+
+    lines = McpDevTypedOutputRenderer.optional_lines(value, present)
+    assert lines == (() if value is None else (str(value),))
+    assert observed == ([] if value is None else [value])
 
 
 def test_cooperative_diamond_renderer_identity_is_visited_once():
