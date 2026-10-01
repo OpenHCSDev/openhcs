@@ -26,7 +26,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.process_local_cache import ProcessLocalBoundedCache
+from openhcs.core.process_local_cache import BoundedCache
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
@@ -812,7 +812,7 @@ class RuntimeArtifactAddress:
         return dict(payload)
 
 
-StoreQueryCacheT = TypeVar("StoreQueryCacheT", bound=ProcessLocalBoundedCache[Any, Any])
+StoreQueryCacheT = TypeVar("StoreQueryCacheT", bound=BoundedCache[Any, Any])
 
 
 class RuntimeValueStore:
@@ -827,8 +827,8 @@ class RuntimeValueStore:
         self._current_location_by_key: dict[ArtifactKey, RuntimeArtifactLocation] = {}
         self._revision = 0
         self._query_caches: dict[
-            type[ProcessLocalBoundedCache[Any, Any]],
-            ProcessLocalBoundedCache[Any, Any],
+            type[BoundedCache[Any, Any]],
+            BoundedCache[Any, Any],
         ] = {}
         self._find_cache: dict[
             tuple[

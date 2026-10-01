@@ -38,7 +38,7 @@ from openhcs.core.measurement_lookup_dialect import (
     resolve_runtime_measurement_lookup_dialect,
 )
 from openhcs.core.process_local_cache import (
-    ProcessLocalBoundedCache,
+    BoundedCache,
     RegisteredProcessLocalBoundedCache,
     identity_owner_tuples_match,
     named_identity_owner_tuples_match,
@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 
 
 class RuntimeMeasurementTablesQueryCache(
-    ProcessLocalBoundedCache[
+    BoundedCache[
         tuple[str, str | None],
         tuple[MeasurementTable, ...],
     ]

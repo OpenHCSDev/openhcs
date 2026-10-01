@@ -1,4 +1,4 @@
-"""Small process-local cache substrates for immutable runtime projections."""
+"""Shared bounded values and process-local cache lifetime policies."""
 
 from __future__ import annotations
 
@@ -40,8 +40,8 @@ def named_identity_owner_tuples_match(
 
 
 @dataclass(slots=True)
-class ProcessLocalBoundedCache(Generic[CacheKey, CachedValue]):
-    """Bounded LRU cache with one singleton instance per concrete subclass."""
+class BoundedCache(Generic[CacheKey, CachedValue]):
+    """Bounded LRU values with lifetime supplied by their owning consumer."""
 
     max_entries: int = 4096
     entries: OrderedDict[CacheKey, CachedValue] = field(default_factory=OrderedDict)
@@ -61,8 +61,13 @@ class ProcessLocalBoundedCache(Generic[CacheKey, CachedValue]):
         return value
 
     def clear(self) -> None:
-        """Discard all values retained by this process-local cache instance."""
+        """Discard all values retained by this cache instance."""
         self.entries.clear()
+
+
+@dataclass(slots=True)
+class ProcessLocalBoundedCache(BoundedCache[CacheKey, CachedValue]):
+    """Bounded values with one process-local singleton per concrete subclass."""
 
     @classmethod
     def process_cache(cls) -> "ProcessLocalBoundedCache[CacheKey, CachedValue]":

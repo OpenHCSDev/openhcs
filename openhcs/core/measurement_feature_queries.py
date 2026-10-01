@@ -31,7 +31,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.process_local_cache import (
     IdentityBoundProcessCache,
-    ProcessLocalBoundedCache,
+    BoundedCache,
     RegisteredProcessLocalBoundedCache,
     identity_owner_tuples_match,
 )
@@ -153,7 +153,7 @@ class RuntimeObjectLabelMeasurementQuery(RuntimeObjectSliceMeasurementQuery):
 
 
 class RuntimeObjectLabelMeasurementQueryCache(
-    ProcessLocalBoundedCache[
+    BoundedCache[
         RuntimeObjectLabelMeasurementQuery,
         tuple[np.ndarray, ...],
     ]
