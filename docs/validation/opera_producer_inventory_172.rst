@@ -228,7 +228,8 @@ Opera generation -> complete empty-step initialization -> sample -> persisted
 reopen -> combined inventory journey. Require one R01C01 semantic well and
 coherent site/channel/Z/time membership and exact source refs. Keep issue 172
 open until that producer acceptance; this source owner takes no science/native
-slot. No live-readiness or biological/calibration correctness claim is made.
+slot. No live-readiness or general biological/calibration correctness claim is
+made; issue 335's source equivalence is qualified separately below.
 Unrelated existing HTD/grid layout branches are unchanged. The independent
 native pixel-size default is removed by the issue 335 addition below.
 
@@ -286,3 +287,55 @@ Both issues remain open for parent-owned new-candidate installation, raw/native
 initialize/inspect/sample/reopen and combined-inventory acceptance after Hubble's
 scientific slot. Original failures, fixtures and frozen H001d installation are
 unchanged. PR 333 owns this addition too; no untracked follow-up branch.
+
+Final calibrated checkpoint and publication boundary
+----------------------------------------------------
+
+Production calibration qualified at ba41c37e2be5d6e47b59defc334f41dad1b53f0f;
+test-only missing-acquisition control added at 67dbefb3c. Twenty-five combined
+source-contract methods pass (this task's fourteen plus PR 329's eleven),
+5.14 s/94.28 MiB. The additional control removes only its newly generated
+disposable XML and proves the existing FileNotFoundError propagates without
+publishing invented/default physical calibration. All original/frozen fixtures
+are unchanged. Existing 34-method regression shard also passes after calibration,
+8.59 s/385.64 MiB. No resource limit is hit.
+
+Original unchanged calibrated R0 openhcs guard passes against main 2cbfc4a0:
+22.20 s/85.63 MiB, exit 0, only GodClassExcess -131; every other delta zero.
+Scripts/benchmark trees are byte-identical to the previously guarded merged
+checkpoint, so their retained guard inputs/results are unchanged. Calibrated
+current-archive census: zero unparsed; string equality -6, optional None checks
++7, long function -1, code lines -40; all other measures zero delta. Additional
+AST witnesses enforce calls to source_voxel_spacing, require_physical_pixel_size
+and merge_into and deletion of the independent pixel_size parameter. Original
+R1 remains unresolved before global analysis; no full NRA/R1 certification or
+exception is claimed for this calibrated version.
+
+Final changed paths: synthetic_data.py; parser_metaprogramming.py; existing
+imagexpress.py/opera_phenix.py filename leaves; the one fixture_utils.py caller;
+test_synthetic_acquisition_identity.py; this RST and its evidence archive.
+No new production nominal class, copied semantic procedure or authority mirror.
+The original reciprocal-order cooperative MI controls remain and pass after
+the calibration extension through the real acquisition metadata owner.
+
+Owned disposable worktrees tracked for terminal cleanup:
+/home/ts/wt/openhcs-opera-producer-inventory-172-base-proof-20261001,
+/home/ts/wt/openhcs-opera-producer-inventory-172-audit-tool-20261001,
+/home/ts/wt/openhcs-opera-producer-inventory-172-nra-tool-20261001.
+Their sources/status are clean; these contain no initialized child repositories.
+The new implementation worktree/branch remains persistent for parent integration.
+
+Terminal archive verification and cleanup
+-----------------------------------------
+
+Final archive size 1,157,171 bytes; SHA256
+326541e4ccb3a4b5378ad4322614c4d9bdc03448bba9575535548f02285aaa7b.
+Fresh extraction to owned persistent
+/home/ts/.cache/agent-scratch/opera-producer-inventory-172-archive-check-eFy3aneS
+and recursive byte comparison against the original 8.2 MiB scratch PASS.
+All supervised commands are terminal, with no resource-limit termination.
+Removed only the three verified-clean detached proof/tool worktrees above,
+owned original scratch and its verified extraction directory. Evidence is
+recoverable from this committed archive; source from its recorded Git objects.
+The implementation worktree/branch, parent worktrees, original fixtures,
+installed/frozen candidates and scientific slot are unchanged and retained.
