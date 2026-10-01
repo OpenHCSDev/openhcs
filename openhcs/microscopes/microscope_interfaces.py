@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Hashable, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import ClassVar, Dict, Mapping, Optional, TYPE_CHECKING, Tuple, Union
 from openhcs.constants.constants import Backend, AllComponents
 from openhcs.core.components.parser_metaprogramming import (
@@ -30,6 +31,7 @@ from polystore.streaming.viewer_transport import (
     ViewerMicroscopeHandlerABC,
 )
 from polystore.filemanager import FileManager
+from polystore.virtual_workspace import SourcePixelRef
 
 if TYPE_CHECKING:
     from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
@@ -374,6 +376,85 @@ class FilenameParser(
     def construct_filename(self, components: FilenameParseResult) -> str:
         """Construct a filename from one complete nominal component result."""
         pass
+
+
+class MicroscopeImagePathParser(ABC):
+    """Interpret acquisition paths using the microscope's existing filename owner.
+
+    Independent folder capabilities cooperate through ``image_path_components``;
+    consumers never need to know which acquisition layout supplies an axis.
+    """
+
+    parser: FilenameParser | None
+
+    def parse_filename(self, filename: str) -> FilenameParseResult | None:
+        """Delegate to the declared filename parser, when available."""
+        return None if self.parser is None else self.parser.parse_filename(filename)
+
+    def construct_filename(self, components: FilenameParseResult) -> str:
+        """Delegate nominal filename construction to the parser."""
+        return self.require_filename_parser(
+            "Filename construction requires a filename parser"
+        ).construct_filename(components)
+
+    def require_filename_parser(self, absence_message: str) -> FilenameParser:
+        """Require this owner's optional parser with the caller's operation context."""
+        if self.parser is None:
+            raise ValueError(absence_message)
+        return self.parser
+
+    @property
+    def image_path_parser(self) -> MicroscopeImagePathParser | None:
+        """Expose the actual path owner only when filename parsing is available."""
+        return None if self.parser is None else self
+
+    def parse_image_path(self, relative_path: str) -> FilenameParseResult | None:
+        """Decode once, then compose nominal coordinates from the relative path."""
+        path = Path(relative_path)
+        parsed = self.parse_filename(path.name)
+        return (
+            None
+            if parsed is None
+            else parsed.with_values(self.image_path_components(path))
+        )
+
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        """Identity terminus for cooperative acquisition-coordinate capabilities."""
+        return ()
+
+    @staticmethod
+    def indexed_folder_components(
+        path: Path,
+        component: AllComponents,
+        pattern: re.Pattern[str],
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        """Project a declared folder grammar onto an existing nominal component."""
+        return tuple(
+            (component, int(match.group(1)))
+            for part in path.parent.parts
+            if (match := pattern.search(part)) is not None
+        )
+
+    def acquisition_workspace_mapping(
+        self,
+        image_paths: Iterable[str],
+        *,
+        backend: str,
+    ) -> dict[str, SourcePixelRef]:
+        """Collect the same interpreted acquisition identities for initialization."""
+        mapping: dict[str, SourcePixelRef] = {}
+        for relative_path in image_paths:
+            parsed = self.parse_image_path(relative_path)
+            if parsed is None:
+                continue
+            virtual_path = self.construct_filename(parsed)
+            source_ref = SourcePixelRef(backend=backend, backend_address=relative_path)
+            if virtual_path in mapping and mapping[virtual_path] != source_ref:
+                raise ValueError(f"Acquisition paths collide at {virtual_path!r}")
+            mapping[virtual_path] = source_ref
+        return mapping
 
 
 class MetadataHandler(ViewerMetadataHandlerABC, ABC):

@@ -70,6 +70,43 @@ purpose bounded source census, compiler/test/guard logs and fresh unit fixtures.
 Archive receipts, then clean this exact disposable root and owned build binaries.
 Persistent worktrees remain. No scientific/held-out/reference files are accessed.
 
-Pending: implementation, focused source validation and unchanged original guards.
+Working checkpoint: ten production-path tests pass, 4.12s/230664 KiB RSS, one CPU.
+Fresh raw four-plane inspection, real file query, explicit native initialization
+and reinspection agree on axes and exact physical source paths. Original bytes
+remain unchanged; read-only inspection never creates workspace metadata. Flat,
+TimePoint-only, ZStep-only and nested paths retain filename/folder precedence.
+Bounded skipped/unparsed/duplicate-axis failure receipts remain observable.
+
+Actual new-case evidence: one SiteAcquisitionHandler declaration composes the new
+independent SiteFolders capability with ImageXpressHandler, both base orders.
+Existing AutoRegisterMeta selects it through the real factory. Unchanged inspector
+and file query retain site7/time3/Z1/2; the cooperative SiteFolders and PathTerminus
+each execute once per interpretation, and the shared ancestor occurs once in MRO.
+No consumer, registry, parser catalog or dispatch branch was added for the subtype.
+Test-only declarations are removed from the existing registry on test teardown.
+
+Deleted: all three _flatten_* procedures; basename-only inspector decode;
+inventory's filename-only delegate; separately supplied parser/metadata pairs in
+the image/file inventory API. Existing result-artifact filename interpretation is
+unchanged. MicroscopeHandler's filename delegates moved to its actual path ancestor
+and were deleted from the oversized class; that class shrinks, not grows.
+Shared path decode/composition, folder traversal and mapping collection are on
+MicroscopeImagePathParser; format grammar and nominal coordinate choice are small
+cooperative TimePoint/ZStep hooks. No second address store, DTO mirror or registry.
+
+Preserved persisted contracts: external ImageXpress filenames, folders and HTD
+metadata unchanged; existing OpenHCS workspace JSON schema unchanged. Initialized
+mapping derives the same canonical identity from the same path owner. Ambiguous
+physical paths now fail explicitly rather than silently overwriting a source ref.
+No migration, installed package or runtime change.
+
+Original failing reproducer and every attempted test log/XML are retained.
+First added 512MiB address-space cap failed in pytest collection (193220 KiB RSS):
+mapped-library virtual memory is not resident memory. Subsequent identical-input
+measured run remains below 512MiB resident memory; original failure is not erased.
+Two subsequent test-fixture mistakes (enum order and DTO field names) are corrected;
+their original failures remain archived. No existing assertion was weakened.
+
+Pending: existing family regression shards and unchanged original guards.
 Parent owns final installed public generate-inspect-initialize-reinspect journey
 before merge. Neither source checks nor incomplete NRA evidence establish that.
