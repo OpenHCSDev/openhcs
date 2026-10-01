@@ -52,6 +52,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
     UiSelectedPlateWorkflowResult,
+    UiStateSurfaceDocument,
     UiStateSurfaceRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -417,34 +418,31 @@ class McpDevToolResult:
     payloads: tuple[object, ...]
 
     def decoded_for_rendering(self) -> "McpDevToolResult":
-        """Descend through the capability's existing renderer/output binding."""
-        from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
-
+        """Decode declared producer contracts once, independent of presentation."""
         try:
             capability = get_agent_capability(self.tool)
         except KeyError:
             return self
-        bindings = tuple(
-            McpDevOutputRenderer.for_output_contract(contract)
-            for contract in capability.output_contract_types
-        )
-        if not bindings or any(binding is None for binding in bindings):
+        contracts = capability.output_contract_types
+        if not contracts:
             return self
         return replace(
             self,
             payloads=tuple(
-                self._decode_payload(payload, bindings) for payload in self.payloads
+                self._decode_payload(payload, contracts) for payload in self.payloads
             ),
         )
 
     @staticmethod
-    def _decode_payload(payload, bindings):
+    def _decode_payload(payload, contracts):
         if isinstance(payload, McpDevPayloadFailure):
             return payload
         rejections: list[AgentError] = []
-        for binding in bindings:
+        for contract in contracts:
             try:
-                return binding.decode_payload(payload)
+                if isinstance(payload, contract):
+                    return payload
+                return dataclass_from_mapping(contract, payload)
             except (TypeError, ValueError) as error:
                 rejections.append(
                     AgentError.from_exception("mcp_payload_invalid", error)
@@ -695,7 +693,7 @@ class WorkflowPollBaseline:
             return None
         return cls(
             revision_token=optional_str(
-                first_payload_mapping(result).get("current_revision_token")
+                state_surface_document(result).current_revision_token
             )
             or optional_str(state_payload.get("current_revision_token")),
             object_state_token=optional_int(state_payload.get("object_state_token")),
@@ -706,7 +704,7 @@ class WorkflowPollBaseline:
         if not state_payload:
             return False
         revision_token = optional_str(
-            first_payload_mapping(result).get("current_revision_token")
+            state_surface_document(result).current_revision_token
         ) or optional_str(state_payload.get("current_revision_token"))
         object_state_token = optional_int(state_payload.get("object_state_token"))
         return (
@@ -2403,15 +2401,11 @@ def workflow_result_target_scope_ids(result: McpDevToolResult) -> tuple[str, ...
 def ui_bridge_operation_result(
     result: McpDevToolResult,
 ) -> UiBridgeOperationRef | None:
-    """Decode a bridge-operation receipt through its declared result schema."""
-
-    try:
-        return dataclass_from_mapping(
-            UiBridgeOperationRef,
-            first_payload_mapping(result),
-        )
-    except (TypeError, ValueError):
-        return None
+    """Consume the bridge-operation contract already decoded at ingress."""
+    return cast(
+        UiBridgeOperationRef | None,
+        result.decoded_for_rendering().first_decoded_payload(),
+    )
 
 
 def workflow_operation_receipt_skip_reason(
@@ -2433,27 +2427,17 @@ def workflow_operation_receipt_skip_reason(
     )
 
 
-def first_payload_mapping(result: McpDevToolResult) -> Mapping[str, JsonValue]:
-    if not result.payloads:
-        return {}
-    payload = result.payloads[0]
-    if not isinstance(payload, Mapping):
-        return {}
-    return payload
-
-
-def nested_mapping(
-    payload: Mapping[str, JsonValue],
-    key: str,
-) -> Mapping[str, JsonValue]:
-    value = payload.get(key)
-    if not isinstance(value, Mapping):
-        return {}
-    return value
+def state_surface_document(result: McpDevToolResult) -> UiStateSurfaceDocument | None:
+    """Retain the declared envelope; only its dynamic document body is JSON."""
+    return cast(
+        UiStateSurfaceDocument | None,
+        result.decoded_for_rendering().first_decoded_payload(),
+    )
 
 
 def state_surface_payload(result: McpDevToolResult) -> Mapping[str, JsonValue]:
-    return nested_mapping(first_payload_mapping(result), "payload")
+    document = state_surface_document(result)
+    return {} if document is None else document.payload
 
 
 def state_surface_rows(result: McpDevToolResult) -> tuple[WorkflowPollRowState, ...]:
