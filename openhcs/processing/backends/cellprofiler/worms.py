@@ -125,6 +125,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     CurrentPayloadMeasurementRecordMixin,
@@ -252,7 +253,7 @@ class BothOverlapWormLabelOutputStrategy(WormLabelOutputStrategy):
 class UntangleWormsModule(
     CurrentPayloadMeasurementRecordMixin,
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
 ):
     module_name = "UntangleWorms"
     function_name = "untangle_worms"
@@ -704,7 +705,7 @@ class FlipMode(Enum):
 class StraightenWormsModule(
     StraightenWormsSpecialInputPolicy,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     MeasurementArtifactOutputModule,
 ):
     module_name = "StraightenWorms"

@@ -60,7 +60,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     PlaneRuntimeArtifactModule,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -85,9 +85,6 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-        CellProfilerObjectLocationMeasurementRows,
-    )
     from openhcs.core.artifacts import ArtifactSpec
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -592,24 +589,13 @@ class IdentifyObjectsInGridModule(
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     CellProfilerModule,
 ):
     module_name = "IdentifyObjectsInGrid"
     function_name = "identify_objects_in_grid"
     validated = True
     confidence = 1.0
-
-    @classmethod
-    def object_location_measurement_row_type(
-        cls,
-    ) -> type[CellProfilerObjectLocationMeasurementRows]:
-        """The native grid utility measures only actual label dimensions."""
-        from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-            LabelDimensionObjectLocationMeasurementRows,
-        )
-
-        return LabelDimensionObjectLocationMeasurementRows
 
     grid_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
         "Select the defined grid"

@@ -476,6 +476,20 @@ class ObjectArtifactOutputModule(
         return request.measurement_source_metadata(object_outputs)
 
 
+class LabelDimensionObjectArtifactOutputModule(ObjectArtifactOutputModule):
+    """Object producers using native identify utility location measurements."""
+
+    @classmethod
+    def object_location_measurement_row_type(
+        cls,
+    ) -> type[CellProfilerObjectLocationMeasurementRows]:
+        from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+            LabelDimensionObjectLocationMeasurementRows,
+        )
+
+        return LabelDimensionObjectLocationMeasurementRows
+
+
 class PriorMeasurementArtifactInputModule(CellProfilerModule):
     """Parent for modules that consume feature-addressed prior measurements."""
 
