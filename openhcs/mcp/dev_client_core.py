@@ -2375,15 +2375,11 @@ def workflow_result_operation_id(result: McpDevToolResult) -> str | None:
 def workflow_result_payload(
     result: McpDevToolResult,
 ) -> UiSelectedPlateWorkflowResult | None:
-    """Decode selected-workflow evidence through its declared result schema."""
-
-    try:
-        return dataclass_from_mapping(
-            UiSelectedPlateWorkflowResult,
-            first_payload_mapping(result),
-        )
-    except (TypeError, ValueError):
-        return None
+    """Consume the same nominal result already descended at wire ingress."""
+    return cast(
+        UiSelectedPlateWorkflowResult | None,
+        result.decoded_for_rendering().first_decoded_payload(),
+    )
 
 
 def workflow_poll_skip_reason(result: McpDevToolResult) -> WorkflowPollSkipReason:

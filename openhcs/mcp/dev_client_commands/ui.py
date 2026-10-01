@@ -471,27 +471,6 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             lines.extend(self._row_lines(final_rows))
         return "\n".join(lines)
 
-    def render_call_response(
-        self,
-        payload: JsonObject,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> str:
-        from openhcs.mcp.dev_client_renderers.ui_bridge import UiActionInvokeRenderer
-
-        workflow = optional_str(tool_arguments.get("workflow"))
-        return UiActionInvokeRenderer.render(
-            payload,
-            widget_id=PlateManagerWidgetIdentity.value,
-            action_id=workflow,
-        )
-
-    def render_call_result(self, response, tool_arguments: Mapping[str, JsonValue]) -> str:
-        # This distinct workflow presentation is still in the named pending
-        # UI/state family. Preserve its existing action view at that boundary.
-        from openhcs.serialization.json import to_jsonable
-
-        return self.render_call_response(to_jsonable(response), tool_arguments)
-
     @staticmethod
     def _poll_summary_payload(payload: JsonObject) -> Mapping[str, JsonValue] | None:
         for result in SelectedWorkflowCommandSpec._result_mappings(payload):
