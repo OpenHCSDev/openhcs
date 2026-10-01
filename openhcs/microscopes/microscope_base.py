@@ -476,9 +476,12 @@ class MicroscopeHandler(
         """
         from polystore.virtual_workspace import VirtualWorkspaceBackend
         from openhcs.constants.constants import Backend
+        from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
         # Always create a new backend for this plate (VirtualWorkspace is plate-specific)
-        backend = VirtualWorkspaceBackend(plate_root=Path(plate_path))
+        backend = VirtualWorkspaceBackend(
+            plate_root=Path(plate_path), metadata_config=METADATA_CONFIG
+        )
         filemanager.register_backend(Backend.VIRTUAL_WORKSPACE.value, backend)
         logger.info(f"Registered virtual workspace backend for {plate_path}")
 
