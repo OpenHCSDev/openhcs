@@ -39,8 +39,8 @@ inside the consuming module. Bind the recursive ForwardRef to its existing
 decoder, import a roster of names into DTO leaves, or add a fallback reader.
 A new inherited DTO importing only JsonObject needs no consumer edits.
 
-FunctionReference's original ABC owns source import authority and expression
-hooks. Importable references inherit direct declaration imports; registry
+FunctionReference's original ABC composes the existing PythonSourceLiteral
+capability and owns source import authority and expression hooks. Importable references inherit direct declaration imports; registry
 references supply two small hooks using the existing documented exact-key
 ``get_function`` lookup. Existing pycodify formatters share that behavior,
 retain alias mappings, and do not resolve endpoint callables during formatting.
@@ -55,10 +55,20 @@ algorithms, weaker parallel mechanisms). No reference-kind/library/name switch,
 new registry, mirrored store, decoder/schema roster or compatibility facade is
 introduced. Existing Python-callable category handling remains at its boundary.
 Source behavior is on the existing ancestor with polymorphic leaf hooks, not a
-consumer switch. A new reference descendant calling cooperative ``super``
-formats without editing generic consumers. No artificial MI family is added
-for a single capability; existing SourceFormatter and FunctionReference owners
-retain their declared hierarchies.
+consumer switch. Delete the separate FunctionReferenceFormatter: the original
+PythonSourceLiteralFormatter now handles references through that nominal
+capability. Its ABC default keeps context-free literals unchanged; references
+bind name aliases at their declaration owner. Importable Python classes are a
+small concrete formatter hook inheriting the original callable template, not
+a concrete-type branch in its consumer.
+
+A new reference descendant calling cooperative ``super`` formats without
+editing generic consumers. A genuinely independent import-contribution
+capability composes through real MI: ComposedReference ->
+RegistryFunctionReference -> FunctionReference -> ExtraImport ->
+PythonSourceLiteral -> ABC -> object. The actual formatting test requires both
+the canonical reference import and the independently contributed import; shared
+import collection calls cooperative super, rather than consulting a roster.
 
 Focused source evidence and limitations
 ---------------------------------------
@@ -116,5 +126,16 @@ acceptance item: derive admitted compile-time kwargs from the existing
 declaration, preserve them through the real authoring/render boundary, continue
 rejecting unknown ordinary kwargs and runtime-owned payloads, and retain exact
 producer/missing/ambiguous negatives. This witness does not authorize changing
-the numerical implementation, runtime engine or original drafts. Neither the
-selector witness nor the separate compile-time alias failures are marked fixed.
+the numerical implementation, runtime engine or original drafts. The selector
+witness is not marked fixed.
+
+Parent diagnosis update: the engineering AUTO alias rejection used an already
+prepared plate without aliases. OpenHCSMicroscopeHandler selected
+PREPARED_WORKSPACE, which correctly refuses a declared raw override. Do not
+weaken that provenance boundary. Parent reports actual artifact-plan success
+with explicit SOURCE_BINDINGS on a separate 64x64 synthetic plate, using exact
+physical-path SourceFilterClause and component selectors to produce DAPI/FITC
+virtual metadata. Its separately authored source is
+``/home/ts/wt/openhcs-issue-batch-20260929/paired350-installed-20261001/color-explicit-file-selectors-pipeline.py``.
+That parent success is not acceptance of the original rendered source or of
+compile-time kwargs admission; those original authoring failures remain intact.

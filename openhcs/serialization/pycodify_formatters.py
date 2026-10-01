@@ -38,55 +38,32 @@ class OpenHCSCallableFormatter(SourceFormatter):
     priority = 75
 
     def can_format(self, value) -> bool:
-        return callable(value)
+        return inspect.isfunction(value) or inspect.isbuiltin(value)
+
+    def reference_for(self, value) -> FunctionReference:
+        return FunctionReferenceTransportAuthority.function_reference(value)
 
     def format(self, value, context: FormatContext) -> SourceFragment:
-        if inspect.ismethod(value):
-            return SourceFragment(repr(value), frozenset())
-
-        if isinstance(value, type):
-            reference = ImportableFunctionReference(
-                import_identity=CallableImportIdentity(
-                    module_name=value.__module__, function_name=value.__name__,
-                ),
-                composite_key=f"{value.__module__}.{value.__name__}",
-            )
-        elif inspect.isfunction(value) or inspect.isbuiltin(value):
-            try:
-                reference = FunctionReferenceTransportAuthority.function_reference(value)
-            except RuntimeError:
-                return SourceFragment(repr(value), frozenset())
-        else:
+        try:
+            reference = self.reference_for(value)
+        except RuntimeError:
             return SourceFragment(repr(value), frozenset())
         return to_source(reference, context)
 
 
-class FunctionReferenceFormatter(SourceFormatter):
-    """Render compiler references from their declared import identity.
-
-    Formatting is a declaration operation. It must not resolve the callable or
-    initialize the execution process's registry catalog.
-    """
+class OpenHCSImportableTypeFormatter(OpenHCSCallableFormatter):
+    """Classes own direct declaration imports, not processing-registry lookup."""
 
     priority = 76
 
     def can_format(self, value) -> bool:
-        return isinstance(value, FunctionReference)
+        return inspect.isclass(value)
 
-    def format(
-        self,
-        value: FunctionReference,
-        context: FormatContext,
-    ) -> SourceFragment:
-        identity = value.source_import_identity
-        import_pair = (identity.module_name, identity.function_name)
-        mapped = NameMappingLookup.resolve(
-            context,
-            import_pair,
-            identity.function_name,
+    def reference_for(self, value) -> FunctionReference:
+        identity = CallableImportIdentity.from_callable(value)
+        return ImportableFunctionReference(
+            import_identity=identity, composite_key=identity.import_path,
         )
-        imports = frozenset() if identity.module_name == "builtins" else frozenset((import_pair,))
-        return SourceFragment(value.source_expression(mapped), imports)
 
 
 class PythonSourceLiteralFormatter(SourceFormatter):
@@ -98,14 +75,10 @@ class PythonSourceLiteralFormatter(SourceFormatter):
         return isinstance(value, PythonSourceLiteral)
 
     def format(self, value, context: FormatContext) -> SourceFragment:
-        from openhcs.core.python_source_literal import PythonSourceLiteral
-
-        if not isinstance(value, PythonSourceLiteral):
-            raise TypeError(
-                "PythonSourceLiteralFormatter requires PythonSourceLiteral, "
-                f"got {type(value).__name__}."
-            )
-        return SourceFragment(value.source_literal(), value.source_literal_imports())
+        return SourceFragment(
+            value.source_literal_with_names(context.name_mappings),
+            value.source_literal_imports(),
+        )
 
 
 class OpenHCSPathFormatter(SourceFormatter):

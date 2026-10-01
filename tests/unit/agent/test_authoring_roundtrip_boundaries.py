@@ -24,6 +24,7 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.python_source_literal import PythonSourceLiteral
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.mcp.dev_client_core import McpDevToolResult
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -171,3 +172,29 @@ def test_new_reference_family_member_needs_no_generic_formatter_edit(gamma_metad
     reference = FunctionReferenceTransportAuthority.function_reference(gamma_metadata.func)
     member = NewReference(import_identity=reference.import_identity, composite_key=reference.composite_key)
     assert to_source(member, FormatContext()).code == "(get_function('skimage:exposure.adjust_gamma'))"
+
+
+def test_independent_source_capability_composes_through_cooperative_mro(gamma_metadata):
+    class ExtraImport(PythonSourceLiteral):
+        def source_literal_imports(self):
+            return super().source_literal_imports() | frozenset({(__name__, "step_receipt")})
+
+    class ComposedReference(RegistryFunctionReference, ExtraImport):
+        pass
+
+    reference = FunctionReferenceTransportAuthority.function_reference(gamma_metadata.func)
+    member = ComposedReference(import_identity=reference.import_identity, composite_key=reference.composite_key)
+    fragment = to_source(member, FormatContext())
+    assert fragment.code == "get_function('skimage:exposure.adjust_gamma')"
+    assert fragment.imports == frozenset({
+        ("openhcs.processing.func_registry", "get_function"), (__name__, "step_receipt"),
+    })
+
+
+@pytest.mark.parametrize("declaration", (NewJsonOwner, int))
+def test_importable_type_formatter_uses_shared_source_literal_owner(declaration):
+    fragment = to_source(declaration, FormatContext())
+    assert fragment.code == declaration.__name__
+    assert fragment.imports == (
+        frozenset() if declaration is int else frozenset({(__name__, declaration.__name__)})
+    )
