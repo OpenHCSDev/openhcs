@@ -1190,9 +1190,10 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
     ) == (virtual_path,)
 
 
-def test_source_binding_members_canonicalize_declared_physical_spellings():
+@pytest.mark.parametrize("aliases", [("DAPI", "FITC"), ("DAPI", "FITC", "TRITC")])
+def test_source_binding_members_canonicalize_declared_physical_spellings(aliases):
     virtual_paths = tuple(
-        f"A01_s001_w{channel}_z001_t001.tif" for channel in (1, 2)
+        f"A01_s001_w{channel}_z001_t001.tif" for channel in range(1, len(aliases) + 1)
     )
     paths = {path: f"/declared/plate/{path}" for path in virtual_paths}
     bindings = tuple(
@@ -1201,7 +1202,7 @@ def test_source_binding_members_canonicalize_declared_physical_spellings():
             selector=SourceSelector(metadata=(MetadataSelector("channel", channel),)),
             component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
         )
-        for alias, channel in (("DAPI", "1"), ("FITC", "2"))
+        for alias, channel in zip(aliases, map(str, range(1, len(aliases) + 1)), strict=True)
     )
     context = SourcePatternResolutionContext.from_sources(
         parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths
@@ -1214,11 +1215,12 @@ def test_source_binding_members_canonicalize_declared_physical_spellings():
             SourceBindingsConfig(bindings=bindings)
         ),
     )
-    assert matched_set.members_for_binding(
-        bindings[1],
-        anchor_provenance=SourceImageProvenance(source_path=paths[virtual_paths[0]]),
-        source_universe=tuple(paths.values()),
-    ) == (paths[virtual_paths[1]],)
+    for binding, virtual_path in zip(bindings[1:], virtual_paths[1:], strict=True):
+        assert matched_set.members_for_binding(
+            binding,
+            anchor_provenance=SourceImageProvenance(source_path=paths[virtual_paths[0]]),
+            source_universe=tuple(paths.values()),
+        ) == (paths[virtual_path],)
 
 
 def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct():
@@ -1231,6 +1233,9 @@ def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct
         parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths,
     )
     candidates = (*positions, *paths.values())
+    assert context.virtual_paths_for_sources(
+        ("/a/raw.tif", "/b/raw.tif", "raw.tif")
+    ) == (positions[:2], (positions[2],), ())
     assert context.declared_positions_for_candidates(candidates) == positions
     assert context.matching_candidates_for_source_identities(
         (SourceImageIdentity("/a/raw.tif"),
@@ -1238,6 +1243,18 @@ def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct
          SourceImageIdentity("/b/raw.tif"), SourceImageIdentity("/elsewhere/raw.tif")),
         candidates,
     ) == (positions[:2], (positions[1],), (positions[2],), ())
+
+
+def test_source_binding_exact_position_projection_inherits_owning_context():
+    """Surface policy guard: declaration resolution is not reimplemented in leaves."""
+    assert (
+        SourceBindingMatchedImageSet.virtual_paths_for_sources
+        is SourcePatternResolutionContext.virtual_paths_for_sources
+    )
+    assert (
+        SourceBindingMatchedImageSet.declared_positions_for_candidates
+        is SourcePatternResolutionContext.declared_positions_for_candidates
+    )
 
 
 def test_source_identity_batch_preserves_planes_ambiguity_and_query_order():

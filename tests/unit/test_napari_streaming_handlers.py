@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from itertools import product
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,6 +16,7 @@ from zmqruntime.viewer_protocol import ViewerComponentMode
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
+    NapariDimensionMode,
     NapariVariableSizeHandling,
 )
 from openhcs.core.runtime_image_values import (
@@ -66,6 +67,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataNormalizer,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
+    ViewerDisplayBatchContext,
     ViewerLayerAxisProjection,
     ViewerLayerAxisProjectionRequest,
     ViewerLayerAxisProjector,
@@ -1960,11 +1962,31 @@ def test_napari_display_pipeline_aligns_scalar_and_stack_routes_by_semantic_valu
     assert server.viewer.dims.nsteps == (1, 2, 1, 1, 1, 4, 4)
 
 
+@dataclass(frozen=True)
+class _RegionDisplayConfig(NapariDisplayConfig):
+    """New display declaration: inherit existing modes and add one owned axis."""
+
+    REGION_COMPONENT = "region"
+    COMPONENT_ORDER = (*NapariDisplayConfig.COMPONENT_ORDER, REGION_COMPONENT)
+    region_mode: NapariDimensionMode = NapariDimensionMode.STACK
+
+    def component_modes(self) -> dict[str, str]:
+        return {
+            **super().component_modes(),
+            self.REGION_COMPONENT: self.region_mode.value,
+        }
+
+
 @pytest.mark.parametrize(
-    "component, mode_field", [("channel", "channel_mode"), ("site", "site_mode")]
+    "component, mode_field, config_type",
+    [
+        ("channel", "channel_mode", NapariDisplayConfig),
+        ("site", "site_mode", NapariDisplayConfig),
+        (_RegionDisplayConfig.REGION_COMPONENT, "region_mode", _RegionDisplayConfig),
+    ],
 )
 def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates(
-    component, mode_field
+    component, mode_field, config_type
 ):
     from napari.components import ViewerModel
     from openhcs.core.config import NapariDimensionMode
@@ -1977,11 +1999,11 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
     pipeline = NapariLayerDisplayPipeline(server)
     for origin, config, producer in (
         (
-            "raw", NapariDisplayConfig(),
+            "raw", config_type(),
             StreamProducerIdentity("manual", "image", "raw", "raw"),
         ),
         (
-            "pipeline", NapariDisplayConfig(**{mode_field: NapariDimensionMode.LAYER}),
+            "pipeline", config_type(**{mode_field: NapariDimensionMode.LAYER}),
             None,
         ),
     ):
@@ -2023,6 +2045,48 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
         assert tuple(server.layer_route_state.layer(f"raw-{channel}").translate) == tuple(
             server.layer_route_state.layer(f"pipeline-{channel}").translate
         )
+
+
+def test_display_batch_composes_domain_and_names_for_new_declared_component():
+    from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
+
+    component = _RegionDisplayConfig.REGION_COMPONENT
+    config = _RegionDisplayConfig(region_mode=NapariDimensionMode.LAYER)
+    grouping_layout = ViewerObjectDisplayConfigInput(config).layout()
+    stack_layout = ViewerObjectDisplayConfigInput(_RegionDisplayConfig()).layout()
+    shared_layout = grouping_layout.with_shared_stack_axes((stack_layout,))
+    names = _component_name_metadata({component: {1: "West", 2: "East"}})
+    batch = ViewerDisplayBatchContext(
+        entries=_component_value_domain({component: [1, 2]}).entries,
+        layout=shared_layout,
+        store=names.store,
+        viewer_display_config=config,
+    )
+
+    assert batch.required_component_values((component,)) == {component: [1, 2]}
+    assert batch.axis_labels(component, [1, 2]) == ["Region 1: West", "Region 2: East"]
+    projection = batch.axis_projection_semantics()
+    assert projection.component_order == (component,)
+    assert projection.layout.components_for_mode(ViewerComponentMode.STACK) == (component,)
+    assert projection.entries is batch.entries
+    assert batch.store is names.store
+    assert grouping_layout.components_for_mode(ViewerComponentMode.LAYER) == (component,)
+
+
+def test_paired_raw_projection_keeps_one_inherited_algorithm_owner():
+    """Surface policy guard: a leaf copy or forwarding facade cannot reappear."""
+    assert (
+        NapariAxisPresentation.axis_projection_semantics
+        is ViewerComponentAxisSemantics.axis_projection_semantics
+    )
+    assert (
+        NapariPendingLayerUpdate.for_display_layout
+        is ViewerComponentAxisSemantics.for_display_layout
+    )
+    assert (
+        ViewerDisplayBatchContext.axis_projection_semantics
+        is ViewerComponentAxisSemantics.axis_projection_semantics
+    )
 
 
 def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_rematerialization():

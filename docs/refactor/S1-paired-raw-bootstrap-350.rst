@@ -43,8 +43,11 @@ Proofs and gates
 One family-level canonical source identity test, equivalent spellings and
 distinct-position negative cases. A mixed STACK/LAYER production display test
 using the existing native ViewerModel proves both channel identities and exact
-coordinate placement; the site-axis case exercises the same owner without a
-channel special case. Reverse admission is not a claim of this checkpoint;
+coordinate placement; site and a new declaration-only region axis exercise the
+same owner without a channel special case. A third source alias and the existing
+MI domain/name context also work without consumer edits. Full review and new-case
+edit counts: receipts/paired-raw-350-polymorphism-review.rst.
+Reverse admission is not a claim of this checkpoint;
 the existing fail-closed rematerialization guard remains. No consumer
 dispatch/heuristics or mirrored rosters.
 OneCPU/thread pools1,512MiB and60seconds per local shard. Installed frozen
@@ -56,11 +59,14 @@ bounds remain incomplete. Parent coordinates a distinct exact live slot later.
 Status
 ------
 
-Deleted 17 lines of copied leaf projection; its small hook now
-delegates to ViewerComponentAxisSemantics.for_display_layout, also inherited by
-NapariPendingLayerUpdate. SourceIdentityResolutionContext inherits the exact
+Deleted the complete20-line leaf projection method from main; both projection
+operations now belong to ViewerComponentAxisSemantics, inherited without leaf
+facades by NapariAxisPresentation, NapariPendingLayerUpdate and the existing MI
+ViewerDisplayBatchContext. SourceIdentityResolutionContext inherits the exact
 workspace projection from SourcePatternResolutionContext;
 SourceBindingMatchedImageSet retains its one-position admission proof.
+Single-address lookup and candidate canonicalization use one batched exact-source
+algorithm on SourcePatternResolutionContext, not two derived lookup mechanisms.
 ViewerComponentLayout derives
 native STACK slots from mounted declarations, while each original display config
 still owns grouping. NapariDimensionLayerState owns optional participation.
@@ -73,11 +79,15 @@ none; no parity or performance claim. Source-authored bug repair, not a claim of
 NRA-certified behavioural equivalence. Dependency binaries are read-only links
 to the frozen installed environment, not newly built or installed artifacts.
 
-Provider-free source results: 51 source-binding tests, 49 selected viewer/shared-
+Initial source results at017642ff0:51 source-binding tests,49 selected viewer/shared-
 axis tests and 15 selected pipeline source-projection tests pass. The original
 collection failure, two original defect failures and incomplete global audit
 are retained under receipts/. Source checkpoint017642ff0 is published in draft
 PR351 (https://github.com/OpenHCSDev/openhcs/pull/351).
+Latest owner review source results:53 source-binding tests,52 selected viewer/shared-
+axis tests and15 selected pipeline source-projection tests pass, including two
+focused inherited-owner guards. Full original failures and the corrected MI label
+fixture expectation are preserved beside the latest measured receipts.
 
 R0 unavailable: original agent-comms3b037 package fails on InputDocument's
 annotation during import under required frozen Python3.12, before measuring.

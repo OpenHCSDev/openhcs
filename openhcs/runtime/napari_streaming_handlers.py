@@ -1146,10 +1146,6 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
 
         return self.layout.components_for_mode(ViewerComponentMode.STACK)
 
-    def axis_projection_semantics(self) -> ViewerComponentAxisSemantics:
-        """Derive the route-addressable axes from its declared value domain."""
-        return self.for_display_layout(self.layout)
-
     @property
     def projected_display_axis_indices(self) -> tuple[int, ...]:
         """Return the display slot owned by each route-local projected axis."""

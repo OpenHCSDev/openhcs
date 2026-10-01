@@ -875,6 +875,10 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
 
     layout: ViewerComponentLayout
 
+    def axis_projection_semantics(self) -> "ViewerComponentAxisSemantics":
+        """Derive the route-addressable axes from its declared value domain."""
+        return self.for_display_layout(self.layout)
+
     def for_display_layout(
         self,
         layout: ViewerComponentLayout,
