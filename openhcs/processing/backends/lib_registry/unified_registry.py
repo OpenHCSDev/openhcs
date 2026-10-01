@@ -1438,29 +1438,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         return None
 
     @classmethod
-    def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata | None:
-        """Resolve exact claims through this registry's declaration capabilities."""
-
-        claims = tuple(cls._canonical_metadata_claims(function_id))
-        for metadata in claims:
-            if metadata.composite_key != function_id:
-                raise ValueError(
-                    f"Canonical function {function_id!r} contradicts declaration "
-                    f"{metadata.composite_key!r}."
-                )
-            metadata.require_current_declaration()
-        if not claims:
-            return None
-        first = claims[0]
-        if any(
-            metadata.import_identity != first.import_identity
-            or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
-            for metadata in claims[1:]
-        ):
-            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
-        return first
-
-    @classmethod
     def _canonical_metadata_claims(
         cls, function_id: str, *, prepare_catalog: bool = True,
     ) -> Iterator[FunctionMetadata]:
@@ -1505,20 +1482,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 for module_name in module_names
             )
         )
-
-    def require_declared_callable_composite_key(
-        self,
-        func: Callable,
-        composite_key: str,
-    ) -> None:
-        """Require a transported key to be owned by the declaration inventory."""
-
-        declared_keys = self.composite_keys_for_declared_callable(func)
-        if composite_key not in declared_keys:
-            raise RuntimeError(
-                f"Function reference {composite_key!r} contradicts "
-                f"declaration-owned identity candidates {declared_keys!r}."
-            )
 
     # ===== CONTRACT HANDLING =====
     def apply_contract_wrapper(

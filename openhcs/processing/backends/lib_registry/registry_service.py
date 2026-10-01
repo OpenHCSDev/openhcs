@@ -62,13 +62,26 @@ class RegistryService:
 
         registry_name, separator, name = function_id.partition(":")
         registry_type = LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
-        metadata = (
-            None if registry_type is None
-            else registry_type.metadata_for_canonical_key(function_id)
+        claims = () if registry_type is None else tuple(
+            registry_type._canonical_metadata_claims(function_id)
         )
-        if metadata is None:
+        for metadata in claims:
+            if metadata.composite_key != function_id:
+                raise ValueError(
+                    f"Canonical function {function_id!r} contradicts declaration "
+                    f"{metadata.composite_key!r}."
+                )
+            metadata.require_current_declaration()
+        if not claims:
             raise KeyError(f"Unknown canonical function ID {function_id!r}.")
-        return metadata
+        first = claims[0]
+        if any(
+            metadata.import_identity != first.import_identity
+            or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
+            for metadata in claims[1:]
+        ):
+            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
+        return first
 
     @classmethod
     def get_all_functions_with_metadata(
@@ -408,7 +421,8 @@ class RegistryService:
         declared = reference.require_current_declaration(declared)
 
         registry = registry_type()
-        registry.require_declared_callable_composite_key(
+        cls._require_declared_callable_composite_key(
+            registry,
             declared,
             reference.composite_key,
         )
@@ -434,6 +448,21 @@ class RegistryService:
                 reference, resolved
             )
         return resolved
+
+    @staticmethod
+    def _require_declared_callable_composite_key(
+        registry: LibraryRegistryBase,
+        func: Callable,
+        composite_key: str,
+    ) -> None:
+        """Validate a transported key against its original declaration inventory."""
+
+        declared_keys = registry.composite_keys_for_declared_callable(func)
+        if composite_key not in declared_keys:
+            raise RuntimeError(
+                f"Function reference {composite_key!r} contradicts "
+                f"declaration-owned identity candidates {declared_keys!r}."
+            )
 
     @staticmethod
     def _validate_reference_metadata(

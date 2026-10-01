@@ -12,7 +12,7 @@ the frozen public-388 driver. Native acceptance remains parent-owned.
 
 Production seam: ``func_registry.get_function``,
 ``RegistryService.metadata_for_canonical_key``, the original
-``LibraryRegistryBase`` canonical-claim template, ``OpenHCSRegistry``'s MRO,
+``LibraryRegistryBase`` canonical-claim hook, ``OpenHCSRegistry``'s MRO,
 and ``custom_functions.runtime_registry``'s source capability and metadata.
 The existing declaration-local callable hooks remain untouched.
 
@@ -28,7 +28,9 @@ earlier restored red and this red remain in ``validation/``.
 
 ``RegistryService`` derives the canonical registry from the original
 ``LibraryRegistryBase.__registry__``. Exact identity, declaration validation,
-and ambiguity checks live once on that existing ancestor. Ordinary catalog
+and ambiguity checks live once on the original lookup/reference-boundary owner,
+``RegistryService``. The original registry ABC supplies only a small catalog
+claim hook. Ordinary catalog
 resolution retains the original catalog authority. The independently composed
 ``CustomFunctionCanonicalLookup`` capability supplies source-owned claims and
 cooperatively calls ``super()``; an available custom declaration prevents
@@ -48,6 +50,17 @@ consumer dispatch), IMPL-5/12/13 (shared claim checks and original source loader
 MEMB-1/2 (registry membership remains declaration-derived), and BOUND-2/8
 (metadata carries its actual declaration lifetime rather than asking consumers
 to recover a custom-function kind).
+
+Pinned R0 rejected the first layout because putting the entire new template on
+the already oversized ``LibraryRegistryBase`` added 39 GodClassExcess lines.
+That red is retained. Boundary validation now belongs to ``RegistryService``,
+beside its original transported-reference validation. The old
+``LibraryRegistryBase.require_declared_callable_composite_key`` validator is
+deleted from the registry ABC and moved to that same service boundary, with
+its single caller migrated. Registry declarations still own identity candidates
+through their unchanged ``composite_keys_for_declared_callable`` hook. This
+removes the wrong-layer validator rather than retaining a forwarding facade or
+compressing code to conceal the class-growth metric.
 
 Behavioral evidence
 -------------------
@@ -78,14 +91,22 @@ returns a reference remain recorded, followed by corrected checks. Existing
 name-lookup fixtures now supply original nominal ``FunctionMetadata`` instead
 of incomplete stand-in objects; ambiguity assertions are unchanged.
 
+Final corrected-owner controls pass 107 cases, including the unchanged PR377
+canonical witness, in 11.41 seconds / 481.94 MiB. The only deselected case is
+the original PR377 declaration-discovery witness owned by issue 376.
+
 Qualification limits
 --------------------
 
 All checks are source-only, one CPU, bounded to 60 seconds / 512 MiB combined,
 using readonly dependencies and explicit own-source imports with subprocess
 launch blocked. Pinned R0 and final owner controls are appended at their actual
-results. A complete production/dependency R1 comparison is not claimed from
-these focused tests: its full context must not be replaced by a narrow scan.
+results. R1 preflight with the original production NRA source and interpreter
+finds all eight recorded dependency repositories uninitialized in this existing
+worktree (1.76 seconds / 62.66 MiB). The first Python3.14 preflight attempt also
+retains its missing-tree-sitter import failure. A complete production/dependency
+R1 comparison is not claimed: no narrowed context, replacement detector, engine
+change, clone, or heavyweight scan was used to manufacture a passing result.
 Original installed issue-379 failure remains retained; no registration,
 startup, native compile, execution, viewer, or scientific input is replayed.
 
