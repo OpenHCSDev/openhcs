@@ -226,3 +226,57 @@ its original 4096-label identity and discriminating quadrant/row assertions are
 unchanged. Prior failures, fixture, receipts and scientific outputs are untouched.
 The branch normally merged main ``c4be92335``; pinned R0 for this correction is
 pending at this first published working checkpoint, not silently inherited.
+
+Pinned guard correction at the same callable owner
+------------------------------------------------
+
+First published production ``5c233590b`` passed behavior but the original pinned
+R0 rejected CallableContract GodClassExcess +30 (17.00s/75.07MiB). That red is
+retained in ``public-enum-388-pinned-r0.json/.log`` without a waiver. The same
+canonical annotation owner now replaces duplicated path and primary-payload
+introspection as well as public enum validation. Runtime keyword injection
+iterates the existing declaration contributions in their original order instead
+of separate repeated binding loops. No new ancestor/facade, category roster,
+cache, suppressed measurement or format-only blank-line deletion was used.
+The corrected shared owner has no measured class-line increase over main c4be.
+
+``public-enum-388-owner-deduplicated-controls.json`` passes all 248 source cases,
+15.98s/491.29MiB combined, unchanged oneCPU/60s/512MiB and subprocess guard.
+This retains all 224 and adds the existing path and runtime-payload controls;
+compiler raw enum strings remain rejected. Original declared enum values/names
+and already typed members descend, invalid/required-null members reject.
+New owner-projection tests do not claim an installed/native plan or execution.
+
+The intermediate ``61758894e`` guard retained ForeignAbsenceProbe +1 from a
+new negation of ``parameter_type.is_semantic_control``. Final runtime selection
+derives from the existing ``overridable_runtime_parameter_names`` owner instead;
+config contributions remain explicitly bound by their original declarations.
+No predicate/detector rewrite or waiver. All 248 final cases pass again in
+``public-enum-388-final-owner-controls.json``: 25.44s/491.24MiB. Original class
+growth/probe reds are kept as failed measurements, not passing qualification.
+
+Final source-qualified production head
+``5ef5c7c666be45017189bb89c1c3ea8abc35e977``. Original pinned Python3.14 R0
+against main ``c4be92335ed6f02ce22e39a66dd3229bc08ea147`` PASSES,
+33.97s/74.82MiB combined; 5182 measured entries, positive delta ``[]``.
+CallableContract GodClassExcess and foreign probes are unchanged; the original
+classification-module decrease55 and string-subscript decrease1 remain exact.
+Ruff F and diff checks pass. This is the actual original R0 tool, not a copied
+detector, changed threshold or global NRA R1/FULL qualification.
+
+Archive ``receipts/public-enum-388-source-20261001.tar.gz`` retains all twenty
+new command/receipt/log files, INCLUDING harness, collection and guard failures,
+and four original parent call016/call020/source witnesses without reserialization.
+SHA256 ``d0e8e9015987245eb0988926735e257576d55f06f981db3872043b884b2a689e``;
+412KiB allocated, all24 members compare against their original sources without
+extraction. No full source snapshot, environment or worktree was duplicated.
+No disposable build/cache directory was created; nothing was deleted (0 bytes
+released). Prior archives and source histories remain unchanged.
+
+Only this receipt/archive changes after the qualified production head. Actual
+PUBLIC artifact-plan/compile/execute and all4096 label pixels plus discriminating
+rows remain PENDING parent-installed acceptance. Current native-slot ownership
+is not inferred from historical PIDs. No worker native/install/registration or
+startup replay. Original issue379 cache/source red stays independently owned
+and pending; it is not the cause of this observed call020 failure. No complete
+two-detector full-context R1 rescan or global85 NRA FULL claim is made here.
