@@ -20,9 +20,12 @@ from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes import create_microscope_handler, get_all_handler_types
 from openhcs.microscopes.microscope_base import (
+    MetadataMicroscopeDetector,
     MicroscopeHandler,
     MicroscopeSourceSelectionRole,
 )
+from openhcs.microscopes.imagexpress import ImageXpressHandler
+from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
 from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
 from openhcs.demo.synthetic_data import (
@@ -67,6 +70,52 @@ def test_typed_microscope_values_are_exact_registered_handler_keys() -> None:
         for handler_type in MicroscopeHandler.__registry__.values()
         if handler_type._microscope_type in configured_types
     } == configured_types
+
+
+@pytest.mark.parametrize(
+    "handler_type",
+    (ImageXpressHandler, OperaPhenixHandler, OpenHCSMicroscopeHandler),
+)
+@pytest.mark.parametrize("missing", (False, True))
+def test_metadata_detection_uses_each_declared_owner(
+    monkeypatch, tmp_path: Path, handler_type, missing: bool,
+) -> None:
+    from polystore.exceptions import MetadataNotFoundError
+
+    observed = []
+    filemanager = bioformats_filemanager()
+    metadata_type = handler_type._metadata_handler_class
+
+    def find_metadata_file(metadata, plate_folder):
+        observed.append((type(metadata), plate_folder))
+        if missing:
+            raise MetadataNotFoundError("declared metadata unavailable")
+        return plate_folder / "declared-metadata"
+
+    monkeypatch.setattr(metadata_type, "find_metadata_file", find_metadata_file)
+
+    assert handler_type.detect(tmp_path, filemanager) is not missing
+    assert observed == [(metadata_type, tmp_path)]
+
+
+def test_metadata_detection_new_case_needs_only_its_declaration(
+    monkeypatch, tmp_path: Path,
+) -> None:
+    metadata_type = ImageXpressHandler._metadata_handler_class
+
+    class NewMetadataDetector(MetadataMicroscopeDetector):
+        _metadata_handler_class = metadata_type
+
+    observed = []
+
+    def find_metadata_file(metadata, plate_folder):
+        observed.append((type(metadata), plate_folder))
+        return plate_folder / "new-case-metadata"
+
+    monkeypatch.setattr(metadata_type, "find_metadata_file", find_metadata_file)
+
+    assert NewMetadataDetector.detect(tmp_path, bioformats_filemanager()) is True
+    assert observed == [(metadata_type, tmp_path)]
 
 
 def test_config_schema_patch_and_source_share_opera_handler_identity() -> None:

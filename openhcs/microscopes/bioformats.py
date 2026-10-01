@@ -52,12 +52,19 @@ class BioFormatsFilenameParser(SourceSchemaFilenameParser):
 class BioFormatsMetadataHandler(MetadataHandler):
     """Metadata view over exact store-emitted source planes."""
 
-    def __init__(self, filemanager: FileManager | None = None):
+    def __init__(
+        self,
+        filemanager: FileManager | None = None,
+        source_bindings: SourceBindingsConfig | None = None,
+    ):
         super().__init__()
         self.filemanager = filemanager
+        self.source_bindings = source_bindings or SourceBindingsConfig()
 
     def source_dataset(self, plate_path: Union[str, Path]) -> SourcePlaneDataset:
-        return SourcePlaneStoreAdapter.discover_dataset(plate_path)
+        return SourcePlaneStoreAdapter.discover_dataset(
+            plate_path, source_bindings=self.source_bindings
+        )
 
     def source_diagnostics(
         self,
@@ -158,6 +165,22 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
     _metadata_handler_class = BioFormatsMetadataHandler
 
     @classmethod
+    def detect(
+        cls,
+        plate_folder: Path,
+        filemanager: FileManager,
+        source_bindings_config: SourceBindingsConfig | None = None,
+    ) -> bool:
+        """Keep source selections ahead of container opens during auto-detection."""
+        try:
+            BioFormatsMetadataHandler(
+                filemanager, source_bindings_config
+            ).find_metadata_file(plate_folder)
+        except (FileNotFoundError, TypeError):
+            return False
+        return True
+
+    @classmethod
     def create(
         cls,
         *,
@@ -182,11 +205,13 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
         source_bindings_config: SourceBindingsConfig | None = None,
     ):
         self.parser = BioFormatsFilenameParser(filemanager, pattern_format)
-        self.source_metadata_handler = BioFormatsMetadataHandler(filemanager)
-        self.metadata_handler: MetadataHandler = self.source_metadata_handler
         self.source_bindings = source_bindings_defaults_to_base(
             source_bindings_config or SourceBindingsConfig()
         )
+        self.source_metadata_handler = BioFormatsMetadataHandler(
+            filemanager, self.source_bindings
+        )
+        self.metadata_handler: MetadataHandler = self.source_metadata_handler
         super().__init__(parser=self.parser, metadata_handler=self.metadata_handler)
 
     @property

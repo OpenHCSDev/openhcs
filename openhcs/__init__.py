@@ -7,7 +7,6 @@ and does NOT import from internal modules in a way that triggers
 registrations or other side-effects.
 """
 
-import os
 import platform
 import sys
 
@@ -16,8 +15,6 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 __version__ = "0.8.7"
 
-# Configure polystore defaults for OpenHCS integration
-os.environ.setdefault("POLYSTORE_METADATA_FILENAME", "openhcs_metadata.json")
 OpenHCSProcessEnvironment.project_dependency_gpu_import_policy()
 OpenHCSProcessEnvironment.project_numba_worker_profiling_policy()
 
