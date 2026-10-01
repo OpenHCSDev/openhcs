@@ -1,0 +1,118 @@
+[
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-boundary-diagnostic-20260930/ExampleImagingFlowCytometryObjectsInGrid-1115133-140175649535680-000097-spreadsheet.pickle",
+    "tables": 31,
+    "rows": 89796,
+    "carriers": [
+      "openhcs.core.measurement_row_materialization.ConcatenatedColumnarRows",
+      "openhcs.core.measurement_row_materialization.MeasurementProjectedColumnarRows"
+    ],
+    "kwargs": {
+      "delimiter": "<SpreadsheetDelimiter.COMMA: ','>",
+      "add_image_metadata": "False",
+      "add_image_file_names": "False",
+      "select_measurements": "False",
+      "selected_columns": "()",
+      "calculate_aggregate_means": "False",
+      "calculate_aggregate_medians": "False",
+      "calculate_aggregate_standard_deviations": "False",
+      "output_directory": "''",
+      "export_all_measurement_types": "False",
+      "file_selections": "(SpreadsheetFileSelection(subjects=('BF_cells_on_grid', 'SSC'), file_name='BF_cells_on_grid.csv'),)",
+      "nan_representation": "<SpreadsheetNanRepresentation.NAN: 'nan'>",
+      "add_filename_prefix": "False",
+      "filename_prefix": "'MyExpt_'"
+    },
+    "timings": [
+      {
+        "mapping_csv": 0.8895826921798289,
+        "column_csv": 0.6970774931833148,
+        "bundle": 1.5463167941197753
+      },
+      {
+        "mapping_csv": 0.8806390082463622,
+        "column_csv": 0.6915999259799719,
+        "bundle": 1.440112757962197
+      },
+      {
+        "mapping_csv": 0.8824338377453387,
+        "column_csv": 0.6934090838767588,
+        "bundle": 1.4530350952409208
+      },
+      {
+        "mapping_csv": 0.882154902908951,
+        "column_csv": 0.6945731760933995,
+        "bundle": 1.4576297379098833
+      },
+      {
+        "mapping_csv": 0.8832375118508935,
+        "column_csv": 0.6956049990840256,
+        "bundle": 1.4590663341805339
+      }
+    ],
+    "medians": {
+      "mapping_csv": 0.8824338377453387,
+      "column_csv": 0.6945731760933995,
+      "bundle": 1.4576297379098833
+    }
+  },
+  {
+    "case": "cp_tutorial_3d_monolayer",
+    "fixture": "/home/ts/code/projects/openhcs-benchmark-runs/perf-plate-boundary-diagnostic-20260930/cp_tutorial_3d_monolayer-1117601-140663293691584-000104-spreadsheet.pickle",
+    "tables": 14,
+    "rows": 590,
+    "carriers": [
+      "openhcs.core.measurement_row_materialization.ConcatenatedColumnarRows",
+      "openhcs.core.measurement_row_materialization.MeasurementProjectedColumnarRows"
+    ],
+    "kwargs": {
+      "delimiter": "<SpreadsheetDelimiter.COMMA: ','>",
+      "add_image_metadata": "True",
+      "add_image_file_names": "False",
+      "select_measurements": "False",
+      "selected_columns": "()",
+      "calculate_aggregate_means": "False",
+      "calculate_aggregate_medians": "False",
+      "calculate_aggregate_standard_deviations": "False",
+      "output_directory": "''",
+      "export_all_measurement_types": "True",
+      "file_selections": "()",
+      "nan_representation": "<SpreadsheetNanRepresentation.NAN: 'nan'>",
+      "add_filename_prefix": "True",
+      "filename_prefix": "'3d_monolayer_'"
+    },
+    "timings": [
+      {
+        "mapping_csv": 0.0033728820271790028,
+        "column_csv": 0.0028793630190193653,
+        "bundle": 0.013520533218979836
+      },
+      {
+        "mapping_csv": 0.0034099621698260307,
+        "column_csv": 0.002901966217905283,
+        "bundle": 0.012121559120714664
+      },
+      {
+        "mapping_csv": 0.0034123267978429794,
+        "column_csv": 0.0031471573747694492,
+        "bundle": 0.012317898217588663
+      },
+      {
+        "mapping_csv": 0.003419840708374977,
+        "column_csv": 0.002910532057285309,
+        "bundle": 0.012236004229635
+      },
+      {
+        "mapping_csv": 0.003414199687540531,
+        "column_csv": 0.002904138993471861,
+        "bundle": 0.01233057165518403
+      }
+    ],
+    "medians": {
+      "mapping_csv": 0.0034123267978429794,
+      "column_csv": 0.002904138993471861,
+      "bundle": 0.012317898217588663
+    }
+  }
+]

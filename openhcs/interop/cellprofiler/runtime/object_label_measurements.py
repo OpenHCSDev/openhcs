@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
-from weakref import WeakKeyDictionary
 
 import numpy as np
 
@@ -14,6 +13,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.measurement_feature_queries import (
+    RuntimeObjectLabelMeasurementQueryCache,
     MeasurementFeatureQuery,
     RuntimeObjectLabelMeasurementQuery,
     RuntimeObjectSliceMeasurementQuery,
@@ -34,7 +34,6 @@ from openhcs.core.runtime_measurements import (
     ObjectLabelMeasurementValues,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
-from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
 )
@@ -47,29 +46,6 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-
-ObjectLabelMeasurementValuesProcessCache = dict[
-    RuntimeObjectLabelMeasurementQuery,
-    tuple[np.ndarray, ...],
-]
-
-_OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE: WeakKeyDictionary[
-    RuntimeValueStore,
-    tuple[int, ObjectLabelMeasurementValuesProcessCache],
-] = WeakKeyDictionary()
-
-
-def object_label_measurement_values_cache(
-    store: RuntimeValueStore,
-) -> ObjectLabelMeasurementValuesProcessCache:
-    """Return label-aligned vectors bound to the store's current revision."""
-    cached_revision = _OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE.get(store)
-    if cached_revision is not None and cached_revision[0] == store.revision:
-        return cached_revision[1]
-    cache: ObjectLabelMeasurementValuesProcessCache = {}
-    _OBJECT_LABEL_MEASUREMENT_VALUES_PROCESS_CACHE[store] = (store.revision, cache)
-    return cache
-
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
@@ -242,10 +218,12 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
         """Return object measurements aligned to this request's label planes."""
         label_domain = self.label_domain()
         query = self.measurement_query(adapter, label_domain=label_domain)
-        object_label_values_cache = object_label_measurement_values_cache(
-            adapter.request.context.runtime_value_store
+        object_label_values_cache = (
+            adapter.request.context.runtime_value_store.query_cache(
+                RuntimeObjectLabelMeasurementQueryCache
+            )
         )
-        cached = object_label_values_cache.get(query)
+        cached = object_label_values_cache.cached_value(query)
         if cached is not None:
             return cached
         child_name = child_count_feature_child_name(self.feature_name)
@@ -299,8 +277,7 @@ class ObjectLabelMeasurementSliceRequest(ObjectFeatureMeasurementContext):
                 plane_projector=adapter,
                 dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
             ).values_for_labels(self.labels)
-        object_label_values_cache[query] = values
-        return values
+        return object_label_values_cache.store_value(query, values)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

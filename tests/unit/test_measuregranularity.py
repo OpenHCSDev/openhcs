@@ -10,7 +10,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.granularity import (
-    GRANULARITY_IMAGE_SERIES_CACHE,
+    GranularityImageSeriesCache,
     GRANULARITY_SPECTRUM_LENGTH,
     GranularityImageSeriesRequest,
     GranularitySamplingGrid,
@@ -306,7 +306,8 @@ def test_measure_granularity_objects_preserves_sparse_label_ids():
 def test_granularity_series_cache_reuses_equal_image_values():
     image = np.arange(36, dtype=np.float64).reshape(6, 6)
     image_copy = image.copy()
-    GRANULARITY_IMAGE_SERIES_CACHE.clear()
+    cache = GranularityImageSeriesCache.process_cache()
+    cache.clear()
 
     first = GranularityImageSeriesRequest(
         image=image,
@@ -326,7 +327,7 @@ def test_granularity_series_cache_reuses_equal_image_values():
     ).series()
 
     assert second is first
-    assert len(GRANULARITY_IMAGE_SERIES_CACHE) == 1
+    assert len(cache.entries) == 1
 
 
 def test_measure_granularity_objects_uses_order_one_coordinate_sampling_after_subsampling():

@@ -55,3 +55,16 @@ class RuntimeProfileLogger:
         if profile_path := os.environ.get(PROFILE_RUNTIME_PATH_ENV):
             with open(profile_path, "a", encoding="utf-8") as handle:
                 handle.write(f"RUNTIME_PROFILE {label} {seconds:.6f}s {field_text}\n")
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeProfiler:
+    """Runtime-profile emitter bound to a module logger."""
+
+    logger: logging.Logger
+
+    def enabled(self) -> bool:
+        return RuntimeProfileLogger.enabled()
+
+    def log(self, label: str, seconds: float, **fields: object) -> None:
+        RuntimeProfileLogger.log(self.logger, label, seconds, **fields)

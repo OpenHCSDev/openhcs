@@ -80,9 +80,7 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     filter_physical_border_objects_numba,
     manual_declumping_size,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.shape import shape_measurement_backend
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
@@ -101,7 +99,7 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 class UnclumpMethod(Enum):

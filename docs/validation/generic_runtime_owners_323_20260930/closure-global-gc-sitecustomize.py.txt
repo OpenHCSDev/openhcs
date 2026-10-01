@@ -1,0 +1,79 @@
+"""Minimal process-global GC timeline; processing/profile branches stay intact."""
+import functools
+import gc
+import importlib.abc
+import importlib.machinery
+import json
+import os
+import sys
+import threading
+import time
+from pathlib import Path
+
+OUTPUT = Path('/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-owner-closure-global-gc-diagnostic-20261001')
+label = os.environ['OPENHCS_EXECUTION_DIAGNOSTIC_CASE']
+descriptor = os.open(str(OUTPUT / (label + '.jsonl')), os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+started = {}
+
+
+def write(event):
+    event['pid'] = os.getpid()
+    os.write(descriptor, (json.dumps(event) + '\n').encode())
+
+
+write({'kind': 'process', 'argv': sys.orig_argv})
+
+
+def gc_timeline(phase, information):
+    generation = information['generation']
+    key = (os.getpid(), generation)
+    if phase == 'start':
+        started[key] = (time.time(), time.perf_counter(), threading.get_ident())
+    elif key in started:
+        epoch, clock, thread = started.pop(key)
+        ended_at = time.time()
+        elapsed = time.perf_counter() - clock
+        write({'kind': 'gc', 'generation': generation, 'thread': thread,
+               'started_at': epoch, 'ended_at': ended_at, 'seconds': elapsed,
+               'collected': information['collected'], 'uncollectable': information['uncollectable']})
+
+
+gc.callbacks.append(gc_timeline)
+
+
+class StepTimelineLoader(importlib.abc.Loader):
+    def __init__(self, loader):
+        self.loader = loader
+
+    def create_module(self, spec):
+        return self.loader.create_module(spec)
+
+    def exec_module(self, module):
+        self.loader.exec_module(module)
+        assert Path(module.__file__).resolve() == Path(os.environ['OPENHCS_DIAGNOSTIC_SOURCE']) / 'openhcs/core/steps/function_execution.py'
+        original = module.FunctionStepExecutor.run
+
+        @functools.wraps(original)
+        def step_timeline(executor, *args, **kwargs):
+            epoch, clock = time.time(), time.perf_counter()
+            try:
+                return original(executor, *args, **kwargs)
+            finally:
+                ended_at, elapsed = time.time(), time.perf_counter() - clock
+                write({'kind': 'step', 'thread': threading.get_ident(),
+                       'step_index': executor.plan.step_index, 'step_name': executor.plan.step_name,
+                       'started_at': epoch, 'ended_at': ended_at, 'seconds': elapsed})
+        module.FunctionStepExecutor.run = step_timeline
+
+
+class StepTimelineFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname != 'openhcs.core.steps.function_execution':
+            return None
+        spec = importlib.machinery.PathFinder.find_spec(fullname, path, target)
+        assert spec is not None and isinstance(spec.loader, importlib.machinery.SourceFileLoader)
+        spec.loader = StepTimelineLoader(spec.loader)
+        return spec
+
+
+sys.meta_path.insert(0, StepTimelineFinder())

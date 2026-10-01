@@ -1,0 +1,48 @@
+import hashlib
+import json
+import statistics
+from pathlib import Path
+
+import numpy as np
+import tifffile
+
+runs = Path('/home/ts/code/projects/openhcs-benchmark-runs')
+observations = json.loads((runs / 'perf-numerical-cache-owners-public-observations-20261001.json').read_text())
+parity = []
+for case in ('ExampleImagingFlowCytometryObjectsInGrid', 'cp_tutorial_3d_monolayer'):
+    selected = [obs for obs in observations if obs['case'] == case]
+    assert len(selected) == 2 and [obs['label'] for obs in selected] == ['main','candidate']
+    targets = [(Path(obs['directory']), obs['label']) for obs in selected]
+    if case == 'cp_tutorial_3d_monolayer':
+        suffix = case + '/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput'
+        control = runs / 'perf-plate-transport-full-candidate-20260929' / suffix
+        expected_csvs, expected_labels = 6,120
+    else:
+        suffix = case + '/wells_1/workers_1/images_' + case + '_source_workspace_well_throughput'
+        control = Path(selected[0]['directory']) / suffix
+        expected_csvs, expected_labels = 1,0
+    control_csvs = {p.relative_to(control):p for p in control.rglob('*.csv')}
+    control_labels = {p.relative_to(control):p for p in control.rglob('*Labels.tiff')}
+    assert len(control_csvs) == expected_csvs and len(control_labels) == expected_labels
+    for directory,label in targets:
+        folder = directory / suffix
+        csvs = {p.relative_to(folder):p for p in folder.rglob('*.csv')}
+        images = {p.relative_to(folder):p for p in folder.rglob('*Labels.tiff')}
+        assert csvs.keys() == control_csvs.keys() and images.keys() == control_labels.keys(), directory
+        for relative,path in csvs.items():
+            assert path.read_bytes() == control_csvs[relative].read_bytes(), path
+        for relative,path in images.items():
+            x,y = tifffile.imread(path),tifffile.imread(control_labels[relative])
+            assert x.dtype == y.dtype and x.shape == y.shape and np.array_equal(x,y), path
+        parity.append({'case':case,'directory':str(directory),'label':label,'control':str(control),
+                       'byte_exact_csvs':[{'path':str(p),'sha256':hashlib.sha256(csvs[p].read_bytes()).hexdigest()} for p in sorted(csvs)],
+                       'exact_label_images':len(images)})
+means = {case:{label:{key:statistics.mean(float(row[key]) for obs in observations if obs['case']==case and obs['label']==label for row in obs['rows'])
+                            for key in ('compile_seconds','execute_seconds','total_seconds')}
+                   for label in ('main','candidate')}
+             for case in ('ExampleImagingFlowCytometryObjectsInGrid','cp_tutorial_3d_monolayer')}
+report={'parity':parity,'means':means,'public_observations':len(observations),
+        'limits':'Unprofiled CPU5 sequential paired qualification after main PR317; two observations per case are parity/source qualification, not statistical performance evidence, shared current dependency pins and warmed declared kernel cache; mandatory readiness preparation precedes pipeline clocks. Server startup/shutdown excluded. 1w_1t selects InlineWorkerExecutorResources; fork is configured for multiworker processes. ImagingFlow has one requested combined spreadsheet and no persisted label outputs; 3D compares all six complete spreadsheets and120 persisted labels. Diagnostics are timing attribution only. No native CP/scaling refresh or whole-goal completion is claimed.'}
+destination=runs/'perf-numerical-cache-owners-public-comparison-20261001.json'
+destination.write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({'means':means,'exact_csvs':sum(len(x['byte_exact_csvs']) for x in parity),'exact_labels':sum(x['exact_label_images'] for x in parity)}))

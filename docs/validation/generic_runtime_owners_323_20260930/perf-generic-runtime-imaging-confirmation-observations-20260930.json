@@ -1,0 +1,126 @@
+[
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "index": 0,
+    "label": "candidate",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-imaging-confirmation-0-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.974999189376831",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "17.312246084213257",
+        "total_seconds": "19.956717803142965",
+        "wells_per_second": "0.05776258003355688",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2537.04296875",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "8d22604ab07a5075f9f3b912e425037556c915f34741029c817cc9c487c4bb82"
+      }
+    ],
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+  },
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "index": 1,
+    "label": "main",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-imaging-confirmation-1-main-20260930",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.5193252563476562",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "16.02342963218689",
+        "total_seconds": "18.275223518256098",
+        "wells_per_second": "0.062408611823729726",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2602.6640625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "46fd388a00f03ecb90ebeb942623e8633fe171c18c850c5378932a105109073d"
+      }
+    ],
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+  },
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "index": 2,
+    "label": "main",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-imaging-confirmation-2-main-20260930",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.960972547531128",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "17.503740549087524",
+        "total_seconds": "20.144600269384682",
+        "wells_per_second": "0.05713064571516003",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2541.3984375",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "46fd388a00f03ecb90ebeb942623e8633fe171c18c850c5378932a105109073d"
+      }
+    ],
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+  },
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "index": 3,
+    "label": "candidate",
+    "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-generic-runtime-imaging-confirmation-3-candidate-20260930",
+    "rows": [
+      {
+        "case_name": "ExampleImagingFlowCytometryObjectsInGrid",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "1.5604984760284424",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "17.66849160194397",
+        "total_seconds": "19.967063021846116",
+        "wells_per_second": "0.05659792711959494",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "2402.03125",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "8d22604ab07a5075f9f3b912e425037556c915f34741029c817cc9c487c4bb82"
+      }
+    ],
+    "csv_sha256": "517057a4b018195cc4c57e8503be63a378a8306eb2ecc303d4a025b6eab6dd1c"
+  }
+]
