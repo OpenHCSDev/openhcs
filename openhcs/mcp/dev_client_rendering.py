@@ -221,12 +221,6 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
         return ()
 
     @classmethod
-    def decode_payload(cls, payload: object, output_contract: type) -> object:
-        """Unmigrated families keep their existing presentation until cutover."""
-        del output_contract
-        return payload
-
-    @classmethod
     def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
         from openhcs.serialization.json import to_jsonable
 
@@ -253,9 +247,6 @@ class McpDevOutputRendererBinding:
     output_contract: type
     renderer_type: type[McpDevOutputRenderer]
     render_function: McpDevOutputRenderFunction | None = None
-
-    def decode_payload(self, payload: object) -> object:
-        return self.renderer_type.decode_payload(payload, self.output_contract)
 
     def render_result(self, response, options: McpDevOutputRenderOptions) -> str:
         if self.render_function is not None:
@@ -339,12 +330,6 @@ class McpDevTypedOutputRenderer(McpDevOutputRenderer):
         if binding is None:
             raise TypeError(f"No renderer declared for {type(payload).__name__}")
         return binding.renderer_type.render_payload(payload, options)
-
-    @classmethod
-    def decode_payload(cls, payload: object, output_contract: type) -> object:
-        if isinstance(payload, output_contract):
-            return payload
-        return dataclass_from_mapping(output_contract, payload)
 
 
 class McpDevPayloadProjection:

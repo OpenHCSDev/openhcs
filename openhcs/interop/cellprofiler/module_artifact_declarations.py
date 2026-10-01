@@ -57,6 +57,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 
 if TYPE_CHECKING:
+    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+        CellProfilerObjectLocationMeasurementRows,
+    )
     from collections.abc import Callable
 
     from openhcs.core.function_patterns import (
@@ -251,6 +254,17 @@ class ObjectArtifactOutputModule(
     """Parent for modules that emit object-label artifacts through declared settings."""
 
     @classmethod
+    def object_location_measurement_row_type(
+        cls,
+    ) -> type[CellProfilerObjectLocationMeasurementRows]:
+        """Declare the native segmentation location-measurement owner."""
+        from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+            ObjectLocationMeasurementRows,
+        )
+
+        return ObjectLocationMeasurementRows
+
+    @classmethod
     def measurement_object_output_specs_for_request(
         cls,
         request: "CellProfilerOutputRecordRequest",
@@ -375,13 +389,10 @@ class ObjectArtifactOutputModule(
         from openhcs.interop.cellprofiler.measurement_lookup import (
             CellProfilerMeasurementFeature,
         )
-        from openhcs.interop.cellprofiler.runtime.measurement_rows import (
-            ObjectLocationMeasurementRows,
-        )
 
         row_batches = []
         for object_spec in cls.measurement_object_output_specs_for_request(request):
-            location_rows = ObjectLocationMeasurementRows(
+            location_rows = cls.object_location_measurement_row_type()(
                 request.artifact_output_value(object_spec),
                 object_name=object_spec.name,
                 domain_scope=request.object_label_output_domain_scope(),
@@ -463,6 +474,20 @@ class ObjectArtifactOutputModule(
         if not object_outputs:
             return super().measurement_record_source_metadata(request, rows)
         return request.measurement_source_metadata(object_outputs)
+
+
+class LabelDimensionObjectArtifactOutputModule(ObjectArtifactOutputModule):
+    """Object producers using native identify utility location measurements."""
+
+    @classmethod
+    def object_location_measurement_row_type(
+        cls,
+    ) -> type[CellProfilerObjectLocationMeasurementRows]:
+        from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+            LabelDimensionObjectLocationMeasurementRows,
+        )
+
+        return LabelDimensionObjectLocationMeasurementRows
 
 
 class PriorMeasurementArtifactInputModule(CellProfilerModule):
@@ -564,6 +589,24 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
         return frozenset(object_refs), frozenset(source_refs)
 
     @classmethod
+    def prior_measurement_matches_lineage(
+        cls,
+        spec: ArtifactSpec,
+        *,
+        object_refs: frozenset[ArtifactSpecRef],
+        source_refs: frozenset[ArtifactSpecRef],
+    ) -> bool:
+        """Compare producer subjects in the consumer role using the reference owner."""
+        lineage_refs = frozenset(
+            relation.source.for_plan_type(ArtifactInputPlan)
+            for relation in spec.relations
+        )
+        return all(
+            not required or not required.isdisjoint(lineage_refs)
+            for required in (object_refs, source_refs)
+        )
+
+    @classmethod
     def prior_measurement_artifact_inputs(
         cls,
         module: "ModuleBlock",
@@ -592,19 +635,10 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 and producer.spec.measurement_feature_owner.owns_measurement_feature_name(
                     feature_name
                 )
-                and (
-                    not object_refs
-                    or any(
-                        relation.source in object_refs
-                        for relation in producer.spec.relations
-                    )
-                )
-                and (
-                    not source_refs
-                    or any(
-                        relation.source in source_refs
-                        for relation in producer.spec.relations
-                    )
+                and cls.prior_measurement_matches_lineage(
+                    producer.spec,
+                    object_refs=object_refs,
+                    source_refs=source_refs,
                 )
             )
             if not feature_matches:
@@ -616,9 +650,9 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
             for producer in feature_matches:
                 measurement_input = producer.spec.for_plan_type(ArtifactInputPlan)
                 lineage_sources = tuple(
-                    source
+                    source.for_plan_type(ArtifactInputPlan)
                     for source in producer.spec.group_scope_sources()
-                    if source in group_lineage_refs
+                    if source.for_plan_type(ArtifactInputPlan) in group_lineage_refs
                 )
                 if len(lineage_sources) > 1:
                     raise ValueError(
@@ -1229,25 +1263,8 @@ class ImageMeasurementInputModule(
         )
 
 
-class ObjectMeasurementInputModule(
-    MeasurementArtifactOutputModule,
-    ObjectArtifactInputModule,
-):
-    """Parent for measurement modules that consume object-label measurement inputs."""
-
-    object_measurement_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
-        "Select object sets to measure",
-        aliases=("Select objects to measure", "Select an object to measure"),
-    )
-    object_measurement_binding = SettingToKeywordBinding.input(
-        object_measurement_setting,
-        ObjectLabelsArtifactType,
-        runtime_parameter_name="labels",
-        repeated=True,
-    )
-    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
-        object_measurement_binding,
-    )
+class ObjectMeasurementArtifactOutputModule(MeasurementArtifactOutputModule):
+    """Compose object subjects independently of input settings and splitting."""
 
     @classmethod
     def measurement_output_relations(
@@ -1272,6 +1289,27 @@ class ObjectMeasurementInputModule(
                 for spec in artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
             ),
         )
+
+
+class ObjectMeasurementInputModule(
+    ObjectMeasurementArtifactOutputModule,
+    ObjectArtifactInputModule,
+):
+    """Parent for measurement modules that consume object-label measurement inputs."""
+
+    object_measurement_setting: ClassVar[SettingNameFamily] = SettingNameFamily(
+        "Select object sets to measure",
+        aliases=("Select objects to measure", "Select an object to measure"),
+    )
+    object_measurement_binding = SettingToKeywordBinding.input(
+        object_measurement_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
+        repeated=True,
+    )
+    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
+        object_measurement_binding,
+    )
 
     @classmethod
     def invocation_module_blocks(

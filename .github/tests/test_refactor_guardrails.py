@@ -12,6 +12,7 @@ import yaml
 from scripts.check_refactor_r1 import (
     R1EmptyReportScope,
     SourceRevision,
+    StagedSourceRevision,
     compare,
     git,
     json_report_object,
@@ -207,7 +208,18 @@ def test_empty_scope_rejects_an_uninitialized_repository_child(repository, tmp_p
     assert not (tmp_path / "not-created").exists()
 
 
-@pytest.mark.parametrize("source,increased", [("", False), (RAW, True)])
+@pytest.mark.parametrize(
+    "source,increased",
+    [
+        ("", False),
+        (RAW, True),
+        (
+            SCHEMA
+            + "\ndef check(row: Record):\n    return isinstance(row.alpha, str)\n",
+            True,
+        ),
+    ],
+)
 def test_actual_r1_cli_json_and_exit_status(repository, tmp_path, source, increased):
     base = git(repository, "rev-parse", "HEAD").decode().strip()
     head = commit(repository, "openhcs/read.py", source)
@@ -275,6 +287,202 @@ def test_original_nra_reuse_invalidates_changed_schema_context(
         ("unmodeled_record_shape", "openhcs/consumer.py")
     ]
     assert "NRA cache=" in capsys.readouterr().err
+
+
+def test_staging_keeps_source_identity_and_removes_deleted_members(
+    repository, tmp_path
+):
+    commit(repository, "openhcs/model.py", SCHEMA)
+    base = commit(repository, "openhcs/old.py", RAW)
+    snapshot = tmp_path / "source"
+    StagedSourceRevision(repository, base).materialize(snapshot, ("openhcs",))
+    model = snapshot / "openhcs/model.py"
+    identity = model.stat()
+    git(repository, "rm", "openhcs/old.py")
+    head = commit(repository, "openhcs/new.py", RAW)
+    members = StagedSourceRevision(repository, head).materialize(snapshot, ("openhcs",))
+    assert model.stat() == identity
+    assert not (snapshot / "openhcs/old.py").exists()
+    assert (snapshot / "openhcs/new.py").read_text() == RAW
+    assert set(members) == set(snapshot.rglob("*.py"))
+
+
+@pytest.mark.parametrize("transition", ["added", "removed", "ambiguous"])
+def test_staged_schema_membership_matches_fresh_original_analysis(
+    repository, tmp_path, monkeypatch, transition
+):
+    from nominal_refactor_advisor.semantic_descent import SemanticAuthorityKind
+
+    import scripts.check_refactor_r1 as policy
+
+    if transition != "added":
+        commit(repository, "openhcs/model.py", SCHEMA)
+    base = commit(repository, "openhcs/consumer.py", RAW)
+    if transition == "removed":
+        git(repository, "rm", "openhcs/model.py")
+    elif transition == "ambiguous":
+        commit(repository, "openhcs/other.py", SCHEMA.replace("Record", "OtherRecord"))
+    else:
+        commit(repository, "openhcs/model.py", SCHEMA)
+    head = commit(repository, "openhcs/consumer.py", RAW + "# changed report target\n")
+    results = []
+    original = policy.analyze_compact_roots_with_cache
+
+    def observed(*args, **kwargs):
+        result = original(*args, **kwargs)
+        # Retain only names from the original schema inventory, not its graph.
+        results.append(
+            tuple(
+                sorted(
+                    authority.name
+                    for authority in result.semantic_descent_graph.authorities
+                    if authority.kind is SemanticAuthorityKind.DATACLASS_SCHEMA
+                )
+            )
+        )
+        return result
+
+    monkeypatch.setattr(policy, "analyze_compact_roots_with_cache", observed)
+    result = compare(repository, base, head, tmp_path / "scratch")
+    staged_resolution = results[-1]
+    snapshot = tmp_path / "fresh"
+    SourceRevision(repository, head).materialize(snapshot, ("openhcs",))
+    fresh = scan_counts(
+        snapshot, ("openhcs",), result.changed, cache_root=tmp_path / "fresh-nra"
+    )
+    assert result.after == fresh
+    assert staged_resolution == results[-1]
+    if transition == "added":
+        assert {item.check for item in result.before} == {"unmodeled_record_shape"}
+        assert {item.check for item in result.after} == {"mapping_read"}
+    elif transition == "removed":
+        assert {item.check for item in result.before} == {"mapping_read"}
+        assert {item.check for item in result.after} == {"unmodeled_record_shape"}
+        assert {item.check for item in result.increased} == {"unmodeled_record_shape"}
+    else:
+        assert len(results[0]) == 1
+        assert len(staged_resolution) == 2
+        assert result.before != result.after
+
+
+def test_fixed_address_reuses_original_projection_cache(
+    repository, tmp_path, monkeypatch
+):
+    from nominal_refactor_advisor.analysis import CompactProjectionCacheSource
+
+    import scripts.check_refactor_r1 as policy
+
+    commit(repository, "openhcs/model.py", SCHEMA)
+    base = commit(repository, "openhcs/consumer.py", DECODE)
+    head = commit(repository, "openhcs/consumer.py", DECODE + "# comment only\n")
+    snapshots = []
+    parsed = []
+    original_scan = policy.scan_counts
+    original_parse = CompactProjectionCacheSource.parsed_module
+
+    def observed_parse(self):
+        parsed.append(self.path)
+        return original_parse(self)
+
+    def observed_scan(snapshot, *args, **kwargs):
+        start = len(parsed)
+        result = original_scan(snapshot, *args, **kwargs)
+        snapshots.append((snapshot, len(parsed) - start))
+        return result
+
+    monkeypatch.setattr(CompactProjectionCacheSource, "parsed_module", observed_parse)
+    monkeypatch.setattr(policy, "scan_counts", observed_scan)
+    result = compare(repository, base, head, tmp_path / "scratch")
+    assert not result.increased
+    assert snapshots[0][0] == snapshots[1][0]
+    assert snapshots[0][1] > 0
+    assert snapshots[1][1] == 0
+
+
+@pytest.mark.parametrize("remove_dependency", [False, True])
+def test_recursive_git_dependency_transition_invalidates_schema(
+    repository, tmp_path, remove_dependency
+):
+    dependency = repository / "external/dep"
+    nested = dependency / "external/nested"
+    nested.mkdir(parents=True)
+    git(dependency, "init", "-q")
+    git(nested, "init", "-q")
+    schema_base = commit(nested, "nested/model.py", SCHEMA)
+    git(
+        dependency,
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        f"160000,{schema_base},external/nested",
+    )
+    dependency_base = commit(dependency, "dep/__init__.py", "")
+    git(
+        repository,
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        f"160000,{dependency_base},external/dep",
+    )
+    base = commit(repository, "openhcs/consumer.py", RAW)
+    if remove_dependency:
+        git(repository, "update-index", "--force-remove", "external/dep")
+    else:
+        schema_head = commit(
+            nested, "nested/model.py", SCHEMA.replace("beta: int", "delta: int")
+        )
+        git(
+            dependency,
+            "update-index",
+            "--cacheinfo",
+            f"160000,{schema_head},external/nested",
+        )
+        dependency_head = commit(
+            dependency, "dep/__init__.py", "# dependency changed\n"
+        )
+        git(
+            repository,
+            "update-index",
+            "--cacheinfo",
+            f"160000,{dependency_head},external/dep",
+        )
+    head = commit(repository, "openhcs/consumer.py", RAW + "# changed report\n")
+    result = compare(repository, base, head, tmp_path / "scratch")
+    assert {item.check for item in result.before} == {"mapping_read"}
+    assert {item.check for item in result.after} == {"unmodeled_record_shape"}
+    assert {(item.check, item.file) for item in result.increased} == {
+        ("unmodeled_record_shape", "openhcs/consumer.py")
+    }
+    snapshot = tmp_path / "fresh"
+    SourceRevision(repository, head).materialize(snapshot, ("openhcs",))
+    assert result.after == scan_counts(
+        snapshot, ("openhcs",), result.changed, cache_root=tmp_path / "fresh-nra"
+    )
+
+
+def test_transition_releases_original_graph_before_next_analysis(
+    repository, tmp_path, monkeypatch
+):
+    import weakref
+
+    import scripts.check_refactor_r1 as policy
+
+    commit(repository, "openhcs/model.py", SCHEMA)
+    base = commit(repository, "openhcs/consumer.py", RAW)
+    head = commit(repository, "openhcs/consumer.py", RAW + "# changed\n")
+    graphs = []
+    original = policy.analyze_compact_roots_with_cache
+
+    def observed(*args, **kwargs):
+        assert all(graph() is None for graph in graphs)
+        result = original(*args, **kwargs)
+        graphs.append(weakref.ref(result.semantic_descent_graph))
+        return result
+
+    monkeypatch.setattr(policy, "analyze_compact_roots_with_cache", observed)
+    compare(repository, base, head, tmp_path / "scratch")
+    assert len(graphs) == 2
+    assert all(graph() is None for graph in graphs)
 
 
 def test_r1_parse_failure_and_deadline_are_not_clean_results(repository, tmp_path):

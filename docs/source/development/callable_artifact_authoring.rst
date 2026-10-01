@@ -67,6 +67,16 @@ Callable names such as ``special_inputs`` and ``special_outputs`` describe ABI
 positions only. They are not a substitute for artifact types, producer edges,
 or materialization declarations.
 
+``special_inputs("labels")`` alone does not bind a required ``labels`` parameter.
+Compilation rejects that incomplete contract, even if authored kwargs contain a
+value for ``labels``. Declare its semantic input with
+``artifact_inputs(ArtifactSpec.input("StoredLabels", ObjectLabelsArtifactType,
+parameter_name="labels"))`` or supply the exact declaration through the existing
+invocation-contract provider. Provider resolution precedes validation of the
+finalized ``CallableContract``. An optional ABI parameter may instead retain its
+declared Python default; the compiler does not invent an artifact identity,
+runtime loader or default value for it.
+
 Image outputs that retain the current stack's axes should use
 ``MainFlowStackOutputSpec.output(name, ImageArtifactType, ...)``. The compiler
 binds its lineage to the current image input. Declare the image before any

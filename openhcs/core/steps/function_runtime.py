@@ -1875,9 +1875,7 @@ class FunctionInvocationArtifactScope:
                 else (
                     RuntimeValue.from_spec(
                         input_plan.spec,
-                        self.declared_source_payload(
-                            artifact_ref, source_payload, loaded_artifact_payloads={}
-                        ),
+                        input_plan.resolve_unstored_payload(self, source_payload),
                         execution_scope=self.runtime_scope.axis_scope,
                     ),
                 )

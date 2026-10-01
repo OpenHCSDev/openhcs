@@ -38,8 +38,12 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     FunctionCatalogServiceABC,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import PipelineConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+from openhcs.core.invocation_artifacts import (
+    PipelineInvocationContractProviderAuthority,
+)
 from openhcs.core.pipeline_document import (
     PipelineDocument,
     PipelineDocumentAuthority,
@@ -357,6 +361,11 @@ class PipelineAuthoringService:
         func = self._function_catalog.resolve(ref.function_id)
         kwargs = dict(ref.kwargs)
         _validate_callable_kwargs(ref.function_id, func, kwargs)
+        contract = CallableContract.from_callable(func)
+        kwargs = contract.decode_public_kwargs(kwargs)
+        kwargs = PipelineInvocationContractProviderAuthority.normalize_authoring_kwargs(
+            contract, kwargs,
+        )
         if not kwargs:
             return func
         return (func, kwargs)
@@ -384,7 +393,10 @@ def _validate_callable_kwargs(
     kwargs: Mapping[str, JsonValue],
 ) -> None:
     signature = inspect.signature(func)
-    accepted_kwargs = PARAMETER_DOCUMENTATION_POLICY.agent_parameter_names(func)
+    contract = CallableContract.from_callable(func)
+    accepted_kwargs = PARAMETER_DOCUMENTATION_POLICY.agent_parameter_names(
+        func, contract,
+    )
     invalid_kwargs = tuple(kwarg for kwarg in kwargs if kwarg not in accepted_kwargs)
     if invalid_kwargs:
         raise InvalidFunctionKwargsError(
@@ -402,10 +414,10 @@ def _validate_callable_kwargs(
             function_id,
             missing_kwargs=missing_kwargs,
         )
-    try:
-        signature.bind_partial(**kwargs)
-    except TypeError:
-        raise
+    compile_only = PipelineInvocationContractProviderAuthority.compile_time_parameter_names(contract)
+    signature.bind_partial(**{
+        name: value for name, value in kwargs.items() if name not in compile_only
+    })
 
 
 def _pipeline_validation_error(exception: Exception) -> AgentError:

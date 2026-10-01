@@ -134,40 +134,17 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if self._metadata_cache is not None and self._plate_path_cache == current_path:
             return self._metadata_cache
 
-        metadata_file_path = self.find_metadata_file(current_path)
-        if not self.filemanager.exists(str(metadata_file_path), Backend.DISK.value):
-            raise MetadataNotFoundError(
-                f"Metadata file '{self.METADATA_FILENAME}' not found in {plate_path}"
-            )
-
-        try:
-            content = self.filemanager.load(str(metadata_file_path), Backend.DISK.value)
-            # Backend may return already-parsed dict (disk backend auto-parses JSON)
-            if isinstance(content, dict):
-                metadata_dict = content
-            else:
-                # Otherwise parse raw bytes/string
-                metadata_dict = json.loads(
-                    content.decode("utf-8") if isinstance(content, bytes) else content
-                )
-
-            # Handle subdirectory-keyed format
-            subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
-            base_metadata = self._metadata_projection(subdirs, plate_path)
-            base_metadata[FIELDS.IMAGE_FILES] = [
-                image_file
-                for subdir_name, subdir in subdirs.items()
-                for image_file in self._image_files(subdir_name, subdir)
-            ]
-            self._metadata_cache = base_metadata
-
-            self._plate_path_cache = current_path
-            return self._metadata_cache
-
-        except json.JSONDecodeError as e:
-            raise MetadataNotFoundError(
-                f"Error decoding JSON from '{metadata_file_path}': {e}"
-            ) from e
+        metadata_dict = self._load_metadata_dict(current_path)
+        subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
+        base_metadata = self._metadata_projection(subdirs, plate_path)
+        base_metadata[FIELDS.IMAGE_FILES] = [
+            image_file
+            for subdir_name, subdir in subdirs.items()
+            for image_file in self._image_files(subdir_name, subdir)
+        ]
+        self._metadata_cache = base_metadata
+        self._plate_path_cache = current_path
+        return self._metadata_cache
 
     def determine_main_subdirectory(self, plate_path: Union[str, Path]) -> str:
         """Determine main input subdirectory from metadata."""
@@ -244,7 +221,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> Mapping[str, Any] | None:
-        """Return the unambiguous subdirectory that owns a workspace mapping."""
+        """Return the metadata-owned mapping for input or read-only output."""
 
         metadata_document = self.source_workspace_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(
@@ -261,13 +238,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if len(mapped_subdirectories) == 1:
             return next(iter(mapped_subdirectories.values()))
 
-        main_subdirectory = self._main_subdirectory_name(subdirectories, plate_path)
-        if main_subdirectory not in mapped_subdirectories:
+        projected_metadata = self._metadata_projection(subdirectories, plate_path)
+        if not projected_metadata.get(FIELDS.WORKSPACE_MAPPING):
             raise ValueError(
-                f"OpenHCS main subdirectory {main_subdirectory!r} for {plate_path} "
+                f"OpenHCS selected metadata for {plate_path} "
                 "does not own one of the declared workspace mappings."
             )
-        return mapped_subdirectories[main_subdirectory]
+        return projected_metadata
 
     def build_metadata_view_document(
         self,
@@ -508,6 +485,14 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 },
                 plate_path,
                 "available_backends",
+            ),
+            FIELDS.WORKSPACE_MAPPING: self._merge_subdirectory_mapping(
+                {
+                    subdirectory_name: metadata.workspace_mapping
+                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                },
+                plate_path,
+                "workspace_mapping",
             ),
         }
 

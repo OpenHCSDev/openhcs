@@ -782,7 +782,7 @@
       "document_id": "openhcs_image_preprocessing",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/image-preprocessing.md",
-      "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, Gaussian/median denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis; preserve measurement pixels and faint biology.",
+      "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis. Interpret nuisances, retain source provenance and validate faint biology with claim-appropriate measurement inputs.",
       "tags": ["preprocessing method selection validation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
       "title": "Choose and test microscopy preprocessing"
     },
@@ -806,8 +806,8 @@
       "document_id": "openhcs_viewer_qa",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md",
-      "summary": "Matched raw-only/result-only/combined inspection across channels, positions, scales and numeric windows; verify live viewer state and recapture after canvas changes.",
-      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "segmentation visual debugging"],
+      "summary": "Distributed raw-only faint-structure and nuisance scans with progressively lower numeric upper display limits; diagnostic soma saturation versus publication intent. Matched raw-only/result-only/combined QA across channels, positions and scales; verify live state and recapture after canvas changes.",
+      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "segmentation visual debugging", "faint neurite lower upper display limit", "diagnostic soma saturation", "noise background illumination scan"],
       "title": "Review matched microscopy views"
     },
     {

@@ -724,6 +724,126 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
     )
 
 
+def test_export_to_spreadsheet_copies_native_metadata_and_qualified_file_names() -> (
+    None
+):
+    image = _measurement_record(
+        "image",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        rows=(
+            {
+                "slice_index": 0,
+                "Metadata_Plate": "plate",
+                "FileName_DNA": "dna.tif",
+                "PathName_DNA": "/inputs",
+                "Image_FileName_Membrane": "membrane.tif",
+            },
+        ),
+    )
+    cells = _measurement_record(
+        "cells",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=({"slice_index": 0, "object_number": 1, "Area": 2.0},),
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=tuple(
+            ArtifactSpec.input(record.key.name, MeasurementsArtifactType)
+            for record in (image, cells)
+        ),
+        records_by_axis={"A01": (image, cells)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+
+    bundle = export_to_spreadsheet(
+        artifact_batch=batch,
+        add_image_metadata=True,
+        add_image_file_names=True,
+        add_filename_prefix=False,
+    )
+
+    (row,) = csv.DictReader(io.StringIO(bundle["Cells.csv"]))
+    assert row["Metadata_Plate"] == "plate"
+    assert row["Image_FileName_DNA"] == "dna.tif"
+    assert row["Image_PathName_DNA"] == "/inputs"
+    assert row["Image_FileName_Membrane"] == "membrane.tif"
+    assert not any(name.startswith("Image_Metadata_") for name in row)
+    assert not any(name.startswith("Image_Image_") for name in row)
+
+
+def test_combined_spreadsheet_retains_native_subject_headers_and_sparse_rows(
+    tmp_path,
+) -> None:
+    from openhcs.core.runtime_equivalence import RuntimeTableSnapshot
+
+    records = tuple(
+        _measurement_record(
+            name,
+            axis_id="A01",
+            subject=MeasurementSubject(MeasurementScope.OBJECT, name, "object_number"),
+            rows=tuple(
+                {"slice_index": 0, "object_number": i, "Area": value}
+                for i, value in enumerate(values, 1)
+            ),
+        )
+        for name, values in (("Cells", (2.0, 4.0)), ("Cells_inner", (3.0,)))
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=tuple(
+            ArtifactSpec.input(record.key.name, MeasurementsArtifactType)
+            for record in records
+        ),
+        records_by_axis={"A01": records},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=batch,
+        export_all_measurement_types=False,
+        file_selections=(
+            SpreadsheetFileSelection(("Cells", "Cells_inner"), "Combined.csv"),
+        ),
+        add_filename_prefix=False,
+    )
+    lines = tuple(tuple(row) for row in csv.reader(io.StringIO(bundle["Combined.csv"])))
+    assert lines == (
+        ("Image", "Cells", "Cells", "Cells_inner", "Cells_inner"),
+        ("image_number", "object_label", "Area", "object_label", "Area"),
+        ("1", "1", "2.0", "1", "3.0"),
+        ("1", "2", "4.0", "", ""),
+    )
+    path = tmp_path / "Combined.csv"
+    path.write_text(bundle["Combined.csv"])
+    tables = RuntimeTableSnapshot.from_csv(path).measurement_tables()
+    assert tuple(table.subject.name for table in tables) == (
+        "Image",
+        "Cells",
+        "Cells_inner",
+    )
+    assert tuple(tables[1].rows.column_values("Area")) == ("2.0", "4.0")
+
+
+def test_native_csv_header_rows_preserve_quoting_and_reject_wrong_width() -> None:
+    from numbers import Real
+    from openhcs.core._tabular_native import render_csv
+
+    result = render_csv(
+        ({"raw": 3.0},),
+        ("raw",),
+        ",",
+        Real,
+        True,
+        (("Cells,inner",), ('Area"quoted\nname',)),
+    )
+    assert tuple(csv.reader(io.StringIO(result))) == (
+        ["Cells,inner"],
+        ['Area"quoted\nname'],
+        ["3.0"],
+    )
+    with pytest.raises(ValueError, match="header width"):
+        render_csv(({"raw": 3.0},), ("raw",), ",", Real, True, (("one", "two"),))
+
+
 def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() -> None:
     provenance_by_channel = (
         SourceImageProvenancePlanes.from_components(

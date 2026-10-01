@@ -488,6 +488,7 @@ def test_object_label_pure_2d_aggregator_uses_image_metadata_composition() -> No
             "well": "A01",
             "site": "1",
             "channel": "1",
+            "extension": ".tif",
         },
         source_image_names=("rawDNA",),
         source_spatial_domain=spatial_domain,
@@ -502,6 +503,7 @@ def test_object_label_pure_2d_aggregator_uses_image_metadata_composition() -> No
             "well": "A01",
             "site": "2",
             "channel": "1",
+            "extension": ".tif",
         },
         source_image_names=("rawDNA",),
         source_spatial_domain=spatial_domain,
@@ -1573,6 +1575,7 @@ def test_bundle_image_metadata_preserves_payload_source_provenance() -> None:
                     "well": "A01",
                     "site": "1",
                     "channel": "1",
+                    "extension": ".tif",
                     "z_index": "1",
                 },
             ),
@@ -1586,6 +1589,7 @@ def test_bundle_image_metadata_preserves_payload_source_provenance() -> None:
                     "well": "A01",
                     "site": "1",
                     "channel": "2",
+                    "extension": ".tif",
                     "z_index": "1",
                 },
             ),
@@ -2941,7 +2945,8 @@ def test_group_scoped_measurements_preserve_runtime_row_axis() -> None:
     value = RuntimeValue.normalize(output_plan, table, axis_id="A01")
 
     assert value.data is table
-    assert value.materialization_payload() == table.rows
+    assert value.materialization_payload() is table
+    assert tuple(value.materialization_payload().rows) == tuple(table.rows)
 
 
 def test_grouped_scalar_artifact_records_compose_one_runtime_axis() -> None:
@@ -3079,13 +3084,23 @@ def test_normalize_artifact_value_preserves_slice_aligned_object_label_sources()
     first = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=expected_labels[0]),
         source_path="/input/A02_s001_w1_z001_t001.tif",
-        source_component_metadata={"well": "A02", "site": 1, "channel": 1},
+        source_component_metadata={
+            "well": "A02",
+            "site": 1,
+            "channel": 1,
+            "extension": ".tif",
+        },
         domain=ObjectLabelDomain(declared_object_ids=(1,)),
     )
     second = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=expected_labels[1]),
         source_path="/input/A02_s002_w1_z001_t001.tif",
-        source_component_metadata={"well": "A02", "site": 2, "channel": 1},
+        source_component_metadata={
+            "well": "A02",
+            "site": 2,
+            "channel": 1,
+            "extension": ".tif",
+        },
         domain=ObjectLabelDomain(declared_object_ids=(2,)),
     )
 
@@ -3122,8 +3137,8 @@ def test_normalize_artifact_value_preserves_slice_aligned_object_label_sources()
     assert tuple(
         dict(item) for item in payload.source_image_provenance_planes.component_metadata
     ) == (
-        {"well": "A02", "site": 1, "channel": 1},
-        {"well": "A02", "site": 2, "channel": 1},
+        {"well": "A02", "site": 1, "channel": 1, "extension": ".tif"},
+        {"well": "A02", "site": 2, "channel": 1, "extension": ".tif"},
     )
     np.testing.assert_array_equal(payload.labels, expected_labels)
     assert value.materialization_payload() is payload
