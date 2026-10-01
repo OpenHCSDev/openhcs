@@ -33,6 +33,8 @@ TASKS = (
     ("current processing intensity units", "openhcs_measurement_interpretation"),
     ("recipe error memory", "openhcs_analysis_learning"),
     ("canvas resize recapture", "openhcs_viewer_qa"),
+    ("diagnostic soma saturation", "openhcs_viewer_qa"),
+    ("noise background illumination scan", "openhcs_viewer_qa"),
     ("blind recipe promotion", "openhcs_blind_recipe_promotion"),
     ("missing analysis operation", "openhcs_custom_function_workflow"),
 )
@@ -89,6 +91,9 @@ def test_packaged_transfer_guides_retain_content_sections_and_skill_links(tmp_pa
         assert (destination / source_path).read_bytes() == (
             ROOT / source_path
         ).read_bytes()
+        assert document.content.strip() == (ROOT / source_path).read_text(
+            encoding="utf-8"
+        ).strip()
         # Each local companion link is available in the projected package,
         # rather than depending on the developer's checkout or /tmp sources.
         for link in re.findall(r"\]\(([^)]+\.md)\)", document.content):
