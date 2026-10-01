@@ -734,7 +734,10 @@ class OpenHCSMetadataWriter:
         def runtime_artifact_projection_paths(
             self, context: ProcessingContext, plan: CompiledStepPlan
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
-            """Only runtime-artifact targets own persisted artifact projections."""
+            """Publish artifacts persisted in this declared storage target."""
+            materialization = plan.runtime_artifact_materialization
+            if materialization.persists_to_backend(self.backend):
+                return self.project_runtime_artifacts(context, plan)
             return ()
 
         def contains_images(self, context: ProcessingContext) -> bool:
@@ -902,7 +905,10 @@ class OpenHCSMetadataWriter:
                     context,
                     output_path_filter=ImageFileFormat.is_image_path,
                 ):
-                    if not ImageFileFormat.is_image_path(output.path):
+                    if (
+                        not ImageFileFormat.is_image_path(output.path)
+                        or Path(output.path).parent != Path(self.output_dir)
+                    ):
                         continue
                     if output.metadata is None:
                         raise ValueError(
@@ -1125,11 +1131,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
             sub_dir=str(output_dir.relative_to(plate_root)),
             results_dir=None,
         )
-
-    def runtime_artifact_projection_paths(
-        self, context: ProcessingContext, plan: CompiledStepPlan
-    ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
-        return self.project_runtime_artifacts(context, plan)
 
 
 class RuntimeArtifactMaterializationAuthority:
