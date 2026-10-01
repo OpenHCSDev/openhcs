@@ -2948,7 +2948,7 @@ class PatternGroupRuntime:
 
     def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
         projection = self.source_workspace_projection_authority().projection_or_empty()
-        return SourcePatternResolutionContext.from_projection(
+        return self.request.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.request.context.microscope_handler.parser,
             projection=self.source_workspace_projection_cache().filtered_by_axis(
                 projection,
