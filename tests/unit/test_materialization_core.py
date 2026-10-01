@@ -34,7 +34,6 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import TransportMode
-from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
@@ -372,16 +371,6 @@ class _TestViewerMetadataHandler(ViewerMetadataHandlerABC):
 class _TestViewerMicroscopeHandler(ViewerMicroscopeHandlerABC):
     parser = _TestViewerFilenameParser()
     metadata_handler = _TestViewerMetadataHandler()
-
-
-@pytest.fixture
-def viewer_ack_return_route():
-    """Nominal producer route for message construction without a live listener."""
-    return AckReturnRoute(
-        url="tcp://127.0.0.1:8111",
-        incarnation="00000000-0000-0000-0000-000000000001",
-        owner=ProcessIdentity.current(),
-    )
 
 
 def _viewer_stream_backend_kwargs():

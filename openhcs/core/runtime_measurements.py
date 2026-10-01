@@ -1606,6 +1606,17 @@ class MeasurementSubject:
         return self.name
 
     @property
+    def row_identity_domain(self) -> tuple[MeasurementScope, str | None, str | None]:
+        """Return the row domain independently of an image's source qualifier.
+
+        Named image subjects share image-set row identity. Object and relationship
+        names identify different row domains and cannot be combined implicitly.
+        """
+
+        name = None if self.scope is MeasurementScope.IMAGE else self.name
+        return self.scope, name, self.id_field
+
+    @property
     def object_name(self) -> str | None:
         """Return the concrete object set represented by this subject, if any."""
         return self.name if self.scope is MeasurementScope.OBJECT else None
