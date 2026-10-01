@@ -320,9 +320,7 @@ class FunctionOutputPathAuthority:
         if qualifier is None:
             return filename
         if not filename.endswith(extension):
-            raise ValueError(
-                "Constructed filename does not retain its declared extension."
-            )
+            raise ValueError("Constructed filename does not retain its declared extension.")
         return f"{filename[:-len(extension)]}_{qualifier}{extension}"
 
     @staticmethod
@@ -588,10 +586,8 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                metadata.source_component_metadata,
-                metadata.source_path,
-                parser=parser,
-                identity_cache=identity_cache,
+                metadata.source_component_metadata, metadata.source_path,
+                parser=parser, identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -645,10 +641,8 @@ class FunctionOutputIdentityAuthority:
             identity = cls._identity_from_metadata(
                 source_identity.component_metadata,
                 extension=FunctionOutputExtensionAuthority.from_source(
-                    source_identity.component_metadata,
-                    source_identity.path,
-                    parser=parser,
-                    identity_cache=identity_cache,
+                    source_identity.component_metadata, source_identity.path,
+                    parser=parser, identity_cache=identity_cache,
                 ),
                 source="single represented payload source metadata",
             )
@@ -706,10 +700,8 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                metadata.source_component_metadata,
-                metadata.source_path,
-                parser=parser,
-                identity_cache=identity_cache,
+                metadata.source_component_metadata, metadata.source_path,
+                parser=parser, identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -908,10 +900,8 @@ class FunctionOutputIdentityAuthority:
         identity = cls._identity_from_metadata(
             source_identity.component_metadata,
             extension=FunctionOutputExtensionAuthority.from_source(
-                source_identity.component_metadata,
-                source_identity.path,
-                parser=parser,
-                identity_cache=identity_cache,
+                source_identity.component_metadata, source_identity.path,
+                parser=parser, identity_cache=identity_cache,
             ),
             source=f"represented source identity {identity_index} metadata",
         )
