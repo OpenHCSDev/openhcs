@@ -4,7 +4,7 @@ Managed render-complete snapshots and spatial QA, issues363/366
 Integration owner: Singer/Codex managed-viewer QA sidecar. Source base791650087.
 Persistent source: /home/ts/wt/openhcs-render-complete-snapshot-20261001 and
 /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001. Paired dependency
-8cf7282 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
+2de6bc0 (draft PyQT-reactive10), extended from the original3437d1c gitlink.
 OpenHCS draft364 closes363 and366; neither draft is installed or live accepted.
 Closes #363. Closes #366. Paired PR: https://github.com/OpenHCSDev/PyQT-reactive/pull/10.
 
@@ -142,11 +142,11 @@ archive evidence here before removing that exact owned directory.
 Latest bounded shards, all plugin/provider-free with CPU0 affinity, CPUQuota100%,
 MemoryMax512M and MemorySwapMax0, shell timeout60s:
 
-* qt-deadline-fixed.log:15 passed,1.46s elapsed,127968KiB peak. Existing real
+* qt-operation-final.log:15 passed,1.45s elapsed,127996KiB peak. Existing real
   qapp/rendered_canvas and observed_form fixtures, including original flash
   painter, late native completion, deadline, destruction and MI/new-case;
   expired queued operation and late real PNG commit are rejected without an
-  artifact. qt-operation-final.log rechecks the declaration-owned phase policy.
+  artifact. The declaration-owned phase policy is included in this final run.
 * spatial-final.log:16 passed,8.90s elapsed,482548KiB peak. Real ViewerModel,
   asymmetric nonzero gray/RGB crops, clipping/empty bounds, original two
   streaming-handler sampling tests, missing layout, color-axis retention and
@@ -193,7 +193,23 @@ OpenHCS Python paths and the paired pyqt-reactive source change; no path omitted
 Both pre-deadline full production ratchets passed: e16575464 OpenHCS against
 791650087 in23.27s/87692KiB (r0-openhcs-schema.log), and a9e6745 pyqt against
 3437d1c in3.42s/58192KiB (r0-pyqt-first.log). Revised end-to-end deadline
-production is subject to fresh pinned R0 on both actual deltas before handoff.
+production also passes original pinned R0 without any positive measure:
+OpenHCS f7f9af993 against791650087 in24.15s/87744KiB
+(r0-openhcs-operation.log), pyqt2de6bc0 against3437d1c in6.11s/58208KiB
+(r0-pyqt-operation.log). All five OpenHCS production paths and the actual paired
+pyqt production delta are included. No detector copy, omission, raised bound
+or waiver. Subsequent archive/receipt commit does not change production bytes.
+
+Byte-exact raw evidence is retained in
+docs/validation/issue363-source-checks-20261001.tar.gz. Archive entries preserve
+the original log basenames above and full commands/resource footers, including
+all original failures. Fresh extraction and byte comparisons precede removal
+of the replaced loose versioned copies. No pytest whitespace is rewritten.
+Production/docs and whole-PR diff whitespace checks are now separate from the
+unchanged evidence bytes inside the archive. The copied source-test native
+extension and exact owned agent-scratch directory are disposable and removed
+after archival; source worktrees, original parent witnesses and installed
+packages remain untouched.
 
 This receipt is a focused source/ownership review, not a completed global NRA
 scan or equivalence proof. The user's source-only limits govern validation;
