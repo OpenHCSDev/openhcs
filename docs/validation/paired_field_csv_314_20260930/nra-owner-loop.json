@@ -1,0 +1,35 @@
+{
+  "findings": [],
+  "plans": [],
+  "finding_payload_mode": "counts_only",
+  "finding_count": 0,
+  "finding_counts": {
+    "by_pattern": [],
+    "by_detector": []
+  },
+  "scan_status": {
+    "mode": "exact_compact_global",
+    "analyzed_detector_count": 79,
+    "omitted_detector_count": 0,
+    "complete": true,
+    "reason": "all_context_detectors_use_compact_global_projections"
+  },
+  "timing": {
+    "parse_seconds": 1.231,
+    "analysis_seconds": 0.229,
+    "planning_seconds": 0.0,
+    "source_index_seconds": 0.0,
+    "analysis_cache_status": "disabled",
+    "total_seconds": 1.46
+  },
+  "active_finding_surface": "raw_findings",
+  "payload_timing": {
+    "observation_graph_seconds": 0.0,
+    "semantic_descent_graph_seconds": 0.0,
+    "source_snapshot_seconds": 0.0,
+    "source_index_payload_seconds": 0.0,
+    "semantic_refactor_gate_seconds": 0.0,
+    "finding_recipe_plan_seconds": 0.0,
+    "total_seconds": 0.003
+  }
+}

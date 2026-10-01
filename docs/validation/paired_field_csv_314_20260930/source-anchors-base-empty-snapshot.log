@@ -1,0 +1,77 @@
+Traceback (most recent call last):
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 858, in import_plugin
+    __import__(importspec)
+ModuleNotFoundError: No module named 'tests'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+           ^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 156, in main
+    config = _prepareconfig(args, plugins)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 341, in _prepareconfig
+    config = pluginmanager.hook.pytest_cmdline_parse(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/helpconfig.py", line 105, in pytest_cmdline_parse
+    config = yield
+             ^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1140, in pytest_cmdline_parse
+    self.parse(args)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1494, in parse
+    self._preparse(args, addopts=addopts)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1377, in _preparse
+    self.pluginmanager.consider_preparse(args, exclude_only=False)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 787, in consider_preparse
+    self.consider_pluginarg(parg)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 810, in consider_pluginarg
+    self.import_plugin(arg, consider_entry_points=True)
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 860, in import_plugin
+    raise ImportError(
+  File "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 858, in import_plugin
+    __import__(importspec)
+ImportError: Error importing plugin "tests.pytest_integration_options": No module named 'tests'
+Command exited with non-zero status 1
+	Command being timed: "timeout 60s env OPENHCS_CPU_ONLY=true OPENHCS_BACKEND_EXCLUDE=torch,tensorflow,jax,cupy OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 XDG_CACHE_HOME=/home/ts/.cache/agent-scratch/issue314-russell /home/ts/code/projects/openhcs/.venv/bin/python -B -m pytest tests/unit/test_source_bound_matched_image_set_anchors.py -q --basetemp=/home/ts/.cache/agent-scratch/issue314-russell/pytest-base-controls"
+	User time (seconds): 0.18
+	System time (seconds): 0.03
+	Percent of CPU this job got: 110%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.19
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 26860
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 7128
+	Voluntary context switches: 28
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 48
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

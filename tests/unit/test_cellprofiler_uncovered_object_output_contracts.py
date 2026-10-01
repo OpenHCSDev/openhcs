@@ -33,7 +33,11 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_image_values import image_payload_metadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_metadata,
+)
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -227,6 +231,40 @@ def test_object_leaf_callables_emit_schema_rows_then_nominal_labels() -> None:
     ) == (DeadWormStats, DeadWormAngleMeasurement)
     assert isinstance(dead_worms[2], ObjectLabelValue)
     assert dead_worms[2].object_label_domain().declared_object_count == 0
+
+
+@pytest.mark.parametrize("metadata_bearing", (False, True))
+@pytest.mark.parametrize("preserve_label", (False, True))
+def test_image_conversion_preserves_source_pixels_and_metadata(
+    metadata_bearing: bool, preserve_label: bool,
+) -> None:
+    pixels = np.zeros((12, 12), dtype=np.uint8)
+    pixels[2:5, 2:5] = 2
+    pixels[7:10, 7:10] = 7
+    original = pixels.copy()
+    metadata = ImagePayloadMetadata(
+        source_path="/input/A01_s001_w1_z001_t001.TIF",
+        source_component_metadata={"well": "A01", "channel": "1"},
+        source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
+    )
+    image = metadata.payload_with(pixels, None) if metadata_bearing else pixels
+
+    main_image, rows, objects = inspect.unwrap(convert_image_to_objects)(
+        image, preserve_label=preserve_label,
+    )
+
+    assert main_image is image
+    np.testing.assert_array_equal(pixels, original)
+    expected_labels = original if preserve_label else np.where(original == 7, 2, original // 2)
+    np.testing.assert_array_equal(object_label_dense_array(objects), expected_labels)
+    assert objects.object_label_domain().declared_object_count == 2
+    assert tuple(rows.iter_row_mappings()) == (
+        {"slice_index": 0, "object_count": 2, "mean_area": 9.0, "total_area": 18},
+    )
+    source_metadata = image_payload_metadata(image)
+    assert objects.source_provenance == source_metadata.source_provenance
+    assert objects.parent_image_source_voxel_spacing == source_metadata.source_voxel_spacing
+    assert objects.source_spatial_domain.source_shape_yx == pixels.shape
 
 
 def test_identify_dead_worms_projects_exact_native_measurement_features() -> None:
