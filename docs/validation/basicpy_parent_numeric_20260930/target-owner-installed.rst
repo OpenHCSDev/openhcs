@@ -58,6 +58,16 @@ to ArrayBridge0.3.5; no old-API fallback, direct-Git dependency or manual source
 pin is added. A companion release must be published before ordinary dependency
 resolution is claimed.
 
+After PR317 merged, this dependency branch normally integrates
+main74eac059f67389ca071055c93fcbdd556ba79f1a at771dbdd45. Sixteen combined
+real-BaSiC numerical and source-image-set identity controls pass in7.12 seconds,
+including the stationary-signal negative control. This is source integration
+evidence, not a new installed acceptance claim for the combined dependency
+branch. The existing isolated candidate is frozen for the independent-author
+H003f trial until its terminal freeze and exact process cleanup; no package,
+instruction or shared-install mutation is permitted there during that trial.
+The companion ArrayBridge release is visible in OpenHCSDev/ArrayBridge PR4.
+
 The approved openhcs-basicpy1.3.1 publication job36783511705 remains queued
 without a runner or steps. Its exact PyPI endpoint returned HTTP404 on the
 2026-10-01 checkpoint. Do not merge an unavailable ordinary dependency into
