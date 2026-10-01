@@ -21,6 +21,7 @@ from openhcs.processing.backends.cellprofiler.granularity import (
     NativeGranularityReconstructionBackendStrategy,
     NumbaGranularityReconstructionBackendStrategy,
     ObjectGranularityMeasurementRows,
+    ImageGranularityMeasurementRows,
     OpenCVGranularityReconstructionBackendStrategy,
     background_corrected_pixels,
     granularity_grey_erosion,
@@ -242,10 +243,46 @@ def test_measure_granularity_projects_exact_image_feature_identities_at_producer
     assert projected.column_values("Granularity_16_BF_image") == (16.25,)
 
 
+@pytest.mark.parametrize("sample_count", (1, 5, 17))
+@pytest.mark.parametrize("object_count", (0, 2))
+def test_granularity_row_schema_contains_only_actual_samples(
+    sample_count, object_count
+):
+    values = np.arange(object_count * sample_count, dtype=float).reshape(
+        object_count, sample_count
+    )
+    rows = ObjectGranularityMeasurementRows(
+        object_ids=np.arange(1, object_count + 1, dtype=np.int32),
+        gs_values=values,
+    )
+    assert tuple(rows.columns) == (
+        "slice_index",
+        "object_id",
+        *(f"gs{i}" for i in range(1, sample_count + 1)),
+    )
+    assert tuple(field.name for field in rows.fields) == tuple(rows.columns)
+    for i in range(sample_count):
+        np.testing.assert_array_equal(rows.column_values(f"gs{i+1}"), values[:, i])
+    image = ImageGranularityMeasurementRows(
+        gs_values=np.arange(sample_count, dtype=float).reshape(1, sample_count)
+    )
+    assert tuple(image.columns) == (
+        "slice_index",
+        *(f"gs{i}" for i in range(1, sample_count + 1)),
+    )
+    projected = MeasureGranularityModule.prepare_measurement_record_rows(
+        image, source_image_name="DNA"
+    )
+    assert tuple(projected.columns) == (
+        "slice_index",
+        *(f"Granularity_{i}_DNA" for i in range(1, sample_count + 1)),
+    )
+
+
 def test_measure_granularity_projects_exact_object_feature_identities_at_producer():
     rows = ObjectGranularityMeasurementRows(
-        np.asarray((3,), dtype=np.int32),
-        np.arange(1.0, 17.0, dtype=np.float64).reshape(1, 16),
+        object_ids=np.asarray((3,), dtype=np.int32),
+        gs_values=np.arange(1.0, 17.0, dtype=np.float64).reshape(1, 16),
     )
 
     projected = MeasureGranularityModule.prepare_measurement_record_rows(
@@ -267,8 +304,8 @@ def test_measure_granularity_projects_exact_object_feature_identities_at_produce
 
 def test_object_granularity_rows_preserve_exact_zero_row_schema():
     rows = ObjectGranularityMeasurementRows(
-        np.empty(0, dtype=np.int32),
-        np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
+        object_ids=np.empty(0, dtype=np.int32),
+        gs_values=np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
     )
 
     assert tuple(field.name for field in rows.fields) == tuple(rows.columns)
@@ -300,7 +337,7 @@ def test_measure_granularity_objects_preserves_sparse_label_ids():
         dtype_config=DtypeConfig(),
     )
 
-    assert [measurement.object_id for measurement in measurements] == [1, 3]
+    assert measurements.column_values("object_id").tolist() == [1, 3]
 
 
 def test_granularity_series_cache_reuses_equal_image_values():
@@ -362,7 +399,7 @@ def test_measure_granularity_objects_uses_order_one_coordinate_sampling_after_su
         spectrum_length=1,
         profile_function="test",
     ).series()
-    object_ids = np.array([measurement.object_id for measurement in measurements])
+    object_ids = np.array(measurements.column_values("object_id").tolist())
     current_means = scipy.ndimage.mean(image, labels, object_ids)
     start_means = np.maximum(current_means, np.finfo(float).eps)
     rec = series.reconstructions[0]
@@ -374,7 +411,7 @@ def test_measure_granularity_objects_uses_order_one_coordinate_sampling_after_su
     rec_full = scipy.ndimage.map_coordinates(rec, (ri, rj), order=1)
     new_means = scipy.ndimage.mean(rec_full, labels, object_ids)
     expected = (current_means - new_means) * 100 / start_means
-    actual = np.array([measurement.gs1 for measurement in measurements])
+    actual = np.asarray(measurements.column_values("gs1"))
 
     np.testing.assert_allclose(actual, expected)
 
@@ -553,8 +590,11 @@ def test_measure_granularity_objects_matches_reference_operations():
         current_means = scipy.ndimage.mean(rec, labels, object_ids)
         expected.append((previous_means - current_means) * 100 / start_means)
 
-    actual = np.array(
-        [[measurement.gs1, measurement.gs2] for measurement in actual_measurements]
+    actual = np.column_stack(
+        (
+            actual_measurements.column_values("gs1"),
+            actual_measurements.column_values("gs2"),
+        )
     )
     np.testing.assert_allclose(actual, np.asarray(expected).T)
 
@@ -576,5 +616,5 @@ def test_measure_granularity_objects_preserves_negative_first_scale():
         dtype_config=DtypeConfig(),
     )
 
-    assert measurements[0].gs1 < 0.0
-    assert measurements[0].gs2 >= 0.0
+    assert measurements.column_values("gs1")[0] < 0.0
+    assert measurements.column_values("gs2")[0] >= 0.0

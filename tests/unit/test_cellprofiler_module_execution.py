@@ -3308,7 +3308,6 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
     assert {row["feature_name"] for row in object_rows} == {
         "Location_Center_X",
         "Location_Center_Y",
-        "Location_Center_Z",
     }
 
 
@@ -14655,14 +14654,12 @@ def test_object_location_measurements_preserve_repeated_homogeneous_planes() -> 
         object_name="GridObjects",
     ).rows()
 
-    assert len(rows) == 12
+    assert len(rows) == 8
     assert {row["slice_index"] for row in rows} == {0, 1}
-    assert {
-        row["result_value"]
-        for row in rows
-        if row["feature_name"]
-        == CellProfilerObjectCoreMeasurementFeature.CENTER_Z.value
-    } == {0.0}
+    assert {row["feature_name"] for row in rows} == {
+        CellProfilerObjectCoreMeasurementFeature.CENTER_X.value,
+        CellProfilerObjectCoreMeasurementFeature.CENTER_Y.value,
+    }
 
 
 def test_sparse_object_label_aggregation_preserves_declared_domain() -> None:

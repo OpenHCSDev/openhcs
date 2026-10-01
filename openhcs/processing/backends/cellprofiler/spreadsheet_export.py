@@ -217,6 +217,91 @@ class SpreadsheetFileSelection:
         object.__setattr__(self, "subjects", subjects)
         object.__setattr__(self, "file_name", file_name)
 
+    def combined_rows(
+        self,
+        selected_tables: tuple[tuple[str, tuple[Mapping[str, object], ...]], ...],
+    ) -> tuple[Mapping[str, object], ...]:
+        if len(selected_tables) == 1:
+            return selected_tables[0][1]
+        image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+        grouped: list[tuple[str, OrderedDict[object, list[Mapping[str, object]]]]] = []
+        image_order: list[object] = []
+        for subject, rows in selected_tables:
+            rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = (
+                OrderedDict()
+            )
+            for row in rows:
+                if image_field not in row:
+                    raise ValueError(
+                        "Combined spreadsheet subjects require a producer-declared "
+                        f"{image_field!r} on every {subject!r} row."
+                    )
+                image_number = row[image_field]
+                rows_by_image.setdefault(image_number, []).append(row)
+                if image_number not in image_order:
+                    image_order.append(image_number)
+            grouped.append((subject, rows_by_image))
+
+        combined: list[Mapping[str, object]] = []
+        for image_number in image_order:
+            row_count = max(
+                (
+                    len(rows_by_image.get(image_number, ()))
+                    for _, rows_by_image in grouped
+                ),
+                default=0,
+            )
+            for row_index in range(row_count):
+                row: dict[str, object] = {image_field: image_number}
+                for subject, rows_by_image in grouped:
+                    subject_rows = rows_by_image.get(image_number, ())
+                    if row_index >= len(subject_rows):
+                        continue
+                    for field_name, value in subject_rows[row_index].items():
+                        if field_name == image_field:
+                            continue
+                        row[f"{subject}_{field_name}"] = value
+                combined.append(row)
+        return tuple(combined)
+
+    def render_csv(
+        self,
+        rows: tuple[Mapping[str, object], ...],
+        *,
+        active_subjects: tuple[str, ...],
+        delimiter: SpreadsheetDelimiter,
+        nan_representation: SpreadsheetNanRepresentation,
+    ) -> str:
+        """Render native single or contextual headers from the selected subjects."""
+        columns = tuple(dict.fromkeys(field_name for row in rows for field_name in row))
+        header_rows = (columns,)
+        if len(active_subjects) > 1:
+            bindings = []
+            subjects = sorted(active_subjects, key=len, reverse=True)
+            image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+            for name in columns:
+                if name == image_field:
+                    bindings.append(("Image", name))
+                    continue
+                subject = next(
+                    (subject for subject in subjects if name.startswith(f"{subject}_")),
+                    None,
+                )
+                if subject is None:
+                    raise ValueError(
+                        f"Combined spreadsheet column {name!r} has no declared subject."
+                    )
+                bindings.append((subject, name[len(subject) + 1 :]))
+            header_rows = tuple(zip(*bindings))
+        return _render_native_csv(
+            rows,
+            columns,
+            delimiter.value,
+            Real,
+            nan_representation is SpreadsheetNanRepresentation.NULL,
+            header_rows,
+        )
+
 
 def cellprofiler_metadata_template(value: str) -> str:
     """Translate CellProfiler metadata references into a public string template."""
@@ -337,7 +422,7 @@ def render_spreadsheet_bundle(
         )
         if not selected_tables:
             continue
-        rows = _combined_rows(selected_tables)
+        rows = selection.combined_rows(selected_tables)
         path_template = _bundle_path_template(
             output_directory=output_directory,
             prefix=prefix,
@@ -352,8 +437,9 @@ def render_spreadsheet_bundle(
                 raise ValueError(
                     f"Spreadsheet export produced duplicate path {relative_path!r}."
                 )
-            bundle[relative_path] = _render_csv(
+            bundle[relative_path] = selection.render_csv(
                 selected_rows,
+                active_subjects=tuple(subject for subject, _ in selected_tables),
                 delimiter=delimiter,
                 nan_representation=nan_representation,
             )
@@ -784,48 +870,6 @@ def _automatic_file_selections(
     )
 
 
-def _combined_rows(
-    selected_tables: tuple[tuple[str, tuple[Mapping[str, object], ...]], ...],
-) -> tuple[Mapping[str, object], ...]:
-    if len(selected_tables) == 1:
-        return selected_tables[0][1]
-    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-    grouped: list[tuple[str, OrderedDict[object, list[Mapping[str, object]]]]] = []
-    image_order: list[object] = []
-    for subject, rows in selected_tables:
-        rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = OrderedDict()
-        for row in rows:
-            if image_field not in row:
-                raise ValueError(
-                    "Combined spreadsheet subjects require a producer-declared "
-                    f"{image_field!r} on every {subject!r} row."
-                )
-            image_number = row[image_field]
-            rows_by_image.setdefault(image_number, []).append(row)
-            if image_number not in image_order:
-                image_order.append(image_number)
-        grouped.append((subject, rows_by_image))
-
-    combined: list[Mapping[str, object]] = []
-    for image_number in image_order:
-        row_count = max(
-            (len(rows_by_image.get(image_number, ())) for _, rows_by_image in grouped),
-            default=0,
-        )
-        for row_index in range(row_count):
-            row: dict[str, object] = {image_field: image_number}
-            for subject, rows_by_image in grouped:
-                subject_rows = rows_by_image.get(image_number, ())
-                if row_index >= len(subject_rows):
-                    continue
-                for field_name, value in subject_rows[row_index].items():
-                    if field_name == image_field:
-                        continue
-                    row[f"{subject}_{field_name}"] = value
-            combined.append(row)
-    return tuple(combined)
-
-
 def _bundle_path_template(
     *,
     output_directory: str,
@@ -894,22 +938,6 @@ def _optional_metadata_value(
         if normalize_runtime_identifier(field_name) in candidates:
             return str(value)
     return None
-
-
-def _render_csv(
-    rows: tuple[Mapping[str, object], ...],
-    *,
-    delimiter: SpreadsheetDelimiter,
-    nan_representation: SpreadsheetNanRepresentation,
-) -> str:
-    columns = tuple(dict.fromkeys(field_name for row in rows for field_name in row))
-    return _render_native_csv(
-        rows,
-        columns,
-        delimiter.value,
-        Real,
-        nan_representation is SpreadsheetNanRepresentation.NULL,
-    )
 
 
 def _coerce_enum(enum_type: type[_EnumT], value: object) -> _EnumT:

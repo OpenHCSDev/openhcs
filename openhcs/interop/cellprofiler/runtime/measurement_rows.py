@@ -529,6 +529,7 @@ class ObjectLocationMeasurementRows:
                     axis_centers,
                     counts,
                 )
+                if coordinate.axis_present
             ),
         )
 
