@@ -49,5 +49,9 @@ summary = {
 }
 (SCRATCH / f"{name}.command.json").write_text(json.dumps(summary, indent=2) + "\n")
 print(json.dumps(summary))
-print((SCRATCH / f"{name}.log").read_text())
+log_text = (SCRATCH / f"{name}.log").read_text()
+if len(log_text) <= 8000:
+    print(log_text)
+else:
+    print(f"Full output retained in {SCRATCH / f'{name}.log'} ({len(log_text)} characters)")
 sys.exit(result if result >= 0 else 1)

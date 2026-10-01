@@ -122,6 +122,13 @@ system3.14.7, matching original CI's3.14, executes its unchanged pinned local
 Git source. This does not alter product3.12 validation or install/download
 anything. Tool worktree: /home/ts/wt/metadata-namespace-327-audit-tool.
 
+The application guard also passes unchanged at committeda1a1689f3 against PR206:
+all deltas zero for openhcs (14.01s, peak74.06 MiB), scripts (2.02s) and
+benchmark (2.59s). No parent-owned files are added to the write set.
+Changed-file census completes on both stacks with no parse omissions: dependency
+StringSubscript-2 / literal_key_get-1, application all measures unchanged. This
+does not certify parent changes after the pinned baseline or a future integration.
+
 Semantic edits were hand-authored; no NRA transaction or completed R1/raw-record
 certificate is claimed. Full NRA/R1 remains uncompleted, not waived. All raw
 logs/XML/command bounds, including failures, are retained in
@@ -129,6 +136,11 @@ metadata_namespace_327_source_evidence.tgz. Initial census JSON filenames were
 overwritten by the command-summary harness; the complete census stdout remains
 in logs. Harness now uses distinct .command.json outputs. No science data is
 part of this archive.
+
+Visible paired drafts: https://github.com/OpenHCSDev/PolyStore/pull/20 and
+https://github.com/OpenHCSDev/openhcs/pull/328. Final paired source uses child
+91fd7e854ca760a16e7472d8d558b4012e89b6ba, whose production tree equals the tested
+ee1e5438d64cb7d37e2641c2d9b3ee8870663adf tree (the later change is receipt-only).
 
 Acceptance boundary
 -------------------
