@@ -372,9 +372,11 @@ None of the four assigned production modules, fixture-helper caller, assigned
 test or frozen PR 329 XML parser changes from a339. Ordinary public imports
 prove the four assigned modules resolve to this worktree and have the exact old
 Git bytes; the adjacent metadata/artifact modules have the exact new main bytes.
-The recorded PolyStore source dependency remains
-91fd7e854ca760a16e7472d8d558b4012e89b6ba, whose qualified production tree matches
-merged PolyStore main 84f322. No dependency or installed package was modified.
+The recorded external/PolyStore gitlink is
+84f322e46871de5ed47e7fd20976ad03e533c1c4, confirmed by git ls-tree HEAD.
+The read-only source-check dependency is the historical qualified source
+91fd7e854ca760a16e7472d8d558b4012e89b6ba, with identical production source/tests
+to that merged PolyStore pin. No dependency or installed package was modified.
 
 Bounded integration evidence (same existing Python 3.12, one CPU, single-thread
 math libraries, bytecode disabled, supervised process-group RSS/time/scratch):
