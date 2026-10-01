@@ -218,16 +218,7 @@ def _tables_by_schema(
 def _comparable_table_snapshots(
     tables: tuple[RuntimeTableSnapshot, ...],
 ) -> tuple[RuntimeTableSnapshot, ...]:
-    return tuple(table for table in tables if not _is_metadata_table_snapshot(table))
-
-
-def _is_metadata_table_snapshot(table: RuntimeTableSnapshot) -> bool:
-    if normalize_runtime_identifier(table.path.stem) != "experiment":
-        return False
-    normalized_header = frozenset(
-        normalize_runtime_identifier(column) for column in table.header
-    )
-    return normalized_header == frozenset(("key", "value"))
+    return tuple(table for table in tables if not table.is_metadata_table)
 
 
 def _image_snapshots_equivalent(

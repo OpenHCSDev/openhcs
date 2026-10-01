@@ -78,6 +78,16 @@ class RuntimeTableSnapshot:
     rows: tuple[tuple[str, ...], ...]
     column_context: tuple[str | None, ...] = ()
 
+    @property
+    def is_metadata_table(self) -> bool:
+        """Identify the engine's Experiment key/value receipt table."""
+        if normalize_runtime_identifier(self.path.stem) != "experiment":
+            return False
+        normalized_header = frozenset(
+            normalize_runtime_identifier(column) for column in self.header
+        )
+        return normalized_header == frozenset(("key", "value"))
+
     @classmethod
     def from_csv(cls, path: Path) -> "RuntimeTableSnapshot":
         """Read a CSV export into a semantic table snapshot."""

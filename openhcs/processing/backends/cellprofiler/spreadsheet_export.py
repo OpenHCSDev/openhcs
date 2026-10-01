@@ -747,9 +747,13 @@ def _row_with_image_columns(
             add_file_names
             and normalized.startswith(
                 (
+                    "file_name_",
+                    "path_name_",
                     "filename_",
                     "pathname_",
                     "url_",
+                    "image_file_name_",
+                    "image_path_name_",
                     "image_filename_",
                     "image_pathname_",
                     "image_url_",
@@ -760,7 +764,7 @@ def _row_with_image_columns(
             continue
         output_name = (
             field_name
-            if normalize_runtime_identifier(field_name).startswith("image_")
+            if normalized.startswith(("metadata_", "image_"))
             else f"Image_{field_name}"
         )
         result.setdefault(output_name, value)

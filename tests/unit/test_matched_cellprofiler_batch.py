@@ -22,6 +22,186 @@ from benchmark.matched_cellprofiler_batch import (
 )
 from openhcs.core.config import MultiprocessingStartMethod, PipelineConfig
 from openhcs.core.progress.types import ProgressEvent
+from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_equivalence import (
+    RuntimeMeasurementSnapshot,
+    RuntimeOutputSnapshot,
+    RuntimeTableSnapshot,
+    runtime_measurement_equivalence,
+)
+
+
+@pytest.mark.parametrize("extra", (None, "Experiment.csv", "plate_Experiment.csv"))
+def test_matched_inventory_accepts_csv_and_only_engine_receipt_asymmetry(
+    tmp_path: Path,
+    extra: str | None,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "plate_Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    if extra is not None:
+        (roots[0] / extra).write_text("Key,Value\nCellProfiler_Version,4.2.8.1\n")
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+
+    matched_batch._require_compared_output_inventory(
+        reference_files=frozenset(roots[0].iterdir()),
+        candidate_files=frozenset(roots[1].iterdir()),
+        reference_exports=exports[0],
+        candidate_exports=exports[1],
+        reference_snapshot=snapshots[0],
+        candidate_snapshot=snapshots[1],
+    )
+
+
+@pytest.mark.parametrize(
+    "contents, message",
+    (
+        ({"unexpected.txt": "data"}, "without a value comparison"),
+        ({"Empty.csv": ""}, "without a value comparison"),
+        (
+            {"Cells.csv": "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n"},
+            "counts differ",
+        ),
+        ({"Experiment.csv": "ImageNumber,Count_Cells\n1,2\n"}, "counts differ"),
+        ({"Receipt.csv": "Key,Value\nVersion,1\n"}, "counts differ"),
+    ),
+)
+def test_matched_inventory_rejects_uncompared_and_extra_scientific_files(
+    tmp_path: Path,
+    contents: dict[str, str],
+    message: str,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+        (root / "Image.csv").write_text("ImageNumber,Count_Cells\n1,2\n")
+    for name, text in contents.items():
+        (roots[1] / name).write_text(text)
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+    with pytest.raises(RuntimeError, match=message):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].iterdir()),
+            candidate_files=frozenset(roots[1].iterdir()),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+        )
+
+
+@pytest.mark.parametrize(
+    "path, header, expected",
+    (
+        ("Experiment.csv", ("Key", "Value"), True),
+        ("Experiment.csv", ("Value", "Key"), True),
+        ("Receipt.csv", ("Key", "Value"), False),
+        ("Experiment.csv", ("ImageNumber", "Count_Cells"), False),
+        ("Experiment.csv", ("Key", "Value", "Measurement"), False),
+    ),
+)
+def test_engine_metadata_classification_preserves_scientific_tables(
+    path: str,
+    header: tuple[str, ...],
+    expected: bool,
+) -> None:
+    assert RuntimeTableSnapshot(Path(path), header, ()).is_metadata_table is expected
+
+
+@pytest.mark.parametrize(
+    "candidate, equivalent",
+    (
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,5.0000001,plate\n",
+            True,
+        ),
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,6,plate\n",
+            False,
+        ),
+        ("ImageNumber,ObjectNumber,Metadata_Plate\n1,1,plate\n", False),
+        (
+            "ImageNumber,ObjectNumber,AreaShape_Area,Image_Metadata_Plate\n1,1,5,plate\n",
+            False,
+        ),
+    ),
+)
+def test_matched_csv_scientific_comparison_rejects_value_and_schema_changes(
+    tmp_path: Path,
+    candidate: str,
+    equivalent: bool,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+    (roots[0] / "Cells.csv").write_text(
+        "ImageNumber,ObjectNumber,AreaShape_Area,Metadata_Plate\n1,1,5,plate\n"
+    )
+    (roots[1] / "Cells.csv").write_text(candidate)
+    policy = matched_batch._strict_cellprofiler_runtime_equivalence_policy()
+    measurements = tuple(
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot.from_output_root(root),
+            policy=policy,
+        )
+        for root in roots
+    )
+    report = runtime_measurement_equivalence(*measurements, policy=policy)
+    assert report.is_equivalent is equivalent
+
+
+@pytest.mark.parametrize(
+    "candidate_text",
+    (
+        "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n1,2,5\n",
+        "ImageNumber,ObjectNumber,AreaShape_Area\n",
+    ),
+)
+def test_matched_inventory_rejects_csv_row_duplication_or_loss(
+    tmp_path: Path,
+    candidate_text: str,
+) -> None:
+    roots = (tmp_path / "native", tmp_path / "candidate")
+    for root in roots:
+        root.mkdir()
+    (roots[0] / "Cells.csv").write_text(
+        "ImageNumber,ObjectNumber,AreaShape_Area\n1,1,5\n"
+    )
+    (roots[1] / "Cells.csv").write_text(candidate_text)
+    exports = tuple(RuntimeExportObservation.from_output_root(root) for root in roots)
+    snapshots = tuple(
+        RuntimeOutputSnapshot.from_export_observation(item) for item in exports
+    )
+    with pytest.raises(RuntimeError, match="CSV table row counts differ"):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(roots[0].iterdir()),
+            candidate_files=frozenset(roots[1].iterdir()),
+            reference_exports=exports[0],
+            candidate_exports=exports[1],
+            reference_snapshot=snapshots[0],
+            candidate_snapshot=snapshots[1],
+        )
+
+
+def test_matched_inventory_rejects_metadata_only_outputs(tmp_path: Path) -> None:
+    (tmp_path / "Experiment.csv").write_text("Key,Value\nVersion,1\n")
+    exports = RuntimeExportObservation.from_output_root(tmp_path)
+    snapshot = RuntimeOutputSnapshot.from_export_observation(exports)
+    with pytest.raises(RuntimeError, match="no compared scientific output"):
+        matched_batch._require_compared_output_inventory(
+            reference_files=frozenset(tmp_path.iterdir()),
+            candidate_files=frozenset(tmp_path.iterdir()),
+            reference_exports=exports,
+            candidate_exports=exports,
+            reference_snapshot=snapshot,
+            candidate_snapshot=snapshot,
+        )
 
 
 def test_pilot_parser_requires_one_sampling_declaration() -> None:

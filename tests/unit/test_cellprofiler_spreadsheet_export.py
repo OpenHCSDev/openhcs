@@ -724,6 +724,54 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
     )
 
 
+def test_export_to_spreadsheet_copies_native_metadata_and_qualified_file_names() -> (
+    None
+):
+    image = _measurement_record(
+        "image",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        rows=(
+            {
+                "slice_index": 0,
+                "Metadata_Plate": "plate",
+                "FileName_DNA": "dna.tif",
+                "PathName_DNA": "/inputs",
+                "Image_FileName_Membrane": "membrane.tif",
+            },
+        ),
+    )
+    cells = _measurement_record(
+        "cells",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=({"slice_index": 0, "object_number": 1, "Area": 2.0},),
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=tuple(
+            ArtifactSpec.input(record.key.name, MeasurementsArtifactType)
+            for record in (image, cells)
+        ),
+        records_by_axis={"A01": (image, cells)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+
+    bundle = export_to_spreadsheet(
+        artifact_batch=batch,
+        add_image_metadata=True,
+        add_image_file_names=True,
+        add_filename_prefix=False,
+    )
+
+    (row,) = csv.DictReader(io.StringIO(bundle["Cells.csv"]))
+    assert row["Metadata_Plate"] == "plate"
+    assert row["Image_FileName_DNA"] == "dna.tif"
+    assert row["Image_PathName_DNA"] == "/inputs"
+    assert row["Image_FileName_Membrane"] == "membrane.tif"
+    assert not any(name.startswith("Image_Metadata_") for name in row)
+    assert not any(name.startswith("Image_Image_") for name in row)
+
+
 def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() -> None:
     provenance_by_channel = (
         SourceImageProvenancePlanes.from_components(
