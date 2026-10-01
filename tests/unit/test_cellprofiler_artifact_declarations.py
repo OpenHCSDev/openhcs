@@ -564,20 +564,29 @@ def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
     assert identify_contract.artifact_outputs.names_of_artifact_type(
         ObjectLabelsArtifactType
     ) == ("Nuclei",)
+    from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+        PrimaryObjectDiagnosticPlanes,
+    )
+
+    identify_objects = (
+        identify_contract.artifact_outputs.require_by_name_and_artifact_type(
+            "Nuclei", ObjectLabelsArtifactType
+        )
+    )
     assert identify_contract.artifact_outputs.names() == (
         "IdentifyPrimaryObjects_1_measurements",
         "Nuclei",
+        *(
+            spec.name
+            for spec in PrimaryObjectDiagnosticPlanes.artifact_specs(
+                source_image=source_image, objects=identify_objects
+            )
+        ),
     )
     identify_measurement = (
         identify_contract.artifact_outputs.require_by_name_and_artifact_type(
             "IdentifyPrimaryObjects_1_measurements",
             MeasurementsArtifactType,
-        )
-    )
-    identify_objects = (
-        identify_contract.artifact_outputs.require_by_name_and_artifact_type(
-            "Nuclei",
-            ObjectLabelsArtifactType,
         )
     )
     source_ref = ArtifactSpec.input("OrigBlue", ImageArtifactType).ref()

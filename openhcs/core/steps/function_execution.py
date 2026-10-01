@@ -265,8 +265,7 @@ class StepAnchorPatternFilter:
 
         pattern = self.plan.compiled_function_pattern
         source_owns_groups = (
-            RuntimeInvocationDomain.from_invocations(tuple(pattern.iter_invocations()))
-            is RuntimeInvocationDomain.SOURCE_ANCHORED
+            pattern.runtime_domain is RuntimeInvocationDomain.SOURCE_ANCHORED
         )
         if not grouped_patterns.groups:
             return grouped_patterns
@@ -316,7 +315,7 @@ class StepAnchorPatternFilter:
     ) -> PatternGroups:
         """Restrict source-bound step anchors to compatible declared sources."""
 
-        if self.plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT:
+        if not self.plan.main_input_dependency.uses_pipeline_start_anchors():
             return grouped_patterns
         if not self.plan.source_binding_plan.has_primary_content:
             return grouped_patterns

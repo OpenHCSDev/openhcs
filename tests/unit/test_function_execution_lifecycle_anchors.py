@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -19,10 +21,9 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.runtime_adapters import runtime_adapter
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import PatternGroups, StepAnchorPatternFilter
-
 
 def _anchor_filter(plan: object, output_manifest: object) -> StepAnchorPatternFilter:
     return StepAnchorPatternFilter(
@@ -34,7 +35,17 @@ def _anchor_filter(plan: object, output_manifest: object) -> StepAnchorPatternFi
     )
 
 
-def test_storage_backed_cross_group_uses_producer_lifecycle_anchor() -> None:
+@pytest.mark.parametrize(
+    "dependency",
+    (
+        StepInputDependency.step_output(
+            source_step_index=4,
+            source_step_scope_id="non-adjacent-main-flow-producer",
+        ),
+        StepInputDependency.no_main_flow(),
+    ),
+)
+def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -> None:
     measurements = ArtifactSpec.input(
         "measurements",
         MeasurementsArtifactType,
@@ -89,11 +100,10 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor() -> None:
     plan = SimpleNamespace(
         step_index=9,
         step_name="StorageBackedConsumer",
-        main_input_dependency=StepInputDependency.step_output(
-            source_step_index=4,
-            source_step_scope_id="non-adjacent-main-flow-producer",
+        main_input_dependency=dependency,
+        source_binding_plan=CompiledSourceBindingPlan(
+            bindings=(NamedSourceBinding(alias="OrigDNA"),)
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),

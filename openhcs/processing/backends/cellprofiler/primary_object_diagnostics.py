@@ -30,10 +30,9 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariant
 from openhcs.processing.materialization import (
     ImageFileOptions,
-    MaterializationSpec,
+    TerminalMaterializationSpec,
     MaterializedFilenameIdentity,
 )
-
 
 @dataclass(frozen=True, slots=True)
 class DiagnosticPlaneSource:
@@ -175,7 +174,7 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
                 ImageArtifactType,
                 sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
                 viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
-                materialization=MaterializationSpec(
+                materialization=TerminalMaterializationSpec(
                     ImageFileOptions(
                         filename_suffix=".tif",
                         filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,

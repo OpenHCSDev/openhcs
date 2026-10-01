@@ -201,12 +201,13 @@ class MaterializationSpecFormatter(SourceFormatter):
         return isinstance(value, MaterializationSpec)
 
     def format(self, value, context: FormatContext) -> SourceFragment:
+        materialization_type = type(value)
         import_pair = (
-            "openhcs.processing.materialization.core",
-            "MaterializationSpec",
+            materialization_type.__module__,
+            materialization_type.__name__,
         )
         class_name = NameMappingLookup.resolve(
-            context, import_pair, "MaterializationSpec"
+            context, import_pair, materialization_type.__name__
         )
         item_ctx = context.indented()
         output_frags = [to_source(output, item_ctx) for output in value.outputs]

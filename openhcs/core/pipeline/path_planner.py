@@ -323,6 +323,19 @@ class PathPlannerExecutionGroups:
             if input_component_scopes is None
             else input_component_scopes
         )
+        artifact_owned = bool(contracts) and all(
+            contract.group_scope_inputs for contract in contracts
+        )
+        if artifact_owned:
+            source_bindings = (
+                self.planner.source_bindings_for_snapshot(snapshot)
+                if source_bindings is None
+                else source_bindings
+            ).for_artifact_refs(
+                spec.ref()
+                for contract in contracts
+                for spec in contract.group_scope_inputs
+            )
         scope = component_scopes.scope_for_group_by(
             group_by,
         )
@@ -337,7 +350,7 @@ class PathPlannerExecutionGroups:
                 if source_scope.is_ungrouped
                 else source_scope
             )
-        if contracts and all(contract.group_scope_inputs for contract in contracts):
+        if artifact_owned:
             scope = self.artifact_owned_execution_scope(
                 snapshot,
                 contracts,
