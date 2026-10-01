@@ -5,13 +5,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, fields
-from functools import cache
-from typing import Self, get_type_hints
+from functools import cache, wraps
+from typing import Self, cast, get_type_hints
+
+from python_introspect import dataclass_from_mapping
 
 from openhcs.serialization.json import (
     JsonObject,
     JsonScalar as JsonScalar,
     JsonValue as JsonValue,
+    to_jsonable,
 )
 
 SCHEMA_VERSION = "openhcs.agent.v1"
@@ -52,6 +55,30 @@ class AgentCliRequest(ABC):
     @abstractmethod
     def as_tool_arguments(self) -> JsonObject:
         raise NotImplementedError
+
+
+class AgentDataclassCliRequest(AgentCliRequest):
+    """CLI capability of a DTO whose declared fields are its tool input shape.
+
+    Constructor reflection owns the signature; existing boundary codecs own
+    nested reconstruction, constraints and JSON projection. Custom flattened
+    request factories remain on their actual request owners.
+    """
+
+    @classmethod
+    def from_fields(cls, **kwargs) -> Self:
+        return dataclass_from_mapping(cls, kwargs)
+
+    @classmethod
+    def agent_cli_factory(cls):
+        @wraps(cls, updated=())
+        def from_cli_fields(**kwargs):
+            return cls.from_fields(**kwargs)
+
+        return from_cli_fields
+
+    def as_tool_arguments(self) -> JsonObject:
+        return cast(JsonObject, to_jsonable(self))
 
 
 @dataclass(frozen=True, slots=True)

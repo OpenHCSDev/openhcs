@@ -9,7 +9,7 @@ from python_introspect import project_dataclass, validate_annotated_dataclass
 from zmqruntime.config import NonBlankString, SocketPort, TransportMode
 from zmqruntime.transport import TransportEndpoint
 
-from openhcs.agent.dto.common import JsonObject
+from openhcs.agent.dto.common import AgentDataclassCliRequest, JsonObject
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class ExecutionConnectionSpec:
+class ExecutionConnectionSpec(AgentDataclassCliRequest):
     host: NonBlankString = "localhost"
     port: SocketPort | None = None
     transport_mode: TransportMode | None = None
