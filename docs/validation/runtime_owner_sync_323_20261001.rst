@@ -1,8 +1,8 @@
 Runtime ownership after main synchronization (#323, #336)
 =======================================================
 
-Production source ``68aed451f1a8423b2e9b91ce82f05432ccc3ccf0`` includes main
-``8c512d404f8707a6a1be311406c0af2a089360f7`` and its exact dependency pins,
+Production source ``f7b39a2a49ce07134d58ef8ae61c85e2395fd93f`` includes main
+``f24a828da16691b83284622a01e1765b1d147e66`` and its exact dependency pins,
 including PolyStore ``84f322e``. PR331's completed Official30 qualification
 repairs are integrated. This note supersedes older source cohorts for current
 qualification; their receipts remain historical counterevidence.
@@ -45,9 +45,9 @@ address, source shape and 0.65 calibration assertions. This resolves #336.
 Current validation
 ------------------
 
-* 1,524 local tests and 20 subtests pass; one optional Napari skip and two
-  unchanged watershed warnings. Final formatting affects only added cache test
-  layout; an exact final 111-test focused gate also passes.
+* 1,538 local tests and 42 subtests pass; one optional Napari skip and two
+  unchanged watershed warnings. Main's latest acquisition filename ownership
+  change is integrated and its source-contract tests are included.
 * Original CI-pinned R0 passes for all three roots without increases.
 * Original NRA R1 passes both configured detectors with complete dependency
   context and no increases. This does not claim all-detector cleanliness.
@@ -66,6 +66,11 @@ The public throughput route runs a source-asserting main/candidate/candidate/mai
 sequence for each case, CPU5, one well and one numerical thread, current pins and
 the shared persistent Numba cache. All eight observations succeed. Means of two
 samples per side, in seconds:
+
+These ordinary timing receipts identify the prior synchronized production
+``68aed451f`` and main ``8c512d404``. They are not relabeled as measurements of
+the newer acquisition parser integration. The full native and local/structural
+gates above were repeated on the latest production source.
 
 .. list-table:: Main / candidate pipeline clocks
    :header-rows: 1

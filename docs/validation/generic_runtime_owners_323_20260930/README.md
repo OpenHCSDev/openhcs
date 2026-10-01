@@ -1,7 +1,7 @@
 # Generic runtime optimization owners — issue 323
 
-Current qualification is production `68aed451f` on main `8c512d404`: 1,524 tests
-plus 20 subtests, original guards, and all 30 native-reference cases pass. The
+Current qualification is production `f7b39a2a4` on main `f24a828da`: 1,538 tests
+plus 42 subtests, original guards, and all 30 native-reference cases pass. The
 warmed-parent review fix, test-context isolation, exact receipts and matched
 current timing limits are in [the synchronized validation note](../runtime_owner_sync_323_20261001.rst).
 The source cohorts and timing observations below are historical evidence.
