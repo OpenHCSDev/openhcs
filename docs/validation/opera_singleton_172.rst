@@ -125,6 +125,10 @@ not a relocation or ratchet exemption.
 Separate tracked inventory witness, retained under issue 172
 ----------------------------------------------------------
 
+Owner correction at terminal handoff: parent owns this separate A01/R01C01
+generator-versus-filename discrepancy and its closure, unless the user explicitly
+reassigns it. This source implementation does not claim that follow-up.
+
 Parent observed persisted Opera A01 metadata versus filename-parsed R01C01:
 sample succeeds, combined inventory reports two wells. Source witness:
 SyntheticMicroscopyGenerator.generate_openhcs_metadata builds
@@ -211,7 +215,10 @@ for this parser patch is NOT verified. Parent must integrate/install PR 329 and
 repeat the original raw Opera generation plus complete empty-document
 artifact-plan through the actual installed entrypoint, confirm warning/error
 absence, and retain fresh acceptance receipts. No science/native/MCP slot is
-claimed here. The separate persisted A01/R01C01 combined-inventory disagreement
+claimed here. Parent schedules installed empty-step raw Opera initialization
+qualification after Pauli H003d releases the scientific slot/runtime on frozen
+installed e690c3bf. This implementation takes no MCP, native, JVM or scientific
+lock. The separate persisted A01/R01C01 combined-inventory disagreement
 remains under issue 172; it is not concealed by this parser fix.
 
 Cleanup completed: fresh extraction and complete byte comparison passed; owned
