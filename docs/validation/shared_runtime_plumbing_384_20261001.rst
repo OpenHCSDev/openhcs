@@ -224,6 +224,26 @@ ownership investigation continue before promotion. Evidence:
 shared-plumbing-owner-followup-qualified-abba-20261001.json and its summary,
 source receipts and all per-step/progress observations.
 
+Across all six run pairs, Imaging Flow Cytometry's two header rows and all
+1,800-by-527 measurement cells match exactly. All six 3D CSV schemas, rows and
+cells match, as do all 120 TIFF arrays, shapes and dtypes. Ordinary output
+inventories match. Outcome-wire differences are fresh execution UUIDs and actual
+run-root path prefixes; no scientific values are present in those outcome views.
+Advanced's database/properties were not numerically compared, so absence of
+ordinary CSV/TIFF output does not establish its parity. Evidence:
+shared-plumbing-owner-followup-abba-step-output-audit-20261001.json.
+
+The next normal synchronization integrates main
+0d07909b07870557a04f125452dc6944db77cb6c, including PR358's startup feedback and
+worker-budget repair, at candidate fdf50241aa9adc6d96bc9c530dcc9acd19692b64.
+The recorded ZMQRuntime dependency 668edafcb5ee530a163377c936431ae1e8334e85 is
+checked out in both trees and consumed through the shared editable environment.
+All 498 preparation/startup/CP integration controls pass, with six skips and two
+existing warnings; original R0/R1 pass with unchanged budgets and exclusions.
+Issue355 is closed by its existing merged PR. The ABBA remains pinned to its
+measured sources; no timing result is projected through this synchronization.
+Evidence: shared-plumbing-main355-local-gates-20261001.json.
+
 Fresh native qualification and next dominant route
 ------------------------------------------------
 
