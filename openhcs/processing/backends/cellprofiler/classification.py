@@ -1,7 +1,8 @@
 """Classification backends for CellProfiler-compatible object measurements."""
 
 from __future__ import annotations
-from collections.abc import Callable, Mapping
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, replace
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 import numpy as np
@@ -13,6 +14,7 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ArtifactSpecCollection,
+    ArtifactSpec,
     ImageArtifactType,
     SourceStackLineageSourceRelation,
 )
@@ -107,28 +109,106 @@ class _ClassifiedImageRuleIndicesRuntimeParameter(KeywordRuntimeParameter):
     parameter_default = ()
 
 
-class _ClassificationMeasurementValuesRuntimeParameter(KeywordRuntimeParameter):
-    """Runtime-bound vector for single-measurement classification."""
+class _ClassificationMeasurementVectorRuntimeParameter(KeywordRuntimeParameter, ABC):
+    """Bind a declared feature through the original object-vector authority."""
 
-    parameter_name = "measurement_values"
     annotation_type = np.ndarray | None
     parameter_default = None
 
+    @classmethod
+    @abstractmethod
+    def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
+        """Return this vector's original authoring declaration."""
 
-class _ClassificationMeasurement1ValuesRuntimeParameter(KeywordRuntimeParameter):
+    @classmethod
+    def bind_runtime_inputs(
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        feature_name = cls.measurement_feature_binding().require_parameter_name()
+        if feature_name not in request.kwargs:
+            return {}
+        return {
+            cls.require_parameter_name(): CellProfilerObjectMeasurementVectorBinding.for_object(
+                request,
+                object_ref=object_spec,
+                feature_name=request.require_string_kwarg(feature_name),
+                labels=labels,
+            )
+            .vector()
+            .runtime_value
+        }
+
+
+class _SingleClassifiedImageOutputRuntimeBinding(ABC):
+    """Cooperatively restore one scalar output selector consumed at compile time."""
+
+    @classmethod
+    @abstractmethod
+    def classified_image_output_binding(cls) -> SettingToKeywordBinding:
+        """Return the original scalar image-output declaration."""
+
+    @classmethod
+    def bind_runtime_inputs(
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
+        labels: ObjectLabelValue,
+    ) -> dict[str, RuntimeCallableArgument]:
+        bound = super().bind_runtime_inputs(request, object_spec, labels)
+        binding = cls.classified_image_output_binding()
+        outputs = request.adapter.request.require_callable_contract().artifact_outputs.of_artifact_type(
+            binding.require_artifact_type()
+        )
+        if len(outputs) > 1:
+            raise ValueError(
+                "Scalar classification requires at most one declared image output."
+            )
+        bound[binding.require_parameter_name()] = outputs[0].name if outputs else None
+        return bound
+
+
+class _ClassificationMeasurementValuesRuntimeParameter(
+    _SingleClassifiedImageOutputRuntimeBinding,
+    _ClassificationMeasurementVectorRuntimeParameter,
+):
+    """A single-measurement vector AND its scalar retained-image selector."""
+
+    parameter_name = "measurement_values"
+
+    @classmethod
+    def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
+        return ClassifyObjectsSingleMeasurementModule.single_measurement_feature_binding
+
+    @classmethod
+    def classified_image_output_binding(cls) -> SettingToKeywordBinding:
+        return ClassifyObjectsSingleMeasurementModule.output_image_binding
+
+
+class _ClassificationMeasurement1ValuesRuntimeParameter(
+    _ClassificationMeasurementVectorRuntimeParameter
+):
     """Runtime-bound first vector for two-measurement classification."""
 
     parameter_name = "measurement1_values"
-    annotation_type = np.ndarray | None
-    parameter_default = None
+
+    @classmethod
+    def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
+        return ClassifyObjectsSingleMeasurementModule.first_measurement_feature_binding
 
 
-class _ClassificationMeasurement2ValuesRuntimeParameter(KeywordRuntimeParameter):
+class _ClassificationMeasurement2ValuesRuntimeParameter(
+    _ClassificationMeasurementVectorRuntimeParameter
+):
     """Runtime-bound second vector for two-measurement classification."""
 
     parameter_name = "measurement2_values"
-    annotation_type = np.ndarray | None
-    parameter_default = None
+
+    @classmethod
+    def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
+        return ClassifyObjectsSingleMeasurementModule.second_measurement_feature_binding
 
 
 class _ClassificationRuleValuesRuntimeParameter(KeywordRuntimeParameter):
@@ -141,29 +221,6 @@ class _ClassificationRuleValuesRuntimeParameter(KeywordRuntimeParameter):
 
 class ClassifyObjectsMeasurementInputPolicy:
     """Resolve ClassifyObjects label and measurement-vector inputs."""
-
-    measurement_value_parameters: ClassVar[
-        tuple[type[KeywordRuntimeParameter], ...]
-    ] = (
-        _ClassificationMeasurementValuesRuntimeParameter,
-        _ClassificationMeasurement1ValuesRuntimeParameter,
-        _ClassificationMeasurement2ValuesRuntimeParameter,
-    )
-    measurement_feature_kwargs: ClassVar[tuple[str, ...]] = (
-        "measurement_feature",
-        "measurement1_feature",
-        "measurement2_feature",
-    )
-    measurement_kwarg_by_parameter: ClassVar[Mapping[str, str]] = dict(
-        zip(
-            (
-                parameter_type.require_parameter_name()
-                for parameter_type in measurement_value_parameters
-            ),
-            measurement_feature_kwargs,
-            strict=True,
-        )
-    )
 
     @classmethod
     def bind_runtime_inputs(
@@ -210,16 +267,12 @@ class ClassifyObjectsMeasurementInputPolicy:
                 ),
             }
         bound_values = {
-            parameter_name: CellProfilerObjectMeasurementVectorBinding.for_object(
-                request,
-                object_ref=object_spec,
-                feature_name=request.require_string_kwarg(kwarg_name),
-                labels=measurement_labels,
-            )
-            .vector()
-            .runtime_value
-            for parameter_name, kwarg_name in cls.measurement_kwarg_by_parameter.items()
-            if kwarg_name in request.kwargs
+            name: value
+            for parameter_type in request.adapter.request.require_callable_contract().runtime_bound_parameter_types
+            if issubclass(parameter_type, _ClassificationMeasurementVectorRuntimeParameter)
+            for name, value in parameter_type.bind_runtime_inputs(
+                request, object_spec, measurement_labels
+            ).items()
         }
         return {
             labels_parameter: labels,
