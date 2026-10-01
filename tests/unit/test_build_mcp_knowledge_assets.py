@@ -140,3 +140,7 @@ def test_wheel_globs_include_the_projected_hidden_plugin_manifest(tmp_path):
         for path in glob.glob(str(package_root / pattern), recursive=True)
     }
     assert plugin_manifest in included
+    plugin_root = plugin_manifest.parent.parent
+    assert {
+        path for path in projected if path.is_relative_to(plugin_root)
+    } <= included
