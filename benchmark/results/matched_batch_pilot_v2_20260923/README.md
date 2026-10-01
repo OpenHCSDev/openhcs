@@ -1,5 +1,10 @@
 # Genuine-well matched-output pilot (2026-09-23)
 
+For new reproductions, prepare the native environment using the
+[headless oracle bootstrap guide](../../../docs/cellprofiler_headless_environment.md)
+and retain its receipt beside the new observations. This does not change the
+historical environment recorded below.
+
 This is a bounded **output-equivalence and new-API execution check**, not a
 CellProfiler/OpenHCS speed comparison or replacement for manuscript timing
 figures. The driver is `benchmark/matched_cellprofiler_batch.py`, using the
