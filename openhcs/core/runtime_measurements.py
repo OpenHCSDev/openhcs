@@ -791,6 +791,7 @@ class ObjectLocationCoordinateValues:
 
     values: Any
     include_missing: bool
+    axis_present: bool = True
 
 
 class ObjectLocationCoordinateProjectionStrategy(
@@ -841,7 +842,9 @@ class AxisBackedObjectLocationCoordinateProjectionStrategy(
         values = np.zeros(len(counts))
         if type(self).absent_axis_missing_for_unlabeled_objects:
             values = self.missing_for_absent_labels(values, counts)
-        return ObjectLocationCoordinateValues(values, include_missing=False)
+        return ObjectLocationCoordinateValues(
+            values, include_missing=False, axis_present=False
+        )
 
 
 for _coordinate_projection_spec in (

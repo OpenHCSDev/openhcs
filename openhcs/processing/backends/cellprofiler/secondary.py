@@ -76,6 +76,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -112,7 +113,7 @@ class IdentifyTertiaryObjectsModule(
     PairedPrimarySecondaryObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
     MeasurementArtifactOutputModule,
     CellProfilerModule,

@@ -78,13 +78,47 @@ missing biological information, a missing tool contract, new authority or unsafe
 resource use, report the exact boundary and retain the best candidate with its
 known failures. Do not force unsupported structures into a mask to finish.
 
+## Development corrections and autonomous evaluation
+
+Declare the run's purpose before starting. Development aims to reach an
+evidence-supported result and learn which general guidance or software contract
+is missing. Preserve the same analysis context through useful corrections;
+rejecting a hypothesis or archiving a failed checkpoint does not require a new
+agent. Do not impose an arbitrary candidate-count cap on development unless the
+task explicitly requires one. Bound work by time, RAM, disk and a discriminating
+next action instead. Record every source version and failed attempt, including
+technical failures before scientific execution; keep technical repairs distinct
+from changes to the analysis hypothesis, without deleting either denominator.
+
+External corrections, including operational guidance or a mid-run harness fix,
+make the completed continuation assisted development evidence, not an autonomous
+pass. Record who supplied what, when it arrived, the affected source/software
+version, and the result after correction. A successful corrected journey can
+identify how to reach success; it does not establish that a fresh agent would
+discover that journey unaided. If a technical failure requires an engineer,
+retain the exact request and owner, and resume development after repair rather
+than resetting the scientific context. Observation timeout alone never permits
+mutation replay or process replacement; resolve the original handle first.
+Preserve already frozen records unchanged and start an explicitly linked
+development continuation instead of rewriting their disposition.
+
 For an autonomous-performance evaluation, freeze the harness and skill before a
-fresh context-isolated run. Supply the scientific task brief, acquisition facts
-and authorised images, not the intended method, suspect failure, prior trial
+fresh context-isolated run. Supply only the scientific brief, acquisition facts
+and authorised images, not the intended method, suspected failure, prior trial
 conclusions or worked answer. Internal agent review may be part of the declared
-harness, but human channel hints, parameter corrections and candidate coaching
-must remain visible as interventions; do not count an assisted repair as an
-uncoached success. Keep failures and abstentions in the evaluation denominator.
+harness. Self-correction using that frozen harness is autonomous; externally
+corrected or repaired continuations are not. If assistance is supplied, retain
+the original unassisted outcome and its evaluation denominator, then label the
+continuation separately. Do not change a declared evaluation budget mid-run.
+
+Transfer only general, tested operational or reasoning improvements into the
+skill/MCP harness through [analysis learning](analysis-learning.md). Do not copy
+dataset-specific thresholds, object identities, expected masks, scoring answers
+or the successful trial transcript into the fresh agent's instructions. Freeze
+the new harness before testing it without corrections. Reusing a consulted
+development image tests repeatability, not unseen generalization; keep a genuine
+untouched reserve for the latter. Final candidate freezing precedes held-out
+access, not every unsuccessful development iteration.
 
 ## Keep execution bounded
 

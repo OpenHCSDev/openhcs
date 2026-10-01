@@ -20,6 +20,17 @@ validation scope before applying a repair. Official30 selected-value parity is
 meaningful reference evidence, but not proof of new-assay raw biological support.
 Do not turn a plausible explanation from an earlier run into an observed fact.
 
+Continue development in the retained analysis context after an authorised
+correction; archiving a failed candidate is not a requirement to restart with a
+new agent. Record external corrections as interventions, including software or
+tool-use repairs. A successful corrected run supplies assisted development
+evidence. Distil a general, tested lesson rather than its dataset-specific
+answer, update the existing skill/MCP source owner, and freeze that harness
+before a fresh context-isolated run without corrections. Do not relabel the
+corrected predecessor as an autonomous pass or a reused image as unseen data.
+The [analysis strategy](analysis-strategy.md#development-corrections-and-autonomous-evaluation)
+owns the development/evaluation distinction and stopping conditions.
+
 ## Record an experience that can be tested again
 
 Within an authorised trial log or repository contribution, retain:
