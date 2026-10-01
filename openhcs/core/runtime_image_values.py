@@ -273,6 +273,12 @@ class ImagePayloadMetadata(
                 "ImagePayloadMetadata.source_channel_axis must be int or None."
             )
 
+    def require_leading_plane_axis(self, message: str) -> RuntimePlaneAxis:
+        """Validate a required plane declaration at its metadata authority."""
+        if self.plane_axis is None:
+            raise ValueError(message)
+        return RuntimePlaneAxis(self.plane_axis)
+
     @property
     def has_values(self) -> bool:
         """Return whether this metadata carries any semantic image facts."""
@@ -1492,8 +1498,9 @@ class LeadingPlaneAxisMetadataProjection(ImageMetadataProjection):
         return None if intensity is None else intensity.without_source_planes()
 
     def projected_fields(self) -> dict[str, Any]:
-        if self.metadata.plane_axis is None:
-            raise ValueError("Image metadata has no leading plane axis to remove.")
+        self.metadata.require_leading_plane_axis(
+            "Image metadata has no leading plane axis to remove."
+        )
         source_channel_axis = self.metadata.source_channel_axis
         if source_channel_axis == 0:
             raise ValueError(
@@ -1501,7 +1508,6 @@ class LeadingPlaneAxisMetadataProjection(ImageMetadataProjection):
                 "plane and channel."
             )
         self.metadata.validate_source_channel_axis()
-        RuntimePlaneAxis(self.metadata.plane_axis)
         if source_channel_axis is not None and source_channel_axis > 0:
             source_channel_axis -= 1
         changes = super().projected_fields()
@@ -1521,12 +1527,10 @@ class LeadingSourcePlaneMetadataProjection(
     """Compose source selection and axis removal before constructing metadata."""
 
     def projected_fields(self) -> dict[str, Any]:
-        if self.metadata.plane_axis is None:
-            raise ValueError(
-                "Leading source-plane projection requires a declared plane axis."
-            )
+        self.metadata.require_leading_plane_axis(
+            "Leading source-plane projection requires a declared plane axis."
+        )
         self.metadata.validate_source_channel_axis()
-        RuntimePlaneAxis(self.metadata.plane_axis)
         return super().projected_fields()
 
 
