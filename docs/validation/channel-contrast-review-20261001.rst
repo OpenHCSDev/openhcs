@@ -44,3 +44,18 @@ Both retain the two existing disabled-asyncio-plugin config warnings.
 Original skill-creator quick_validate passes; whole diff-check passes.
 There are no production Python changes. These checks establish retrieval and
 packaging, not autonomous biological performance.
+
+Owner clarification: each image, not only each channel
+-----------------------------------------------------
+
+The follow-up based on merged405/df139a74 explicitly checks each new source
+image, site, Z/time plane and processed output, even with an unchanged channel
+name. Its own intensity/background evidence and multi-window/multi-scale review
+select the diagnostic mapping. The raw window stays fixed within a matched
+three-view set; a changed window requires a new matched set. No fixed assay
+range, mandatory remapping on every redraw or new presentation owner is added.
+The original manifest adds one discovery tag and the existing task family one
+retrieval query. Four focused retrieval/package/byte-sync checks PASS with the
+same helper and bounds: 7.07s,281896KiB,19 deselected, the same two warnings.
+Original skill validator and diff-check pass. Live installation remains at
+the analysis owner's safe handoff, with the frozen383 skill preserved.

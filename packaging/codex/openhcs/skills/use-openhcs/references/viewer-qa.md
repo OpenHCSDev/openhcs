@@ -23,6 +23,14 @@ different plates disagree, stream raw from the result's declared source and
 recheck. Reject black, wrong-channel, stale or misplaced captures; an invisible
 overlay is not evidence that the detector found nothing.
 
+Check contrast for **each distinct image**, including a new site, Z/time plane
+or processed output, even when its channel name is unchanged. Signal range,
+background and processing units can differ drastically. Inspect that image's
+bounded intensity/background samples and raw-only views at multiple windows
+and scales before choosing its review limits/gamma; do not inherit a previous
+image's limits without checking. Keep the chosen raw window unchanged within
+a matched raw/result/combined set, or recapture the set after changing it.
+
 When channels share an image layer, its contrast limits can remain unchanged
 when the channel axis changes. After switching channels or restoring a view,
 read back the physical source/component, visible route and applied numeric
