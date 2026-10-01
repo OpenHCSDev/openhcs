@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import inspect
 import json
+import ast
+import textwrap
 from dataclasses import replace
 
 import numpy as np
@@ -24,6 +26,11 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.interop.cellprofiler.setting_names import setting_values
+from openhcs.interop.cellprofiler.parser import ModuleSetting
+from openhcs.interop.cellprofiler.settings_binder import (
+    SettingsBinder,
+    coerce_cellprofiler_enum,
+)
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassificationMethod,
     ClassificationResult,
@@ -34,6 +41,8 @@ from openhcs.processing.backends.cellprofiler.classification import (
     _ClassificationMeasurement2ValuesRuntimeParameter,
     _ClassificationMeasurementValuesRuntimeParameter,
     _SingleClassifiedImageOutputRuntimeBinding,
+    _ClassificationMethodBehavior,
+    _TwoMeasurementClassificationMethodBehavior,
     classify_objects_single_measurement,
     classify_objects_two_measurements,
 )
@@ -46,6 +55,166 @@ from tests.unit.test_cellprofiler_conditional_analysis_images import (
     _public_function_step_contract,
 )
 from tests.unit.test_classification_interop_boundaries import _runtime_request
+
+
+@pytest.mark.parametrize(
+    "projection",
+    (
+        "bind_settings",
+        "classified_image_outputs",
+        "finalize_module_blocks",
+    ),
+)
+def test_original_mode_projections_have_no_case_dispatch(projection):
+    """Seal the three exact IMPL-2/IMPL-5 sites, including subthreshold switches."""
+    tree = ast.parse(
+        textwrap.dedent(inspect.getsource(getattr(ClassificationMethod, projection)))
+    )
+    forbidden = tuple(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.If, ast.IfExp, ast.Match, ast.Compare, ast.Dict))
+    )
+    assert not forbidden, (
+        f"{projection} still decides case behavior: {[type(node).__name__ for node in forbidden]}"
+    )
+    member_names = frozenset(ClassificationMethod.__members__)
+    assert not any(
+        isinstance(node, ast.Attribute) and node.attr in member_names
+        for node in ast.walk(tree)
+    )
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in ("getattr", "hasattr", "isinstance", "type")
+        for node in ast.walk(tree)
+    )
+
+
+class _IndependentModeProjectionCapability:
+    """A real independent capability contributing to every mode projection."""
+
+    def bind_settings(self, module_type, module, binder):
+        return {
+            **super().bind_settings(module_type, module, binder),
+            "independent_mode": True,
+        }
+
+    def classified_image_outputs(self, module_type, module):
+        return tuple(
+            replace(output, rule_index=output.rule_index + 7)
+            for output in super().classified_image_outputs(module_type, module)
+        )
+
+    def finalize_mode_blocks(self, module_type, blocks, invocation):
+        inherited = super().finalize_mode_blocks(module_type, blocks, invocation)
+        # The shared original enum template must run before this case-owned tail.
+        assert all(
+            setting_values(block, module_type.classification_decision_count_setting)
+            == ("Independent measurement mode",)
+            for block in inherited
+        )
+        return tuple(
+            replace(
+                block,
+                setting_records=[
+                    *block.iter_settings(),
+                    ModuleSetting("Independent tail", "complete"),
+                ],
+            )
+            for block in inherited
+        )
+
+
+class _IndependentModeBehavior(
+    _IndependentModeProjectionCapability,
+    _TwoMeasurementClassificationMethodBehavior,
+):
+    """A new case is only its capability composition and member declaration."""
+
+
+def test_new_original_mode_member_owns_all_projections_and_cooperative_tail():
+    # Python Enum preserves its original __new__ as _new_member_. Construct a
+    # new original-typed declaration, without a second enum or registry mutation.
+    member = ClassificationMethod._new_member_(
+        ClassificationMethod,
+        "independent_measurement_mode",
+        _IndependentModeBehavior(),
+        "Independent measurement mode",
+    )
+    assert isinstance(member, ClassificationMethod)
+    assert member.value == "independent_measurement_mode"
+    assert member.cellprofiler_literals == (
+        "independent_measurement_mode",
+        "Independent measurement mode",
+    )
+    module_type = IndependentPairDeclarationModule
+    module = _module_block(
+        module_type,
+        (
+            (
+                module_type.classification_decision_count_setting.canonical,
+                "Single measurement",
+            ),
+            (module_type.input_objects_setting.canonical, "Cells"),
+            (module_type.first_measurement_feature_setting.canonical, "AreaShape_Area"),
+            (
+                module_type.second_measurement_feature_setting.canonical,
+                "AreaShape_Area",
+            ),
+            (module_type.output_image_setting.canonical, "IndependentModeImage"),
+        ),
+    )
+    bound = member.bind_settings(module_type, module, SettingsBinder())
+    assert bound["independent_mode"] is True
+    assert bound["measurement1_feature"] == "AreaShape_Area"
+    assert bound["measurement2_feature"] == "AreaShape_Area"
+    assert member.classified_image_outputs(module_type, module) == (
+        ClassifiedImageOutput(7, "IndependentModeImage"),
+    )
+    invocation = next(
+        normalize_function_pattern(independent_pair_declaration_callable).iter_items()
+    )
+    (finalized,) = member.finalize_module_blocks(module_type, (module,), invocation)
+    assert setting_values(
+        finalized, module_type.classification_decision_count_setting
+    ) == ("Independent measurement mode",)
+    assert setting_values(finalized, "Independent tail") == ("complete",)
+    assert not setting_values(finalized, "Hidden")
+    mro = _IndependentModeBehavior.__mro__
+    assert mro.index(_IndependentModeProjectionCapability) < mro.index(
+        _TwoMeasurementClassificationMethodBehavior
+    )
+    assert mro.index(_TwoMeasurementClassificationMethodBehavior) < mro.index(
+        _ClassificationMethodBehavior
+    )
+
+
+@pytest.mark.parametrize(
+    "member,value,literals",
+    (
+        (
+            ClassificationMethod.SINGLE_MEASUREMENT,
+            "single_measurement",
+            ("single_measurement", "Single measurement"),
+        ),
+        (
+            ClassificationMethod.TWO_MEASUREMENTS,
+            "two_measurements",
+            ("two_measurements", "Pair of measurements", "Two measurements"),
+        ),
+    ),
+)
+def test_original_mode_values_and_external_literals_remain_exact(
+    member, value, literals
+):
+    assert member.value == value
+    assert member.cellprofiler_literals == literals
+    assert ClassificationMethod(value) is member
+    assert all(
+        coerce_cellprofiler_enum(ClassificationMethod, literal) is member
+        for literal in literals
+    )
 
 
 def paired_kwargs():

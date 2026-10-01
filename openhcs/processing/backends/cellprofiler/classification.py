@@ -1298,22 +1298,121 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 
 
+class _ClassificationMethodBehavior(ABC):
+    """Case-owned projections attached to the original parsed-mode member."""
+
+    @abstractmethod
+    def bind_settings(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock, binder: SettingsBinder,
+    ) -> RuntimeCallableKwargs:
+        """Bind this mode through the concrete module's existing setting hook."""
+
+    @abstractmethod
+    def classified_image_outputs(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+    ) -> tuple[ClassifiedImageOutput, ...]:
+        """Project this mode's concrete module image-output hook."""
+
+    @abstractmethod
+    def finalize_mode_blocks(
+        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+        blocks: tuple[ModuleBlock, ...], invocation: FunctionInvocation,
+    ) -> tuple[ModuleBlock, ...]:
+        """Complete this mode after the shared template emits its literal."""
+
+
+class _SingleMeasurementClassificationMethodBehavior(_ClassificationMethodBehavior):
+    """Scalar or repeated-rule settings and the original scalar output tail."""
+
+    def bind_settings(self, module_type, module, binder):
+        return module_type._single_measurement_kwargs(module, binder)
+
+    def classified_image_outputs(self, module_type, module):
+        return module_type._single_measurement_classified_image_outputs(module)
+
+    def finalize_mode_blocks(self, module_type, blocks, invocation):
+        rules = invocation.kwargs_dict.get("classification_rules")
+        if rules is not None:
+            if not isinstance(rules, tuple) or any(
+                not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
+            ):
+                raise TypeError(
+                    "ClassifyObjects classification_rules must be a tuple of "
+                    "SingleMeasurementClassificationRule values."
+                )
+        if not rules:
+            retained_image_name = normalized_symbol_name(
+                str(invocation.kwargs_dict.get("retained_image_name") or "")
+            )
+            return tuple(
+                module_type._block_with_scalar_classification_output(
+                    block, retained_image_name=retained_image_name
+                )
+                for block in blocks
+            )
+        return tuple(
+            replace(
+                block,
+                setting_records=[
+                    *(
+                        record
+                        for record in block.iter_settings()
+                        if not module_type._single_group_setting_name(record.name)
+                        and not setting_name_matches(record.name, "Hidden")
+                    ),
+                    ModuleSetting("Hidden", str(len(rules))),
+                    *(
+                        record
+                        for rule in rules
+                        for record in module_type._single_rule_setting_records(rule)
+                    ),
+                ],
+            )
+            for block in blocks
+        )
+
+
+class _TwoMeasurementClassificationMethodBehavior(_ClassificationMethodBehavior):
+    """Paired settings and outputs, with no scalar rule reconstruction tail."""
+
+    def bind_settings(self, module_type, module, binder):
+        return module_type._two_measurement_kwargs(module, binder)
+
+    def classified_image_outputs(self, module_type, module):
+        return module_type._two_measurement_classified_image_outputs(module)
+
+    def finalize_mode_blocks(self, module_type, blocks, invocation):
+        return blocks
+
+
 class ClassificationMethod(Enum):
     """CellProfiler ClassifyObjects measurement-count mode."""
 
+    _behavior: _ClassificationMethodBehavior
+    cellprofiler_literals: tuple[str, ...]
+
     def __new__(
-        cls, absorbed_value: str, *cellprofiler_literals: str
+        cls, absorbed_value: str, behavior: _ClassificationMethodBehavior,
+        *cellprofiler_literals: str,
     ) -> "ClassificationMethod":
-        return enum_member_with_payload(
+        member = enum_member_with_payload(
             cls,
             absorbed_value,
             payload_attribute="cellprofiler_literals",
             payload=(absorbed_value, *cellprofiler_literals),
         )
+        member._behavior = behavior
+        return member
 
-    SINGLE_MEASUREMENT = ("single_measurement", "Single measurement")
+    SINGLE_MEASUREMENT = (
+        "single_measurement",
+        _SingleMeasurementClassificationMethodBehavior(),
+        "Single measurement",
+    )
     TWO_MEASUREMENTS = (
         "two_measurements",
+        _TwoMeasurementClassificationMethodBehavior(),
         "Pair of measurements",
         "Two measurements",
     )
@@ -1364,16 +1463,12 @@ class ClassificationMethod(Enum):
         self, module_type: type[ClassifyObjectsSingleMeasurementModule],
         module: ModuleBlock, binder: SettingsBinder,
     ) -> RuntimeCallableKwargs:
-        if self is self.TWO_MEASUREMENTS:
-            return module_type._two_measurement_kwargs(module, binder)
-        return module_type._single_measurement_kwargs(module, binder)
+        return self._behavior.bind_settings(module_type, module, binder)
 
     def classified_image_outputs(
         self, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
     ) -> tuple[ClassifiedImageOutput, ...]:
-        if self is self.TWO_MEASUREMENTS:
-            return module_type._two_measurement_classified_image_outputs(module)
-        return module_type._single_measurement_classified_image_outputs(module)
+        return self._behavior.classified_image_outputs(module_type, module)
 
     def finalize_module_blocks(
         self, module_type: type[ClassifyObjectsSingleMeasurementModule],
@@ -1397,47 +1492,7 @@ class ClassificationMethod(Enum):
             )
             for block in blocks
         )
-        if self is self.TWO_MEASUREMENTS:
-            return blocks
-        rules = invocation.kwargs_dict.get("classification_rules")
-        if rules is not None:
-            if not isinstance(rules, tuple) or any(
-                not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
-            ):
-                raise TypeError(
-                    "ClassifyObjects classification_rules must be a tuple of "
-                    "SingleMeasurementClassificationRule values."
-                )
-        if not rules:
-            retained_image_name = normalized_symbol_name(
-                str(invocation.kwargs_dict.get("retained_image_name") or "")
-            )
-            return tuple(
-                module_type._block_with_scalar_classification_output(
-                    block, retained_image_name=retained_image_name
-                )
-                for block in blocks
-            )
-        return tuple(
-            replace(
-                block,
-                setting_records=[
-                    *(
-                        record
-                        for record in block.iter_settings()
-                        if not module_type._single_group_setting_name(record.name)
-                        and not setting_name_matches(record.name, "Hidden")
-                    ),
-                    ModuleSetting("Hidden", str(len(rules))),
-                    *(
-                        record
-                        for rule in rules
-                        for record in module_type._single_rule_setting_records(rule)
-                    ),
-                ],
-            )
-            for block in blocks
-        )
+        return self._behavior.finalize_mode_blocks(module_type, blocks, invocation)
 
 
 class ClassificationThresholdMethod(Enum):
