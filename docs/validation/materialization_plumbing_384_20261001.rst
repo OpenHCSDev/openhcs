@@ -85,6 +85,13 @@ and export, all three runtime observation modes, pickle transport after resource
 release, exact combined worker/parent export paths, materialization formats,
 metadata publication/reconciliation, runtime/viewer validation and ZMQ consumers.
 
-R0/R1 source guard qualification, representative ordinary unprofiled timing and
+The original unmodified R0 guard passes for a264ee95546ab17a3ded40f81759cc6234d08817
+against main e341ac9b55cb2b6a143df9083785b296c23000df. There are no positive debt
+deltas; ZMQExecutionServer god-class excess decreases by eight lines and the
+artifact materialization foreign-absence probe decreases by one. This revision
+includes the normal merge of main's fixture/documentation fix; production sources
+are identical to the 267-test candidate.
+
+Combined R1 source qualification, representative ordinary unprofiled timing and
 native numerical parity remain required before promotion. No benchmark ratios or
 speedup claim are attached to this receipt.
