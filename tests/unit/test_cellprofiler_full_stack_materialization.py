@@ -217,7 +217,11 @@ def test_independent_composition_capabilities_cooperate_in_both_mro_orders(rever
     class MaskCapability:
         def compose_mask(self, composed, metadata):
             calls.append("mask")
-            return super().compose_mask(composed, metadata)
+            mask = super().compose_mask(composed, metadata)
+            if mask is None:
+                mask = np.ones_like(composed, dtype=bool)
+            mask[:, 0, 0] = False
+            return mask
 
     bases = (
         (MaskCapability, PixelCapability)
@@ -232,3 +236,6 @@ def test_independent_composition_capabilities_cooperate_in_both_mro_orders(rever
     np.testing.assert_array_equal(
         image_payload_data(dense), np.stack((np.ones((2, 3)), np.full((2, 3), 2)))
     )
+    expected_mask = np.ones((2, 2, 3), dtype=bool)
+    expected_mask[:, 0, 0] = False
+    np.testing.assert_array_equal(image_payload_mask(dense), expected_mask)

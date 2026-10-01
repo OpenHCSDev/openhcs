@@ -66,8 +66,11 @@ runner resolves this worktree's Python code and only the unchanged installed
 ``_tabular_native.abi3.so`` artifact. No download/build/install is performed.
 
 The first complete-package NRA attempt rejected a misdeclared context root.
-The corrected whole-package plus recorded external dependency scan timed out
-at 60 seconds with 511664 KiB RSS. No complete global semantic/proof certificate
+The corrected whole-package scan admitted the installed candidate's external
+directory, but that candidate's submodules are uninitialized; this is not
+complete dependency context. The CLI's own 20-second deadline expired while
+parsing (outer shard bound 60 seconds), with 511664 KiB RSS.
+No complete global semantic/proof certificate
 is claimed. Manual ownership evidence and source behavior tests are distinct.
 The initial slotted-dataclass zero-argument super failure is retained and fixed
 with explicit cooperative super(AlignedImageStack, self), not suppressed.
@@ -99,8 +102,13 @@ two outputs although identify_primary_objects now has seven diagnostic image
 slots in addition to the canonical slots. The exact same test fails on a
 complete unchanged production source snapshot of main 0c0563e65, not merely
 an executor substitution. No production ABI assertion or fixture was weakened.
-This pre-existing fixture mismatch is separately recorded under parent
-integration; the shard is not claimed fully passing.
+This pre-existing fixture mismatch is owned by the runtime repair worker under
+parent integration. Its fixture is now aligned by deriving diagnostic artifact
+specs from PrimaryObjectDiagnosticPlanes.artifact_specs, the same authority
+used by the production module declaration. No new role/name inventory or
+production relaxation is introduced. The original failure receipts stay
+retained, including the unrelated failed shard invocation with nonexistent
+test paths; corrected consumer checks are reported separately.
 
 Affected nominal owners: aligned runtime image stacks and their named-output
 bundle subtype require materialization; already-dense image metadata/masked
@@ -121,3 +129,20 @@ Remaining gate: original structural/R1 guard disposition, parent integration
 and scheduled fresh installed entrypoint acceptance with synthetic inputs.
 This source checkpoint is not live readiness or biological success. H003g
 stays FAILED and is not a validation dataset for this repair.
+
+Guard disposition at source checkpoint 63ad7c652: original CI-pinned R0
+debt_ratchet.py (agent-comms 3b03785f45df2ef5dc62ba6aed99294192ecbb01,
+SHA256 e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562)
+and its direct owner dependencies are byte-identical in the existing cached
+package. It ran with the CI's Python 3.14 using existing local dependencies:
+production openhcs root PASS, 18.75 seconds wall / 89428 KiB RSS, one CPU,
+512 MiB / no swap / 60 seconds. Earlier interpreter/dependency import failures
+remain retained. Changed-source counts have no positive structural deltas.
+
+The original scripts.check_refactor_r1 is NOT passing: the existing current
+NRA environment fails to import RedundantTypeCheckDetector from the detector
+package before scanning. The worktree's recorded dependency gitlinks are also
+uninitialized, so full-context source materialization is not yet qualified.
+No detector substitution, narrowed context, script modification, download or
+dependency installation has been used to manufacture a passing result. Parent
+integration must disposition/qualify the original R1 environment separately.
