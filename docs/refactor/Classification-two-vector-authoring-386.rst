@@ -70,13 +70,40 @@ object-label image. Public author/validate/render (both modes)/parse/declaration
 reconstruction is exercised continuously. Unknown, labels, runtime vectors
 and undeclared image-index kwargs remain rejected by the public authoring API.
 
+Source-qualified production/test head:
+``30eeea4e55dc076a938f986a5094d400f1bc0099``. Subsequent delivery changes only
+this receipt and its archive, not production or tests.
+
 Focused receipt ``two-vector-focused-v4.json``: 48 cases passed, 7.82s wall,
-420.94MiB combined RSS, one CPU, unchanged 60s/512MiB bounds, subprocess guard.
-Intermediate failures remain recorded. Complete integrated source and original
-pinned R0 qualification follow in this same draft; no whole-context NRA/FULL
-claim is made.
+420.94MiB combined RSS. Final ``two-vector-integrated-final.json``: all 143
+cases passed, 9.82s wall, 438.71MiB combined RSS. Both use one CPU, unchanged
+60s/512MiB bounds, original readonly interpreter dependencies, own source
+explicitly and a subprocess guard. The final run includes the full previous
+113-case suite, public selector admission and this new authoring suite, with
+no deselection. Two existing unknown-async-config warnings do not change scope.
+Explicit empty rules preserve scalar defaults; unknown external modes and
+untyped rule declarations reject.
+
+Original pinned R0: frozen382 ``be2f7faa`` to source head ``30eeea4e`` passed
+14.58s wall, 74.79MiB combined RSS, 5166 measured entries, increased ``[]``.
+``GodClassExcess`` for the original module decreases 55; ``StringSubscript``
+decreases one. Exact Python3.14 tool and readonly metaclass backing paths are
+asserted in ``two-vector-pinned-r0-final.json``. No detector copy, engine change,
+whole-context NRA/R1 scan or global85 FULL qualification is claimed.
+
+Archive ``receipts/classification-two-vector-authoring-386-source-20261001.tar.gz``
+contains only this follow-up's command/receipt/log files, including original and
+intermediate failures. SHA256:
+``470e435d270548a0cf65ac574bfed5778798af91410484ed78906ee80f87ca96``.
+Archive comparison against every source member passed without extraction.
+Its allocated size is 276KiB; no worktree/environment/snapshot was duplicated.
 
 Installed acceptance remains parent-owned and pending. Read-only native-slot
 inspection found canonical validation.lock held by flock PID1890068; this
 worker did not acquire it, prepare wheels, install or launch native processes.
 Frozen PR382 and its original 113/R0 receipts remain unchanged.
+
+Draft PR388 is based on frozen382 until parent integration. Issue386 owns this
+bug; issue384 is separately owned runtime-plumbing performance work. Singer
+lookup379 coordination is issuecomment-5936826187. Do not replay original
+mutations, broaden provenance or claim installed classification readiness.
