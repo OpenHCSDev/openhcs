@@ -1,6 +1,19 @@
 Persisted result reopening: issue 398
 ====================================
 
+Current status: reader/reopen DONE
+---------------------------------
+
+PR399 merged as ``e3765e3534b009f09413c7c5bfc35d072030a704`` at
+2026-10-01 21:45:10 UTC. Parent completed actual private installed PUBLIC MCP
+reader, inventory, bounded sampling, ordinary saved-image streaming, native
+readback and capture acceptance, paired with Lorentz397
+``229dea725dd0cc82c4fae06835617ac19c5d7722``. This is the reader/reopen scope,
+not a standalone claim for the earlier unpaired aggregate stream.
+Graph reopening under issue134/PR394 remains separate and unfinished.
+Candidate1b remains REJECTED; this engineering acceptance is not a biological
+pipeline pass. Historical failures below remain retained.
+
 Owner and boundary
 ------------------
 
@@ -187,9 +200,9 @@ ControlGroup. The owned disposable root
 archival; source/history and all parent scientific inputs/outputs remain.
 This does not overlap Lorentz's worktree cleanup.
 
-PR399 is a visible source checkpoint. Parent installed public-tool acceptance
-is pending; no live-readiness, historical graph recovery, or global NRA
-completion is asserted.
+At the initial source checkpoint, parent installed public-tool acceptance was
+pending. The paired installed qualification below supersedes that status, not
+the historical failures or unresolved global NRA/graph scope.
 
 Installed read acceptance and stream failure
 -------------------------------------------
@@ -210,7 +223,7 @@ updates0 of1. Native ``NapariAggregateAxisBindingAuthority.bindings`` refused
 declaration.`` Source includes PR397 ``ad6baa4e``; parent reports artifact
 shape(1,1024,1024), native metadata retains ``plane_axis=source_binding`` and
 one exact source plane/channel2. Original viewer2263287/create1790888684.96
-remains parent-owned for observation/closure, not an authorized replay target.
+was parent-owned for observation/closure, not an authorised replay target.
 
 Original request/response are retained in
 ``paired397-388-installed-20261001/reopen399-installed-viewer/``:
@@ -244,5 +257,55 @@ Singer retains399 inventory/read ownership and the coordinated394 graph seam;
 no397 production/test file or live process was edited. This receipt-only update
 does not change399 production head6cea76331, installed packages, source axes,
 timeouts, or scientific outputs. No tests/startup/replay or new scratch were
-performed. Installed stream/capture acceptance remains FAILED pending the
-separately owned producer repair and a fresh parent-controlled qualification.
+performed. At this checkpoint, installed stream/capture acceptance remained
+FAILED pending the separately owned producer repair and fresh parent-controlled
+qualification. The following qualification records the later outcome without
+replaying or rewriting that failure.
+
+Paired installed reader/reopen acceptance
+----------------------------------------
+
+The fresh original ordinary saved-image route passed with399's native reader
+and397's exact declaration-producer projection. Parent evidence is retained
+under ``/home/ts/wt/openhcs-issue-batch-20260929/paired397-388-installed-20261001``:
+
+* ``reopen399-installed-read-native-channel/ACCEPTANCE.json``: all9 native
+  inventory records and resolution0 samples for candidate_mask and
+  unrooted_residual, exact origin(180,745), shape40x45, integer channel2,
+  calibration1.3556. Original wrong string-type harness receipt is preserved.
+* ``reopen399-installed-viewer-projected/transport-and-capture.json``:
+  ordinary PUBLIC MCP saved candidate stream succeeds, no errors/warnings,
+  one item mounted, followed by native readback and render-complete capture.
+  SHA256 ``1f16e3453d6e5b99ed58e4f357a7aeba30f38fff3a34076f136ae6e3461ff3c8``.
+* ``reopen399-projected-binary-review/REVIEW.json``: native payload is
+  1024x1024 uint8, Site1/Channel2/Z1/T1/WellA01, source calibration1.3556;
+  mounted-payload summary9815 nonzero, binary values0..1. Parent personally
+  opened both the initial default black capture and the revealed binary capture
+  after the original MCP display-intensity control set limits0..1, gamma1.
+  The default limits were0..255; the black presentation was not a missing
+  payload or failed render-completion receipt. This display control did not
+  rewrite the persisted acquisition/candidate artifact.
+  SHA256 ``7dd6e9b5163d27e69c1ce00f5a8b8039e527ea87fb9b9e718f4682aafa2fbda5``.
+
+Both captures report ``captured=true``, ``frame_condition=render_complete``
+and one painted frame, with the original5000ms operation deadline and2.5s
+observation bound. Their PNG hashes are respectively
+``14d759db5e4f4e06b01dfa15582bb19cb716a264b406f9f7ca728367c19184bc``
+and ``130530b2df6349072dac1d03130735a6586be5a66df6ee50c09c5c8fc79db05c``.
+These are parent-observed installed acceptance, not additional tests or image
+judgement performed by Singer. Geometry/mask quality and missed faint processes
+are not inferred from the bitmap, payload count, or engineering pass.
+
+At the handover checkpoint the exact viewer2339091/create1790890853.17 on
+DISPLAY91/5992 remained alive, approximately707MiB, for the parent's handover
+to Dalton's same assisted one-site context. This receipt grants no restart,
+replay, closure, package update or installed-source edit while that owner lives.
+Current live state is parent-owned, not polled by this docs update.
+
+Receiving docs use the same persistent Singer worktree, on an ordinary
+docs-only branch from merged maine3765e353. No production file, installed
+environment, native process, scientific output, deadline, or graph contract is
+changed. No redundant evidence copy, scratch directory, test rerun or native
+operation was created. Original failure archives and parent evidence stay intact.
+Graph sidecar coordination remains with Singer and the394 writer owner;
+historical unbound graphs are not recovered by this reader acceptance.
