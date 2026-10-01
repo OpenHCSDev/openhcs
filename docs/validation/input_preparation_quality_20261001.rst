@@ -59,12 +59,21 @@ One numeric thread,60-second shell bounds, no JVM, Fiji/package/environment
 download or global install. Owned scratch input-parent-quality-20261001 is
 bounded and cleaned after terminal source checks and evidence archive.
 
-Remaining gates
----------------
+Original guards and remaining gates
+----------------------------------
 
-The unchanged original packaged structural ratchet must be rerun on the committed
-candidate before publication acceptance. Full-context NRA/R1/ZIP completion is
-not certified by these focused checks or the method's unchanged AST.
+The unchanged original packaged structural ratchet actually passes against
+main74eac059 for committed production candidate1998f8ed6: both openhcs and
+benchmark have zero positive deltas. MicroscopeHandler excess is now16 below
+main, rather than10 above; the profile's added StringSubscript delta is gone.
+Other existing improvements retain SourceBindingWorkspaceProjector excess-10,
+SyntheticMicroscopyGenerator excess-30 and workspace ForeignAbsenceProbe-1.
+No exception, scope move, string-constant substitution or guard change is used.
+Original failed and current successful JSONs remain separate. Scripts source
+is unchanged from the earlier passing revision. An AST comparison also proves
+the complete detect signature/decorator/body is unchanged from a3179b214;
+that syntax comparison does not itself prove MRO/metaclass runtime semantics.
+Full-context NRA/R1/ZIP completion is not certified by these focused checks.
 Installed native/MCP input preparation, actual Java/CZI and persisted sample
 acceptance remain required. The current scientific trial owns the isolated
 runtime slot; no foreign or frozen process is changed to obtain that slot.
