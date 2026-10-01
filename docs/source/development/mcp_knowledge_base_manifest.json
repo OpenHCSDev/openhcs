@@ -807,7 +807,7 @@
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md",
       "summary": "Distributed raw-only faint-structure and nuisance scans with progressively lower numeric upper display limits; diagnostic soma saturation versus publication intent. Matched raw-only/result-only/combined QA across channels, positions and scales; verify live state and recapture after canvas changes.",
-      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "channel switch contrast window", "remote desktop compression native capture", "segmentation visual debugging", "faint neurite lower upper display limit", "diagnostic soma saturation", "noise background illumination scan"],
+      "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "per image contrast check", "channel switch contrast window", "remote desktop compression native capture", "segmentation visual debugging", "faint neurite lower upper display limit", "diagnostic soma saturation", "noise background illumination scan"],
       "title": "Review matched microscopy views"
     },
     {

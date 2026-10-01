@@ -33,6 +33,7 @@ TASKS = (
     ("current processing intensity units", "openhcs_measurement_interpretation"),
     ("recipe error memory", "openhcs_analysis_learning"),
     ("canvas resize recapture", "openhcs_viewer_qa"),
+    ("per image contrast check", "openhcs_viewer_qa"),
     ("channel switch contrast window", "openhcs_viewer_qa"),
     ("remote desktop compression native capture", "openhcs_viewer_qa"),
     ("diagnostic soma saturation", "openhcs_viewer_qa"),
