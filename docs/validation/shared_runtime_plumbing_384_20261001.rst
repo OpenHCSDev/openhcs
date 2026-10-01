@@ -72,8 +72,10 @@ already resolved payload through the existing artifact strategy family.
 The executor does not own a second interpretation of input relations or returned
 artifact contexts. ``ArtifactSpecCollection`` derives exact broadcast indices
 from its ordered declarations; ``RuntimeReturnedOutputMatcher`` contextualizes
-the compiled canonical return ABI. The old CP helpers are deleted. The existing
-contract, collection and returned value determine these answers directly.
+the compiled canonical return ABI. ``AlignedImageStack`` binds the complete
+declared output roster to its exact slice contexts in one linear traversal. The
+old CP and canonical-values helpers are deleted. The existing contract,
+collection and returned value determine these answers directly.
 
 The deeper clean-source probe at 5d1f1a781eda851b4783b68db342b76eeef9dea9 records
 10.053237 seconds of public execution, including 4.465789 seconds at the callable
@@ -143,6 +145,18 @@ dc1a371b06079ff249c8c6432953d21e0c05917b, without increasing debt allowances or
 source checks. The main synchronization passed 85 help/output/source-resolution
 controls. These source ratchets are scoped guards, not a formal proof of every
 dynamic binding.
+
+The subsequent ownership/publication follow-up normally merges main
+76a2d392056f4fa6cc74bc122a552edc32f24239 at candidate
+84057fbefd0ad5469c766051e19b34f42e851102, including the declaration-owned
+classification and singleton image-selection repairs. All 955 controls across
+26 changed-path and relevant main-owner test files pass, with two existing
+watershed warnings. Original unmodified R0 and R1 pass against that main, with
+no metric budgets or exclusions changed. The R1 scan uses the current NRA
+checkout's virtual environment and its original 120-second deadline. Earlier
+failed owner-growth/context-inspection guards and the wrong-interpreter import
+failure are retained. Evidence: shared-plumbing-final-local-gates-20261001.json
+and the original R0/R1 logs in the external evidence directory.
 
 The first complete saved-native gate exposed two illumination-correction
 publication failures: actual numeric NPY saves admitted directories without any
