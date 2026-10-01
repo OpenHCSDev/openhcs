@@ -219,6 +219,15 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                         np.testing.assert_array_equal(tifffile.imread(raw_plate / path),
                                                       tifffile.imread(native_plate / path))
 
+    def test_absent_acquisition_cannot_publish_default_physical_calibration(self):
+        generator, plate = self.generate("OperaPhenix", native=False)
+        # Only this new disposable control's XML is removed. Historical and
+        # frozen fixtures are not inputs to this negative admission test.
+        (plate / "Images/Index.xml").unlink()
+        with self.assertRaises(FileNotFoundError), redirect_stdout(StringIO()):
+            generator.generate_openhcs_metadata(sub_dir="Images")
+        self.assertFalse(get_metadata_path(plate).exists())
+
     def test_new_nominal_capabilities_cooperate_through_real_parser_diamond(self):
         # Independent behaviors, not sibling format implementations: one records
         # physical acquisitions; the other scopes their names. Both cooperate
