@@ -1,6 +1,33 @@
 Runtime repair #342 source receipts
 ==================================
 
+Latest engineering authoring disposition
+---------------------------------------
+
+The public example is corrected to the parent's admitted acquisition contracts:
+IS_TIF filter; exact FILE_NAME acquisition metadata; METADATA pairing on
+well/site/z_index/timepoint; per-alias CHANNEL component_identity. The failed
+minimal example at 327cec9f6 remains in Git and the original a14 archive.
+No production code changes after a14d471e3. The existing native handler does
+not promise named source projection; do not infer ingestion owner from a
+requested microscope enum or input occurrences from storage-plan rendering.
+
+engineering-acquisition-final-source: 6 PASS, 2.78s pytest / 3.50s wall /
+334736 KiB RSS. Document parsing and synthetic path/declaration checks only;
+no pixel load, initialization, compile, scientific execution or native startup.
+engineering-source-bindings-ingress: initial 3 PASS / 1 FAIL, incorrect expected
+exception class for an existing metadata conflict; original receipt retained.
+engineering-source-bindings-identity-controls: 5 PASS, before final adoption
+of the parent's precise complete authoring recipe. Source receipts remain
+separate from the parent's installed21 and continuous installed MCP/native gate.
+Parent reports compile/run complete, 8192 comparisons with maximum error
+1.23e-7, exact declared calibration/first-source scope; no direct carrier/mask
+inspection and no biology or R1 acceptance. See 344-engineering-acceptance.rst.
+
+New authoring receipts: docs/refactor/receipts/cp-aligned-full-stack-342-acquisition.tar.gz
+and diagnostics/ACQUISITION_SHA256SUMS. Prior archives/manifests are unchanged;
+their source hashes authenticate their recorded snapshots, not this revised example.
+
 Owner: H003g runtime repair worker under parent integration; draft PR #344.
 H003g is permanently FAILED. These are synthetic source checks, not a trial
 retry, installed acceptance, result QA or biological success evidence.
