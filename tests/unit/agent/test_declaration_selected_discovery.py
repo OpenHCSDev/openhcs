@@ -8,11 +8,14 @@ from types import ModuleType
 import pytest
 
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
+from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 
 
 @pytest.mark.parametrize("audit_first", [True, False])
+@pytest.mark.parametrize("computed_name", [False, True])
 def test_independent_declaration_is_selected_with_cooperative_capability(
-    tmp_path, monkeypatch, audit_first
+    tmp_path, monkeypatch, audit_first, computed_name
 ):
     events = []
 
@@ -32,15 +35,16 @@ def test_independent_declaration_is_selected_with_cooperative_capability(
     support = ModuleType("selected_declaration_support")
     support.Root = root
     monkeypatch.setitem(sys.modules, support.__name__, support)
-    package_name = f"selected_declarations_{audit_first}"
+    package_name = f"selected_declarations_{audit_first}_{computed_name}"
     package = tmp_path / package_name
     package.mkdir()
     (package / "__init__.py").write_text("")
     (package / "arbitrary_location.py").write_text(
         "from selected_declaration_support import Root\n"
         "class IndependentDeclaration(Root):\n"
-        f"    module_name = 'IndependentSelection{audit_first}'\n"
-        f"    aliases = ('IndependentAlias{audit_first}',)\n"
+        + (f"    module_name = 'IndependentSelection' + str({audit_first})\n"
+         if computed_name else f"    module_name = 'IndependentSelection{audit_first}'\n")
+        + f"    aliases = ('IndependentAlias{audit_first}',)\n"
         f"    function_name = 'independent_selected_function_{audit_first}'\n"
     )
     (package / "unrelated.py").write_text(
@@ -74,9 +78,35 @@ def test_independent_declaration_is_selected_with_cooperative_capability(
         assert root.for_module("MissingIndependentDeclaration") is None
         with pytest.raises(KeyError):
             root.require_module("MissingIndependentDeclaration")
+        (package / "collision.py").write_text(
+            "from selected_declaration_support import Root\n"
+            "class ConflictingDeclaration(Root):\n"
+            f"    module_name = 'IndependentSelection{audit_first}'\n"
+            "    aliases = ('ForcedCollisionSelection',)\n"
+        )
+        importlib.invalidate_caches()
+        with pytest.raises(ValueError, match="duplicates CellProfiler module names"):
+            root.for_module("ForcedCollisionSelection")
+        assert dict.get(registry, f"IndependentSelection{audit_first}") is declaration
     finally:
         dict.pop(registry, f"IndependentSelection{audit_first}", None)
         for name in tuple(sys.modules):
             if name == package_name or name.startswith(f"{package_name}."):
                 monkeypatch.delitem(sys.modules, name)
         importlib.invalidate_caches()
+
+
+def test_examplehuman_selected_source_uses_same_declaration_owner(monkeypatch):
+    def forbid_full_discovery():
+        raise AssertionError("selected example requested whole-family discovery")
+
+    monkeypatch.setattr(CellProfilerModule.__registry__, "_discover", forbid_full_discovery)
+    document = KnowledgeBaseService().get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_official30_benchmark_recipes",
+            section_id="examplehuman-openhcs-python",
+            max_chars=50000,
+        )
+    )
+    assert not document.errors, document.errors
+    assert "pipeline_steps" in document.content

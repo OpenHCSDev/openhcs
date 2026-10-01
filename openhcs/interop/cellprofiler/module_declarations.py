@@ -159,9 +159,7 @@ class CellProfilerModule(
     __registry_key__ = "module_name"
     __skip_if_no_key__ = True
     module_name: ClassVar[str | None] = None
-    function_name: ClassVar[str | None] = None
     aliases: ClassVar[tuple[str, ...]] = ()
-    function_variants: ClassVar[tuple[str, ...]] = ()
     registry_catalog_module: ClassVar[str] = _CELLPROFILER_BACKEND_PACKAGE
     confidence: ClassVar[float] = 0.5
     validated: ClassVar[bool] = False
@@ -381,13 +379,6 @@ class CellProfilerModule(
         CellProfilerModule.scale_qualified_measurement_feature_prefix_declarations.__func__.cache_clear()
 
     @classmethod
-    def declared_function_names(cls) -> tuple[str, ...]:
-        """Return the primary and variant function names declared by this module."""
-        if cls.function_name is None:
-            return ()
-        return (str(cls.function_name), *cls.function_variants)
-
-    @classmethod
     def contribute_source_bindings(
         cls,
         module: "ModuleBlock",
@@ -406,16 +397,16 @@ class CellProfilerModule(
         """Fold enabled modules into one public source-binding configuration."""
         from openhcs.core.source_bindings import SourceBindingsConfig
 
-        modules = tuple(modules)
-        cls.discover_source_declarations(
-            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
-            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
-        )
         if not isinstance(config, SourceBindingsConfig):
             raise TypeError(
                 "CellProfiler source binding import requires SourceBindingsConfig, "
                 f"got {type(config).__name__}."
             )
+        modules = tuple(modules)
+        cls.discover_source_declarations(
+            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
+            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
+        )
         for module in modules:
             if not module.enabled:
                 continue
@@ -441,29 +432,6 @@ class CellProfilerModule(
         """Return whether axis execution requires the CellProfiler workspace adapter."""
 
         return True
-
-    @classmethod
-    def for_backend_function_name(
-        cls,
-        function_name: str,
-    ) -> type["CellProfilerModule"] | None:
-        """Resolve a function exposed inside the CellProfiler backend namespace."""
-        normalized_name = _required_string(
-            function_name,
-            "function_name",
-            cls.__name__,
-        )
-        matches = cls.discover_source_declarations(
-            frozenset((normalized_name,)), ("function_name", "function_variants"), str,
-            lambda declaration: frozenset(declaration.declared_function_names()),
-        )
-        if len(matches) > 1:
-            raise ValueError(
-                f"CellProfiler function {normalized_name!r} is owned by multiple "
-                "module declarations: "
-                f"{tuple(item.require_module_name() for item in matches)!r}."
-            )
-        return matches[0] if matches else None
 
     @classmethod
     def for_callable_import_identity(

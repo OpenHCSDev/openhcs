@@ -98,6 +98,8 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
 
     registry_catalog_module: ClassVar[str | None] = None
     __registry__: ClassVar[LazyDiscoveryDict]
+    function_name: ClassVar[str | None] = None
+    function_variants: ClassVar[tuple[str, ...]] = ()
 
     @classmethod
     def discover_source_declarations(
@@ -142,9 +144,27 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
         )
 
     @classmethod
-    @abstractmethod
     def declared_function_names(cls) -> tuple[str, ...]:
         """Return the local callable names owned by this declaration."""
+        if cls.function_name is None:
+            return ()
+        return (cls.function_name, *cls.function_variants)
+
+    @classmethod
+    def for_backend_function_name(cls, function_name: str) -> type | None:
+        """Resolve one function through this nominal catalog's declarations."""
+        if not isinstance(function_name, str) or not function_name.strip():
+            raise ValueError(f"{cls.__name__}.function_name must be a non-empty string.")
+        matches = cls.discover_source_declarations(
+            frozenset((function_name,)), ("function_name", "function_variants"), str,
+            lambda declaration: frozenset(declaration.declared_function_names()),
+        )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Function {function_name!r} is owned by multiple catalog "
+                f"declarations: {tuple(owner.__name__ for owner in matches)!r}."
+            )
+        return matches[0] if matches else None
 
     @classmethod
     def require_registry_catalog_module(cls) -> str:
