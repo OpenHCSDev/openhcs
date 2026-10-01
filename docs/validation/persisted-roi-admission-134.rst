@@ -111,11 +111,10 @@ fails at directory admission itself, as above.
 
 ``docs/validation/persisted-roi-admission-134-source-20261001.tar.gz`` contains all
 three byte-exact raw source logs, each original check-input version and synthetic
-failed fixtures. ``tar -d`` verified it against every loose original. Full guarded
+failed fixtures. ``tar -d`` verified it against every loose original.
 Archive SHA256:
 ``5d01ecf1a408f8bd98053ba8d4d287b8b429dcd020f3e96304f1e8e41cfcb5d3``.
-Full guarded
-commands and process receipts are in the logs. Original public errors and
+Full guarded commands and process receipts are in the logs. Original public errors and
 scientific artefacts remain in Dalton's root, outside this archive. No production
 paths changed, so no new production R0/R1 or global NRA pass is asserted. Whole-PR
 ``git diff --check`` applies to source/docs; authentic raw logs remain inside the
