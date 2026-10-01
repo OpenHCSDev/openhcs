@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import subprocess
+from collections import Counter
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
@@ -61,11 +62,17 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_equivalence import (
+    RuntimeMeasurementSnapshot,
+    runtime_measurement_equivalence,
+)
 from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -158,6 +165,79 @@ def _source_input_inventory(input_dir: Path) -> tuple[dict[str, object], ...]:
         }
         for path in files
     )
+
+
+def _require_compared_output_inventory(
+    *,
+    reference_files: frozenset[Path],
+    candidate_files: frozenset[Path],
+    reference_exports: RuntimeExportObservation,
+    candidate_exports: RuntimeExportObservation,
+    reference_snapshot: RuntimeOutputSnapshot,
+    candidate_snapshot: RuntimeOutputSnapshot,
+    candidate_managed_files: frozenset[Path] = frozenset(),
+) -> None:
+    """Reject unqualified output formats and missing scientific output files."""
+    counts = []
+    for files, exports, snapshot, managed_files in (
+        (reference_files, reference_exports, reference_snapshot, frozenset()),
+        (
+            candidate_files,
+            candidate_exports,
+            candidate_snapshot,
+            candidate_managed_files,
+        ),
+    ):
+        files = files - managed_files
+        compared_files = (
+            frozenset(exports.table_outputs)
+            | frozenset(exports.image_outputs)
+            | frozenset(
+                path
+                for path in exports.output_files
+                if path.suffix.lower() in {".db", ".properties"}
+            )
+        )
+        if files != compared_files:
+            raise RuntimeError(
+                "Matched output inventory contains files without a value comparison: "
+                f"{tuple(sorted(files - compared_files))!r}."
+            )
+        count = (
+            len(files)
+            - len(snapshot.tables)
+            + sum(table.participates_in_comparison for table in snapshot.tables)
+        )
+        if count < 1:
+            raise RuntimeError("Matched batch has no compared scientific output files.")
+        counts.append(count)
+    if counts[0] != counts[1]:
+        raise RuntimeError(
+            "Matched scientific output file counts differ: "
+            f"reference={counts[0]}, candidate={counts[1]}."
+        )
+    table_shapes = tuple(
+        Counter(
+            (
+                tuple(
+                    (
+                        measurement.subject.scope.value,
+                        normalize_runtime_identifier(measurement.subject.name),
+                    )
+                    for measurement in table.measurement_tables()
+                ),
+                len(table.rows),
+            )
+            for table in snapshot.tables
+            if table.participates_in_comparison
+        )
+        for snapshot in (reference_snapshot, candidate_snapshot)
+    )
+    if table_shapes[0] != table_shapes[1]:
+        raise RuntimeError(
+            "Matched CSV table row counts differ: "
+            f"reference={table_shapes[0]}, candidate={table_shapes[1]}."
+        )
 
 
 def _native_python_executable(path: Path, project_root: Path) -> Path:
@@ -700,10 +780,24 @@ def main(argv: list[str] | None = None) -> int:
             database_report = cellprofiler_database_export_equivalence(
                 native_root, candidate_exports, policy=policy
             )
-            native_images = RuntimeOutputSnapshot.from_output_root(native_root).images
-            candidate_images = RuntimeOutputSnapshot.from_export_observation(
+            native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+            native_snapshot = RuntimeOutputSnapshot.from_export_observation(
+                native_exports
+            )
+            candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
                 candidate_exports
-            ).images
+            )
+            csv_report = runtime_measurement_equivalence(
+                RuntimeMeasurementSnapshot.from_output_snapshot(
+                    native_snapshot, policy=policy
+                ),
+                RuntimeMeasurementSnapshot.from_output_snapshot(
+                    candidate_snapshot, policy=policy
+                ),
+                policy=policy,
+            )
+            native_images = native_snapshot.images
+            candidate_images = candidate_snapshot.images
             image_differences = runtime_image_differences(
                 native_images, candidate_images, policy
             )
@@ -721,30 +815,20 @@ def main(argv: list[str] | None = None) -> int:
             native_output_files = frozenset(
                 path for path in native_root.rglob("*") if path.is_file()
             )
-            supported_native_outputs = frozenset(
-                image.path for image in native_images
-            ) | frozenset(
+            managed_output_files = frozenset(
                 path
-                for path in native_output_files
-                if path.suffix.lower() in {".db", ".properties"}
+                for output_root in completed.output_roots
+                for path in METADATA_CONFIG.managed_paths(output_root)
             )
-            supported_candidate_outputs = frozenset(
-                image.path for image in candidate_images
-            ) | frozenset(
-                path
-                for path in actual_output_files
-                if path.suffix.lower() in {".db", ".properties"}
+            _require_compared_output_inventory(
+                reference_files=native_output_files,
+                candidate_files=actual_output_files,
+                reference_exports=native_exports,
+                candidate_exports=candidate_exports,
+                reference_snapshot=native_snapshot,
+                candidate_snapshot=candidate_snapshot,
+                candidate_managed_files=managed_output_files,
             )
-            if (
-                not any(path.suffix.lower() == ".db" for path in native_output_files)
-                or native_output_files != supported_native_outputs
-                or actual_output_files != supported_candidate_outputs
-            ):
-                raise RuntimeError(
-                    "This matched pilot can prove only SQLite, CPA properties "
-                    "and image outputs; another export type requires its own "
-                    "value comparison before timing can be reported."
-                )
             result = {
                 "repetition": repetition,
                 "execution_id": completed.execution_id,
@@ -778,7 +862,11 @@ def main(argv: list[str] | None = None) -> int:
                 "unexpected_output_files": (
                     tuple(
                         str(path)
-                        for path in sorted(actual_output_files - declared_output_files)
+                        for path in sorted(
+                            actual_output_files
+                            - declared_output_files
+                            - managed_output_files
+                        )
                     )
                     if declared_output_files is not None
                     else None
@@ -794,6 +882,9 @@ def main(argv: list[str] | None = None) -> int:
                 "database_differences": tuple(
                     str(difference) for difference in database_report.differences
                 ),
+                "csv_differences": tuple(
+                    str(difference) for difference in csv_report.differences
+                ),
                 "image_differences": tuple(
                     str(difference) for difference in image_differences
                 ),
@@ -806,6 +897,7 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
                 f"{len(result['database_differences'])} database and "
+                f"{len(csv_report.differences)} CSV and "
                 f"{len(result['image_differences'])} image differences.",
                 flush=True,
             )
@@ -813,14 +905,15 @@ def main(argv: list[str] | None = None) -> int:
                 not native_output_files
                 or not actual_output_files
                 or len(native_images) != len(candidate_images)
-                or len(native_output_files) != len(actual_output_files)
                 or (
                     declared_output_files is not None
-                    and len(declared_output_files) != len(actual_output_files)
+                    and len(declared_output_files - managed_output_files)
+                    != len(actual_output_files - managed_output_files)
                 )
                 or result["unexpected_output_files"]
                 or result["missing_declared_output_files"]
                 or result["database_differences"]
+                or csv_report.differences
                 or result["image_differences"]
             ):
                 raise RuntimeError(

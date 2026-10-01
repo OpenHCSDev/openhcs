@@ -149,9 +149,9 @@ class FakeMetadataHandler:
     ) -> dict[str, str]:
         return {}
 
-    def get_pixel_size(self, plate_path) -> float:
+    def source_voxel_spacing(self, plate_path) -> SourceVoxelSpacing:
         del plate_path
-        return 1.3556
+        return SourceVoxelSpacing((1.3556, 1.3556))
 
 
 def filename_parse_result(*, channel: int = 1) -> FilenameParseResult:
@@ -377,10 +377,10 @@ def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing
             )
 
     class CalibratedMetadataHandler(FakeMetadataHandler):
-        def get_pixel_size(self, plate_path):
+        def source_voxel_spacing(self, plate_path):
             if spacing.has_values:
                 raise AssertionError("Native calibration must not query plate defaults")
-            return super().get_pixel_size(plate_path)
+            return super().source_voxel_spacing(plate_path)
 
     filemanager = CalibratedFileManager()
     service = StreamingService(
@@ -918,7 +918,7 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
     metadata_handler = FakeMetadataHandler()
     monkeypatch.setattr(
         metadata_handler,
-        "get_pixel_size",
+        "source_voxel_spacing",
         lambda _path: pytest.fail("Native explicit spacing must not be replaced"),
     )
     handler = SimpleNamespace(

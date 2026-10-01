@@ -193,7 +193,7 @@ def test_snapshot_resource_decodes_once_against_original_schema(
 
 
 def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_path):
-    from PyQt6.QtCore import pyqtSignal
+    from PyQt6.QtCore import QEventLoop, pyqtSignal
     from PyQt6.QtGui import QColor, QImage, QPainter
     from PyQt6.QtWidgets import QApplication, QWidget
 
@@ -231,6 +231,16 @@ def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_
     canvas.show()
     app.processEvents()
     completed, failed = [], []
+    event_loop = QEventLoop()
+
+    def complete(response):
+        completed.append(response)
+        event_loop.quit()
+
+    def fail(response):
+        failed.append(response)
+        event_loop.quit()
+
     request = _request(tmp_path)
     try:
         ViewerWindowSnapshotService().request_viewer_capture(
@@ -244,11 +254,12 @@ def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_
             ViewerWindowDescriptor(
                 viewer_type=ViewerType.NAPARI, title="Source snapshot"
             ),
-            completed.append,
-            failed.append,
+            complete,
+            fail,
         )
-        assert not completed
-        app.processEvents()
+        assert not completed and not failed
+        # The capture owns its existing deadline; run Qt until its terminal reply.
+        event_loop.exec()
         assert not failed and len(completed) == 1
         result = ViewerWindowService(
             path_policy=AgentPathPolicy.with_roots(
