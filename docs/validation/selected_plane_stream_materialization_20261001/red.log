@@ -1,0 +1,101 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so e1e0517b3706e6f6e8de126e8c3758c3a6bbf0ca024782b795fcb27d509f3e3e
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so 9f873070c3e136dd78109a55570852981e989c1d21e3452ce214bbaa753b7308
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/steps/function_runtime.py
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_public_selected_checkpoint_materializes_and_streams_without_storage_axes[source_binding] _
+
+axis = <RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>
+tmp_path = PosixPath('/home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/storage_cleanup_20261001/selected-plane-red-scratch/test_public_selected_checkpoin1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa259d0f8f0>
+
+    @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+    def test_public_selected_checkpoint_materializes_and_streams_without_storage_axes(
+        axis, tmp_path, monkeypatch,
+    ):
+        source = _source_stack(axis)
+        pixels = np.arange(56, dtype=np.uint16).reshape(1, 7, 8)
+        selected = SelectedPlaneImageOutput(pixels, (1,))
+        payload = ImageFunctionOutputContextStrategy().contextualize(
+            source, selected, None,
+            RuntimePlaneAxisValueProjection.preserve(axis=axis, axis_size=2),
+        )
+        spec = next(
+            spec for spec in CallableContract.from_callable(neurite_outgrowth_metaxpress).artifact_outputs
+            if spec.name == "neurite_candidate_mask"
+        )
+        viewer = NapariStreamingBackend()
+        filemanager = FileManager({"disk": DiskStorageBackend(), "napari_stream": viewer})
+        saved_streams = []
+        save_batch = filemanager.save_batch
+    
+        def capture_stream(data_list, paths, backend, **kwargs):
+            if backend == "napari_stream":
+                saved_streams.append((tuple(data_list), tuple(paths), kwargs["stream_request"]))
+                return
+            return save_batch(data_list, paths, backend, **kwargs)
+    
+        monkeypatch.setattr(filemanager, "save_batch", capture_stream)
+        try:
+>           result = materialize(
+                spec.materialization, payload, str(tmp_path / "checkpoint.tif"),
+                filemanager, ["disk", "napari_stream"],
+                {"napari_stream": _viewer_stream_backend_kwargs()},
+                context=_context(filemanager), variable_components=(),
+            )
+
+tests/unit/test_selected_plane_stream_materialization.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/processing/materialization/core.py:4251: in materialize
+    ctx.saver.save_all(outs)
+openhcs/processing/materialization/core.py:1684: in save_all
+    for batch_outputs, kwargs in kwargs_payload.filemanager_batches(
+openhcs/processing/materialization/core.py:1551: in filemanager_batches
+    output_fields = self._output_fields(output)
+openhcs/processing/materialization/core.py:1619: in _output_fields
+    StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+openhcs/core/steps/stream_component_semantics.py:109: in item_fields_for_plane_components
+    return cls._item_fields(
+openhcs/core/steps/stream_component_semantics.py:143: in _item_fields
+    plane_component_values = cls._singleton_plane_component_values(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+metadata = ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.3556, 1.3556), unit=<SourceVoxelSpacingUnit...ne, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>)
+plane_components = ()
+
+    @staticmethod
+    def _singleton_plane_component_values(
+        metadata: ImagePayloadMetadata,
+        plane_components: tuple[AllComponents, ...],
+    ) -> dict[str, tuple[ComponentValue, ...]]:
+        """Project one exact source plane onto its declared viewer component."""
+    
+        plane_metadata = metadata.source_provenance.for_source_plane(
+            0
+        ).source_component_metadata
+        values = {
+            component.value: (value,)
+            for component in plane_components
+            if (
+                value := source_component_metadata_raw_value(
+                    plane_metadata or {},
+                    component,
+                )
+            )
+            is not None
+        }
+        if len(values) != 1:
+>           raise ValueError(
+                "Viewer stream singleton plane axis requires exactly one exact "
+                "component value from the declared plane components; got "
+                f"{tuple(values)!r} from {plane_components!r}."
+            )
+E           ValueError: Viewer stream singleton plane axis requires exactly one exact component value from the declared plane components; got () from ().
+
+openhcs/core/steps/stream_component_semantics.py:181: ValueError
+- generated xml file: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/docs/validation/selected_plane_stream_materialization_20261001/red.xml -
+=========================== short test summary info ============================
+FAILED tests/unit/test_selected_plane_stream_materialization.py::test_public_selected_checkpoint_materializes_and_streams_without_storage_axes[source_binding]
+1 failed, 1 passed in 2.96s

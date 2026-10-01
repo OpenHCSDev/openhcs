@@ -1,0 +1,8 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so e1e0517b3706e6f6e8de126e8c3758c3a6bbf0ca024782b795fcb27d509f3e3e
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so 9f873070c3e136dd78109a55570852981e989c1d21e3452ce214bbaa753b7308
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/openhcs/core/steps/function_runtime.py
+.......................................                                  [100%]
+- generated xml file: /home/ts/wt/openhcs-artifact-fed-parameter-declaration-contract-20261001/docs/validation/selected_plane_stream_materialization_20261001/green-initial.xml -
+39 passed in 2.72s

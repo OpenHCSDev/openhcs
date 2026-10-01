@@ -1,0 +1,58 @@
+{
+  "owner": "Lorentz",
+  "integration_owner": "parent",
+  "issue": 395,
+  "pull_request": 397,
+  "production_revision": "32d7a6ec49e4a7b995586f9d464353ddb2e00d60",
+  "current_main_base": "e3765e3534b009f09413c7c5bfc35d072030a704",
+  "production_sha256": {
+    "openhcs/core/projected_image_output.py": "ae17fab8b22e216c23a3d3b55bcba5d7a8fdbc504a4435c82b0ba8d9380e9c3f",
+    "openhcs/core/runtime_image_values.py": "356f4ffa469383fa0989a4da4f59c9c1ea07591ad9d4c7e8dac8efca691e5665",
+    "openhcs/core/viewer_streaming_service.py": "6bec8b5cb7052d118d7d44fd308721bc055dd48c998565728bf09ad0c1fb556a"
+  },
+  "original_r0": {
+    "status": "PASS",
+    "metrics": 5177,
+    "positive_deltas": 0,
+    "policy_sha256": "e323c94d49c2b72d9524a5169f123e64b4a6e46a41035ca9fb4497e49b6ca562",
+    "original_failed_attempt_retained": true
+  },
+  "original_r1": {
+    "status": "BLOCKED_BOUNDED_COMPLETE_CONTEXT_ATTEMPT",
+    "policy_sha256": "4c6282f52e7c188068dd9d63399f5522a7cb1d222504d0c0b809be10303884ca",
+    "api_capable_readonly_nra_revision": "673c062fc656e9c74f1eddcab30f036c9befbc1f",
+    "git_context_owner": "/home/ts/wt/openhcs-input-parent-integration-20261001",
+    "report_scope": [
+      "openhcs/core/projected_image_output.py",
+      "openhcs/core/runtime_image_values.py",
+      "openhcs/core/viewer_streaming_service.py"
+    ],
+    "context_roots": ["openhcs", "scripts", "benchmark", "recursive recorded gitlinks"],
+    "completed_before_after_report": false,
+    "waived": false
+  },
+  "source_controls": {
+    "unique_completed_passing": 218,
+    "final_owner_contract_shard": 104,
+    "final_public_saved_image_receiver_cases": 3,
+    "final_independent_plain_tiff_cases": 1,
+    "final_all12_outputs_real_shm_module": 12,
+    "original_agent_cpu_only": {"passed": 14, "deselected": 2},
+    "source_shard_limits": {"cpu": 1, "aggregate_rss_mib": 512, "outer_seconds": 60}
+  },
+  "raw_evidence": {
+    "archive": "raw-evidence.tar.gz",
+    "sha256": "e9a10347805e3e334c0783b742136328430389ff2abd9932ace08779bbfe28b8",
+    "members": 72,
+    "member_hash_index": "RAW_EVIDENCE_SHA256.txt",
+    "byte_compare_exit_status": 0,
+    "original_bytes_modified": false
+  },
+  "installed_boundaries": {
+    "229_native_bitmap_acceptance": "PASS_REPORTED_BY_PARENT",
+    "owner_promotion_9a3_32d_installed_live_acceptance": "PENDING_PARENT_NEXT_SAFE_MILESTONE",
+    "source_author_install_native_or_science_execution": false,
+    "parent_dalton_live_environment_untouched": true,
+    "biological_acceptance_claim": false
+  }
+}

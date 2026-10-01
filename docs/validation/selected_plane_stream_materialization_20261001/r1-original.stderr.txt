@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/scripts/check_refactor_r1.py", line 27, in <module>
+    from nominal_refactor_advisor.detectors import (
+ImportError: cannot import name 'RedundantTypeCheckDetector' from 'nominal_refactor_advisor.detectors' (/home/ts/code/projects/nominal-refactor-advisor/nominal_refactor_advisor/detectors/__init__.py)
