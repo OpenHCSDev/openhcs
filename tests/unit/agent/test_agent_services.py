@@ -2158,6 +2158,21 @@ def test_viewer_window_service_keeps_explicit_zero_summary_counts():
     assert layer.component_value_count == 0 and layer.payload_summary_count == 0
 
 
+def test_viewer_window_service_rejects_boolean_native_integer_count():
+    class BooleanCountGateway(_FakeViewerWindowGateway):
+        def window_state(self, request):
+            response = super().window_state(request)
+            response["layers"][0]["component_value_count"] = False
+            return response
+
+    result = ViewerWindowService(gateway=BooleanCountGateway()).window_state(
+        ViewerWindowStateRequest(connection=_viewer_connection())
+    )
+    assert result.observed is False
+    assert result.errors[0].code == "viewer_window_state_response_invalid"
+    assert "component_value_count" in result.errors[0].message
+
+
 def test_viewer_window_service_can_omit_raw_state_response():
     gateway = _FakeViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)

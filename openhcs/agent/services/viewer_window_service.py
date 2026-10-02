@@ -13,6 +13,7 @@ from typing import ClassVar, Generic, TypeVar, cast
 import zmq
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping, project_dataclass
+from python_introspect.validation import validate_annotation_value
 from polystore.streaming.identity import StreamProducerIdentity
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureSpec,
@@ -2774,9 +2775,11 @@ class ViewerWindowService:
         value = payload[field_name]
         if value is None:
             return default
-        if not isinstance(value, expected_type):
+        try:
+            validate_annotation_value(expected_type, value, path=f"Viewer response field {field_name!r}")
+        except TypeError as error:
             type_name = expected_type.__name__
             raise TypeError(
                 f"Viewer response field {field_name!r} must be a {type_name}."
-            )
+            ) from error
         return value
