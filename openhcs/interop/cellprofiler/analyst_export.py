@@ -6,6 +6,11 @@ runtime artifacts. It does not make CPA tables a new semantic authority.
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.workspace_export import (
+    CPAWorkspacePanel,
+    CPAWorkspaceRenderer,
+)
+
 from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -283,6 +288,8 @@ class CellProfilerDatabaseExportSettings:
     selected_objects: tuple[str, ...] | None
     wants_properties_file: bool
     wants_relationship_tables: bool
+    wants_workspace_file: bool = False
+    workspace_panels: tuple[CPAWorkspacePanel, ...] = ()
     maximum_column_name_length: int = 64
     location_object: str | None = None
     plate_type: str | None = None
@@ -391,6 +398,26 @@ class CellProfilerDatabaseExportSettings:
                 "contain empty names."
             )
         object.__setattr__(self, "thumbnail_image_names", thumbnail_names)
+
+    def workspace_files(
+        self, dialect: CellProfilerDatabaseColumnDialect
+    ) -> dict[str, str]:
+        """Resolve enabled workspace filenames from this exact export request."""
+        if not self.wants_workspace_file:
+            return {}
+        if dialect.table_prefix != self.table_prefix:
+            raise ValueError(
+                "CPA workspace dialect disagrees with export table prefix."
+            )
+        name = str(Path(self.sqlite_file).with_suffix(""))
+        prefix = self.table_prefix.removesuffix("_")
+        if prefix:
+            name = f"{name}_{prefix}"
+        return {
+            f"{name}.workspace": CPAWorkspaceRenderer(dialect).render(
+                self.workspace_panels
+            )
+        }
 
     def exports_object(self, object_name: str) -> bool:
         """Return whether this export includes one declared object subject."""

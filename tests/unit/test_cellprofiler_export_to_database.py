@@ -142,7 +142,6 @@ REMOVED_EXPORT_FALSE_OPTIONS = {
     "wants_filter_fields",
     "create_plate_filters",
     "overwrite_mode",
-    "wants_workspace_file",
     "workspace_measurements",
 }
 
