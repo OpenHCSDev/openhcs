@@ -1,6 +1,29 @@
 Selected-discovery public installer coordination
 ================================================
 
+Current delivery checkpoint
+----------------------------
+
+Dependency0.2.2 is now PUBLISHED from exact merged/tagged393a7e0 through the
+original publisher36946473814/job110649639675, terminal SUCCESS. Original OpenHCS
+helpers verified metadata AND normal installer-index availability; one retained
+wheel/sdist set matches all six library sources at393a7e0; original public-wheel
+API controls3passed,0.59s/40040KiB for the complete bounded verifier. Details,
+artifact paths/checksums and exact handles:
+metaclass-registry-022-publication-20261001/RECEIPT.rst.
+
+Existing PR414 normally integrates current main9a0410749 (including416/418) and
+advances the metaclass gitlink to actual release393a7e0. Its only production
+changes against that main are the coordinated >=0.2.2,<0.3 minimum and gitlink.
+Public availability/API gate is complete; ready for parent review/merge, without
+hosted CI wait. Parent owns subsequent installation/live user acceptance. No
+private install or science/native replay was performed. Original preparation and
+queued-publication observations below remain historical evidence, not current
+availability or authorization restrictions. No persisted format changes.
+
+Historical preparation and publication observations
+---------------------------------------------------
+
 Owner: Schrodinger. Base OpenHCS mainf2aabe45a84d9834eef37d1862f0d0290ba73b63.
 Draft minimum >=0.2.2,<0.3; DO NOT MERGE before authorized dependency publication
 and exact ordinary installer-index/API verification. No artifact publication or

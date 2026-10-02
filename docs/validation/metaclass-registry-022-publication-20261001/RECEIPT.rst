@@ -1,6 +1,68 @@
 Authorized metaclass-registry 0.2.2 publication
 ==============================================
 
+Terminal publication and PR414 integration
+------------------------------------------
+
+Public release/index/artifact/API gate PASSED. Original publisher36946473814,
+attempt1, job110649639675 completed SUCCESS at2026-10-02T00:58:17Z. Original
+observer69246 exited0; orchestration cell207 completed after the one admitted
+verification. workflow-terminal.json and workflow-watch.log retain the actual
+terminal steps. The queued state below is the preserved predecessor observation.
+
+Original OpenHCS wait_for_release/probe_release verified exact PyPI metadata AND
+the normal installer index for metaclass-registry==0.2.2. Original
+materialize_release_files downloaded one wheel/sdist set and verified the declared
+SHA256 digests. No second download, environment or installation was performed.
+
+Retained distributions in artifacts/:
+
+* metaclass_registry-0.2.2-py3-none-any.whl,22522bytes,
+  SHA25667ae17c58d9d10cd58acf83ebe01833c1f1fe0a1a2e281924fab836958d592ed.
+* metaclass_registry-0.2.2.tar.gz,30773bytes,
+  SHA256540bd730c52a535e08866c487b34aa4f9cb2fe857eb07a312882cdc43a15517c.
+
+verify_publication.py compared all six packaged library Python sources in BOTH
+distributions byte-for-byte with exact tagged393a7e03003cdc56df9013f932ed4f26e632d77a.
+Wheel metadata/version and source inventory passed. The original read-only
+Python3.12 imported metaclass_registry directly from the retained PUBLIC wheel,
+not checkout/site-packages: version0.2.2; original selected/full discovery identity
+and ImportError/ValueError negative controls all3passed in0.02s. Whole verification
+exit0,0.59s,40040KiB peak RSS, CPU0/kernel512MiB/no swap/60s. Exact output and command
+are artifact-verification.log and artifact-verification.resources.txt.
+
+Normally merged OpenHCS main9a04107492ad90233394cf17524d0ca8e74062bb (including
+418's root aggregate versus selected-plane capability) into the existing PR414
+branch: mergec054f1674ff4cf4169f4cb175be27d2515711346. Updated ONLY the metaclass
+gitlink from prepared4b7d491 to actual released393a7e0. Remaining production diff
+against that main is pyproject.toml >=0.2.2,<0.3 and that gitlink; openhcs/ and
+tests/ are identical to main. Dependency src/tests/pyproject are unchanged from
+reviewed4b7d491. No submodule checkout was initialized or changed. Prior48source
+checks/original pinnedR0 zero-positive remain retained; no identical source rerun,
+full R1 retry, timeout increase or global qualification claim.
+
+NRA catalog review: IMPL-12/13 retain original publisher/probe/materialization and
+LazyDiscoveryDict importer/registration owner; MEMB-1/2 introduce no parallel
+catalog/roster; TIME-3/4 require the actual published API through the package
+minimum, not a compatibility alias or negotiated fallback. Original source376
+new-declaration/cooperative capability tests remain unchanged. Published-wheel
+new-case test creates independent Plugin declarations, exercises selected then
+full registration through the original shared owner, and preserves exact identity
+without generic consumer edits. No ornamental inheritance or new mechanism.
+
+After all observer/verifier workers were terminal and no lsof/process handles
+remained, removed ONLY owned
+/home/ts/.cache/agent-scratch/metaclass-registry-022-publication-20261001 (56KiB).
+Canonical root and pytest alias symlinks resolving inside it were checked first.
+One durable artifact set and all original evidence/source/history remain.
+
+PR414 is ready for parent review/merge; installed OpenHCS acceptance and package
+installation remain parent-owned. No private/backing environment, native/viewer,
+provider or scientific input/output changes. No persisted format changes.
+
+Initial authorized publication checkpoint (historical)
+------------------------------------------------------
+
 Owner: Schrodinger. Explicit owner authorization: publish this dependency now
 through original scripts/release.py and tag-triggered publisher. No authorization
 for other releases or current private installation changes. Parent owns414 minimum
