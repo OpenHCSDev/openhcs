@@ -1292,3 +1292,21 @@ Original RED and repaired logs:
 ``/var/tmp/openhcs-pr394-main17-lifetime-fixture-repair-controls-20261002.log``.
 AST/owner receipt:
 ``/var/tmp/openhcs-pr394-main17-lifetime-fixture-repair-20261002.json``.
+
+The test-only repair ships independently in merged PR460, commitb495dbb13;
+issue457 is formally linked and closed. Its exact clean-main branch passes21
+lifetime/stdio/dev-client controls through normal repository conftest collection
+in13.21s. Main is normally merged back into this branch at01875a772; the merge
+introduces no additional production diff. Clean-main qualification receipt:
+``/var/tmp/openhcs-mcp-lifetime-fixture-457-main-qualification-20261002.json``.
+
+The next ownership census uses NRA's ModuleSyntaxIndex and canonical
+CompactClassFamilyIndex on all703 OpenHCS production modules and the actual
+63 PolyStore,12 python-introspect and6 metaclass-registry modules. All5506
+original class declarations remain represented;5493 join canonical family
+declarations and13 remain unprojected OPEN. There are no parse errors.
+Conditional/function-local binding, omitted numerical dependencies and native
+runtime effects remain explicit proof limits. This is source discovery, not
+an admitted architecture or equivalence proof. NRA revision0844525ec is pinned.
+Receipt:
+``/var/tmp/openhcs-b764-shared-derivation-nra-class-census-20261002.json``.
