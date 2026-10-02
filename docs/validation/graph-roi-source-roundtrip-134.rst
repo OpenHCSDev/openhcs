@@ -20,9 +20,13 @@ Parent retained ``GRAPH-ROI-REOPEN-134-RECEIVING-20261002.rst`` under
 ``/home/ts/wt/openhcs-issue-batch-20260929``. The candidate6 saved
 ``A01_s001_w2_z001_t001_neurite_morphology_step0.graph.roi.zip`` resolves through
 public result inventory but native reopening refuses missing embedded source
-identity. Original request/error remains in the author's
-``neurite-development-skill383-20261001/output/assisted-2-post426-1/mcp.stdout``
-near7605. The original broken archive was not opened, rewritten or backfilled.
+identity. Original request/error remains in the author's actual recorder:
+``/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/assisted-2-post426-1.stdout``.
+Read-only verification locates ``plate_file_stream_failed`` at line7602 and the
+``ValueError`` message requiring native ROI source metadata at line7605, naming
+the exact candidate6 graph ZIP above. This corrects the recorder reference in
+the ddbc1b197 receipt; historical receiving receipts and original archives remain
+unchanged. The original broken archive was not opened, rewritten or backfilled.
 
 Required relation and original owners
 -------------------------------------
