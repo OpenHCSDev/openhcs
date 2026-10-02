@@ -2141,6 +2141,38 @@ def test_viewer_window_service_reads_running_viewer_state():
     assert gateway.requests[0].timeout_ms == 5000
 
 
+def test_viewer_window_service_keeps_explicit_zero_summary_counts():
+    class ZeroCountsGateway(_FakeViewerWindowGateway):
+        def window_state(self, request):
+            response = super().window_state(request)
+            response["layers"][0]["component_value_count"] = 0
+            response["layers"][0]["payload_summary_count"] = 0
+            return response
+
+    result = ViewerWindowService(gateway=ZeroCountsGateway()).window_state(
+        ViewerWindowStateRequest(connection=_viewer_connection())
+    )
+    assert result.observed and not result.errors
+    layer = result.layers[0]
+    assert len(layer.component_values) == 2 and len(layer.payload_summaries) == 2
+    assert layer.component_value_count == 0 and layer.payload_summary_count == 0
+
+
+def test_viewer_window_service_rejects_boolean_native_integer_count():
+    class BooleanCountGateway(_FakeViewerWindowGateway):
+        def window_state(self, request):
+            response = super().window_state(request)
+            response["layers"][0]["component_value_count"] = False
+            return response
+
+    result = ViewerWindowService(gateway=BooleanCountGateway()).window_state(
+        ViewerWindowStateRequest(connection=_viewer_connection())
+    )
+    assert result.observed is False
+    assert result.errors[0].code == "viewer_window_state_response_invalid"
+    assert "component_value_count" in result.errors[0].message
+
+
 def test_viewer_window_service_can_omit_raw_state_response():
     gateway = _FakeViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)
@@ -2212,9 +2244,9 @@ def test_viewer_window_service_reads_payload_records():
     payload = layer.payloads[0]
     assert payload.components["well"] == "A14"
     assert payload.axis_indices == (0, 0, 0)
-    assert payload.summary["nonzero_count"] == 128
+    assert payload.summary.nonzero_count == 128
     assert payload.array_values == (1, 2, 3)
-    assert payload.array_value_summary == {
+    assert payload.array_value_summary.to_wire_mapping() == {
         "requested": True,
         "included": True,
         "shape": (3,),

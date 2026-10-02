@@ -10,6 +10,19 @@ from openhcs.core.runtime_plane_projection import (
 )
 
 
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_complete_projection_admission_is_owned_by_each_runtime_axis(axis):
+    projection = RuntimePlaneAxisValueProjection.preserve(axis=axis, axis_size=3)
+    assert RuntimePlaneAxisValueProjection.require_complete_projection(
+        projection, value_name="Test image"
+    ) is projection
+    for invalid in (None, projection.selected_plane(1)):
+        with pytest.raises(ValueError, match="complete input stack projection"):
+            RuntimePlaneAxisValueProjection.require_complete_projection(
+                invalid, value_name="Test image"
+            )
+
+
 @pytest.mark.parametrize("indices", [(), (0, 0), (-1,), (True,), (0.5,)])
 def test_selected_output_rejects_invalid_indices(indices):
     with pytest.raises(ValueError, match="Selected source planes"):
