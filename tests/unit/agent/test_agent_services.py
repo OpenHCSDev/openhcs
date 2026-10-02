@@ -60,6 +60,7 @@ from openhcs.agent.services import execution_session_service as execution_sessio
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.execution_session_service import (
+    CompileInspectionGatewayABC,
     CompileInspectionResult,
     ExecutionSessionService,
     PipelineSourceSessionRequest,
@@ -109,6 +110,9 @@ from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.progress import (
+    ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
+)
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     MetadataExtractionRule,
@@ -539,13 +543,21 @@ def _compile_inspection_result(
     )
 
 
-class _FakeCompileInspectionGateway:
+class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
     def __init__(self) -> None:
         self.requests = []
 
-    def compile(self, request):
+    @staticmethod
+    def emit_progress(request):
+        request.progress_queue.put(create_event(ProgressEventPayload(
+            identity=ProgressIdentity("inspection", str(request.plate), "A01", "compilation"),
+            phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+            percent=0.0,
+        )).to_dict())
+
+    def _compile(self, request):
         self.requests.append(request)
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+        self.emit_progress(request)
         step_plan = CompiledStepPlan(
             step_index=0,
             step_name="WriteArtifacts",
@@ -615,30 +627,30 @@ class _FakeCompileInspectionGateway:
         )
 
 
-class _FailingCompileInspectionGateway:
+class _FailingCompileInspectionGateway(_FakeCompileInspectionGateway):
     def __init__(self, exception: Exception) -> None:
         self.exception = exception
 
-    def compile(self, request):
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+    def _compile(self, request):
+        self.emit_progress(request)
         raise self.exception
 
 
 class _WorkspacePreparingCompileInspectionGateway(_FakeCompileInspectionGateway):
-    def compile(self, request):
+    def _compile(self, request):
         (request.plate / "openhcs_metadata.json").write_text(
             "{}",
             encoding="utf-8",
         )
-        return super().compile(request)
+        return super()._compile(request)
 
 
 class _MetadataTransactionCompileInspectionGateway(_FakeCompileInspectionGateway):
-    def compile(self, request):
+    def _compile(self, request):
         metadata_module.AtomicMetadataWriter().replace_subdirectory_metadata(
             metadata_module.get_metadata_path(request.plate), "A01", {}
         )
-        return super().compile(request)
+        return super()._compile(request)
 
 
 class _FakeRuntimeServerGateway:
@@ -3407,9 +3419,13 @@ def test_execution_session_service_inspects_pipeline_source_artifact_plan(
         == PipelineConfig()
     )
     assert compile_gateway.requests[0].axis_filter == ("A01",)
-    assert compile_gateway.requests[0].progress_queue.events == [
-        {"phase": "compile", "status": "running"}
-    ]
+    events = compile_gateway.requests[0].progress_queue.events
+    assert len(events) == 1
+    assert events[0].phase is ProgressPhase.COMPILE
+    assert events[0].status is ProgressStatus.RUNNING
+    assert events[0].identity == ProgressIdentity(
+        "inspection", str(tmp_path.resolve()), "A01", "compilation",
+    )
     assert inspection.errors == ()
     assert inspection.axis_count == 1
     assert inspection.axes == ("A01",)

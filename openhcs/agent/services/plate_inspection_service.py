@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from polystore.base import ImageSamplingRequest
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.common import (
     AgentError,
@@ -1619,12 +1620,14 @@ class PlateInspectionService:
         pixel_size = self._pixel_size(handler, plate_path, warnings)
         available_backends = self._available_backends(handler, plate_path, warnings)
         parser = self._parser(handler, warnings)
-        file_inventory = self._plate_file_inventory(
+        file_inventory = self._plate_file_inventory_for_query(
             handler,
             plate_path,
             parser,
             filemanager,
+            None,
             warnings,
+            warn_on_recovered_listing_failure=True,
         )
         image_files = tuple(
             record.virtual_path for record in file_inventory.image_records
@@ -1870,12 +1873,21 @@ class PlateInspectionService:
     ) -> "MicroscopeHandler":
         from openhcs.microscopes import create_microscope_handler
 
-        return create_microscope_handler(
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Preparing physical microscope handler and reader runtime",
+        ).publish()
+        handler = create_microscope_handler(
             microscope_type=request.microscope_type,
             plate_folder=plate_path,
             filemanager=filemanager,
             pattern_format=request.pattern_format,
         )
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Physical microscope handler ready",
+        ).publish()
+        return handler
 
     @staticmethod
     def _metadata_file_path(
@@ -1957,7 +1969,13 @@ class PlateInspectionService:
         filemanager: "FileManager",
         query_kind: PlateFileKind | None,
         warnings: list[AgentWarning],
+        *,
+        warn_on_recovered_listing_failure: bool = False,
     ) -> PlateFileInventory:
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Reading plate file inventory and native metadata",
+        ).publish()
         if query_kind is PlateFileKind.IMAGE:
             image_inventory = PlateInspectionService._image_inventory(
                 handler,
@@ -1971,7 +1989,7 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 )
                 if result_inventory.records:
                     warnings.append(
@@ -1997,7 +2015,7 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 ),
             )
         return PlateFileInventory.from_inventories(
@@ -2012,31 +2030,9 @@ class PlateInspectionService:
                 plate_path,
                 parser,
                 warnings,
-                warn_on_recovered_listing_failure=False,
+                warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
             ),
         )
-
-    def _plate_file_inventory(
-        self,
-        handler: "MicroscopeHandler",
-        plate_path: Path,
-        parser: "FilenameParser | None",
-        filemanager: "FileManager",
-        warnings: list[AgentWarning],
-    ) -> PlateFileInventory:
-        image_inventory = PlateInspectionService._image_inventory(
-            handler,
-            plate_path,
-            filemanager,
-            warnings,
-        )
-        result_inventory = self._result_file_inventory(
-            handler,
-            plate_path,
-            parser,
-            warnings,
-        )
-        return PlateFileInventory.from_inventories(image_inventory, result_inventory)
 
     @staticmethod
     def _image_inventory(

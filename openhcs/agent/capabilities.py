@@ -2193,7 +2193,7 @@ class InspectPlatePathCapability(ProgressAcknowledgedCapability, PlatePathCapabi
     )
 
 
-class QueryPlateFilesCapability(PlatePathCapability):
+class QueryPlateFilesCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_query_plate_files"
     cli_command = "query-plate-files"
     kind = CapabilityKind.TOOL
@@ -2224,7 +2224,7 @@ class QueryPlateFilesCapability(PlatePathCapability):
     )
 
 
-class SamplePlateImageCapability(PlatePathCapability):
+class SamplePlateImageCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_sample_plate_image"
     cli_command = "sample-plate-image"
     kind = CapabilityKind.TOOL

@@ -44,7 +44,7 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
 }), name='DeclaredNlm')]
 """
     identity = ContextVar("real-inspection-request", default="outside")
-    calls, progress_threads = [], []
+    calls, progress_threads, messages = [], [], []
 
     class AffineCompileGateway(InProcessCompileInspectionGateway):
         def compile(self, request):
@@ -60,6 +60,7 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
         async def report_progress(self, *args, **kwargs):
             assert threading.current_thread() is not threading.main_thread()
             progress_threads.append(threading.get_ident())
+            messages.append(kwargs["message"])
 
     config = ConfigService()
     service = ExecutionSessionService(
@@ -88,6 +89,21 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
         assert result["source_workspace"]["file_count"] == 1
         assert len(calls) == 1 and progress_threads
         assert calls[0].pipeline_document.original_source == source
+        assert result["progress_event_count"] == 1
+        stages = (
+            "Resolving pipeline source document",
+            "Preparing source inspection compiler",
+            "Initializing microscope source workspace and metadata",
+            "Compiling declared pipeline artifacts on the original main thread",
+            "compile: running: A01: compilation: 1/1",
+            "Projecting compiled source workspace",
+            "Source inspection compilation and source projection completed",
+        )
+        positions = [next(index for index, message in enumerate(messages) if stage in message)
+                     for stage in stages]
+        assert positions == sorted(positions), messages
+        assert len(calls[0].progress_queue.events) == 1
+        assert calls[0].progress_queue.events[0].axis_id == "A01"
         assert identity.get() == "outside"
     finally:
         executor.close()

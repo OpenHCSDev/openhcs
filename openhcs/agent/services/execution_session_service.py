@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Self
 
 from zmqruntime.execution import ExecutionProgressObservation
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from zmqruntime.messages import (
     ExecutionRecord,
     ExecutionStatus,
@@ -63,7 +64,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import MissingArtifactInputError
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
-from openhcs.core.progress import ProgressQueue
+from openhcs.core.progress import ProgressEvent, ProgressQueue
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
@@ -129,11 +130,17 @@ class UnknownExecutionJobIdError(ExecutionSessionError):
 
 class AgentProgressQueue(ProgressQueue):
     def __init__(self) -> None:
-        self.events: list[JsonObject] = []
+        self.events: list[ProgressEvent] = []
 
-    def put(self, event) -> None:
-        if isinstance(event, dict):
-            self.events.append(dict(event))
+    def put(self, event: dict) -> None:
+        progress = ProgressEvent.from_dict(event)
+        self.events.append(progress)
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            f"{progress.phase.value}: {progress.status.value}: "
+            f"{progress.axis_id}: {progress.step_name}: "
+            f"{progress.completed}/{progress.total}",
+        ).publish()
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,13 +161,32 @@ class CompileInspectionResult:
 
 
 class CompileInspectionGatewayABC(ABC):
-    @abstractmethod
     def compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
+        """Publish the authoritative lifetime of any inspection compiler hook."""
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Preparing source inspection compiler",
+        ).publish()
+        try:
+            result = self._compile(request)
+        except Exception:
+            EndpointStartupStatus(
+                EndpointStartupPhase.FAILED, "Source inspection compiler failed",
+            ).publish()
+            raise
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Source inspection compilation and source projection completed",
+        ).publish()
+        return result
+
+    @abstractmethod
+    def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
         raise NotImplementedError
 
 
 class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
-    def compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
+    def _compile(self, request: CompileInspectionInput) -> CompileInspectionResult:
         from objectstate.lazy_factory import ensure_global_config_context
 
         from openhcs.core.config import GlobalPipelineConfig
@@ -176,7 +202,15 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
             pipeline_config=request.pipeline_document.pipeline_config,
             progress_callback=None,
         )
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Initializing microscope source workspace and metadata",
+        ).publish()
         orchestrator.initialize()
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Compiling declared pipeline artifacts on the original main thread",
+        ).publish()
         set_progress_queue(request.progress_queue)
         try:
             execution_bundle = orchestrator.compile_pipelines(
@@ -184,6 +218,10 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
                 well_filter=list(request.axis_filter) or None,
                 is_zmq_execution=True,
             )
+            EndpointStartupStatus(
+                EndpointStartupPhase.PREPARING_CAPABILITIES,
+                "Projecting compiled source workspace",
+            ).publish()
             return CompileInspectionResult(
                 execution_bundle=execution_bundle,
                 source_workspace_projection=(
@@ -901,6 +939,10 @@ class ExecutionSessionService:
         metadata_path = METADATA_CONFIG.metadata_path(plate)
         metadata_existed_before = metadata_path.exists()
         try:
+            EndpointStartupStatus(
+                EndpointStartupPhase.PREPARING_CAPABILITIES,
+                "Resolving pipeline source document",
+            ).publish()
             document = PipelineDocumentAuthority.from_source(request.pipeline_source)
         except Exception as exc:
             return ArtifactPlanInspection(
