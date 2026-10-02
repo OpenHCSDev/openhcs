@@ -109,3 +109,34 @@ failure remains separately retained. No installed, native or biological pass is
 claimed. Parent must qualify original source-bound rescale->objects->labels/ROI/
 checkpoints->strict viewer settlement and true2D measurement on the installed
 user path. That live slot was not acquired here.
+
+Final finite delivery checkpoint
+--------------------------------
+
+PR430 published4219ea866b32656375bc63485a29b7bd715c1903; production remains
+byte-identical to that parent's reviewed source checkpoint. No further production
+or test change is made while recording these terminal checks.
+
+Original pinned agent-comms ratchet3b03785f45df2ef5dc62ba6aed99294192ecbb01
+was run read-only from existing openhcs-namespace-guard-tool-20261001 using its
+original Python3.14 and read-only metaclass backing. Earlier pinned tool worktree
+had been removed by cleanup; no detector was copied, no new tool installed and
+no new checkout created. R0.json/R0.resources.txt:5198 reported measures, zero
+positive deltas over both changed production files; exit0,19.22s,87472KiB RSS.
+
+GREEN-final-stream-shard.log:37passes (12newcase+25original stream projection
+controls),9.34s,526332KiB process RSS. As above, process RSS slightly exceeds
+512MiB despite the enforced scope bound; this measurement is not hidden.
+GREEN-strict-native-shard.log:3original aggregate/domain/shape refusal controls
+pass4.71s,437668KiB RSS. There are139distinct passing source cases across the
+111declaration/numeric checks,25stream controls and3strict-native controls, not
+the sum of every repeated diagnostic invocation. No remaining source failure;
+no global NRA, installed or biological claim. Optional hosted CI is not a gate.
+
+All test processes are terminal; lsof +D on the exact owned scratch had no open
+handles. Exact disposable cleanup target:
+/home/ts/.cache/agent-scratch/h001-stream-plane-427-20261002
+Measured1864701bytes logical/2.0MiB allocated before removal. Only synthetic
+pytest temporary files and Numba caches are removed; source, durable evidence,
+publication ledger and original uncertain/scientific artifacts remain intact.
+Parent owns the now-safe installed acceptance; no additional source scan/run.
