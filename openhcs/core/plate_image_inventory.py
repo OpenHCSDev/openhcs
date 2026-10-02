@@ -96,6 +96,43 @@ class PlateImageInventory:
     records: tuple[PlateImageRecord, ...]
 
     @classmethod
+    def from_read_only_handler(
+        cls,
+        *,
+        plate_path: Path,
+        handler: "MicroscopeHandler",
+        filemanager: "FileManager",
+    ) -> "PlateImageInventory":
+        """Inventory the selected metadata owner, not a different source domain.
+
+        Acquisition owners expose their exact physical dataset. Workspace owners
+        retain the persisted projection. Neither path prepares or rewrites it.
+        """
+
+        handler.register_source_backends(filemanager)
+        source_dataset = handler.metadata_handler.source_dataset(plate_path)
+        if source_dataset is not None:
+            return cls.from_source_dataset(
+                plate_path=plate_path,
+                handler=handler,
+                filemanager=filemanager,
+                source_dataset=source_dataset,
+            )
+        source_projection = cls._projection(
+            plate_path, handler.metadata_handler, filemanager
+        )
+        if source_projection is not None:
+            handler.register_workspace_backends(plate_path, filemanager)
+        return cls.from_handler(
+            plate_path=plate_path,
+            handler=handler,
+            filemanager=filemanager,
+            backend=handler.get_primary_backend(plate_path, filemanager),
+            source_projection=source_projection,
+            all_subdirs=True,
+        )
+
+    @classmethod
     def from_orchestrator(
         cls,
         orchestrator: "PipelineOrchestrator",

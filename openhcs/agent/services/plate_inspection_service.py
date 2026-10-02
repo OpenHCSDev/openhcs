@@ -64,10 +64,6 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFilePreviewReader,
     PlateResultFileInventory,
 )
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
-
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -2050,31 +2046,10 @@ class PlateInspectionService:
         warnings: list[AgentWarning],
     ) -> PlateImageInventory:
         try:
-            handler.register_source_backends(filemanager)
-            source_dataset = handler.metadata_handler.source_dataset(plate_path)
-            if source_dataset is not None:
-                return PlateImageInventory.from_source_dataset(
-                    plate_path=plate_path,
-                    handler=handler,
-                    filemanager=filemanager,
-                    source_dataset=source_dataset,
-                )
-            source_projection = (
-                VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
-                    plate_path=plate_path,
-                    metadata_handler=handler.metadata_handler,
-                    filemanager=filemanager,
-                ).projection_if_available()
-            )
-            if source_projection is not None:
-                handler.register_workspace_backends(plate_path, filemanager)
-            return PlateImageInventory.from_handler(
+            return PlateImageInventory.from_read_only_handler(
                 plate_path=plate_path,
                 handler=handler,
                 filemanager=filemanager,
-                backend=handler.get_primary_backend(plate_path, filemanager),
-                source_projection=source_projection,
-                all_subdirs=True,
             )
         except Exception as exc:
             warnings.append(
