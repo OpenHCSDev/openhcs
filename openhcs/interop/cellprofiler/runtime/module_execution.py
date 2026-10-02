@@ -36,6 +36,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (
+    ObjectLabelInputExecutionMode,
     object_label_input_execution_mode_from_callable,
 )
 from openhcs.core.runtime_adapters import (
@@ -1494,6 +1495,24 @@ class CellProfilerModuleExecutor:
             kwargs=runtime_kwargs,
             variable_components=adapter.request.variable_components,
         )
+        # A scalar image can result from composing channels on a declared
+        # singleton runtime root. Match-image labels consume that root only
+        # after the module has chosen its final image domain and execution mode.
+        if (
+            object_label_input_execution_mode_from_callable(self.raw_func)
+            is ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK
+            and execution_mode is ImagePayloadExecutionMode.NATURAL
+            and image_request.plane_projection is None
+            and runtime_projection is not None
+            and runtime_projection.axis_size == 1
+        ):
+            runtime_kwargs = cast(
+                dict[str, RuntimeCallableArgument],
+                RuntimeSliceProjection.kwargs_for_slice(
+                    runtime_kwargs,
+                    runtime_projection.selected_plane(0),
+                ),
+            )
         if profile_enabled:
             CellProfilerRuntimeProfileLogger.log_module_profile(
                 "cp_invocation_execution_mode_policy",
