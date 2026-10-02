@@ -81,3 +81,13 @@ That original RED is retained. The follow-up moves real supported-method
 validation to its registry owner and uses the colormap's get_cmap API; no guard
 budget or formatting rule changed. All 21 renderer frames and four rc controls
 remain exact to the previous algorithm, with the same native text-pixel RED.
+
+At e6dbb56be0b132af31e42215ade0c6e878f37588 against main
+5b2e43b36b7e2d129e191e86e763e914e7142e9a, the original unmodified R0
+passes for all three roots (openhcs, scripts and benchmark), and original R1
+passes with its unchanged 160-second budget. Receipts are retained at
+/var/tmp/pr468-e6db-original-r0-{openhcs,scripts,benchmark}-20261002 and
+/var/tmp/pr468-e6db-original-r1-20261002, including source pins, original tool
+commands, exit codes and resource measurements. The 19 focused controls and
+all 21 actual renderer frames pass at this source. These passing architecture
+gates do not replace the full native PNG gate or qualify a public pipeline run.
