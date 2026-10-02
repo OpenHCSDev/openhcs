@@ -31,8 +31,8 @@ CREATE_SOURCE_CHANNEL_AXIS annotation through the original metadata boundary.
 No source header is rewritten and ColorToGray's strict requirement is unchanged.
 
 CompiledFunctionGroup.primary_image_carrier_proof owns the one backwards
-invocation traversal. Inherited/created/unproved nominal proof results expose
-the source-validation obligation and exact failed invocation; they are local
+invocation traversal. Inherited/created/unproved nominal proof results own
+the source-validation obligation and failed-invocation rejection; they are local
 proof results, not another registry, metadata mirror or persisted state store.
 The compiler's original ancestry owner uses that result, stopping only at a
 creator of the required carrier. The preservation-only first_unproved method
@@ -87,6 +87,9 @@ resource-helper advisory warning was not represented as a hard-limit pass.
 * carrier-repair-initial.log: 21PASS,6.09s,373380KiB,exit0.
 * carrier-repair-newcase.log: 26PASS,6.19s,369632KiB,exit0.
 * carrier-repair-controls.log: 77PASS,6.77s,372764KiB,exit0.
+* carrier-repair-binding-controls.log: 5PASS/2deselected,5.20s,345556KiB,exit0.
+* carrier-repair-owned-proof-controls.log: current82PASS/2deselected,
+  7.15s,372756KiB,exit0 after the proof-owner correction below.
 
 Two original unary GrayToColor naming REDs remain separate and unchanged;
 ordinary scalar ImageMath naming is the retained installed successful route.
@@ -94,5 +97,42 @@ Raw logs preserve warning whitespace; no whole-log diff-check-clean claim.
 No full/global NRA/R1 retry or qualification, provider/science/native/UI/MCP
 launch, installation or frozen-author edit. Parent owns later installed
 acceptance. Untracked required-runtime-qt-publication ledger remains excluded.
-Original pinned R0 and disposable fixture cleanup will be appended after their
-finite terminal checks, without modifying predecessor failures.
+Original pinned R0 remains RED as detailed below. No waiver or zero-positive
+claim. Parent is independently qualifying the working installed behavior;
+source tests, architecture guard and actual installed acceptance stay distinct.
+
+Original guard follow-through (not a waiver)
+-------------------------------------------
+
+Production0513c8e4c6800c2822660bb3a3503b05c3fb840b passed77+5 focused controls.
+Original pinned guard tool3b03785f45df2ef5dc62ba6aed99294192ecbb01, Python3.14
+with read-only original metaclass backing, rejected +21
+GodClassExcess:PipelineCompiler and +2 ForeignAbsenceProbe:compiler.py.
+carrier-repair-r0.log retains that18.09s/87504KiB exit1 result. No detector
+copy, scope removal, suppression or proof waiver. Initial attribution to the
+optional unproved_invocation consumer checks was incorrect: the original
+detector counts the new negated requires_source_validation property queries.
+
+Corrected at6370ac5f6: PrimaryImageCarrierProof.require_proven_invocations
+owns the transition guard, and the Unproved leaf raises for its exact failed
+invocation. Compiler only supplies existing contextual error wording and
+collects validation errors. Removed the optional projection/property, but not
+the two negated source-obligation queries. Behavior unchanged, current82
+controls PASS. Final carrier-repair-owned-proof-r0.log is terminal RED:
++27 GodClassExcess:PipelineCompiler and +2 ForeignAbsenceProbe:compiler.py,
+19.34s/87516KiB/exit1. Exact production6370ac5f609bd98544eacdddedc6b9c013d76f09
+versusdf15ddfe0bcbd80cadaf2f5fc56b83517910f334; all other deltas nonpositive.
+This is a specific unresolved architecture guard violation, not a runtime
+failure, global NRA result, source-clean claim or installed acceptance.
+No wider architecture/audit expansion while parent runs installed qualification.
+
+Exact disposable cleanup
+------------------------
+
+All source shards and both guard processes terminal. Verified own fixture root
+/home/ts/.cache/agent-scratch/graytocolor-carrier-repair-432-20261002,
+10602 logical bytes, containing only generated tiny synthetic test headers and
+pytest links; lsof +D reports no open handles. Delete only this exact disposable
+root. Source, publication ledger and durable original/current raw logs remain.
+No scientific data/output or uncertain external input is removed. Fixtures are
+reproducible from retained test source; no unrelated cleanup or environment edit.
