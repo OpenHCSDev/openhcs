@@ -51,6 +51,14 @@ viewer projection owners. No generic consumer gains a tool-name/type switch.
 The independent new stream declaration adds a cooperative audit hook through
 super() and runs the real generated binding without changing generic consumers.
 
+Original pinned R0 at4565562f6 found GodClassExcess +20 for the streaming service
+(160300KiB/15.385s, returncode1). The full RED is retained, not waived. The
+correction removes three repeated common PlateFileStreamResult projections:
+the original service builds its original DTO once, then uses dataclasses.replace
+for no-stream/error/success terminal facts. It deletes40 lines and adds19 in
+that same owner; no result factory/facade, schema or authority store is added.
+Exact corrected-head R0 and terminal contract controls are pending below.
+
 Finite source controls and retained attempts
 -------------------------------------------
 

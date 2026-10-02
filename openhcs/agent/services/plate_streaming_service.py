@@ -139,6 +139,18 @@ class PlateStreamingService:
 
         config = None
         connection = request.connection
+        result = PlateFileStreamResult(
+            schema_version=SCHEMA_VERSION,
+            plate_path=str(inventory_plate_path),
+            requested_microscope_type=request.microscope_type,
+            detected_microscope_type=context.microscope_type,
+            handler_class=type(context.handler).__name__,
+            parser_class=None if context.parser is None else type(context.parser).__name__,
+            viewer_config_key=request.viewer_config_key,
+            connection=connection,
+            requested_paths=request.file_paths,
+            warnings=warnings,
+        )
         try:
             stream_context = replace(context, plate_path=inventory_plate_path)
             config = self._streaming_config(request)
@@ -149,6 +161,7 @@ class PlateStreamingService:
                 transport_mode=config.transport_mode,
                 persistent=config.persistent,
             )
+            result = replace(result, viewer_type=config.viewer_type, connection=connection)
             if request.result_directory is not None:
                 if request.kind is not PlateFileKind.RESULT or request.well is not None:
                     raise ValueError(
@@ -200,21 +213,8 @@ class PlateStreamingService:
                     ),
                 )
             if not image_paths and not roi_paths:
-                return PlateFileStreamResult(
-                    schema_version=SCHEMA_VERSION,
-                    plate_path=str(stream_context.plate_path),
-                    requested_microscope_type=request.microscope_type,
-                    detected_microscope_type=context.microscope_type,
-                    handler_class=type(context.handler).__name__,
-                    parser_class=(
-                        None
-                        if context.parser is None
-                        else type(context.parser).__name__
-                    ),
-                    viewer_config_key=request.viewer_config_key,
-                    viewer_type=config.viewer_type,
-                    connection=connection,
-                    requested_paths=request.file_paths,
+                return replace(
+                    result,
                     resolved_records=self._record_summaries(resolved_records),
                     skipped_records=self._record_summaries(skipped_records),
                     errors=(
@@ -303,36 +303,15 @@ class PlateStreamingService:
                 )
             self._report_progress("Selected artifacts published and viewer settlement completed")
         except Exception as exc:
-            return PlateFileStreamResult(
-                schema_version=SCHEMA_VERSION,
-                plate_path=str(inventory_plate_path),
-                requested_microscope_type=request.microscope_type,
-                detected_microscope_type=context.microscope_type,
-                handler_class=type(context.handler).__name__,
-                parser_class=(
-                    None if context.parser is None else type(context.parser).__name__
-                ),
-                viewer_config_key=request.viewer_config_key,
+            return replace(
+                result,
                 viewer_type=None if config is None else config.viewer_type,
                 connection=connection,
-                requested_paths=request.file_paths,
                 errors=(self._stream_error(exc, plate_path=request.plate_path),),
-                warnings=warnings,
             )
 
-        return PlateFileStreamResult(
-            schema_version=SCHEMA_VERSION,
-            plate_path=str(inventory_plate_path),
-            requested_microscope_type=request.microscope_type,
-            detected_microscope_type=context.microscope_type,
-            handler_class=type(context.handler).__name__,
-            parser_class=(
-                None if context.parser is None else type(context.parser).__name__
-            ),
-            viewer_config_key=request.viewer_config_key,
-            viewer_type=config.viewer_type,
-            connection=connection,
-            requested_paths=request.file_paths,
+        return replace(
+            result,
             resolved_records=self._record_summaries(resolved_records),
             streamed_image_paths=image_paths,
             streamed_roi_paths=roi_paths,
