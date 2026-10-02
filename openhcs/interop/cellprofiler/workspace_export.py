@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pathlib import Path
 from typing import ClassVar, TYPE_CHECKING
 
 from metaclass_registry import AutoRegisterMeta
@@ -24,9 +23,6 @@ from openhcs.interop.cellprofiler.setting_names import optional_setting_value
 from openhcs.interop.cellprofiler.settings_binder import parse_cellprofiler_bool
 
 if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.analyst_export import (
-        CellProfilerDatabaseExportSettings,
-    )
     from openhcs.processing.backends.cellprofiler.export_to_database import (
         ExportToDatabaseModule,
     )
@@ -182,20 +178,24 @@ class CPAWorkspacePanel(ABC, metaclass=AutoRegisterMeta):
     def setting_records(
         cls,
         declaration: type[ExportToDatabaseModule],
-        wants: bool,
-        panels: tuple[CPAWorkspacePanel, ...],
+        *,
+        wants_workspace_file: bool,
+        workspace_panels: tuple[CPAWorkspacePanel, ...],
+        **other_export_parameters: object,
     ) -> tuple[ModuleSetting, ...]:
+        """Project workspace records from the already-bound public export call."""
+        del other_export_parameters
         records = [
             ModuleSetting(
                 declaration.workspace_measurement_count_setting.canonical,
-                str(len(panels)),
+                str(len(workspace_panels)),
             ),
             ModuleSetting(
                 declaration.wants_workspace_file_setting.canonical,
-                cellprofiler_setting_literal(wants),
+                cellprofiler_setting_literal(wants_workspace_file),
             ),
         ]
-        for panel in panels:
+        for panel in workspace_panels:
             values = (
                 (declaration.workspace_display_tool_setting, panel.setting_name),
                 (declaration.workspace_x_type_setting, panel.x.measurement_type),
@@ -334,26 +334,17 @@ class CPAWorkspaceRenderer:
 
     dialect: CellProfilerDatabaseColumnDialect
 
-    def render(self, settings: CellProfilerDatabaseExportSettings) -> dict[str, str]:
-        if not settings.wants_workspace_file:
-            return {}
-        if self.dialect.table_prefix != settings.table_prefix:
-            raise ValueError(
-                "CPA workspace dialect disagrees with export table prefix."
-            )
-        name = str(Path(settings.sqlite_file).with_suffix(""))
-        prefix = settings.table_prefix.removesuffix("_")
-        if prefix:
-            name = f"{name}_{prefix}"
+    def render(self, panels: tuple[CPAWorkspacePanel, ...]) -> str:
+        """Encode panel meaning without deciding whether an export requested it."""
         sections = tuple(
             "\n"
             + panel.display_name
             + "\n"
             + "\n".join(f"\t{key}: {value}" for key, value in panel.rows(self.dialect))
             + "\n"
-            for panel in settings.workspace_panels
+            for panel in panels
         )
-        return {
-            f"{name}.workspace": "CellProfiler Analyst workflow\nversion: 1\nCP version : 4281\n"
+        return (
+            "CellProfiler Analyst workflow\nversion: 1\nCP version : 4281\n"
             + "".join(sections)
-        }
+        )

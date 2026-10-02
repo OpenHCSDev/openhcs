@@ -34,7 +34,6 @@ from openhcs.interop.cellprofiler.analyst_export import (
 )
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspacePanel,
-    CPAWorkspaceRenderer,
 )
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_setting_literal,
@@ -526,11 +525,7 @@ class ExportToDatabaseModule(ArtifactExportModule):
                 cellprofiler_setting_literal(False),
             ),
             ModuleSetting(cls.overwrite_mode_setting.canonical, "Never"),
-            *CPAWorkspacePanel.setting_records(
-                cls,
-                arguments.arguments["wants_workspace_file"],
-                arguments.arguments["workspace_panels"],
-            ),
+            *CPAWorkspacePanel.setting_records(cls, **arguments.arguments),
             *cls._selected_object_setting_records(selected_objects),
             *cls._property_image_setting_records(image_channels),
             *cls._group_setting_records(group_fields),
@@ -948,7 +943,7 @@ def export_to_database(
                 settings, resolved_channels, projection
             )
         ),
-        *CPAWorkspaceRenderer(dialect).render(settings).items(),
+        *settings.workspace_files(dialect).items(),
     )
     for file_name, text in text_files:
         if file_name in bundle:

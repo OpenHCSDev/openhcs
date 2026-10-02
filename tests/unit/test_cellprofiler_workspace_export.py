@@ -18,7 +18,6 @@ from openhcs.interop.cellprofiler.database_column_dialect import (
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspaceAxis,
     CPAWorkspacePanel,
-    CPAWorkspaceRenderer,
 )
 from openhcs.processing.backends.cellprofiler.export_to_database import (
     ExportToDatabaseModule,
@@ -58,11 +57,9 @@ def axis(kind="Image", name="Intensity_MeanIntensity_DNA", index="ImageNumber"):
 def test_all_native_tools_preserve_axis_roles(tool, display, fields):
     panel = CPAWorkspacePanel.from_settings(tool, axis("Index"), axis("Object"))
     declaration = settings(wants_workspace_file=True, workspace_panels=(panel,))
-    ((name, text),) = (
-        CPAWorkspaceRenderer(CellProfilerDatabaseColumnDialect("Prefix_"))
-        .render(declaration)
-        .items()
-    )
+    ((name, text),) = declaration.workspace_files(
+        CellProfilerDatabaseColumnDialect("Prefix_")
+    ).items()
     assert name == "Database_Prefix.workspace"
     ((tool_name, rows),) = CPAWorkspacePanel.parse_workspace(text)
     assert tool_name == display
@@ -90,10 +87,7 @@ def test_single_axis_tools_do_not_validate_inactive_y():
 
 
 def test_disabled_workspace_emits_nothing():
-    assert (
-        CPAWorkspaceRenderer(CellProfilerDatabaseColumnDialect()).render(settings())
-        == {}
-    )
+    assert settings().workspace_files(CellProfilerDatabaseColumnDialect()) == {}
 
 
 @pytest.mark.parametrize("kind,index", [("Bogus", "ImageNumber"), ("Index", "Bogus")])
@@ -111,7 +105,9 @@ def test_workspace_module_records_round_trip_without_reordering():
             "PlateViewer", axis(), axis(name="invalid\nfield")
         ),
     )
-    records = CPAWorkspacePanel.setting_records(ExportToDatabaseModule, True, panels)
+    records = CPAWorkspacePanel.setting_records(
+        ExportToDatabaseModule, wants_workspace_file=True, workspace_panels=panels
+    )
     block = ModuleBlock(
         name="ExportToDatabase",
         module_num=1,
@@ -201,8 +197,8 @@ def test_workspace_panels_survive_source_transport():
 def test_workspace_dialect_must_match_its_export_request():
     panel = CPAWorkspacePanel.from_settings("Histogram", axis(), axis())
     with pytest.raises(ValueError, match="table prefix"):
-        CPAWorkspaceRenderer(CellProfilerDatabaseColumnDialect("Other_")).render(
-            settings(wants_workspace_file=True, workspace_panels=(panel,))
+        settings(wants_workspace_file=True, workspace_panels=(panel,)).workspace_files(
+            CellProfilerDatabaseColumnDialect("Other_")
         )
 
 
@@ -215,9 +211,7 @@ def test_workspace_filename_preserves_native_relative_directory_and_single_suffi
         workspace_panels=(panel,),
     )
     assert tuple(
-        CPAWorkspaceRenderer(CellProfilerDatabaseColumnDialect("Prefix__")).render(
-            declaration
-        )
+        declaration.workspace_files(CellProfilerDatabaseColumnDialect("Prefix__"))
     ) == ("nested/Database_Prefix_.workspace",)
 
 
