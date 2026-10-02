@@ -71,3 +71,25 @@ Exact paired prepared gitlink4b7d491e816ed8806a1f52e6302d38c05c78dfcb is publish
 on dependency PR3. Only receipt text follows tested version source9d18172;
 src/tests are byte-identical. This is prepared source, not published0.2.2.
 No dependency tag is created. Checksums are in selected-discovery-release-022-SHA256SUMS.
+
+Subsequent explicit publication authorization
+---------------------------------------------
+
+Owner subsequently authorized this dependency publication immediately. PR3 is
+merged393a7e03003cdc56df9013f932ed4f26e632d77a; original release.py executed once,
+confirmed y for0.2.2/PyPI0.2.1 and pushed annotated tag v0.2.2, terminal exit0.
+Remote tag object c88166848834c402b0a059db37ed8a141cd42147 peels exactly393a7e0.
+Original publisher36946473814/job110649639675 is queued, no hosted runner/steps;
+Actions enabled and no pending deployment approval. No specific cause established.
+
+Current evidence/verification driver:
+docs/validation/metaclass-registry-022-publication-20261001/RECEIPT.rst.
+Original10s GH watcher session69246 retained; orchestration cell207 observes that
+same watcher and schedules bounded original-helper materialization/API verification
+only on actual terminal success. No publisher restart/replay or another publisher.
+This is actual artifact creation, not an optional CI validation gate. Keep414
+unmerged until the verified metadata/index/artifact/API receipt succeeds; parent
+owns the final minimum/gitlink integration and safe private installation. No current
+private/backing environment or live science process change. Prior draft restrictions
+on publication above describe the earlier unauthorised stage, not a permission wait
+after this explicit authorization. No artifact availability/completion claimed yet.

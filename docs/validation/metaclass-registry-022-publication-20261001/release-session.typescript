@@ -1,0 +1,17 @@
+Script started on 2026-10-01 20:31:57-04:00 [COMMAND="systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=0 -p CPUQuota=100% -- timeout 60s taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -B scripts/release.py" TERM="dumb" TTY="/dev/pts/6" COLUMNS="80" LINES="24"]
+Running as unit: run-p2677172-i15228715.scope; invocation ID: bbe88d2a6ed540829fe834ae3fc6fd65
+Current package version: 0.2.2
+Current PyPI version: 0.2.1
+Create release for v0.2.2? [y/N] y
+Enumerating objects: 1, done.
+Counting objects: 100% (1/1)Counting objects: 100% (1/1), done.
+Writing objects: 100% (1/1)Writing objects: 100% (1/1), 173 bytes | 173.00 KiB/s, done.
+Total 1 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+To https://github.com/OpenHCSDev/metaclass-registry.git
+ * [new tag]         v0.2.2 -> v0.2.2
+
+Successfully created and pushed tag v0.2.2
+GitHub Actions workflow should start automatically.
+Monitor progress at: https://github.com/OpenHCSDev/metaclass-registry/actions
+
+Script done on 2026-10-01 20:32:02-04:00 [COMMAND_EXIT_CODE="0"]
