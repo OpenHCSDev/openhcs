@@ -124,26 +124,100 @@ def test_invalid_shape_keeps_original_error(shape):
     assert str(current.value) == str(original.value)
 
 
+@pytest.mark.parametrize("failure", (None, "iterate", 1, 2, 3, 4, 5))
+def test_domain_callbacks_follow_pixel_snapshot_and_original_allocation_order(failure):
+    outcomes = []
+    for call in (generic_centers, lambda labels, domain: object_label_axis_centers(labels, domain=domain)):
+        labels = np.array([[1, 1], [2, 0]], dtype=np.int32)
+        effects = []
+
+        class DomainInteger(int):
+            def __gt__(self, other):
+                effects.append("compare")
+                return super().__gt__(other)
+
+            def __add__(self, other):
+                effects.append("add")
+                result = super().__add__(other)
+                return float(result) if effects.count("add") == failure else result
+
+        class MutatingDomain:
+            def __iter__(self):
+                effects.append("iterate")
+                labels[:] = 3
+                labels.shape = (1, 2, 2)
+                if failure == "iterate":
+                    raise RuntimeError("Domain iteration failed after changing pixels")
+                yield DomainInteger(4)
+
+        try:
+            result = call(labels, MutatingDomain())
+        except (RuntimeError, TypeError) as error:
+            outcome = (type(error), str(error))
+        else:
+            outcome = result
+        outcomes.append((outcome, effects, labels.copy()))
+
+    if failure is None:
+        assert_centers(outcomes[0][0], outcomes[1][0])
+        np.testing.assert_array_equal(outcomes[1][0][1], (0, 2, 1, 0, 0))
+        assert len(outcomes[1][0][0]) == 2
+    else:
+        assert outcomes[0][0] == outcomes[1][0]
+    assert outcomes[0][1] == outcomes[1][1]
+    np.testing.assert_array_equal(outcomes[0][2], outcomes[1][2])
+
+
+@pytest.mark.parametrize("domain", ((4.0,), (np.int64(np.iinfo(np.int64).max),), (2**63,)))
+def test_domain_minlength_errors_and_warnings_remain_numpy_owned(domain):
+    outcomes = []
+    for call in (generic_centers, lambda labels, domain: object_label_axis_centers(labels, domain=domain)):
+        with warnings.catch_warnings(record=True) as observed:
+            warnings.simplefilter("always")
+            try:
+                call(np.array([[1, 0], [2, 1]], dtype=np.int32), domain)
+            except (TypeError, ValueError, OverflowError) as error:
+                outcome = (type(error), str(error))
+            else:
+                raise AssertionError("Invalid minlength unexpectedly succeeded")
+        outcomes.append((outcome, [(type(w.message), str(w.message)) for w in observed]))
+    assert outcomes[0] == outcomes[1]
+
+
+def test_invalid_geometry_precedes_domain_iteration():
+    for call in (generic_centers, lambda labels, domain: object_label_axis_centers(labels, domain=domain)):
+        effects = []
+
+        class Domain:
+            def __iter__(self):
+                effects.append("iterate")
+                yield 1
+
+        with pytest.raises(ValueError, match="SparseIJVLabelRows.from_dense_stack"):
+            call(np.zeros((2, 3, 4, 5), dtype=np.int32), Domain())
+        assert not effects
+
+
 def test_primary_objects_preparation_readies_all_admitted_storage_signatures(tmp_path):
     script = textwrap.dedent("""
         from unittest.mock import patch
         import numpy as np
         from openhcs.core.callable_contract import prepare_processing_callable
         from openhcs.core.runtime_object_labels import (
-            _dense_label_coordinate_centers_numba, dense_label_centers_2d_numba,
+            _dense_label_coordinate_moments_numba, dense_label_centers_2d_numba,
             object_label_axis_centers,
         )
         from openhcs.processing.backends.cellprofiler.primary_objects import identify_primary_objects
-        assert not _dense_label_coordinate_centers_numba.signatures
+        assert not _dense_label_coordinate_moments_numba.signatures
         prepare_processing_callable(identify_primary_objects)
-        kernels = (_dense_label_coordinate_centers_numba, dense_label_centers_2d_numba)
+        kernels = (_dense_label_coordinate_moments_numba, dense_label_centers_2d_numba)
         signatures = tuple(tuple(kernel.signatures) for kernel in kernels)
         assert all(signatures)
 
         def reject_compilation(signature):
             raise AssertionError(('Late coordinate compilation', str(signature)))
 
-        with patch.object(_dense_label_coordinate_centers_numba, 'compile',
+        with patch.object(_dense_label_coordinate_moments_numba, 'compile',
                           side_effect=reject_compilation), patch.object(
                 dense_label_centers_2d_numba, 'compile', side_effect=reject_compilation):
             for shape in ((4, 5), (3, 4, 5)):

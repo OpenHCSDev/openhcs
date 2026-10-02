@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import (
     Callable,
     Hashable,
+    Iterable,
     MutableMapping,
     Sequence,
 )
@@ -1112,14 +1113,30 @@ class ObjectLabelStorageStrategy(
             if sparse_labels.has_slice_index
             else (sparse_labels.y_column, sparse_labels.x_column)
         )
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=array[:, coordinate_column],
+                    minlength=max_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=max_label,
+        )
+
+    @staticmethod
+    def coordinate_centers(
+        counts: np.ndarray,
+        coordinate_sums: Iterable[np.ndarray],
+        *,
+        maximum_label: int,
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        """Allocate and divide each coordinate sum in its declared ID domain."""
         axis_centers: list[np.ndarray] = []
-        for coordinate_column in coordinate_columns:
-            sums = np.bincount(
-                object_ids,
-                weights=array[:, coordinate_column],
-                minlength=max_label + 1,
-            )
-            centers = np.full(max_label + 1, np.nan, dtype=np.float64)
+        for sums in coordinate_sums:
+            centers = np.full(maximum_label + 1, np.nan, dtype=np.float64)
             np.divide(sums, counts, out=centers, where=counts > 0)
             axis_centers.append(centers)
         return tuple(axis_centers), counts
@@ -1205,30 +1222,41 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
         labels = np.array([[0, 1]], dtype=np.int32)
         for writeable in (True, False):
             labels.flags.writeable = writeable
-            _dense_label_coordinate_centers_numba(labels.ravel(), 1, 2, 1, 2)
+            _dense_label_coordinate_moments_numba(labels.ravel(), 1, 2, 1)
             dense_label_centers_2d_numba(labels, 1)
 
     def axis_centers(
         self, labels: object, *, domain: Sequence[int]
     ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        array = np.asarray(labels)
         if (
-            type(labels) is not np.ndarray
-            or labels.dtype != np.dtype(np.int32)
-            or labels.ndim not in (2, 3)
-            or any(size > np.iinfo(np.int32).max for size in labels.shape)
-            or type(domain) is not tuple
-            or any(type(value) is not int for value in domain)
-            or max(domain, default=0) >= np.iinfo(np.intp).max
+            array.dtype != np.dtype(np.int32)
+            or array.ndim not in (2, 3)
+            or any(size > np.iinfo(np.int32).max for size in array.shape)
         ):
             return super().axis_centers(labels, domain=domain)
-        maximum_label = max(int(labels.max(initial=0)), max(domain, default=0))
-        centers, counts = _dense_label_coordinate_centers_numba(
-            labels.ravel(order="C"),
-            labels.shape[-2], labels.shape[-1], maximum_label, labels.ndim,
+        coordinate_columns = tuple(range(3 - array.ndim, 3))
+        sums, pixel_counts = _dense_label_coordinate_moments_numba(
+            array.ravel(order="C"),
+            array.shape[-2], array.shape[-1], int(array.max(initial=0)),
         )
-        return (
-            tuple(centers[:, axis].copy() for axis in range(labels.ndim)),
-            counts.copy(),
+        # Like sparse conversion, the moments snapshot precedes domain callbacks.
+        object_ids = np.flatnonzero(pixel_counts)
+        max_domain_label = max(domain, default=0)
+        maximum_label = max(int(object_ids.max(initial=0)), max_domain_label)
+        counts = np.bincount(object_ids, minlength=maximum_label + 1)
+        counts[object_ids] = pixel_counts[object_ids]
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=sums[object_ids, coordinate_column],
+                    minlength=maximum_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=maximum_label,
         )
 
     def stack_planes(
@@ -1593,12 +1621,11 @@ def object_label_axis_centers(
 
 
 @njit(cache=True)
-def _dense_label_coordinate_centers_numba(
+def _dense_label_coordinate_moments_numba(
     flat_labels: np.ndarray,
     height: int,
     width: int,
     maximum_label: int,
-    coordinate_count: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Reduce dense positive labels once in their declared row-major geometry."""
     sums = np.zeros((maximum_label + 1, 3), dtype=np.float64)
@@ -1616,14 +1643,7 @@ def _dense_label_coordinate_centers_numba(
                     sums[label_id, 1] += y
                     sums[label_id, 2] += x
                     counts[label_id] += 1
-    centers = np.empty((maximum_label + 1, coordinate_count), dtype=np.float64)
-    for label_id in range(maximum_label + 1):
-        for axis in range(coordinate_count):
-            centers[label_id, axis] = (
-                np.nan if counts[label_id] == 0
-                else sums[label_id, axis + 3 - coordinate_count] / counts[label_id]
-            )
-    return centers, counts
+    return sums, counts
 
 
 @njit(cache=True)
@@ -1632,9 +1652,16 @@ def dense_label_centers_2d_numba(
 ) -> np.ndarray:
     """Validate compiled two-dimensional geometry and return its y/x centers."""
     height, width = labels.shape
-    centers, _counts = _dense_label_coordinate_centers_numba(
-        labels.ravel(), height, width, label_count, 2
+    sums, counts = _dense_label_coordinate_moments_numba(
+        labels.ravel(), height, width, label_count
     )
+    centers = np.empty((label_count + 1, 2), dtype=np.float64)
+    for label_id in range(label_count + 1):
+        for axis in range(2):
+            centers[label_id, axis] = (
+                np.nan if counts[label_id] == 0
+                else sums[label_id, axis + 1] / counts[label_id]
+            )
     return centers
 
 
