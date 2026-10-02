@@ -702,7 +702,7 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
 def test_cold_execution_server_catalog_request_discovers_library_roots(
     tmp_path: Path,
 ) -> None:
-    """The first live catalog request initializes the server-owned library registry."""
+    """Cold server startup prepares declarations before the first catalog request."""
 
     repository_root = Path(__file__).parents[2]
     environment = os.environ.copy()
@@ -717,8 +717,10 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         import importlib
         import json
         import socket
+        import sys
         import threading
         import time
+        from pathlib import Path
 
         from openhcs.agent.dto.functions import FunctionCatalogControlRequest
         from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -735,6 +737,8 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         startup_started = time.perf_counter()
         server.start()
         startup_seconds = time.perf_counter() - startup_started
+        future = server._function_catalog_preparation.ensure_started()
+        assert future.done() and future.exception() is None
 
         def pump_server():
             while server.is_running():
@@ -771,7 +775,7 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
                 resolved = getattr(resolved, owner_name)
             assert resolved is declaration
 
-        print(
+        Path(sys.argv[1]).write_text(
             json.dumps(
                 {
                     "catalog_size": len(catalog.items),
@@ -784,22 +788,21 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         )
         """)
 
+    observation_path = tmp_path / "startup-observation.json"
     completed = subprocess.run(
-        (sys.executable, "-c", script),
+        (sys.executable, "-c", script, str(observation_path)),
         cwd=repository_root,
         env=environment,
         check=False,
         capture_output=True,
         text=True,
-        timeout=90,
+        timeout=165,
     )
 
     assert completed.returncode == 0, completed.stderr
-    result = json.loads(completed.stdout)
+    result = json.loads(observation_path.read_text())
     assert result["catalog_size"] > 0
-    # Cold discovery is deliberately isolated from the request thread.  The typed
-    # pending protocol keeps the endpoint responsive until preparation completes;
-    # the unit-level protocol tests assert that polling contract directly.  Server
-    # startup itself must remain independent of discovery latency.
-    assert result["startup_seconds"] < 5.0
+    # Kernel preparation belongs to startup; a ready endpoint serves its catalog
+    # directly without paying that work during a pipeline or catalog request.
+    assert result["catalog_request_seconds"] < 5.0
     assert {"openhcs", "skimage"}.issubset(result["library_roots"])

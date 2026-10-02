@@ -206,7 +206,8 @@ def test_late_module_capture_effect_reaches_real_shape_callable_hook(
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_new_declarations_populate_children_then_share_parent_hook_readiness(
     monkeypatch, kernel_module, tmp_path
@@ -236,7 +237,7 @@ def test_new_declarations_populate_children_then_share_parent_hook_readiness(
     kernel_module.SecondKernel = SecondKernel
     process = declare_callable(kernel_module, FirstKernel().prepare)
     batch = PreparationCacheBatch.from_callables((process, process))
-    batch.populate_child_caches()
+    batch.populate_child_caches(max_workers=2)
     assert not PreparationOperation._completed
     for name in ("first", "second"):
         pids = (tmp_path / name).read_text().splitlines()
@@ -275,7 +276,8 @@ def test_failure_keeps_kernel_and_enclosing_module_retryable(kernel_module):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path):
     script = textwrap.dedent("""
@@ -314,7 +316,7 @@ def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path)
         PreparationOperation.reset()
         PreparationOperation._lock.acquire()
         try:
-            PreparationCacheBatch((ModuleRegistryPreparation(module.__name__),)).populate_child_caches()
+            PreparationCacheBatch((ModuleRegistryPreparation(module.__name__),)).populate_child_caches(max_workers=2)
             assert not PreparationOperation._completed
         finally:
             PreparationOperation._lock.release()
