@@ -10,7 +10,7 @@ from functools import lru_cache
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
-from typing import ClassVar, Self, TYPE_CHECKING, TypeAlias, TypeVar
+from typing import ClassVar, NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.viewer_protocol import ViewerWireField
@@ -77,9 +77,29 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             {str(key): cls.normalized_value(value) for key, value in metadata.items()}
         )
 
+    @classmethod
+    def normalized_scalar(cls, value: SourceMetadataScalar) -> SourceMetadataScalar:
+        """Admit the shared scalar grammar before applying the owner's policy."""
+        if value is None:
+            return None
+        if isinstance(value, SourceMetadataNonNullScalar):
+            return cls._normalize_admitted_scalar(value)
+        return cls._reject_scalar(value)
+
     @staticmethod
-    def normalized_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
-        return source_metadata_scalar(value)
+    def _normalize_admitted_scalar(
+        value: SourceMetadataNonNullScalar,
+    ) -> SourceMetadataNonNullScalar:
+        if isinstance(value, str):
+            return canonical_path_metadata_value(value)
+        return value
+
+    @staticmethod
+    def _reject_scalar(value: object) -> NoReturn:
+        raise TypeError(
+            "Source metadata scalar values must be str, int, float, bool, or None, "
+            f"got {type(value).__name__}."
+        )
 
     def __getitem__(self, key: str) -> SourceMetadataValue:
         for field_key, value in self.fields:
@@ -499,9 +519,13 @@ class DurableSourceMetadata(OwnedSourceMetadataFields):
     __hash__ = None
 
     @staticmethod
-    def normalized_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
-        if value is None or isinstance(value, SourceMetadataNonNullScalar):
-            return value
+    def _normalize_admitted_scalar(
+        value: SourceMetadataNonNullScalar,
+    ) -> SourceMetadataNonNullScalar:
+        return value
+
+    @staticmethod
+    def _reject_scalar(value: object) -> NoReturn:
         if isinstance(value, Mapping) or (
             isinstance(value, Sequence) and not isinstance(value, str)
         ):
@@ -546,16 +570,7 @@ def source_metadata_dict(
 def source_metadata_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
     """Return the canonical scalar representation stored in source metadata."""
 
-    if value is None:
-        return None
-    if not isinstance(value, SourceMetadataNonNullScalar):
-        raise TypeError(
-            "Source metadata scalar values must be str, int, float, bool, or None, "
-            f"got {type(value).__name__}."
-        )
-    if isinstance(value, str):
-        return canonical_path_metadata_value(value)
-    return value
+    return SourceMetadataFields.normalized_scalar(value)
 
 
 def canonical_path_metadata_value(value: str) -> str:

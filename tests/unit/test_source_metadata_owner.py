@@ -587,6 +587,25 @@ def test_scalar_admission_keeps_none_identity_and_reported_class_read_order():
     assert DurableSourceMetadata.normalized_scalar(reported_integer) is reported_integer
     assert reported_integer.reads == [object, int]
 
+    for normalize in (
+        source_metadata_scalar,
+        SourceMetadataFields.normalized_scalar,
+        ResolvedSourceMetadataRecord.normalized_scalar,
+    ):
+        reported_integer = ReportedClass((object, int, object))
+        assert normalize(reported_integer) is reported_integer
+        assert reported_integer.reads == [object, int, object]
+
+        # Scalar admission and string normalization are separate observations.
+        # A changing reported class must retain the previous normalization order.
+        reported_string = ReportedClass((str, object))
+        assert normalize(reported_string) is reported_string
+        assert reported_string.reads == [str, object]
+
+    reported_string = ReportedClass((str, object))
+    assert DurableSourceMetadata.normalized_scalar(reported_string) is reported_string
+    assert reported_string.reads == [str]
+
     changing_class = ReportedClass(
         (object, object, object, object, object, Sequence, str)
     )
