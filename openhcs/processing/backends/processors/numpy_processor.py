@@ -39,6 +39,60 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 logger = logging.getLogger(__name__)
 
 
+@numpy_func(contract=ProcessingContract.PURE_2D)
+def non_local_means_denoise_planes(
+    image: np.ndarray,
+    *,
+    patch_size: int = 7,
+    patch_distance: int = 11,
+    h: float = 0.1,
+    fast_mode: bool = True,
+    sigma: float = 0.0,
+    preserve_range: bool = False,
+) -> np.ndarray:
+    """Denoise independent grayscale planes with scikit-image non-local means.
+
+    The declared PURE_2D contract slices the original runtime plane axis and
+    restores its metadata and provenance. SITE, channel, and physical Z planes
+    are filtered independently: no patches or neighbors cross that axis. Use
+    the original ``skimage:restoration.denoise_nl_means`` for volumetric NLM.
+
+    A bare ndarray must already be a 2-D plane. This operation never guesses an
+    axis or squeezes a volume. Parameters retain scikit-image's definitions and
+    defaults; it adds no normalization or calibration. Independent-plane NLM
+    does not establish a memory bound for arbitrarily large planes.
+
+    Args:
+        patch_size: Side length of patches compared within each plane.
+        patch_distance: Maximum search distance within each plane, in pixels.
+        h: Cutoff controlling accepted patch intensity differences.
+        fast_mode: Use scikit-image's fast NLM implementation.
+        sigma: Known noise standard deviation in the input intensity units.
+        preserve_range: Preserve input intensity range instead of scikit-image's
+            dtype-dependent conversion to floating-point image range.
+
+    Returns:
+        Denoised plane, with the dtype and intensity semantics of scikit-image.
+    """
+    from skimage.restoration import denoise_nl_means
+
+    if image.ndim != 2:
+        raise ValueError(
+            "Plane NLM requires a 2-D grayscale plane or a runtime payload "
+            f"with a declared plane axis; received shape {image.shape}."
+        )
+    return denoise_nl_means(
+        image,
+        patch_size=patch_size,
+        patch_distance=patch_distance,
+        h=h,
+        fast_mode=fast_mode,
+        sigma=sigma,
+        preserve_range=preserve_range,
+        channel_axis=None,
+    )
+
+
 PercentileLowerEndpointInput = Annotated[
     float,
     "Percentile used as the input-range lower endpoint (0 to 100).",
