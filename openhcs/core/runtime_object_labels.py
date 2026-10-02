@@ -14,6 +14,7 @@ from typing import Any, ClassVar, Self, cast
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
+from numba import njit
 
 from openhcs.core import (
     runtime_array_values,
@@ -1198,6 +1199,38 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         return SparseIJVLabelRows.from_dense_stack(cast(np.ndarray, labels))
 
+    @classmethod
+    def prepare_coordinates(cls) -> None:
+        """Prepare both mutability signatures of the dense coordinate reducer."""
+        labels = np.array([[0, 1]], dtype=np.int32)
+        for writeable in (True, False):
+            labels.flags.writeable = writeable
+            _dense_label_coordinate_centers_numba(labels.ravel(), 1, 2, 1, 2)
+            dense_label_centers_2d_numba(labels, 1)
+
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        if (
+            type(labels) is not np.ndarray
+            or labels.dtype != np.dtype(np.int32)
+            or labels.ndim not in (2, 3)
+            or any(size > np.iinfo(np.int32).max for size in labels.shape)
+            or type(domain) is not tuple
+            or any(type(value) is not int for value in domain)
+            or max(domain, default=0) >= np.iinfo(np.intp).max
+        ):
+            return super().axis_centers(labels, domain=domain)
+        maximum_label = max(int(labels.max(initial=0)), max(domain, default=0))
+        centers, counts = _dense_label_coordinate_centers_numba(
+            labels.ravel(order="C"),
+            labels.shape[-2], labels.shape[-1], maximum_label, labels.ndim,
+        )
+        return (
+            tuple(centers[:, axis].copy() for axis in range(labels.ndim)),
+            counts.copy(),
+        )
+
     def stack_planes(
         self,
         labels: Sequence[object],
@@ -1399,6 +1432,14 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
             label_data
         )
 
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        label_data = self.label_data(labels)
+        return ObjectLabelStorageStrategy.for_value(label_data).axis_centers(
+            label_data, domain=domain
+        )
+
     def stack_planes(
         self,
         labels: Sequence[object],
@@ -1549,6 +1590,52 @@ def object_label_axis_centers(
         payload,
         domain=domain,
     )
+
+
+@njit(cache=True)
+def _dense_label_coordinate_centers_numba(
+    flat_labels: np.ndarray,
+    height: int,
+    width: int,
+    maximum_label: int,
+    coordinate_count: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reduce dense positive labels once in their declared row-major geometry."""
+    sums = np.zeros((maximum_label + 1, 3), dtype=np.float64)
+    counts = np.zeros(maximum_label + 1, dtype=np.int64)
+    plane_size = height * width
+    plane_count = 0 if plane_size == 0 else flat_labels.size // plane_size
+    offset = 0
+    for plane in range(plane_count):
+        for y in range(height):
+            for x in range(width):
+                label_id = int(flat_labels[offset])
+                offset += 1
+                if label_id > 0 and label_id <= maximum_label:
+                    sums[label_id, 0] += plane
+                    sums[label_id, 1] += y
+                    sums[label_id, 2] += x
+                    counts[label_id] += 1
+    centers = np.empty((maximum_label + 1, coordinate_count), dtype=np.float64)
+    for label_id in range(maximum_label + 1):
+        for axis in range(coordinate_count):
+            centers[label_id, axis] = (
+                np.nan if counts[label_id] == 0
+                else sums[label_id, axis + 3 - coordinate_count] / counts[label_id]
+            )
+    return centers, counts
+
+
+@njit(cache=True)
+def dense_label_centers_2d_numba(
+    labels: np.ndarray, label_count: int
+) -> np.ndarray:
+    """Validate compiled two-dimensional geometry and return its y/x centers."""
+    height, width = labels.shape
+    centers, _counts = _dense_label_coordinate_centers_numba(
+        labels.ravel(), height, width, label_count, 2
+    )
+    return centers
 
 
 def object_label_storage_is_sparse_ijv(payload: object) -> bool:
