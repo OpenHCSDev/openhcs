@@ -1123,3 +1123,81 @@ Receipts:
 ``/var/tmp/openhcs-geometry-narrow-b764-independent-science-and-inputs-20261002.json``,
 ``/var/tmp/openhcs-main4754-independent-historical-3d-science-20261002.json`` and
 ``/var/tmp/openhcs-native-3d-aba4-qualification-20261002/fresh-native-scientific-comparison-supplemental.json``.
+
+
+Four-run 3D comparison and dominant runtime frontier (2026-10-02)
+----------------------------------------------------------------
+
+The subsequent A1/B1/B2/A2 ordinary comparison supersedes the single-pair
+ratios above. A is frozen clean main4754fbe2b; B is frozen narrowb7640ad61,
+including the full PR394 runtime change and five truthful annotations. Each
+run uses CPU5, one worker/thread, the unchanged public driver, default OUTCOMES
+and memory observation. Mandatory server/library/kernel startup and shutdown
+remain outside the pipeline clocks. All four observations preserve exact six
+CSV tables and120 TIFFs against the same retained reference, unchanged source
+and dependency freezes, and all180 source-plane references to the same three
+physical volumes used by fresh native CP.
+
+=======================  ============  ============  ============
+Observation              Compilation   Execution     Total
+=======================  ============  ============  ============
+Main A1                  1.6754s       10.0712s       12.4766s
+Candidate B1             1.6190s       8.3008s        10.7417s
+Candidate B2             1.7936s       8.7713s        11.3281s
+Main A2                  1.6213s       10.0910s       12.4374s
+Main mean                1.6484s       10.0811s       12.4570s
+Candidate mean           1.7063s       8.5360s        11.0349s
+=======================  ============  ============  ============
+
+The descriptive mean reductions are1.5451s execution and1.4221s total.
+Native warm invocation mean14.39595s gives1.6865x execution and1.3046x
+total ratios under the previously stated clock scopes. Two observations per
+source do not establish statistical significance or annotation-only causality.
+The remaining2x gap is1.3381s execution and3.8369s total, larger than the
+first-pair estimate. The complete independent receipt is
+``/var/tmp/openhcs-3d-b764-abba-science-clocks-20261002.json``.
+
+A separate source-pinned diagnostic partitions8.3448s of execution into
+4.0497s inside the callable boundary and4.2951s outside it. Callable time
+includes decorated metadata/control work, not only numerical kernels. The
+exclusive outer terms include stack loading0.5991s, unstacking0.2126s,
+saving0.3487s, output identity0.2070s across1680 calls, image recording0.2333s,
+CP image requests0.2012s, SaveImages invocation preparation0.3463s, metadata
+finalization0.1112s, publication0.4795s and reconciliation0.2812s. These are
+diagnostic spans, not accepted speedup measurements; required copying,
+validation and I/O remain within them.
+
+The SaveImages preparation span stores memory artifacts and contextualizes
+their values; it is not TIFF encoding. Actual artifact materialization has a
+separate0.0831s envelope. Saved metadata contains120 SourceArtifactProjection
+entries from the two SaveImages outputs. The generic main-flow metadata/VFS
+reload branch is not the observed publication route. The actual joint route
+is artifact invocation/store, successful materialization metadata, source
+artifact projection, serialization, locked publication and reconciliation.
+
+Publication/finalization/identity alone has an optimistic1.0789s ceiling and
+is rejected as insufficient to close the current execution gap. The broader
+cohort/recording/invocation/publication envelope is3.0201s and requires at
+least44.3% collapse before accounting for mandatory work. Existing whole-stack
+cache lookup/storage is already below1ms; dictionary tuning or assuming every
+input is restacked cannot support the target. The next admission requires an
+actual saved joint leaf replay preserving metadata mutation, source correlation,
+custom normalization, error ordering and pixel/mask isolation. No new mutable
+identity cache or production optimization has yet been admitted by this ceiling.
+
+Diagnostic science and freeze validation:
+``/var/tmp/openhcs-narrow450-phase-science-and-freeze-20261002.json``.
+Global authority/consumer inventory and corrected route:
+``/var/tmp/openhcs-b764-publication-authority-consumer-inventory-20261002.json``
+and ``/var/tmp/openhcs-b764-coupled-publication-source-frontier-v2-20261002.json``.
+
+Latest mainb68029c0c is normally merged atc0d78b62e. The initial MCP/agent
+integration run passes131 cases and fails both MRO variants of a new cold
+feedback fixture. Clean mainb680 reproduces both failures: its reporting thread
+can observe published progress before the fake compiler sets its subsequent
+``emitted`` marker. This identifies a fixture synchronization race, not a
+demonstrated production race. The original candidate and clean-main failures
+remain retained. Baseline causal receipt:
+``/var/tmp/openhcs-main-b680-cold-feedback-race-baseline-20261002.json``.
+Benchmark timings above remain pinned to their actual main4754/narrowb764
+sources; the newer MCP merge is not silently included in their evidence.
