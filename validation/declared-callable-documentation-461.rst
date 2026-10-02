@@ -56,7 +56,7 @@ Open ArrayBridge PR list was empty at the ownership checkpoint.
 Bounded source evidence
 -----------------------
 
-``doc461-source02.log``:28 PASS/98 deselected,9.878s/487080KiB aggregateRSS.
+``doc461-source02.log.gz``:28 PASS/98 deselected,9.878s/487080KiB aggregateRSS.
 Eight new cases plus20 unchanged catalog controls. New independent declarations
 exercise PURE_2D/PURE_3D prose, parameters/defaults and search without consumer
 edits. FLEXIBLE's existing load-bearing MI executes the real per-plane and
@@ -65,14 +65,35 @@ request binding preserves its public doc instead of crossing into its private
 implementation. CellProfiler setting descriptions remain on typed parameters.
 No new inheritance or facade is introduced to decorate this small projection.
 
-``doc461-source01.log`` retains2 FAIL/6 PASS,7.712s/453016KiB. The search fixture
+``doc461-source01.log.gz`` retains2 FAIL/6 PASS,7.712s/453016KiB. The search fixture
 incorrectly assumed a multiword phrase could not match existing partial-token
 search semantics; it now checks the unique generated token ``contamination``.
 The CP fixture called nonexistent ``function`` instead of the owning
 ``require_callable`` API; corrected control uses the original scalar module's
 declared function. No production fallback or weakened contract was introduced.
 
-Ruff F and whitespace checks pass. Original pinned R0 and after-owner closure
-are pending. Fresh installed public describe/search qualification is pending
-parent; source controls do not establish installed GUI or biological readiness.
+``doc461-owner-after.log.gz`` completes41.110s/100472KiB, again958 modules and
+zero omissions. Original class/enum/import/decision counts are unchanged; one
+local callable-contract variable write is added. No new nominal family,
+parallel authority or dependency mutation appears. Whole-family consumer search
+confirms the replaced free doc/summary readers are gone. Existing typed
+parameter descriptions and doc truncation are unchanged. The same dynamic
+resolution omissions stated above apply to both snapshots.
+
+Readonly ``find_spec`` resolves arraybridge, metaclass_registry and
+pyqt_reactive to the paired parent site-packages; python_introspect and
+ObjectState resolve to BasicPy's site-packages. Neither borrowed root is edited.
+
+``doc461-pinned-r0.log.gz``: original unchanged R0 PASS/zero positive deltas,
+14.580s/186804KiB aggregateRSS. Tool is immutable agent-comms
+``3b03785f45df2ef5dc62ba6aed99294192ecbb01`` loaded through the existing Git
+importer with actual Python3.14 and readonly BasicPy metaclass backing. Scope
+``openhcs``, base64424ebe2 to production19544733db6e2af7b078fd9dbf7899856a0f77d1.
+Both completed owner snapshots and first failure are retained losslessly in
+gzip, not recomputed or replaced. Ruff F and whitespace checks pass.
+
+Fresh installed public describe/search qualification is pending parent; source
+controls do not establish installed GUI or biological readiness. Wrapper docs
+remain intact for their dependency/GUI consumers; this fix owns the actual
+public catalog projection rather than modifying the external library contract.
 Original parent459 acceptance and ONE08 OOM/unknown-rank evidence remain intact.
