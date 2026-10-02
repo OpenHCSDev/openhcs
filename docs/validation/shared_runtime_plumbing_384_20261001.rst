@@ -1617,3 +1617,128 @@ this priority change. No rejected route is promoted because its preparation is
 already complete. The tracking renderer is being investigated in an independent
 main142 worktree with actual 21-frame producer inputs and exact native panel
 replay; no saved-image repair is included or claimed here yet.
+
+Library readiness repair and latest qualification, 2026-10-02
+------------------------------------------------------------
+
+Main 3f955d3fb (MCP sampling) and cf5a83f89 (fixture CLI repair) are normally
+merged. The MCP/prepared-geometry/automatic-role integration gate records 354
+passes and nine failures. All nine fail identically on clean main3f955 with the
+same readonly native-binary bindings: eight fixture declarations omit the
+required server, and one expected stream-argument mapping omits display_config.
+The first clean-main attempt refused a missing native extension at collection;
+that original failure is retained before the exact-bound native supplement.
+These are existing fixture failures, not a passing full suite. Numerical and
+dependency sources are unchanged by the fixture-CLI merge.
+
+The actual Illumination3 first run reached an unprepared masked polynomial
+specialization. Its Numba artifacts were written inside the measured polynomial
+step: 0.526s versus 0.016s when already cached. The existing callable preparation
+hook now prepares masked/unmasked and readonly canonical image/mask signatures
+before READY. A fresh-cache subprocess forbids all later compilation and cache
+loads across 36 dtype/layout/mutability/mask combinations and verifies an
+independent polynomial oracle, input isolation and geometry errors. Twenty
+preparation/fitted-illumination controls pass, with two existing skips. The fix
+ships independently in merged PR474, formally closing issue473; original R0
+passes all three roots and original R1 passes its unchanged 160-second budget.
+Main a6c18f054 is normally merged back into this branch. Its full receipt is
+``docs/validation/polynomial-library-readiness-473-20261002.rst``.
+
+The clean frozen integrated source54708367b has fresh ordinary CPU5 one-worker,
+one-thread observations using the existing cache, default OUTCOMES observer and
+default memory policy:
+
+.. list-table:: Fresh post-repair observations, seconds
+   :header-rows: 1
+
+   * - Case
+     - Compilation
+     - Execution
+     - Pipeline total
+   * - Illumination3
+     - 0.962373
+     - 0.647611
+     - 1.961545
+   * - WoundHealing
+     - 0.346341
+     - 3.916717
+     - 4.575604
+
+Startup/library/kernel preparation and shutdown remain outside pipeline clocks.
+These are single observations, with no matched repair speedup or statistical
+regression claim. Wound is slower than its retained earlier single observation;
+that result is preserved rather than substituting the better sample. Both
+authored Illumination3 NPY images and Wound's complete two-row Image.csv agree
+byte-for-byte with the qualified unchanged references. Existing complete saved
+inventory and CP-tolerance comparison gates pass. Native science is transitive
+through those fully qualified references. The first validator incorrectly
+expected two Wound tables rather than two rows; its failure remains retained,
+and the V2 supplement checks the actual authored inventory without changing any
+production comparison policy. Source, dependencies, interpreter, native binaries
+and all inputs remain frozen. Receipt:
+``/var/tmp/openhcs-pr394-masked-prewarm-ordinary-science-v2-20261002.json``
+(SHA256 21231dffa14dbe17bf824a4258f677e7d656122036da81e0b3d8c9c8bc2f9c02).
+
+Additional native qualification and remaining execution frontier
+---------------------------------------------------------------
+
+Current9aa Vitra uses one selected joined source set containing all four physical
+resources, rather than two channel-derived image sets. Its two warm native
+repetitions average 3.044868s; OpenHCS is 1.615775s execution and 2.908514s total.
+Complete saved science passes for 2,233 table rows and its authored image in both
+native repetitions. Earlier source-set controller refusals remain retained.
+Receipt:
+``/var/tmp/openhcs-current-vitra-native-timing-science-v3-20261002.json``.
+
+Illumination3's two warm native repetitions average 0.603076s. Its authored
+pipeline saves two NPY images and no CSV. Complete existing inventory and image
+science pass in both repetitions. The retained first OpenHCS observation is
+1.309110s execution and 2.603767s total, containing the late polynomial
+specialization described above; the fresh post-repair observation is recorded
+separately. Cache-state differences prevent treating these as a matched repair
+speedup. The global weakest full-catalog case remains unknown. Receipt:
+``/var/tmp/openhcs-current-illumination3-native-timing-science-v1-20261002.json``.
+
+Wound's actual worker profile partitions 3.387111s into 1.536850s of disjoint raw
+processing and 1.850261s of other runtime/recording work. The 22 stack operations
+include 0.4036s in 16 aggregate image stacks, 0.1481s in object variants, 0.0538s
+in main-flow/cache and 0.0023s in initial loading. Ten source-record
+normalizations account for 0.2436s of the 0.5510s normalization envelope. These
+are profiled costs and overlap the earlier source-query attribution; none are
+accepted saved seconds.
+
+Actual Wound ON_DEMAND QA images are not forced by terminal OUTCOMES publication.
+However, raw QA planes borrow object-variant pixels and shared validity masks;
+their current aggregates establish independent mutable artifact buffers.
+Deferral with equivalent eager per-plane copies cannot remove those copy bytes,
+and zero-copy adoption without an ownership/lifetime proof is unsound. Existing
+ArrayBridge geometry validation also forces concrete arrays at payload
+construction. No lazy wrapper or second mutable identity cache is promoted.
+The global AST owner/lifetime audit retains a bounded actual alias-capture plan:
+``/var/tmp/openhcs-current9aa-wound-copy-lifetime-reassessment-20261002.json``.
+
+An external shared-geometry convex prototype preserves both actual saved input
+graphs exactly. The outer 256-level call's warm local median changes from
+0.260906s to 0.023542s, saving 0.237364s; the nested 16-level call overlaps it
+and is never added as independent work. This is useful local evidence, not a
+production pipeline gain. The nominal owner audit identifies existing shared
+column-envelope and Bresenham authorities and a disconnected 15-kernel legacy
+component; production migration and end-to-end qualification remain separate.
+The shared dense-coordinate prototype also has exact actual Wound/Track input
+replays and passing scoped R0/R1 after removing duplicated admission logic.
+Its pre-domain allocation behavior for very sparse large label IDs remains
+under review. Neither prototype is integrated here or counted as a speedup.
+
+Independent tracking PR468 is synced to main and passes 19 focused tests plus
+unchanged scoped R0/R1. It remains draft: native saved-image differences shrink
+from 77,726 to 3,340 text pixels, but full native PNG parity is still RED. It
+formally links issue467. No parity gate, tolerance, scientific output or renderer
+environment is weakened, and no tracking repair is included in this branch.
+
+Remaining acceptance still includes installed-root issue419 IPO/Shape and
+Morph/DISTANCE consumers; issue433's original 13.36GB OOM allocation owner and
+repeated READY behavior; installed-root issue435; and issue450's installed
+prepared-Resize consumer. The original whole-branch scalar-classifier R0 RED
+remains separately retained. These draft closing references do not establish
+completion. Full native scaling, all30 benchmark reruns and fresh figures remain
+outstanding, and the long-running performance goal stays active.
