@@ -22,6 +22,32 @@ ae4d9968ccd5c88689af614b2a3b76c599b1840dd2ddbbc82252316e2e59146e.
 The original driver exited zero, but the MCP child exit code was not retained.
 No original query, journal or scientific input is replayed or changed.
 
+Original native crash report, independently read
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The original report remains at
+``/home/ts/wt/openhcs-issue-batch-20260929/carrier434-installed-20261002/hs_err_pid3996424.log``.
+Size is 435048 bytes; SHA256 is
+3736ac983126c24b8d89e114d21275f032f49be4b867348696b602d1bb108605.
+No full report or original input is copied into this checkout.
+
+Its header confirms SIGSEGV in the exact original MCP3996424, main thread
+3996424, at Fri Oct 2 08:23:14 2026 EDT, OpenJDK21.0.7+6-LTS. The problematic
+frame is ``JPypeException::toJava() [clone .cold]+0x6b`` in the original
+``_jpype.cpython-312-x86_64-linux-gnu.so``. Java frames identify
+``TypeFactoryNative.newWrapper`` and ``JPypeContext.newWrapper``. The process
+thread section also contains a Java ``SIGTERM handler`` thread. This proves a
+native JVM/JPype crash, not merely a fatal-looking diagnostic.
+
+The SIGTERM handler is consistent with the original client's unconditional
+``process.terminate()`` immediately after EOF. It does not uniquely establish
+the failing exception's origin, Python finalization state or the causal sequence.
+The header signal is not an observed subprocess return code: JVM fatal handling
+may change the terminal signal. Original child exit remains unobserved. The
+already-published patch removes premature termination and reaches original
+process-resource shutdown on main; actual JVM-close acceptance remains pending.
+Parent's separate454 process and its eventual exit disposition are independent.
+
 Reason-first ownership trace
 ----------------------------
 
