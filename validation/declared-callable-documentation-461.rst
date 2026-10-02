@@ -97,3 +97,52 @@ controls do not establish installed GUI or biological readiness. Wrapper docs
 remain intact for their dependency/GUI consumers; this fix owns the actual
 public catalog projection rather than modifying the external library contract.
 Original parent459 acceptance and ONE08 OOM/unknown-rank evidence remain intact.
+
+Normal main integration and raw review
+-------------------------------------
+
+Main283119c4207d0852994ff784862c11ebb5d230f4 merged normally into this branch
+at2e139ca836ea39cc631bce584d4be0eb08f0cc3f. No force push or rebase. The only
+incoming change is the parent-owned authoritative recipe guide. Its Git blob
+``2612930958a97ab8e888dc61a09f768c7b33745c`` matches main exactly; it was not
+edited by this worker.
+
+Qualified19544733d and integrated2e139 have identical Git trees:
+``openhcs``8534fa76c875166c5dfc8adde0fc8e1d6340a875,
+``tests``a3c2e085e2ceb589088a867b85c258299aa676cb,
+``external``8e2c178c2658bbfbcf38f3a8cfc069099db57781.
+Thus the completed28 source controls, unchanged pinned R0, and before/after
+whole-production958-module AST/consumer closure apply to the same integrated
+source; they were not repeated as a merge ritual. Ruff F and whitespace checks
+also pass after integration. Existing uninitialized submodule worktrees were
+not synced or edited; recorded gitlinks and borrowed readonly package roots
+remain distinct and explicitly named.
+
+``doc461-integrated-raw-nra02.log.gz`` preserves direct original NRA R1-owner
+analysis using readonly673c062fc656e9c74f1eddcab30f036c9befbc1f (the original
+production API), both original selected detectors and schema/descent graph.
+Report scope is the changed catalog file; context explicitly includes its
+original callable/declaration/DTO/memory/registry owners plus actual
+ArrayBridge, metaclass_registry, python_introspect, ObjectState and the two
+pyqt_reactive help owners. No parse or analysis cache is reused. Preparation
+4.537s, analysis0.165s,142 projections; bounded run6.448s/91796KiB. No raw
+detector findings or matching missing-descent certificates are emitted for
+that report scope. This is an owner-context raw review, NOT the full production
+roots/eight recorded-dependency R1 ratchet or an85-detector global proof.
+
+New doc/summary code reads nominal callable contracts and external optional
+docstrings, not raw schema records. Existing dictionary-derived parameter
+descriptions remain on their original typed projection. No new raw mapping,
+record shape or type-check decision is introduced. Structural leads were read
+with the source semantics rather than treated as runtime proof.
+
+``doc461-integrated-raw-nra.log.gz`` retains the first ImportError before any
+analysis: current NRA83b05d1f no longer exports the original R1 detector names.
+It is not a passing scan. The completed review invokes the explicitly retained
+original production API instead of replacing detectors or changing tool pins.
+Root394 has advanced to51533665e; no owned file is crossed.
+
+Current headroom is critical(home3.0GiB); only bounded serial source review ran.
+No new cache, environment, wheel, runtime or science process was created.
+Fresh installed public describe/search still awaits parent at a safe QA
+checkpoint. This nonblocking documentation follow-up does not hold development.
