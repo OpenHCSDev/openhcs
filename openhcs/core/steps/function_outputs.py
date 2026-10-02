@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+from types import MappingProxyType
 from typing import ClassVar, TypeVar
 
 import numpy as np
@@ -52,6 +53,7 @@ from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
+    SourceProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
@@ -774,11 +776,17 @@ class OpenHCSMetadataWriter:
             self,
             context: ProcessingContext,
             plan: CompiledStepPlan,
+            *,
+            produced_projections: Mapping[
+                Path, tuple[ProducedOutputSemantics, SourceProjection]
+            ] = MappingProxyType({}),
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Publish artifacts persisted in this declared storage target."""
             materialization = plan.runtime_artifact_materialization
             if materialization.persists_to_backend(self.backend):
-                return self.project_runtime_artifacts(context, plan)
+                return self.project_runtime_artifacts(
+                    context, plan, produced_projections=produced_projections
+                )
             return ()
 
         def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
@@ -869,6 +877,7 @@ class OpenHCSMetadataWriter:
                 else ()
             )
             projection_paths = []
+            produced_projections = {}
             declared_addresses: set[OpenHCSPlaneAddress] = set()
             parser_context = FunctionOutputParserContext.from_processing_context(
                 context
@@ -895,11 +904,15 @@ class OpenHCSMetadataWriter:
                             SourcePlaneProjection(
                                 address=address,
                                 ref=SourcePixelRef(self.backend, virtual_path),
+                                source_alias=record.persisted_source_alias,
                                 source_metadata=source_metadata,
                                 image_metadata=metadata,
                             ),
                             virtual_path,
                         )
+                    )
+                    produced_projections[Path(destination)] = (
+                        record, projection_paths[-1][0]
                     )
                     continue
                 projection_paths.append(
@@ -915,8 +928,13 @@ class OpenHCSMetadataWriter:
                         virtual_path,
                     )
                 )
+                produced_projections[Path(destination)] = (
+                    record, projection_paths[-1][0]
+                )
             projection_paths.extend(
-                self.runtime_artifact_projection_paths(context, plan)
+                self.runtime_artifact_projection_paths(
+                    context, plan, produced_projections=produced_projections
+                )
             )
             if not projection_paths:
                 return None
@@ -938,6 +956,10 @@ class OpenHCSMetadataWriter:
             self,
             context: ProcessingContext,
             plan: CompiledStepPlan,
+            *,
+            produced_projections: Mapping[
+                Path, tuple[ProducedOutputSemantics, SourceProjection]
+            ] = MappingProxyType({}),
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Project persisted image artifacts into the target source authority."""
 
@@ -967,6 +989,21 @@ class OpenHCSMetadataWriter:
                             metadata
                         )
                     )
+                    produced = produced_projections.get(Path(destination))
+                    if produced is not None:
+                        record, projection = produced
+                        if record.owns_persisted_artifact(
+                            materialization.output_plan, destination, self.output_dir
+                        ):
+                            if (
+                                projection.address != address
+                                or projection.image_metadata != metadata
+                            ):
+                                raise ValueError(
+                                    "Conflicting metadata for persisted image "
+                                    f"occurrence {destination!r}."
+                                )
+                            continue
                     source_metadata = metadata.source_component_metadata or {}
                     persisted_source_metadata = dict(source_metadata)
                     metadata.source_voxel_spacing.merge_into(

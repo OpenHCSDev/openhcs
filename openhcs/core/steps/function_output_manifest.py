@@ -145,6 +145,28 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         return str(Path(output_dir) / self.relative_output_path)
 
     @property
+    def persisted_source_alias(self) -> str | None:
+        """Retain a declared artifact name on its persisted main-flow image."""
+        identity = self.producer_identity
+        return identity.output_key if identity.artifact_kind is not None else None
+
+    def owns_persisted_artifact(
+        self,
+        output_plan: ArtifactOutputPlan,
+        output_path: str,
+        output_dir: str | Path,
+    ) -> bool:
+        """Identify the same declared producer and exact saved occurrence."""
+        identity = self.producer_identity
+        return (
+            identity.artifact_kind is not None
+            and identity.artifact_kind == output_plan.artifact_type.value
+            and identity.output_key == output_plan.name
+            and identity.step_scope_id == output_plan.producer_step_scope_id
+            and Path(self.path_under(output_dir)) == Path(output_path)
+        )
+
+    @property
     def output_context(self) -> AlignedImageSliceContext:
         """Return the declared main-flow context for this produced output."""
 
