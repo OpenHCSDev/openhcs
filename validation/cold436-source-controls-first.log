@@ -1,0 +1,164 @@
+Running as unit: dewey-436-cold-feedback-controls-20261002.scope; invocation ID: 926b11179e3b4c5e9551ddb2692912ac
+...F.FF...............                                                   [100%]
+=================================== FAILURES ===================================
+_ test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result[False] __
+
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/dewey-436-cold-feedback-controls-20261002/test_new_gateway_hook_cooperat0')
+fails = False
+
+    @pytest.mark.parametrize("fails", (False, True))
+    def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_path, fails):
+        """Independent audit capability needs no edits to service or MCP consumers."""
+        identity = ContextVar("cold-feedback-request", default="outside")
+        calls, messages = [], []
+        emitted = threading.Event()
+        release = threading.Event()
+        error = ValueError("original declared compiler error")
+    
+        class AuditGateway(CompileInspectionGatewayABC):
+            def _compile(self, request):
+                calls.append(("enter", identity.get()))
+                result = super()._compile(request)
+                calls.append(("exit", identity.get()))
+                return result
+    
+        class DeclaredGateway(_FakeCompileInspectionGateway):
+            def _compile(self, request):
+                assert threading.current_thread() is threading.main_thread()
+                self.emit_progress(request)
+                emitted.set()
+                assert release.wait(3), "Actual stage relay was not delivered during held work"
+                if fails:
+                    raise error
+                return super()._compile(request)
+    
+        class Before(AuditGateway, DeclaredGateway):
+            pass
+    
+        class After(DeclaredGateway, AuditGateway):
+            pass
+    
+        class StageContext:
+            request_context = object()
+    
+            async def report_progress(self, progress, total=None, message=None):
+                assert threading.current_thread() is not threading.main_thread()
+                messages.append(message)
+                if "compile: running: A01: compilation" in message:
+                    assert emitted.is_set()
+                    release.set()
+    
+        executor = McpTransportExecutor()
+        config = ConfigService()
+        try:
+            for gateway_type in (Before, After):
+                release.clear()
+                emitted.clear()
+                gateway = gateway_type()
+                service = ExecutionSessionService(
+                    path_policy=AgentPathPolicy.with_roots(
+                        readable_roots=(tmp_path,), writable_roots=(tmp_path,),
+                    ),
+                    pipeline_service=PipelineAuthoringService(FunctionCatalogService(), config),
+                    config_service=config, compile_inspection_gateway=gateway,
+                )
+                built = build_server(SimpleNamespace(execution_service=service),
+                                     main_thread_dispatcher=executor.dispatcher)
+                tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
+    
+                async def exercise():
+                    token = identity.set("original-request")
+                    try:
+                        return await tool.fn(mcp_context=StageContext(), plate_path=str(tmp_path),
+                                             pipeline_source="pipeline_steps = []")
+                    finally:
+                        identity.reset(token)
+    
+                before = len(messages)
+                result = executor.run(exercise)
+                observed = messages[before:]
+                assert any("Preparing source inspection compiler" in item for item in observed)
+                if fails:
+                    assert result["errors"][0]["exception_type"] == "ValueError"
+                    assert result["errors"][0]["message"] == str(error)
+                    assert any("Source inspection compiler failed" in item for item in observed)
+                    assert not any("projection completed" in item for item in observed)
+                else:
+                    assert result["errors"] == []
+                    assert any("projection completed" in item for item in observed)
+            expected = ["enter"] * 2 if fails else ["enter", "exit"] * 2
+            # Before enters audit before the held leaf; After enters via cooperative
+            # super after the leaf. Failure before super correctly bypasses After.
+            if fails:
+                expected = ["enter"]
+>           assert calls == [(stage, "original-request") for stage in expected]
+E           AssertionError: assert [('enter', 'o...nal-request')] == [('enter', 'o...nal-request')]
+E             
+E             Right contains 2 more items, first extra item: ('enter', 'original-request')
+E             Use -v to get more diff
+
+tests/unit/agent/test_cold_inspection_feedback.py:147: AssertionError
+_________ test_real_inventory_binding_relays_shared_reader_preparation _________
+
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/dewey-436-cold-feedback-controls-20261002/test_real_inventory_binding_re0')
+
+    def test_real_inventory_binding_relays_shared_reader_preparation(tmp_path):
+        plate = ImageXpressPlateFixture.write(tmp_path)
+>       service = PlateInspectionService(AgentPathPolicy.with_roots(readable_roots=(tmp_path,)))
+E       TypeError: AgentPathPolicy.with_roots() missing 1 required keyword-only argument: 'writable_roots'
+
+tests/unit/agent/test_cold_inspection_feedback.py:156: TypeError
+____ test_execution_session_service_inspects_pipeline_source_artifact_plan _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7141fdd580>
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/dewey-436-cold-feedback-controls-20261002/test_execution_session_service0')
+
+    def test_execution_session_service_inspects_pipeline_source_artifact_plan(
+        monkeypatch,
+        tmp_path: Path,
+    ):
+        compile_gateway = _FakeCompileInspectionGateway()
+        execution_service = ExecutionSessionService(
+            path_policy=AgentPathPolicy.with_roots(
+                readable_roots=(tmp_path,),
+                writable_roots=(tmp_path,),
+            ),
+            pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+            config_service=ConfigService(),
+            client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+            compile_inspection_gateway=compile_gateway,
+        )
+    
+        inspection = execution_service.inspect_pipeline_source_artifact_plan(
+            PipelineSourceSessionRequest(
+                identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+                pipeline_source=_pipeline_document_source(),
+                global_config_id=None,
+                connection=ExecutionConnectionSpec(),
+            ),
+            axis_filter=("A01",),
+        )
+    
+        assert compile_gateway.requests[0].plate == tmp_path.resolve()
+        assert compile_gateway.requests[0].pipeline_document.pipeline_steps == []
+        assert (
+            compile_gateway.requests[0].pipeline_document.pipeline_config
+            == PipelineConfig()
+        )
+        assert compile_gateway.requests[0].axis_filter == ("A01",)
+>       assert compile_gateway.requests[0].progress_queue.events == [
+            {"phase": "compile", "status": "running"}
+        ]
+E       AssertionError: assert [ProgressEven...p_names=None)] == [{'phase': 'c...': 'running'}]
+E         
+E         At index 0 diff: ProgressEvent(identity=ProgressIdentity(execution_id='inspection', plate_id='/home/ts/.cache/agent-scratch/dewey-436-cold-feedback-controls-20261002/test_execution_session_service0', axis_id='A01', step_name='compilation'), phase=<ProgressPhase.COMPILE: 'compile'>, status=<ProgressStatus.RUNNING: 'running'>, percent=0.0, completed=0, total=1, timestamp=1790942782.0841563, pid=3961548, error=None, traceback=None, total_wells=None, worker_assignments=None, worker_slot=None, owned_wells=None, message=None, component=None, pattern=None, context=None, step_n...
+E         
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/unit/agent/test_agent_services.py:3422: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_cold_inspection_feedback.py::test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result[False]
+FAILED tests/unit/agent/test_cold_inspection_feedback.py::test_real_inventory_binding_relays_shared_reader_preparation
+FAILED tests/unit/agent/test_agent_services.py::test_execution_session_service_inspects_pipeline_source_artifact_plan
+3 failed, 19 passed, 102 deselected in 7.96s
+BOUNDED_SOURCE peak_aggregate_rss_kib=505756 elapsed_seconds=12.734 returncode=1 reason=None

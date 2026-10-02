@@ -1,0 +1,4 @@
+Running as unit: dewey-436-cold-feedback-inventory-closure-20261002.scope; invocation ID: b140140a9a7244f78dbbcb0fec6670d1
+......                                                                   [100%]
+6 passed, 26 deselected in 2.64s
+BOUNDED_SOURCE peak_aggregate_rss_kib=442432 elapsed_seconds=7.218 returncode=0 reason=None
