@@ -1,0 +1,118 @@
+{
+  "conclusion": "success",
+  "databaseId": 36946473814,
+  "event": "push",
+  "headBranch": "v0.2.2",
+  "headSha": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+  "jobs": [
+    {
+      "completedAt": "2026-10-02T00:58:17Z",
+      "conclusion": "success",
+      "databaseId": 110649639675,
+      "name": "Build and publish to PyPI",
+      "startedAt": "2026-10-02T00:57:37Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-02T00:57:39Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-02T00:57:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:40Z",
+          "conclusion": "success",
+          "name": "Checkout code",
+          "number": 2,
+          "startedAt": "2026-10-02T00:57:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:40Z",
+          "conclusion": "success",
+          "name": "Set up Python",
+          "number": 3,
+          "startedAt": "2026-10-02T00:57:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:42Z",
+          "conclusion": "success",
+          "name": "Install build dependencies",
+          "number": 4,
+          "startedAt": "2026-10-02T00:57:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:44Z",
+          "conclusion": "success",
+          "name": "Build package",
+          "number": 5,
+          "startedAt": "2026-10-02T00:57:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:48Z",
+          "conclusion": "success",
+          "name": "Check distribution",
+          "number": 6,
+          "startedAt": "2026-10-02T00:57:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:57:53Z",
+          "conclusion": "success",
+          "name": "Create GitHub Release",
+          "number": 7,
+          "startedAt": "2026-10-02T00:57:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:58:15Z",
+          "conclusion": "success",
+          "name": "Publish to PyPI",
+          "number": 8,
+          "startedAt": "2026-10-02T00:57:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:58:15Z",
+          "conclusion": "success",
+          "name": "Post Publish to PyPI",
+          "number": 14,
+          "startedAt": "2026-10-02T00:58:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:58:15Z",
+          "conclusion": "success",
+          "name": "Post Set up Python",
+          "number": 15,
+          "startedAt": "2026-10-02T00:58:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:58:16Z",
+          "conclusion": "success",
+          "name": "Post Checkout code",
+          "number": 16,
+          "startedAt": "2026-10-02T00:58:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-02T00:58:16Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-02T00:58:16Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/OpenHCSDev/metaclass-registry/actions/runs/36946473814/job/110649639675"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/OpenHCSDev/metaclass-registry/actions/runs/36946473814"
+}
