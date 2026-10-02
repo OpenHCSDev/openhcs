@@ -1,0 +1,22 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/home/ts/.local/share/uv/python/cpython-3.14-linux-x86_64-gnu/bin/python3.14",
+    "-I",
+    "-B",
+    "-c",
+    "import sys;from pathlib import Path;sys.path[:0]=[\"/home/ts/wt/comms-ratchet-pinned-ui348-20261001/src\",\"/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages\"];import agent_comms.debt_ratchet as tool;import metaclass_registry;assert Path(tool.__file__).is_relative_to(Path(\"/home/ts/wt/comms-ratchet-pinned-ui348-20261001/src\"));assert Path(metaclass_registry.__file__).is_relative_to(Path(\"/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages\"));print(\"PINNED_R0_TOOL=\"+tool.__file__);print(\"READONLY_BACKING=\"+metaclass_registry.__file__);raise SystemExit(tool.main())",
+    "--root",
+    "openhcs",
+    "--base",
+    "e66500e7ae3804abca1396681c50e1cef5e9a11e",
+    "--head",
+    "HEAD"
+  ],
+  "exit": 0,
+  "limit": null,
+  "peak_rss_mib": 83.91,
+  "seconds": 31.25
+}

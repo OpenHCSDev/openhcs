@@ -21,7 +21,7 @@ from typing import Any, ClassVar, Dict, List, Tuple
 from weakref import WeakKeyDictionary
 
 import numpy as np
-from metaclass_registry import import_module_preserving_root_logging
+from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
 from openhcs.core.callable_contract import (
@@ -36,6 +36,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.processing.custom_functions.runtime_registry import CustomFunctionCanonicalLookup
 
 logger = logging.getLogger(__name__)
 
@@ -48,15 +49,119 @@ class OpenHCSFunctionCatalogModule(ModuleType, ABC):
         """Return processing functions owned by this module's catalog."""
 
 
+class _CatalogDeclarationSourceSelection(ast.NodeVisitor):
+    """Read declaration eligibility through Python's native AST traversal owner."""
+
+    def __init__(
+        self, keys: frozenset[str], attributes: tuple[str, ...],
+        normalize: Callable[[str], str],
+    ) -> None:
+        self.keys = keys
+        self.attributes = attributes
+        self.normalize = normalize
+        self.selected = False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Function bodies cannot supply enclosing class declaration fields."""
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Async function bodies are likewise outside class-field ownership."""
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        for statement in node.body:
+            if isinstance(statement, ast.Assign):
+                targets = statement.targets
+            elif isinstance(statement, ast.AnnAssign):
+                targets = (statement.target,)
+            else:
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id in self.attributes
+                for target in targets
+            ):
+                continue
+            try:
+                value = ast.literal_eval(statement.value)
+            except (ValueError, TypeError):
+                self.selected = True
+                return
+            if value is None:
+                continue
+            values = (value,) if isinstance(value, str) else value
+            if any(self.normalize(item) in self.keys for item in values):
+                self.selected = True
+                return
+        self.generic_visit(node)
+
+
 class OpenHCSFunctionCatalogDeclaration(ABC):
     """Nominal declaration that assigns local callables to one catalog module."""
 
     registry_catalog_module: ClassVar[str | None] = None
+    __registry__: ClassVar[LazyDiscoveryDict]
+
+    @classmethod
+    def discover_source_declarations(
+        cls,
+        lookup_keys: frozenset[str],
+        attributes: tuple[str, ...],
+        normalize: Callable[[str], str],
+        declared_keys: Callable[[type], frozenset[str]],
+    ) -> tuple[type, ...]:
+        """Select declaration sources, then read the original registered owners.
+
+        Source literals are eligibility only, never registered membership or
+        callable metadata. Nonliteral declarations must be imported to resolve
+        their value; failures remain authoritative. No projection is cached.
+        """
+        missing = lookup_keys.difference(
+            key for declaration in dict.values(cls.__registry__)
+            for key in declared_keys(declaration)
+        )
+        if not missing:
+            return tuple(
+                declaration for declaration in dict.values(cls.__registry__)
+                if lookup_keys.intersection(declared_keys(declaration))
+            )
+
+        def eligible(module_name: str) -> bool:
+            spec = importlib.util.find_spec(module_name)
+            if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+                raise ImportError(f"No declaration source loader for {module_name!r}")
+            source = spec.loader.get_source(module_name)
+            if source is None:
+                raise ImportError(f"No declaration source for {module_name!r}")
+            module_ast = ast.parse(source, filename=spec.origin or module_name)
+            selection = _CatalogDeclarationSourceSelection(missing, attributes, normalize)
+            selection.visit(module_ast)
+            return selection.selected
+
+        cls.__registry__.discover_matching(eligible)
+        return tuple(
+            declaration for declaration in dict.values(cls.__registry__)
+            if lookup_keys.intersection(declared_keys(declaration))
+        )
 
     @classmethod
     @abstractmethod
     def declared_function_names(cls) -> tuple[str, ...]:
         """Return the local callable names owned by this declaration."""
+
+    @classmethod
+    def for_backend_function_name(cls, function_name: str) -> type | None:
+        """Resolve one function through this nominal catalog's declarations."""
+        if not isinstance(function_name, str) or not function_name.strip():
+            raise ValueError(f"{cls.__name__}.function_name must be a non-empty string.")
+        matches = cls.discover_source_declarations(
+            frozenset((function_name,)), ("function_name", "function_variants"), str,
+            lambda declaration: frozenset(declaration.declared_function_names()),
+        )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Function {function_name!r} is owned by multiple catalog "
+                f"declarations: {tuple(owner.__name__ for owner in matches)!r}."
+            )
+        return matches[0] if matches else None
 
     @classmethod
     def require_registry_catalog_module(cls) -> str:
@@ -234,7 +339,7 @@ def _memory_type_from_decorator(
         return None
 
 
-class OpenHCSRegistry(LibraryRegistryBase):
+class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     """
     Registry for OpenHCS native functions with explicit contract support.
 
