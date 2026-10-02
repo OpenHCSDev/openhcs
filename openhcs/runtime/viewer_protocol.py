@@ -213,6 +213,15 @@ class ViewerArrayStatistics(ViewerProjectionRecord):
     def known_nonzero_count(self) -> int | None:
         return self.optional(self.nonzero_count)
 
+    def require_positive_shape(self, *, rank: int) -> tuple[int, ...]:
+        if self.shape is VIEWER_FIELD_ABSENT:
+            raise ValueError("Array evidence requires an explicit shape.")
+        if len(self.shape) != rank:
+            raise ValueError(f"Array evidence requires exactly {rank} axes.")
+        if min(self.shape, default=0) <= 0:
+            raise ValueError("Array evidence requires positive axis extents.")
+        return self.shape
+
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerShapeCoordinateBounds(ViewerProjectionRecord):
@@ -254,6 +263,12 @@ class ViewerSourceSpatialSummary(ViewerProjectionRecord):
             origin_yx=self.optional(self.spatial_origin_yx),
             source_shape_yx=self.optional(self.source_spatial_shape_yx),
         )
+
+    def require_uncropped_source_shape(self) -> tuple[int, int]:
+        domain = self.source_domain
+        if domain.origin_yx != (0, 0):
+            raise ValueError("Image receipt requires explicit uncropped pixel placement.")
+        return domain.required_source_shape_yx(source_label="image receipt")
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerAggregateComponentSummary(ViewerProjectionRecord):
@@ -300,11 +315,12 @@ class ViewerPayloadSummary(
         return tuple(self.optional(self.components) or {})
 
     def require_full_image_window(self) -> None:
-        domain = self.source_domain
-        shape = self.optional(self.shape)
-        if (shape is None or len(shape) != 3 or any(value <= 0 for value in shape)
-                or domain.origin_yx != (0, 0)
-                or domain.source_shape_yx != shape[-2:]):
+        try:
+            shape = self.require_positive_shape(rank=3)
+            source_shape = self.require_uncropped_source_shape()
+        except ValueError as error:
+            raise ValueError("Image receipt requires an explicit full three-axis image window.") from error
+        if source_shape != shape[-2:]:
             raise ValueError("Image receipt requires an explicit full three-axis image window.")
 
     @property
@@ -367,10 +383,6 @@ class ViewerPayloadContent(ViewerProjectionRecord):
     def is_image(self) -> bool:
         return self.data_type == StreamingDataType.IMAGE.value
 
-    @property
-    def is_shapes(self) -> bool:
-        return self.data_type == StreamingDataType.SHAPES.value
-
     def wire_overrides(self) -> JsonObject:
         return super().wire_overrides() | {
             "summary": self.summary.to_wire_mapping(),
@@ -382,6 +394,11 @@ class ViewerPayloadContent(ViewerProjectionRecord):
 class ViewerPayloadRecord(ViewerPayloadContent):
     route_key: str
     shape_payloads: tuple[JsonObject, ...] = ()
+
+    @property
+    def roi_payload_records(self) -> tuple[Self, ...]:
+        """Contribute ROI records through an inherited producer capability hook."""
+        return (self,) if self.data_type == StreamingDataType.SHAPES.value else ()
 
 
 class ViewerControlField(str, Enum):

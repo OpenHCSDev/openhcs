@@ -19,6 +19,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor, ViewerWindowImageSampleRequest,
     ViewerWindowLayerState, ViewerWindowPayloadRequest,
     ViewerWindowRoiSummaryRequest, ViewerWindowStateResult,
+    ViewerWindowPayloadRecord,
 )
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -254,3 +255,36 @@ def test_independent_native_capability_executes_cooperative_validation_and_wire_
     with pytest.raises(ValueError, match="must not be empty"):
         AuditedSummary(spatial_origin_yx=(0, 0), source_spatial_shape_yx=(4, 4),
                        aggregate_component_values={"channel": ()})
+
+
+def test_independent_roi_capability_contributes_through_original_service_factory_and_mro():
+    calls = []
+
+    class RoiFamilyCapability:
+        @property
+        def roi_payload_records(self):
+            calls.append("roi-family")
+            return (*super().roi_payload_records, self)
+
+    @dataclass(frozen=True, kw_only=True)
+    class DeclaredRoiRecord(RoiFamilyCapability, ViewerWindowPayloadRecord):
+        pass
+
+    class DeclaredRoiService(ViewerWindowService):
+        payload_record_type = DeclaredRoiRecord
+
+    payload = item([{"type": "polygon", "coordinates": [[0, 0], [1, 1]],
+                     "metadata": {"label": 0, "source_spatial_shape_yx": (4, 4)}}],
+                   kind=StreamingDataType.ROIS)
+    wire = native_record(payload)
+    service, _ = service_for(wire, payload)
+    extended = DeclaredRoiService(gateway=service._gateway)
+    request = ViewerWindowRoiSummaryRequest(connection=ExecutionConnectionSpec(port=5992), route_key="route")
+    assert service.summarize_rois(request).roi_payload_count == 0
+    result = extended.summarize_rois(request)
+    assert calls == ["roi-family"]
+    assert result.payload_type_counts == {"rois": 1}
+    assert result.roi_payload_count == 1 and result.total_roi_count == 1
+    decoded, compact, _ = rendered(SummarizeViewerWindowRoisCapability, result)
+    assert decoded.payloads[0].example_rois[0].label == 0
+    assert "roi_count=1" in compact and "example label=0" in compact

@@ -413,7 +413,7 @@ class ViewerRoiSummaryRenderer(ViewerResultRenderer):
         if roi_payloads:
             lines.append("Payloads:")
             lines.extend(cls._payload_lines(roi_payloads))
-        elif not payload.errors:
+        elif payload.should_explain_missing_rois:
             lines.extend(cls._no_roi_guidance(payload, payload_type_counts))
         return "\n".join(lines)
 

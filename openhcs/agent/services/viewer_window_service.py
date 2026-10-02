@@ -1206,6 +1206,7 @@ class ViewerWindowService:
     """Expose running viewer windows through bounded agent resources."""
 
     SUCCESS_STATUS = "success"
+    payload_record_type: ClassVar[type[ViewerWindowPayloadRecord]] = ViewerWindowPayloadRecord
 
     def __init__(
         self,
@@ -2023,58 +2024,57 @@ class ViewerWindowService:
                 payload_type_counts[payload.data_type] = (
                     payload_type_counts.get(payload.data_type, 0) + 1
                 )
-                if not payload.is_shapes:
-                    continue
-                shape_payload_count = payload.summary.returned_member_count(
-                    len(payload.shape_payloads)
-                )
-                returned_shape_payload_count = len(payload.shape_payloads)
-                payload_truncated = returned_shape_payload_count < shape_payload_count
-                semantic_payloads = self._semantic_shape_payloads(
-                    payload.shape_payloads
-                )
-                total_roi_count += len(semantic_payloads)
-                returned_roi_count += len(semantic_payloads)
-                total_roi_member_count += shape_payload_count
-                returned_roi_member_count += returned_shape_payload_count
-                roi_count_exact = roi_count_exact and not payload_truncated
-                duplicate_member_count = (
-                    max(0, shape_payload_count - len(semantic_payloads))
-                    if not payload_truncated
-                    else max(0, returned_shape_payload_count - len(semantic_payloads))
-                )
-                areas = self._numeric_metadata(semantic_payloads, "area")
-                perimeters = self._numeric_metadata(semantic_payloads, "perimeter")
-                payload_summaries.append(
-                    ViewerWindowRoiPayloadSummary(
-                        layer_route_key=layer.route_key,
-                        layer_title=layer.title,
-                        payload_route_key=payload.route_key,
-                        path=payload.path,
-                        components=payload.components,
-                        axis_indices=payload.axis_indices,
-                        roi_count=len(semantic_payloads),
-                        returned_roi_count=len(semantic_payloads),
-                        roi_count_exact=not payload_truncated,
-                        roi_member_count=shape_payload_count,
-                        returned_roi_member_count=returned_shape_payload_count,
-                        roi_duplicate_member_count=duplicate_member_count,
-                        roi_payloads_truncated=payload_truncated,
-                        area=self._numeric_stats(areas),
-                        perimeter=self._numeric_stats(perimeters),
-                        bounds_yx=payload.summary.optional(payload.summary.shape_coordinate_bounds_yx),
-                        coordinate_count=payload.summary.optional(payload.summary.shape_coordinate_count),
-                        spatial_origin_yx=payload.summary.source_domain.origin_yx,
-                        source_spatial_shape_yx=payload.summary.source_domain.source_shape_yx,
-                        out_of_source_bounds_count=payload.summary.optional(payload.summary.shape_out_of_source_bounds_count),
-                        example_rois=tuple(
-                            self._example_roi(shape_payload)
-                            for shape_payload in semantic_payloads[
-                                : request.max_examples
-                            ]
-                        ),
+                for roi_payload in payload.roi_payload_records:
+                    shape_payload_count = roi_payload.summary.returned_member_count(
+                        len(roi_payload.shape_payloads)
                     )
-                )
+                    returned_shape_payload_count = len(roi_payload.shape_payloads)
+                    payload_truncated = returned_shape_payload_count < shape_payload_count
+                    semantic_payloads = self._semantic_shape_payloads(
+                        roi_payload.shape_payloads
+                    )
+                    total_roi_count += len(semantic_payloads)
+                    returned_roi_count += len(semantic_payloads)
+                    total_roi_member_count += shape_payload_count
+                    returned_roi_member_count += returned_shape_payload_count
+                    roi_count_exact = roi_count_exact and not payload_truncated
+                    duplicate_member_count = (
+                        max(0, shape_payload_count - len(semantic_payloads))
+                        if not payload_truncated
+                        else max(0, returned_shape_payload_count - len(semantic_payloads))
+                    )
+                    areas = self._numeric_metadata(semantic_payloads, "area")
+                    perimeters = self._numeric_metadata(semantic_payloads, "perimeter")
+                    payload_summaries.append(
+                        ViewerWindowRoiPayloadSummary(
+                            layer_route_key=layer.route_key,
+                            layer_title=layer.title,
+                            payload_route_key=roi_payload.route_key,
+                            path=roi_payload.path,
+                            components=roi_payload.components,
+                            axis_indices=roi_payload.axis_indices,
+                            roi_count=len(semantic_payloads),
+                            returned_roi_count=len(semantic_payloads),
+                            roi_count_exact=not payload_truncated,
+                            roi_member_count=shape_payload_count,
+                            returned_roi_member_count=returned_shape_payload_count,
+                            roi_duplicate_member_count=duplicate_member_count,
+                            roi_payloads_truncated=payload_truncated,
+                            area=self._numeric_stats(areas),
+                            perimeter=self._numeric_stats(perimeters),
+                            bounds_yx=roi_payload.summary.optional(roi_payload.summary.shape_coordinate_bounds_yx),
+                            coordinate_count=roi_payload.summary.optional(roi_payload.summary.shape_coordinate_count),
+                            spatial_origin_yx=roi_payload.summary.source_domain.origin_yx,
+                            source_spatial_shape_yx=roi_payload.summary.source_domain.source_shape_yx,
+                            out_of_source_bounds_count=roi_payload.summary.optional(roi_payload.summary.shape_out_of_source_bounds_count),
+                            example_rois=tuple(
+                                self._example_roi(shape_payload)
+                                for shape_payload in semantic_payloads[
+                                    : request.max_examples
+                                ]
+                            ),
+                        )
+                    )
 
         return ViewerWindowRoiSummaryResult(
             schema_version=SCHEMA_VERSION,
@@ -2444,7 +2444,7 @@ class ViewerWindowService:
     ) -> ViewerWindowPayloadRecord:
         if not isinstance(payload, Mapping):
             raise TypeError("Viewer payload records must be mappings.")
-        return ViewerWindowPayloadRecord(
+        return self.payload_record_type(
             route_key=self._required_scalar(
                 payload, ViewerPayloadField.ROUTE_KEY, str, "a string"
             ),
@@ -2519,8 +2519,8 @@ class ViewerWindowService:
                 payload,
                 ViewerLayerField.COMPONENT_VALUE_COUNT,
                 int,
-            )
-            or self._sequence_length(payload, ViewerLayerField.COMPONENT_VALUES),
+                default=self._sequence_length(payload, ViewerLayerField.COMPONENT_VALUES),
+            ),
             component_values_truncated=self._optional_typed(
                 payload,
                 ViewerLayerField.COMPONENT_VALUES_TRUNCATED,
@@ -2537,8 +2537,8 @@ class ViewerWindowService:
                 payload,
                 ViewerLayerField.PAYLOAD_SUMMARY_COUNT,
                 int,
-            )
-            or self._sequence_length(payload, ViewerLayerField.PAYLOAD_SUMMARIES),
+                default=self._sequence_length(payload, ViewerLayerField.PAYLOAD_SUMMARIES),
+            ),
             payload_summaries_truncated=self._optional_typed(
                 payload,
                 ViewerLayerField.PAYLOAD_SUMMARIES_TRUNCATED,
@@ -2766,12 +2766,14 @@ class ViewerWindowService:
         payload: Mapping[str, JsonValue],
         field_name: str,
         expected_type: type[OptionalViewerFieldT],
+        *,
+        default: OptionalViewerFieldT | None = None,
     ) -> OptionalViewerFieldT | None:
         if field_name not in payload:
-            return None
+            return default
         value = payload[field_name]
         if value is None:
-            return None
+            return default
         if not isinstance(value, expected_type):
             type_name = expected_type.__name__
             raise TypeError(

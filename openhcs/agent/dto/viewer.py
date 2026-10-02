@@ -1425,6 +1425,11 @@ class ViewerWindowRoiSummaryResult(AgentResultEnvelope):
     roi_payloads_truncated: bool = False
     payloads: tuple[ViewerWindowRoiPayloadSummary, ...] = ()
 
+    @property
+    def should_explain_missing_rois(self) -> bool:
+        """An empty successful ROI observation admits absence guidance."""
+        return not self.errors and not self.payloads and self.total_roi_count == 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerWindowValidationCounters:
