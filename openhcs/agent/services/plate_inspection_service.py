@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from polystore.base import ImageSamplingRequest
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.common import (
     AgentError,
@@ -1870,12 +1871,21 @@ class PlateInspectionService:
     ) -> "MicroscopeHandler":
         from openhcs.microscopes import create_microscope_handler
 
-        return create_microscope_handler(
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Preparing physical microscope handler and reader runtime",
+        ).publish()
+        handler = create_microscope_handler(
             microscope_type=request.microscope_type,
             plate_folder=plate_path,
             filemanager=filemanager,
             pattern_format=request.pattern_format,
         )
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Physical microscope handler ready",
+        ).publish()
+        return handler
 
     @staticmethod
     def _metadata_file_path(
@@ -1958,6 +1968,10 @@ class PlateInspectionService:
         query_kind: PlateFileKind | None,
         warnings: list[AgentWarning],
     ) -> PlateFileInventory:
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES,
+            "Reading plate file inventory and native metadata",
+        ).publish()
         if query_kind is PlateFileKind.IMAGE:
             image_inventory = PlateInspectionService._image_inventory(
                 handler,

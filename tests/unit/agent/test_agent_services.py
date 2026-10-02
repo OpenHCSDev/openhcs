@@ -60,6 +60,7 @@ from openhcs.agent.services import execution_session_service as execution_sessio
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.execution_session_service import (
+    CompileInspectionGatewayABC,
     CompileInspectionResult,
     ExecutionSessionService,
     PipelineSourceSessionRequest,
@@ -109,6 +110,9 @@ from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.progress import (
+    ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
+)
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     MetadataExtractionRule,
@@ -539,13 +543,21 @@ def _compile_inspection_result(
     )
 
 
-class _FakeCompileInspectionGateway:
+class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
     def __init__(self) -> None:
         self.requests = []
 
-    def compile(self, request):
+    @staticmethod
+    def emit_progress(request):
+        request.progress_queue.put(create_event(ProgressEventPayload(
+            identity=ProgressIdentity("inspection", str(request.plate), "A01", "compilation"),
+            phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+            percent=0.0,
+        )).to_dict())
+
+    def _compile(self, request):
         self.requests.append(request)
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+        self.emit_progress(request)
         step_plan = CompiledStepPlan(
             step_index=0,
             step_name="WriteArtifacts",
@@ -615,12 +627,12 @@ class _FakeCompileInspectionGateway:
         )
 
 
-class _FailingCompileInspectionGateway:
+class _FailingCompileInspectionGateway(_FakeCompileInspectionGateway):
     def __init__(self, exception: Exception) -> None:
         self.exception = exception
 
-    def compile(self, request):
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+    def _compile(self, request):
+        self.emit_progress(request)
         raise self.exception
 
 
