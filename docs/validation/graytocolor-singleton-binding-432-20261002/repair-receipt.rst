@@ -1,7 +1,7 @@
 Unary432 working composition repair
 ==================================
 
-Source owner Schrodinger; existing draft https://github.com/OpenHCSDev/openhcs/pull/437.
+Source owner Schrodinger; existing ready PR https://github.com/OpenHCSDev/openhcs/pull/437.
 Production ffc3a4f345cc6460f8906b36a7af4582c67ffdad. Normal main integration
 8551a48644b5a9cd054ca1c738ffef2295c5266f, merge d78d6634497d1434fae6b912490a6a6013c6d0f8.
 Existing isolated openhcs-knowledge-declaration-source-376-20261001 worktree and
@@ -151,3 +151,41 @@ removed that exact root. The original policy had already reclaimed its peak
 93MiB staged source/cache through TemporaryDirectory on deadline. All original
 failed logs, reproducibility driver, exact source/dependency IDs, source and
 publication ledger remain persistent. No other owner's cache/output was removed.
+
+Current-main source integration
+-------------------------------
+
+Remote437 was independently verified at8669a1305229375c4db07c75940adab005ca4462,
+already pushed and ready, before this continuation. Normally merged current
+main3df650bf7faf84f67dbad9acf9ee62a095ab1ecf (442/443) into the same branch:
+source-qualified merge51637fe437b212fcf66d4c78743f4da09c1edc1b. No conflict;
+all three released production blobs equal originalffc3a4f. No additional
+production edit, dependency gitlink change or Root394/435 hunk taken. The
+merge hook's absent submodule-worktree warning was reviewed; all eight recorded
+gitlinks remain unchanged and no backing/submodule checkout was modified.
+
+main-integration-controls.log: the original unary7 and independent declaration8
+controls all PASS on51637fe43, pytest5.03s/wall5.78s/355060KiB. Existing read-only
+driver and environment, serial1CPU/512MiB/60s, numerical pools1. These15 repeat
+only the affected integration path, not another full68-case qualification.
+main-integration-r0.log: original pinned3b03785f45df2ef5dc62ba6aed99294192ecbb01
+guard, actual Python3.14/backing as above; exact3df650bf7 ->51637fe43 comparison
+of the three changed production paths, exit0/wall17.20s/87508KiB. All5215
+deltas zero. The original complete-context R1 deadline remains incomplete;
+no replay, waiver, source pruning or expanded budget.
+
+Reviewed current diff against BOUND-8 and IMPL-2/1/3/5/12/13: original member
+owns admission, generic executor queries it, original composer remains the
+only alignment/bundle algorithm. New source-echo declaration needs no consumer
+edit; the same actual invocation controls remain green after integration.
+No new independent capability or ornamental MI was introduced. No stored
+format change. Source/test diff-check passes; original raw-log whitespace is
+retained rather than claiming a whole-evidence whitespace pass.
+
+Admission RAM13.7GiB/home3.7GiB with disk/swap advisory retained; bounded serial
+peak347MiB leaves over8GiB RAM headroom. No new env/build/install/download/native
+or biological attempt. The newly named pytest scratch address
+/home/ts/.cache/agent-scratch/graytocolor-unary-main-integration-437-20261002
+was never materialized by these tests; no cleanup or other-owner deletion.
+The untracked required-runtime-qt-publication ledger remains untouched/excluded.
+Issue432 stays OPEN pending parent-owned full installed composition acceptance.
