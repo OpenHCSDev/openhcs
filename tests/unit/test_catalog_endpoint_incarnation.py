@@ -49,6 +49,7 @@ from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
     FunctionCatalogEndpointUnavailableError,
+    FunctionCatalogExecutionClient,
     ZMQExecutionClient,
 )
 
@@ -95,7 +96,15 @@ def test_exited_native_rejects_before_any_foreign_message(connection, monkeypatc
 
 
 @pytest.mark.parametrize(
-    "replacement", ("viewer", "new_incarnation", "missing_identity", "application")
+    "replacement",
+    (
+        "viewer",
+        "new_incarnation",
+        "missing_identity",
+        "application",
+        "data_port",
+        "control_port",
+    ),
 )
 def test_current_peer_cannot_replace_connection_owner(
     connection, monkeypatch, replacement
@@ -109,6 +118,8 @@ def test_current_peer_cannot_replace_connection_owner(
         ),
         "missing_identity": replace(expected, process_identity=None),
         "application": replace(expected, application=EndpointApplication("other", "1")),
+        "data_port": replace(expected, port=expected.port + 1),
+        "control_port": replace(expected, control_port=expected.control_port + 1),
     }
 
     def ping(payload, *, timeout_ms):
@@ -225,8 +236,20 @@ def test_new_request_declaration_and_cooperative_capability_need_no_consumer_edi
             events.append(("after", response))
             return response
 
-    class AuditedCatalogClient(AuditCapability, ZMQExecutionClient):
-        pass
+    class AuditedCatalogClient(AuditCapability, FunctionCatalogExecutionClient):
+        def endpoint_compatibility(self):
+            return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
+                self.connected_endpoint.application
+            )
+
+        def serialize_task(self, task, config=None):
+            pytest.fail("This independent catalog client does not submit science")
+
+        def _spawn_server_process(self):
+            pytest.fail("Catalog-only declarations must not create a runtime")
+
+        def send_data(self, data):
+            pytest.fail("Catalog controls do not send scientific arrays")
 
     client = AuditedCatalogClient(port=22319, persistent=True)
     expected = _handshake(client)
@@ -249,7 +272,7 @@ def test_new_request_declaration_and_cooperative_capability_need_no_consumer_edi
     assert AuditedCatalogClient.__mro__[:3] == (
         AuditedCatalogClient,
         AuditCapability,
-        ZMQExecutionClient,
+        FunctionCatalogExecutionClient,
     )
 
 

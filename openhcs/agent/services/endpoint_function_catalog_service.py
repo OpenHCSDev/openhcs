@@ -39,7 +39,10 @@ from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from openhcs.runtime.zmq_execution_client import (
+        FunctionCatalogExecutionClient,
+        ZMQExecutionClient,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ class CustomFunctionRegistrationUncertainError(AgentFacingErrorMixin, RuntimeErr
 
 FunctionCatalogClientFactory = Callable[
     [OpenHCSZMQConfig],
-    "ZMQExecutionClient",
+    "FunctionCatalogExecutionClient",
 ]
 
 
@@ -137,7 +140,7 @@ class FunctionCatalogClientSession:
     """One client paired with the exact endpoint used to construct it."""
 
     endpoint: OpenHCSZMQConfig
-    client: ZMQExecutionClient
+    client: FunctionCatalogExecutionClient
 
     def disconnect(self) -> None:
         self.client.disconnect()
@@ -581,8 +584,8 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
 
         if not preparation.future.set_running_or_notify_cancel():
             return
-        client: ZMQExecutionClient | None = None
-        owner: ZMQExecutionClient | None = None
+        client: FunctionCatalogExecutionClient | None = None
+        owner: FunctionCatalogExecutionClient | None = None
         try:
             owner = self._client_for(preparation.endpoint)
             client = self._client_factory(preparation.endpoint)
@@ -647,7 +650,7 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
             self._preparation = None
         preparation.cancel_and_join()
 
-    def _client_for(self, endpoint: OpenHCSZMQConfig) -> ZMQExecutionClient:
+    def _client_for(self, endpoint: OpenHCSZMQConfig) -> FunctionCatalogExecutionClient:
         if self._client_session is not None:
             if self._client_session.endpoint == endpoint:
                 return self._client_session.client

@@ -682,10 +682,275 @@ class FunctionCatalogEndpointUnavailableError(AgentFacingErrorMixin, RuntimeErro
     )
 
 
-class ZMQExecutionClient(
+class FunctionCatalogExecutionClient(
     ExecutionClient[OpenHCSExecutionSubmission, None],
     EndpointCompatibilityClientABC,
 ):
+    """Catalog-control capability on the original execution/compatibility owners.
+
+    Concrete execution clients supply their original application proof and
+    transport/serialization hooks. No catalog service, connection or registry
+    is duplicated by this ancestor.
+    """
+
+    config: OpenHCSZMQConfig
+
+    def require_compatible_endpoint(self) -> EndpointApplicationCompatibility:
+        """Admit only the OpenHCS application version declared by this client."""
+
+        compatibility = self.endpoint_compatibility()
+        compatibility.require_match()
+        return compatibility
+
+    def get_function_catalog(
+        self,
+        request: FunctionCatalogControlRequest,
+        *,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> FunctionCatalogPage:
+        """Read the authoritative callable catalog from this execution endpoint."""
+
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
+
+        response = self._send_function_catalog_control_request(
+            request,
+            cancellation=cancellation,
+            endpoint_owner=endpoint_owner,
+        )
+        return FunctionCatalogControlResponse.from_control_response(response).catalog
+
+    def search_function_catalog(
+        self,
+        request: FunctionSearchRequest,
+    ) -> FunctionCatalogPage:
+        """Search this endpoint through the authoritative catalog ranking policy."""
+
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionCatalogControlResponse.from_control_response(response).catalog
+
+    def get_function_detail(
+        self,
+        request: FunctionDetailControlRequest,
+    ) -> FunctionDetail:
+        """Read one callable detail from an exact endpoint catalog revision."""
+
+        from openhcs.agent.dto.functions import FunctionDetailControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionDetailControlResponse.from_control_response(response).detail
+
+    def get_function_reference(
+        self,
+        request: FunctionReferenceControlRequest,
+    ) -> FunctionReference:
+        """Read one exact compiler reference from this execution endpoint."""
+
+        from openhcs.agent.dto.functions import FunctionReferenceControlResponse
+
+        response = self._send_function_catalog_control_request(request)
+        return FunctionReferenceControlResponse.from_control_response(
+            response
+        ).reference
+
+    def register_custom_function(
+        self,
+        request: CustomFunctionRegistrationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationResult:
+        """Send one mutation; readiness belongs to preceding read-only discovery.
+
+        Never poll/resend a source-bearing request, including when the server
+        reports preparation pending. A missing mutation receipt is uncertain.
+        """
+
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationControlResponse,
+        )
+
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return CustomFunctionRegistrationControlResponse.from_control_response(
+            response
+        ).result
+
+    def custom_function_registration_destination(
+        self,
+        request: CustomFunctionRegistrationDestinationRequest,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> CustomFunctionRegistrationDestination:
+        """Require the selected endpoint's native admission contract before mutation."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationDestinationControlResponse,
+        )
+
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return (
+            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
+                response
+            ).destination
+        )
+
+    def function_catalog_preparation(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+    ) -> FunctionCatalogPreparationState:
+        """One responsive start/status/cancel exchange on an existing endpoint."""
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationStateControlResponse,
+        )
+
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
+        )
+        return FunctionCatalogPreparationStateControlResponse.from_control_response(
+            response
+        ).value
+
+    def _send_function_catalog_control_request(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> dict:
+        """Poll read-only discovery while endpoint catalog preparation is active."""
+
+        from openhcs.agent.dto.functions import (
+            FunctionCatalogPreparationControlResponse,
+        )
+
+        cancellation = cancellation or OperationCancellation()
+        last_preparation_sequence: int | None = None
+        while True:
+            if cancellation.requested():
+                raise CancelledError("Function catalog preparation was cancelled")
+            response = self._send_function_catalog_exchange(
+                request, cancellation=cancellation, endpoint_owner=endpoint_owner
+            )
+            pending = FunctionCatalogPreparationControlResponse.from_control_response(
+                response
+            )
+            if pending is None:
+                if last_preparation_sequence is not None:
+                    self._emit_connection_status(
+                        EndpointStartupPhase.CONNECTED,
+                        "Function catalog is ready",
+                    )
+                return response
+            if pending.status.sequence != last_preparation_sequence:
+                last_preparation_sequence = pending.status.sequence
+                self._emit_connection_status(
+                    pending.status.phase,
+                    pending.status.message,
+                )
+            if cancellation.wait(pending.retry_after_seconds):
+                raise CancelledError("Function catalog preparation was cancelled")
+
+    def _send_function_catalog_exchange(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+        cancellation: OperationCancellation | None = None,
+        endpoint_owner: FunctionCatalogExecutionClient | None = None,
+    ) -> dict:
+        """Admit one nominal catalog control without creating or adopting an owner.
+
+        The original connection handshake is the only incarnation authority.
+        Read-only preparation polling calls this per exchange; mutations call it
+        once and never enter that polling path.
+        """
+        from openhcs.agent.dto.functions import FunctionCatalogControlPayload
+
+        payload = FunctionCatalogControlPayload.from_request(request)
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms, operation="function catalog control"
+        )
+        deadline.remaining_seconds()
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        owner = self if endpoint_owner is None else endpoint_owner
+        if not owner.is_connected() and not owner.new_connection_attempt(
+            cancellation=cancellation
+        ).connect(EndpointConnectionPolicy.ATTACH_EXISTING, deadline.cap_seconds(1.0)):
+            raise FunctionCatalogEndpointUnavailableError(
+                "Function catalog requires an existing execution endpoint."
+            )
+        expected = owner.connected_endpoint
+        if expected is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog attachment returned no connection-owned handshake."
+            )
+        identity = expected.process_identity
+        if identity is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection has no native process-incarnation proof."
+            )
+        if owner.known_server_process_is_alive() is False:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Selected catalog owner {identity!r} has exited."
+            )
+        if expected.server_role is not ServerRole.EXECUTION:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection is not a compatible OpenHCS execution runtime."
+            )
+        try:
+            owner.require_compatible_endpoint()
+        except EndpointApplicationCompatibilityError as error:
+            raise FunctionCatalogEndpointUnavailableError(str(error)) from error
+        # PING is the existing generic endpoint observation, not a catalog request.
+        # Clamp its original one-second observation to the caller's remaining budget.
+        try:
+            observed = PongResponse.from_dict(
+                self._send_control_request(
+                    ControlRequestHeader(ControlMessageType.PING).to_dict(),
+                    timeout_ms=min(1000, deadline.remaining_milliseconds()),
+                )
+            )
+        except (TimeoutError, KeyError, TypeError, ValueError) as error:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Could not verify selected catalog owner: {error}"
+            ) from error
+        # Compare the binding projected from the original typed handshake; volatile
+        # readiness/resource/progress fields are not incarnation authorities.
+        if (
+            observed.process_identity,
+            observed.port,
+            observed.control_port,
+            observed.server_role,
+            observed.application,
+        ) != (
+            identity,
+            expected.port,
+            expected.control_port,
+            expected.server_role,
+            expected.application,
+        ):
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Catalog endpoint no longer belongs to {identity!r}; "
+                f"observed {observed.process_identity!r} ({observed.server_role.value})."
+            )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        return self._send_control_request(
+            payload.to_dict(), timeout_ms=deadline.remaining_milliseconds()
+        )
+
+
+class ZMQExecutionClient(FunctionCatalogExecutionClient):
     """ZMQ client for OpenHCS pipeline execution with progress streaming."""
 
     config: OpenHCSZMQConfig
@@ -741,13 +1006,6 @@ class ZMQExecutionClient(
         if handshake is None:
             raise RuntimeError("ZMQ endpoint compatibility requires a connection")
         return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(handshake.application)
-
-    def require_compatible_endpoint(self) -> EndpointApplicationCompatibility:
-        """Admit only the OpenHCS application version declared by this client."""
-
-        compatibility = self.endpoint_compatibility()
-        compatibility.require_match()
-        return compatibility
 
     def serialize_task(
         self,
@@ -942,253 +1200,6 @@ class ZMQExecutionClient(
         return CompiledArtifactInspectionResponse.from_control_response(
             response
         ).inspection
-
-    def get_function_catalog(
-        self,
-        request: FunctionCatalogControlRequest,
-        *,
-        cancellation: OperationCancellation | None = None,
-        endpoint_owner: ZMQExecutionClient | None = None,
-    ) -> FunctionCatalogPage:
-        """Read the authoritative callable catalog from this execution endpoint."""
-
-        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
-
-        response = self._send_function_catalog_control_request(
-            request,
-            cancellation=cancellation,
-            endpoint_owner=endpoint_owner,
-        )
-        return FunctionCatalogControlResponse.from_control_response(response).catalog
-
-    def search_function_catalog(
-        self,
-        request: FunctionSearchRequest,
-    ) -> FunctionCatalogPage:
-        """Search this endpoint through the authoritative catalog ranking policy."""
-
-        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
-
-        response = self._send_function_catalog_control_request(request)
-        return FunctionCatalogControlResponse.from_control_response(response).catalog
-
-    def get_function_detail(
-        self,
-        request: FunctionDetailControlRequest,
-    ) -> FunctionDetail:
-        """Read one callable detail from an exact endpoint catalog revision."""
-
-        from openhcs.agent.dto.functions import FunctionDetailControlResponse
-
-        response = self._send_function_catalog_control_request(request)
-        return FunctionDetailControlResponse.from_control_response(response).detail
-
-    def get_function_reference(
-        self,
-        request: FunctionReferenceControlRequest,
-    ) -> FunctionReference:
-        """Read one exact compiler reference from this execution endpoint."""
-
-        from openhcs.agent.dto.functions import FunctionReferenceControlResponse
-
-        response = self._send_function_catalog_control_request(request)
-        return FunctionReferenceControlResponse.from_control_response(
-            response
-        ).reference
-
-    def register_custom_function(
-        self,
-        request: CustomFunctionRegistrationRequest,
-        *,
-        operation_deadline: OperationDeadline | None = None,
-    ) -> CustomFunctionRegistrationResult:
-        """Send one mutation; readiness belongs to preceding read-only discovery.
-
-        Never poll/resend a source-bearing request, including when the server
-        reports preparation pending. A missing mutation receipt is uncertain.
-        """
-
-        from openhcs.agent.dto.functions import (
-            CustomFunctionRegistrationControlResponse,
-        )
-
-        response = self._send_function_catalog_exchange(
-            request,
-            operation_deadline=operation_deadline,
-        )
-        return CustomFunctionRegistrationControlResponse.from_control_response(
-            response
-        ).result
-
-    def custom_function_registration_destination(
-        self,
-        request: CustomFunctionRegistrationDestinationRequest,
-        *,
-        operation_deadline: OperationDeadline | None = None,
-    ) -> CustomFunctionRegistrationDestination:
-        """Require the selected endpoint's native admission contract before mutation."""
-        from openhcs.agent.dto.functions import (
-            CustomFunctionRegistrationDestinationControlResponse,
-        )
-
-        response = self._send_function_catalog_exchange(
-            request,
-            operation_deadline=operation_deadline,
-        )
-        return (
-            CustomFunctionRegistrationDestinationControlResponse.from_control_response(
-                response
-            ).destination
-        )
-
-    def function_catalog_preparation(
-        self,
-        request: FunctionCatalogControlRequestABC,
-        *,
-        operation_deadline: OperationDeadline | None = None,
-    ) -> FunctionCatalogPreparationState:
-        """One responsive start/status/cancel exchange on an existing endpoint."""
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogPreparationStateControlResponse,
-        )
-
-        response = self._send_function_catalog_exchange(
-            request,
-            operation_deadline=operation_deadline,
-        )
-        return FunctionCatalogPreparationStateControlResponse.from_control_response(
-            response
-        ).value
-
-    def _send_function_catalog_control_request(
-        self,
-        request: FunctionCatalogControlRequestABC,
-        *,
-        cancellation: OperationCancellation | None = None,
-        endpoint_owner: ZMQExecutionClient | None = None,
-    ) -> dict:
-        """Poll read-only discovery while endpoint catalog preparation is active."""
-
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogPreparationControlResponse,
-        )
-
-        cancellation = cancellation or OperationCancellation()
-        last_preparation_sequence: int | None = None
-        while True:
-            if cancellation.requested():
-                raise CancelledError("Function catalog preparation was cancelled")
-            response = self._send_function_catalog_exchange(
-                request, cancellation=cancellation, endpoint_owner=endpoint_owner
-            )
-            pending = FunctionCatalogPreparationControlResponse.from_control_response(
-                response
-            )
-            if pending is None:
-                if last_preparation_sequence is not None:
-                    self._emit_connection_status(
-                        EndpointStartupPhase.CONNECTED,
-                        "Function catalog is ready",
-                    )
-                return response
-            if pending.status.sequence != last_preparation_sequence:
-                last_preparation_sequence = pending.status.sequence
-                self._emit_connection_status(
-                    pending.status.phase,
-                    pending.status.message,
-                )
-            if cancellation.wait(pending.retry_after_seconds):
-                raise CancelledError("Function catalog preparation was cancelled")
-
-    def _send_function_catalog_exchange(
-        self,
-        request: FunctionCatalogControlRequestABC,
-        *,
-        operation_deadline: OperationDeadline | None = None,
-        cancellation: OperationCancellation | None = None,
-        endpoint_owner: ZMQExecutionClient | None = None,
-    ) -> dict:
-        """Admit one nominal catalog control without creating or adopting an owner.
-
-        The original connection handshake is the only incarnation authority.
-        Read-only preparation polling calls this per exchange; mutations call it
-        once and never enter that polling path.
-        """
-        from openhcs.agent.dto.functions import FunctionCatalogControlPayload
-
-        payload = FunctionCatalogControlPayload.from_request(request)
-        deadline = operation_deadline or OperationDeadline.after_milliseconds(
-            self.config.control_timeout_ms, operation="function catalog control"
-        )
-        deadline.remaining_seconds()
-        if cancellation is not None and cancellation.requested():
-            raise CancelledError("Function catalog preparation was cancelled")
-        owner = self if endpoint_owner is None else endpoint_owner
-        if not owner.is_connected() and not owner.new_connection_attempt(
-            cancellation=cancellation
-        ).connect(EndpointConnectionPolicy.ATTACH_EXISTING, deadline.cap_seconds(1.0)):
-            raise FunctionCatalogEndpointUnavailableError(
-                "Function catalog requires an existing execution endpoint."
-            )
-        expected = owner.connected_endpoint
-        if expected is None:
-            raise FunctionCatalogEndpointUnavailableError(
-                "Catalog attachment returned no connection-owned handshake."
-            )
-        identity = expected.process_identity
-        if identity is None:
-            raise FunctionCatalogEndpointUnavailableError(
-                "Catalog connection has no native process-incarnation proof."
-            )
-        if owner.known_server_process_is_alive() is False:
-            raise FunctionCatalogEndpointUnavailableError(
-                f"Selected catalog owner {identity!r} has exited."
-            )
-        if expected.server_role is not ServerRole.EXECUTION:
-            raise FunctionCatalogEndpointUnavailableError(
-                "Catalog connection is not a compatible OpenHCS execution runtime."
-            )
-        try:
-            owner.require_compatible_endpoint()
-        except EndpointApplicationCompatibilityError as error:
-            raise FunctionCatalogEndpointUnavailableError(str(error)) from error
-        # PING is the existing generic endpoint observation, not a catalog request.
-        # Clamp its original one-second observation to the caller's remaining budget.
-        try:
-            observed = PongResponse.from_dict(
-                self._send_control_request(
-                    ControlRequestHeader(ControlMessageType.PING).to_dict(),
-                    timeout_ms=min(1000, deadline.remaining_milliseconds()),
-                )
-            )
-        except (TimeoutError, KeyError, TypeError, ValueError) as error:
-            raise FunctionCatalogEndpointUnavailableError(
-                f"Could not verify selected catalog owner: {error}"
-            ) from error
-        # Compare the binding projected from the original typed handshake; volatile
-        # readiness/resource/progress fields are not incarnation authorities.
-        if (
-            observed.process_identity,
-            observed.port,
-            observed.control_port,
-            observed.server_role,
-            observed.application,
-        ) != (
-            identity,
-            expected.port,
-            expected.control_port,
-            expected.server_role,
-            expected.application,
-        ):
-            raise FunctionCatalogEndpointUnavailableError(
-                f"Catalog endpoint no longer belongs to {identity!r}; "
-                f"observed {observed.process_identity!r} ({observed.server_role.value})."
-            )
-        if cancellation is not None and cancellation.requested():
-            raise CancelledError("Function catalog preparation was cancelled")
-        return self._send_control_request(
-            payload.to_dict(), timeout_ms=deadline.remaining_milliseconds()
-        )
 
     def send_debug_worker_command(
         self,
