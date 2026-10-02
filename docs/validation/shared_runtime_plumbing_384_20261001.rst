@@ -1517,3 +1517,103 @@ must capture actual ordered requests and detached pre/post cache states before
 its replay or a performance candidate can be admitted. Receipts:
 ``/var/tmp/openhcs-whole-cohort-v4-budget-preflight-REJECTED-20261002.json`` and
 ``/var/tmp/openhcs-grouped-identity-budget-saved-experiment-v3-20261002/receipt.json``.
+
+Fresh native qualification changes the primary target
+---------------------------------------------------
+
+Four additional ordinary current9aa cases now have matched source inventories
+and actual warm native runs. Each native case excludes one warmup and retains
+both measured repetitions. OpenHCS uses one CPU5 inline worker/thread, mandatory
+READY warmup before compilation, the default OUTCOMES observer and memory policy.
+Server startup and shutdown are excluded. The following ratios are descriptive:
+one OpenHCS observation against the mean of two native observations, not a
+repeated A/B optimization claim. Native time includes preparation, modules,
+post-run and measurement closure, excluding imports, JVM startup and pipeline
+loading; OpenHCS total includes compilation.
+
+.. list-table:: Current single-worker observations, seconds
+   :header-rows: 1
+
+   * - Case
+     - OpenHCS execution
+     - OpenHCS total
+     - Native mean
+     - Execution speedup
+     - Total speedup
+   * - WoundHealing
+     - 3.571737
+     - 4.096850
+     - 3.779188
+     - 1.058x
+     - 0.922x
+   * - TrackObjects
+     - 5.036489
+     - 6.400329
+     - 8.276148
+     - 1.643x
+     - 1.293x
+   * - UntangleWorms
+     - 2.194352
+     - 3.206172
+     - 2.974680
+     - 1.356x
+     - 0.928x
+   * - UntangleWormsBrightField
+     - 3.064656
+     - 4.264850
+     - 6.152021
+     - 2.007x
+     - 1.443x
+
+All eight comparisons pass the existing measurement/schema/discrete gate and
+unchanged numeric tolerances. WoundHealing and BrightField also pass complete
+saved-output science. TrackObjects and UntangleWorms fail saved-image content
+comparison in both repetitions; their ratios therefore have measurement-only
+qualification. Physical output inventories match. All original RED receipts
+remain unchanged. TrackObjects saves 21 three-panel PNGs: original-image and
+outline panels agree exactly, while the tracked-object panels are gray instead
+of the native colored labels and white IDs. The current callable deletes the
+requested saved-image options and returns its unchanged input image. Worm
+images have matching backgrounds and colors but 96 differing outline pixels
+across two outputs. Sparse-overlap rendering is a candidate cause requiring
+actual producer inputs, not a proved segmentation diagnosis.
+
+WoundHealing is weakest among seven retained representative measurement-science
+scopes, replacing 3D as the primary investigation. This is not a full-catalog
+ranking. WoundHealing needs about 1.682142s execution reduction and 2.207256s
+total reduction to reach twice its native throughput. Its native comparison
+uses exactly two selected 2304-by-1536 RGB JPGs; TrackObjects uses all 21 selected
+sequence frames, and both worm cases retain their actual source bindings and
+training inputs. Source, dependencies, interpreter, native binaries and all
+original inputs are frozen before and after. Evidence:
+``/var/tmp/openhcs-current-slowcase-priority-and-png-audit-20261002.json``
+(SHA256 c84d5c0f39bf2a246e00eb7cbb42a7457849efb6a974a6d78fee0e68c6c270ef).
+
+The existing worker-owned profile on current9aa WoundHealing preserves exact
+ordinary CSV outputs. It attributes 0.604904s to 22 runtime stack operations,
+0.551025s to 16 image normalizations, 0.288266s to two centroid queries and
+0.464524s to two color reductions. These profile durations are diagnostic costs,
+not measured savings. Metadata composition itself is only 0.016512s. Source
+recording's 0.251105s overlaps normalization and must not be added to it. Even
+eliminating stacking, normalization and centroid costs entirely gives an
+optimistic 1.444195s, below the execution gap before mandatory copies. Another
+small metadata leaf is rejected as a sufficient route. Receipt:
+``/var/tmp/openhcs-current9aa-wound-profile-dominant-frontier-20261002.json``.
+
+The bounded actual-input normalization capture completes successfully: all 16
+calls are recorded, with two unchanged V6 before/after graph pairs for the
+large integer arrivals. Both consume the same two-frame uint8 RGB stack,
+shape (2, 1536, 2304, 3), scale 255 and float32 target. Original input pixels
+and public metadata remain unchanged; source/environment/native freezes pass.
+Capture clocks are not performance evidence. Independent whole-output science
+and original-leaf replay remain separate gates. Receipt:
+``/var/tmp/openhcs-wound-intensity-leaf-capture-v1-20261002/observations.json``.
+The generic consumer investigation must preserve exact compiled artifact
+selection, source projection and stack-broadcast laws; raw integer pixels cannot
+be relabeled as normalized unit-interval pixels to avoid a conversion.
+
+The former 3D grouped-cohort V5 diagnostic remains prepared and unlaunched after
+this priority change. No rejected route is promoted because its preparation is
+already complete. The tracking renderer is being investigated in an independent
+main142 worktree with actual 21-frame producer inputs and exact native panel
+replay; no saved-image repair is included or claimed here yet.
