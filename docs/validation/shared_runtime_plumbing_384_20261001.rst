@@ -396,3 +396,60 @@ hooks. The next gate is an ordinary production comparison against the existing
 nominal immutable-field owner, before further implementation or broad gates.
 Evidence: ``metadata-lifetime-union-production-counterfactual-admission-20261001.json``
 and ``metadata-lifetime-union-reflection-pair-control-20261001.json``.
+
+Initial ordinary complete-field-owner counterfactual
+---------------------------------------------------
+
+The existing immutable field-owner migration is now included in this draft,
+rather than left on an unpublished independent branch. ``SourceMetadataFields``
+owns the common algorithms; live declared fields and owned resolved/durable
+fields provide their actual lifetime through inheritance. Owned builtin values
+permit local derived-view reuse, indexed lookup and readonly snapshot reuse.
+Raw mutable mappings retain fresh derivation. The obsolete role/identity view
+types and duplicate field algorithms are removed. Fields-only transport drops
+process-local derived caches.
+
+One initial ordinary, uninstrumented 3D pair compares main
+9a04107492ad90233394cf17524d0ca8e74062bb against the complete candidate
+401cd69fa718d6b19ce4dc35fb5f7c2d70f2d219:
+
+=================== ============ ============
+Metric              Main         Candidate
+=================== ============ ============
+Execution           11.6153 s    8.1170 s
+Compilation         2.2212 s     50.7997 s
+Pipeline total      14.5439 s    59.6670 s
+=================== ============ ============
+
+Execution improves by 3.4984 seconds in this initial pair; total time regresses
+by 45.1231 seconds. All six actual result CSVs have exact rows and all 120 TIFF
+arrays have exact dtype, shape and pixels, with equal complete inventories.
+This is an initial counterfactual, not accepted ABBA or all-case native parity.
+
+The compilation regression is not startup time: 239 Numba cache files are written
+after axis compilation, over 48.2219 seconds, ending immediately before compilation
+completes. The cold candidate source-path kernel cache exposes a startup regression.
+Commit 2b86bfbe49f36d302dcd67c5b0a0cb4f656f1eb0 implemented registry kernel warming;
+ffba8426cefcaa87b6b00ff056e4cb96855233e4 in PR358 subsequently removed that loop
+and deferred readiness to selected compilation. Restoring the existing registry
+warmup lifecycle is tracked by issue162. No total-time improvement is claimed
+until that repair is verified with fresh caches.
+
+The field-owner integration into this draft passes 81 scoped lifetime/ownership
+controls with metaclass-registry 0.2.2. A subsequent projection correctness repair
+passes 173 scoped controls in its isolated source. It restores source-plane
+derivation and cross-invalid field/error ordering before leading-axis guards,
+shares normalization on the existing metadata owner, and deletes premature
+projection properties. That repair requires performance requalification; the
+initial pair is not projected through it. Arbitrary external constructor/mapping
+callback equivalence remains an OPEN obligation, not a claimed proof.
+
+Evidence: ``metadata-owner-ordinary-pair-output-parity-20261001.json``,
+``metadata-owner-cold-compilation-regression-cause-20261001.json``,
+``source-projection-order-384-correctness-patch-20261002.json``,
+``/var/tmp/openhcs-metadata-owner-ordinary-pair-20261001/observations.json`` and
+``/var/tmp/openhcs-integrated-metadata-owner-scoped-gates-20261002.log``.
+Main 25d56ae3fb9b80acda80f3cf4e1c8667939147eb is normally merged; the shared
+environment and PR submodule consume the declared published metaclass-registry
+0.2.2 source 393a7e03003cdc56df9013f932ed4f26e632d77a. Earlier observations retain
+their measured source/dependency pins.
