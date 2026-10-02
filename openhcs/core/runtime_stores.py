@@ -121,11 +121,6 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
     backend: str
 
     def __post_init__(self) -> None:
-        if not self.input_plan.producer_group_scope().is_dynamic:
-            raise ValueError(
-                "RuntimeArtifactDynamicComponentTarget requires a dynamic "
-                "producer group scope."
-            )
         if not self.backend:
             raise ValueError(
                 "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
@@ -879,11 +874,15 @@ class RuntimeValueStore:
     def __getstate__(self) -> dict[str, object]:
         state = dict(self.__dict__)
         del state["_query_caches"]
+        del state["_find_cache"]
+        del state["_find_matching_cache"]
         return state
 
     def __setstate__(self, state: dict[str, object]) -> None:
         self.__dict__.update(state)
         self._query_caches = {}
+        self._find_cache = {}
+        self._find_matching_cache = {}
 
     @staticmethod
     def address_matches_plan(

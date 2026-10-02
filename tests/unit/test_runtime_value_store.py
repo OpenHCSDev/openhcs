@@ -2112,3 +2112,47 @@ def test_input_plan_owns_independent_immutable_runtime_address_snapshot():
     assert snapshot.source_step_scope_id == plan.source_step_scope_id
     with pytest.raises(TypeError):
         snapshot.paths_by_group["DAPI"] = "/mutated/query.pkl"
+
+
+def test_store_transport_excludes_all_derived_lookup_caches():
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    value.data.rows = MeasurementProjectedColumnarRows(
+        {"object_id": (1,)}, fields=(FieldSpec("object_id", int),)
+    )
+    record = store.record(value, path="/memory/measurements.pkl", backend="memory")
+    latest = store.replace(
+        value, path="/later/measurements.pkl", backend="memory"
+    )
+    original_transport = pickle.dumps(store, protocol=5)
+    query = RuntimeArtifactQuery.from_input_plan(
+        ArtifactInputPlan(
+            name="measurements",
+            path=record.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+            paths_by_group={"DAPI": record.path},
+        ),
+        axis_id="A01",
+        backend="memory",
+    )
+    assert store.find(name=value.key.name) == (record, latest)
+    assert store.find_matching(query) == (record,)
+    store.query_cache(RuntimeObjectLabelMeasurementQueryCache).store_value(
+        _label_query(), (np.ones(100_000),)
+    )
+    assert pickle.dumps(store, protocol=5) == original_transport
+    restored = pickle.loads(original_transport)
+    assert restored.revision == store.revision
+    assert restored._find_cache == {}
+    assert restored._find_matching_cache == {}
+    assert restored._query_caches == {}
+    assert restored.values()[0].key == record.key
+    assert restored.values()[0].location == record.location
+    assert restored.values()[0].value.data.row_mappings() == value.data.row_mappings()
+    assert restored.find_matching(query) == (restored.values()[0],)
+    assert restored.get(record.key) is restored.values()[1]
+    assert restored.get(record.key).location == latest.location
+    assert restored.observed_values == restored.values()
+    assert restored.values()[0] is restored.observed_values[0]
+    assert restored.values()[0].value is restored.values()[1].value
