@@ -1,0 +1,48 @@
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1/git-view'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1/git-view/external/ObjectState'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1/git-view/external/PolyStore'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1/git-view/external/arraybridge'...
+done.
+fatal: Not a valid object name 1e53d03d9f468322a1c085c8be29485fb139caf2^{commit}
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py", line 52, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py", line 40, in main
+    git_output(view / path, "cat-file", "-e", f"{oid}^{{commit}}")
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py", line 15, in git_output
+    return subprocess.check_output(("git", "-C", str(repo), *args), text=True).strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('git', '-C', '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1/git-view/external/arraybridge', 'cat-file', '-e', '1e53d03d9f468322a1c085c8be29485fb139caf2^{commit}')' returned non-zero exit status 128.
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -B docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py /home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1 8551a48644b5a9cd054ca1c738ffef2295c5266f ffc3a4f34"
+	User time (seconds): 0.06
+	System time (seconds): 0.05
+	Percent of CPU this job got: 82%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16864
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 23
+	Minor (reclaiming a frame) page faults: 7925
+	Voluntary context switches: 493
+	Involuntary context switches: 429
+	Swaps: 0
+	File system inputs: 4104
+	File system outputs: 1168
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

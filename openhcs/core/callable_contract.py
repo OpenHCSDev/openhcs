@@ -9,7 +9,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from enum import Enum
 from functools import wraps
@@ -58,6 +58,10 @@ from openhcs.core.variable_component_stack_requirement import (
 )
 
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import (
+        AlignedImageSliceContext,
+        ImagePayloadComposition,
+    )
     from openhcs.core.function_reference import FunctionReference
     from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
@@ -206,8 +210,33 @@ class FunctionStepExecutionScope(str, Enum):
 class ImagePayloadConsumption(str, Enum):
     """How a callable consumes its primary image payload."""
 
-    NATURAL = "natural"
-    COMPOSED = "composed"
+    def __new__(cls, value: str, retain_single_input: bool):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member._retain_single_input = retain_single_input
+        return member
+
+    NATURAL = ("natural", True)
+    COMPOSED = ("composed", False)
+
+    def compose_image_payload(
+        self,
+        owner_name: str,
+        image_payloads: tuple[Any, ...],
+        *,
+        slice_contexts: Sequence[AlignedImageSliceContext] = (),
+        stack_broadcast_source_indices: Sequence[int | None] = (),
+    ) -> ImagePayloadComposition:
+        """Admit primary sources to the original alignment/bundle algorithm."""
+        from openhcs.core.aligned_image_payload import compose_aligned_image_payload
+
+        return compose_aligned_image_payload(
+            owner_name,
+            image_payloads,
+            slice_contexts=slice_contexts,
+            stack_broadcast_source_indices=stack_broadcast_source_indices,
+            retain_single_input=self._retain_single_input,
+        )
 
 
 class PrimaryImageCarrierRequirement(str, Enum):
