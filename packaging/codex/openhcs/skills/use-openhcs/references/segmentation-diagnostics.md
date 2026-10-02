@@ -24,6 +24,28 @@ raising a final bound need not undo an earlier clamp. Establish the units and
 earliest failed operation first, preserving raw and any explicitly converted
 alias rather than retuning downstream stages to compensate.
 
+### A threshold fixes one region but damages another
+
+Keep a bright touching pair and a genuine faint positive in different regions
+as simultaneous controls. If raising a global threshold separates the bright
+pair but removes the faint positive, while lowering it restores the positive
+but joins neighbours or admits background, the opposite outcomes are evidence
+against that global foreground choice. Do not alternate global factors until
+one crop looks good. Inspect local background and foreground values on the
+current processing alias, then test a justified background correction or local
+threshold through the [preprocessing guide](image-preprocessing.md). If support
+already preserves both controls, diagnose markers and splitting instead; a
+threshold failure is not established by an incorrect final partition alone.
+
+Trace a missing object through threshold support, initial components, seeds,
+unfiltered labels and retained labels. A bright merged component removed by a
+maximum-size filter is not evidence of absent signal; relaxing that filter may
+only retain the merge. A faint object present in support but absent after
+splitting or size filtering needs a different repair from one absent in support.
+Use the retained stages to locate the first loss before choosing the next
+change. Recheck both original controls and distributed raw/result/combined
+views; a corrected count or repaired cluster cannot excuse new faint misses.
+
 ## Touching round objects and watershed
 
 A distance-map/marker-controlled watershed is a candidate for separating
