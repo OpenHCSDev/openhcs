@@ -1,0 +1,106 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so 60ac32bcefe7d5799bcd033e549ad972fb30b85212373b1b8a9c886e02bed085
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so db6d46d06c3a35c8004375685c1787219a50ba229bf60a3d057fc25a5f826f62
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/steps/function_runtime.py
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_real_generated_source_inspection_keeps_original_compiler_on_main _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fbf4abf76e0>
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/dewey-436-real-compile-source-20261002/test_real_generated_source_ins0')
+
+    def test_real_generated_source_inspection_keeps_original_compiler_on_main(monkeypatch, tmp_path: Path):
+        def forbidden_catalog(*args, **kwargs):
+            raise AssertionError("Declared compilation must not prepare unrelated catalogs")
+    
+        monkeypatch.setattr(RegistryService, "get_all_functions_with_metadata", forbidden_catalog)
+        plate = tmp_path / "staged-source"
+        SyntheticMicroscopyGenerator(
+            output_dir=str(plate), grid_size=(1, 1), tile_size=(64, 64),
+            wavelengths=1, z_stack_levels=1, wells=["A01"], num_cells=3,
+            random_seed=123, include_all_components=True,
+        ).generate_dataset()
+        document = PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(num_workers=1),
+            pipeline_steps=[FunctionStep(func=(reducenoise, {
+                "patch_size": 3, "patch_distance": 3, "cutoff_distance": 0.1,
+            }), name="DeclaredNlm")],
+        )
+        source = PipelineDocumentAuthority.render(document)
+        identity = ContextVar("real-inspection-request", default="outside")
+        calls, progress_threads = [], []
+    
+        class AffineCompileGateway(InProcessCompileInspectionGateway):
+            def compile(self, request):
+                assert threading.current_thread() is threading.main_thread()
+                assert QThread.currentThread() == QCoreApplication.instance().thread()
+                assert identity.get() == "exact-source-request"
+                calls.append(request)
+                return super().compile(request)
+    
+        class ProgressContext:
+            request_context = object()
+    
+            async def report_progress(self, *args, **kwargs):
+                assert threading.current_thread() is not threading.main_thread()
+                progress_threads.append(threading.get_ident())
+    
+        config = ConfigService()
+        service = ExecutionSessionService(
+            path_policy=AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=(tmp_path,)),
+            pipeline_service=PipelineAuthoringService(FunctionCatalogService(), config),
+            config_service=config,
+            compile_inspection_gateway=AffineCompileGateway(),
+        )
+        executor = McpTransportExecutor()
+        built = build_server(SimpleNamespace(execution_service=service), main_thread_dispatcher=executor.dispatcher)
+        tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
+    
+        async def exercise():
+            token = identity.set("exact-source-request")
+            try:
+                return await tool.fn(mcp_context=ProgressContext(), plate_path=str(plate), pipeline_source=source)
+            finally:
+                identity.reset(token)
+    
+        try:
+            result = executor.run(exercise)
+>           assert result["errors"] == [], result
+E           AssertionError: {'axes': [], 'axis_count': 0, 'axis_filter': [], 'errors': [{'code': 'pipeline_source_invalid_document', 'exception_ty...th openhcs_render_pipeline_source.', 'message': 'Declared compilation must not prepare unrelated catalogs', ...}], ...}
+E           assert [{'code': 'pi...talogs', ...}] == []
+E             
+E             Left contains one more item: {'code': 'pipeline_source_invalid_document', 'exception_type': 'AssertionError', 'hint': 'Provide a pipeline document ...raft with openhcs_render_pipeline_source.', 'message': 'Declared compilation must not prepare unrelated catalogs', ...}
+E             Use -v to get more diff
+
+tests/unit/agent/test_mcp_affine_real_compile.py:84: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Auto-calculated image size: 68x68
+Generating synthetic microscopy dataset in /home/ts/.cache/agent-scratch/dewey-436-real-compile-source-20261002/test_real_generated_source_ins0/staged-source
+Grid size: 1x1
+Wavelengths: 1
+Z-stack levels: 1
+Wells: A01
+Generated HTD file: /home/ts/.cache/agent-scratch/dewey-436-real-compile-source-20261002/test_real_generated_source_ins0/staged-source/staged-source.HTD
+
+Generating data for well A01...
+Using random seed 123 for well A01
+Generating full image for wavelength 1 (no Z-stack)...
+  Saved tile: /home/ts/.cache/agent-scratch/dewey-436-real-compile-source-20261002/test_real_generated_source_ins0/staged-source/TimePoint_1/A01_s001_w1_z001_t001.tif
+Dataset generation complete!
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_mcp_affine_real_compile.py::test_real_generated_source_inspection_keeps_original_compiler_on_main
+1 failed, 1 passed, 2 warnings in 5.93s
+BOUNDED_SOURCE peak_aggregate_rss_kib=440852 elapsed_seconds=9.197 returncode=1 reason=None

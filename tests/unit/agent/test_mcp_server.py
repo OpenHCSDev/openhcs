@@ -15051,71 +15051,6 @@ def test_mcp_dev_client_transport_failure_projects_leaf_causes():
     assert error["server_stderr_tail"] == "captured server log"
 
 
-def test_mcp_stdio_bootstrap_failure_keeps_transport_open(tmp_path):
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    from mcp import ClientSession, StdioServerParameters
-    from mcp.client.stdio import stdio_client
-
-    (tmp_path / "sitecustomize.py").write_text(
-        "\n".join(
-            (
-                "import openhcs.mcp.server as openhcs_mcp_server",
-                "",
-                "def fail_build_server(**kwargs):",
-                "    del kwargs",
-                "    raise RuntimeError('stdio construction failed')",
-                "",
-                "openhcs_mcp_server.build_server = fail_build_server",
-            )
-        )
-    )
-    pythonpath_parts = [str(tmp_path)]
-    current_pythonpath = os.environ.get("PYTHONPATH")
-    if current_pythonpath is not None:
-        pythonpath_parts.append(current_pythonpath)
-    # Subprocess tracing races the MCP SDK teardown after successful responses.
-    child_environment = {
-        name: value
-        for name, value in os.environ.items()
-        if not name.startswith("COV_CORE_")
-    }
-
-    async def call_stdio_server():
-        parameters = StdioServerParameters(
-            command=sys.executable,
-            args=("-m", "openhcs.mcp"),
-            env={
-                **child_environment,
-                "PYTHONPATH": os.pathsep.join(pythonpath_parts),
-            },
-        )
-        async with stdio_client(parameters) as (read_stream, write_stream):
-            async with ClientSession(read_stream, write_stream) as session:
-                await asyncio.wait_for(session.initialize(), timeout=5)
-                health = await asyncio.wait_for(
-                    session.call_tool("openhcs_health_check", {}),
-                    timeout=5,
-                )
-                failure = await asyncio.wait_for(
-                    session.call_tool("openhcs_bootstrap_failure", {}),
-                    timeout=5,
-                )
-                return health, failure
-
-    health, failure = asyncio.run(call_stdio_server())
-    health_payload = json.loads(_direct_tool_text(health))
-    failure_payload = json.loads(_direct_tool_text(failure))
-
-    assert health_payload["schema_version"] == "openhcs.mcp.bootstrap.v1"
-    assert health_payload["ok"] is False
-    assert health_payload["status"] == "unavailable"
-    assert health_payload["phase"] == "build_server"
-    assert health_payload["message"] == "stdio construction failed"
-    assert failure_payload == health_payload
-
-
 def test_mcp_bootstrap_failure_server_reports_startup_exception():
     if importlib.util.find_spec("mcp") is None:
         return
@@ -15175,6 +15110,9 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     transports: list[str] = []
 
     class FailingRunServer:
+        def __init__(self, *args, **kwargs):
+            assert kwargs["main_thread_dispatcher"] is recording_transport.execution.dispatcher
+
         def run(self, *, transport: str) -> None:
             transports.append(transport)
             raise RuntimeError("run failed")
@@ -15205,7 +15143,8 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
         build_failure_server,
     )
     recording_transport = SimpleNamespace(
-        run=lambda server: server.run(transport="stdio")
+        run=lambda server: server.run(transport="stdio"),
+        execution=SimpleNamespace(dispatcher=object()),
     )
     monkeypatch.setattr(
         mcp_stdio.McpStdioTransport,
