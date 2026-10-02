@@ -9,6 +9,7 @@ from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
+from openhcs.core.runtime_relationships import ChildCountFeatureDeclaration
 from openhcs.core.public_api import declared_public_names
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 
@@ -151,19 +152,10 @@ class CellProfilerChildCountFeatureParser(CellProfilerMeasurementFeatureParser):
 
     kind = CellProfilerMeasurementFeatureKind.CHILD_COUNT
     kind_key = kind.value
-    prefix = "Children_"
-    suffix = "_Count"
 
-    def parse_feature(
-        self,
-        feature_name: str,
-    ) -> CellProfilerMeasurementFeature | None:
-        if not feature_name.startswith(self.prefix):
-            return None
-        if not feature_name.endswith(self.suffix):
-            return None
-        object_name = feature_name[len(self.prefix) : -len(self.suffix)].strip()
-        if not object_name:
+    def parse_feature(self, feature_name: str) -> CellProfilerMeasurementFeature | None:
+        object_name = ChildCountFeatureDeclaration.from_feature_name(feature_name)
+        if object_name is None:
             return None
         return CellProfilerMeasurementFeature(
             name=feature_name,
@@ -172,18 +164,13 @@ class CellProfilerChildCountFeatureParser(CellProfilerMeasurementFeatureParser):
         )
 
     def feature_from_object_name(
-        self,
-        object_name: str,
+        self, object_name: str
     ) -> CellProfilerMeasurementFeature:
-        normalized = object_name.strip()
-        if not normalized:
-            raise ValueError(
-                "Child-count feature requires a non-empty child object name."
-            )
+        feature_name = ChildCountFeatureDeclaration.feature_name(object_name)
         return CellProfilerMeasurementFeature(
-            name=f"{self.prefix}{normalized}{self.suffix}",
+            name=feature_name,
             kind=CellProfilerMeasurementFeatureKind.CHILD_COUNT,
-            object_name=normalized,
+            object_name=object_name.strip(),
         )
 
 

@@ -5,6 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureMarker,
+)
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -71,7 +74,6 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ObjectLocationMeasurementRows,
 )
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureMarker,
     RelationshipMeasurementRows,
 )
 
