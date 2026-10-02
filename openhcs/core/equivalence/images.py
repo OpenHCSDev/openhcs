@@ -84,14 +84,11 @@ class RuntimeImageSnapshot:
         metadata_values = []
         for plane_index, projection in enumerate(projections):
             metadata = projection.persisted_image_metadata()
-            if metadata is None or metadata.plane_axis is not None:
+            if metadata is None:
                 raise ValueError(
                     "Exported source planes require scalar image metadata."
                 )
-            if metadata.source_channel_axis is not None:
-                raise ValueError(
-                    "Exported Z planes cannot carry an undeclared color axis."
-                )
+            metadata.require_scalar_source_plane()
             indexed_metadata = SourcePlaneIndexedMetadata.from_metadata(
                 metadata.source_component_metadata or {},
                 expected_plane_count=len(projections),
@@ -122,14 +119,7 @@ class RuntimeImageSnapshot:
                 raise ValueError(
                     "Exported Z planes require exactly two spatial pixel axes."
                 )
-            metadata.source_spatial_domain.require_image_window(array.shape)
-            if (
-                metadata.source_dtype is not None
-                and np.dtype(metadata.source_dtype) != array.dtype
-            ):
-                raise ValueError(
-                    "Exported image pixels conflict with their declared dtype."
-                )
+            metadata.require_source_image_pixels(array)
             arrays.append(array)
             paths.append(path)
             metadata_values.append(

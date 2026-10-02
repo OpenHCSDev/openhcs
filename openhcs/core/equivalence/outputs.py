@@ -95,25 +95,23 @@ class RuntimeOutputSnapshot:
             )
             if not projections:
                 continue
-            for group in SourceProjectionSet(projections).image_plane_groups(
-                image_set_policy
-            ):
-                if group[0].address is None:
-                    if group[0].ref.source_axis_indices:
-                        raise ValueError(
-                            "Whole image exports cannot select hidden source axes."
-                        )
-                    images.append(
-                        RuntimeImageSnapshot.from_image_file(
-                            (root / group[0].ref.backend_address).absolute()
-                        )
+            whole_images, plane_groups = SourceProjectionSet(
+                projections
+            ).image_export_groups(image_set_policy)
+            for projection in whole_images:
+                if projection.ref.source_axis_indices:
+                    raise ValueError(
+                        "Whole image exports cannot select hidden source axes."
                     )
-                else:
-                    images.append(
-                        RuntimeImageSnapshot.from_source_planes(
-                            group, workspace_root=root
-                        )
+                images.append(
+                    RuntimeImageSnapshot.from_image_file(
+                        (root / projection.ref.backend_address).absolute()
                     )
+                )
+            for group in plane_groups:
+                images.append(
+                    RuntimeImageSnapshot.from_source_planes(group, workspace_root=root)
+                )
         snapshot = cls(images=tuple(images))
         snapshot.require_image_file_coverage(expected_paths)
         return snapshot.images

@@ -832,6 +832,26 @@ class SourceArtifactProjection(SourceProjection):
             return identity
         return (*identity, self.execution_scope, self.ref)
 
+    def image_plane_cohort_key(
+        self, image_set_policy: SourceImageSetIdentityPolicy
+    ) -> tuple[object, ...] | None:
+        """Derive an exact scalar Z cohort, or retain this whole image export."""
+        if (
+            image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+            or self.address is None
+        ):
+            return None
+        return (
+            self.source_alias,
+            self.artifact_kind,
+            self.execution_scope,
+            tuple(
+                (component, value)
+                for component, value in self.source_component_values()
+                if component is not AllComponents.Z_INDEX
+            ),
+        )
+
     def component_value(self, component: AllComponents) -> str | None:
         """Return scalar address or runtime-scope identity for one component."""
 
@@ -967,42 +987,28 @@ class SourceProjectionSet:
             ),
         )
 
-    def image_plane_groups(
+    def image_export_groups(
         self,
         image_set_policy: SourceImageSetIdentityPolicy,
-    ) -> tuple[tuple[SourceArtifactProjection, ...], ...]:
-        """Order exported image planes on an explicitly declared Z stack.
+    ) -> tuple[
+        tuple[SourceArtifactProjection, ...],
+        tuple[tuple[SourceArtifactProjection, ...], ...],
+    ]:
+        """Partition whole exports and ordered scalar Z cohorts from one set.
 
         Producer, execution scope and all other source coordinates remain
         distinct. Coordinates alone never declare a pixel axis.
         """
+        whole_images = []
         groups: dict[tuple[object, ...], list[SourceArtifactProjection]] = {}
         for projection in self.artifact_projections:
-            if (
-                image_set_policy.is_identity_component(AllComponents.Z_INDEX)
-                or projection.address is None
-            ):
-                key = projection.identity_key
+            key = projection.image_plane_cohort_key(image_set_policy)
+            if key is None:
+                whole_images.append(projection)
             else:
-                key = (
-                    projection.source_alias,
-                    projection.artifact_kind,
-                    projection.execution_scope,
-                    tuple(
-                        (component, value)
-                        for component, value in projection.source_component_values()
-                        if component is not AllComponents.Z_INDEX
-                    ),
-                )
-            groups.setdefault(key, []).append(projection)
+                groups.setdefault(key, []).append(projection)
         ordered_groups = []
         for group in groups.values():
-            if image_set_policy.is_identity_component(AllComponents.Z_INDEX):
-                ordered_groups.append(tuple(group))
-                continue
-            if group[0].address is None:
-                ordered_groups.append(tuple(group))
-                continue
             z_indexes = tuple(
                 projection.component_value(AllComponents.Z_INDEX)
                 for projection in group
@@ -1025,7 +1031,7 @@ class SourceProjectionSet:
             ) != tuple(range(first_z_index, first_z_index + len(ordered))):
                 raise ValueError("Exported Z planes must be unique and contiguous.")
             ordered_groups.append(ordered)
-        return tuple(ordered_groups)
+        return tuple(whole_images), tuple(ordered_groups)
 
     @property
     def execution_anchor_projections(self) -> tuple[SourceProjection, ...]:

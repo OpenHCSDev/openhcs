@@ -6,7 +6,10 @@ the same two logical images. The comparison now consumes the existing typed
 workspace projection and the execution's declared image-set axis policy.
 Native execution, output generation, and scientific processing are unchanged.
 
-`SourceProjectionSet.image_plane_groups` owns ordering and cohort separation.
+`SourceArtifactProjection.image_plane_cohort_key` owns whole-image versus scalar
+cohort derivation. `SourceProjectionSet.image_export_groups` owns ordered
+cohort partitioning, which the comparison consumes without reinterpreting the
+projection address.
 Only an explicitly declared Z member axis permits composition; producer alias,
 artifact kind, execution scope, well, site, channel, and time remain separate.
 Z coordinates must be unique and contiguous. Their origin comes from the
@@ -45,7 +48,7 @@ pixels, complete physical coverage, and zero measurement differences across six
 participating CSV tables. This replay runs no scientific pipeline, preparation,
 or native execution and makes no speedup claim.
 
-Validation: 77 focused tests and 245 existing equivalence/adapter/export tests
+Initial validation: 77 focused tests and 245 existing equivalence/adapter/export tests
 pass. Controls include arbitrary Z origin, missing internal/tail planes,
 declared plane cardinality, mixed source/producer/execution cohorts, duplicate
 physical ownership, wrong axes, dtype/mask/geometry conflicts, changed pixels,
@@ -58,3 +61,11 @@ pipeline coordination/execution/export and excludes endpoint startup. Native
 JVM/pipeline loading and OpenHCS startup prewarming are distinct preparation
 boundaries. This comparison repair does not declare those clocks identical or
 promote a performance ratio.
+
+The original architecture gate identified foreign metadata/address checks. The
+repair gives scalar axis and declared pixel validation to `ImagePayloadMetadata`,
+while removing its complete channel slicing and mask projection algorithms.
+`ImageMaskDomain` now owns those algorithms alongside accepted mask geometry and
+broadcasting. Existing call order, modulo requested axes, supplied-channel-data
+behavior, shared masks and pixel/mask views remain intact. No core source owner
+imports the equivalence layer and no new nominal class is introduced.

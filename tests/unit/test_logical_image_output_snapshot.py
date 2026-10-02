@@ -21,7 +21,7 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import ImageMaskDomain, ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import (
@@ -129,6 +129,25 @@ def test_2d_identity_does_not_infer_a_z_volume_from_coordinates(exported_volume)
         image.shape == (5, 7) and len(image.physical_paths) == 1
         for image in snapshot.images
     )
+
+
+def test_projection_owner_partitions_whole_exports_and_scalar_cohorts(exported_volume):
+    _, _, _, projections = exported_volume
+    whole_image = replace(
+        projections[0],
+        address=None,
+        ref=SourcePixelRef("disk", "whole-volume.tiff"),
+        image_metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+    )
+    declared = SourceProjectionSet((whole_image, *reversed(projections)))
+    whole, planes = declared.image_export_groups(Z_STACK)
+    assert whole == (whole_image,)
+    assert planes == (tuple(projections),)
+    identity_images, identity_planes = declared.image_export_groups(
+        SourceImageSetIdentityPolicy()
+    )
+    assert identity_images == declared.artifact_projections
+    assert identity_planes == ()
 
 
 def test_observation_owns_the_grouping_axis(exported_volume):
@@ -341,3 +360,72 @@ def test_physical_path_owner_rejects_empty_and_duplicate_paths():
     for paths in ((), (image.path, image.path)):
         with pytest.raises(ValueError, match="nonempty unique physical paths"):
             replace(image, physical_paths=paths)
+
+
+def test_channel_slice_precedes_invalid_declared_axis_and_uses_modulo():
+    events = []
+
+    class FailingPixels:
+        shape = (2, 5, 7)
+
+        def __getitem__(self, key):
+            events.append(key)
+            raise RuntimeError("pixel slice failure")
+
+    pixels = FailingPixels()
+    metadata = ImagePayloadMetadata(source_channel_axis=99)
+    with pytest.raises(RuntimeError, match="pixel slice failure"):
+        metadata.project_channel_payload(pixels, pixels, 1, channel_axis=9)
+    assert events == [(slice(1, 2), slice(None), slice(None))]
+    with pytest.raises(ValueError, match="Source channel axis 99 is invalid"):
+        metadata.project_channel_payload(
+            pixels, pixels, 1, channel_data=np.zeros((1, 5, 7)), channel_axis=9
+        )
+    assert len(events) == 1
+
+
+def test_channel_projection_preserves_shared_masks_and_squeezed_views():
+    pixels = np.arange(70).reshape(2, 5, 7)
+    shared_mask = np.ones((5, 7), dtype=bool)
+    selected = ImageMaskDomain.channel_axis_slice(
+        pixels, channel_axis=-3, channel_index=1
+    )
+    assert np.shares_memory(selected, pixels)
+    unchanged = ImageMaskDomain.projected_channel_mask(
+        shared_mask,
+        source_data=pixels,
+        channel_data=selected,
+        channel_index=1,
+        channel_axis=-3,
+    )
+    assert unchanged is shared_mask
+    full_mask = pixels % 3 == 0
+    squeezed = ImageMaskDomain.projected_channel_mask(
+        full_mask,
+        source_data=pixels,
+        channel_data=selected[0],
+        channel_index=1,
+        channel_axis=-3,
+    )
+    np.testing.assert_array_equal(squeezed, full_mask[1])
+    assert np.shares_memory(squeezed, full_mask)
+
+
+def test_mask_conversion_failure_precedes_source_geometry():
+    class BadMask:
+        def __array__(self, dtype=None, copy=None):
+            raise RuntimeError("mask conversion failure")
+
+    class BadPixels:
+        @property
+        def shape(self):
+            raise AssertionError("source geometry must not run first")
+
+    with pytest.raises(RuntimeError, match="mask conversion failure"):
+        ImageMaskDomain.projected_channel_mask(
+            BadMask(),
+            source_data=BadPixels(),
+            channel_data=np.zeros((5, 7)),
+            channel_index=0,
+            channel_axis=0,
+        )
