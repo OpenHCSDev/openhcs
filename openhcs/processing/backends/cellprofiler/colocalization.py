@@ -3290,45 +3290,47 @@ measurement_image_batch_executor(measure_colocalization_objects_batch)(
 def _prepare_measure_colocalization_objects() -> None:
     """Compile object-colocalization reduction kernels before measured execution."""
     _prepare_measure_colocalization()
-    first_pixels = np.linspace(0.0, 1.0, 16, dtype=np.float32)
-    second_pixels = np.linspace(1.0, 0.0, 16, dtype=np.float32)
-    object_labels = np.repeat(np.arange(1, 5, dtype=np.int32), 4)
-    object_count = 4
-    reductions = object_colocalization_base_reductions(
-        first_pixels, second_pixels, object_labels, object_count
-    )
-    threshold_1 = 0.15 * reductions[6]
-    threshold_2 = 0.15 * reductions[7]
-    object_colocalization_threshold_reductions(
-        first_pixels,
-        second_pixels,
-        object_labels,
-        threshold_1,
-        threshold_2,
-        0.1,
-        0.1,
-        object_count,
-    )
-    ranks = np.arange(first_pixels.size, dtype=np.int64)
-    object_colocalization_rwc_reductions(
-        first_pixels,
-        second_pixels,
-        object_labels,
-        threshold_1,
-        threshold_2,
-        ranks,
-        ranks,
-        first_pixels.size,
-        object_count,
-    )
+    first_image = np.linspace(0.0, 1.0, 16, dtype=np.float32).reshape(4, 4)
+    second_image = np.linspace(1.0, 0.0, 16, dtype=np.float32).reshape(4, 4)
+    image = np.stack((first_image, second_image))
+    labels = np.repeat(np.arange(1, 5, dtype=np.int32), 4).reshape(4, 4)
+    for threshold_metrics in (False, True):
+        context = _prepare_object_colocalization_context(
+            image,
+            labels,
+            channel_1=0,
+            channel_2=1,
+            threshold_percent=15.0,
+            do_correlation=True,
+            do_manders=threshold_metrics,
+            do_rwc=threshold_metrics,
+            do_overlap=threshold_metrics,
+            do_costes=True,
+            costes_method=CostesMethod.FASTER,
+            scale_max=255,
+            costes_backend_provider=DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+            image_pair_context=None,
+            object_label_context=None,
+        )
+        _measure_colocalization_objects_core(context)
 
 
 def _prepare_measure_colocalization() -> None:
     """Compile image-colocalization kernels before measured execution."""
-    first_pixels = np.linspace(0.0, 1.0, 64, dtype=np.float64)
-    second_pixels = np.linspace(1.0, 0.0, 64, dtype=np.float64)
+    first_pixels = np.linspace(0.0, 1.0, 64, dtype=np.float32)
+    second_pixels = np.linspace(1.0, 0.0, 64, dtype=np.float32)
     costes_backend().prepare_backend()
-    _costes_manders_numba(first_pixels, second_pixels, 0.25, 0.25)
+    options = ColocalizationMeasurementOptions(
+        threshold_percent=15.0,
+        do_correlation=True,
+        do_manders=True,
+        do_rwc=True,
+        do_overlap=True,
+        do_costes=True,
+        costes_method=CostesMethod.FASTER,
+        scale_max=255,
+    )
+    _colocalization_measurement(first_pixels, second_pixels, options=options)
 
 
 measure_colocalization.__openhcs_prepare__ = _prepare_measure_colocalization
