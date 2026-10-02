@@ -1066,3 +1066,60 @@ clean main4754fbe2b with the same values; it remains a separately recorded
 inherited gate failure, not a passing full suite. Logs:
 ``/var/tmp/openhcs-pr394-latest-main4754-napari-controls-20261002.log`` and
 ``/var/tmp/openhcs-main4754-napari-layout-isolated-20261002.log``.
+
+
+Qualified narrow carrier repair and fresh native 3D (2026-10-02)
+---------------------------------------------------------------
+
+The rejected physical-plane prototype is absent from PR394. Narrow commit
+b7640ad61 on isolated main-synchronized2aa930eb2 changes only five geometry
+annotations; no numerical body, domain, HoleRemoval or renderer changes.
+Nine prepared/FULL_STACK controls establish7 failures before and9 passes
+after, preserving typed masks, runtime/opaque domains and source provenance.
+The related suite passes148 tests; unchanged original R0/R1 both pass within
+their original budgets. Integration fecf3114a has exactly the same production
+and test Git trees as the qualified isolated source; only validation prose
+differs. The fix is formally carried by PR394 for issue450.
+
+The actual uninstrumented default3D pipeline completes, with exact6CSV and
+120TIFF saved science against the same retained reference. All180 actual
+source-plane references belong to exactly3 physical TIFFs with indices0..59
+and unchanged source-file SHA values. Both fresh native CP4.2.8.1 measured
+repeats pass the existing strict6table/150key/2825fact comparison, exact two
+logical uint16(60,256,256) label volumes and complete physical-file coverage.
+Native comparison to the prototype plus exact prototype/reference/narrow
+comparisons establishes transitive narrow parity; no direct narrow/native
+comparison is claimed. The original comparison-controller API failure
+(tuple subtraction from frozenset) remains RED; a separate recipe supplies
+the required frozenset input views without changing any scientific gate.
+
+Fresh current main4754fbe2b also matches the same saved reference exactly.
+All clocks below use CPU5 and one thread, with startup/warmup excluded.
+OpenHCS includes default OUTCOMES and memory observation; native invocation
+includes prepare_run, module execution, post_run and Measurements.close,
+and excludes imports/JVM/pipeline loading plus its separate warmup.
+
+=====================  ============  ============  ============
+Observation            Compilation   Execution     Total
+=====================  ============  ============  ============
+Main4754 ordinary      1.6754s       10.0712s       12.4766s
+Narrowb764 ordinary    1.6190s       8.3008s        10.7417s
+Native measured0       excluded      14.3544s      invocation
+Native measured1       excluded      14.4375s      invocation
+=====================  ============  ============  ============
+
+The observed main/candidate difference is1.7704s execution and1.7349s total
+for the full PR394 plus annotation repair. It is not evidence that the five
+annotations alone save that time. One ordinary observation per source does
+not establish repeatability or statistical significance. Native's two-run
+mean is14.39595s, giving a descriptive1.7343x candidate execution ratio and
+1.3402x whole-pipeline ratio under the explicitly different clock scopes.
+The target gap remains: reaching2x requires about1.10s further execution
+reduction, or3.54s whole-pipeline reduction. No goal completion is claimed.
+
+Receipts:
+``/var/tmp/openhcs-geometry-narrow-original-guards-20261002.json``,
+``/var/tmp/openhcs-geometry-narrow-b764-3d-ordinary-20261002/observations.json``,
+``/var/tmp/openhcs-geometry-narrow-b764-independent-science-and-inputs-20261002.json``,
+``/var/tmp/openhcs-main4754-independent-historical-3d-science-20261002.json`` and
+``/var/tmp/openhcs-native-3d-aba4-qualification-20261002/fresh-native-scientific-comparison-supplemental.json``.
