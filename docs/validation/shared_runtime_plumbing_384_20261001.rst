@@ -1224,3 +1224,71 @@ Both initial failed runs remain retained. Integrated command, CPU3:
 
 Pass log:
 ``/var/tmp/openhcs-pr394-main-b680-repaired-integration-controls-20261002.log``.
+
+Saved-leaf rejection and whole-worker diagnostic, 2026-10-02
+----------------------------------------------------------
+
+A second source-b764 diagnostic captures the actual contextualization,
+normalization scopes, identity-cache preimages, serializer inputs and five
+locked publication preimages. All39 admitted snapshots retain their original
+metadata, source correlations and alias relations. Exact six CSV/120 TIFF
+comparison against the same-head ordinary run and retained historical reference,
+all180 physical input references and source/dependency/native freezes pass.
+Injected capture work is separately timed; these are not accepted pipeline clocks.
+Receipt:
+``/var/tmp/openhcs-narrow450-joint-leaf-v3-science-and-freeze-20261002.json``.
+
+An exploratory metadata projection fusion passes the11 captured valid-input
+leaf comparisons but saves only4.82ms across the five actual context calls;
+normalization has no measured gain. Separately, malformed self spatial-domain
+metadata combined with malformed source fallback spacing changes the first
+exception. The original reports the spatial-domain failure; the candidate
+reports invalid spacing. This is a real correctness failure, independent of a
+historical test that observes normalization phase counts. The candidate is
+rejected for both inadequate payoff and error-order drift, and is not included
+in this branch. Original/candidate replay receipts:
+``/var/tmp/openhcs-narrow450-joint-leaf-v3-original-replay-20261002.json`` and
+``/var/tmp/openhcs-narrow450-joint-leaf-v3-fusion-replay-20261002.json``.
+Malformed-input witness:
+``/var/tmp/repro_narrow450_fusion_domain_spacing_order_20261002.py``.
+
+All five original locked publication transactions and both serializer calls
+replay with exact ordered JSON results and argument after-state. Original replay
+transaction medians sum to0.4646s; the observed callback sum is0.3760s and
+lock/read/JSON-write residual0.0872s. Replacing three final transactions with one
+would remove only about0.04s of this replay's I/O baseline. Standalone batching
+is rejected as insufficient. These are saved-input replay clocks, not an
+end-to-end speedup; original on-disk whitespace was not captured. Receipt:
+``/var/tmp/openhcs-original-publication-v3-replay-20261002/receipt.json``.
+
+One further actual public-driver diagnostic uses the existing thread-owned
+worker profiling policy, with no source edits or diagnostic monkeypatches.
+The worker records26,443,742 calls, including5,280 slice-context projections,
+25,304 source-metadata merges,55,173 source identity constructions and248 NumPy
+stack calls. The next investigation follows repeated whole-image/plane
+derivations across loading, invocation, saving and publication. It does not
+assume every cache hit copies or every saved plane has independent pixels:
+the observed SaveImages named values, VFS planes and cache share pixels, while
+the observed Resize output has independent buffers. Profiling increases the
+execution clock substantially; profile times must not be scaled into ordinary
+costs or reported as benchmark speedups. Exact six CSV/120 TIFF and frozen source,
+dependency, native and physical-input comparisons pass. Receipts:
+``/var/tmp/openhcs-narrow450-existing-worker-profile-20261002/observations.json``
+and
+``/var/tmp/openhcs-narrow450-existing-worker-profile-science-and-freeze-20261002.json``.
+
+Main17c630606 is normally merged ata6abc4418. Its new lifetime controls initially
+produce140 passes, two SDK failures and one teardown error in the integrated
+repository suite. The generated child imports PolyStore before activating the
+selected OpenHCS checkout; the intentionally failing synthetic callback also
+outlives its test into autouse cleanup. Test-only789e3c304 activates OpenHCS first
+and restores the callback owner in a lexical monkeypatch context. Original
+failure identity, cooperative close, main-thread checks and repeated-close
+assertions remain unchanged. All142 lifetime/cold-feedback/agent-service/prepared
+geometry controls then pass in25.24s. This is tracked separately by issue457;
+closed issue455's installed production shutdown acceptance is not reopened.
+Original RED and repaired logs:
+``/var/tmp/openhcs-pr394-main-17c630606-integration-controls-20261002.log`` and
+``/var/tmp/openhcs-pr394-main17-lifetime-fixture-repair-controls-20261002.log``.
+AST/owner receipt:
+``/var/tmp/openhcs-pr394-main17-lifetime-fixture-repair-20261002.json``.
