@@ -69,3 +69,49 @@ while removing its complete channel slicing and mask projection algorithms.
 broadcasting. Existing call order, modulo requested axes, supplied-channel-data
 behavior, shared masks and pixel/mask views remain intact. No core source owner
 imports the equivalence layer and no new nominal class is introduced.
+
+Fresh execution and current-main qualification
+---------------------------------------------
+
+The original matched native 3D command completed warmup and two measured
+repetitions at `1cfec7e4ba9626e05fb282db3c762ff21a57b109`, with ArrayBridge
+0.3.6, openhcs-basicpy 1.3.1 and JAX/jaxlib 0.9.2. Native CP/core remains
+4.2.8.1 in Python 3.9.25 with NumPy 1.24.4 and SciPy 1.9.0. The launcher
+explicitly selects the existing pinned Temurin JDK 11; the earlier missing-Java
+import failure remains retained under the existing bootstrap issue #138.
+
+Both measured repeats independently pass complete physical inventory and exact
+logical-image comparison: two uint16 `[60,256,256]` native images against all
+120 OpenHCS planes, in two 60-plane cohorts. Six nonempty scientific CSV tables
+contribute 150 feature keys and 2,825 measurement facts per tool per repeat,
+with no scientific differences. Within-tool repeated pixels and scientific
+measurements also agree; native elapsed-time cells and its experiment timestamp
+are separately identified. Native input hashes and all observed output hashes
+are retained and checked. Unsaved intermediates are outside this validation.
+
+| Measured repetition | Native invocation (s) | OpenHCS server compilation (s) | OpenHCS execution job (s) | OpenHCS compilation + execution job (s) |
+| --- | ---: | ---: | ---: | ---: |
+| 0 | 14.354725 | 1.103083 | 9.713339 | 10.816422 |
+| 1 | 14.724486 | 1.105663 | 9.623588 | 10.729251 |
+
+Server startup, registry/kernel prewarming and native JVM/pipeline loading are
+excluded. OpenHCS execution-job time does not include compilation; the final
+column explicitly adds the two server jobs. Native invocation includes its
+prepare/group/module/export/post-run work. OpenHCS uses one inline worker in the
+endpoint PID; the configured `fork` setting does not imply a child was forked.
+Native TIFF compression is Adobe DEFLATE (tag 8), while OpenHCS plane files are
+uncompressed (tag 1). Those actual packaging and preparation differences remain
+disclosed, and the original report's `timing_claim` is unchanged. This is a
+comparison-correctness qualification, not a universal scaling claim.
+
+After that frozen execution completed, main `6ed8b87f7` was normally merged at
+`f6bd14f8e0060dc261fe52be8a8204b210b987fa`. All 550 relevant tests pass, including
+the new source-label plane-domain controls from main. All original R0 roots and
+R1 pass against that main with unchanged tools and the 160-second R1 budget.
+Earlier failures remain retained. This documentation addition changes no
+production source; broader 30-case native parity remains a separate gate.
+
+The benchmark-runs workspace retains the execution directory
+`native-volume-361-current-matched-3d-v3-20261002`, its source-freeze receipt,
+`native361-fresh-current-3d-timing-science-independent-audit-20261002.json`, and
+`native361-f6bd-latest6ed8-qualification-summary-20261002.json`.
