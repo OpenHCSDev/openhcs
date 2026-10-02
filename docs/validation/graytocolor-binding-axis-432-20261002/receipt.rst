@@ -1,6 +1,11 @@
 GrayToColor #432: source diagnosis, not an installed repair
 =========================================================
 
+Latest continuation: carrier-creation-receipt.rst records original ASSISTED4
+successful named-role native assembly and its separate fifth-step compile
+failure. It narrows the working target to truthful created-carrier proof, not
+general native composition. The original unary naming failures below persist.
+
 Owner: Schrodinger. Base: df15ddfe0bcbd80cadaf2f5fc56b83517910f334.
 Existing isolated worktree: openhcs-knowledge-declaration-source-376-20261001.
 Branch: fix/graytocolor-role-axis-20261002. Normal fast-forward main integration;
