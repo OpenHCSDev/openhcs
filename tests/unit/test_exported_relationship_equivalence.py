@@ -391,3 +391,23 @@ def test_snapshot_json_cache_retains_correlation_scope(tmp_path: Path) -> None:
         )
         assert restored.correlated_relationships == snapshot.correlated_relationships
         assert restored.measurement_fact_counts == snapshot.measurement_fact_counts
+
+
+@pytest.mark.parametrize("slice_index", (None, 0, 2))
+def test_object_identity_owns_required_plane_admission(slice_index: int | None) -> None:
+    from openhcs.core.runtime_relationships import ObjectInstanceKey
+
+    key = ObjectInstanceKey(1, slice_index)
+    if slice_index is None:
+        with pytest.raises(ValueError, match="explicit image or slice identity"):
+            key.required_slice_index()
+    else:
+        assert key.required_slice_index() == slice_index
+
+
+def test_full_saved_comparison_cannot_admit_unknown_relationship_scope() -> None:
+    unknown = RuntimeMeasurementSnapshot({})
+    with pytest.raises(RuntimeError, match="requires known relationship correlations"):
+        unknown.required_relationship_correlations()
+    known = RuntimeMeasurementSnapshot({}, {})
+    assert known.required_relationship_correlations() is known.correlated_relationships

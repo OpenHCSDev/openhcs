@@ -1815,6 +1815,16 @@ class RuntimeMeasurementSnapshot:
     def is_empty(self) -> bool:
         return not self.measurement_fact_counts
 
+    def required_relationship_correlations(
+        self,
+    ) -> Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship]:
+        """Admit this snapshot for a full saved comparison, not value-only scope."""
+        if self.correlated_relationships is None:
+            raise RuntimeError(
+                "Matched saved output inventory requires known relationship correlations."
+            )
+        return self.correlated_relationships
+
     def relationship_differences(
         self,
         candidate: (

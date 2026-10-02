@@ -953,6 +953,12 @@ class ObjectInstanceKey:
         object.__setattr__(self, "object_id", object_id)
         object.__setattr__(self, "slice_index", slice_index)
 
+    def required_slice_index(self) -> int:
+        """Admit this object identity for a comparison requiring an explicit plane."""
+        if self.slice_index is None:
+            raise ValueError("Object instance requires an explicit image or slice identity.")
+        return self.slice_index
+
     @classmethod
     def from_measurement_row(
         cls,

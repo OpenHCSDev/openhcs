@@ -1115,8 +1115,6 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         policy: RuntimeEquivalencePolicy,
         image_number_offset: RuntimeImageNumberOffset,
     ) -> tuple[Self, ...]:
-        if not table.rows:
-            raise ValueError("Relationship table has no determining declaration rows.")
         normalized_header = tuple(
             normalize_runtime_identifier(name) for name in table.header
         )
@@ -1125,7 +1123,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         groups: dict[
             ObjectRelationshipDeclaration, list[RuntimeMeasurementRowMapping]
         ] = {}
-        for values in table.rows:
+        for values in table.required_rows():
             row = RuntimeMeasurementRowMapping(
                 dict(zip(table.header, values, strict=True))
             )
@@ -1159,11 +1157,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     )
                 slice_index = image_number_offset.object_instance_key(
                     row.row, 1
-                ).slice_index
-                if slice_index is None:
-                    raise ValueError(
-                        "Relationship rows require an explicit image or slice identity."
-                    )
+                ).required_slice_index()
                 raw_count = row.first_value(("slice_count",))
                 count = MeasurementScalarLiteral(raw_count).integer_value
                 if raw_count is not None and count is None:
@@ -1287,10 +1281,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                         f"Relationship endpoint {subject.name!r} lacks an object identity."
                     )
                 key = image_number_offset.object_instance_key(row.row, object_id)
-                if key.slice_index is None:
-                    raise ValueError(
-                        "Relationship object rows require explicit image identities."
-                    )
+                key.required_slice_index()
                 if key in rows and rows[key].row != row.row:
                     raise ValueError(
                         f"Relationship endpoint {subject.name!r} has conflicting object rows for {key!r}."
@@ -1450,14 +1441,11 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                     child_key = image_number_offset.object_instance_key(
                         row.row, child_id
                     )
-                    if child_key.slice_index is None:
-                        raise ValueError(
-                            "Relationship measurements require explicit image identities."
-                        )
+                    slice_index = child_key.required_slice_index()
                     if parent_id > 0:
                         values.append(
                             (
-                                ObjectInstanceKey(parent_id, child_key.slice_index),
+                                ObjectInstanceKey(parent_id, slice_index),
                                 child_key,
                             )
                         )
