@@ -1,0 +1,135 @@
+{
+  "issue": 480,
+  "standalone_source_head": "8fc8ad1b42b1c2e26dfa5f60889239b84c4299a8",
+  "standalone_source_base": "b4405ff3541add6b91004002b7d6f389f1208636",
+  "standalone_focused_controls": {
+    "tests": 105,
+    "elapsed_seconds": 4.59,
+    "log": "/var/tmp/openhcs-cpa-workspace-480-main-controls-v1-20261002.log",
+    "sha256": "af210efd630a37c0b71e953bb81c1de6e5d90b9eb9b58e52fba9a2dd13b28401"
+  },
+  "original_architecture_gates": {
+    "r0-openhcs": {
+      "receipt": "/var/tmp/openhcs-cpa-workspace-480-main-original-r0-openhcs-8fc8-vsb440-20261002.resources.json",
+      "sha256": "5bf13cc2b295857cc6d353e93e279ea8e34bd17fc4305aca2487c67b61cbb145",
+      "command": [
+        "env",
+        "PYTHONPATH=/home/ts/code/projects/openhcs-refactor-ratchet-tool-20260930/src:/home/ts/code/projects/openhcs/external/metaclass-registry/src",
+        "taskset",
+        "-c",
+        "2",
+        "/usr/bin/python",
+        "-m",
+        "agent_comms.debt_ratchet",
+        "--root",
+        "openhcs",
+        "--base",
+        "b4405ff354",
+        "--head",
+        "8fc8ad1b4"
+      ],
+      "exit_code": 0
+    },
+    "r0-scripts": {
+      "receipt": "/var/tmp/openhcs-cpa-workspace-480-main-original-r0-scripts-8fc8-vsb440-20261002.resources.json",
+      "sha256": "5b474eb10f5684d48242ee1facdff716bcbdf36b6f58c3638383b4407bc54017",
+      "command": [
+        "env",
+        "PYTHONPATH=/home/ts/code/projects/openhcs-refactor-ratchet-tool-20260930/src:/home/ts/code/projects/openhcs/external/metaclass-registry/src",
+        "taskset",
+        "-c",
+        "2",
+        "/usr/bin/python",
+        "-m",
+        "agent_comms.debt_ratchet",
+        "--root",
+        "scripts",
+        "--base",
+        "b4405ff354",
+        "--head",
+        "8fc8ad1b4"
+      ],
+      "exit_code": 0
+    },
+    "r0-benchmark": {
+      "receipt": "/var/tmp/openhcs-cpa-workspace-480-main-original-r0-benchmark-8fc8-vsb440-20261002.resources.json",
+      "sha256": "badfaae66ec661c196494bd51d5dbba20ec65fd4e3e51dca2713ac120a49c83d",
+      "command": [
+        "env",
+        "PYTHONPATH=/home/ts/code/projects/openhcs-refactor-ratchet-tool-20260930/src:/home/ts/code/projects/openhcs/external/metaclass-registry/src",
+        "taskset",
+        "-c",
+        "2",
+        "/usr/bin/python",
+        "-m",
+        "agent_comms.debt_ratchet",
+        "--root",
+        "benchmark",
+        "--base",
+        "b4405ff354",
+        "--head",
+        "8fc8ad1b4"
+      ],
+      "exit_code": 0
+    },
+    "r1": {
+      "receipt": "/var/tmp/openhcs-cpa-workspace-480-main-original-r1-8fc8-vsb440-20261002.resources.json",
+      "sha256": "cc437ab633d5ae8b032cadae4787bd0c0371e99bd622ca303de8d4c0d29bbe6e",
+      "command": [
+        "taskset",
+        "-c",
+        "7",
+        "/home/ts/code/projects/nominal-refactor-advisor-audit-20260929/.venv/bin/python",
+        "-m",
+        "scripts.check_refactor_r1",
+        "--base",
+        "b4405ff354",
+        "--head",
+        "8fc8ad1b4",
+        "--scratch-root",
+        "/var/tmp/openhcs-cpa-workspace-480-main-r1-8fc8-scratch-20261002",
+        "--budget-seconds",
+        "160"
+      ],
+      "exit_code": 0
+    }
+  },
+  "integrated_actual_public_consumer": {
+    "source": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+    "head": "38d02e20a795ad6f8c6457459c380995a798d0fe",
+    "receipt": "/var/tmp/openhcs-cpa-workspace-480-integrated-saved-native-v1-20261002.json",
+    "receipt_sha256": "72e22c3859081de0494ad24440d36a54b306adbaa509d8afcb9db87d671ece5d",
+    "source_freeze_sha256": "317de6735208ed9c99149d81296bf40dd3c1e70823e198da69b7cb7575d47e5d",
+    "native_witness_sha256": "8f458d81ba91087c2224ac37e969c8ec10623a54327ebc02e7bbb17bc0669515",
+    "native_report_sha256": "cd1e604d61d7e34008469d4f73b1e1be92a2b96f3d35864d33a24d1452ad4e7d",
+    "measured_repetitions": [
+      {
+        "repetition": 0,
+        "complete_saved_science_equivalent": true,
+        "scientific_differences": [],
+        "physical_inventory_error": null,
+        "compared_CPA_file_count": 6
+      },
+      {
+        "repetition": 1,
+        "complete_saved_science_equivalent": true,
+        "scientific_differences": [],
+        "physical_inventory_error": null,
+        "compared_CPA_file_count": 6
+      }
+    ]
+  },
+  "scope": "Standalone feature/architecture checks use main-based8fc8. Actual public QC science uses integrated PR39438d02; no standalone-main timing claim. Both cached warm-native repetitions compared by original strict policy with nonempty CPA-declared IMAGE rows, complete physical inventory and new actually-consumed-path report. Configured structural-nonmeasurement policy unchanged.",
+  "original_failures_retained": [
+    "Fresh6e69missingworkspace full-inventory RED",
+    "acbR0ForeignAbsence/StringSubscript RED",
+    "f03benchmarkR0suffix-dispatch RED",
+    "Interruptedcodegen capabilities shard20PASS KeyboardInterrupt"
+  ],
+  "native_panel_fixture_sha256": "884f14365ed643c8dd7050ea77e416a1b7253dca83ff11d2e01aa54a8e07bdc6",
+  "numeric_tolerances": {
+    "absolute": 1e-06,
+    "relative": 1e-06
+  },
+  "no_new_native_job": true
+}

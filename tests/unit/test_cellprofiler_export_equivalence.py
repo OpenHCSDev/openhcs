@@ -352,6 +352,9 @@ def test_database_export_equivalence_compares_sqlite_and_semantic_properties(
     )
 
     assert report.is_equivalent
+    assert report.compared_output_files == frozenset(
+        (*reference.iterdir(), *candidate.iterdir())
+    )
 
 
 def test_database_export_equivalence_rejects_unequal_row_count_before_value_projection(
