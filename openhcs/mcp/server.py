@@ -2321,12 +2321,12 @@ def build_server(
             else:
 
                 @wraps(fn)
-                def guarded_tool(*args, **kwargs):
+                async def guarded_tool(*args, **kwargs):
                     stale = stale_result()
                     if stale is not None:
                         return stale
                     try:
-                        result = dispatcher.call(lambda: fn(*args, **kwargs))
+                        result = await dispatcher.invoke(lambda: fn(*args, **kwargs))
                         return project_success(result)
                     except Exception as exc:
                         return project_failure(exc)

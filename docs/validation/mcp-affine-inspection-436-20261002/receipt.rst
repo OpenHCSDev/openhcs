@@ -64,3 +64,27 @@ ValueError projection and unchanged CancelledError identity. Final source
 controls, both continuous transports and real compiler entrypoint qualification
 are in progress. Installed cold public acceptance is PENDING, not implied by
 these source controls. No global FULL/R1 qualification is claimed.
+
+Published checkpoint continuation
+---------------------------------
+
+Draft PR438 is visible. Complete affinity/progress/resident source shard:
+26 PASS, 348112 KiB / 28.723 seconds with unchanged source bounds. It includes
+two successive resident connections with successful and failing inspections,
+using the original dev-client token idle renewal (1.6-second test idle interval,
+2.4-second main-thread work), not a new client loop. The full stdio SDK probe
+uses the unchanged ordinary 10-second deadline and records progress at ~20ms,
+~1s and ~2s before each ~2.4-second terminal result.
+
+First stdio harness attempt selected installed rather than own Python source
+because the SDK deliberately does not inherit arbitrary PYTHONPATH entries.
+The owned source loader now selects the source root explicitly and derives
+read-only native extension membership from installed distribution metadata;
+there is no copied binary, install or Python-source fallback.
+
+The successful initial stdio monitor accounted only its process group: the SDK
+creates a new process group. Thus its 82012 KiB figure is NOT combined RSS proof.
+The existing bounded-source monitor is corrected in place to derive membership
+from its original systemd scope's cgroup.procs and sum each process's RSS. The
+512MiB cgroup limit and 60-second deadline remain unchanged. Full-scope recheck
+is pending; original monitor/probe outcomes remain retained.
