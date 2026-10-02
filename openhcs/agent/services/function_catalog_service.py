@@ -231,7 +231,7 @@ class CatalogFilterText:
             (CatalogSearchRank.SUMMARY_CONTAINS, entry.summary or ""),
             (
                 CatalogSearchRank.DOC_CONTAINS,
-                _detail_doc(metadata.func, metadata.doc) or "",
+                PARAMETER_DOCUMENTATION_POLICY.detail_doc(metadata.func, metadata.doc) or "",
             ),
         ):
             score = self._text_score(value)
@@ -334,6 +334,43 @@ class ParameterDocumentationPolicy:
     variadic_kinds = frozenset(
         {inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD}
     )
+
+    def detail_doc(
+        self,
+        func: Callable,
+        metadata_doc: str | None,
+        contract: CallableContract | None = None,
+    ) -> str | None:
+        """Project authored prose from the original semantic callable owner.
+
+        Runtime decorators can document controls that a host declaration removes.
+        Their copied prose is not the public contract. Added parameter help stays
+        on the final signature's typed parameter projection; request bindings
+        remain semantic boundaries rather than being unwrapped to implementations.
+        """
+        callable_contract = contract or CallableContract.from_callable(func)
+        doc = inspect.getdoc(callable_contract.resolve_raw_runtime_callable())
+        if doc is not None:
+            return doc
+        if metadata_doc is not None and metadata_doc.strip():
+            return metadata_doc
+        return None
+
+    def summary(
+        self,
+        func: Callable,
+        metadata_doc: str | None,
+        view: SummaryView,
+        contract: CallableContract | None = None,
+    ) -> str | None:
+        doc = self.detail_doc(func, metadata_doc, contract)
+        if doc is None:
+            return None
+        for line in doc.splitlines():
+            stripped = line.strip()
+            if stripped:
+                return _bounded_summary(stripped, view)
+        return None
 
     def should_document(
         self,
@@ -841,7 +878,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         # Owner resolution completes any declaration-projected callable help
         # before this immutable detail snapshot is assembled.
         runtime_contract = _runtime_contract_summary(func, contract)
-        doc = _detail_doc(func, metadata.doc)
+        doc = PARAMETER_DOCUMENTATION_POLICY.detail_doc(func, metadata.doc, contract)
         bounded_doc, doc_truncated, effective_max_doc_chars = _bounded_detail_doc(
             doc, max_doc_chars=max_doc_chars
         )
@@ -991,7 +1028,9 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         signature = PARAMETER_DOCUMENTATION_POLICY.display_signature(
             metadata.func, name, signature_view, callable_contract
         )
-        summary = _summary(metadata.func, metadata.doc, summary_view)
+        summary = PARAMETER_DOCUMENTATION_POLICY.summary(
+            metadata.func, metadata.doc, summary_view, callable_contract
+        )
         tags = metadata.tags
         backend_tags: tuple[str, ...]
         if tags is None:
@@ -1024,17 +1063,6 @@ def _format_default(default) -> str | None:
     if isinstance(default, Enum):
         return f"{type(default).__name__}.{default.name}"
     return repr(default)
-
-
-def _summary(func: Callable, metadata_doc: str | None, view: SummaryView) -> str | None:
-    doc = _detail_doc(func, metadata_doc)
-    if doc is None:
-        return None
-    for line in doc.splitlines():
-        stripped = line.strip()
-        if stripped:
-            return _bounded_summary(stripped, view)
-    return None
 
 
 def _bounded_summary(text: str, view: SummaryView) -> str:
@@ -1247,15 +1275,6 @@ def _enum_member_name(value: Enum | None) -> str | None:
     if value is None:
         return None
     return value.name
-
-
-def _detail_doc(func: Callable, metadata_doc: str | None) -> str | None:
-    inspect_doc = inspect.getdoc(func)
-    if inspect_doc is not None:
-        return inspect_doc
-    if metadata_doc is not None and metadata_doc.strip():
-        return metadata_doc
-    return None
 
 
 def _bounded_detail_doc(
