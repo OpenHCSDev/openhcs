@@ -142,13 +142,14 @@ class SourceImageObjectLabelBuildRequest:
                 )
             return None
         metadata = self.metadata
-        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
-            metadata.plane_axis, metadata.source_provenance,
-        )
-        if declared_projection is not None:
+        if metadata.plane_axis is not None:
+            declared_count = metadata.source_provenance.source_plane_count
             if (
-                projection.axis is not declared_projection.axis
-                or projection.axis_size != declared_projection.axis_size
+                projection.axis is not metadata.plane_axis
+                or (
+                    declared_count > 0
+                    and projection.axis_size != declared_count
+                )
             ):
                 raise ValueError(
                     "Object-label plane projection conflicts with the source-image "
