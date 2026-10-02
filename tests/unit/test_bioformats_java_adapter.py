@@ -27,12 +27,24 @@ class JavaValue:
         return self._value
 
 
-class PhysicalSize:
-    def __init__(self, value):
-        self._value = value
+OME_MICROMETER = object()
 
-    def value(self):
-        return self._value
+
+def _ome_units(name):
+    assert name == "ome.units.UNITS"
+    return SimpleNamespace(MICROMETER=OME_MICROMETER)
+
+
+class PhysicalSize:
+    def __init__(self, value, to_micrometers=1.0):
+        self._value = value
+        self._to_micrometers = to_micrometers
+
+    def value(self, unit=None):
+        if unit is None:
+            return self._value
+        assert unit is OME_MICROMETER
+        return self._value * self._to_micrometers
 
 
 @dataclass
@@ -108,6 +120,12 @@ class FakeBioFormatsMetadata:
     def getPixelsPhysicalSizeX(self, image):
         return None if self.pixel_size is None else PhysicalSize(self.pixel_size)
 
+    def getPixelsPhysicalSizeY(self, image):
+        return self.getPixelsPhysicalSizeX(image)
+
+    def getPixelsPhysicalSizeZ(self, image):
+        return None
+
 
 class FakeBioFormatsReader:
     def __init__(self, used_files=("plate.fake", "well-a01.tif")):
@@ -143,6 +161,8 @@ class FakeBioFormatsReader:
 
 
 class FakeBioFormatsContext:
+    scyjava = SimpleNamespace(jimport=_ome_units)
+
     def __init__(
         self,
         metadata_by_name=None,
@@ -577,7 +597,7 @@ def test_java_adapter_retains_all_rgb_container_exclusion_with_scalar_container(
         def getRGBChannelCount(self):
             return 3
 
-    class _Context:
+    class _Context(FakeBioFormatsContext):
         def declares_path(self, source_path):
             return Path(source_path).suffix == ".czi"
 
