@@ -485,3 +485,110 @@ Evidence: ``registry-startup-readiness-162-empty-cache-pipeline-20261002.json``,
 ``registry-startup-readiness-162-original-r1-initialized-root-20261002.log``.
 The original 50.800-second compilation regression remains retained. Current
 combined performance, IFC behavior and source guards remain draft gates.
+
+Complete-field ordinary ABBA and current ownership repairs
+---------------------------------------------------------
+
+The completed uninstrumented ABBA at main107498cf against candidate02609e12
+has two observations per source for each workload. Execution/total means are
+11.162969/13.119510 s versus 8.295599/10.351318 s for 3D,
+8.706567/11.262818 s versus 8.474416/11.132766 s for Advanced, and
+16.500067/18.794964 s versus 16.920803/19.454312 s for IFC. Thus 3D saves
+2.867370 s execution and 2.768192 s total, while IFC regresses 0.420735 s
+execution and 0.659348 s total in these samples. No statistical significance
+or noise explanation is asserted. All observations remain retained.
+
+Original unmodified R0/R1 rejected02609e12. The actual metadata owner now owns
+normalization and leading-axis transformation; the redundant raw projected
+field dictionary, provenance normalization forwarder and foreign optional-state
+handling are removed. Source and axis projection roles compose through
+inheritance while preserving effect/error order and independent result ownership.
+Common scalar admission is shared on SourceMetadataFields. The optional
+intensity-proof projection and scale queries consume their existing authorities
+instead of duplicating algorithms. Component controls include 41 scalar tests,
+1,212 original-source behavior comparisons and 197 metadata/proof controls.
+The collected classification projection census was also repaired to skip actually
+abstract parameter declarations while still checking concrete descendants;
+429 focused and 1,111 broader consumer controls passed before dependency update.
+The inherited census failure was reproduced on main under the same imports.
+
+The subsequent ordinary ABBA measures frozen production candidate
+90c30e1adfacd25a834ed48949b430099c866134 against the same main107498cf:
+
+==================== ======================== ========================
+Workload             Execution main/candidate Total main/candidate
+==================== ======================== ========================
+3D                   11.089386 / 8.172661 s    13.063124 / 10.106094 s
+Advanced             8.854658 / 8.988559 s     11.408556 / 11.590607 s
+IFC                  17.382926 / 16.212604 s   19.628127 / 18.661190 s
+==================== ======================== ========================
+
+3D saves 2.916725 s execution and 2.957031 s total; compilation means are
+1.214262 / 1.209572 s. Advanced regresses 0.133900 s execution and 0.182051 s
+total. IFC improves 1.170322 s execution and 0.966938 s total in this batch.
+These means do not erase the adverse026 IFC evidence or establish significance.
+All twelve case observations succeed through ordinary OUTCOMES, default memory
+observation, one well/thread and CPU5. Both sources use identical public drivers,
+shared dependencies/native binaries and mandatory registry preparation before
+readiness. Server startup, prewarming and shutdown are excluded. There are no
+profiling hooks, captures or scientific substitutions in either ABBA.
+
+For each ABBA, all six output pairs pass scientific comparison. All six 3D
+CSV exports and all120TIFF arrays match exactly, including complete scientific
+inventories, dtype and shape. IFC has exact headers and all1,800x527 result cells.
+Advanced uses the existing CellProfiler database/export comparator at absolute
+and relative1e-6, with exact schemas, cardinalities, discrete values, identifier
+relationships and categorical data. Eight scientific subject tables and all
+relationships are nonempty. Unsaved final segmentation masks were not observed.
+The90 comparison reads actualaf45 source against its still unchanged pre-update
+dependency environment, attested before and after. Output files remain unchanged.
+
+At90c30, original R1 passes with no increases under the unchanged160-second
+budget, and original R0 scripts/benchmark pass. R0 openhcs remains RED solely
+because the scalar/container rejection classifier moved from virtual workspace
+decoding to its actual field owner: source_metadata gains one local switch and
+three arms, while virtual_workspace_metadata loses one switch and four arms.
+The original per-file gate is not waived or declared passed. Across all changed
+roots the global delta is zero switches and minus one arm; untouched files cancel
+because these original metrics are file-local AST measurements. Existing error
+and reported-class observation ordering is preserved rather than altered to
+satisfy the metric. The global702-module authority audit found no existing
+replacement retaining that complete grammar/error contract. These are distinct
+architecture and behavioral gates, not interchangeable claims.
+
+After both ABBA and all their comparisons finished, main
+c32447f1c86a1878a313d1643a398e30ac20f75e was normally merged into this branch.
+The shared environment now installs declared published ArrayBridge0.3.6 at
+source1e53d03d9f468322a1c085c8be29485fb139caf2, openhcs-basicpy1.3.1 and
+JAX/jaxlib0.9.2. Metaclass-registry0.2.2 source393a7e0, NumPy/SciPy/Numba
+and both native extension hashes are unchanged. Pip check reports no broken
+requirements and actual package imports pass. The separate native CellProfiler
+4.2.8.1 environment remains unchanged. Earlier timings retain their measured
+source/dependency pins; they are not projected through this new main/environment.
+New combined qualification and full native parity remain required.
+
+A capture-free coarse diagnostic on frozen80d92 source partitions one9.208835 s
+job into4.164762 s inside RuntimeCallableInvocation.call and5.044073 s outside.
+The callable boundary includes decorated processing/metadata and is not a pure
+image-kernel measurement. Diagnostic wrappers are not accepted performance
+comparisons. Full load, unstack, save, CP image recording and image request phases
+have a nonoverlapping3.009640 s upper bound. Recovering2 s requires eliminating
+at least66.453% of those complete phases, not just a cached recomposition or
+an original-source cache miss. The existing named-value to eager-plane metadata
+to MemoryVFS to whole-stack round trip is the next structural premise. Mandatory
+named/mainflow pixel-copy isolation and concurrent durable publication remain
+constraints. No new production route is admitted without a representative replay
+showing that complete consumer closure can realize a material payoff.
+
+Retained evidence is in the shared benchmark-runs directory:
+``owned-metadata-90c30-ordinary-abba-csv-tiff-parity-20261002.json``,
+``advanced-ordinary90-six-pair-sqlite-parity-20261002.json``,
+``pr394-integrated-90c30-original-source-guards-20261002.json``,
+``scalar-owner-original-r0-global-delta-counterevidence-20261002.json``,
+``integrated90-classification-concrete-projection-census-fix-20261002.json``,
+``shared-main-dependency-update-c32447-20261002.json`` and
+``pr394-90c30-whole-mainflow-value-frontier-20261002.json``.
+Source freezes, complete observations and diagnostic boundaries are retained in
+``/var/tmp/openhcs-owned-metadata-90c30-ordinary-abba-20261002/`` and
+``/var/tmp/openhcs-owned-metadata-phase-probe-20261002/``. The original026
+comparison and original failures remain separate pinned evidence.
