@@ -4,12 +4,16 @@ Persisted ROI directory admission: receiving investigation
 Singer owns this receiving investigation under issue 134. Main audited:
 ``889bca2e1f69ef6bfb50ded599903c23b019ccbb``. Completed issue 398 and PR 399
 remain closed; their ordinary saved-image reader/reopen acceptance is unchanged.
-This checkpoint is a source investigation, not a native ROI or biological pass.
+Current source status: Root integrated the publication requirement in PR394
+``82243634ce097d0d1a2d9e77664cbfeac3e6ec94``. Singer accepted the exact diff and
+receipt against the receiving requirements. Root owns the integrated seam; no
+shared-file release remains pending. Draft404 retains evidence and the parent
+native ROI provenance/reopen gate, not a competing source implementation.
+Historical investigation below is not a native ROI or biological pass.
 Visible draft: https://github.com/OpenHCSDev/openhcs/pull/404.
-The active implementation proposal below supersedes the initial diagnostic-only
-checkpoint. The shared production files remain unapplied pending named ownership.
-The combined ROI-only owner-hook proposal supersedes the historical three-hunk
-proposal below. Its exact ownership/evidence receipt is
+The historical implementation proposal superseded the initial diagnostic-only
+checkpoint and is now superseded by Root's integrated checkpoint. Its original
+qualification and current receiving acceptance/native-boundary receipt is
 ``persisted-roi-only-owner-134.rst`` in this directory.
 
 Original public witness
@@ -131,16 +135,16 @@ after verified archival and source-worker termination: 39751 logical bytes,
 160 KiB filesystem usage. No other worktree/cache, native owner,
 scientific output or uncertain input is removed.
 
-Remaining boundary: PR 394 must release the narrow shared target/publication seam
-or integrate this relation with its existing successful-save batch authority.
-Singer retains this receiving regression and the separate graph metadata crossing.
+The former shared-owner boundary is resolved: Root integrated the relation with
+the existing successful-save batch authority at the source checkpoint named above.
+Singer retains the receiving evidence and separate native/graph acceptance crossing.
 No copied capture/materialization algorithm, compatibility reader, parallel
 registry, invented source receipt or scientific replay was introduced. Diataxis
 reference style keeps the verified admission facts distinct from implementation
 and installed acceptance.
 
-Active implementation: exact shared owner proposal
---------------------------------------------------
+Historical implementation: exact shared owner proposal
+------------------------------------------------------
 
 Parent requested continued repair, not diagnostic-only completion. Public PR 394,
 issue 384, their tracked source receipts and commit metadata still identify the
@@ -264,7 +268,7 @@ Released only
 failures, raw receipts and reconstruction inputs remain recoverable in the archive;
 tracked receiving source/history and all foreign/scientific data remain intact.
 
-The named PR 394 integration owner must take/release the combined proposal. This first
+Root is the integrated PR394 owner; the combined proposal is superseded. This first
 checkpoint repairs the actual mixed-label/checkpoint/ROI witness. ROI-only
 participation and the empty-image transaction now have the independently tested
 saved-output-owner proposal documented in the linked receipt; the older graph ROI source-metadata omission remains

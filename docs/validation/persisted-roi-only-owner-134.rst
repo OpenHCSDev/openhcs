@@ -1,13 +1,18 @@
 ROI-only publication: exact original-owner hook proposal
 =======================================================
 
-Singer owns this receiving checkpoint in draft404 under issue134. Shared source
-audited: PR394 ``faf61ad87c550fa2d8ef44313344db74b378b857``. Parent is pursuing
-the named shared owner route. This is an unapplied proposed delta with bounded
-source evidence, not a production fix or installed/native/biological acceptance.
-Original public reproducer and completed image scope remain in
-``persisted-roi-admission-134.rst``. No further contact/status comments were posted,
-and no foreign worktree or claimed production file was edited.
+Current disposition, 2026-10-02: the source publication requirement is integrated
+by Root in PR394 at ``82243634ce097d0d1a2d9e77664cbfeac3e6ec94`` and accepted
+by Singer's receiving diff/receipt review. The source seam is no longer awaiting
+an owner or release. Root owns integration; draft404 remains the receiving
+evidence/native-acceptance record, not another production implementation to merge.
+Committed PR source is distinct from merged, installed and native acceptance.
+The exact review and remaining parent gate appear in the final section.
+
+The historical proposal below was qualified against PR394
+``faf61ad87c550fa2d8ef44313344db74b378b857`` before Root's integration.
+Original public reproducer, failed controls and completed image scope remain in
+``persisted-roi-admission-134.rst``. No shared source or foreign worktree was edited.
 
 Required relation and exact owners
 ----------------------------------
@@ -18,8 +23,9 @@ directory is not an image source address or an ROI provenance receipt. The share
 transaction must preserve strict image-address validation while publishing
 non-image results without constructing an invalid empty image set.
 
-The exact combined proposed delta is ``persisted-roi-only-owner-134.patch``;
-apply it instead of the historical three-hunk patch. Admission against selected
+The historical combined delta is ``persisted-roi-only-owner-134.patch``;
+it superseded the three-hunk proposal, and is now superseded by Root's integrated
+implementation. Do not apply either archived proposal over PR394. Admission against selected
 original PR394 files passes with ``git apply --check --unidiff-zero`` and the
 explicit projection directory. It changes only ``core/steps/function_outputs.py``
 (17 lines removed, 41 added) and ``core/virtual_workspace_metadata.py``
@@ -151,8 +157,82 @@ alternate index and complete R0. SHA256
 3048192 logical bytes, 3.5MiB filesystem usage. Original evidence is recoverable;
 source, durable history, Dalton outputs and all foreign worktrees remain intact.
 
-Next boundary: original shared owner must take or release the exact combined
-two-file hunk proposal. Actual production application and public native ROI
-reopen/provenance acceptance remain outstanding. Saved image acceptance399,
+The former shared-owner wait is resolved by Root's integration below. Public
+native ROI reopen/provenance acceptance remains outstanding. Saved image acceptance399,
 closed398 scope, snapshot writer/binding ownership, parent viewer guides,
 Schrodinger376 and Dewey379 remain untouched. No biological pass is inferred.
+
+Receiving acceptance of Root's integrated source checkpoint
+----------------------------------------------------------
+
+Read-only review inspected the exact commit diff, its full new behavioral test,
+the PR394 ownership statement and
+https://github.com/OpenHCSDev/openhcs/blob/82243634ce097d0d1a2d9e77664cbfeac3e6ec94/docs/validation/persisted_result_publication_134_20261002.rst.
+Commit parent is ``4afd5141554299680fa0326b31334a448fbf20bf``. Actual production
+delta: ``core/steps/function_outputs.py`` removes16/adds36 lines;
+``core/virtual_workspace_metadata.py`` removes6/adds7. No source edit, native
+operation, installation, test replay or cleanup was performed for this review.
+
+The integrated relation meets the original receiving requirements:
+
+* Existing ``OutputTarget`` owns guarded ``contains_outputs`` and the
+  ``stored_output_paths`` hook. Existing ``RuntimeArtifactMetadataTarget`` supplies
+  its minimal all-saved-format hook. Root correctly omitted the proposed separate
+  capability class: this production behavior has one existing leaf owner; no
+  independent overlapping capability needs another class or duplicate listing.
+* Actual saved ``MaterializationBatch`` outcomes select destinations, without
+  re-rendering. Generic finalization calls the nominal participation contract.
+  The image-only predicate and replaced method disappear; no compatibility alias,
+  consumer switch, result roster or parallel authority is added.
+* Exact nested results identities and original metadata-handler reconciliation
+  survive runtime-value release. The original atomic publisher avoids an empty
+  image-set construction while retaining actual unaddressed-image rejection.
+  Empty raster inventory does not become a fabricated image source projection.
+* Root ported the five receiving behavior cases. The independent declaration
+  composes audit, original produced-image capability and runtime target through
+  cooperative ``super().write``. Its own ``declaration_key=None`` obtains a new
+  derived registry key; complete registry restoration fixes the original test's
+  inherited-key contamination rather than weakening later consumers. Public
+  admission and before/after hooks are exercised, not inheritance assertions.
+  The NumPy-only control now expects a declared result directory with no raster
+  records; mixed raster pixel equality remains asserted.
+
+Root's retained receipt reports original four failures/one pass and89 passing
+publication/checkpoint/metadata/journey controls on the integrated source. PR394
+reports isolated original R0 roots and R1 passing against its ``4afd51415`` parent.
+These are Root's execution receipts, not new receiving runs or a global/native
+acceptance claim. Original test-path, registry-contamination and source failures
+remain retained by Root. Catalog checks MEMB-2, BOUND-2/BOUND-8 and IMPL-12 support
+the accepted owner placement; no run-obstructing ownership violation was found in
+this two-owner delta. No unrelated architecture audit is requested.
+
+Draft404 disposition and remaining parent native gate
+----------------------------------------------------
+
+Production implementation is superseded by PR394 under Root. Do not merge404's
+historical patch/test copies over the registry-safe integrated implementation.
+Keep404 draft as the receiving evidence and narrowly pending native-acceptance
+record while134 remains open. Original failures and archives remain unchanged.
+Close or consolidate the draft with Root after the parent records the installed
+gate; source integration itself is not waiting on that later gate.
+
+After current freezes end, parent owns the authorised installed entrypoint check:
+
+* Pin an installed source including the accepted publication checkpoint and its
+  explicit owned MCP/native endpoint. Use a newly authorised correctly published
+  saved-result checkpoint. Ordinary public ``kind=result`` inventory must admit
+  the exact ROI archive from durable declared metadata, without an explicit-path
+  bypass, fabricated source receipt or silent backfill of the older candidate.
+* Reopen that exact materialised archive through the original public viewer route.
+  The actual native ROI decoder/source-metadata boundary must accept its existing
+  source provenance, selected source channel, plane/spatial domain and calibration.
+  Preserve strict rejection if those facts are absent; directory admission alone
+  does not repair or prove that separate ROI/graph source contract.
+* Retain the original request/reply, native readback and same-coordinate source/
+  ROI placement evidence. Distinguish real archive geometry/reopen from synthetic
+  filename admission. Preserve old failed jobs without replay and keep rejected
+  biological candidates rejected; no segmentation quality or biological pass is
+  inferred from an engineering reopen.
+
+This names the remaining acceptance boundary, not authority to modify the frozen
+environment, generate another scientific run or claim the broader graph134 fixed.
