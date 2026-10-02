@@ -38,6 +38,7 @@ from zmqruntime.messages import (
     CancelRequest,
     ControlMessageType,
     ControlRequestHeader,
+    EndpointApplicationCompatibilityError,
     MessageFields,
     PongResponse,
     ServerRole,
@@ -1114,7 +1115,6 @@ class ZMQExecutionClient(
         once and never enter that polling path.
         """
         from openhcs.agent.dto.functions import FunctionCatalogControlPayload
-        from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
         payload = FunctionCatalogControlPayload.from_request(request)
         deadline = operation_deadline or OperationDeadline.after_milliseconds(
@@ -1131,22 +1131,27 @@ class ZMQExecutionClient(
                 "Function catalog requires an existing execution endpoint."
             )
         expected = owner.connected_endpoint
-        if expected is None or expected.process_identity is None:
+        if expected is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog attachment returned no connection-owned handshake."
+            )
+        identity = expected.process_identity
+        if identity is None:
             raise FunctionCatalogEndpointUnavailableError(
                 "Catalog connection has no native process-incarnation proof."
             )
         if owner.known_server_process_is_alive() is False:
             raise FunctionCatalogEndpointUnavailableError(
-                f"Selected catalog owner {expected.process_identity!r} has exited."
+                f"Selected catalog owner {identity!r} has exited."
             )
-        if expected.server_role is not ServerRole.EXECUTION or not (
-            OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
-                expected.application
-            ).matches
-        ):
+        if expected.server_role is not ServerRole.EXECUTION:
             raise FunctionCatalogEndpointUnavailableError(
                 "Catalog connection is not a compatible OpenHCS execution runtime."
             )
+        try:
+            owner.require_compatible_endpoint()
+        except EndpointApplicationCompatibilityError as error:
+            raise FunctionCatalogEndpointUnavailableError(str(error)) from error
         # PING is the existing generic endpoint observation, not a catalog request.
         # Clamp its original one-second observation to the caller's remaining budget.
         try:
@@ -1160,15 +1165,23 @@ class ZMQExecutionClient(
             raise FunctionCatalogEndpointUnavailableError(
                 f"Could not verify selected catalog owner: {error}"
             ) from error
+        # Compare the binding projected from the original typed handshake; volatile
+        # readiness/resource/progress fields are not incarnation authorities.
         if (
-            observed.process_identity != expected.process_identity
-            or observed.port != expected.port
-            or observed.control_port != expected.control_port
-            or observed.server_role is not expected.server_role
-            or observed.application != expected.application
+            observed.process_identity,
+            observed.port,
+            observed.control_port,
+            observed.server_role,
+            observed.application,
+        ) != (
+            identity,
+            expected.port,
+            expected.control_port,
+            expected.server_role,
+            expected.application,
         ):
             raise FunctionCatalogEndpointUnavailableError(
-                f"Catalog endpoint no longer belongs to {expected.process_identity!r}; "
+                f"Catalog endpoint no longer belongs to {identity!r}; "
                 f"observed {observed.process_identity!r} ({observed.server_role.value})."
             )
         if cancellation is not None and cancellation.requested():
