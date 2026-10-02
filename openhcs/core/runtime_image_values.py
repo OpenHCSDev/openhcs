@@ -239,33 +239,24 @@ class ImagePayloadMetadata(
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.absorb_explicit_source_provenance(source_provenance_values)
-        for name, value in self.normalized_fields({}).items():
-            setattr(self, name, value)
+        self.normalize_metadata_fields()
 
-    def normalized_fields(self, changes: Mapping[str, Any]) -> dict[str, Any]:
-        """Normalize constructor instructions in their source-context effect order."""
-        provenance = changes.get("source_provenance", self.source_provenance)
-        spacing = changes.get("source_voxel_spacing", self.source_voxel_spacing)
-        spacing = spacing.with_missing_from(
-            SourceVoxelSpacing.from_source_metadata(
-                provenance.source_component_metadata
-            )
+    def normalize_metadata_fields(self) -> None:
+        """Normalize this metadata's typed fields in their constructor effect order."""
+        self.source_voxel_spacing = self.source_voxel_spacing.with_missing_from(
+            SourceVoxelSpacing.from_source_metadata(self.source_component_metadata)
         )
-        provenance = SourceImageProvenance.normalized(provenance)
-        domain = changes.get(
-            "source_spatial_domain", self.source_spatial_domain
-        ).normalized()
-        spacing = SourceVoxelSpacing.coerce(spacing)
+        self.normalize_source_provenance_fields()
+        self.normalize_source_spatial_domain_fields()
+        self.normalize_source_voxel_spacing_fields()
         self.validate_source_channel_axis()
-        plane_axis = changes.get("plane_axis", self.plane_axis)
-        if plane_axis is not None:
-            plane_axis = RuntimePlaneAxis(plane_axis)
-        return dict(
-            source_provenance=provenance,
-            source_voxel_spacing=spacing,
-            source_spatial_domain=domain,
-            plane_axis=plane_axis,
-        )
+        if self.plane_axis is not None:
+            self.plane_axis = RuntimePlaneAxis(self.plane_axis)
+
+    def require_leading_plane_axis(self, message: str) -> None:
+        """Require axis presence before later ordered projection validation."""
+        if self.plane_axis is None:
+            raise ValueError(message)
 
     def validate_source_channel_axis(self) -> None:
         """Validate the authored channel declaration before transforming axes."""
@@ -657,9 +648,37 @@ class ImagePayloadMetadata(
         """Project metadata after explicitly removing its leading plane axis."""
         return LeadingSourcePlaneMetadataProjection(self, plane_index).project()
 
-    def without_leading_plane_axis(self) -> "ImagePayloadMetadata":
-        """Return metadata after an explicitly declared leading axis is removed."""
-        return LeadingPlaneAxisMetadataProjection(self).project()
+    def without_leading_plane_axis(
+        self, *, projection: "ImageMetadataProjection | None" = None
+    ) -> "ImagePayloadMetadata":
+        """Remove an axis through the projection's declared result ownership."""
+        self.require_leading_plane_axis(
+            "Image metadata has no leading plane axis to remove."
+        )
+        source_channel_axis = self.source_channel_axis
+        if source_channel_axis == 0:
+            raise ValueError(
+                "Image metadata cannot declare the same leading axis as both "
+                "plane and channel."
+            )
+        if source_channel_axis is not None and source_channel_axis > 0:
+            source_channel_axis -= 1
+        if projection is None:
+            projection = LeadingPlaneAxisMetadataProjection(self)
+        projected = projection.project_source_provenance(
+            self, self.source_provenance.with_runtime_planes_as_contributors()
+        )
+        projected.plane_axis = None
+        projected.source_channel_axis = source_channel_axis
+        projected.source_plane_intensity_scales = ()
+        projected.source_plane_dtypes = ()
+        projected.unit_interval_intensity = (
+            None
+            if self.unit_interval_intensity is None
+            else self.unit_interval_intensity.without_source_planes()
+        )
+        projected.normalize_metadata_fields()
+        return projected
 
     def collapse_leading_plane_axis(self) -> "ImagePayloadMetadata":
         """Return scalar metadata after reducing every plane of the leading axis."""
@@ -1421,15 +1440,23 @@ class ImageMetadataProjection(ABC):
     metadata: ImagePayloadMetadata
 
     def project(self) -> ImagePayloadMetadata:
-        return self.metadata.replace_fields(**self.projected_fields())
+        return self.project_axis_metadata(self.project_source_metadata())
 
     @abstractmethod
-    def projected_fields(self) -> dict[str, Any]:
-        """Derive constructor instructions, never an independently stored fact set."""
-        return dict(
-            source_provenance=self.metadata.source_provenance,
-            unit_interval_intensity=self.metadata.unit_interval_intensity,
-        )
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        """Select source metadata with this projection's declared ownership."""
+
+    def project_axis_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Retain declared axes unless a nominal axis capability transforms them."""
+        return metadata
+
+    @abstractmethod
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Apply provenance using the result ownership established by source selection."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -1438,12 +1465,9 @@ class SourcePlaneImageMetadataProjection(ImageMetadataProjection):
 
     plane_index: int
 
-    def projected_fields(self) -> dict[str, Any]:
-        changes = super(SourcePlaneImageMetadataProjection, self).projected_fields()
-        changes["source_provenance"] = changes["source_provenance"].for_source_plane(
-            self.plane_index
-        )
-        changes.update(
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        provenance = self.metadata.source_provenance.for_source_plane(self.plane_index)
+        return self.metadata.replace_fields(
             intensity_scale=self.metadata.intensity_scale_for_source_plane(
                 self.plane_index
             ),
@@ -1451,64 +1475,56 @@ class SourcePlaneImageMetadataProjection(ImageMetadataProjection):
                 self.metadata.source_plane_dtypes, self.plane_index
             )
             or self.metadata.source_dtype,
+            source_provenance=provenance,
             unit_interval_intensity=(
                 None
-                if changes["unit_interval_intensity"] is None
-                else changes["unit_interval_intensity"].for_source_plane(
+                if self.metadata.unit_interval_intensity is None
+                else self.metadata.unit_interval_intensity.for_source_plane(
                     self.plane_index
                 )
             ),
             source_plane_intensity_scales=(),
             source_plane_dtypes=(),
         )
-        changes.update(self.metadata.normalized_fields(changes))
-        return changes
+
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Normalize the independently owned result created by source selection."""
+        metadata.source_provenance = provenance
+        metadata.normalize_metadata_fields()
+        return metadata
 
 
 class LeadingPlaneAxisMetadataProjection(ImageMetadataProjection):
     """Remove a declared leading axis while preserving its source contributors."""
 
-    def projected_fields(self) -> dict[str, Any]:
-        if self.metadata.plane_axis is None:
-            raise ValueError("Image metadata has no leading plane axis to remove.")
-        changes = super().projected_fields()
-        source_channel_axis = self.metadata.source_channel_axis
-        if source_channel_axis == 0:
-            raise ValueError(
-                "Image metadata cannot declare the same leading axis as both "
-                "plane and channel."
-            )
-        if source_channel_axis is not None and source_channel_axis > 0:
-            source_channel_axis -= 1
-        changes["source_provenance"] = changes[
-            "source_provenance"
-        ].with_runtime_planes_as_contributors()
-        changes.update(self.metadata.normalized_fields(changes))
-        intensity = changes["unit_interval_intensity"]
-        changes.update(
-            plane_axis=None,
-            source_channel_axis=source_channel_axis,
-            source_plane_intensity_scales=(),
-            source_plane_dtypes=(),
-            unit_interval_intensity=(
-                None if intensity is None else intensity.without_source_planes()
-            ),
-        )
-        return changes
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        return self.metadata
+
+    def project_axis_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        return metadata.without_leading_plane_axis(projection=self)
+
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Create the standalone result after its axis guards and source derivation."""
+        return metadata.replace_fields(source_provenance=provenance)
 
 
 class LeadingSourcePlaneMetadataProjection(
-    LeadingPlaneAxisMetadataProjection,
     SourcePlaneImageMetadataProjection,
+    LeadingPlaneAxisMetadataProjection,
 ):
-    """Compose source selection and axis removal before constructing metadata."""
+    """Remove the leading axis of independently owned selected-source metadata."""
 
-    def projected_fields(self) -> dict[str, Any]:
-        if self.metadata.plane_axis is None:
-            raise ValueError(
-                "Leading source-plane projection requires a declared plane axis."
-            )
-        return super().projected_fields()
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        self.metadata.require_leading_plane_axis(
+            "Leading source-plane projection requires a declared plane axis."
+        )
+        return super().project_source_metadata()
 
 
 @dataclass(frozen=True, slots=True)

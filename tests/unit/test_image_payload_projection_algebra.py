@@ -315,3 +315,114 @@ def test_projection_spacing_failure_precedes_other_invalid_source_fields():
     metadata.plane_axis = "invalid-axis"
     with pytest.raises(ValueError, match="finite and positive"):
         metadata.for_leading_source_plane(0)
+
+
+@pytest.mark.parametrize(
+    "operation,normalization_axes",
+    (
+        ("without_leading_plane_axis", (RuntimePlaneAxis.RUNTIME_SLICE, None)),
+        (
+            "for_leading_source_plane",
+            (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.RUNTIME_SLICE, None),
+        ),
+    ),
+)
+def test_projection_normalizes_owned_metadata_at_each_historical_phase(
+    monkeypatch, operation, normalization_axes
+):
+    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, 2)
+    input_provenance = metadata.source_provenance
+    input_proof = metadata.unit_interval_intensity
+    births = []
+    phases = []
+    original_constructor = ImagePayloadMetadata.__post_init__
+    original_normalize = ImagePayloadMetadata.normalize_metadata_fields
+
+    def observe_constructor(self, *values):
+        births.append((self, self.plane_axis, self.source_channel_axis))
+        original_constructor(self, *values)
+
+    def observe_normalization(self):
+        phases.append((self, self.plane_axis, self.source_channel_axis))
+        original_normalize(self)
+
+    monkeypatch.setattr(ImagePayloadMetadata, "__post_init__", observe_constructor)
+    monkeypatch.setattr(
+        ImagePayloadMetadata, "normalize_metadata_fields", observe_normalization
+    )
+    projected = (
+        metadata.without_leading_plane_axis()
+        if operation == "without_leading_plane_axis"
+        else metadata.for_leading_source_plane(1)
+    )
+
+    assert births == [(projected, RuntimePlaneAxis.RUNTIME_SLICE, 2)]
+    assert tuple(axis for _, axis, _ in phases) == normalization_axes
+    assert all(owner is projected for owner, _, _ in phases)
+    assert tuple(channel for _, _, channel in phases) == (2,) * (
+        len(normalization_axes) - 1
+    ) + (1,)
+    assert projected is not metadata
+    assert metadata.source_provenance is input_provenance
+    assert metadata.unit_interval_intensity is input_proof
+    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.source_channel_axis == 2
+    assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
+    assert projected.source_provenance is not input_provenance
+    assert projected.unit_interval_intensity is not input_proof
+
+
+@pytest.mark.parametrize("combined", (False, True))
+def test_projection_preserves_contributor_derivation_constructor_error_order(
+    monkeypatch, combined
+):
+    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, None)
+    invalid_domain = SourceSpatialDomain(origin_yx=(1,))
+    metadata.source_spatial_domain = invalid_domain
+    provenance = metadata.source_provenance
+    calls = []
+
+    def fail_contributors(self):
+        calls.append(self)
+        raise RuntimeError("contributor derivation observed")
+
+    monkeypatch.setattr(
+        type(provenance), "with_runtime_planes_as_contributors", fail_contributors
+    )
+    if combined:
+        with pytest.raises(ValueError, match="spatial_origin_yx"):
+            metadata.for_leading_source_plane(1)
+        assert calls == []
+    else:
+        with pytest.raises(RuntimeError, match="contributor derivation observed"):
+            metadata.without_leading_plane_axis()
+        assert calls == [provenance]
+    assert metadata.source_provenance is provenance
+    assert metadata.source_spatial_domain is invalid_domain
+    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
+
+
+@pytest.mark.parametrize("combined", (False, True))
+def test_failed_owned_axis_transform_does_not_mutate_source(monkeypatch, combined):
+    metadata = _metadata(RuntimePlaneAxis.RUNTIME_SLICE, 2)
+    provenance = metadata.source_provenance
+    proof = metadata.unit_interval_intensity
+
+    def fail_proof(self):
+        raise RuntimeError("axis proof derivation observed")
+
+    monkeypatch.setattr(
+        ImageUnitIntervalIntensityMetadata, "without_source_planes", fail_proof
+    )
+    with pytest.raises(RuntimeError, match="axis proof derivation observed"):
+        if combined:
+            metadata.for_leading_source_plane(1)
+        else:
+            metadata.without_leading_plane_axis()
+    assert metadata.source_provenance is provenance
+    assert metadata.unit_interval_intensity is proof
+    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.source_channel_axis == 2
+    assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
+    assert metadata.source_plane_dtypes == ("uint8", "uint16")
