@@ -76,3 +76,45 @@ def test_skeletonize_preserves_centrosome_top_border_behavior() -> None:
         skeletonize_worm_mask(np.ones((2, 2), dtype=bool)),
         np.array([[True, True], [False, False]]),
     )
+
+
+def test_line_points_match_centrosome_all_octants_and_keep_owned_outputs() -> None:
+    import centrosome.cpmorphology
+
+    grid = np.arange(-3, 4)
+    end_rows, end_columns = np.meshgrid(grid, grid)
+    end_rows = end_rows.ravel()
+    end_columns = end_columns.ravel()
+    start_rows = np.zeros_like(end_rows)
+    start_columns = np.zeros_like(end_columns)
+    for endpoints in (
+        (start_rows, start_columns, end_rows, end_columns),
+        (end_rows, end_columns, start_rows, start_columns),
+        tuple(np.empty(0, dtype=int) for _ in range(4)),
+    ):
+        expected = centrosome.cpmorphology.get_line_pts(*endpoints)
+        actual = _cellprofiler_line_points(*endpoints)
+        for result, oracle in zip(actual, expected):
+            np.testing.assert_array_equal(result, oracle)
+            assert result.dtype == np.dtype(int)
+            assert result.flags.owndata and result.flags.writeable
+            assert all(not np.shares_memory(result, source) for source in endpoints)
+        assert all(
+            not np.shares_memory(left, right)
+            for index, left in enumerate(actual)
+            for right in actual[index + 1 :]
+        )
+
+
+def test_line_points_reject_unequal_endpoint_lengths() -> None:
+    import pytest
+
+    with pytest.raises(
+        ValueError, match="Line endpoint arrays must have equal lengths"
+    ):
+        _cellprofiler_line_points(
+            np.array([0, 1]),
+            np.array([0]),
+            np.array([2]),
+            np.array([2]),
+        )
