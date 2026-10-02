@@ -201,6 +201,10 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationSummaryResult,
     ViewerWindowViewportRequest,
     ViewerWindowViewportResult,
+    ViewerWindowImageColorRequest,
+    ViewerWindowImageColorResult,
+    ViewerWindowNativePresentationRequest,
+    ViewerWindowNativePresentationResult,
 )
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
 from openhcs.serialization.json import to_jsonable
@@ -3252,10 +3256,23 @@ class SummarizeViewerWindowRoisCapability(ViewerWindowCliConnectionCapability):
     )
 
 
-class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
+class ViewerNativePresentationCapability(ViewerWindowCliConnectionCapability):
+    """Original derived exposure and shared native-presentation invocation."""
+
+    kind = CapabilityKind.TOOL
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_presentation",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.presentation(request),
+    )
+
+
+class SetViewerViewportCapability(ViewerNativePresentationCapability):
     name = "openhcs_set_viewer_viewport"
     cli_command = "viewer-viewport"
-    kind = CapabilityKind.TOOL
     title = "Set native viewer viewport"
     description = (
         "Sets finite native 2D camera center (three world coordinates) and positive zoom. "
@@ -3263,17 +3280,42 @@ class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
         "native readback, without changing pixels, axes, selection or layer transforms. "
         "Unsupported viewer modes fail closed. Settle and snapshot after presentation changes."
     )
-    service = "viewer_window"
-    mutating = True
-    side_effects = ("mutates_viewer_window_presentation",)
-    runtime_requirements = ("running_openhcs_viewer_server",)
     data_exposure = ("viewer_native_viewport",)
     input_contract = ViewerWindowViewportRequest
     output_contract = ViewerWindowViewportResult
-    request_invocation = AgentViewerWindowRequestServiceInvocation(
-        service=lambda context: context.viewer_window_service,
-        method=lambda service, request: service.viewport(request),
+
+
+class SetViewerImageColorCapability(ViewerNativePresentationCapability):
+    name = "openhcs_set_viewer_image_color"
+    cli_command = "viewer-image-color"
+    title = "Set native image colormap and blending"
+    description = (
+        "Set an installed Napari colormap and blending mode on one exact mounted scalar "
+        "image route. Returns actual native readback. Use channel_mode=LAYER in the "
+        "stream's original display_config for simultaneous channel composition, and "
+        "the existing image-intensity tool for each route's numeric window. No pixels, "
+        "axes, transforms or physical source identities change. RGB images fail closed."
     )
+    data_exposure = ("viewer_native_image_color",)
+    input_contract = ViewerWindowImageColorRequest
+    output_contract = ViewerWindowImageColorResult
+
+
+class SetViewerNativeWindowCapability(ViewerNativePresentationCapability):
+    name = "openhcs_set_viewer_native_window"
+    cli_command = "viewer-native-window"
+    title = "Read, focus or position the exact detached viewer window"
+    description = (
+        "Read actual window geometry/focus with presentation={}, or set focus=true "
+        "and/or a complete Qt logical client geometry bounded by its current screen. "
+        "Addresses only the supplied running viewer endpoint through its native Qt "
+        "control action, not the GUI bridge or OS input. Missing endpoints fail without "
+        "launch/restart/adoption. Camera, layers, pixel values and axes are unchanged. "
+        "Returns native readback; window-manager focus may settle before a later read."
+    )
+    data_exposure = ("viewer_native_window",)
+    input_contract = ViewerWindowNativePresentationRequest
+    output_contract = ViewerWindowNativePresentationResult
 
 
 class SetViewerImageIntensityCapability(ViewerWindowCliConnectionCapability):

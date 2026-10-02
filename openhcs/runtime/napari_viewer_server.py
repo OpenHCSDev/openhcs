@@ -48,6 +48,9 @@ from polystore.streaming.receivers.napari.viewport_presentation import (
 from polystore.streaming_constants import StreamingDataType
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import QDockWidget
+from napari.layers import Image
+from napari.layers.base._base_constants import Blending
+from napari.utils.colormaps import ensure_colormap
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import (
     ImageTransferIdentity,
@@ -98,6 +101,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariDimensionLayerState,
     NapariImageLayerPresentationPolicy,
     NapariImagePayloadAxisLabelPolicy,
+    NapariNativeWindowPresentation,
     NapariLayerBatchDebouncePolicy,
     NapariLayerHandle,
     NapariLayerRouteStateStore,
@@ -159,6 +163,10 @@ from openhcs.runtime.viewer_protocol import (
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlField,
+    ViewerImageColorControlOptions,
+    ViewerNativeImageColorPresentation,
+    ViewerNativeWindowControlOptions,
+    ViewerDeclaredWireValue,
     ViewerControlMessageType,
     ViewerControlReplyHeader,
     ViewerControlReplyPayload,
@@ -4907,40 +4915,80 @@ class NapariRegionMeasurementControlMessageAction(
         return plane.region(request)
 
 
-class NapariViewportControlMessageAction(NapariControlMessageAction):
-    """Apply native 2D camera presentation through the owning Qt action."""
+class NapariPresentationControlMessageAction(NapariControlMessageAction):
+    """Shared nominal admission, native apply/readback and reply lifecycle."""
 
-    message_type = ViewerControlMessageType.VIEWPORT.value
+    request_type: ClassVar[type]
+    response_field: ClassVar[ViewerControlField]
+
+    @abstractmethod
+    def apply_presentation(self, server, request) -> ViewerDeclaredWireValue:
+        """Apply through the actual native owner and return its current state."""
 
     def handle(
         self, server: "NapariViewerServer", message: Mapping[str, object]
     ) -> dict[str, object]:
         try:
             request = message.get(ViewerControlResponseField.PAYLOAD.value)
-            if not isinstance(request, ViewerNativeViewportPresentation):
-                raise TypeError(
-                    "Viewport payload must be ViewerNativeViewportPresentation."
-                )
-            control = NapariNativeViewportPresentation.for_viewer(server.viewer)
-            if control is None:
-                raise ValueError(
-                    "The viewer does not expose native 2D viewport presentation."
-                )
-            control.apply(request)
+            if not isinstance(request, self.request_type):
+                raise TypeError(f"Presentation payload must be {self.request_type.__name__}.")
+            snapshot = self.apply_presentation(server, request)
             response = ViewerControlReplyHeader(
                 ViewerProtocolStatus.SUCCESS,
-                response_type=ViewerControlMessageType.VIEWPORT.acknowledgement_type,
+                response_type=f"{self.message_type}_ack",
             ).to_wire_mapping()
-            response[ViewerControlField.NATIVE_VIEWPORT.value] = (
-                control.snapshot().to_wire_mapping()
-            )
+            response[self.response_field.value] = snapshot.to_wire_mapping()
             return response
         except Exception as error:
             return ViewerControlReplyHeader(
                 ViewerProtocolStatus.ERROR,
-                response_type=ViewerControlMessageType.VIEWPORT.acknowledgement_type,
+                response_type=f"{self.message_type}_ack",
                 message=str(error),
             ).to_wire_mapping()
+
+
+class NapariViewportControlMessageAction(NapariPresentationControlMessageAction):
+    message_type = ViewerControlMessageType.VIEWPORT.value
+    request_type = ViewerNativeViewportPresentation
+    response_field = ViewerControlField.NATIVE_VIEWPORT
+
+    def apply_presentation(self, server, request):
+        control = NapariNativeViewportPresentation.for_viewer(server.viewer)
+        if control is None:
+            raise ValueError("The viewer does not expose native 2D viewport presentation.")
+        control.apply(request)
+        return control.snapshot()
+
+
+class NapariImageColorControlMessageAction(
+    NapariPresentationControlMessageAction, NapariMountedRouteControlMessageAction,
+):
+    """Independent exact-route and native reply capabilities compose by C3 MRO."""
+
+    message_type = OpenHCSViewerControlMessageType.IMAGE_COLOR.value
+    request_type = ViewerImageColorControlOptions
+    response_field = ViewerControlField.NATIVE_IMAGE_COLOR
+
+    def apply_presentation(self, server, request):
+        layer = self._mounted_layer(server, request.route_key)
+        if not isinstance(layer, Image) or layer.rgb:
+            raise ValueError("Color presentation requires a mounted scalar Napari Image.")
+        colormap = ensure_colormap(request.presentation.colormap)
+        blending = Blending(request.presentation.blending)
+        layer.colormap = colormap
+        layer.blending = blending
+        return ViewerNativeImageColorPresentation(layer.colormap.name, layer.blending)
+
+
+class NapariWindowPresentationControlMessageAction(NapariPresentationControlMessageAction):
+    message_type = OpenHCSViewerControlMessageType.WINDOW_PRESENTATION.value
+    request_type = ViewerNativeWindowControlOptions
+    response_field = ViewerControlField.NATIVE_WINDOW
+
+    def apply_presentation(self, server, request):
+        control = NapariNativeWindowPresentation(server.viewer.window.qt_viewer.window())
+        control.apply(request)
+        return control.snapshot()
 
 
 class NapariImageIntensityControlMessageAction(NapariMountedRouteControlMessageAction):
@@ -6106,12 +6154,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         surface = self.require_result_selection_surface()
         surface.dock.show()
         surface.dock.raise_()
-        qt_window = surface.dock.window()
-        if qt_window.isMinimized():
-            qt_window.showNormal()
-        qt_window.show()
-        qt_window.raise_()
-        qt_window.activateWindow()
+        NapariNativeWindowPresentation(surface.dock.window()).focus()
 
     def bind_result_selection_layer(self, layer: NapariLayerHandle) -> None:
         """Bind native selection behavior to one authoritative streamed layer."""
