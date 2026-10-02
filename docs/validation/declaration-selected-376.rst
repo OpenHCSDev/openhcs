@@ -215,3 +215,26 @@ Regenerated the same owned disposable integration scratch for these two checks,
 then removed only that exact path after terminal workers/no-open-handles/process
 and canonical-path checks;356KiB released again. No source, failure evidence,
 foreign worktree, private environment or parent live process changed.
+
+Source installation and public publication boundary
+---------------------------------------------------
+
+Verified dependency b27722bc still declares __version__="0.2.1"; OpenHCS
+pyproject.toml still requires "metaclass-registry>=0.2.1,<0.3". Therefore an
+ordinary package-index installation can select old0.2.1 without discover_matching.
+The published gitlink and PR2 do not update package-index artifacts or enforce
+this new API minimum. Public normal-install delivery is not qualified here.
+
+The parent-approved paired source/private-wheel route must explicitly build and
+install the original dependency source b27722bc71282ddd1ca1c5847208a72c800fe0b6
+alongside this OpenHCS checkpoint and retain wheel/import provenance. It must
+not treat installing OpenHCS alone as selecting that dependency source. This
+receipt does not execute that route or mutate the current live private environment.
+
+Coordinated public-release followup: choose and commit a new dependency version
+for this API; update the OpenHCS minimum to that actual version; publish the
+dependency through the authorized registry release owner, then qualify a fresh
+normal-resolver OpenHCS installation and affected user entrypoint. Publication
+and installation remain parent integration/explicit authorization boundaries.
+No version bump, package upload, registry publication or compatibility shim was
+performed. Existing PR2 source/tests and its own WT remain preserved unchanged.
