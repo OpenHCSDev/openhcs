@@ -865,6 +865,7 @@ from openhcs.core.runtime_object_label_domains import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_object_labels import (
+    dense_label_centers_2d_numba,
     ObjectLabelValue,
     object_label_value_with_dense_labels,
 )
@@ -1854,7 +1855,7 @@ class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrat
         label_count = int(labels.max())
         if label_count == 0:
             return np.empty((0, 2), dtype=np.float64)
-        centroids = _label_centroids_numba(np.ascontiguousarray(labels), label_count)
+        centroids = dense_label_centers_2d_numba(np.ascontiguousarray(labels), label_count)
         return centroids[1:]
 
 
@@ -2194,29 +2195,6 @@ def _parents_of_from_overlap_counts_numba(
 
 
 @njit(cache=True)
-def _label_centroids_numba(labels: np.ndarray, label_count: int) -> np.ndarray:
-    sums = np.zeros((label_count + 1, 2), dtype=np.float64)
-    counts = np.zeros(label_count + 1, dtype=np.int64)
-    height, width = labels.shape
-    for row in range(height):
-        for col in range(width):
-            label_id = int(labels[row, col])
-            if label_id > 0 and label_id <= label_count:
-                sums[label_id, 0] += row
-                sums[label_id, 1] += col
-                counts[label_id] += 1
-    centroids = np.empty((label_count + 1, 2), dtype=np.float64)
-    for label_id in range(label_count + 1):
-        if counts[label_id] == 0:
-            centroids[label_id, 0] = np.nan
-            centroids[label_id, 1] = np.nan
-        else:
-            centroids[label_id, 0] = sums[label_id, 0] / counts[label_id]
-            centroids[label_id, 1] = sums[label_id, 1] / counts[label_id]
-    return centroids
-
-
-@njit(cache=True)
 def _calculate_centroid_distances_numba(
     parent_labels: np.ndarray,
     child_labels: np.ndarray,
@@ -2229,8 +2207,8 @@ def _calculate_centroid_distances_numba(
         distances[child_idx] = np.nan
     if child_count == 0 or parent_count == 0:
         return distances
-    parent_centroids = _label_centroids_numba(parent_labels, parent_count)
-    child_centroids = _label_centroids_numba(child_labels, child_count)
+    parent_centroids = dense_label_centers_2d_numba(parent_labels, parent_count)
+    child_centroids = dense_label_centers_2d_numba(child_labels, child_count)
     for child_idx in range(child_count):
         parent_id = int(parents_of[child_idx])
         child_id = child_idx + 1
@@ -2282,7 +2260,7 @@ def _calculate_minimum_distances_numba(
         distances[child_idx] = np.nan
     if child_count == 0 or parent_count == 0:
         return distances
-    child_centroids = _label_centroids_numba(child_labels, child_count)
+    child_centroids = dense_label_centers_2d_numba(child_labels, child_count)
     height, width = parent_labels.shape
     counts = np.zeros(parent_count + 1, dtype=np.int64)
     for row in range(height):

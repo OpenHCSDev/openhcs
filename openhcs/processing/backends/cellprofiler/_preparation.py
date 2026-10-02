@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
+from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
 from openhcs.processing.backends.cellprofiler.perf_fixtures import capture_enabled
 
 
@@ -20,4 +21,5 @@ class CellProfilerCallableKernelPreparation(RegisteredNumbaKernelPreparation):
     def prepare_registered_family(cls) -> None:
         if capture_enabled():
             return
+        DenseArrayObjectLabelStorageStrategy.prepare_coordinates()
         super().prepare_registered_family()
