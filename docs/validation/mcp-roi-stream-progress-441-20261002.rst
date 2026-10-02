@@ -57,7 +57,7 @@ correction removes three repeated common PlateFileStreamResult projections:
 the original service builds its original DTO once, then uses dataclasses.replace
 for no-stream/error/success terminal facts. It deletes40 lines and adds19 in
 that same owner; no result factory/facade, schema or authority store is added.
-Exact corrected-head R0 and terminal contract controls are pending below.
+Exact corrected-head R0 and terminal contract controls PASS below.
 
 Finite source controls and retained attempts
 -------------------------------------------
@@ -80,7 +80,8 @@ overrode execute_request, but the connection-bound family actually owns
 execute_connection_request. The corrected before/after MI leaves cooperate
 through that original hook, preserve direct request ContextVar propagation,
 and exercise the generated consumer without changing it. The12s PASS was not
-rerun to correct the independent hook. Further original controls are pending.
+rerun to correct the independent hook. After the production result-owner
+correction, its terminal source contracts were requalified once as below.
 Shards enforce
 one CPU,512MiB aggregate RSS,60s through the existing cgroup monitor. The readonly
 paired-parent Python and declaration-derived native ABI loader are reused;
@@ -96,10 +97,44 @@ metadata. No production source-provenance assertion is removed or weakened.
 All failed synthetic inputs remain in owned agent-scratch/dewey-441-stream-source*
 directories; none are biological inputs. No broad cleanup is performed.
 
-Original scoped R0 will compare this base to the exact published production
-checkpoint using the unchanged pinned tool. Full R1/global FULL remains outside
+Final production checkpoint d54717cc178cfbb1ac374a59fa7afec67c1f2985:
+
+* 24 source cases PASS,337156KiB/19.750s. Four new stream tests plus14 original
+  service contracts and6 original request-token/idle/malformed/unrelated-traffic
+  controls. Same-session ROI success12.062203s, unsigned error0.027891s, reuse
+  0.035407s, original10s idle and tokens2/3/4. No tests or assertions changed in
+  those20 original controls. Log: validation/stream441-terminal-controls.log.
+* Original unchanged scoped R0 base8551a486 to d54717cc: PASS,zero positive
+  deltas,180496KiB/14.680s. Exact changed source paths are capabilities.py and
+  plate_streaming_service.py. Original tool is read directly from retained
+  /home/ts/.agent-comms Git3b03785f45df2ef5dc62ba6aed99294192ecbb01 via the
+  existing validation/run_pinned_r0_419.py; actual Python3.14 and readonly
+  BasicPy metaclass backing are unchanged. No detector/schema/engine is copied.
+
+The first combined original-control shard hit the unchanged512MiB guard while
+entering the original OME reader case:525872KiB/21.861s,returncode143. Full log
+validation/stream441-original-controls.log is preserved. The final finite
+MCP/service shard deselects exactly the original OME and ordinary-TIFF direct
+reader cases; no skip or test modification is added. Those reader cases are
+not independently qualified in this task. This is24 named source contracts,
+not all streaming tests or installed/native evidence.
+
+Original R0 stdout is archived losslessly in validation/stream441-pinned-r0.log.gz
+(RED, rawSHA2565e95011cf0388288a430cb605e09142e16a996af0d1bff5b96b4d5f7d78da337)
+and validation/stream441-pinned-r0-corrected.log.gz
+(PASS, rawSHA256ab62c0e5948aa996295dac6f23c85d1a3fa0be6bf0f41b41c28d5fef6fe15d3f).
+gzip decompression compares exactly to each retained raw log. No source change
+followed the qualified production checkpoint.
+
+Full R1/global FULL remains outside
 this bounded source claim; original R1/resource failures and439 full-stdio12s
 resource RED are unchanged. Completed438/439 shards are not rerun.
+
+Scratch ownership: Dewey's small synthetic roots dewey-441-stream-source02/03/04/05,
+dewey-441-newcase, dewey-441-original-controls and dewey-441-terminal-controls
+under /home/ts/.cache/agent-scratch are retained (under1MiB when inventoried,
+including failed/uncertain synthetic inputs). All source scopes terminated.
+No lifecycle/science/global installation or foreign environment was modified.
 
 Installed acceptance (parent-coordinated, pending)
 ------------------------------------------------
