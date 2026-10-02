@@ -9,8 +9,10 @@ import openhcs
 installed_package = Path(sys.argv[1])
 for name, relative in (
     ("openhcs.core._tabular_native", "core/_tabular_native.abi3.so"),
-    ("openhcs.processing.backends.cellprofiler._granularity_native",
-     "processing/backends/cellprofiler/_granularity_native.abi3.so"),
+    (
+        "openhcs.processing.backends.cellprofiler._granularity_native",
+        "processing/backends/cellprofiler/_granularity_native.abi3.so",
+    ),
 ):
     spec = importlib.util.spec_from_file_location(name, installed_package / relative)
     module = importlib.util.module_from_spec(spec)

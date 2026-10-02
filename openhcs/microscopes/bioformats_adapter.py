@@ -31,7 +31,7 @@ from openhcs.core.source_matching import (
     merge_source_metadata,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import SourceMetadataMapping, SourceVoxelSpacing
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
@@ -180,16 +180,19 @@ class BioFormatsImage:
     series_index: int
     pixels: BioFormatsPixels
     channel_names: tuple[str | None, ...]
-    pixel_size: float
+    source_voxel_spacing: SourceVoxelSpacing
     reader: str = "bioformats"
+
+    @property
+    def pixel_size(self) -> float:
+        """Derive the existing numeric dataset view from the physical authority."""
+        return SourceVoxelSpacing.metadata_pixel_size((self.source_voxel_spacing,))
 
     def __post_init__(self) -> None:
         if not self.image_id:
             raise ValueError("OME Image.ID cannot be empty.")
         if not self.source_files:
             raise ValueError("Bio-Formats image requires reader-declared used files.")
-        if self.pixel_size <= 0:
-            raise ValueError("OME Pixels physical size must be positive.")
         expected = self.pixels.size_c * self.pixels.size_z * self.pixels.size_t
         if len(self.pixels.planes) != expected:
             raise ValueError(
@@ -428,6 +431,7 @@ class BioFormatsStoreMetadata:
                 "ome_image_id": image.image_id,
                 "ome_sample_id": sample_id,
             }
+            image.source_voxel_spacing.merge_into(metadata, path=backend_source)
             if self.plates:
                 metadata["ome_plate_id"] = self.plates[0].plate_id
             for component, value in address.component_values().items():
@@ -786,10 +790,9 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
                 continue
             if not self._declares_path(context, source_path):
                 continue
-            if (
-                not self.source_bindings.discovery_path_matches(root, source_path)
-                and context.is_single_file(source_path)
-            ):
+            if not self.source_bindings.discovery_path_matches(
+                root, source_path
+            ) and context.is_single_file(source_path):
                 continue
             try:
                 dataset = self._discover_container(root, source_path)
@@ -1019,8 +1022,8 @@ def _images_from_java(
                     java_str(metadata.getChannelName(image_index, channel_index))
                     for channel_index in range(size_c)
                 ),
-                pixel_size=_normalized_pixel_size(
-                    metadata.getPixelsPhysicalSizeX(image_index)
+                source_voxel_spacing=_source_voxel_spacing_from_java(
+                    metadata, image_index
                 ),
             )
         )
@@ -1211,7 +1214,9 @@ def _image_from_mapping(
         channel_names=tuple(
             None if value is None else str(value) for value in payload["channel_names"]
         ),
-        pixel_size=float(payload["pixel_size"]),
+        source_voxel_spacing=SourceVoxelSpacing(
+            (float(payload["pixel_size"]), float(payload["pixel_size"]))
+        ),
         pixels=BioFormatsPixels(
             size_c=int(pixels["size_c"]),
             size_z=int(pixels["size_z"]),
@@ -1609,17 +1614,31 @@ def _required_int(value: Any, field_name: str) -> int:
     return converted
 
 
-def _normalized_pixel_size(value: Any) -> float:
-    """Normalize uncalibrated OME pixel coordinates to explicit unit spacing."""
-
-    converted = java_float(value)
-    if converted is None:
-        return 1.0
-    if converted <= 0:
+def _source_voxel_spacing_from_java(
+    metadata: Any, image_index: int
+) -> SourceVoxelSpacing:
+    """Decode OME quantities once, preserving absent calibration and Y/X/Z units."""
+    x = metadata.getPixelsPhysicalSizeX(image_index)
+    y = metadata.getPixelsPhysicalSizeY(image_index)
+    z = metadata.getPixelsPhysicalSizeZ(image_index)
+    if x is None and y is None and z is None:
+        return SourceVoxelSpacing()
+    if x is None or y is None:
         raise BioFormatsAdapterUnavailableError(
-            "OME Pixels.PhysicalSizeX must be positive when declared."
+            "OME physical calibration requires both PhysicalSizeX and PhysicalSizeY."
         )
-    return converted
+    target_unit = (
+        BioFormatsJavaContext.instance().scyjava.jimport("ome.units.UNITS").MICROMETER
+    )
+    values = tuple(
+        java_float(length.value(target_unit))
+        for length in ((y, x) if z is None else (z, y, x))
+    )
+    if any(value is None for value in values):
+        raise BioFormatsAdapterUnavailableError(
+            "OME physical sizes must be convertible to micrometers."
+        )
+    return SourceVoxelSpacing(values)
 
 
 def _required_str(value: Any, field_name: str) -> str:
