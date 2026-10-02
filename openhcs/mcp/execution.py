@@ -10,6 +10,7 @@ import threading
 from typing import Any, ParamSpec, TypeVar
 
 from PyQt6.QtCore import QCoreApplication, QEventLoop, QThread
+from polystore import cleanup_backend_connections
 from pyqt_reactive.core.future_completion import FutureCompletion
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
@@ -84,5 +85,20 @@ class McpTransportExecutor(AsyncOperationExecutor):
         return future.result()
 
     def close(self) -> None:
-        self.dispatcher.close()
-        super().close()
+        """Release process resources on their original main-thread owner.
+
+        Both transports reach this boundary after their SDK operation finishes.
+        PolyStore owns the lazy ImageJ context and registered resource cleanup;
+        leaving it to interpreter finalization is not an MCP lifecycle.
+        """
+        if threading.current_thread() is not threading.main_thread():
+            raise RuntimeError("MCP transport must be closed on the process main thread.")
+        if self._closed:
+            return
+        try:
+            self.dispatcher.close()
+        finally:
+            try:
+                super().close()
+            finally:
+                cleanup_backend_connections(include_process_resources=True)

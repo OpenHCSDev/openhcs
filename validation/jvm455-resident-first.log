@@ -1,0 +1,14 @@
+Running as unit: dewey-jvm455-resident.scope; invocation ID: 53372478612242beac834fd375c21f5d
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0
+PyQt6 6.11.0 -- Qt runtime 6.11.2 -- Qt compiled 6.11.0
+rootdir: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002
+configfile: pytest.ini
+plugins: asyncio-1.0.0, napari-0.6.1, napari-plugin-engine-0.2.0, anyio-4.9.0, timeout-2.4.0, zarr-3.4.0, xdist-3.8.0, langsmith-0.4.37, cov-6.1.1, npe2-0.7.8, qt-4.5.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 9 items / 8 deselected / 1 selected
+
+tests/unit/agent/test_mcp_process_resource_lifetime.py .                 [100%]
+
+======================= 1 passed, 8 deselected in 3.41s ========================
+BOUNDED_SOURCE peak_aggregate_rss_kib=467588 elapsed_seconds=7.659 returncode=0 reason=None
