@@ -318,9 +318,13 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         value = request.value
         if isinstance(value, ObjectLabelSet):
             return value
+        metadata = image_payload_metadata(value)
         return SourceImageObjectLabelBuildRequest(
             image=value,
             labels=image_payload_data(value),
+            plane_projection=RuntimePlaneAxisValueProjection.from_source_declaration(
+                metadata.plane_axis, metadata.source_provenance,
+            ),
         ).label_set(
             name=request.spec.name,
             source_image_name=request.spec.name,

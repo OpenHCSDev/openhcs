@@ -10,6 +10,10 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from collections.abc import Sequence
 from typing import ClassVar
 from typing import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
 class RuntimeSliceProjectableValue(ABC):
@@ -245,6 +249,26 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
         object.__setattr__(self, "source_aliases", source_aliases)
         object.__setattr__(self, "axis_size", axis_size)
         object.__setattr__(self, "plane_index", plane_index)
+
+    @classmethod
+    def from_source_declaration(
+        cls,
+        axis: RuntimePlaneAxis | None,
+        source: "SourceImageProvenance",
+    ) -> "RuntimePlaneAxisValueProjection | None":
+        """Construct the retained axis declared by an exact source-image value.
+
+        A missing axis declares no plane projection, even when provenance has
+        multiple contributors. Cardinality and aliases come from that original
+        source declaration; array rank never supplies spatial meaning.
+        """
+        if axis is None:
+            return None
+        return cls.preserve(
+            axis=axis,
+            axis_size=source.source_plane_count,
+            source_aliases=source.source_image_names,
+        )
 
     @classmethod
     def from_projector(

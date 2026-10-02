@@ -1,6 +1,7 @@
 """MetaXpress-style 2D neurite outgrowth analysis.
 
-The public controls mirror the documented MetaXpress Neurite Outgrowth module.
+The public controls include MetaXpress-style Neurite Outgrowth settings and an
+OpenHCS-exposed lower-size acceptance gate from the existing segmentation engine.
 The opinionated implementation composes the existing CellProfiler-compatible
 segmentation leaves and measures the final soma-rooted neurite topology.
 """
@@ -216,7 +217,7 @@ CELLPROFILER_NEURITE_ENGINE_PROFILE = CellProfilerNeuriteEngineProfile()
 
 @dataclass(frozen=True)
 class MetaXpressCellBodySettings:
-    """Documented cell-body controls for Neurite Outgrowth."""
+    """MetaXpress-style body controls plus an OpenHCS engine acceptance gate."""
 
     approximate_max_width: float = 30.0
     """Approximate maximum short-axis width in micrometers."""
@@ -230,7 +231,22 @@ class MetaXpressCellBodySettings:
     channel_index: int | None = None
     """Optional body channel; omitted means the neurite channel."""
 
+    minimum_inscribed_diameter_px: float = (
+        CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_min_diameter_px
+    )
+    """OpenHCS minimum maximum-inscribed diameter (2 * EDT radius - 1) in pixels.
+
+    This acceptance gate is independent of calibrated area and maximum
+    short-axis width. Zero disables only this lower-size gate; it does not
+    change the CellProfiler candidate smoothing or declumping scale.
+    """
+
     def validate(self) -> None:
+        if (
+            not np.isfinite(self.minimum_inscribed_diameter_px)
+            or self.minimum_inscribed_diameter_px < 0
+        ):
+            raise ValueError("cell_body.minimum_inscribed_diameter_px must be >= 0")
         if (
             not np.isfinite(self.approximate_max_width)
             or self.approximate_max_width <= 0
@@ -249,6 +265,22 @@ class MetaXpressCellBodySettings:
             or self.channel_index < 0
         ):
             raise ValueError("cell_body.channel_index must be a non-negative integer")
+
+    def contract_candidates(
+        self,
+        labels: np.ndarray,
+        response: np.ndarray,
+        pixel_size_um: float,
+    ) -> np.ndarray:
+        """Apply this declaration's calibrated and pixel-unit soma gates."""
+        return _cell_body_contract_candidates(
+            labels,
+            response,
+            minimum_area_px=self.minimum_area / pixel_size_um**2,
+            minimum_inscribed_diameter_px=self.minimum_inscribed_diameter_px,
+            maximum_width_px=self.approximate_max_width / pixel_size_um,
+            intensity_threshold=self.intensity_above_local_background,
+        )
 
 
 @dataclass(frozen=True)
@@ -735,11 +767,14 @@ def neurite_outgrowth_metaxpress(
 ]:
     """Measure cell bodies and attached neurites in one 2D channel stack.
 
-    The user-facing controls follow the MetaXpress Neurite Outgrowth module:
+    The MetaXpress-style controls cover:
     neurite image and illumination; optional cell-body channel, maximum width,
     minimum area, and local-background intensity; outgrowth maximum width,
     local-background intensity, and scoring threshold; plus an optional nuclear
     wavelength with minimum/maximum width and local-background intensity.
+    OpenHCS additionally exposes the existing engine's minimum-inscribed-
+    diameter acceptance gate in pixels. This is not a claim that the vendor's
+    MetaXpress module exposes that control or that segmentation is equivalent.
 
     This implementation is deliberately 2D. ``image`` must have shape
     ``(C, Y, X)`` and should be produced by a step whose variable component is
@@ -1207,7 +1242,6 @@ def _identify_cell_bodies_cellprofiler(
     """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
 
     maximum_width_px = settings.approximate_max_width / pixel_size_um
-    minimum_area_px = settings.minimum_area / pixel_size_um**2
     _, _, detected_payload, *_ = _raw_processing_leaf(identify_primary_objects)(
         _cellprofiler_foreground_image(image, bright_objects=bright_objects),
         **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
@@ -1223,12 +1257,10 @@ def _identify_cell_bodies_cellprofiler(
         object_width_px=maximum_width_px,
         bright_objects=bright_objects,
     )
-    contract_candidates = _cell_body_contract_candidates(
+    contract_candidates = settings.contract_candidates(
         detected_labels,
         response,
-        minimum_area_px=minimum_area_px,
-        maximum_width_px=maximum_width_px,
-        intensity_threshold=settings.intensity_above_local_background,
+        pixel_size_um,
     )
 
     candidate_labels = np.where(
@@ -1296,12 +1328,10 @@ def _identify_nuclear_seeded_cell_bodies_cellprofiler(
         object_width_px=maximum_width_px,
         bright_objects=bright_objects,
     )
-    keep = _cell_body_contract_candidates(
+    keep = settings.contract_candidates(
         propagated_labels,
         response,
-        minimum_area_px=settings.minimum_area / pixel_size_um**2,
-        maximum_width_px=maximum_width_px,
-        intensity_threshold=settings.intensity_above_local_background,
+        pixel_size_um,
     )
     return object_label_value_with_dense_labels(
         propagated_payload,
@@ -1315,6 +1345,7 @@ def _cell_body_contract_candidates(
     response: np.ndarray,
     *,
     minimum_area_px: float,
+    minimum_inscribed_diameter_px: float,
     maximum_width_px: float,
     intensity_threshold: float,
 ) -> np.ndarray:
@@ -1340,7 +1371,7 @@ def _cell_body_contract_candidates(
         if (
             region.area >= minimum_area_px
             and maximum_inscribed_diameter_px
-            >= CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_min_diameter_px
+            >= minimum_inscribed_diameter_px
             and region.axis_minor_length <= maximum_width_px
             and region_response.size
             and float(np.mean(region_response)) >= intensity_threshold
