@@ -72,6 +72,35 @@ Read current NRA/refactor-audit skill archive, catalog, source precedents44/45/5
 58/60 and the original OPENHCS-HISTORY.md in comms-cleanup-live-integration WT.
 No global FULL/R1 claim; original failed resource evidence remains independent.
 
+Before/after owner and consumer closure
+---------------------------------------
+
+Production4754f ->14c1b0982, complete OpenHCS AST/consumer search:
+
+* Gateway: original one ABC/one production concrete leaf, one injected service
+  field and one service compile call before and after. Shared compile now owns
+  lifetime; only original concrete _compile performs compiler work. Test leaves
+  migrate their hook in place; independent audit hooks cooperate in either MRO.
+* Queue: one original class and one per-inspection construction before and after.
+  Its only production events readers are the two success/failure result count
+  projections. Original compiler emit/emit_event -> ProgressQueue.put supplies
+  serialized events; AgentProgressQueue descends once to ProgressEvent. Deleted
+  raw dict validation/copy; no second event store or stale count use.
+* Inventory: before, _plate_file_inventory one inspection call duplicated the
+  complete branch of _plate_file_inventory_for_query with three calls (public
+  file_inventory, query and image sampling). After, deleted method has zero
+  declarations/calls; original query inventory method has four calls including
+  inspection. The same handler/reader/records and original warning policy apply.
+* Handler: original _create_handler has four service calls (open_context,
+  query, sampling, inspection), all keep the same factory/affinity. Streaming
+  additionally uses those original context/inventory methods.
+
+No source factory, compiler/context/kernel, ZMQ progress, viewer or decoder owner
+is replaced. Search and omissions are retained in cold436-consumer-closure.log.
+Original .pth-backed ObjectState27 files were also parsed and searched; none
+declares or consumes these queue/gateway/status terms. Compiler's ObjectState
+main-thread ownership remains independently exercised by real compilation.
+
 Qualification
 -------------
 
@@ -107,7 +136,25 @@ enabled. Both consumers now use the same preparation-status boundary.
 Original inventory closure6PASS/26deselected,442432KiB/7.218s: read-only source
 identity, path-planned results, result-only roots, low parse coverage, path-policy
 errors and once-only source projection. See cold436-inventory-closure.log.
-Corrected exact production R0 pending.
+Corrected original scoped R0 PASS at14c1b0982fff7c2af62bb26ecd247352dba2bcd3
+against4754fbe2b6a7969380c0fe7b749dee0a5bdf8643: zero positive deltas,
+182916KiB/17.791s. Exact original tool3b03785f45df2ef5dc62ba6aed99294192ecbb01
+from retained agent-comms Git, actual Python3.14, readonly basicpy metaclass
+backing, unchanged512MiB/60s/oneCPU. Three production files only. Original RED
+and corrected PASS are losslessly retained as cold436-pinned-r0-first.log.gz and
+cold436-pinned-r0-corrected.log.gz; gzip decode matched original raw logs.
+
+Final30 distinct source cases PASS across bounded shards. No production changes
+after14c1b0982; final followup only records evidence. No installed cold Java or
+wire notification timing claim. Parent qualification uses a fresh new staged
+source/request (not C3 UNKNOWN) and original generic10s idle, recording matching
+wire progress and these stages before terminal inventory/plan/error. artifact-plan
+CLI's separate60s default must not be substituted for that generic-call check.
+Use existing dev-client diagnostic stream rather than asserting stdout silence
+means transport starvation. No new timers/observers, cold catalog imports or
+scientific execution are prescribed. Residual latency inside workspace/compiler
+belongs to Root's original core on the other machine; this patch supplies its
+owned feedback boundary, not a copied/moved engine implementation.
 Parent fresh installed cold synthetic inspection and physical reader preparation
 remain required; no new native/viewer/scientific process, install or download here.
 Resource helper reports3.6GiB home and swap pressure; use only existing WT/env,
