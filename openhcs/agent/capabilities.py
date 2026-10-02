@@ -1500,10 +1500,14 @@ class ArchitectureCapability(
     )
 
 
-class FunctionCatalogCapability(AgentCapabilityDeclaration):
-    """Capability that reads or extends the processing-function catalog."""
+class ProgressAcknowledgedCapability(AgentCapabilityDeclaration):
+    """Worker-safe operations acknowledge activity before the client idle limit."""
 
-    progress_heartbeat_seconds = 5.0
+    progress_heartbeat_seconds = 1.0
+
+
+class FunctionCatalogCapability(ProgressAcknowledgedCapability):
+    """Capability that reads or extends the processing-function catalog."""
 
     exposition = AgentCapabilityExposition(
         workflow_group=CapabilityWorkflowGroup.FUNCTION_AUTHORING,
@@ -2115,8 +2119,9 @@ class SearchKnowledgeCapability(
     )
 
 
-class GenerateSyntheticPlateCapability(PlatePathCapability):
-    progress_heartbeat_seconds = 5.0
+class GenerateSyntheticPlateCapability(
+    ProgressAcknowledgedCapability, PlatePathCapability
+):
     name = "openhcs_generate_synthetic_plate"
     cli_command = "generate-synthetic-plate"
     cli_aliases = ("synthetic-plate",)
@@ -2141,8 +2146,7 @@ class GenerateSyntheticPlateCapability(PlatePathCapability):
     )
 
 
-class InspectPlatePathCapability(PlatePathCapability):
-    progress_heartbeat_seconds = 5.0
+class InspectPlatePathCapability(ProgressAcknowledgedCapability, PlatePathCapability):
     progress_worker_thread_safe = True
     name = "openhcs_inspect_plate_path"
     cli_command = "inspect-plate"
@@ -2737,8 +2741,7 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
     )
 
 
-class SubmitCompileCapability(HeadlessExecutionCapability):
-    progress_heartbeat_seconds = 5.0
+class SubmitCompileCapability(ProgressAcknowledgedCapability, HeadlessExecutionCapability):
     name = "openhcs_submit_compile"
     kind = CapabilityKind.TOOL
     title = "Submit compile job"
@@ -2766,8 +2769,9 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
     )
 
 
-class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
-    progress_heartbeat_seconds = 5.0
+class SubmitPipelineExecutionCapability(
+    ProgressAcknowledgedCapability, HeadlessExecutionCapability
+):
     name = "openhcs_submit_pipeline_execution"
     kind = CapabilityKind.TOOL
     title = "Submit pipeline execution"

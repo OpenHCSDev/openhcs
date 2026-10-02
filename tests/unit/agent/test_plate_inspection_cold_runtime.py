@@ -11,7 +11,10 @@ from polystore.imagej_distribution import (
     ImageJArchiveDownloadPolicy,
 )
 
-from openhcs.agent.capabilities import InspectPlatePathCapability
+from openhcs.agent.capabilities import (
+    InspectPlatePathCapability,
+    ProgressAcknowledgedCapability,
+)
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.plate import PlatePathInspectionResult
 from openhcs.mcp.dev_client_core import McpDevServerSpec
@@ -37,7 +40,10 @@ def test_mcp_launch_preserves_bundle_root_separately_from_run_cache(
 
 def test_inspection_declares_progress_and_optional_runtime_side_effects():
     capability = InspectPlatePathCapability.to_spec()
-    assert capability.progress_heartbeat_seconds == 5.0
+    assert (
+        capability.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert capability.progress_worker_thread_safe
     assert capability.mutating
     assert not capability.read_only

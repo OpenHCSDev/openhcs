@@ -325,6 +325,11 @@ def test_persistent_client_preserves_local_usage_errors(
 def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
     monkeypatch,
 ) -> None:
+    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.serialization.json import to_jsonable
+
+    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
+
     class ProgressAwareFakeMcpDevStdioSession:
         def __init__(self, server_spec, server_stderr) -> None:
             del server_stderr
@@ -356,7 +361,7 @@ def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps({"status": "ok"}),
+                        "text": json.dumps(health_payload),
                     }
                 ],
             }
@@ -378,8 +383,8 @@ def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
             timeout_seconds=0.02,
         )
 
-    assert execution.returncode == 0
-    assert execution.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert execution.returncode == 0, execution.payload
+    assert execution.payload["results"][0]["payloads"] == [health_payload]
 
 
 def test_stdio_tool_call_requests_and_consumes_progress_notifications(monkeypatch):
@@ -464,6 +469,69 @@ def test_stdio_tool_call_progress_renews_inactivity_timeout(monkeypatch) -> None
     )
 
     assert result == {"content": []}
+
+
+@pytest.mark.parametrize(
+    "unrelated_message",
+    [
+        {
+            "jsonrpc": "2.0",
+            "method": "notifications/progress",
+            "params": {"progressToken": "another-request", "progress": 1.0},
+        },
+        {"jsonrpc": "2.0", "id": "another-request", "result": {}},
+    ],
+)
+def test_unrelated_messages_do_not_renew_tool_inactivity(
+    monkeypatch, unrelated_message
+) -> None:
+    session = dev_client.McpDevStdioSession(
+        dev_client.McpDevServerSpec(sys.executable), io.StringIO()
+    )
+    received = 0
+
+    async def write_message(message):
+        del message
+
+    async def read_message(*, timeout_seconds):
+        nonlocal received
+        await asyncio.wait_for(asyncio.sleep(0.01), timeout=timeout_seconds)
+        received += 1
+        if received <= 6:
+            return unrelated_message
+        return {"jsonrpc": "2.0", "id": 1, "result": {"content": []}}
+
+    monkeypatch.setattr(session, "write_message", write_message)
+    monkeypatch.setattr(session, "read_message", read_message)
+    with pytest.raises(TimeoutError):
+        asyncio.run(session.call_tool("openhcs_slow_tool", {}, timeout_seconds=0.025))
+    assert received < 6
+
+
+def test_malformed_progress_fails_at_the_original_protocol_boundary(monkeypatch):
+    from pydantic import ValidationError
+
+    session = dev_client.McpDevStdioSession(
+        dev_client.McpDevServerSpec(sys.executable), io.StringIO()
+    )
+    responses = iter(
+        (
+            {"jsonrpc": "2.0", "method": "notifications/progress", "params": {}},
+            {"jsonrpc": "2.0", "id": 1, "result": {"content": []}},
+        )
+    )
+
+    async def write_message(message):
+        del message
+
+    async def read_message(*, timeout_seconds):
+        del timeout_seconds
+        return next(responses)
+
+    monkeypatch.setattr(session, "write_message", write_message)
+    monkeypatch.setattr(session, "read_message", read_message)
+    with pytest.raises(ValidationError):
+        asyncio.run(session.call_tool("openhcs_slow_tool", {}, timeout_seconds=1.0))
 
 
 def test_stdio_session_times_out_when_no_message_activity_arrives() -> None:

@@ -11,6 +11,9 @@ from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     DescribeFunctionCapability,
+    GenerateSyntheticPlateCapability,
+    InspectPlatePathCapability,
+    ProgressAcknowledgedCapability,
     SearchFunctionsCapability,
     SubmitCompileCapability,
     SubmitPipelineExecutionCapability,
@@ -25,6 +28,7 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
     ZMQFunctionCatalogService,
 )
 from openhcs.mcp.server import _await_with_declared_progress, build_server
+from openhcs.mcp.dev_client_core import DEFAULT_CALL_TIMEOUT_SECONDS
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
@@ -46,12 +50,20 @@ class RecordingContext:
 
 
 @pytest.mark.parametrize(
-    "declaration", (SubmitCompileCapability, SubmitPipelineExecutionCapability)
+    "declaration",
+    (
+        GenerateSyntheticPlateCapability,
+        InspectPlatePathCapability,
+        SubmitCompileCapability,
+        SubmitPipelineExecutionCapability,
+    ),
 )
 def test_submission_leaf_declares_existing_worker_progress(declaration):
     spec = declaration.to_spec()
-    assert spec.progress_heartbeat_seconds is not None
+    assert 0 < spec.progress_heartbeat_seconds < DEFAULT_CALL_TIMEOUT_SECONDS
     assert spec.progress_worker_thread_safe is True
+    assert issubclass(declaration, ProgressAcknowledgedCapability)
+    assert "progress_heartbeat_seconds" not in declaration.__dict__
 
 
 def test_reused_client_reports_actual_phase_before_heartbeat_and_retains_ui_callback():
@@ -125,7 +137,10 @@ def test_terminal_operation_preserves_error_and_flushes_original_status(error_ty
 
 
 def test_catalog_family_inherits_progress_without_search_leaf_repetition():
-    assert DescribeFunctionCapability.to_spec().progress_heartbeat_seconds == 5.0
+    assert (
+        DescribeFunctionCapability.to_spec().progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert "progress_heartbeat_seconds" not in SearchFunctionsCapability.__dict__
 
 
