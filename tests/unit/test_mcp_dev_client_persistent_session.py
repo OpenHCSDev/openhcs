@@ -125,6 +125,10 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     monkeypatch,
 ) -> None:
     from openhcs.mcp.dev_client_commands import ui
+    from openhcs.mcp.server import HealthCheckMcpToolBinding
+    from openhcs.serialization.json import to_jsonable
+
+    health_payload = to_jsonable(HealthCheckMcpToolBinding.execute(None))
 
     decoded_arguments = []
     parse_arguments = ui.parse_json_object
@@ -178,7 +182,7 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps({"status": "ok"}),
+                        "text": json.dumps(health_payload),
                     }
                 ],
             }
@@ -199,9 +203,9 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     assert tools.returncode == 0
     assert tools.payload["tools"][0]["name"] == "openhcs_health_check"
     assert health.returncode == 0
-    assert health.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert health.payload["results"][0]["payloads"] == [health_payload]
     assert raw_health.returncode == 0
-    assert raw_health.payload["results"][0]["payloads"] == [{"status": "ok"}]
+    assert raw_health.payload["results"][0]["payloads"] == [health_payload]
     assert decoded_arguments == ["{}"]
     assert type(dev_client.McpDevCommandSpec.for_name("tools")) is not type(
         dev_client.McpDevCommandSpec.for_name("health")

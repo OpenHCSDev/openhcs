@@ -2239,8 +2239,6 @@ def add_code_document_source_options(parser: argparse.ArgumentParser) -> None:
 def code_document_source_from_args(args: argparse.Namespace) -> str:
     if args.source_text is not None:
         return args.source_text
-    if args.source_file == "-":
-        return sys.stdin.read()
     return Path(args.source_file).read_text(encoding="utf-8")
 
 
@@ -2308,8 +2306,6 @@ def add_pipeline_source_options(parser: argparse.ArgumentParser) -> None:
 def pipeline_source_from_args(args: argparse.Namespace) -> str:
     if args.source_text is not None:
         return args.source_text
-    if args.source_file == "-":
-        return sys.stdin.read()
     return Path(args.source_file).read_text(encoding="utf-8")
 
 

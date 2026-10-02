@@ -43,6 +43,7 @@ from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
+    StdinSourceCommandSpec,
     TypedCompositeCommandSpec,
     UiBridgeCommandSpec,
 )
@@ -592,7 +593,7 @@ class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
         )
 
 
-class ValidateCodeDocumentCommandSpec(CapabilityBackedCommandSpec):
+class ValidateCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_validate_code_document
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -627,7 +628,7 @@ class ValidateCodeDocumentCommandSpec(CapabilityBackedCommandSpec):
         )
 
 
-class ApplyCodeDocumentCommandSpec(CapabilityBackedCommandSpec):
+class ApplyCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_apply_code_document
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
