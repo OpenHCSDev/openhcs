@@ -71,8 +71,8 @@ def _display(channels, channel_axis, site_count):
     return server, items, originals
 
 
-@pytest.mark.parametrize("channels", (1, 2, 5))
-@pytest.mark.parametrize("channel_axis", (-1, 0))
+@pytest.mark.parametrize("channels", (1, 2, 5, 7))
+@pytest.mark.parametrize("channel_axis", (-1, 0, 2))
 @pytest.mark.parametrize("site_count", (1, 2))
 def test_non_rgb_carrier_reopens_with_native_yx(channels, channel_axis, site_count):
     server, items, originals = _display(channels, channel_axis, site_count)
