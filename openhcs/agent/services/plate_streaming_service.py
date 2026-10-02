@@ -11,7 +11,6 @@ from polystore.streaming.identity import (
     StreamProducerIdentity,
 )
 from polystore.streaming.viewer_transport import ViewerStreamProducer
-from zmqruntime.viewer_protocol import ViewerSourceSpatialDomainPayload
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -399,18 +398,16 @@ class PlateStreamingService:
             record, producer = state.image_payload_binding_for(image_path)
             producers.append(producer)
             plane_domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-                record.summary["aggregate_component_values"],
+                record.summary.require_plane_components(),
                 context="image receipt plane coordinates",
             )
             planes = SourceImageProvenancePlanes.from_component_domain(
                 path=image_path,
                 fixed_components=record.components,
                 aggregate_components=plane_domain.to_wire_mapping(),
-                plane_count=record.summary["shape"][0],
+                plane_count=record.summary.full_image_plane_count,
             )
-            domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
-                record.summary, source_label="image receipt"
-            )
+            domain = record.summary.source_domain
             first_components = planes.component_metadata[0]
             projection = SourcePlaneProjection(
                 address=OpenHCSPlaneAddress(
