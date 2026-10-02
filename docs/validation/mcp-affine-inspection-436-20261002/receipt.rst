@@ -173,6 +173,45 @@ distinct. The original assisted5 UNKNOWN request is not replayed or reclassified
 Acceptance is source-inspection/MCP technical readiness only, not scientific
 execution, biological results, a viewer, a global installation or a FULL audit.
 
+Literal ordinary-idle experiment (proof-only follow-up PR439)
+-------------------------------------------------------------
+
+The original 2.4-second stdio SDK check did NOT establish work beyond its
+ordinary 10-second idle interval. It remains qualified at exactly that scope.
+The original WireInspectionService and stdio probe now take a work duration;
+no compilation, transport, progress or timeout algorithm is duplicated.
+
+First full stdio/dev-client experiment at work_seconds12 hit the unchanged
+512MiB aggregate RSS guard during startup: 524460 KiB / 8.096 seconds,
+returncode-15. The original log is stdio-twelve-second-controls.log. Its source
+probe uses the original McpDevStdioSession request/token/idle machinery; small
+subclasses only supply the synthetic process arguments and observe notifications
+through cooperative super(). This failed attempt is not a timing/progress PASS;
+no larger budget, lighter compatibility reader or installed retry was used.
+
+The original resident control was then parameterized, not copied: the new
+ordinary-ten-second-idle case performs success and original ValueError on one
+continuous connection with 12-second process/Qt-main-thread work and unchanged
+10-second idle. Its ObservedSession extends the original McpDevSocketSession,
+calls the original notification hook via super(), and checks every observed
+token against that request ID, acknowledgement before 1 second, and progress
+after the 10-second boundary. The original request implementation is inherited
+from McpDevStdioSession, not reproduced. Both terminal results and reuse pass:
+12.013594 / 12.014658 seconds; original structured failure checks are preserved.
+See resident-twelve-second-controls.log: 1 PASS, 318556 KiB / 30.846 seconds,
+one CPU / 512MiB combined RSS / 60seconds. Only this new parameter case ran;
+the completed 26 controls, compiler shards and scoped R0 were NOT rerun.
+
+This adds one focused source case (47 total named cases across retained shards).
+It proves literal >10-second main-affine work through the original dev-client
+token owner and actual resident SDK transport. A full stdio/dev-client >10s
+journey remains resource-unqualified; the separate SDK stdio 2.4s and ordinary
+installed public compiler results are not inflated into that claim. No new
+installed/live/scientific operation is required or claimed by this source guard.
+There is no production delta from merged08054. Home headroom was checked before
+this finite experiment (6.2GiB home, 10GiB available RAM); no parallel source run,
+environment, download, cleanup or scientific/native/viewer process was started.
+
 Owned scratch (retained; no cleanup in this checkpoint)
 ------------------------------------------------------
 

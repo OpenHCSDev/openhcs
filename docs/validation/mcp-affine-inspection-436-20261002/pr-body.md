@@ -17,6 +17,12 @@ This follow-up changes only tests/validation evidence: **no production drift**.
 - Unchanged original scoped R0, main902913616→08054fccf: PASS, zero positive deltas.
 - Original bootstrap source-admission red retained and corrected through the
   existing stdio test owner; 1 PASS, no assertion weakening or added skip.
+- New parameter of the **original resident control**: 12-second Qt/main work,
+  unchanged ordinary10s dev-client idle, matching-token progress beyond10s,
+  same-connection success/error/reuse PASS (318556KiB/30.846s, 1 new case).
+  The first full stdio/dev-client12s attempt hit unchanged512MiB during startup
+  (524460KiB/8.096s); its RED is archived, not waived. That literal full-stdio
+  experiment remains resource-unqualified; prior2.4s SDK stdio is not >10s proof.
 
 Parent's ordinary private installed fresh public health/guides/source artifact
 inspection PASSes with unchanged10s idle: errors[], A01/file1/step1,

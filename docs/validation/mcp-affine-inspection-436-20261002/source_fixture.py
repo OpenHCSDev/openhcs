@@ -28,4 +28,6 @@ if __name__ == "__main__":
     load_readonly_native_extensions()
     import openhcs
     assert Path(openhcs.__file__).resolve().is_relative_to(source_root)
-    runpy.run_path(sys.argv[1])["serve_stdio_inspection_fixture"]()
+    runpy.run_path(sys.argv[1])["serve_stdio_inspection_fixture"](
+        work_seconds=float(sys.argv[2]) if len(sys.argv) > 2 else 2.4,
+    )
