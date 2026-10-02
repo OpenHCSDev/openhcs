@@ -1310,3 +1310,59 @@ runtime effects remain explicit proof limits. This is source discovery, not
 an admitted architecture or equivalence proof. NRA revision0844525ec is pinned.
 Receipt:
 ``/var/tmp/openhcs-b764-shared-derivation-nra-class-census-20261002.json``.
+
+Current-main integration and acceptance findings, 2026-10-02
+-----------------------------------------------------------
+
+Main cc9fcdfd4 is normally merged at 133da74ec. The affected native
+presentation/MCP, agent-service, resource-lifetime and prepared-geometry suite
+passes 150 cases in 17.75s. A separate current-source owner gate passes 73
+metadata-owner, live-mutation, provenance-constructor and resolution-snapshot
+cases in 1.34s. These scoped gates do not erase the retained broader offscreen
+window failure or qualify a new benchmark source. Logs:
+``/var/tmp/openhcs-pr394-main-cc9fcdfd4-integration-controls-20261002.log`` and
+``/var/tmp/openhcs-pr394-current-maincc9-source-owner-controls-20261002.log``.
+
+The original, unchanged whole-branch R0 is rerun against cc9fcdfd4 and
+133da74ec with tool revision 3b03785f4. It exits 1. Its only positive measures
+remain source_metadata's one TypeSwitch and three TypeSwitchArms; the removed
+virtual_workspace_metadata classifier contributes minus one switch and minus
+four arms. The ownership decision retains scalar admission on
+SourceMetadataFields and durable rejection on DurableSourceMetadata: the
+grammar belongs to the field owner, while canonical runtime spelling and
+literal durable spelling remain substitutable policies. Reintroducing the
+decoder's duplicate validator or moving the grammar to an unrelated utility
+would contradict that ownership. This adjudicates the relocation's architecture;
+it does not declare the per-file ratchet passed or alter its implementation,
+budget, exclusions or observations. Primitive/subclass admission, reported-class
+read ordering, scalar/container precedence, exact errors and mutable lifetime
+remain separate behavior obligations covered by the owner controls. Raw report:
+``/var/tmp/openhcs-pr394-current-maincc9-original-r0-20261002.log``.
+
+The metadata-only whole-query prototype is rejected immediately after saved
+replay: its five captured context calls still take about 55ms, with no matched
+speedup demonstrated. Valid saved leaf gates pass, but constructor/subclass,
+malformed-input and live-mutation obligations remain unresolved. Neither its
+callback-based query abstraction nor its manually replayed constructor effects
+are promoted. A separate source trace falsifies wholesale stack-rebuild removal:
+23 of 32 loads already hit the whole-stack cache and memory saves retain typed
+payload references. The entire load/unstack/save/identity envelope is only
+1.3674s before mandatory work, insufficient to close the 1.3381s execution gap.
+The next route must span repeated source derivation across existing request,
+recording, stack and publication owners. Receipts:
+``/var/tmp/openhcs-whole-source-query-exploratory-REJECTED-20261002.json`` and
+``/var/tmp/openhcs-b764-whole-cohort-cycle-dominant-route-review-20261002.json``.
+
+Issue 435's fresh public MCP synthetic acceptance is RED on frozen 133da74ec.
+The original five processing steps are unchanged; only owned output paths and
+the unused required DAPI binding differ. The first attempt stops before runtime
+creation because native TCP lock paths do not follow XDG storage. A fresh,
+separately retained attempt admits only its declared private data/control lock
+paths, completes mandatory preparation and compilation, then fails the fifth
+step at the unchanged duplicate source-projection guard. Its exact owned runtime
+is closed through the public API and all SDK children are terminal. This is a
+real workflow failure that the existing same-occurrence unit fixture did not
+cover; installed acceptance remains open. No original biological replay or
+performance claim follows from this synthetic check. Source/input/dependency,
+native, request/reply and failure evidence:
+``/var/tmp/openhcs-derived-role-435-synthetic-acceptance-v2-20261002``.
