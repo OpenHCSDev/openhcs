@@ -1839,3 +1839,43 @@ private prototype is not admitted: default-factory/callback and mutable-state
 laws remain unproved. This route is deferred while the larger unauthorized
 metric execution is qualified. Full scaling and fresh figures remain pending;
 the long-running optimization goal remains active.
+
+Requested CPA workspace production qualification
+------------------------------------------------
+
+Issue480 is integrated at ``38d02e20a795ad6f8c6457459c380995a798d0fe``.
+The existing export settings retain authored workspace requests and panels;
+nominal tool/axis leaves own the irreducible external grammar and derive
+columns from the existing CPA dialect. The discarded settings validator is
+removed. Publication uses the same existing export bundle/materialization
+path. Full physical-file admission now consumes paths actually read by the
+existing CPA equivalence report, instead of a manually synchronized suffix
+roster. Unmatched files and failed readers cannot claim coverage.
+
+Original scoped R0 across all three roots and original R1 pass against2560;
+138 agent controls and 81 root integration controls pass. An actual ordinary
+QualityControl public run on clean, sealed38d observes 0.652361870s execution,
+2.120112958s total and 1.088341713s compilation. Startup/readiness and shutdown
+are excluded. No diagnostic hooks are installed. Both immutable saved native
+repetitions pass database/schema/discrete/numerical measurements, nonempty
+declared two-row Image table, requested workspace meaning, every physical
+output and all source/input/dependency/native/controller freezes. This is a
+correctness qualification, not a paired performance gain. The original V4
+missing-workspace inventory RED is retained unchanged.
+
+Complete receipt:
+/var/tmp/openhcs-cpa-workspace-480-integrated-saved-native-v1-20261002.json
+SHA256 72e22c3859081de0494ad24440d36a54b306adbaa509d8afcb9db87d671ece5d.
+Ordinary source-freeze SHA256:
+317de6735208ed9c99149d81296bf40dd3c1e70823e198da69b7cb7575d47e5d.
+Standalone main isolation and its independent source checks are in progress;
+the integrated result does not claim a main-only benchmark.
+
+The actual before-fix Beginner observation on frozen4904884 is execution
+6.981277943s, total9.296563831s, compilation1.451889992s. It intentionally
+preserves the reproduced issue487 metric bug and missing63parentmeans; no
+parity exemption or speedup is claimed. Controller/source/environment/native
+and complete actual input freezes pass. Source-freeze SHA256:
+dc8a40519a10b7dd13ba9809a95bd6e2070622a326afa66ee2684adbe892a28d.
+Issue487's source fix passes156 controls and original scoped R0/R1, but actual
+candidate pipeline science and paired ordinary timing remain outstanding.
