@@ -381,3 +381,18 @@ Main 9a04107492ad90233394cf17524d0ca8e74062bb is normally integrated, including
 the merged native-module source-discovery repair in PR416 and source projection
 capability repair in PR418. Earlier behavior/source/performance gates retain
 their exact source pins. PR394 remains a draft formally closing issue384.
+
+The next bounded union-depth diagnostic on that main measures 3.6594 seconds
+across selected metadata construction, provenance projection, component/literal
+field lookup and merges. Its 972,354 selected calls enter 102,445 outer selected
+regions; nested work is timed once and the final depth is zero. It retains hook
+overhead, includes metadata inside callable wrappers and excludes physical
+processing, I/O, complete writer preparation and publication ancestors. Thus
+this is a plausible wider counterfactual scope, not 3.6594 recoverable seconds.
+Reflection controls compare original and wrapped constructors: hints and errors
+agree, including the original generated image-metadata constructor's existing
+``NameError('InitVar')``. Actual provenance mapping decode succeeds through the
+hooks. The next gate is an ordinary production comparison against the existing
+nominal immutable-field owner, before further implementation or broad gates.
+Evidence: ``metadata-lifetime-union-production-counterfactual-admission-20261001.json``
+and ``metadata-lifetime-union-reflection-pair-control-20261001.json``.
