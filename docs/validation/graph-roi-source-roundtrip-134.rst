@@ -1,0 +1,255 @@
+Graph ROI native-source roundtrip: receiving 134
+===============================================
+
+Status and ownership
+--------------------
+
+Tristan's latest explicit correction on2026-10-02 restores Singer's ownership of
+draft404 after the temporary handoff/stop. Root retains394 and shared production
+ownership, including ``openhcs/processing/materialization/core.py``. Parent owns
+actual installed/native graph reopening;404 retains that receiving acceptance.
+
+The graph writer repair integrated by Root at
+``45f3a721e115b37ab662f362fa5ab4d5e58e1f6e`` remains present at current394
+``94ee1079d22540f9b5ed48b69481d7e7ab51095d``. No shared-hunk release remains
+pending. Root owns production integration; Singer owns404 receiving acceptance;
+parent owns installed/native qualification after the retinal11 slot yields.
+404 is not merged wholesale. Its historical production base/proposal is not a
+replacement for current394. Saved-directory publication at822 is not reapplied.
+
+Account-switch resume and current source
+---------------------------------------
+
+Tristan explicitly resumed work on2026-10-02. The preceding pause interrupted
+no owned qualification operation: the last completed task was disposable-scratch
+cleanup. On resume there is no active goal and no owned QA/ratchet process.
+Original logs, failed fixtures, source proposals and uncertain dispositions
+remain intact; no interrupted input is replayed.
+
+The existing persistent checkout is reused. The unpublished445 integration
+receipt/archive is preserved on its local branch at1574ee396, without pushing
+that branch.404 resumes from its existing published5f17851cd checkpoint; all
+three untracked QA ledgers remain. No new WT, environment, dependency download,
+package change, native launch, test rerun or cleanup is needed for this update.
+Recorded submodule gitlinks differ from local dependency worktrees; none is
+changed or represented as an installed qualification.
+
+Read the current394/404 claims and open468/469 rosters before this review.
+468 owns tracking renderer correctness;469 owns MCP sampling presentation.
+Neither claims the graph writer/binder or404 receipt. Root's shared production
+files remain untouched. No competing404 implementation is started.
+
+At pinned94ee1079d, both graph test files and original ``SpatialGraph``,
+``ROIArchiveSourceMetadata``, ``SourceImageProvenance``, ``SourceVoxelSpacing``,
+``ImagePayloadMetadata`` and ``StreamingService`` modules are byte-identical to
+the integrated45f3 checkpoint. Whole materialization/core.py has44 additions and
+25 deletions since45f3 for retained-image role filename/context ownership; its
+graph writer is unchanged. Function-runtime changes leave the graph context
+strategy unchanged. Public plate streaming adds progress/typed failure receipts
+and retains ``require_source_metadata=request.result_directory is not None``.
+These differences do not justify copying the writer or weakening source admission.
+
+Current source still follows the original graph projection -> typed metadata ->
+shared archive binder -> strict reader relationship. BOUND-2/BOUND-8 and
+IMPL-12 remain resolved at that receiving boundary. The unchanged seven-case
+fixture retains actual cooperative ``AuditedGraph(ProjectionAudit, SpatialGraph)``
+hooks and independent edge-feature roundtrip evidence; no generic consumer edit
+is required for that new declaration. Historical executed source controls below
+are reused, not presented as a new run at94ee1079d or a whole394 qualification.
+
+The finite remaining404 gate is a fresh correctly materialized source-bearing
+graph ZIP through public ``kind=result`` inventory and the explicitly owned
+native reopen route, with actual source/channel/plane/calibration, geometry and
+subject/edge feature readbacks plus matched raw/result/combined placement review.
+Parent owns that serial installed check. Original candidate6's broken archive
+and failed job are historical evidence, not an input to repair/replay. Root's
+optimization target, whole-branch R0 adjudication and separate saved-image parity
+work do not require another404 source implementation.
+
+Verified integrated source checkpoint
+-------------------------------------
+
+Root's commit45f3a721e has parent
+``38067a4a5c348e0c7fcedd1d48f69bb99b7be19b``. Its production diff is exactly the
+published narrow writer patch: one bare-content line replaced, nine lines added
+for original typed metadata/spacing and binder reuse. Whole core.py and existing
+``test_spatial_graph_materialization.py`` have zero differences from the qualified
+proposal comparison3913c5008. The imported seven-case receiving fixture has the
+same Git blob as f3e566485:
+``83f0b9b4789a14a3d762d2f63d6599c7b939536f``.
+
+The original graph context hook still owns explicit source-plane selection;
+the writer performs no second selection. ``ROIArchiveSourceMetadata`` retains
+encoding, decoding and geometry projection. ``Output.metadata`` carries the same
+declaration. The native reader and its missing/conflicting-source guard are not
+changed by this integration. The geometry-test adaptation and cooperative
+new-declaration/edge-feature behaviour are the exact receiving version.
+
+Root's committed integration receipt reports original current-source3RED/4PASS
+and87 integrated controls PASS in2.28s, with original before/after logs retained
+under RUNS.394's body reports the isolated original R0 graph delta passed with
+zero positive deltas. These are Root's execution evidence, not a receiving rerun
+or a waiver of394's separate whole-branch architecture/native/performance gates.
+Receipt:
+https://github.com/OpenHCSDev/openhcs/blob/45f3a721e115b37ab662f362fa5ab4d5e58e1f6e/docs/validation/shared_runtime_plumbing_384_20261001.rst.
+
+NRA/refactor-audit source review accepts the exact BOUND-2/BOUND-8 repair using
+the existing projection/binder owners, without IMPL-12 duplication or another
+consumer/registry. No test was repeated, source patch reapplied, foreign worktree
+edited or live installation changed for this receiving checkpoint.
+
+Original receiving witness
+--------------------------
+
+Parent retained ``GRAPH-ROI-REOPEN-134-RECEIVING-20261002.rst`` under
+``/home/ts/wt/openhcs-issue-batch-20260929``. The candidate6 saved
+``A01_s001_w2_z001_t001_neurite_morphology_step0.graph.roi.zip`` resolves through
+public result inventory but native reopening refuses missing embedded source
+identity. Original request/error remains in the author's actual recorder:
+``/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/assisted-2-post426-1.stdout``.
+Read-only verification locates ``plate_file_stream_failed`` at line7602 and the
+``ValueError`` message requiring native ROI source metadata at line7605, naming
+the exact candidate6 graph ZIP above. This corrects the recorder reference in
+the ddbc1b197 receipt; historical receiving receipts and original archives remain
+unchanged. The original broken archive was not opened, rewritten or backfilled.
+
+Required relation and original owners
+-------------------------------------
+
+An authorised graph archive must preserve its already-declared source identity,
+selected channel/plane, declared coordinate spacing, polyline geometry and
+neuron subject/edge features through writing and loading. Native reopening must
+still reject absent, unbound, partially bound or conflicting source declarations.
+
+``SpatialGraph.contextualized_source_provenance`` owns explicit source-plane
+selection. ``SpatialGraphFunctionOutputContextStrategy`` consumes that hook and
+attaches invocation provenance before materialisation. It already produces a
+scalar selected-source graph, including when the original plane index is1.
+Selecting that index again from the scalar graph would be incorrect.
+
+``MaterializationInputItem.metadata`` delegates to ``image_payload_metadata``;
+``SpatialGraph`` is not an image-metadata carrier, so that value is empty for
+graphs. The original graph carries ``source_provenance`` and
+``coordinate_spacing``. The registered graph ROI writer projects those facts
+into the existing ``ImagePayloadMetadata`` and ``SourceVoxelSpacing`` owners.
+``ROIArchiveSourceMetadata.bind/decode/geometry`` retain the single encoding,
+decoding and presentation procedures. ``Output.metadata`` carries the same
+declaration into downstream materialisation. No new source schema is introduced.
+
+Historical exact source proposal
+--------------------------------
+
+``graph-roi-source-roundtrip-134.patch`` contains the narrow production hunk and
+one geometry-test adaptation. Its historical822 admission used zero-context
+``git apply --unidiff-zero``. Do not reapply it over Root's integrated45f3a721e.
+The production change removes one bare-content
+line and adds nine lines in the existing registered leaf writer/imports. The
+unchanged binder performs archive encoding. The reader, source-plane projection,
+writer registry, subject projection, capture and viewer implementations are
+unchanged. Source voxel spacing requires an import from its existing owner;
+the first coordination note's statement that core already imported it was
+incorrect and is corrected here.
+
+Synthetic Git comparison commit
+``3913c5008b606a51268b5aeb4a3c8a527b89f1b0`` has parent82243634c and only the
+proposed core file plus the existing geometry-test adaptation. It is a ratchet
+comparison object, not an applied production commit or release branch.
+
+``tests/unit/test_graph_roi_source_roundtrip_134.py`` exercises actual context
+selection, registered materialisation, disk ZIP writing and original ZIP loading.
+It asserts both explicit input planes0/1, exact source/channel/names/provenance,
+declared1.3556 spacing, fractional Y/X coordinates, node/edge IDs, graph features,
+neuron label and typed subject identity, and transport-field removal from geometry.
+The misleading archive filename supplies no identity.
+
+An independent ``AuditedGraph(ProjectionAudit, SpatialGraph)`` declaration
+exercises cooperative ``super().__init__`` and before/after
+``contextualized_source_provenance`` hooks. Its newly declared
+``engineering_confidence`` edge feature survives the same ZIP writer/reader;
+no generic consumer or registry changes are needed. This is behavioural MRO
+evidence, not an inheritance assertion or ornamental production hierarchy.
+
+The four rejection cases call the original ``StreamingService.stream_rois`` with
+``require_source_metadata=True``. They fail before reaching transport; no native
+viewer is instantiated. Successful native streaming remains the later parent gate.
+The graph type does not declare cropped source-domain bounds. This checkpoint
+does not infer or claim such bounds from coordinates or filenames.
+
+Bounded qualification and original failures
+-------------------------------------------
+
+Every execution was serial, existing Python/ABI dependencies only, CPU affinity0,
+``CPUQuota=100%``, kernel ``MemoryMax=512M``, ``MemorySwapMax=0``, shell deadline60s,
+pytest external plugins/cache disabled and numerical thread counts1. Tests use
+only explicitly constructed disk storage; a fixture fails optional storage
+bootstrap. No native/MCP/UI launch, package/environment change, download, provider,
+scientific execution or shared slot was used.
+
+The existing source-selection runner now loads changed OpenHCS Python modules
+directly from pinned Git blobs when ``QA134_GIT_REF`` is supplied. Unchanged files
+come from the existing branch, equal to that revision; only the proposed core
+overrides a blob. This avoids another worktree/full source snapshot and preserves
+the actual current dependency closure instead of monkeypatching product methods.
+
+Original logs, including harness failures, are retained in the paired archive:
+
+* ``original.log``: collection fails because a partial current-source selection
+  lacked ``DurableSourceMetadata``;1.74s/91656KiB. No product assertion executed.
+* ``original2.log``: collection fails because mixing current source metadata with
+  old source bindings lacked ``SourceMetadataIdentityProjection``;
+  2.22s/79076KiB. No product assertion executed.
+* ``pinned-original.log``: exact pinned source, three native-source-loss REDs
+  and four rejection controls PASS;2.52s/177464KiB.
+* ``proposed.log``: seven receiving cases plus five existing metadata cases,
+  12PASS;3.05s/199284KiB.
+* ``graph-regression.log``:15PASS/1RED. The existing test compared the bare ROI
+  feature mapping including transport metadata. This authentic first failure is
+  retained. The proposed adaptation uses original ``geometry`` before the same
+  exact feature/coordinate assertions; no assertion is removed or weakened.
+* ``graph-regression-final.log``: the existing full graph family,16PASS;
+  2.40s/172992KiB. No receiving cases were repeated for ceremony.
+* ``r0.log``: original unmodified pinned agent-comms R0 at
+  ``3b03785f45df2ef5dc62ba6aed99294192ecbb01``, from the existing
+  ``/home/ts/wt/openhcs-s1-original-ratchet-20261001``. Exact822→3913c5008
+  comparison includes the entire changed production core file: exit0, every
+  delta zero;33.81s/87660KiB. The old UI348 ratchet WT no longer exists;
+  no new WT or copied detector was created.
+
+Ownership/antipattern review
+----------------------------
+
+Refreshed full NRA skill and authoritative refactor-audit ZIP, catalog README,
+boundaries, implementation, membership and surface-receipt guidance were read.
+NRA skill SHA256:
+``9f2f8b28bc82256eefa3e9d63248c50722dc3ffe7d77adba5793296df196b47e``.
+Audit ZIP SHA256:
+``ef0367d878cc57565f2b257a8e6647a234d4ba4298f61391709d9c3c82bec9f7``.
+
+BOUND-2/BOUND-8 classify the lost original source declaration at the writer
+boundary. IMPL-12 is avoided by reusing the shared binder/decoder/geometry owner
+rather than copying metadata encoding. IMPL-3/IMPL-5 and MEMB-1/MEMB-2 introduce
+no new consumer type switch, repeated dispatch or roster. The registered writer
+is the existing format leaf; shared algorithms remain on their original owners.
+No forwarding facade, compatibility reader or parallel store is introduced.
+This source review and original R0 pass are not a complete global NRA/R1 scan;
+earlier bounded global-scan failures remain in the historical receiving receipts.
+
+Disposition and later acceptance
+--------------------------------
+
+Source integration is complete in394 at45f3a721e; no production-hunk dependency
+remains for404.404 retains the receiving record and pending installed/native
+acceptance, not another implementation to merge over394. Parent controls the
+coherent package qualification, installed freeze release and later public
+inventory→owned native reopen of a
+new correctly written graph ZIP, with source/channel/calibration readbacks and
+personally opened same-coordinate raw/result/combined placement. Existing failed
+jobs/archives remain unchanged; no biological acceptance is claimed.
+
+Owned scratch is ``.qa134-graph-20261002`` in Singer's existing persistent WT.
+Cleanup remains stopped; no completed disposable directories were deleted here.
+The byte-exact original logs and synthetic engineering ZIP inputs/outputs are
+archived, not reformatted to remove their authentic whitespace.
+Archive: ``graph-roi-source-roundtrip-134-source-20261002.tar.gz``; SHA256
+``0b04936ffd6f54fb124f4c5ce27f300f72bd83af01922bc874e7e5014efbf375``.
+Direct archive reads match the original negative and positive raw-log hashes.
