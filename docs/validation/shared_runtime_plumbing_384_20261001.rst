@@ -592,3 +592,61 @@ Source freezes, complete observations and diagnostic boundaries are retained in
 ``/var/tmp/openhcs-owned-metadata-90c30-ordinary-abba-20261002/`` and
 ``/var/tmp/openhcs-owned-metadata-phase-probe-20261002/``. The original 026
 comparison and original failures remain separate pinned evidence.
+
+
+Prepared callable owner and independent plane follow-up (2026-10-02)
+------------------------------------------------------------------
+
+Registry preparation now resolves canonical and actual raw signatures after all
+function preparation hooks and before READY. Authored declarations resolve in
+compilation. Immutable signature pairs travel on the existing CallableMetadata
+through existing function-reference/worker transport. Runtime filtering, batch
+defaults and canonical argument admission consume the associated prepared view;
+three separate signature/default/type LRU caches and late kernel preparation are
+removed. Server preparation remains outside pipeline clocks.
+
+The isolated owner repair ``760e9ae8613d8737411a627b6abfe6a15f4ca0b9`` moves actual
+target resolution, signature state and carrier grammar onto CallableMetadata;
+CallableProjection/Reader own preparation admission, RuntimeCallablePolicy owns
+invocation, and Pure2DSliceBatchExecutor owns the formerly duplicated executor
+selection. Distinct actual targets always receive independent raw snapshots;
+only the same actual target shares its canonical snapshot. No new wrapper class
+or equality comparison over arbitrary callable defaults is introduced.
+
+Original, unchanged R0 passes against both the prepared-callable commit and the
+frozen qualification source, eliminating its new class-size, Boolean-chain and
+foreign-absence debt. Original R1 passes within the unchanged 160-second budget
+with 3,084 projections. These are isolated gates; the inherited scalar-owner
+per-file R0 gate on the whole branch remains open. Focused owner tests pass 105
+controls; the larger 648-pass/five-skip suite initially retained two baseline-red
+plane-domain controls. Their failure also reproduces on untouched ``94915``.
+
+The independent repair ``0b7f6f98a4b19d85d0dbb20f4db49e45cd0d90c1`` validates an
+explicit object projection against its declared source axis and nonempty
+acquisition cardinality directly. Independently authored runtime planes can own
+an exact projection without acquisition-plane provenance. Physical source/label
+cardinality and spatial-shape checks remain mandatory. Thirty-nine controls pass,
+including both axes at one/two planes and wrong-axis refusal. No object-domain
+semantics are inferred from source storage axes.
+
+The all-30 scientific qualification on frozen ``94915`` is RED: 24 cases pass;
+four fail at missing payload context in Align/Crop, one loses its server to a
+confirmed kernel OOM kill, and one differs in threshold entropy. Saved input
+replay traces that entropy mismatch to missing Threshold source scale/dtype at
+the canonical raw boundary. Truthful declarations are being corrected without
+scientific-body or tolerance changes. Linux killed endpoint PID 2412356 with
+13,360,004 KiB anonymous RSS; the dominant allocation/retaining owner is still
+unmeasured. Issue #433 tracks that distinct execution-server acceptance gate and
+is formally linked to this draft PR. Retained native clocks are not current
+paired speedup evidence.
+
+Evidence stays in the external benchmark RUNS directory, including
+``pr394-94915-all30-native-science-qualification-red-20261002.json``,
+``pr394-signature-owner-760-source-inventory-20261002.json``, the original R0/R1
+receipts, and ``issue419-explicit-object-plane-cardinality-followup-20261002.json``.
+Two partial cohort captures complete all 31 production steps and match all six
+CSV files and 120 TIFF dtype/shape/pixel arrays exactly, but each admits only six
+of ten graph snapshots. V4 identifies an unsupported native allocation owner in
+the four remaining before-state graphs; those graphs remain missing. Diagnostic
+capture clocks do not establish a speedup, and the additional multi-second
+whole-value plumbing payoff remains unmeasured.
