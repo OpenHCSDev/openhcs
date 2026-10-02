@@ -1821,11 +1821,19 @@ class NapariImageLayerDisplayHandler(NapariLayerDisplayHandler):
         )
         stacked_data = presentation.align_array(stacked_data)
         pipeline = request.pipeline
-        payload_axis_labels = pipeline.payload_axis_policy.axis_labels(
+        image_presentation = NapariImageLayerPresentationPolicy.for_payload(
             layer_items[0].data,
             layer_items[0].image_metadata,
-            presentation.aggregate_axis_bindings.payload_axes,
         )
+        payload_axis_labels = (
+            *pipeline.payload_axis_policy.axis_labels(
+                layer_items[0].data,
+                layer_items[0].image_metadata,
+                presentation.aggregate_axis_bindings.payload_axes,
+            ),
+            *image_presentation.payload_axis_labels,
+        )
+        stacked_data = image_presentation.present_data(stacked_data)
         presentation = replace(
             presentation,
             payload_axis_labels=payload_axis_labels,
@@ -1834,11 +1842,7 @@ class NapariImageLayerDisplayHandler(NapariLayerDisplayHandler):
         request = replace(request, presentation=presentation)
         axis_labels = presentation.axis_labels
 
-        layer_kwargs = NapariImageLayerPresentationPolicy.layer_kwargs(
-            layer_items[0].data,
-            layer_items[0].image_metadata,
-            request.display_config.colormap,
-        )
+        layer_kwargs = image_presentation.layer_kwargs(request.display_config.colormap)
         if axis_labels is not None:
             layer_kwargs["axis_labels"] = axis_labels
         layer_kwargs["translate"] = translate

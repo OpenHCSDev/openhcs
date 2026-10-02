@@ -846,11 +846,12 @@ NAPARI_LAYER_CREATED_LOGGERS = _complete_layer_log_mapping(
 )
 
 
-class NapariImageLayerPresentationPolicy:
+class NapariImageLayerPresentationPolicy(ABC):
     """Formal defaults for streamed Napari image layer presentation."""
 
     DEFAULT_COLORMAP = "gray"
     DEFAULT_BLEND_MODE = "additive"
+    payload_axis_labels: ClassVar[tuple[str, ...]] = ()
 
     @classmethod
     def colormap(cls, colormap: str | None) -> str:
@@ -858,41 +859,71 @@ class NapariImageLayerPresentationPolicy:
             return cls.DEFAULT_COLORMAP
         return colormap
 
-    @classmethod
     def layer_kwargs(
-        cls,
-        image_data: LayerData,
-        image_metadata: ImagePayloadMetadata,
+        self,
         colormap: str | None,
     ) -> dict[str, LayerKwargValue]:
-        kwargs: dict[str, LayerKwargValue] = {"blending": cls.DEFAULT_BLEND_MODE}
-        if cls.is_rgb(image_data, image_metadata):
-            kwargs["rgb"] = True
-            return kwargs
-        kwargs["colormap"] = cls.colormap(colormap)
-        return kwargs
+        return {"blending": self.DEFAULT_BLEND_MODE, **self.color_kwargs(colormap)}
+
+    @abstractmethod
+    def color_kwargs(self, colormap: str | None) -> dict[str, LayerKwargValue]:
+        """Supply the native scalar-band or RGB color interpretation."""
+
+    def present_data(self, data: np.ndarray) -> np.ndarray:
+        """Retain the original native layout unless a declared band needs moving."""
+        return data
 
     @classmethod
-    def is_rgb(
+    def for_payload(
         cls,
         image_data: LayerData,
         image_metadata: ImagePayloadMetadata,
-    ) -> bool:
+    ) -> NapariImageLayerPresentationPolicy:
+        """Decode the declared channel layout into Napari's native interpretations."""
         channel_axis = image_metadata.normalized_source_channel_axis(image_data)
         if channel_axis is None:
-            return False
+            return NapariScalarImageLayerPresentationPolicy()
         shape = tuple(int(dimension) for dimension in np.shape(image_data))
+        channel_count = shape[channel_axis]
+        if channel_count < 1:
+            raise ValueError("Napari source channel axis requires at least one value.")
+        if channel_count not in (3, 4):
+            return NapariSourceChannelImageLayerPresentationPolicy(
+                relative_channel_axis=channel_axis - len(shape)
+            )
         if channel_axis != len(shape) - 1:
             raise ValueError(
                 "Napari RGB payload requires its declared source channel axis "
                 f"to be last; got axis {channel_axis} for shape {shape!r}."
             )
-        if shape[channel_axis] not in (3, 4):
-            raise ValueError(
-                "Napari RGB payload requires three or four values on its declared "
-                f"source channel axis; got shape {shape!r}."
-            )
-        return True
+        return NapariRGBImageLayerPresentationPolicy()
+
+
+class NapariScalarImageLayerPresentationPolicy(NapariImageLayerPresentationPolicy):
+    """Scalar images explicitly disable Napari's shape-based RGB guessing."""
+
+    def color_kwargs(self, colormap: str | None) -> dict[str, LayerKwargValue]:
+        return {"rgb": False, "colormap": self.colormap(colormap)}
+
+
+@dataclass(frozen=True, slots=True)
+class NapariSourceChannelImageLayerPresentationPolicy(
+    NapariScalarImageLayerPresentationPolicy
+):
+    """Present declared non-RGB bands as dimensionless selectors before native YX."""
+
+    relative_channel_axis: int
+    payload_axis_labels: ClassVar[tuple[str, ...]] = ("source_channel",)
+
+    def present_data(self, data: np.ndarray) -> np.ndarray:
+        return np.moveaxis(data, self.relative_channel_axis, -3)
+
+
+class NapariRGBImageLayerPresentationPolicy(NapariImageLayerPresentationPolicy):
+    """RGB/RGBA keep their trailing channel carrier outside native dimensions."""
+
+    def color_kwargs(self, colormap: str | None) -> dict[str, LayerKwargValue]:
+        return {"rgb": True}
 
 
 @dataclass(frozen=True, slots=True)
