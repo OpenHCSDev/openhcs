@@ -2490,15 +2490,24 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
     context.runtime_value_store.clear()
     OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
     metadata_path = tmp_path / "openhcs_metadata.json"
+    subdirectories = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]
+    assert set(subdirectories) == {"images/exports"}
+    subdirectory = subdirectories["images/exports"]
+    assert subdirectory[SourceProjectionMetadataSerializer.RESULTS_DIR_FIELD] == (
+        "images/exports"
+    )
     if not with_raster:
-        assert not metadata_path.exists()
+        assert subdirectory[FIELDS.IMAGE_FILES] == []
+        assert (
+            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                subdirectory
+            ).entries
+            == {}
+        )
         return
     np.testing.assert_array_equal(
         tifffile.imread(tmp_path / "images/exports/A01_s001_w2_z001_t001.tif"), pixels
     )
-    subdirectories = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES]
-    assert set(subdirectories) == {"images/exports"}
-    subdirectory = subdirectories["images/exports"]
     assert subdirectory[FIELDS.IMAGE_FILES] == [
         "images/exports/A01_s001_w2_z001_t001.tif"
     ]

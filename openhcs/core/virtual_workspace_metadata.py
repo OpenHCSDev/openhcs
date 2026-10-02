@@ -232,12 +232,13 @@ class AtomicMetadataWriter:
                 )
             )
             subdirectory.update(serializer.projection_fields(retained_paths))
-            projections = SourceProjectionSet(
-                tuple(entries[path] for path in published_paths)
-            )
-            subdirectory.update(
-                serializer.component_metadata(projections, labels=component_labels)
-            )
+            if published_paths:
+                projections = SourceProjectionSet(
+                    tuple(entries[path] for path in published_paths)
+                )
+                subdirectory.update(
+                    serializer.component_metadata(projections, labels=component_labels)
+                )
             subdirectory[FIELDS.IMAGE_FILES] = list(published_paths)
             subdirectory[FIELDS.MICROSCOPE_HANDLER_NAME] = microscope_handler_name
             subdirectory[FIELDS.SOURCE_FILENAME_PARSER_NAME] = (
