@@ -1201,3 +1201,26 @@ remain retained. Baseline causal receipt:
 ``/var/tmp/openhcs-main-b680-cold-feedback-race-baseline-20261002.json``.
 Benchmark timings above remain pinned to their actual main4754/narrowb764
 sources; the newer MCP merge is not silently included in their evidence.
+
+Test-only integration3317bf9c2 sets the compiler-entry marker before publishing
+progress. The actual reporting callback still releases held work; the original
+three-second timeout, both cooperative MROs, ContextVar restoration, terminal
+ordering and original compiler-error assertions are unchanged. No production
+race workaround, retry or longer timeout is introduced. The clean-main repair
+passes124 cold-feedback/agent-service controls; integrated PR394 then passes
+all133 controls including the narrow prepared geometry ABI tests in13.72s.
+Both initial failed runs remain retained. Integrated command, CPU3:
+
+.. code-block:: bash
+
+   env PYTHONDONTWRITEBYTECODE=1 \
+     PYTHONPATH=/home/ts/code/projects/openhcs-shared-runtime-plumbing \
+     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+     NUMBA_NUM_THREADS=1 CUDA_VISIBLE_DEVICES='' taskset -c 3 \
+     /home/ts/code/projects/openhcs/.venv/bin/python -m pytest -q \
+     -p no:cacheprovider tests/unit/agent/test_cold_inspection_feedback.py \
+     tests/unit/agent/test_agent_services.py \
+     tests/unit/test_cellprofiler_geometry_prepared_payload_abi.py
+
+Pass log:
+``/var/tmp/openhcs-pr394-main-b680-repaired-integration-controls-20261002.log``.
