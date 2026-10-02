@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import ClassVar, Iterator, Sequence
 from weakref import WeakKeyDictionary
@@ -23,6 +23,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_metadata,
 )
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_identity import (
@@ -113,6 +114,19 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     output_path: str
     relative_output_path: str
     image_metadata: ImagePayloadMetadata | None = None
+    main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE
+
+    def passed_through(self, plan: CompiledStepPlan) -> "ProducedOutputSemantics":
+        """Retain the image domain and physical identity under the next producer."""
+        return replace(
+            self,
+            producer_identity=FunctionStepOutputProducerIdentityAuthority.build(
+                FunctionStepOutputProducerIdentityRequest.from_main_flow(
+                    plan, self.output_context,
+                )
+            ),
+            relative_output_path=source_path_identity(self.output_path).name,
+        )
 
     def contextualize_image_payload(
         self,
@@ -175,6 +189,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         output_identity: FunctionOutputIdentity,
         output_context: AlignedImageSliceContext | None = None,
         image_metadata: ImagePayloadMetadata | None = None,
+        main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE,
     ) -> "ProducedOutputSemantics":
         output_path_text = str(output_path)
         if output_context is None:
@@ -197,6 +212,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
                 Path(plan.output_dir),
             ),
             image_metadata=image_metadata,
+            main_flow_plane_axis=main_flow_plane_axis,
         )
 
     @classmethod
@@ -407,14 +423,27 @@ class StepOutputManifestStore:
     ) -> tuple[AlignedImageSliceContext, ...]:
         """Return producer output contexts aligned to concrete input paths."""
 
-        producer_records = self._selected_unique_producer_records_for(plan)
-        if producer_records is None:
+        records = self.producer_output_records_for_paths(plan, paths, parser)
+        if records is None:
             return tuple(
                 AlignedImageSliceContext.anonymous_main_flow() for _path in paths
             )
+        return tuple(record.output_context for record in records)
+
+    def producer_output_records_for_paths(
+        self,
+        plan: CompiledStepPlan,
+        paths: Sequence[str],
+        parser: FilenameParser,
+    ) -> tuple[ProducedOutputSemantics, ...] | None:
+        """Resolve exact producer declarations in the requested physical path order."""
+
+        producer_records = self._selected_unique_producer_records_for(plan)
+        if producer_records is None:
+            return None
 
         path_index = ProducedPathRecordIndex.from_records(producer_records, parser)
-        contexts: list[AlignedImageSliceContext] = []
+        records: list[ProducedOutputSemantics] = []
         for path in paths:
             matching_records = path_index.matching_records(path)
             if len(matching_records) != 1:
@@ -422,8 +451,8 @@ class StepOutputManifestStore:
                     "Expected one producer output context for input path "
                     f"{path!r}, found {len(matching_records)}."
                 )
-            contexts.append(matching_records[0].output_context)
-        return tuple(contexts)
+            records.append(matching_records[0])
+        return tuple(records)
 
     def filter_to_producer_paths(
         self,
@@ -501,6 +530,12 @@ class StepOutputManifestStore:
     ) -> tuple[ProducedOutputSemantics, ...]:
         records_by_path: dict[str, ProducedOutputSemantics] = {}
         for record in records:
+            existing = records_by_path.get(record.output_path)
+            if existing is not None and existing.main_flow_plane_axis is not record.main_flow_plane_axis:
+                raise ValueError(
+                    "One produced output path cannot declare conflicting main-flow image axes: "
+                    f"{record.output_path!r}."
+                )
             records_by_path.setdefault(record.output_path, record)
         return tuple(records_by_path.values())
 

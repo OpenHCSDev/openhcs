@@ -1140,6 +1140,17 @@ class AlignedImageStack(ImagePayloadStackComposition):
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
         return ImagePayloadMetadataCompositionMode.STACK
 
+    @property
+    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+        """Declare the outer runtime axis retained by projected output members."""
+        return self.composition_metadata_mode
+
+    def plane_axis_for_output_context(
+        self, context: AlignedImageSliceContext,
+    ) -> RuntimePlaneAxis | None:
+        """An explicitly aligned stack declares its outer runtime-slice domain."""
+        return RuntimePlaneAxis.RUNTIME_SLICE
+
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata
     ) -> ImagePayloadMetadata:
@@ -1285,6 +1296,33 @@ class ImageOutputBundle(AlignedImageStack):
     @property
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
         return ImagePayloadMetadataCompositionMode.BUNDLE
+
+    @property
+    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+        """Flatten declared inner runtime planes, retaining other named image domains."""
+        if any(
+            image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            for payload in self.slices
+        ):
+            return ImagePayloadMetadataCompositionMode.STACK
+        if len(self.slices) == 1:
+            return None
+        return self.composition_metadata_mode
+
+    def plane_axis_for_output_context(
+        self, context: AlignedImageSliceContext,
+    ) -> RuntimePlaneAxis | None:
+        """Resolve a named output's original inner domain before leaf projection."""
+        payloads = tuple(
+            payload for payload, declared_context in zip(self.slices, self.slice_contexts, strict=True)
+            if declared_context == context
+        )
+        if len(payloads) != 1:
+            raise ValueError(
+                "Named image output context requires exactly one original payload: "
+                f"{context!r}; found {len(payloads)}."
+            )
+        return image_payload_metadata(payloads[0]).plane_axis
 
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata
