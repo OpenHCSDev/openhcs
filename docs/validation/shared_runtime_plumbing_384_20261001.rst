@@ -984,16 +984,16 @@ The corrected frozen919 diagnostic has zero foreign sleep/server/poller
 events, exact original IFC CSV bytes, and zero scientific differences against
 native CP for1800rows. Its disjoint recording attribution is diagnostic only:
 
-===============================  ============
-Region                           Profile time
-===============================  ============
-Centroid calculation             0.6766s
-Sparse relationship row assembly 0.4404s
-Repeated axis-domain scans       0.2159s
-Other table assembly             0.3644s
-Ownership validation             0.000027s
-Measurement storage              0.0123s
-===============================  ============
+================================  ============
+Region                            Profile time
+================================  ============
+Centroid calculation              0.6766s
+Sparse relationship row assembly  0.4404s
+Repeated axis-domain scans        0.2159s
+Other table assembly              0.3644s
+Ownership validation              0.000027s
+Measurement storage               0.0123s
+================================  ============
 
 Centroid-to-IJV conversion is nested within centroid calculation and must not
 be added to it. Storage/ownership are immaterial targets for these recording
@@ -1018,3 +1018,51 @@ Retained thread-scope/science receipts:
 and ``/var/tmp/openhcs-nine-recorders-thread-owned-disjoint-analysis-20261002.json``.
 Actual failed3D proof:
 ``/var/tmp/openhcs-spatial-plane-sourceborn-diagnostic-v2-20261002/observations.json``.
+
+
+Actual 3D production completion and remaining qualification (2026-10-02)
+----------------------------------------------------------------------
+
+The isolated physical-plane prototype at aba4bfaf3 normally incorporates this
+branch through424bd2029. Its truthful Resize ABI declarations and prepared
+FULL_STACK controls pass438 tests. The actual new production run completes
+with no observer errors,780 source-plane births and32 producer groups. Resize
+now retains the runtime stack axis and all60 correlated physical rows;
+MonolayerMask and the primary input consequently use the existing declared
+stack-binding path. The diagnostic controller had required the different
+opaque-image fallback's hook. Its original observation gate remains RED;
+zero calls to that fallback is not a production failure or evidence of lost
+metadata. The actual route is separately adjudicated from retained producer
+observations and the existing binding declaration.
+
+Independent unchanged saved-output comparison passes all6 CSVs and120 TIFFs
+exactly against the specified retained ordinary reference: headers/cells and
+image dtype/shape/pixels. Receipt:
+``/var/tmp/openhcs-spatial-plane-aba4-independent-historical-science-20261002.json``.
+Diagnostic clocks are compilation2.1216s, execution9.7020s and total12.7136s;
+they exclude server startup but do not establish a new performance benefit
+or a current native CP ratio. Original R1 passes within its unchanged budget;
+original R0 retains the quoted-Iterable finding. Independent actual RGB-volume
+controls show identical pixels/masks but incorrect XY metadata in the
+prototype: (3,3) instead of the declared channel-aware (2,3). Baseline passes.
+The separate 2D RGB mask failure also occurs on baseline and is not claimed
+as a new regression.
+
+The decisive route reassessment rejects promotion of the broader physical-Z
+prototype. Preserving Resize's runtime stack carrier makes the existing typed
+binding sufficient here; the new opaque physical-plane binding has no actual
+production consumer in this run. Synthetic controls and successful saved
+science do not establish its runtime payoff. Further prototype implementation
+is stopped; the next counterfactual applies only truthful carrier declarations
+and existing prepared metadata/mask/stack controls to current PR394. Actual
+production execution must identify any remaining necessary repair. The
+original failed observer gate and the RGB counterexample remain retained;
+no source facts are injected and no gate is retroactively called PASS.
+
+PR394 normally incorporates latest main4754fbe2b at2aa930eb2. The added Napari
+integration controls pass183 cases and fail the existing offscreen window
+width assertion (1260 versus0). The exact isolated assertion also fails on
+clean main4754fbe2b with the same values; it remains a separately recorded
+inherited gate failure, not a passing full suite. Logs:
+``/var/tmp/openhcs-pr394-latest-main4754-napari-controls-20261002.log`` and
+``/var/tmp/openhcs-main4754-napari-layout-isolated-20261002.log``.
