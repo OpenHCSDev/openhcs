@@ -708,10 +708,17 @@ NAPARI_SETTLEMENT_UPDATE_YIELD_MS = 10
 class NapariImagePayloadLayoutRole(str, Enum):
     """Declared image layouts that cannot share one Napari layer."""
 
-    SCALAR_PLANE = "scalar_plane"
-    SCALAR_STACK = "scalar_stack"
-    COLOR_PLANE = "color_plane"
-    COLOR_STACK = "color_stack"
+    SCALAR_PLANE = ("scalar_plane", "", True)
+    SCALAR_STACK = ("scalar_stack", "image stack", False)
+    COLOR_PLANE = ("color_plane", "source channels", False)
+    COLOR_STACK = ("color_stack", "source-channel stack", False)
+
+    def __new__(cls, value: str, title_suffix: str, is_default_route: bool):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.title_suffix = title_suffix
+        member.is_default_route = is_default_route
+        return member
 
     @classmethod
     def for_stream_layer_context(
@@ -733,19 +740,6 @@ class NapariImagePayloadLayoutRole(str, Enum):
     @property
     def route_suffix(self) -> str:
         return self.value
-
-    @property
-    def title_suffix(self) -> str:
-        return {
-            self.SCALAR_PLANE: "",
-            self.SCALAR_STACK: "image stack",
-            self.COLOR_PLANE: "RGB",
-            self.COLOR_STACK: "RGB stack",
-        }[self]
-
-    @property
-    def is_default_route(self) -> bool:
-        return self is self.SCALAR_PLANE
 
     def route_key(self, base_route_key: str) -> str:
         if self.is_default_route:

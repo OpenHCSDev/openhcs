@@ -17,6 +17,7 @@ from openhcs.agent.dto.common import (
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.constants.constants import AllComponents
+from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -393,6 +394,7 @@ class PlateFileStreamRequest:
     well: str | None = None
     limit: int = 1
     viewer_config_key: str = ViewerType.NAPARI.config_key
+    display_config: NapariDisplayConfig | None = None
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     fresh_viewer: bool = False
     source_receipt: AgentResourceRef | None = None
@@ -411,6 +413,7 @@ class PlateFileStreamRequest:
         well: str | None = None,
         limit: int = 1,
         viewer_config_key: str = ViewerType.NAPARI.config_key,
+        display_config: NapariDisplayConfig | None = None,
         host: str = "localhost",
         port: int | None = None,
         transport_mode: TransportMode | None = None,
@@ -429,6 +432,7 @@ class PlateFileStreamRequest:
             well=well,
             limit=limit,
             viewer_config_key=viewer_config_key,
+            display_config=display_config,
             connection=ExecutionConnectionSpec(
                 host=host,
                 port=port,
@@ -451,6 +455,7 @@ class PlateFileStreamRequest:
             "well": self.well,
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
+            "display_config": to_jsonable(self.display_config),
             **self.connection.tool_arguments(),
             "fresh_viewer": self.fresh_viewer,
             "source_receipt": (

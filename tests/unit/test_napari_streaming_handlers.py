@@ -4684,7 +4684,7 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
     )
     assert sorted(server.layer_route_state.layer_titles.values()) == [
         "5. OverlayOutlines",
-        "5. OverlayOutlines RGB stack",
+        "5. OverlayOutlines source-channel stack",
     ]
 
 
@@ -4765,7 +4765,7 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
         3,
     )
     assert list(server.layer_route_state.layer_titles.values()) == [
-        "8. OverlayOutlines RGB stack"
+        "8. OverlayOutlines source-channel stack"
     ]
 
 

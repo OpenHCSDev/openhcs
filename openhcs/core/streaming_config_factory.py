@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import DataclassFieldAccess, get_base_config_type
+from python_introspect.validation import overlay_non_none_dataclass
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import (
     ExplicitViewerTransportConfig,
@@ -18,6 +19,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSource,
     ViewerStreamSourceIdentity,
     ViewerStreamSourceMetadata,
+    ViewerDisplayConfigABC,
 )
 from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
@@ -160,6 +162,14 @@ class StreamingConfigBehaviorMixin:
 
     viewer_type_declaration: ClassVar[ViewerType]
     transport_mode: TransportMode
+
+    def with_display_config(self, display: ViewerDisplayConfigABC | None):
+        """Overlay the original display declaration on its matching viewer config."""
+        if display is None:
+            return self
+        if not isinstance(self, type(display)):
+            raise TypeError("Display config must belong to the selected viewer config.")
+        return overlay_non_none_dataclass(self, display)
 
     @classmethod
     def port_from_config(cls, config) -> int | None:
