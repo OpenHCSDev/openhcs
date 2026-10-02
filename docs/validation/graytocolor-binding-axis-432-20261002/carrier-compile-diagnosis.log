@@ -1,0 +1,65 @@
+Interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+Discovery owner: /home/ts/wt/metaclass-registry-selected-discovery-376-20261001/src/metaclass_registry/__init__.py
+EEEF                                                                     [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_declared_gray_creator_proves_color_consumer_before_execution _
+../../.pyenv/versions/3.12.3/lib/python3.12/pathlib.py:1311: in mkdir
+    os.mkdir(self, mode)
+E   FileNotFoundError: [Errno 2] No such file or directory: '/home/ts/.cache/agent-scratch/graytocolor-carrier-432-20261002/pytest'
+_ ERROR at setup of test_declared_gray_creator_proves_same_group_color_consumer _
+../../.pyenv/versions/3.12.3/lib/python3.12/pathlib.py:1311: in mkdir
+    os.mkdir(self, mode)
+E   FileNotFoundError: [Errno 2] No such file or directory: '/home/ts/.cache/agent-scratch/graytocolor-carrier-432-20261002/pytest'
+_ ERROR at setup of test_preservation_annotation_cannot_create_missing_source_carrier _
+../../.pyenv/versions/3.12.3/lib/python3.12/pathlib.py:1311: in mkdir
+    os.mkdir(self, mode)
+E   FileNotFoundError: [Errno 2] No such file or directory: '/home/ts/.cache/agent-scratch/graytocolor-carrier-432-20261002/pytest'
+=================================== FAILURES ===================================
+____ test_original_stack_runtime_carrier_splits_into_unchanged_scalar_roles ____
+tests/unit/test_gray_to_color_carrier_compile_432.py:101: in test_original_stack_runtime_carrier_splits_into_unchanged_scalar_roles
+    assert image_payload_metadata(output).source_channel_axis is None
+E   assert -1 is None
+E    +  where -1 = ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.0, 1.0), unit=<SourceVoxelSpacingUnit.MICRO...urce_plane_dtypes=(), physical_border_edges_yx=None, mask_defines_border=None, source_channel_axis=-1, plane_axis=None).source_channel_axis
+E    +    where ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.0, 1.0), unit=<SourceVoxelSpacingUnit.MICRO...urce_plane_dtypes=(), physical_border_edges_yx=None, mask_defines_border=None, source_channel_axis=-1, plane_axis=None) = image_payload_metadata(ImageMetadataPayload(data=array([[0.        , 0.01525902, 0.03051804, 0.04577707, 0.06103609],\n       [0.07629511, 0.0...rce_plane_dtypes=(), physical_border_edges_yx=None, mask_defines_border=None, source_channel_axis=-1, plane_axis=None)))
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_gray_to_color_carrier_compile_432.py::test_original_stack_runtime_carrier_splits_into_unchanged_scalar_roles
+ERROR tests/unit/test_gray_to_color_carrier_compile_432.py::test_declared_gray_creator_proves_color_consumer_before_execution
+ERROR tests/unit/test_gray_to_color_carrier_compile_432.py::test_declared_gray_creator_proves_same_group_color_consumer
+ERROR tests/unit/test_gray_to_color_carrier_compile_432.py::test_preservation_annotation_cannot_create_missing_source_carrier
+1 failed, 2 warnings, 3 errors in 4.75s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python docs/validation/knowledge-selected-source-tests.py --basetemp=/home/ts/.cache/agent-scratch/graytocolor-carrier-432-20261002/pytest tests/unit/test_gray_to_color_carrier_compile_432.py -q --tb=short"
+	User time (seconds): 4.97
+	System time (seconds): 0.34
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.44
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 347856
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 74931
+	Voluntary context switches: 6
+	Involuntary context switches: 879
+	Swaps: 0
+	File system inputs: 376
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

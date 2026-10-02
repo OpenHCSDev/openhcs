@@ -8,6 +8,7 @@ gives that unit a named identity for compile-time planning and runtime lookup.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -818,25 +819,72 @@ class CompiledFunctionGroup:
             for invocation in self.invocations
         )
 
-    def first_unproved_primary_image_carrier_invocation(
+    def primary_image_carrier_proof(
         self,
         requirement: PrimaryImageCarrierRequirement,
         *,
         stop_before: int | None = None,
-    ) -> CompiledFunctionInvocation | None:
-        """Return the first invocation without a typed carrier proof."""
+    ) -> PrimaryImageCarrierProof:
+        """Resolve a consumer's evidence backwards to its creation or source."""
 
         invocations = (
             self.invocations if stop_before is None else self.invocations[:stop_before]
         )
-        return next(
-            (
-                invocation
-                for invocation in invocations
-                if not invocation.proves_primary_image_carrier(requirement)
-            ),
-            None,
-        )
+        for invocation in reversed(invocations):
+            if not invocation.proves_primary_image_carrier(requirement):
+                return UnprovedPrimaryImageCarrierProof(invocation)
+            transition = invocation.contract.primary_image_carrier_transition
+            if transition.creates(requirement):
+                return CreatedPrimaryImageCarrierProof()
+        return InheritedPrimaryImageCarrierProof()
+
+
+class PrimaryImageCarrierProof(ABC):
+    """One group-owned proof result, not another carrier metadata authority."""
+
+    def validate_obligation(
+        self,
+        *,
+        failure_message: Callable[[CompiledFunctionInvocation], str],
+        source_validation: Callable[[], bool],
+        failures: list[str],
+    ) -> bool:
+        """Execute this proof's obligation; report whether ancestry work is done.
+
+        Completion is not success: rejected obligations are recorded in the
+        caller's existing failure collection and still stop this ancestry walk.
+        """
+        try:
+            return self._fulfill_obligation(failure_message, source_validation)
+        except ValueError as error:
+            failures.append(str(error))
+            return True
+
+    @abstractmethod
+    def _fulfill_obligation(
+        self,
+        failure_message: Callable[[CompiledFunctionInvocation], str],
+        source_validation: Callable[[], bool],
+    ) -> bool:
+        """Fulfill this member's source obligation or reject its invocation."""
+
+
+class InheritedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
+        return source_validation()
+
+
+class CreatedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
+        return True
+
+
+@dataclass(frozen=True, slots=True)
+class UnprovedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    invocation: CompiledFunctionInvocation
+
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
+        raise ValueError(failure_message(self.invocation))
 
 
 @dataclass(frozen=True, slots=True)
