@@ -130,8 +130,8 @@ from openhcs.interop.cellprofiler.setting_names import (
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingsBinder,
     SettingToKeywordBinding,
+    ModuleOnlySettingBinding,
     cellprofiler_enum_setting_parser,
-    normalize_cellprofiler_setting_name,
     parse_cellprofiler_bool,
     parse_cellprofiler_float,
 )
@@ -267,12 +267,17 @@ class ColocalizationSourcePairFeatureRelation(RuntimeMeasurementFeatureRelation)
     """Exact CP family and source orientation for one colocalization feature."""
 
     cellprofiler_family_name: str
+    metric_parameter_name: str = field(kw_only=True)
     source_endpoint_order: tuple[int, int]
     absorbed_field_name: str | None = None
     directional_alias_index: int | None = None
     measurement_scope: CellProfilerMeasurementTargetScope = (
         CellProfilerMeasurementTargetScope.BOTH
     )
+
+    def enabled_for_kwargs(self, kwargs: Mapping[str, object]) -> bool:
+        """Select this feature using the same declared numerical metric flag."""
+        return bool(kwargs.get(self.metric_parameter_name, True))
 
     @property
     def runtime_feature_family(self) -> str:
@@ -357,7 +362,7 @@ class MeasureColocalizationObjectMeasurementRowPolicy(
                 "MeasureColocalization row projection requires an exact source pair."
             )
         return MeasureColocalizationModule.project_source_pair_columnar_rows(
-            rows, invocation.source_pair
+            rows, invocation.source_pair, metric_kwargs=invocation.kwargs
         )
 
     def table_source_image_name(
@@ -460,7 +465,11 @@ class MeasureColocalizationModule(
 
         CORRELATION = (
             "correlation",
-            (ColocalizationSourcePairFeatureRelation("Correlation", (0, 1)),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "Correlation", (0, 1), metric_parameter_name="do_correlation"
+                ),
+            ),
         )
         REGRESSION_SLOPE = (
             "slope",
@@ -469,26 +478,43 @@ class MeasureColocalizationModule(
                     "Slope",
                     (0, 1),
                     measurement_scope=CellProfilerMeasurementTargetScope.IMAGE,
+                    metric_parameter_name="do_correlation",
                 ),
             ),
         )
         OVERLAP = (
             "overlap",
-            (ColocalizationSourcePairFeatureRelation("Overlap", (0, 1)),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "Overlap", (0, 1), metric_parameter_name="do_overlap"
+                ),
+            ),
         )
         OVERLAP_K_FIRST = (
             "k_1",
-            (ColocalizationSourcePairFeatureRelation("K", (0, 1), "k1", 1),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "K", (0, 1), "k1", 1, metric_parameter_name="do_overlap"
+                ),
+            ),
         )
         OVERLAP_K_SECOND = (
             "k_2",
-            (ColocalizationSourcePairFeatureRelation("K", (1, 0), "k2", 2),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "K", (1, 0), "k2", 2, metric_parameter_name="do_overlap"
+                ),
+            ),
         )
         MANDERS_FIRST = (
             "manders_m_1",
             (
                 ColocalizationSourcePairFeatureRelation(
-                    "Manders", (0, 1), "manders_m1", 1
+                    "Manders",
+                    (0, 1),
+                    "manders_m1",
+                    1,
+                    metric_parameter_name="do_manders",
                 ),
             ),
         )
@@ -496,23 +522,35 @@ class MeasureColocalizationModule(
             "manders_m_2",
             (
                 ColocalizationSourcePairFeatureRelation(
-                    "Manders", (1, 0), "manders_m2", 2
+                    "Manders",
+                    (1, 0),
+                    "manders_m2",
+                    2,
+                    metric_parameter_name="do_manders",
                 ),
             ),
         )
         RANK_WEIGHTED_FIRST = (
             "rwc_1",
-            (ColocalizationSourcePairFeatureRelation("RWC", (0, 1), "rwc1", 1),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "RWC", (0, 1), "rwc1", 1, metric_parameter_name="do_rwc"
+                ),
+            ),
         )
         RANK_WEIGHTED_SECOND = (
             "rwc_2",
-            (ColocalizationSourcePairFeatureRelation("RWC", (1, 0), "rwc2", 2),),
+            (
+                ColocalizationSourcePairFeatureRelation(
+                    "RWC", (1, 0), "rwc2", 2, metric_parameter_name="do_rwc"
+                ),
+            ),
         )
         COSTES_MANDERS_FIRST = (
             "costes_m_1",
             (
                 ColocalizationSourcePairFeatureRelation(
-                    "Costes", (0, 1), "costes_m1", 1
+                    "Costes", (0, 1), "costes_m1", 1, metric_parameter_name="do_costes"
                 ),
             ),
         )
@@ -520,7 +558,7 @@ class MeasureColocalizationModule(
             "costes_m_2",
             (
                 ColocalizationSourcePairFeatureRelation(
-                    "Costes", (1, 0), "costes_m2", 2
+                    "Costes", (1, 0), "costes_m2", 2, metric_parameter_name="do_costes"
                 ),
             ),
         )
@@ -599,12 +637,16 @@ class MeasureColocalizationModule(
         cls,
         rows: ColumnarRows,
         source_pair: CellProfilerSourceImagePair,
+        *,
+        metric_kwargs: Mapping[str, object] = MappingProxyType({}),
     ) -> ColumnarRows:
         """Project columnar colocalization fields to exact source-pair names."""
         if isinstance(rows, ConcatenatedColumnarRows):
             return ConcatenatedColumnarRows(
                 tuple(
-                    cls.project_source_pair_columnar_rows(row_batch, source_pair)
+                    cls.project_source_pair_columnar_rows(
+                        row_batch, source_pair, metric_kwargs=metric_kwargs
+                    )
                     for row_batch in rows.row_batches
                 )
             )
@@ -639,6 +681,8 @@ class MeasureColocalizationModule(
             if field_name not in features_by_field_name:
                 continue
             feature = features_by_field_name[field_name]
+            if not feature.source_pair_relation.enabled_for_kwargs(metric_kwargs):
+                continue
             if not feature.emitted_in_scope(measurement_scope):
                 continue
             projected_field_columns.append(
@@ -737,27 +781,27 @@ class MeasureColocalizationModule(
     metric_flag_setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
         SettingToKeywordBinding(
             correlation_setting,
-            "do_correlation",
+            MeasurementFeature.CORRELATION.source_pair_relation.metric_parameter_name,
             parse_cellprofiler_bool,
         ),
         SettingToKeywordBinding(
             manders_setting,
-            "do_manders",
+            MeasurementFeature.MANDERS_FIRST.source_pair_relation.metric_parameter_name,
             parse_cellprofiler_bool,
         ),
         SettingToKeywordBinding(
             rank_weighted_setting,
-            "do_rwc",
+            MeasurementFeature.RANK_WEIGHTED_FIRST.source_pair_relation.metric_parameter_name,
             parse_cellprofiler_bool,
         ),
         SettingToKeywordBinding(
             overlap_setting,
-            "do_overlap",
+            MeasurementFeature.OVERLAP.source_pair_relation.metric_parameter_name,
             parse_cellprofiler_bool,
         ),
         SettingToKeywordBinding(
             costes_setting,
-            "do_costes",
+            MeasurementFeature.COSTES_MANDERS_FIRST.source_pair_relation.metric_parameter_name,
             parse_cellprofiler_bool,
         ),
     )
@@ -766,6 +810,7 @@ class MeasureColocalizationModule(
         *metric_flag_setting_bindings,
     )
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
+        ModuleOnlySettingBinding(run_all_metrics_setting),
         save_mask_output_image_binding,
         save_mask_object_binding,
         *metric_setting_bindings,
@@ -1052,18 +1097,6 @@ class MeasureColocalizationModule(
         bound = cls._bind_declared_settings(module, binder=binder)
         kwargs = dict(bound.kwargs)
         unmapped_kwargs = dict(bound.unmapped_kwargs)
-        run_all_value = optional_setting_value(module, cls.run_all_metrics_setting)
-        if run_all_value is not None:
-            if cls.run_all_metrics_enabled(run_all_value, binder):
-                kwargs.update(
-                    {
-                        binding.require_parameter_name(): True
-                        for binding in cls.metric_flag_setting_bindings
-                    }
-                )
-            unmapped_kwargs.pop(
-                normalize_cellprofiler_setting_name(cls.run_all_metrics_setting), None
-            )
         kwargs.pop(
             cls.save_mask_output_image_binding.require_parameter_name(),
             None,
@@ -1212,15 +1245,6 @@ class MeasureColocalizationModule(
             block,
             setting_records=records,
         )
-
-    @staticmethod
-    def run_all_metrics_enabled(value: str, binder: "SettingsBinder") -> bool:
-        normalized = value.strip().lower()
-        if normalized in binder.BOOL_TRUE:
-            return True
-        if normalized in binder.BOOL_FALSE:
-            return False
-        return bool(value.strip())
 
 
 logger = logging.getLogger(__name__)
@@ -2538,7 +2562,7 @@ def measure_colocalization(
     (CellProfiler setting -> Python parameter)
         'Select images to measure' -> (pipeline-handled)
         'Set threshold as percentage of maximum intensity for the images' -> threshold_percent
-        'Run all metrics?' -> (pipeline-handled)
+        'Run all metrics?' -> (module UI only; individual metric rows select work)
         'Calculate correlation and slope metrics?' -> do_correlation
         'Calculate the Manders coefficients?' -> do_manders
         'Calculate the Rank Weighted Colocalization coefficients?' -> do_rwc
