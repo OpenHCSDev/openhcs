@@ -6536,6 +6536,7 @@ def test_mcp_dev_client_sample_plate_image_command_renders_compact_summary():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6543,6 +6544,9 @@ def test_mcp_dev_client_sample_plate_image_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -6604,6 +6608,7 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_element_budget():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6611,6 +6616,9 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_element_budget():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -6658,6 +6666,7 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_include_arrays():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -6665,6 +6674,9 @@ def test_mcp_dev_client_sample_plate_image_omission_suggests_include_arrays():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
+                        "plate_path": "/tmp/example-plate",
+                        "requested_image_path": "A01_s001_w1_z001_t001.tif",
                         "virtual_path": "images/A01_s001_w1_z001_t001.tif",
                         "source_path": "/tmp/example-plate/images/A01_s001_w1_z001_t001.tif",
                         "shape": [1, 96, 96],
@@ -7247,6 +7259,7 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample",))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7254,6 +7267,7 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -7262,6 +7276,9 @@ def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
                         "image_path": "./A01_s001_w1_z001_t001.tif",
                         "auto_selected_image_path": True,
                         "sample": {
+                            "schema_version": SCHEMA_VERSION,
+                            "plate_path": "/tmp/selected-plate",
+                            "requested_image_path": "./A01_s001_w1_z001_t001.tif",
                             "virtual_path": "./A01_s001_w1_z001_t001.tif",
                             "source_path": "/tmp/source/A01_w1.tif",
                             "shape": [1, 2, 2],
@@ -7318,6 +7335,7 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample", "--target", "output"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7325,6 +7343,7 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -7333,6 +7352,9 @@ def test_mcp_dev_client_selected_plate_sample_omission_suggests_element_budget()
                         "image_path": "./A01_s001_w1_z001_t001.tif",
                         "auto_selected_image_path": False,
                         "sample": {
+                            "schema_version": SCHEMA_VERSION,
+                            "plate_path": "/tmp/selected-plate",
+                            "requested_image_path": "./A01_s001_w1_z001_t001.tif",
                             "virtual_path": "./A01_s001_w1_z001_t001.tif",
                             "source_path": "/tmp/source/A01_w1.tif",
                             "shape": [1, 96, 96],
@@ -7379,6 +7401,7 @@ def test_mcp_dev_client_selected_plate_sample_error_keeps_target_context():
     parser = dev_client._build_parser()
     args = parser.parse_args(("selected-plate-sample", "--target", "output"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -7386,6 +7409,7 @@ def test_mcp_dev_client_selected_plate_sample_error_keeps_target_context():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "selected_plate": {
                             "name": "selected-plate",
                             "plate_root": "/tmp/selected-plate",
@@ -14360,6 +14384,7 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
     args = parser.parse_args(("sample-viewer-image", "5555", "image-layer"))
     streamed_path = tmp_path / "sampled_virtual_image.tif"
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14367,6 +14392,7 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": [0, 1],
@@ -14381,6 +14407,9 @@ def test_mcp_dev_client_sample_viewer_image_command_renders_compact_summary(tmp_
                         "sample_omitted_count": 0,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer:0",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [0, 1],
@@ -14434,6 +14463,7 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
     parser = dev_client._build_parser()
     args = parser.parse_args(("sample-viewer-image", "5555", "image-layer"))
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14441,6 +14471,7 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": {"channel": 1},
@@ -14453,6 +14484,9 @@ def test_mcp_dev_client_sample_viewer_image_renders_omitted_reason():
                         "sample_omitted_count": 1,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [1],
@@ -14510,6 +14544,7 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
         )
     )
     response = {
+        "server": {"command": sys.executable, "module": "openhcs.mcp.server"},
         "errors": [],
         "results": [
             {
@@ -14517,6 +14552,7 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
                 "mcp_error": False,
                 "payloads": [
                     {
+                        "schema_version": SCHEMA_VERSION,
                         "observed": True,
                         "route_key": "image-layer",
                         "axis_indices": {"channel": 1},
@@ -14529,6 +14565,9 @@ def test_mcp_dev_client_sample_viewer_image_omission_suggests_element_budget():
                         "sample_omitted_count": 1,
                         "records": [
                             {
+                                "layer_title": "image-layer",
+                                "data_type": "image",
+                                "components": {},
                                 "payload_route_key": "image-layer",
                                 "layer_route_key": "image-layer",
                                 "axis_indices": [1],
