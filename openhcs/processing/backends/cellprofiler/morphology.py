@@ -2250,10 +2250,18 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
             np.stack((labels, labels)), np.ones((3, 3, 3), dtype=np.bool_)
         )
         self.local_maxima_by_label(image, labels, footprint)
-        self.smooth_image_for_declumping(image, mask, 1.0)
-        self.smooth_image_for_declumping(
-            image, np.ones(mask.shape, dtype=np.bool_), 1.0
-        )
+        for dtype in (np.float32, np.float64):
+            for writable_image in (False, True):
+                image = np.arange(9, dtype=dtype).reshape((3, 3))
+                image.flags.writeable = writable_image
+                for full_mask in (False, True):
+                    for writable_mask in (False, True):
+                        smoothing_mask = (
+                            np.ones(mask.shape, dtype=np.bool_)
+                            if full_mask else mask.copy()
+                        )
+                        smoothing_mask.flags.writeable = writable_mask
+                        self.smooth_image_for_declumping(image, smoothing_mask, 1.0)
 
     def connected_components(
         self, mask: np.ndarray, *, connectivity: int = 2
