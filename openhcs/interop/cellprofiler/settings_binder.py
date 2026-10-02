@@ -372,15 +372,35 @@ class SettingToKeywordBinding:
         kwargs: dict[str, CellProfilerSettingValue],
         binder: "SettingsBinder",
     ) -> None:
+        parameter_name = self.bound_parameter_name()
+        if parameter_name is None:
+            return
         value = optional_setting_value(module, self.setting_name)
         if value is None:
             return
         setting_name = setting_names(self.setting_name)[0]
-        kwargs[self.require_parameter_name()] = (
+        kwargs[parameter_name] = (
             binder.parse_value(setting_name, value)
             if self.parse is None
             else self.parse(value)
         )
+
+    def bound_parameter_name(self) -> str | None:
+        """Return the runtime keyword owned by this setting declaration."""
+        return self.require_parameter_name()
+
+
+@dataclass(frozen=True, slots=True)
+class ModuleOnlySettingBinding(SettingToKeywordBinding):
+    """Retain an inactive module row without declaring a runtime input or kwarg.
+
+    Reconstruction and setting coverage remain owned by the original binding
+    algorithms. A row for an unsupported operation must not manufacture image
+    planes merely because it happens to contain an image's name.
+    """
+
+    def bound_parameter_name(self) -> None:
+        return None
 
 
 @dataclass(frozen=True, slots=True)
