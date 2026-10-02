@@ -1098,7 +1098,7 @@ def mask_image(
     mask_source: MaskSource = MaskSource.IMAGE,
     invert_mask: bool = False,
     binary_threshold: float = 0.5,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Mask an image using CellProfiler image/object mask semantics.
 
     Args:
@@ -1276,14 +1276,14 @@ def tile(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def resize(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
     specific_width: int = 100,
     specific_height: int = 100,
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Resize a CellProfiler image plane by factor or explicit dimensions."""
     pixels = image_payload_data(image)
     geometry = ResizeGeometry.from_parameters(
@@ -1298,7 +1298,7 @@ def resize(
 
 @numpy(contract=ProcessingContract.PURE_3D)
 def resize_volumetric(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
@@ -1307,7 +1307,7 @@ def resize_volumetric(
     specific_height: int = 100,
     specific_planes: int = 10,
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Resize a CellProfiler ZYX image volume by factor or explicit dimensions."""
     pixels = image_payload_data(image)
     geometry = ResizeGeometry.from_trailing_spatial_parameters(
