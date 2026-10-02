@@ -1,13 +1,18 @@
 """Execution readiness owns main-thread registry warming and one catalogue future."""
 
 import threading
+import sys
 from concurrent.futures import CancelledError
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from zmqruntime.execution import ExecutionServer
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import FunctionCatalogPreparationOutcome
+from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.processing_preparation import PreparationCacheBatch, PreparationOperation
+from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
@@ -124,3 +129,51 @@ def test_startup_observer_receives_live_kernel_progress_before_binding(monkeypat
     )
     preparation.prepare_before_serving(observe)
     assert observed[-1] == ("Function catalog ready", True)
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_real_registry_readiness_waits_for_unselected_parent_hooks(monkeypatch, fails):
+    events = []
+    module = ModuleType("_openhcs_startup_readiness_test")
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+
+    def unselected(image):
+        return image
+
+    unselected.__module__ = module.__name__
+    server = ZMQExecutionServer()
+    server._function_catalog = PreparedCatalog(events)
+    preparation = FunctionCatalogPreparation(server._function_catalog)
+    server._function_catalog_preparation = preparation
+
+    def parent_hook():
+        assert threading.current_thread() is threading.main_thread()
+        assert not preparation._future.done()
+        events.append("unselected parent hook")
+        if fails:
+            raise RuntimeError("unselected kernel failed")
+
+    unselected.__dict__[FunctionContractAttribute.processing_prepare] = parent_hook
+    monkeypatch.setattr(
+        RegistryService, "_metadata_cache", {"unselected": SimpleNamespace(func=unselected)}
+    )
+    monkeypatch.setattr(
+        PreparationCacheBatch, "populate_child_caches",
+        lambda self, **kwargs: events.append("cache work"),
+    )
+    monkeypatch.setattr(ExecutionServer, "start", lambda self: events.append("bind"))
+    PreparationOperation.reset()
+    try:
+        if fails:
+            with pytest.raises(RuntimeError, match="unselected kernel failed"):
+                server.start()
+            assert events == ["cache work", "unselected parent hook"]
+            state = preparation.start(ExecutionConnectionSpec(port=22319))
+            assert state.outcome is FunctionCatalogPreparationOutcome.FAILED
+        else:
+            server.start()
+            server.prepare_runtime_capabilities()
+            assert events == ["cache work", "unselected parent hook", "catalog", "bind"]
+            assert preparation._future.done() and preparation._future.exception() is None
+    finally:
+        PreparationOperation.reset()

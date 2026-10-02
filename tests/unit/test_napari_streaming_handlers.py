@@ -141,7 +141,7 @@ def _payload_summary(item: NapariStreamLayerItem) -> dict:
         item,
         item.address.components,
         item.data,
-    )
+    ).to_wire_mapping()
 
 
 def test_napari_stream_context_reconstructs_exact_source_spatial_domain():

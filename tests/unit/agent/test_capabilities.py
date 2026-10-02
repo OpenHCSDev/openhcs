@@ -21,6 +21,7 @@ from openhcs.agent.capabilities import (
     LocalCapabilitySurfaceProfile,
     PipelineDraftCapability,
     PlatePathCapability,
+    ProgressAcknowledgedCapability,
     RuntimeServerCliConnectionCapability,
     UiBridgeCapability,
     ViewerWindowCliConnectionCapability,
@@ -73,11 +74,17 @@ def test_source_session_capability_owns_progress_heartbeat_policy():
     assert source_session.as_jsonable()["progress_worker_thread_safe"] is False
 
     function_search = capabilities["openhcs_search_functions"]
-    assert function_search.progress_heartbeat_seconds == 5.0
+    assert (
+        function_search.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert function_search.progress_worker_thread_safe is True
 
     synthetic_plate = capabilities["openhcs_generate_synthetic_plate"]
-    assert synthetic_plate.progress_heartbeat_seconds == 5.0
+    assert (
+        synthetic_plate.progress_heartbeat_seconds
+        == ProgressAcknowledgedCapability.progress_heartbeat_seconds
+    )
     assert synthetic_plate.progress_worker_thread_safe is True
 
 

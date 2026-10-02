@@ -107,6 +107,7 @@ from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -13937,10 +13938,9 @@ def test_mcp_viewer_rois_collapses_duplicate_member_metadata():
                                 data_type="shapes",
                                 path="/tmp/A01_w2_rois.roi.zip",
                                 components={"well": "A01", "channel": 2},
-                                summary={
-                                    "shape_payload_count": 3,
-                                    "shape_coordinate_count": 12,
-                                },
+                                summary=ViewerPayloadSummary(
+                                    shape_payload_count=3, shape_coordinate_count=12,
+                                ),
                                 shape_payloads=(
                                     {
                                         "type": "polygon",
@@ -14036,17 +14036,11 @@ def test_mcp_sample_viewer_image_auto_selects_single_image_layer():
                                 path=f"/tmp/image-{index}.tif",
                                 components={"well": "A01", "channel": 1},
                                 axis_indices=(index,),
-                                summary={
-                                    "shape": [96, 96],
-                                    "dtype": "uint16",
-                                    "min": 1,
-                                    "max": 4,
-                                    "nonzero_count": 10,
-                                },
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(
+                                    shape=(96, 96), dtype="uint16", min=1, max=4,
+                                    nonzero_count=10,
+                                ),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             )
                             for index in range(5)
                         ),
@@ -14120,11 +14114,8 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 path="/tmp/first.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14140,11 +14131,8 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 path="/tmp/second.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14207,11 +14195,8 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 path="/tmp/selected.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
@@ -14227,11 +14212,8 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 path="/tmp/other.tif",
                                 components={"well": "A01"},
                                 axis_indices=(0,),
-                                summary={"shape": [8, 8]},
-                                array_value_summary={
-                                    "requested": True,
-                                    "included": False,
-                                },
+                                summary=ViewerPayloadSummary(shape=(8, 8)),
+                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
                             ),
                         ),
                     ),
