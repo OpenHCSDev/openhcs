@@ -1,0 +1,879 @@
+Existing refactor-audit Package/ParsedModule AST enumeration; no dynamic binding proof
+ROOT /home/ts/wt/openhcs-knowledge-declaration-source-376-20261001 4754fbe2b6a7969380c0fe7b749dee0a5bdf8643 PARSED 703 OMISSIONS ()
+openhcs/agent/capabilities.py 174 ImportFrom from openhcs.agent.dto.viewer import ViewerWindowPolylineMeasurementRequest, ViewerWindowPolylineMeasurementResult, ViewerWindowRegionMeasurementRequest, ViewerWindowRegionMeasurementResult, ViewerEndpointDiscoveryResult, ViewerWindowCloseRequest, ViewerWindowImageIntensityRequest, ViewerWindowImageIntensityResult, ViewerWindowImageSampleRequest, ViewerWindowImageSampleResult, ViewerWindowIntensit [body read separately]
+openhcs/agent/capabilities.py 3255 ClassDef class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
+openhcs/agent/capabilities.py 3271 Assign input_contract = ViewerWindowViewportRequest
+openhcs/agent/capabilities.py 3273 Assign request_invocation = AgentViewerWindowRequestServiceInvocation(service=lambda context: context.viewer_window_service, method=lambda service, request: service.viewport(request))
+openhcs/agent/capabilities.py 3271 Name ViewerWindowViewportRequest
+openhcs/agent/capabilities.py 3273 Call AgentViewerWindowRequestServiceInvocation(service=lambda context: context.viewer_window_service, method=lambda service, request: service.viewport(request))
+openhcs/agent/capabilities.py 3275 Call service.viewport(request)
+openhcs/agent/capabilities.py 3275 Attribute service.viewport
+openhcs/agent/dto/viewer.py 22 ImportFrom from zmqruntime.viewer_protocol import ViewerImageIntensityControlOptions, ViewerNativeImageIntensityPresentation, ViewerNativeLayerTransform, ViewerNativeViewportPresentation
+openhcs/agent/dto/viewer.py 410 ClassDef @dataclass(frozen=True, slots=True, kw_only=True)
+openhcs/agent/dto/viewer.py 1068 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/agent/dto/viewer.py 1215 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/agent/dto/viewer.py 413 AnnAssign presentation: ViewerNativeViewportPresentation
+openhcs/agent/dto/viewer.py 416 FunctionDef @classmethod
+openhcs/agent/dto/viewer.py 1085 AnnAssign native_viewport: ViewerNativeViewportPresentation | None = None
+openhcs/agent/dto/viewer.py 1224 AnnAssign native_viewport: ViewerNativeViewportPresentation | None = None
+openhcs/agent/dto/viewer.py 413 Name ViewerNativeViewportPresentation
+openhcs/agent/dto/viewer.py 1085 Name ViewerNativeViewportPresentation
+openhcs/agent/dto/viewer.py 1224 Name ViewerNativeViewportPresentation
+openhcs/agent/dto/viewer.py 420 Name ViewerNativeViewportPresentation
+openhcs/agent/services/viewer_window_service.py 27 ImportFrom from zmqruntime.viewer_protocol import ViewerNativeImageIntensityPresentation, ViewerNativeLayerTransform, ViewerNativeViewportPresentation
+openhcs/agent/services/viewer_window_service.py 43 ImportFrom from openhcs.agent.dto.viewer import ViewerWindowPolylineMeasurementRequest, ViewerWindowPolylineMeasurementResult, ViewerWindowRegionMeasurementRequest, ViewerWindowRegionMeasurementResult, ViewerWindowCloseRequest, ViewerWindowControlRequest, ViewerWindowDescriptor, ViewerWindowImageIntensityRequest, ViewerWindowImageIntensityResult, ViewerWindowImageSampleRequest, ViewerWindowImageSampleResult, [body read separately]
+openhcs/agent/services/viewer_window_service.py 1010 ClassDef class ViewerWindowGatewayABC(ABC):
+openhcs/agent/services/viewer_window_service.py 1062 ClassDef class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
+openhcs/agent/services/viewer_window_service.py 1206 ClassDef class ViewerWindowService:
+openhcs/agent/services/viewer_window_service.py 1030 FunctionDef @abstractmethod
+openhcs/agent/services/viewer_window_service.py 1070 FunctionDef def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1078 FunctionDef def window_state(self, request: ViewerWindowStateRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1085 FunctionDef def window_payloads(self, request: ViewerWindowPayloadRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1092 FunctionDef def image_intensity(self, request: ViewerWindowImageIntensityRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1101 FunctionDef def viewport(self, request: ViewerWindowViewportRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1110 FunctionDef def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1117 FunctionDef def isolate_layers(self, request: ViewerWindowLayerIsolationRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1136 FunctionDef def apply_intensity_window(self, request: ViewerWindowIntensityWindowRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1148 FunctionDef def measure_polyline(self, request: ViewerWindowPolylineMeasurementRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1159 FunctionDef def measure_region(self, request: ViewerWindowRegionMeasurementRequest) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1170 FunctionDef def _send_control_message(self, request: ViewerWindowControlRequest, message: Mapping[str, object]) -> JsonObject:
+openhcs/agent/services/viewer_window_service.py 1400 FunctionDef def viewport(self, request: ViewerWindowViewportRequest) -> ViewerWindowViewportResult:
+openhcs/agent/services/viewer_window_service.py 2174 FunctionDef def _state_result_from_response(self, *, connection: ExecutionConnectionSpec, response: JsonObject, include_response: bool=True) -> ViewerWindowStateResult:
+openhcs/agent/services/viewer_window_service.py 1076 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1083 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1090 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1093 Call self._send_control_message(request, {ViewerControlResponseField.TYPE.value: ViewerControlMessageType.IMAGE_INTENSITY.value, ViewerControlResponseField.PAYLOAD.value: request.intensity})
+openhcs/agent/services/viewer_window_service.py 1102 Call self._send_control_message(request, {ViewerControlResponseField.TYPE.value: ViewerControlMessageType.VIEWPORT.value, ViewerControlResponseField.PAYLOAD.value: request.presentation})
+openhcs/agent/services/viewer_window_service.py 1115 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1124 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1146 Call self._send_control_message(request, message)
+openhcs/agent/services/viewer_window_service.py 1151 Call self._send_control_message(request, {ViewerControlResponseField.TYPE.value: OpenHCSViewerControlMessageType.MEASURE_POLYLINE.value, ViewerControlResponseField.PAYLOAD.value: request.measurement})
+openhcs/agent/services/viewer_window_service.py 1162 Call self._send_control_message(request, {ViewerControlResponseField.TYPE.value: OpenHCSViewerControlMessageType.MEASURE_REGION.value, ViewerControlResponseField.PAYLOAD.value: request.measurement})
+openhcs/agent/services/viewer_window_service.py 1404 Assign response = self._gateway.viewport(request)
+openhcs/agent/services/viewer_window_service.py 1414 Assign presentation = ViewerNativeViewportPresentation.from_wire_mapping(self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT))
+openhcs/agent/services/viewer_window_service.py 2201 Call ViewerWindowStateResult(schema_version=SCHEMA_VERSION, connection=connection, observed=True, errors=errors, viewer=ViewerWindowDescriptor.from_wire_fields(viewer_wire_value=self._required_scalar(viewer_payload, ViewerDescriptorField.TYPE, str, 'a string'), title=self._required_scalar(viewer_payload, ViewerDescriptorField.TITLE, str, 'a string')), layer_count=self._required_scalar(response, ViewerC [body read separately]
+openhcs/agent/services/viewer_window_service.py 1030 Name ViewerWindowViewportRequest
+openhcs/agent/services/viewer_window_service.py 1076 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1083 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1090 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1093 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1101 Name ViewerWindowViewportRequest
+openhcs/agent/services/viewer_window_service.py 1102 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1115 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1124 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1146 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1151 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1162 Attribute self._send_control_message
+openhcs/agent/services/viewer_window_service.py 1401 Name ViewerWindowViewportRequest
+openhcs/agent/services/viewer_window_service.py 1404 Call self._gateway.viewport(request)
+openhcs/agent/services/viewer_window_service.py 1414 Call ViewerNativeViewportPresentation.from_wire_mapping(self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT))
+openhcs/agent/services/viewer_window_service.py 1404 Attribute self._gateway.viewport
+openhcs/agent/services/viewer_window_service.py 1414 Attribute ViewerNativeViewportPresentation.from_wire_mapping
+openhcs/agent/services/viewer_window_service.py 1414 Name ViewerNativeViewportPresentation
+openhcs/agent/services/viewer_window_service.py 2230 Call ViewerNativeViewportPresentation.from_wire_mapping(self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT))
+openhcs/agent/services/viewer_window_service.py 2230 Attribute ViewerNativeViewportPresentation.from_wire_mapping
+openhcs/agent/services/viewer_window_service.py 2230 Name ViewerNativeViewportPresentation
+openhcs/core/config.py 35 ImportFrom from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
+openhcs/core/config.py 257 ClassDef @dataclass(frozen=True)
+openhcs/core/config.py 386 Assign NapariDisplayConfig = global_pipeline_config(ui_hidden=True)(NapariDisplayConfig)
+openhcs/core/config.py 414 ClassDef @dataclass(frozen=True)
+openhcs/core/config.py 1147 ImportFrom from openhcs.core.streaming_config_factory import StreamingConfigBehaviorMixin, ViewerProcessLaunchConfig
+openhcs/core/config.py 1156 ClassDef @abbreviation('nap')
+openhcs/core/config.py 1188 ClassDef @abbreviation('fiji')
+openhcs/core/config.py 258 Name ViewerDisplayConfigABC
+openhcs/core/config.py 291 AnnAssign channel_mode: NapariDimensionMode = field(default=NapariDimensionMode.STACK, metadata={'description': 'Whether channel values are stacked or use separate layers.'})
+openhcs/core/config.py 318 FunctionDef def component_modes(self) -> dict[str, str]:
+openhcs/core/config.py 386 Name NapariDisplayConfig
+openhcs/core/config.py 386 Call global_pipeline_config(ui_hidden=True)(NapariDisplayConfig)
+openhcs/core/config.py 415 Name ViewerDisplayConfigABC
+openhcs/core/config.py 447 AnnAssign channel_mode: FijiDimensionMode = field(default=FijiDimensionMode.CHANNEL, metadata={'description': 'ImageJ dimension used for channel values, or WINDOW for separate windows.'})
+openhcs/core/config.py 480 FunctionDef def component_modes(self) -> dict[str, str]:
+openhcs/core/config.py 1157 Name StreamingConfigBehaviorMixin
+openhcs/core/config.py 1159 Name NapariDisplayConfig
+openhcs/core/config.py 1189 Name StreamingConfigBehaviorMixin
+openhcs/core/config.py 291 Name channel_mode
+openhcs/core/config.py 386 Name NapariDisplayConfig
+openhcs/core/config.py 447 Name channel_mode
+openhcs/core/config.py 323 Attribute self.channel_mode.value
+openhcs/core/config.py 485 Attribute self.channel_mode.value
+openhcs/core/config.py 323 Attribute self.channel_mode
+openhcs/core/config.py 485 Attribute self.channel_mode
+openhcs/core/steps/stream_component_semantics.py 13 ImportFrom from polystore.streaming.viewer_transport import DisplayComponentToken, DisplayModeToken, IndexedViewerStreamSourceMetadata, PathMappedViewerStreamSourceMetadata, ViewerStreamBackendKwargs, ViewerStreamMessageContext, ViewerStreamProducer, ViewerStreamSourceIdentity, ViewerStreamSourceMetadata, ViewerDisplayConfigABC
+openhcs/core/steps/stream_component_semantics.py 194 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/core/steps/stream_component_semantics.py 194 Name ViewerDisplayConfigABC
+openhcs/core/steps/stream_component_semantics.py 197 AnnAssign base: ViewerDisplayConfigABC
+openhcs/core/steps/stream_component_semantics.py 197 Name ViewerDisplayConfigABC
+openhcs/core/streaming_config_factory.py 158 ClassDef class StreamingConfigBehaviorMixin:
+openhcs/gui_startup.py 459 FunctionDef def _run_startup_window_child() -> int:
+openhcs/gui_startup.py 612 ClassDef class _StartupWindowPresentation(_StartupEventPresentationABC):
+openhcs/gui_startup.py 622 FunctionDef def present_failure(self, message: str, detail: str) -> None:
+openhcs/gui_startup.py 685 Call window.activateWindow()
+openhcs/gui_startup.py 685 Attribute window.activateWindow
+openhcs/gui_startup.py 638 Call self._window.activateWindow()
+openhcs/gui_startup.py 638 Attribute self._window.activateWindow
+openhcs/mcp/dev_client_commands/viewer.py 13 ImportFrom from openhcs.agent.dto.viewer import VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT, ViewerWindowImageSampleRequest, ViewerWindowIntensityWindowRequest, ViewerWindowLayerIsolationRequest, ViewerWindowNavigationRequest, ViewerNativeViewportPresentation, ViewerWindowViewportRequest, ViewerWindowViewportResult, ViewerWindowPayloadRequest, ViewerWindowRoiSummaryRequest, ViewerWindowSnapshotRequest, ViewerWi [body read separately]
+openhcs/mcp/dev_client_commands/viewer.py 846 ClassDef class SetViewerViewportCommandSpec(SingleToolCommandSpec):
+openhcs/mcp/dev_client_commands/viewer.py 873 FunctionDef def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
+openhcs/mcp/dev_client_commands/viewer.py 886 Assign presentation = ViewerNativeViewportPresentation(center=center, zoom=args.zoom if args.zoom is not None else 1.0)
+openhcs/mcp/dev_client_commands/viewer.py 890 Assign request = ViewerWindowViewportRequest.from_fields(connection=ExecutionConnectionSpec(host=connection.host, port=connection.port, transport_mode=connection.transport_mode), timeout_ms=connection.timeout_ms if connection.timeout_ms is not None else VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT, presentation=presentation)
+openhcs/mcp/dev_client_commands/viewer.py 886 Call ViewerNativeViewportPresentation(center=center, zoom=args.zoom if args.zoom is not None else 1.0)
+openhcs/mcp/dev_client_commands/viewer.py 890 Call ViewerWindowViewportRequest.from_fields(connection=ExecutionConnectionSpec(host=connection.host, port=connection.port, transport_mode=connection.transport_mode), timeout_ms=connection.timeout_ms if connection.timeout_ms is not None else VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT, presentation=presentation)
+openhcs/mcp/dev_client_commands/viewer.py 886 Name ViewerNativeViewportPresentation
+openhcs/mcp/dev_client_commands/viewer.py 890 Attribute ViewerWindowViewportRequest.from_fields
+openhcs/mcp/dev_client_commands/viewer.py 890 Name ViewerWindowViewportRequest
+openhcs/mcp/dev_client_renderers/viewer.py 145 ClassDef class ViewerStateRenderer(ViewerResultRenderer):
+openhcs/mcp/dev_client_renderers/viewer.py 179 FunctionDef @classmethod
+openhcs/mcp/dev_client_renderers/viewer.py 182 Call cls._json_summary(viewport.center)
+openhcs/mcp/dev_client_renderers/viewer.py 182 Attribute viewport.zoom
+openhcs/mcp/dev_client_renderers/viewer.py 182 Attribute viewport.center
+openhcs/mcp/dev_client_renderers/viewer.py 182 Name viewport
+openhcs/mcp/dev_client_renderers/viewer.py 182 Name viewport
+openhcs/pyqt_gui/app.py 110 ClassDef class OpenHCSPyQtApp(QApplication):
+openhcs/pyqt_gui/app.py 273 FunctionDef def show_main_window(self, *, on_deferred_initialization_complete: Callable[[], None] | None=None, on_deferred_initialization_failed: Callable[[BaseException], None] | None=None):
+openhcs/pyqt_gui/app.py 293 Call self.main_window.activateWindow()
+openhcs/pyqt_gui/app.py 293 Attribute self.main_window.activateWindow
+openhcs/pyqt_gui/services/ui_bridge_windows.py 1050 ClassDef class QtTopLevelWindowProjection(WindowTargetOperationProjectionMixin, WindowCatalogProjectionABC):
+openhcs/pyqt_gui/services/ui_bridge_windows.py 1105 FunctionDef def focus(self, request: UiWindowFocusRequest) -> UiWindowFocusResult:
+openhcs/pyqt_gui/services/ui_bridge_windows.py 1116 Call target.widget.activateWindow()
+openhcs/pyqt_gui/services/ui_bridge_windows.py 1116 Attribute target.widget.activateWindow
+openhcs/pyqt_gui/services/window_handlers.py 48 ClassDef class OpenHCSWindowCreationAuthority:
+openhcs/pyqt_gui/services/window_handlers.py 376 FunctionDef def _show_window(self, window: QWidget) -> None:
+openhcs/pyqt_gui/services/window_handlers.py 379 Call window.activateWindow()
+openhcs/pyqt_gui/services/window_handlers.py 379 Attribute window.activateWindow
+openhcs/pyqt_gui/widgets/pipeline_editor.py 362 ClassDef class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidget):
+openhcs/pyqt_gui/widgets/pipeline_editor.py 714 FunctionDef def action_add_step(self):
+openhcs/pyqt_gui/widgets/pipeline_editor.py 1548 FunctionDef @override
+openhcs/pyqt_gui/widgets/pipeline_editor.py 858 Call editor.activateWindow()
+openhcs/pyqt_gui/widgets/pipeline_editor.py 1607 Call editor.activateWindow()
+openhcs/pyqt_gui/widgets/pipeline_editor.py 858 Attribute editor.activateWindow
+openhcs/pyqt_gui/widgets/pipeline_editor.py 1607 Attribute editor.activateWindow
+openhcs/pyqt_gui/widgets/plate_manager.py 537 ClassDef class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidget):
+openhcs/pyqt_gui/widgets/plate_manager.py 1506 FunctionDef def _open_config_window(self, state: ObjectState, on_save_callback, mutation_scope_ids: tuple[str, ...]):
+openhcs/pyqt_gui/widgets/plate_manager.py 2279 FunctionDef def action_view_live_results(self):
+openhcs/pyqt_gui/widgets/plate_manager.py 1543 Call config_window.activateWindow()
+openhcs/pyqt_gui/widgets/plate_manager.py 2296 Call self.live_measurements_window.activateWindow()
+openhcs/pyqt_gui/widgets/plate_manager.py 1543 Attribute config_window.activateWindow
+openhcs/pyqt_gui/widgets/plate_manager.py 2296 Attribute self.live_measurements_window.activateWindow
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 528 ClassDef class PlateSelectionInteractionLifecycle:
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 596 ClassDef class AspectRatioContainer(QWidget):
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 568 FunctionDef def show_rectangle(self, rect: QRect) -> None:
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 633 FunctionDef def _update_child_geometry(self):
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 569 Call self.view.selection_rect_widget.setGeometry(rect)
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 669 Call self.child_widget.setGeometry(x, y, child_w, child_h)
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 569 Attribute self.view.selection_rect_widget.setGeometry
+openhcs/pyqt_gui/widgets/shared/plate_view_widget.py 669 Attribute self.child_widget.setGeometry
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1328 ClassDef class EditableTableLayout:
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1350 FunctionDef @staticmethod
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1365 Call table.viewport().setMinimumHeight(row_height)
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1365 Attribute table.viewport().setMinimumHeight
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1365 Call table.viewport()
+openhcs/pyqt_gui/widgets/source_bindings_editor.py 1365 Attribute table.viewport
+openhcs/runtime/napari_streaming_handlers.py 22 ImportFrom from openhcs.core.config import NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 213 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/runtime/napari_streaming_handlers.py 1061 ClassDef @dataclass(slots=True)
+openhcs/runtime/napari_streaming_handlers.py 218 AnnAssign display_config: NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 222 FunctionDef @classmethod
+openhcs/runtime/napari_streaming_handlers.py 1067 AnnAssign display_config: NapariDisplayConfig = field(default_factory=NapariDisplayConfig)
+openhcs/runtime/napari_streaming_handlers.py 218 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 1067 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 1067 Call field(default_factory=NapariDisplayConfig)
+openhcs/runtime/napari_streaming_handlers.py 228 Name NapariDisplayConfig
+openhcs/runtime/napari_streaming_handlers.py 1067 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 42 ImportFrom from polystore.streaming.receivers.napari.image_presentation import NapariNativeImageIntensityPresentation
+openhcs/runtime/napari_viewer_server.py 60 ImportFrom from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField, ViewerNativeLayerTransform, ViewerImageIntensityControlOptions, ViewerNativeViewportPresentation, ViewerSourceSpatialDomainPayload
+openhcs/runtime/napari_viewer_server.py 78 ImportFrom from openhcs.core.config import NapariDisplayConfig, NapariVariableSizeHandling
+openhcs/runtime/napari_viewer_server.py 406 ClassDef @dataclass(frozen=True)
+openhcs/runtime/napari_viewer_server.py 513 ClassDef @dataclass(frozen=True)
+openhcs/runtime/napari_viewer_server.py 619 ClassDef @dataclass(frozen=True)
+openhcs/runtime/napari_viewer_server.py 708 ClassDef class NapariImagePayloadLayoutRole(str, Enum):
+openhcs/runtime/napari_viewer_server.py 797 ClassDef @dataclass(frozen=True)
+openhcs/runtime/napari_viewer_server.py 941 ClassDef class NapariComponentAwareDisplayCoordinator:
+openhcs/runtime/napari_viewer_server.py 1272 ClassDef class NapariLayerTitleAuthority:
+openhcs/runtime/napari_viewer_server.py 1337 ClassDef class NapariDimensionLabelStore:
+openhcs/runtime/napari_viewer_server.py 1685 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/runtime/napari_viewer_server.py 2559 ClassDef class NapariControlMessageAction(NapariMessageTypeBase, metaclass=AutoRegisterMeta):
+openhcs/runtime/napari_viewer_server.py 2640 ClassDef class NapariShutdownControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 2678 ClassDef class NapariClearStateControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 2703 ClassDef class NapariProcessLaunchControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 2733 ClassDef class NapariSettleControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 3755 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/runtime/napari_viewer_server.py 4616 ClassDef class NapariStateControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 4647 ClassDef class NapariPayloadsControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 4679 ClassDef class NapariMountedRouteControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 4916 ClassDef class NapariViewportControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 4952 ClassDef class NapariImageIntensityControlMessageAction(NapariMountedRouteControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 5231 ClassDef class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 5588 ClassDef class NapariLayerIsolationControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 5686 ClassDef class NapariScreenshotControlMessageAction(NapariControlMessageAction, ViewerWindowSnapshotService):
+openhcs/runtime/napari_viewer_server.py 5769 ClassDef class NapariUnknownControlMessageAction(NapariControlMessageAction):
+openhcs/runtime/napari_viewer_server.py 5915 ClassDef class NapariControlTransportPump:
+openhcs/runtime/napari_viewer_server.py 6037 ClassDef class NapariViewerServer(OpenHCSViewerServerABC):
+openhcs/runtime/napari_viewer_server.py 413 FunctionDef @classmethod
+openhcs/runtime/napari_viewer_server.py 520 AnnAssign display_config: NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 523 FunctionDef @classmethod
+openhcs/runtime/napari_viewer_server.py 636 FunctionDef @classmethod
+openhcs/runtime/napari_viewer_server.py 805 AnnAssign display_config: NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 806 AnnAssign payload_layout_role: NapariImagePayloadLayoutRole | None = None
+openhcs/runtime/napari_viewer_server.py 978 FunctionDef @staticmethod
+openhcs/runtime/napari_viewer_server.py 1276 FunctionDef @classmethod
+openhcs/runtime/napari_viewer_server.py 1343 FunctionDef def apply(self, presentation: NapariAxisPresentation, *, display_config: NapariDisplayConfig | None=None) -> tuple[str, ...] | None:
+openhcs/runtime/napari_viewer_server.py 1691 AnnAssign display_config: NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 2640 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2678 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2703 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 2733 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 3804 FunctionDef def layer_state_for(self, route_key: str) -> dict[str, NapariWireValue]:
+openhcs/runtime/napari_viewer_server.py 4616 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4647 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4679 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4916 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 4921 FunctionDef def handle(self, server: 'NapariViewerServer', message: Mapping[str, object]) -> dict[str, object]:
+openhcs/runtime/napari_viewer_server.py 4975 FunctionDef def handle(self, server: 'NapariViewerServer', message: Mapping[str, object]) -> dict[str, object]:
+openhcs/runtime/napari_viewer_server.py 5427 FunctionDef def apply_prepared(self, server: 'NapariViewerServer', prepared: NapariPreparedNavigation, *, refresh_overlay: bool=True) -> None:
+openhcs/runtime/napari_viewer_server.py 5588 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5687 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5769 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 5993 FunctionDef def _response_payload(self, request_payload: bytes) -> bytes:
+openhcs/runtime/napari_viewer_server.py 6047 FunctionDef def _create_pong_response(self):
+openhcs/runtime/napari_viewer_server.py 6109 FunctionDef def raise_result_selection_surface(self) -> None:
+openhcs/runtime/napari_viewer_server.py 6252 FunctionDef def handle_control_message(self, message: Mapping[str, object]) -> dict[str, object]:
+openhcs/runtime/napari_viewer_server.py 6272 FunctionDef def display_image(self, image_data: np.ndarray, metadata: ComponentMap) -> None:
+openhcs/runtime/napari_viewer_server.py 6338 FunctionDef def process_messages(self) -> None:
+openhcs/runtime/napari_viewer_server.py 6348 FunctionDef def _accept_single_image(self, image_info: Mapping[str, NapariWireValue], layer_axis_projection_semantics: ViewerComponentAxisSemantics, display_config: NapariDisplayConfig) -> NapariAcceptedStreamItem:
+openhcs/runtime/napari_viewer_server.py 6364 FunctionDef def _process_single_image(self, image_info: Mapping[str, NapariWireValue], layer_axis_projection_semantics: ViewerComponentAxisSemantics, display_config: NapariDisplayConfig) -> None:
+openhcs/runtime/napari_viewer_server.py 406 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 520 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 805 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 987 Assign payload_layout_role = NapariImagePayloadLayoutRole.for_stream_layer_context(effective_context)
+openhcs/runtime/napari_viewer_server.py 1691 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 3809 Assign intensity_control = NapariNativeImageIntensityPresentation.for_layer(layer)
+openhcs/runtime/napari_viewer_server.py 5457 If if request.data_index is not None:     server.raise_result_selection_surface()
+openhcs/runtime/napari_viewer_server.py 6008 Assign action = NapariControlMessageAction.for_message_type(msg_type if isinstance(msg_type, str) else None)
+openhcs/runtime/napari_viewer_server.py 428 Call cls(msg_type=fields.message_type(), images=fields.required_mapping_items(ViewerBatchWireField.IMAGES), viewer_display_config=NapariDisplayConfig.from_display_payload(display_config_payload), store=component_names_metadata.store, entries=component_axis_semantics.entries, layout=component_axis_semantics.layout)
+openhcs/runtime/napari_viewer_server.py 806 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 987 Call NapariImagePayloadLayoutRole.for_stream_layer_context(effective_context)
+openhcs/runtime/napari_viewer_server.py 3809 Call NapariNativeImageIntensityPresentation.for_layer(layer)
+openhcs/runtime/napari_viewer_server.py 4926 If if not isinstance(request, ViewerNativeViewportPresentation):     raise TypeError('Viewport payload must be ViewerNativeViewportPresentation.')
+openhcs/runtime/napari_viewer_server.py 4990 Assign control = NapariNativeImageIntensityPresentation.for_layer(layer)
+openhcs/runtime/napari_viewer_server.py 6008 Call NapariControlMessageAction.for_message_type(msg_type if isinstance(msg_type, str) else None)
+openhcs/runtime/napari_viewer_server.py 6050 Call replace(super()._create_pong_response(), control_capabilities=NapariControlMessageAction.endpoint_control_capabilities())
+openhcs/runtime/napari_viewer_server.py 6120 Call qt_window.activateWindow()
+openhcs/runtime/napari_viewer_server.py 6267 Call NapariControlMessageAction.for_message_type(msg_type).handle(self, message)
+openhcs/runtime/napari_viewer_server.py 6285 Call self._process_single_image(image_info, ViewerComponentAxisSemanticsAuthority.empty(), NapariDisplayConfig())
+openhcs/runtime/napari_viewer_server.py 527 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 640 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 987 Attribute NapariImagePayloadLayoutRole.for_stream_layer_context
+openhcs/runtime/napari_viewer_server.py 3809 Attribute NapariNativeImageIntensityPresentation.for_layer
+openhcs/runtime/napari_viewer_server.py 4990 Call NapariNativeImageIntensityPresentation.for_layer(layer)
+openhcs/runtime/napari_viewer_server.py 5458 Call server.raise_result_selection_surface()
+openhcs/runtime/napari_viewer_server.py 6008 Attribute NapariControlMessageAction.for_message_type
+openhcs/runtime/napari_viewer_server.py 6120 Attribute qt_window.activateWindow
+openhcs/runtime/napari_viewer_server.py 6267 Attribute NapariControlMessageAction.for_message_type(msg_type).handle
+openhcs/runtime/napari_viewer_server.py 6288 Call NapariDisplayConfig()
+openhcs/runtime/napari_viewer_server.py 6346 Call NapariControlMessageAction.dispatch_accepted_request(self, request)
+openhcs/runtime/napari_viewer_server.py 6352 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6368 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 431 Call NapariDisplayConfig.from_display_payload(display_config_payload)
+openhcs/runtime/napari_viewer_server.py 987 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 1283 Name NapariImagePayloadLayoutRole
+openhcs/runtime/napari_viewer_server.py 1347 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 3809 Name NapariNativeImageIntensityPresentation
+openhcs/runtime/napari_viewer_server.py 4926 Call isinstance(request, ViewerNativeViewportPresentation)
+openhcs/runtime/napari_viewer_server.py 4990 Attribute NapariNativeImageIntensityPresentation.for_layer
+openhcs/runtime/napari_viewer_server.py 5458 Attribute server.raise_result_selection_surface
+openhcs/runtime/napari_viewer_server.py 6008 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 6053 Call NapariControlMessageAction.endpoint_control_capabilities()
+openhcs/runtime/napari_viewer_server.py 6267 Call NapariControlMessageAction.for_message_type(msg_type)
+openhcs/runtime/napari_viewer_server.py 6288 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6346 Attribute NapariControlMessageAction.dispatch_accepted_request
+openhcs/runtime/napari_viewer_server.py 431 Attribute NapariDisplayConfig.from_display_payload
+openhcs/runtime/napari_viewer_server.py 4926 Name ViewerNativeViewportPresentation
+openhcs/runtime/napari_viewer_server.py 4990 Name NapariNativeImageIntensityPresentation
+openhcs/runtime/napari_viewer_server.py 6053 Attribute NapariControlMessageAction.endpoint_control_capabilities
+openhcs/runtime/napari_viewer_server.py 6267 Attribute NapariControlMessageAction.for_message_type
+openhcs/runtime/napari_viewer_server.py 6346 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 431 Name NapariDisplayConfig
+openhcs/runtime/napari_viewer_server.py 6053 Name NapariControlMessageAction
+openhcs/runtime/napari_viewer_server.py 6267 Name NapariControlMessageAction
+openhcs/runtime/viewer_component_system.py 28 ImportFrom from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
+openhcs/runtime/viewer_component_system.py 155 ClassDef @dataclass(frozen=True, slots=True)
+openhcs/runtime/viewer_component_system.py 159 AnnAssign object_display_config: ViewerDisplayConfigABC
+openhcs/runtime/viewer_component_system.py 159 Name ViewerDisplayConfigABC
+ROOT /home/ts/code/projects/openhcs/external/PolyStore 0efe67fdd14985bf90cee6e0f0c4735d41d265d1 PARSED 26 OMISSIONS ()
+src/polystore/streaming/receivers/core/viewport_presentation.py 5 ImportFrom from zmqruntime.viewer_protocol import ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/core/viewport_presentation.py 8 ClassDef class NativeViewportPresentationABC(ABC):
+src/polystore/streaming/receivers/core/viewport_presentation.py 12 FunctionDef @abstractmethod
+src/polystore/streaming/receivers/core/viewport_presentation.py 15 FunctionDef @abstractmethod
+src/polystore/streaming/receivers/core/viewport_presentation.py 12 Name ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/core/viewport_presentation.py 15 Name ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/napari/image_presentation.py 12 ClassDef @dataclass(frozen=True, slots=True)
+src/polystore/streaming/receivers/napari/viewport_presentation.py 6 ImportFrom from zmqruntime.viewer_protocol import ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/napari/viewport_presentation.py 14 ClassDef @dataclass(frozen=True, slots=True)
+src/polystore/streaming/receivers/napari/viewport_presentation.py 29 FunctionDef def snapshot(self) -> ViewerNativeViewportPresentation:
+src/polystore/streaming/receivers/napari/viewport_presentation.py 35 FunctionDef def apply(self, presentation: ViewerNativeViewportPresentation) -> None:
+src/polystore/streaming/receivers/napari/viewport_presentation.py 29 Name ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/napari/viewport_presentation.py 37 If if not isinstance(presentation, ViewerNativeViewportPresentation):     raise TypeError('Native viewport presentation requires its typed value.')
+src/polystore/streaming/receivers/napari/viewport_presentation.py 31 Call ViewerNativeViewportPresentation(tuple(self.viewer.camera.center), self.viewer.camera.zoom)
+src/polystore/streaming/receivers/napari/viewport_presentation.py 31 Name ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/napari/viewport_presentation.py 35 Name ViewerNativeViewportPresentation
+src/polystore/streaming/receivers/napari/viewport_presentation.py 37 Call isinstance(presentation, ViewerNativeViewportPresentation)
+src/polystore/streaming/receivers/napari/viewport_presentation.py 37 Name ViewerNativeViewportPresentation
+src/polystore/streaming/viewer_transport.py 37 ClassDef class ViewerDisplayConfigABC(ABC):
+src/polystore/streaming/viewer_transport.py 431 ClassDef @dataclass(frozen=True)
+src/polystore/streaming/viewer_transport.py 479 ClassDef @dataclass(frozen=True, kw_only=True)
+src/polystore/streaming/viewer_transport.py 434 AnnAssign display_config: ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 483 AnnAssign display_config: ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 489 FunctionDef @classmethod
+src/polystore/streaming/viewer_transport.py 434 Name ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 483 Name ViewerDisplayConfigABC
+src/polystore/streaming/viewer_transport.py 494 Name ViewerDisplayConfigABC
+ROOT /home/ts/code/projects/openhcs/external/zmqruntime 1d3b32f4fcead23d5d2079c975eb2ae7646a1478 PARSED 32 OMISSIONS ()
+src/zmqruntime/viewer_protocol.py 113 ClassDef @dataclass(frozen=True, slots=True)
+ROOT /home/ts/code/projects/openhcs/external/python-introspect 5bb79d5edb7250083a09ab77b2d9177e3ba202ab PARSED 12 OMISSIONS ()
+ROOT /home/ts/wt/pyqt-reactive-render-complete-snapshot-20261001 ad4948775ab81180a354d4b793d17ee5ddff3972 PARSED 193 OMISSIONS ()
+src/pyqt_reactive/animation/flash_mixin.py 398 FunctionDef def _scroll_clip_rects_for_element(element: FlashElement, window: QWidget) -> List[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 1069 FunctionDef def create_table_cell_element(key: str, target: 'StructuralTableCellTarget') -> FlashElement:
+src/pyqt_reactive/animation/flash_mixin.py 1104 FunctionDef def create_tree_item_element(key: str, tree: 'QTreeWidget', get_index: Callable[[], Any]) -> FlashElement:
+src/pyqt_reactive/animation/flash_mixin.py 1149 FunctionDef def create_list_item_element(key: str, list_widget: 'QListWidget', get_row: Callable[[], int]) -> FlashElement:
+src/pyqt_reactive/animation/flash_mixin.py 1227 ClassDef class WindowFlashOverlay(QWidget):
+src/pyqt_reactive/animation/flash_mixin.py 2365 ClassDef class _GlobalFlashCoordinator(QObject):
+src/pyqt_reactive/animation/flash_mixin.py 3281 ClassDef class VisualUpdateMixin:
+src/pyqt_reactive/animation/flash_mixin.py 1072 FunctionDef def get_rect(window: QWidget) -> Optional[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 1115 FunctionDef def get_rect(window: QWidget) -> Optional[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 1167 FunctionDef def get_rect(window: QWidget) -> Optional[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 1467 FunctionDef def __init__(self, window: QWidget):
+src/pyqt_reactive/animation/flash_mixin.py 1625 FunctionDef def _refresh_scroll_area_event_filters(self) -> None:
+src/pyqt_reactive/animation/flash_mixin.py 1687 FunctionDef def eventFilter(self, obj, event):
+src/pyqt_reactive/animation/flash_mixin.py 2087 FunctionDef def resizeEvent(self, event) -> None:
+src/pyqt_reactive/animation/flash_mixin.py 2148 FunctionDef def _get_scroll_area_clip_rects(self) -> List[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 2990 FunctionDef def _delegate_update_rect(self, element: FlashElement) -> Optional[QRect]:
+src/pyqt_reactive/animation/flash_mixin.py 3016 FunctionDef def _update_delegate_element(self, element: FlashElement) -> None:
+src/pyqt_reactive/animation/flash_mixin.py 3038 FunctionDef def _arm_overlay_for_paint(self, overlay: 'WindowFlashOverlay') -> tuple[float, float, float]:
+src/pyqt_reactive/animation/flash_mixin.py 3556 FunctionDef def register_flash_table_cell_rect(self, key: str, target: 'StructuralTableCellTarget') -> None:
+src/pyqt_reactive/animation/flash_mixin.py 408 If if isinstance(widget, QAbstractScrollArea):     viewport = widget.viewport()     if viewport is not None and (not sip.isdeleted(viewport)) and viewport.isVisible():         viewport_rect = viewport.rect()         global_pos = viewport.mapToGlobal(viewport_rect.topLeft())         window_pos = window.mapFromGlobal(global_pos)         clip_rects.append(QRect(window_pos, viewport_rect.size()))
+src/pyqt_reactive/animation/flash_mixin.py 1094 Call FlashElement(key=key, get_rect_in_window=get_rect, get_child_paths=None, source_id=table_cell_flash_source_id(target), layout_watch_widgets=(target.table, target.table.viewport()), scroll_clip_widget=target.table)
+src/pyqt_reactive/animation/flash_mixin.py 1692 If if event_type in (QEvent.Type.Resize, QEvent.Type.Move):     logger.debug(f'[FLASH] Event filter caught {event_type} on {obj.__class__.__name__}, invalidating cache')     if obj is self._window:         self._invalidate_geometry_cache(include_scroll_areas=True)         if event_type == QEvent.Type.Resize:             self.setGeometry(self._window.rect())     elif isinstance(obj, QWidget):          [body read separately]
+src/pyqt_reactive/animation/flash_mixin.py 2090 If if self._window:     self.setGeometry(self._window.rect())     self._needs_raise = True     self._invalidate_geometry_cache(include_scroll_areas=True)
+src/pyqt_reactive/animation/flash_mixin.py 3019 If if update_rect is not None:     element.delegate_widget.viewport().update(update_rect)
+src/pyqt_reactive/animation/flash_mixin.py 3044 If if overlay.geometry() != target_geometry:     started = time.perf_counter()     overlay.setGeometry(target_geometry)     geometry_ms = (time.perf_counter() - started) * 1000.0     overlay._needs_raise = True
+src/pyqt_reactive/animation/flash_mixin.py 409 Assign viewport = widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 410 If if viewport is not None and (not sip.isdeleted(viewport)) and viewport.isVisible():     viewport_rect = viewport.rect()     global_pos = viewport.mapToGlobal(viewport_rect.topLeft())     window_pos = window.mapFromGlobal(global_pos)     clip_rects.append(QRect(window_pos, viewport_rect.size()))
+src/pyqt_reactive/animation/flash_mixin.py 1083 Assign global_pos = table.viewport().mapToGlobal(cell_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1128 Assign viewport = tree.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1129 If if viewport is None:     return None
+src/pyqt_reactive/animation/flash_mixin.py 1131 Assign global_pos = viewport.mapToGlobal(visual_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1181 Assign viewport = list_widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1182 If if viewport is None:     return None
+src/pyqt_reactive/animation/flash_mixin.py 1197 Assign global_pos = viewport.mapToGlobal(inset_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1497 Call self.setGeometry(window.rect())
+src/pyqt_reactive/animation/flash_mixin.py 1639 Assign viewport = scroll_area.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1640 If if viewport is None or sip.isdeleted(viewport):     continue
+src/pyqt_reactive/animation/flash_mixin.py 1694 If if obj is self._window:     self._invalidate_geometry_cache(include_scroll_areas=True)     if event_type == QEvent.Type.Resize:         self.setGeometry(self._window.rect()) elif isinstance(obj, QWidget):     self._invalidate_geometry_cache_if_widget_signature_changed(obj)
+src/pyqt_reactive/animation/flash_mixin.py 2167 Assign viewport = scroll_area.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 2168 If if viewport is None or sip.isdeleted(viewport) or (not viewport.isVisible()):     continue
+src/pyqt_reactive/animation/flash_mixin.py 2171 Assign viewport_rect = viewport.rect()
+src/pyqt_reactive/animation/flash_mixin.py 2172 Assign global_pos = viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 3001 Assign viewport = widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 3002 If if viewport is None:     return
+src/pyqt_reactive/animation/flash_mixin.py 3009 Assign update_rect = visual_rect.intersected(viewport.rect())
+src/pyqt_reactive/animation/flash_mixin.py 3562 Call self._register_flash_element_internal(key, lambda k: create_table_cell_element(k, target), target.table.viewport(), source_id_factory=lambda _k: table_cell_flash_source_id(target))
+src/pyqt_reactive/animation/flash_mixin.py 409 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 409 Call widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 415 Assign viewport_rect = viewport.rect()
+src/pyqt_reactive/animation/flash_mixin.py 416 Assign global_pos = viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1083 Call table.viewport().mapToGlobal(cell_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1128 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1128 Call tree.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1129 Compare viewport is None
+src/pyqt_reactive/animation/flash_mixin.py 1131 Call viewport.mapToGlobal(visual_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1181 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1181 Call list_widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1182 Compare viewport is None
+src/pyqt_reactive/animation/flash_mixin.py 1197 Call viewport.mapToGlobal(inset_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1497 Attribute self.setGeometry
+src/pyqt_reactive/animation/flash_mixin.py 1639 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1639 Call scroll_area.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1642 Call self._install_event_filter_on(viewport)
+src/pyqt_reactive/animation/flash_mixin.py 1696 If if event_type == QEvent.Type.Resize:     self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_mixin.py 2091 Call self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_mixin.py 2167 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2167 Call scroll_area.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 2171 Call viewport.rect()
+src/pyqt_reactive/animation/flash_mixin.py 2172 Call viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 3001 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3001 Call widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 3002 Compare viewport is None
+src/pyqt_reactive/animation/flash_mixin.py 3009 Call visual_rect.intersected(viewport.rect())
+src/pyqt_reactive/animation/flash_mixin.py 3020 Call element.delegate_widget.viewport().update(update_rect)
+src/pyqt_reactive/animation/flash_mixin.py 3046 Call overlay.setGeometry(target_geometry)
+src/pyqt_reactive/animation/flash_mixin.py 3565 Call target.table.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 409 Attribute widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 411 Compare viewport is not None
+src/pyqt_reactive/animation/flash_mixin.py 413 Call viewport.isVisible()
+src/pyqt_reactive/animation/flash_mixin.py 415 Call viewport.rect()
+src/pyqt_reactive/animation/flash_mixin.py 416 Call viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_mixin.py 1083 Attribute table.viewport().mapToGlobal
+src/pyqt_reactive/animation/flash_mixin.py 1099 Call target.table.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1128 Attribute tree.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1129 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1131 Attribute viewport.mapToGlobal
+src/pyqt_reactive/animation/flash_mixin.py 1181 Attribute list_widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1182 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1197 Attribute viewport.mapToGlobal
+src/pyqt_reactive/animation/flash_mixin.py 1639 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1640 Compare viewport is None
+src/pyqt_reactive/animation/flash_mixin.py 1640 Call sip.isdeleted(viewport)
+src/pyqt_reactive/animation/flash_mixin.py 1642 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2091 Attribute self.setGeometry
+src/pyqt_reactive/animation/flash_mixin.py 2167 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Compare viewport is None
+src/pyqt_reactive/animation/flash_mixin.py 2168 Call sip.isdeleted(viewport)
+src/pyqt_reactive/animation/flash_mixin.py 2171 Attribute viewport.rect
+src/pyqt_reactive/animation/flash_mixin.py 2172 Attribute viewport.mapToGlobal
+src/pyqt_reactive/animation/flash_mixin.py 3001 Attribute widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 3002 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3009 Call viewport.rect()
+src/pyqt_reactive/animation/flash_mixin.py 3020 Attribute element.delegate_widget.viewport().update
+src/pyqt_reactive/animation/flash_mixin.py 3046 Attribute overlay.setGeometry
+src/pyqt_reactive/animation/flash_mixin.py 3565 Attribute target.table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 411 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 412 Call sip.isdeleted(viewport)
+src/pyqt_reactive/animation/flash_mixin.py 413 Attribute viewport.isVisible
+src/pyqt_reactive/animation/flash_mixin.py 415 Attribute viewport.rect
+src/pyqt_reactive/animation/flash_mixin.py 416 Attribute viewport.mapToGlobal
+src/pyqt_reactive/animation/flash_mixin.py 1083 Call table.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 1099 Attribute target.table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1131 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1197 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1640 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1640 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1697 Call self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Call viewport.isVisible()
+src/pyqt_reactive/animation/flash_mixin.py 2171 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 2172 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3009 Attribute viewport.rect
+src/pyqt_reactive/animation/flash_mixin.py 3020 Call element.delegate_widget.viewport()
+src/pyqt_reactive/animation/flash_mixin.py 412 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 413 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 415 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 416 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 1083 Attribute table.viewport
+src/pyqt_reactive/animation/flash_mixin.py 1697 Attribute self.setGeometry
+src/pyqt_reactive/animation/flash_mixin.py 2168 Attribute viewport.isVisible
+src/pyqt_reactive/animation/flash_mixin.py 3009 Name viewport
+src/pyqt_reactive/animation/flash_mixin.py 3020 Attribute element.delegate_widget.viewport
+src/pyqt_reactive/animation/flash_mixin.py 2168 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 186 ClassDef class WindowFlashOverlayGL(QOpenGLWidget if OPENGL_AVAILABLE else object):
+src/pyqt_reactive/animation/flash_overlay_opengl.py 234 FunctionDef def __init__(self, window: QWidget):
+src/pyqt_reactive/animation/flash_overlay_opengl.py 479 FunctionDef def _install_scroll_event_filters(self):
+src/pyqt_reactive/animation/flash_overlay_opengl.py 488 FunctionDef def eventFilter(self, obj, event):
+src/pyqt_reactive/animation/flash_overlay_opengl.py 534 FunctionDef def _get_scroll_area_clip_rects(self) -> List[QRect]:
+src/pyqt_reactive/animation/flash_overlay_opengl.py 491 If if event.type() in (QEvent.Type.Resize, QEvent.Type.Wheel, QEvent.Type.Move, QEvent.Type.LayoutRequest):     self._invalidate_geometry_cache()     if obj is self._window and event.type() == QEvent.Type.Resize:         self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 275 Call self.setGeometry(window.rect())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 485 If if scroll_area.viewport():     scroll_area.viewport().installEventFilter(self)
+src/pyqt_reactive/animation/flash_overlay_opengl.py 493 If if obj is self._window and event.type() == QEvent.Type.Resize:     self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Assign viewport = scroll_area.viewport()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 If if viewport and viewport.isVisible():     viewport_rect = viewport.rect()     global_pos = viewport.mapToGlobal(viewport_rect.topLeft())     window_pos = self._window.mapFromGlobal(global_pos)     clip_rects.append(QRect(window_pos, viewport_rect.size()))
+src/pyqt_reactive/animation/flash_overlay_opengl.py 275 Attribute self.setGeometry
+src/pyqt_reactive/animation/flash_overlay_opengl.py 485 Call scroll_area.viewport()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Call scroll_area.viewport()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 545 Assign viewport_rect = viewport.rect()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 546 Assign global_pos = viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 485 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 486 Call scroll_area.viewport().installEventFilter(self)
+src/pyqt_reactive/animation/flash_overlay_opengl.py 494 Call self.setGeometry(self._window.rect())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 543 Attribute scroll_area.viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Call viewport.isVisible()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 545 Call viewport.rect()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 546 Call viewport.mapToGlobal(viewport_rect.topLeft())
+src/pyqt_reactive/animation/flash_overlay_opengl.py 486 Attribute scroll_area.viewport().installEventFilter
+src/pyqt_reactive/animation/flash_overlay_opengl.py 494 Attribute self.setGeometry
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Attribute viewport.isVisible
+src/pyqt_reactive/animation/flash_overlay_opengl.py 545 Attribute viewport.rect
+src/pyqt_reactive/animation/flash_overlay_opengl.py 546 Attribute viewport.mapToGlobal
+src/pyqt_reactive/animation/flash_overlay_opengl.py 486 Call scroll_area.viewport()
+src/pyqt_reactive/animation/flash_overlay_opengl.py 544 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 545 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 546 Name viewport
+src/pyqt_reactive/animation/flash_overlay_opengl.py 486 Attribute scroll_area.viewport
+src/pyqt_reactive/core/reorderable_list_widget.py 12 ClassDef class ReorderableListWidget(QListWidget):
+src/pyqt_reactive/core/reorderable_list_widget.py 38 FunctionDef def setWordWrap(self, enabled: bool) -> None:
+src/pyqt_reactive/core/reorderable_list_widget.py 46 Call self.viewport().update()
+src/pyqt_reactive/core/reorderable_list_widget.py 46 Attribute self.viewport().update
+src/pyqt_reactive/core/reorderable_list_widget.py 46 Call self.viewport()
+src/pyqt_reactive/core/reorderable_list_widget.py 46 Attribute self.viewport
+src/pyqt_reactive/services/widget_tree_projection.py 821 ClassDef class WidgetTreeProjectionService:
+src/pyqt_reactive/services/widget_tree_projection.py 1217 FunctionDef @staticmethod
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Assign viewport = view.viewport()
+src/pyqt_reactive/services/widget_tree_projection.py 1219 If if viewport is None:     top_left = view.mapToGlobal(rect.topLeft()) else:     top_left = viewport.mapToGlobal(rect.topLeft())
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Name viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Call view.viewport()
+src/pyqt_reactive/services/widget_tree_projection.py 1219 Compare viewport is None
+src/pyqt_reactive/services/widget_tree_projection.py 1222 Assign top_left = viewport.mapToGlobal(rect.topLeft())
+src/pyqt_reactive/services/widget_tree_projection.py 1218 Attribute view.viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1219 Name viewport
+src/pyqt_reactive/services/widget_tree_projection.py 1222 Call viewport.mapToGlobal(rect.topLeft())
+src/pyqt_reactive/services/widget_tree_projection.py 1222 Attribute viewport.mapToGlobal
+src/pyqt_reactive/services/widget_tree_projection.py 1222 Name viewport
+src/pyqt_reactive/services/window_manager.py 128 ClassDef class WindowManager:
+src/pyqt_reactive/services/window_manager.py 330 FunctionDef @classmethod
+src/pyqt_reactive/services/window_manager.py 337 If if is_already_active:     logger.debug('[WINDOW_MGR] Window already active, skipping raise/activate: %s', scope_id) else:     window.raise_()     window.activateWindow()
+src/pyqt_reactive/services/window_manager.py 344 Call window.activateWindow()
+src/pyqt_reactive/services/window_manager.py 344 Attribute window.activateWindow
+src/pyqt_reactive/widgets/editors/simple_code_editor.py 101 ClassDef class SimpleCodeEditorService(Generic[DeclarationT]):
+src/pyqt_reactive/widgets/editors/simple_code_editor.py 146 FunctionDef def _edit_with_qt_native(self, initial_content: str, title: str, callback: Callable[[str], None] | None, declaration_type: type[DeclarationT] | None=None, code_data: dict=None, error_line: int=None) -> None:
+src/pyqt_reactive/widgets/editors/simple_code_editor.py 174 Call dialog.activateWindow()
+src/pyqt_reactive/widgets/editors/simple_code_editor.py 174 Attribute dialog.activateWindow
+src/pyqt_reactive/widgets/log_viewer.py 600 ClassDef class LogItemDelegate(QStyledItemDelegate):
+src/pyqt_reactive/widgets/log_viewer.py 1070 ClassDef class LogListView(QListView):
+src/pyqt_reactive/widgets/log_viewer.py 2099 ClassDef class LogViewerWindow(QMainWindow):
+src/pyqt_reactive/widgets/log_viewer.py 698 FunctionDef def _do_viewport_update(self) -> None:
+src/pyqt_reactive/widgets/log_viewer.py 1001 FunctionDef def sizeHint(self, option, index):
+src/pyqt_reactive/widgets/log_viewer.py 1162 FunctionDef def mouseMoveEvent(self, event) -> None:
+src/pyqt_reactive/widgets/log_viewer.py 1383 FunctionDef def _updateSelection(self) -> None:
+src/pyqt_reactive/widgets/log_viewer.py 2807 FunctionDef def _advance_search(self, step: int) -> None:
+src/pyqt_reactive/widgets/log_viewer.py 2866 FunctionDef def clear_search_highlights(self) -> None:
+src/pyqt_reactive/widgets/log_viewer.py 700 If if self._viewport_needs_update and self.parent() and isinstance(self.parent(), QListView):     self.parent().viewport().update()     self._viewport_needs_update = False
+src/pyqt_reactive/widgets/log_viewer.py 1034 If if width <= 0 and isinstance(parent, QListView) and (parent.viewport() is not None):     width = parent.viewport().width()
+src/pyqt_reactive/widgets/log_viewer.py 1178 If if self._is_selecting and event.buttons() & Qt.MouseButton.LeftButton:     viewport_rect = self.viewport().rect()     scroll_margin = 50     if mousePos.y() < 0:         self._auto_scroll_distance = mousePos.y()         if not self._auto_scroll_timer.isActive():             self._auto_scroll_timer.start(50)     elif mousePos.y() > viewport_rect.height():         self._auto_scroll_distance = mouseP [body read separately]
+src/pyqt_reactive/widgets/log_viewer.py 2821 If if search_text != self.current_search_text or case_sensitive != self._search_case_sensitive:     self.current_search_text = search_text     self._search_case_sensitive = case_sensitive     self._search_matches = []     lines = self.log_model.iter_lines()     if case_sensitive:         for row, line in enumerate(lines):             if search_text in line:                 self._search_matches.append [body read separately]
+src/pyqt_reactive/widgets/log_viewer.py 2875 If if self.log_view is not None:     self.log_view.viewport().update()
+src/pyqt_reactive/widgets/log_viewer.py 1035 Assign width = parent.viewport().width()
+src/pyqt_reactive/widgets/log_viewer.py 1180 Assign viewport_rect = self.viewport().rect()
+src/pyqt_reactive/widgets/log_viewer.py 1424 Assign width = itemRect.width() if itemRect.width() > 0 else self.viewport().width()
+src/pyqt_reactive/widgets/log_viewer.py 2847 If if self.log_view is not None:     self.log_view.viewport().update()
+src/pyqt_reactive/widgets/log_viewer.py 701 Call self.parent().viewport().update()
+src/pyqt_reactive/widgets/log_viewer.py 1034 Compare parent.viewport() is not None
+src/pyqt_reactive/widgets/log_viewer.py 1035 Call parent.viewport().width()
+src/pyqt_reactive/widgets/log_viewer.py 1180 Call self.viewport().rect()
+src/pyqt_reactive/widgets/log_viewer.py 2876 Call self.log_view.viewport().update()
+src/pyqt_reactive/widgets/log_viewer.py 701 Attribute self.parent().viewport().update
+src/pyqt_reactive/widgets/log_viewer.py 1034 Call parent.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 1035 Attribute parent.viewport().width
+src/pyqt_reactive/widgets/log_viewer.py 1180 Attribute self.viewport().rect
+src/pyqt_reactive/widgets/log_viewer.py 1424 Call self.viewport().width()
+src/pyqt_reactive/widgets/log_viewer.py 2848 Call self.log_view.viewport().update()
+src/pyqt_reactive/widgets/log_viewer.py 2876 Attribute self.log_view.viewport().update
+src/pyqt_reactive/widgets/log_viewer.py 701 Call self.parent().viewport()
+src/pyqt_reactive/widgets/log_viewer.py 1034 Attribute parent.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1035 Call parent.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 1180 Call self.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 1424 Attribute self.viewport().width
+src/pyqt_reactive/widgets/log_viewer.py 2848 Attribute self.log_view.viewport().update
+src/pyqt_reactive/widgets/log_viewer.py 2876 Call self.log_view.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 701 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/log_viewer.py 1035 Attribute parent.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1180 Attribute self.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1424 Call self.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 2848 Call self.log_view.viewport()
+src/pyqt_reactive/widgets/log_viewer.py 2876 Attribute self.log_view.viewport
+src/pyqt_reactive/widgets/log_viewer.py 1424 Attribute self.viewport
+src/pyqt_reactive/widgets/log_viewer.py 2848 Attribute self.log_view.viewport
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 263 ClassDef class ConfigHierarchyTreeHelper:
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 389 FunctionDef def _complete_populated_tree(self, *, tree: QTreeWidget, form_manager: ConfigTreeFlashManager, on_item_double_clicked: TreeItemDoubleClickHandler) -> None:
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 401 FunctionDef def _subscribe_to_dirty_changes(self, tree: QTreeWidget) -> None:
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 419 FunctionDef def initialize_dirty_styling(self) -> None:
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 410 FunctionDef def on_state_changed(_changed_paths: set[str]):
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 428 If if self._tree_for_dirty:     self._tree_for_dirty.viewport().update()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Call form_manager.register_repaint_callback(lambda: tree.viewport().update())
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 413 Call tree.viewport().update()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 429 Call self._tree_for_dirty.viewport().update()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Call tree.viewport().update()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 413 Attribute tree.viewport().update
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 429 Attribute self._tree_for_dirty.viewport().update
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Attribute tree.viewport().update
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 413 Call tree.viewport()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 429 Call self._tree_for_dirty.viewport()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Call tree.viewport()
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 413 Attribute tree.viewport
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 429 Attribute self._tree_for_dirty.viewport
+src/pyqt_reactive/widgets/shared/config_hierarchy_tree.py 398 Attribute tree.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 65 ClassDef class PreviewWrapMode(Enum):
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 130 ClassDef class MultilinePreviewItemDelegate(QStyledItemDelegate):
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 97 FunctionDef @classmethod
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 149 FunctionDef def __init__(self, name_color: QColor, preview_color: QColor, selected_text_color: QColor, parent: QListView, manager: TreeFlashColorProvider | None=None):
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 456 FunctionDef def _row_rect(self, option: QStyleOptionViewItem, index: QModelIndex) -> QRect:
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 478 FunctionDef def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 512 FunctionDef def _prepared_text(self, option: QStyleOptionViewItem, index) -> PreparedTextLayout:
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 539 FunctionDef def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 459 If if self._row_wraps(index):     rect.setLeft(0)     rect.setWidth(self.parent().viewport().width())
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 488 If if watched is not view.viewport():     return super().eventFilter(watched, event)
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 522 If if self._row_wraps(index):     width = max(1, self.parent().viewport().width() - self.TEXT_INSET_X * 2 - self._text_gutter(index))
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 543 If if self._row_wraps(index):     width = self.parent().viewport().width()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 106 Call view.viewport().update()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 174 Call parent.viewport().installEventFilter(self)
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 488 Compare watched is not view.viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 523 Assign width = max(1, self.parent().viewport().width() - self.TEXT_INSET_X * 2 - self._text_gutter(index))
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Assign width = self.parent().viewport().width()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 106 Attribute view.viewport().update
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 174 Attribute parent.viewport().installEventFilter
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Call rect.setWidth(self.parent().viewport().width())
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 488 Call view.viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 523 Call max(1, self.parent().viewport().width() - self.TEXT_INSET_X * 2 - self._text_gutter(index))
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Call self.parent().viewport().width()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 106 Call view.viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 174 Call parent.viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Call self.parent().viewport().width()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 488 Attribute view.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Attribute self.parent().viewport().width
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 106 Attribute view.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 174 Attribute parent.viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Attribute self.parent().viewport().width
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Call self.parent().viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Call self.parent().viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 525 Call self.parent().viewport().width()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 544 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 461 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 525 Attribute self.parent().viewport().width
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 525 Call self.parent().viewport()
+src/pyqt_reactive/widgets/shared/list_item_delegate.py 525 Attribute self.parent().viewport
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 19 ClassDef @dataclass
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 80 FunctionDef def _render_scrolling_message(self, *, rendered_message: str, status_label: QLabel, status_scroll: Any, timer_parent: Any) -> None:
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 112 FunctionDef def _restart_scrolling(self, *, status_label: QLabel, status_scroll: Any, timer_parent: Any) -> None:
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Assign scroll_width = status_scroll.viewport().width()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Assign scroll_width = status_scroll.viewport().width()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Call status_scroll.viewport().width()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Call status_scroll.viewport().width()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Attribute status_scroll.viewport().width
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Attribute status_scroll.viewport().width
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Call status_scroll.viewport()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Call status_scroll.viewport()
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 98 Attribute status_scroll.viewport
+src/pyqt_reactive/widgets/shared/manager_status_controller.py 127 Attribute status_scroll.viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 9 ClassDef class ReflowingVerticalScrollArea(QScrollArea):
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 90 FunctionDef def _sync_overlay_scrollbar_margin(self) -> None:
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 104 If if vertical_bar.maximum() > vertical_bar.minimum():     viewport = self.viewport()     viewport_rect = QRect(viewport.mapTo(self, QPoint()), viewport.size())     unreserved_viewport_rect = viewport_rect.adjusted(-(self._base_viewport_margins.left() + self._overlay_margin_left), -self._base_viewport_margins.top(), self._base_viewport_margins.right() + self._overlay_margin_right, self._base_viewport [body read separately]
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Assign viewport = self.viewport()
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Assign viewport_rect = QRect(viewport.mapTo(self, QPoint()), viewport.size())
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Name viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Call self.viewport()
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Call QRect(viewport.mapTo(self, QPoint()), viewport.size())
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 105 Attribute self.viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Call viewport.mapTo(self, QPoint())
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Call viewport.size()
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Attribute viewport.mapTo
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Attribute viewport.size
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Name viewport
+src/pyqt_reactive/widgets/shared/reflowing_vertical_scroll_area.py 106 Name viewport
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 38 ClassDef class ScopedTableWidget(QTableWidget):
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 48 FunctionDef def set_scope_color_scheme(self, scheme: ScopeColorScheme | None) -> None:
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 71 FunctionDef def resizeEvent(self, event) -> None:
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 66 Call self._border_overlay.setGeometry(self.rect())
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 73 Call self._border_overlay.setGeometry(self.rect())
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 66 Attribute self._border_overlay.setGeometry
+src/pyqt_reactive/widgets/shared/scoped_table_widget.py 73 Attribute self._border_overlay.setGeometry
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 52 ClassDef class ScrollableFormWindowNavigationDriver(FormFieldWindowNavigationDriver):
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 158 ClassDef class ScrollableFormMixin:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 65 FunctionDef def readiness(self, request: RegisteredWindowNavigationRequest) -> RegisteredWindowNavigationReadiness:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 118 FunctionDef def _target_geometry_is_stable(self, request: RegisteredWindowNavigationRequest, target: ScrollTarget, viewport: ScrollViewport) -> bool:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 146 FunctionDef def target_exposed(self, request: RegisteredWindowNavigationRequest) -> bool | None:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 172 FunctionDef def _scroll_to_section(self, field_name: str, flash: bool=True):
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 419 FunctionDef def _scroll_viewport(self) -> ScrollViewport:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 439 FunctionDef def _target_bounds(self, widget: QWidget, viewport: ScrollViewport) -> tuple[int, int, int]:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 445 FunctionDef def _target_visual_bounds(self, target: ScrollTarget, viewport: ScrollViewport) -> tuple[int, int, int]:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 456 FunctionDef def _target_is_fully_visible(self, target: ScrollTarget, viewport: ScrollViewport) -> bool:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 460 FunctionDef def _target_is_visible_for_navigation(self, target: ScrollTarget, viewport: ScrollViewport, *, is_fallback: bool) -> bool:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 487 FunctionDef def _navigation_scroll_position(self, target: ScrollTarget, viewport: ScrollViewport, *, is_fallback: bool) -> int:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 520 FunctionDef def _target_scroll_position(self, target: ScrollTarget, viewport: ScrollViewport) -> int:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 525 FunctionDef def _field_scroll_position(self, target: ScrollTarget, viewport: ScrollViewport) -> int:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 529 FunctionDef def _section_scroll_position(self, target: ScrollTarget, viewport: ScrollViewport) -> int:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 548 FunctionDef def _widget_center(self, widget: QWidget, viewport: ScrollViewport) -> int:
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 88 Assign viewport = self._owner._scroll_viewport()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 89 If if not self._target_geometry_is_stable(request, target, viewport):     return RegisteredWindowNavigationReadiness(wait_reason=NavigationWaitReason.LAYOUT)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 94 If if viewport.content_widget is None or viewport.viewport_height <= 0 or viewport.vertical_scroll_bar.maximum() <= 0:     if self._owner._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback):         return readiness     return RegisteredWindowNavigationReadiness(wait_reason=NavigationWaitReason.LAYOUT)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 109 If if self._owner._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback):     return readiness
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 124 Assign widget_top, widget_height, widget_bottom = self._owner._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 128 Assign signature = (request.field_path, id(target.target_widget), id(self._owner._target_sizing_widget(target)), widget_top, widget_height, widget_bottom, viewport.viewport_height, viewport.vertical_scroll_bar.maximum())
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 153 Assign viewport = self._owner._scroll_viewport()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 194 Assign viewport = self._scroll_viewport()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 195 If if self._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback):     logger.info(f'✅ Target {field_name} already visible, skipping scroll') else:     target_scroll = self._navigation_scroll_position(target, viewport, is_fallback=is_fallback)     viewport.vertical_scroll_bar.setValue(target_scroll)     logger.info(f'✅ Scrolled to {field_name} (target_scroll={target_scroll})')   [body read separately]
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Assign viewport_height = self.scroll_area.viewport().height()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 440 Assign widget_pos = widget.mapTo(viewport.content_widget, widget.rect().topLeft())
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 450 If if target.structural_flash_target is not None:     rect = target.structural_flash_target.scroll_rect_in(viewport.content_widget)     if rect is not None:         return (rect.y(), rect.height(), rect.y() + rect.height())
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 457 Assign widget_top, _, widget_bottom = self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 475 If if not is_fallback:     return self._target_is_fully_visible(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 477 Assign widget_top, widget_height, widget_bottom = self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 496 If if not is_fallback:     target_scroll = self._target_scroll_position(target, viewport) else:     widget_top, widget_height, widget_bottom = self._target_visual_bounds(target, viewport)     if widget_height >= viewport.viewport_height:         if widget_bottom <= viewport.viewport_top:             target_scroll = widget_bottom - 1         elif widget_top >= viewport.viewport_bottom:             tar [body read separately]
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 517 Assign scroll_bar = viewport.vertical_scroll_bar
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 521 If if target.is_field:     return self._field_scroll_position(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 526 Assign field_center = self._widget_center(target.target_widget, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 530 Assign widget_top, widget_height, _ = self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 532 If if widget_height >= viewport.viewport_height:     logger.debug(f'📜 SCROLL: {target.field_name} taller than viewport, top-aligning: widget_height={widget_height}, viewport_height={viewport.viewport_height}')     return widget_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 540 Assign target_scroll = max(0, widget_center - viewport.viewport_height // 2)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 549 Assign widget_top, widget_height, _ = self._target_bounds(widget, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 88 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 99 If if self._owner._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback):     return readiness
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 109 Call self._owner._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 124 Call self._owner._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 153 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 194 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 195 Call self._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 202 Assign target_scroll = self._navigation_scroll_position(target, viewport, is_fallback=is_fallback)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Call self.scroll_area.viewport().height()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 440 Call widget.mapTo(viewport.content_widget, widget.rect().topLeft())
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 451 Assign rect = target.structural_flash_target.scroll_rect_in(viewport.content_widget)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 454 Call self._target_bounds(self._target_sizing_widget(target), viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 457 Call self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 477 Call self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 497 Assign target_scroll = self._target_scroll_position(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 499 Assign widget_top, widget_height, widget_bottom = self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 503 If if widget_height >= viewport.viewport_height:     if widget_bottom <= viewport.viewport_top:         target_scroll = widget_bottom - 1     elif widget_top >= viewport.viewport_bottom:         target_scroll = widget_top - viewport.viewport_height + 1     else:         target_scroll = viewport.viewport_top elif widget_top < viewport.viewport_top:     target_scroll = widget_top elif widget_bottom > v [body read separately]
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 517 Attribute viewport.vertical_scroll_bar
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 523 Call self._section_scroll_position(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 526 Call self._widget_center(target.target_widget, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 527 Call max(0, field_center - viewport.viewport_height // 2)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 530 Call self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 532 Compare widget_height >= viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 540 Call max(0, widget_center - viewport.viewport_height // 2)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 541 Call logger.debug(f'📜 SCROLL: {target.field_name} centering: widget_top={widget_top}, widget_height={widget_height}, widget_center={widget_center}, viewport_height={viewport.viewport_height}, target_scroll={target_scroll}')
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 549 Call self._target_bounds(widget, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 89 Call self._target_geometry_is_stable(request, target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 95 Compare viewport.content_widget is None
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 96 Compare viewport.viewport_height <= 0
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Compare viewport.vertical_scroll_bar.maximum() <= 0
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 99 Call self._owner._target_is_visible_for_navigation(target, viewport, is_fallback=is_fallback)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 111 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 126 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 135 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 136 Call viewport.vertical_scroll_bar.maximum()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 154 Call target.target_widget.isVisibleTo(self._owner.scroll_area.viewport())
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 155 Call self._owner._target_is_fully_visible(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 197 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 202 Call self._navigation_scroll_position(target, viewport, is_fallback=is_fallback)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 207 Call viewport.vertical_scroll_bar.setValue(target_scroll)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Attribute self.scroll_area.viewport().height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 440 Attribute viewport.content_widget
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 451 Call target.structural_flash_target.scroll_rect_in(viewport.content_widget)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 454 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 457 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Compare widget_top >= viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Compare widget_bottom <= viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 476 Call self._target_is_fully_visible(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 479 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 483 Compare widget_bottom > viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 484 Compare widget_top < viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 497 Call self._target_scroll_position(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 499 Call self._target_visual_bounds(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 503 Compare widget_height >= viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 504 If if widget_bottom <= viewport.viewport_top:     target_scroll = widget_bottom - 1 elif widget_top >= viewport.viewport_bottom:     target_scroll = widget_top - viewport.viewport_height + 1 else:     target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 510 If if widget_top < viewport.viewport_top:     target_scroll = widget_top elif widget_bottom > viewport.viewport_bottom:     target_scroll = widget_bottom - viewport.viewport_height else:     target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 517 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 522 Call self._field_scroll_position(target, viewport)
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 523 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 526 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 530 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 532 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 533 Call logger.debug(f'📜 SCROLL: {target.field_name} taller than viewport, top-aligning: widget_height={widget_height}, viewport_height={viewport.viewport_height}')
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 549 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 89 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 95 Attribute viewport.content_widget
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 96 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Call viewport.vertical_scroll_bar.maximum()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 101 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 135 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 136 Attribute viewport.vertical_scroll_bar.maximum
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 154 Call self._owner.scroll_area.viewport()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 155 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 204 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 207 Attribute viewport.vertical_scroll_bar.setValue
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Call self.scroll_area.viewport()
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 440 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 451 Attribute viewport.content_widget
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Attribute viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 476 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 483 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 484 Attribute viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 497 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 501 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 503 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 504 Compare widget_bottom <= viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 506 If if widget_top >= viewport.viewport_bottom:     target_scroll = widget_top - viewport.viewport_height + 1 else:     target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 510 Compare widget_top < viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 512 If if widget_bottom > viewport.viewport_bottom:     target_scroll = widget_bottom - viewport.viewport_height else:     target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 522 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 532 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 95 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 96 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Attribute viewport.vertical_scroll_bar.maximum
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 136 Attribute viewport.vertical_scroll_bar
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 154 Attribute self._owner.scroll_area.viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 207 Attribute viewport.vertical_scroll_bar
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 423 Attribute self.scroll_area.viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 451 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 458 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 483 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 484 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 503 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 504 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 506 Compare widget_top >= viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 507 Assign target_scroll = widget_top - viewport.viewport_height + 1
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 509 Assign target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 510 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 512 Compare widget_bottom > viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 513 Assign target_scroll = widget_bottom - viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 515 Assign target_scroll = viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 527 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 540 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 544 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Attribute viewport.vertical_scroll_bar
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 136 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 207 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 504 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 506 Attribute viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 509 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 510 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 512 Attribute viewport.viewport_bottom
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 515 Attribute viewport.viewport_top
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 527 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 535 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 540 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 544 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 97 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 506 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 509 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 512 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 513 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 515 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 535 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 507 Attribute viewport.viewport_height
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 513 Name viewport
+src/pyqt_reactive/widgets/shared/scrollable_form_mixin.py 507 Name viewport
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 110 ClassDef class TearOffTabWidget(QTabWidget):
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 285 FunctionDef def _show_drop_indicator(self, pos: QPoint):
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 294 If if drop_index < self.count():     tab_rect = self.tabBar().tabRect(drop_index)     self._drop_indicator.setGeometry(tab_rect.left() - 2, tab_rect.top(), 3, tab_rect.height()) elif self.count() > 0:     last_rect = self.tabBar().tabRect(self.count() - 1)     self._drop_indicator.setGeometry(last_rect.right() + 1, last_rect.top(), 3, last_rect.height()) else:     self._drop_indicator.setGeometry(0,  [body read separately]
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 300 If if self.count() > 0:     last_rect = self.tabBar().tabRect(self.count() - 1)     self._drop_indicator.setGeometry(last_rect.right() + 1, last_rect.top(), 3, last_rect.height()) else:     self._drop_indicator.setGeometry(0, 0, 3, self.tabBar().height())
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 297 Call self._drop_indicator.setGeometry(tab_rect.left() - 2, tab_rect.top(), 3, tab_rect.height())
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 297 Attribute self._drop_indicator.setGeometry
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 302 Call self._drop_indicator.setGeometry(last_rect.right() + 1, last_rect.top(), 3, last_rect.height())
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 304 Call self._drop_indicator.setGeometry(0, 0, 3, self.tabBar().height())
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 302 Attribute self._drop_indicator.setGeometry
+src/pyqt_reactive/widgets/shared/tear_off_tab_widget.py 304 Attribute self._drop_indicator.setGeometry
+src/pyqt_reactive/widgets/structural_table.py 69 ClassDef @dataclass(frozen=True, slots=True)
+src/pyqt_reactive/widgets/structural_table.py 92 FunctionDef def _cell_rect_in(self, ancestor: QWidget) -> QRect | None:
+src/pyqt_reactive/widgets/structural_table.py 104 FunctionDef def layout_watch_widgets(self) -> tuple[QWidget, ...]:
+src/pyqt_reactive/widgets/structural_table.py 98 Assign top_left = ancestor.mapFromGlobal(self.table.viewport().mapToGlobal(cell_rect.topLeft()))
+src/pyqt_reactive/widgets/structural_table.py 105 Assign widgets = [self.table, self.table.viewport()]
+src/pyqt_reactive/widgets/structural_table.py 98 Call ancestor.mapFromGlobal(self.table.viewport().mapToGlobal(cell_rect.topLeft()))
+src/pyqt_reactive/widgets/structural_table.py 98 Call self.table.viewport().mapToGlobal(cell_rect.topLeft())
+src/pyqt_reactive/widgets/structural_table.py 105 Call self.table.viewport()
+src/pyqt_reactive/widgets/structural_table.py 98 Attribute self.table.viewport().mapToGlobal
+src/pyqt_reactive/widgets/structural_table.py 105 Attribute self.table.viewport
+src/pyqt_reactive/widgets/structural_table.py 98 Call self.table.viewport()
+src/pyqt_reactive/widgets/structural_table.py 98 Attribute self.table.viewport
+src/pyqt_reactive/windows/help_window_manager.py 287 ClassDef class HelpWindowManager:
+src/pyqt_reactive/windows/help_window_manager.py 322 FunctionDef @classmethod
+src/pyqt_reactive/windows/help_window_manager.py 363 FunctionDef @classmethod
+src/pyqt_reactive/windows/help_window_manager.py 332 If if isinstance(cls._help_window, QDialog):     try:         if not cls._help_window.isHidden() and isinstance(cls._help_window, DocstringHelpWindow):             if title is None:                 window_title = f'Help: {help_target_display_name(target)}'             else:                 window_title = title             cls._help_window.set_help_target(target, title=window_title)             cls._p [body read separately]
+src/pyqt_reactive/windows/help_window_manager.py 388 If if isinstance(cls._help_window, QDialog):     try:         if not cls._help_window.isHidden() and isinstance(cls._help_window, ParameterHelpWindow):             cls._help_window.set_parameter_content(help_content, title=f'Parameter: {param_name}')             cls._position_window_near_cursor(cls._help_window)             cls._help_window.raise_()             cls._help_window.activateWindow()       [body read separately]
+src/pyqt_reactive/windows/help_window_manager.py 334 If if not cls._help_window.isHidden() and isinstance(cls._help_window, DocstringHelpWindow):     if title is None:         window_title = f'Help: {help_target_display_name(target)}'     else:         window_title = title     cls._help_window.set_help_target(target, title=window_title)     cls._position_window_near_cursor(cls._help_window)     cls._help_window.raise_()     cls._help_window.activateWin [body read separately]
+src/pyqt_reactive/windows/help_window_manager.py 390 If if not cls._help_window.isHidden() and isinstance(cls._help_window, ParameterHelpWindow):     cls._help_window.set_parameter_content(help_content, title=f'Parameter: {param_name}')     cls._position_window_near_cursor(cls._help_window)     cls._help_window.raise_()     cls._help_window.activateWindow()     return
+src/pyqt_reactive/windows/help_window_manager.py 345 Call cls._help_window.activateWindow()
+src/pyqt_reactive/windows/help_window_manager.py 400 Call cls._help_window.activateWindow()
+src/pyqt_reactive/windows/help_window_manager.py 345 Attribute cls._help_window.activateWindow
+src/pyqt_reactive/windows/help_window_manager.py 400 Attribute cls._help_window.activateWindow
