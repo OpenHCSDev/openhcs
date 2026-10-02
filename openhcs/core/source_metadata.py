@@ -798,6 +798,13 @@ class SourceVoxelSpacing:
         if not isinstance(self.unit, SourceVoxelSpacingUnit):
             raise TypeError("SourceVoxelSpacing.unit must be SourceVoxelSpacingUnit.")
 
+    @classmethod
+    def coerce(
+        cls, value: "SourceVoxelSpacing | Sequence[float]"
+    ) -> "SourceVoxelSpacing":
+        """Retain nominal spacing or validate authored coordinate values."""
+        return value if isinstance(value, cls) else cls(tuple(value))
+
     @property
     def has_values(self) -> bool:
         return bool(self.values_zyx)
@@ -960,10 +967,7 @@ class SourceVoxelSpacingFields:
     )
 
     def normalize_source_voxel_spacing_fields(self) -> None:
-        if not isinstance(self.source_voxel_spacing, SourceVoxelSpacing):
-            self.source_voxel_spacing = SourceVoxelSpacing(
-                tuple(self.source_voxel_spacing)
-            )
+        self.source_voxel_spacing = SourceVoxelSpacing.coerce(self.source_voxel_spacing)
 
 
 @lru_cache(maxsize=4096)

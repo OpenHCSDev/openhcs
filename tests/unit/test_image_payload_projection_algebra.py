@@ -19,6 +19,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 
 def _metadata(axis, channel_axis):
@@ -152,3 +153,165 @@ def test_projection_observes_mask_and_metadata_mutation():
     mask.resize((2, 2, 6), refcheck=False)
     with pytest.raises(ValueError, match="cannot be projected"):
         projector.payload_for_slice(data, 1)
+
+
+def _metadata_with_observed_plane_fields(*, proof_raises=False):
+    events = []
+
+    class ObservedInt(int):
+        def __int__(self):
+            events.append("proof-int")
+            if proof_raises:
+                raise RuntimeError("proof conversion observed")
+            return 1
+
+    class ObservedTuple(tuple):
+        def __getitem__(self, index):
+            events.append("intensity-getitem")
+            return super().__getitem__(index)
+
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_plane_intensity_scales=ObservedTuple((2.0,)),
+        unit_interval_intensity=ImageUnitIntervalIntensityMetadata(
+            source_plane_scales=(ObservedInt(1),)
+        ),
+    )
+    return metadata, events
+
+
+def test_plane_proof_failure_precedes_leading_channel_guard():
+    metadata, events = _metadata_with_observed_plane_fields(proof_raises=True)
+    metadata.source_channel_axis = 0
+    with pytest.raises(RuntimeError, match="proof conversion observed"):
+        metadata.for_leading_source_plane(0)
+    assert events == ["intensity-getitem", "proof-int"]
+
+
+def test_plane_field_effects_precede_leading_channel_guard():
+    metadata, events = _metadata_with_observed_plane_fields()
+    metadata.source_channel_axis = 0
+    with pytest.raises(ValueError, match="both plane and channel"):
+        metadata.for_leading_source_plane(0)
+    assert events == ["intensity-getitem", "proof-int"]
+
+
+def test_source_plane_preserves_intensity_then_proof_effect_order():
+    metadata, events = _metadata_with_observed_plane_fields()
+    projected = metadata.for_source_plane(0)
+    assert events == ["intensity-getitem", "proof-int"]
+    assert projected.intensity_scale == 2.0
+    assert projected.unit_interval_intensity.scale == 1
+
+
+def test_plane_proof_failure_precedes_mutated_channel_type_guard():
+    metadata, events = _metadata_with_observed_plane_fields(proof_raises=True)
+    metadata.source_channel_axis = False
+    with pytest.raises(RuntimeError, match="proof conversion observed"):
+        metadata.for_leading_source_plane(0)
+    assert events == ["intensity-getitem", "proof-int"]
+
+
+@pytest.mark.parametrize(
+    "operation,channel_axis,broken,error,message",
+    (
+        ("for_leading_source_plane", 0, "domain", ValueError, "spatial_origin_yx"),
+        ("for_leading_source_plane", 0, "spacing", ValueError, "finite and positive"),
+        (
+            "for_leading_source_plane",
+            0,
+            "spacing-value",
+            AttributeError,
+            "with_missing_from",
+        ),
+        ("for_leading_source_plane", 0, "plane", ValueError, "invalid-axis"),
+        ("for_leading_source_plane", False, "domain", ValueError, "spatial_origin_yx"),
+        (
+            "for_leading_source_plane",
+            False,
+            "spacing",
+            ValueError,
+            "finite and positive",
+        ),
+        ("for_leading_source_plane", False, "plane", TypeError, "must be int or None"),
+        ("for_source_plane", False, "domain", ValueError, "spatial_origin_yx"),
+        ("for_source_plane", False, "spacing", ValueError, "finite and positive"),
+        (
+            "for_source_plane",
+            False,
+            "spacing-value",
+            AttributeError,
+            "with_missing_from",
+        ),
+        ("for_source_plane", False, "plane", TypeError, "must be int or None"),
+        (
+            "without_leading_plane_axis",
+            0,
+            "domain",
+            ValueError,
+            "both plane and channel",
+        ),
+        (
+            "without_leading_plane_axis",
+            0,
+            "spacing",
+            ValueError,
+            "both plane and channel",
+        ),
+        (
+            "without_leading_plane_axis",
+            0,
+            "spacing-value",
+            ValueError,
+            "both plane and channel",
+        ),
+        (
+            "without_leading_plane_axis",
+            0,
+            "plane",
+            ValueError,
+            "both plane and channel",
+        ),
+        ("without_leading_plane_axis", "1", "plane", TypeError, "not supported"),
+    ),
+)
+def test_projection_preserves_cross_invalid_constructor_guard_order(
+    operation, channel_axis, broken, error, message
+):
+    metadata = ImagePayloadMetadata(
+        source_path="/tmp/source.tif",
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    metadata.source_channel_axis = channel_axis
+    if broken == "domain":
+        metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
+    elif broken == "spacing":
+        metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
+    elif broken == "spacing-value":
+        metadata.source_voxel_spacing = None
+    else:
+        metadata.plane_axis = "invalid-axis"
+    with pytest.raises(error, match=message):
+        if operation == "without_leading_plane_axis":
+            metadata.without_leading_plane_axis()
+        else:
+            getattr(metadata, operation)(0)
+
+
+def test_missing_leading_axis_precedes_plane_field_effects():
+    metadata, events = _metadata_with_observed_plane_fields(proof_raises=True)
+    metadata.plane_axis = None
+    metadata.source_channel_axis = 0
+    with pytest.raises(ValueError, match="requires a declared plane axis"):
+        metadata.for_leading_source_plane(0)
+    assert events == []
+
+
+def test_projection_spacing_failure_precedes_other_invalid_source_fields():
+    metadata = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+    metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
+    metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
+    metadata.source_channel_axis = False
+    metadata.plane_axis = "invalid-axis"
+    with pytest.raises(ValueError, match="finite and positive"):
+        metadata.for_leading_source_plane(0)

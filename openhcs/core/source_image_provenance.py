@@ -702,6 +702,15 @@ class SourceImageProvenance:
             self.source_image_names,
         )
 
+    def normalized(self) -> "SourceImageProvenance":
+        """Snapshot provenance through the constructor's concrete field policy."""
+        return SourceImageProvenance(
+            self.source_path,
+            self.source_component_metadata,
+            self.source_image_provenance_planes,
+            self.source_image_names,
+        )
+
     @classmethod
     def from_init_values(
         cls,
@@ -1788,11 +1797,8 @@ class SourceImageProvenanceFields:
         self.source_provenance = explicit.with_missing_from(self.source_provenance)
 
     def normalize_source_provenance_fields(self) -> None:
-        self.source_provenance = SourceImageProvenance(
-            self.source_provenance.source_path,
-            self.source_provenance.source_component_metadata,
-            self.source_provenance.source_image_provenance_planes,
-            self.source_provenance.source_image_names,
+        self.source_provenance = SourceImageProvenance.normalized(
+            self.source_provenance
         )
 
     def replace_fields(self, **changes: Any) -> Self:
