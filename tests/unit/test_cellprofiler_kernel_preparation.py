@@ -228,3 +228,81 @@ def test_illumination_preparation_covers_masked_polynomial_and_array_views(tmp_p
         timeout=90,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_illumination_preparation_covers_shared_hull_and_line_geometry(tmp_path):
+    """Prepared geometry must not compile or load kernels during execution."""
+    script = textwrap.dedent("""
+        from contextlib import ExitStack
+        from unittest.mock import patch
+        import numpy as np
+        import centrosome.filter
+        import centrosome.cpmorphology
+        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.processing.backends.cellprofiler import illumination, label_geometry, worm_geometry
+
+        dispatchers = (
+            illumination._incremental_quantized_hulls_numba,
+            illumination._paint_column_envelope_level_numba,
+            label_geometry._cellprofiler_column_envelope_vertices_numba,
+            worm_geometry._fill_cellprofiler_line_points_numba,
+        )
+        assert all(not dispatcher.signatures for dispatcher in dispatchers)
+        prepare_processing_callable(illumination.correct_illumination_calculate)
+        before = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
+        assert all(before)
+        layouts = {signature[0].layout for signature in dispatchers[0].signatures}
+        assert layouts == {"C", "F"}, layouts
+
+        def reject_late_compilation(signature):
+            raise AssertionError("Shared geometry compiled or loaded after READY: " + str(signature))
+
+        rng = np.random.default_rng(419)
+        source = rng.random((13, 17))
+        partial_mask = rng.random(source.shape) > 0.2
+        with ExitStack() as stack:
+            for dispatcher in dispatchers:
+                stack.enter_context(patch.object(dispatcher, "compile", reject_late_compilation))
+            for dtype in (np.float32, np.float64):
+                for view in (source.astype(dtype), np.asfortranarray(source, dtype=dtype), source[::-1, ::-1].astype(dtype)):
+                    for writeable in (True, False):
+                        view.flags.writeable = writeable
+                        pixels = view.copy()
+                        for mask in (None, partial_mask):
+                            mask_before = None if mask is None else mask.copy()
+                            for levels in (16, 256):
+                                expected = centrosome.filter.convex_hull_transform(view, mask=mask, levels=levels)
+                                actual = illumination._cellprofiler_convex_hull_transform(view, mask, levels=levels)
+                                np.testing.assert_array_equal(actual, expected)
+                                np.testing.assert_array_equal(view, pixels)
+                                if mask is not None:
+                                    np.testing.assert_array_equal(mask, mask_before)
+                                assert not np.shares_memory(actual, view)
+            labels = np.zeros((11, 13), dtype=np.int32)
+            labels[2:8, 4:10] = 1
+            indexes = np.array([1], dtype=np.int32)
+            expected_hull = centrosome.cpmorphology.convex_hull(labels, indexes)
+            actual_hull = label_geometry.CellProfilerLabelHull.from_labels(labels, indexes).vertices()
+            for actual, expected in zip(actual_hull, expected_hull):
+                np.testing.assert_array_equal(actual, expected)
+            endpoints = (np.array([0, 4]), np.array([0, -2]), np.array([4, 0]), np.array([2, 0]))
+            expected_lines = centrosome.cpmorphology.get_line_pts(*endpoints)
+            for actual, expected in zip(worm_geometry._cellprofiler_line_points(*endpoints), expected_lines):
+                np.testing.assert_array_equal(actual, expected)
+                assert actual.flags.owndata and actual.flags.writeable
+        assert tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers) == before
+    """)
+    environment = os.environ.copy()
+    environment.update(
+        {"OPENHCS_CPU_ONLY": "true", "NUMBA_CACHE_DIR": str(tmp_path / "kernels")}
+    )
+    result = subprocess.run(
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
