@@ -15175,6 +15175,9 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     transports: list[str] = []
 
     class FailingRunServer:
+        def __init__(self, *args, **kwargs):
+            assert kwargs["main_thread_dispatcher"] is recording_transport.execution.dispatcher
+
         def run(self, *, transport: str) -> None:
             transports.append(transport)
             raise RuntimeError("run failed")
@@ -15205,7 +15208,8 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
         build_failure_server,
     )
     recording_transport = SimpleNamespace(
-        run=lambda server: server.run(transport="stdio")
+        run=lambda server: server.run(transport="stdio"),
+        execution=SimpleNamespace(dispatcher=object()),
     )
     monkeypatch.setattr(
         mcp_stdio.McpStdioTransport,

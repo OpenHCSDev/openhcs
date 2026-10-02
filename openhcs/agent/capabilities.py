@@ -1501,9 +1501,15 @@ class ArchitectureCapability(
 
 
 class ProgressAcknowledgedCapability(AgentCapabilityDeclaration):
-    """Worker-safe operations acknowledge activity before the client idle limit."""
+    """Operations acknowledge activity before the client idle limit."""
 
     progress_heartbeat_seconds = 1.0
+
+
+class MainThreadProgressCapability(ProgressAcknowledgedCapability):
+    """Compose progress with Qt/ObjectState's original main-thread affinity."""
+
+    progress_worker_thread_safe = False
 
 
 class FunctionCatalogCapability(ProgressAcknowledgedCapability):
@@ -2667,7 +2673,7 @@ class CreateOrchestratorSessionCapability(HeadlessExecutionCapability):
 
 
 class CreateOrchestratorSessionFromPipelineSourceCapability(
-    HeadlessExecutionCapability
+    MainThreadProgressCapability, HeadlessExecutionCapability
 ):
     name = "openhcs_create_orchestrator_session_from_pipeline_source"
     kind = CapabilityKind.TOOL
@@ -2685,8 +2691,6 @@ class CreateOrchestratorSessionFromPipelineSourceCapability(
     service = "execution_session"
     mutating = True
     side_effects = ("creates_in_memory_execution_session",)
-    progress_heartbeat_seconds = 10.0
-    progress_worker_thread_safe = False
     input_contract = PipelineSourceOrchestratorSessionRequest
     output_contract = OrchestratorSessionRef
     request_invocation = AgentFromFieldsServiceInvocation(
@@ -2711,7 +2715,9 @@ class GetOrchestratorSessionCapability(HeadlessExecutionCapability):
     )
 
 
-class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
+class InspectPipelineSourceArtifactPlanCapability(
+    MainThreadProgressCapability, PipelineDraftCapability
+):
     name = "openhcs_inspect_pipeline_source_artifact_plan"
     cli_command = "artifact-plan"
     kind = CapabilityKind.TOOL
