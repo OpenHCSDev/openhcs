@@ -157,3 +157,43 @@ Before acceptance: coordinated coherent producer/consumer patch, original
 2D/3D/multiple-artifact/bad-domain controls, after-inventory deletion evidence,
 and parent-released installed continuous source-bearing live/reopen native
 journey. No source fix, scientist rerun or native acceptance is claimed yet.
+
+Root394 integration review at4110503
+------------------------------------
+
+Reviewed the pinned current Root394 head
+4110503cb543ed525d787f678abdf6efe374b8b7 against production base1a89e09e.
+Of the ten determining files, only source_image_provenance.py,
+function_artifact_materialization.py and materialization/core.py changed.
+The seven remaining files, including PointROIOptions, the Points guard,
+ROIFractionalZ, saved reopening and component scoping, are unchanged.
+This is a source diff/semantic review, not a new scan or execution claim.
+
+The required integration adjustment is to use Root's MaterializationBatch
+render/save and SavedMaterializationOutputs ownership. Keep the exact typed
+point Output and its complete archived provenance flowing through that batch;
+do not restore deleted output-group rendering or re-derive publication paths
+from logical records. MaterializedRuntimeArtifact now observes actual successful
+backend outputs, so the point repair must not add a competing save/path ledger.
+
+SourceImageIdentity and common metadata now delegate snapshots/composition to
+SourceMetadataFields, preserving OwnedSourceMetadataFields lifetime. Derive
+represented identities and the anchor through existing provenance methods,
+without flattening those records to a separate raw mapping. The source-provenance
+initializer now accepts the raw InitVar tuple and decodes at its owner;
+MeasurementTable's consumer is migrated accordingly. The published fixture uses
+the original constructor, not a direct call to that internal initializer.
+
+The remaining defect seam is unchanged: artifact backend kwargs are still built
+before prepare_materialization renders its batch, using the same
+ArtifactStreamSourceMetadataAuthority.metadata_items and
+MaterializationSpec.emitted_source_identities logic. Root's new save ledger does
+not provide a represented PointROI Z domain to that earlier live projection.
+Both full source span and exact original anchor obligations remain.
+
+No production edits, tests, scans, installs or endpoint requests were performed
+for this review. The original8c1e3160d fixture/control remains published and
+qualified only at its original immutable installed484 strength, not executed
+against Root4110503. Independent consumer diagnosis is complete. Named dependency:
+Root394's affirmative shared-seam release or coordinated producer implementation.
+The hold and parent-owned later installed native acceptance remain in force.
