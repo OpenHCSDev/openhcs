@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -7,6 +8,54 @@ from pathlib import Path
 import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
+
+def test_mcp_stdio_bootstrap_failure_keeps_transport_open(tmp_path):
+    """Original bootstrap assertions, with source ABI admission in its owner."""
+    loader = Path(__file__).resolve().parents[3] / "docs/validation/mcp-affine-inspection-436-20261002/source_fixture.py"
+    (tmp_path / "sitecustomize.py").write_text(
+        "\n".join((
+            "import runpy",
+            f"runpy.run_path({str(loader)!r})['load_readonly_native_extensions']()",
+            "import openhcs.mcp.server as openhcs_mcp_server",
+            "",
+            "def fail_build_server(**kwargs):",
+            "    del kwargs",
+            "    raise RuntimeError('stdio construction failed')",
+            "",
+            "openhcs_mcp_server.build_server = fail_build_server",
+        ))
+    )
+    pythonpath_parts = [str(tmp_path)]
+    current_pythonpath = os.environ.get("PYTHONPATH")
+    if current_pythonpath is not None:
+        pythonpath_parts.append(current_pythonpath)
+    child_environment = {
+        name: value for name, value in os.environ.items()
+        if not name.startswith("COV_CORE_")
+    }
+
+    async def call_stdio_server():
+        parameters = StdioServerParameters(
+            command=sys.executable, args=("-m", "openhcs.mcp"),
+            env={**child_environment, "PYTHONPATH": os.pathsep.join(pythonpath_parts)},
+        )
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await asyncio.wait_for(session.initialize(), timeout=5)
+                health = await asyncio.wait_for(session.call_tool("openhcs_health_check", {}), timeout=5)
+                failure = await asyncio.wait_for(session.call_tool("openhcs_bootstrap_failure", {}), timeout=5)
+                return health, failure
+
+    health, failure = asyncio.run(call_stdio_server())
+    health_payload = json.loads(health.content[0].text)
+    failure_payload = json.loads(failure.content[0].text)
+    assert health_payload["schema_version"] == "openhcs.mcp.bootstrap.v1"
+    assert health_payload["ok"] is False
+    assert health_payload["status"] == "unavailable"
+    assert health_payload["phase"] == "build_server"
+    assert health_payload["message"] == "stdio construction failed"
+    assert failure_payload == health_payload
 
 
 def test_stdio_transport_reserves_protocol_stdout_for_persistent_session(
@@ -48,6 +97,7 @@ with McpStdioTransport.reserve_process_stdio() as transport:
         parameters = StdioServerParameters(
             command=sys.executable,
             args=(str(server_script),),
+            env=dict(os.environ),
         )
         with stderr_path.open("w", encoding="utf-8") as stderr:
             async with stdio_client(parameters, errlog=stderr) as (
@@ -115,6 +165,7 @@ with McpStdioTransport.reserve_process_stdio() as transport:
         parameters = StdioServerParameters(
             command=sys.executable,
             args=(str(server_script),),
+            env=dict(os.environ),
         )
         with (tmp_path / "native.stderr.log").open("w", encoding="utf-8") as stderr:
             async with stdio_client(parameters, errlog=stderr) as (reader, writer):

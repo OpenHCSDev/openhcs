@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 import anyio
 from mcp.server.stdio import stdio_server
 
+from openhcs.mcp.execution import McpTransportExecutor
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
@@ -37,6 +39,7 @@ class McpStdioTransport:
     ) -> None:
         self._protocol_stdin = protocol_stdin
         self._protocol_stdout = protocol_stdout
+        self.execution = McpTransportExecutor()
 
     @classmethod
     @contextmanager
@@ -72,7 +75,11 @@ class McpStdioTransport:
                 os.dup2(stderr_fd, stdout_fd)
                 sys.stdin = application_stdin
                 sys.stdout = sys.stderr
-                yield cls(protocol_stdin, protocol_stdout)
+                transport = cls(protocol_stdin, protocol_stdout)
+                try:
+                    yield transport
+                finally:
+                    transport.execution.close()
             finally:
                 try:
                     sys.stdout.flush()
@@ -88,7 +95,7 @@ class McpStdioTransport:
     def run(self, server: FastMCP) -> None:
         """Run one FastMCP server against the reserved protocol channel."""
 
-        anyio.run(self._run, server)
+        self.execution.run(self._run, server)
 
     async def _run(self, server: FastMCP) -> None:
         async_stdin = anyio.wrap_file(self._protocol_stdin)
