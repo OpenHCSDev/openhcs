@@ -257,6 +257,9 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
             ):
                 return self._preparation.future
 
+            # The service session retains the incarnation authority across worker
+            # refreshes; a disposable thread-local sender must not select a peer.
+            self._client_for(endpoint)
             preparation = FunctionCatalogPreparation(
                 endpoint,
                 compact_signatures,
@@ -397,6 +400,10 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
     ) -> CustomFunctionRegistrationResult:
         """Register source at the endpoint and project ephemeral source locally."""
 
+        from openhcs.runtime.zmq_execution_client import (
+            FunctionCatalogEndpointUnavailableError,
+        )
+
         request = request.admitted(self._path_policy)
         endpoint = self._endpoint_for_connection(request.connection)
         deadline = OperationDeadline.after_milliseconds(
@@ -445,6 +452,10 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
                     emit_signal=False,
                 )
             self.invalidate()
+        except FunctionCatalogEndpointUnavailableError:
+            # Native admission failed before the source-bearing exchange, so this
+            # is recoverable rejection, not an uncertain mutation receipt.
+            raise
         except Exception as error:
             raise CustomFunctionRegistrationUncertainError(request) from error
         return result
@@ -477,12 +488,12 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
                 raise RuntimeError(
                     "Catalog preparation response changed the explicit connection."
                 )
+            self.invalidate()
+            if self._client_session is not None:
+                self._client_session.disconnect()
         except BaseException:
             client.disconnect()
             raise
-        self.invalidate()
-        if self._client_session is not None:
-            self._client_session.disconnect()
         self._client_session = FunctionCatalogClientSession(endpoint, client)
         self._config_provider = lambda: endpoint
         return state
@@ -571,13 +582,16 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
         if not preparation.future.set_running_or_notify_cancel():
             return
         client: ZMQExecutionClient | None = None
+        owner: ZMQExecutionClient | None = None
         try:
+            owner = self._client_for(preparation.endpoint)
             client = self._client_factory(preparation.endpoint)
             page = client.get_function_catalog(
                 FunctionCatalogControlRequest(
                     compact_signatures=preparation.compact_signatures,
                 ),
                 cancellation=preparation.cancellation,
+                endpoint_owner=owner,
             )
             projection = FunctionCatalogProjection.from_page(
                 preparation.endpoint,
@@ -597,7 +611,7 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
                     self._preparation = None
             preparation.future.set_exception(error)
         finally:
-            if client is not None:
+            if client is not None and client is not owner:
                 try:
                     client.disconnect()
                 except Exception:

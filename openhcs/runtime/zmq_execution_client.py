@@ -677,7 +677,7 @@ class FunctionCatalogEndpointUnavailableError(AgentFacingErrorMixin, RuntimeErro
     agent_error_hint = (
         "The catalog owner is unavailable or changed. Explicitly select an existing "
         "execution runtime with openhcs_start_function_catalog_preparation; "
-        "no catalog request was delivered and no replacement runtime was started."
+        "the rejected exchange delivered no catalog request and started no replacement runtime."
     )
 
 
@@ -947,6 +947,7 @@ class ZMQExecutionClient(
         request: FunctionCatalogControlRequest,
         *,
         cancellation: OperationCancellation | None = None,
+        endpoint_owner: ZMQExecutionClient | None = None,
     ) -> FunctionCatalogPage:
         """Read the authoritative callable catalog from this execution endpoint."""
 
@@ -955,6 +956,7 @@ class ZMQExecutionClient(
         response = self._send_function_catalog_control_request(
             request,
             cancellation=cancellation,
+            endpoint_owner=endpoint_owner,
         )
         return FunctionCatalogControlResponse.from_control_response(response).catalog
 
@@ -1062,6 +1064,7 @@ class ZMQExecutionClient(
         request: FunctionCatalogControlRequestABC,
         *,
         cancellation: OperationCancellation | None = None,
+        endpoint_owner: ZMQExecutionClient | None = None,
     ) -> dict:
         """Poll read-only discovery while endpoint catalog preparation is active."""
 
@@ -1075,7 +1078,7 @@ class ZMQExecutionClient(
             if cancellation.requested():
                 raise CancelledError("Function catalog preparation was cancelled")
             response = self._send_function_catalog_exchange(
-                request, cancellation=cancellation
+                request, cancellation=cancellation, endpoint_owner=endpoint_owner
             )
             pending = FunctionCatalogPreparationControlResponse.from_control_response(
                 response
@@ -1102,6 +1105,7 @@ class ZMQExecutionClient(
         *,
         operation_deadline: OperationDeadline | None = None,
         cancellation: OperationCancellation | None = None,
+        endpoint_owner: ZMQExecutionClient | None = None,
     ) -> dict:
         """Admit one nominal catalog control without creating or adopting an owner.
 
@@ -1119,18 +1123,19 @@ class ZMQExecutionClient(
         deadline.remaining_seconds()
         if cancellation is not None and cancellation.requested():
             raise CancelledError("Function catalog preparation was cancelled")
-        if not self.is_connected() and not self.new_connection_attempt(
+        owner = self if endpoint_owner is None else endpoint_owner
+        if not owner.is_connected() and not owner.new_connection_attempt(
             cancellation=cancellation
         ).connect(EndpointConnectionPolicy.ATTACH_EXISTING, deadline.cap_seconds(1.0)):
             raise FunctionCatalogEndpointUnavailableError(
                 "Function catalog requires an existing execution endpoint."
             )
-        expected = self.connected_endpoint
+        expected = owner.connected_endpoint
         if expected is None or expected.process_identity is None:
             raise FunctionCatalogEndpointUnavailableError(
                 "Catalog connection has no native process-incarnation proof."
             )
-        if self.known_server_process_is_alive() is False:
+        if owner.known_server_process_is_alive() is False:
             raise FunctionCatalogEndpointUnavailableError(
                 f"Selected catalog owner {expected.process_identity!r} has exited."
             )
@@ -1157,6 +1162,8 @@ class ZMQExecutionClient(
             ) from error
         if (
             observed.process_identity != expected.process_identity
+            or observed.port != expected.port
+            or observed.control_port != expected.control_port
             or observed.server_role is not expected.server_role
             or observed.application != expected.application
         ):

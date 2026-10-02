@@ -78,8 +78,9 @@ class _EndpointClient:
         request: FunctionCatalogControlRequest,
         *,
         cancellation=None,
+        endpoint_owner=None,
     ):
-        del cancellation
+        del cancellation, endpoint_owner
         self.catalog_requests.append(request)
         if len(self.catalogs) > 1:
             return self.catalogs.pop(0)
@@ -276,7 +277,9 @@ def test_projection_coalesces_nonblocking_catalog_preparation() -> None:
     release = threading.Event()
 
     class _BlockingEndpointClient(_EndpointClient):
-        def get_function_catalog(self, request, *, cancellation=None):
+        def get_function_catalog(
+            self, request, *, cancellation=None, endpoint_owner=None
+        ):
             del cancellation
             self.catalog_requests.append(request)
             if not release.wait(2):
@@ -307,7 +310,9 @@ def test_projection_close_cancels_and_joins_catalog_preparation() -> None:
     exited = threading.Event()
 
     class _CancellableEndpointClient(_EndpointClient):
-        def get_function_catalog(self, request, *, cancellation=None):
+        def get_function_catalog(
+            self, request, *, cancellation=None, endpoint_owner=None
+        ):
             self.catalog_requests.append(request)
             if cancellation is None:
                 raise AssertionError(
@@ -404,7 +409,9 @@ def test_selector_destruction_does_not_own_shared_catalog_completion(qapp) -> No
     release = threading.Event()
 
     class _BlockingEndpointClient(_EndpointClient):
-        def get_function_catalog(self, request, *, cancellation=None):
+        def get_function_catalog(
+            self, request, *, cancellation=None, endpoint_owner=None
+        ):
             self.catalog_requests.append(request)
             if not release.wait(2):
                 raise TimeoutError("test did not release catalog request")
@@ -487,7 +494,9 @@ def test_selector_construction_does_not_wait_for_endpoint_catalog(
     release = threading.Event()
 
     class _BlockingEndpointClient(_EndpointClient):
-        def get_function_catalog(self, request, *, cancellation=None):
+        def get_function_catalog(
+            self, request, *, cancellation=None, endpoint_owner=None
+        ):
             del cancellation
             self.catalog_requests.append(request)
             if not release.wait(2):
