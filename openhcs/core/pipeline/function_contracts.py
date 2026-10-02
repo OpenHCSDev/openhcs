@@ -167,35 +167,6 @@ class ObjectLabelInputExecutionMode(str, Enum):
         return {**kwargs, **semantic_controls}
 
 
-    def invocation_kwargs(
-        self,
-        kwargs: Mapping[str, Any],
-        *,
-        execution_mode: ImagePayloadExecutionMode,
-        image_projection: RuntimePlaneAxisValueProjection | None,
-        runtime_projection: RuntimePlaneAxisValueProjection | None,
-        semantic_controls: Mapping[str, Any],
-    ) -> dict[str, Any]:
-        """Match scalar images to their declared singleton runtime root.
-
-        Explicit full-stack label consumers keep their domain. Matching labels
-        can consume a singleton root only after the image's final execution
-        mode and retained plane projection have been resolved.
-        """
-        if (
-            self is self.MATCH_IMAGE_STACK
-            and execution_mode is ImagePayloadExecutionMode.NATURAL
-            and image_projection is None
-        ):
-            if runtime_projection is not None and runtime_projection.axis_size == 1:
-                from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-                kwargs = RuntimeSliceProjection.kwargs_for_slice(
-                    kwargs, runtime_projection.selected_plane(0)
-                )
-        return {**kwargs, **semantic_controls}
-
-
 def _artifact_spec_from_output_declaration(
     spec: str | ArtifactSpec | tuple[str, MaterializationSpec | None],
 ) -> ArtifactSpec:
