@@ -920,7 +920,7 @@ class IlluminationCalculationRequest:
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def correct_illumination_calculate(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     intensity_choice: IntensityChoice = IntensityChoice.REGULAR,
     dilate_objects: bool = False,
     object_dilation_radius: int = 1,

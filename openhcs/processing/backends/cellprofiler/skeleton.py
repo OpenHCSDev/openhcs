@@ -359,7 +359,7 @@ def measure_object_skeleton(
 @numpy_backend(contract=ProcessingContract.PURE_2D)
 @special_inputs("seed_labels")
 def measure_object_skeleton_with_branchpoint_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     seed_labels: SeedObjectLabelsInput,
     fill_small_holes: bool = True,
     maximum_hole_size: int = 10,

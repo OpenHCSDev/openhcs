@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from enum import Enum
 from openhcs.core.memory import numpy
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -123,7 +124,7 @@ class ExcessObjectHandling(CellProfilerEnumAttributeMixin, Enum):
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_primary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     min_diameter: int = 10,
     max_diameter: int = 40,
     exclude_size: bool = True,

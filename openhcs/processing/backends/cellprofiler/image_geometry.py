@@ -1093,7 +1093,7 @@ def align_label_plane_to_shape(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @special_inputs("mask")
 def mask_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     mask: np.ndarray | ObjectLabelValue,
     mask_source: MaskSource = MaskSource.IMAGE,
     invert_mask: bool = False,
@@ -1130,7 +1130,7 @@ def mask_image(
 
 
 def masked_image_plane(
-    image: np.ndarray, binary_mask: np.ndarray, *, invert_mask: bool
+    image: RuntimeArrayData, binary_mask: np.ndarray, *, invert_mask: bool
 ) -> tuple[np.ndarray, np.ndarray]:
     image_data = image_payload_data(image)
     if invert_mask:
@@ -1159,7 +1159,7 @@ def masked_image_plane(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def mask_image_with_binary(
-    image: np.ndarray, invert_mask: bool = False
+    image: RuntimeArrayData, invert_mask: bool = False
 ) -> RuntimeArrayData:
     """Return a binary mask plane, optionally inverted."""
     binary_mask = image_payload_data(image) > 0.5
@@ -1220,7 +1220,7 @@ def tile_output_shape(
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def tile(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     rows: int = 8,
     columns: int = 12,
     place_first: PlaceFirst = PlaceFirst.TOP_LEFT,
@@ -1322,7 +1322,7 @@ def resize_volumetric(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def flip_and_rotate(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     flip_method: FlipMethod = FlipMethod.NONE,
     rotate_method: RotateMethod = RotateMethod.NONE,
     rotation_angle: float = 0.0,

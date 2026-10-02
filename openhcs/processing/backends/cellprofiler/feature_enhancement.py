@@ -13,6 +13,7 @@ from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -65,7 +66,7 @@ STRATEGY_REGISTRY_KEY = "method_label"
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def enhance_or_suppress_features(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     method: OperationMethod = OperationMethod.ENHANCE,
     enhance_method: EnhanceMethod = EnhanceMethod.SPECKLES,
     radius: float = 10.0,

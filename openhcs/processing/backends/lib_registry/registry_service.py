@@ -21,7 +21,7 @@ from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
-from openhcs.core.callable_contract import CallableProjection
+from openhcs.core.callable_contract import CallableContract, CallableProjection
 from openhcs.core.function_reference import ResolvedRegistryFunction
 from openhcs.core.processing_preparation import (
     CallablePreparation,
@@ -145,11 +145,11 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        callables = tuple(
+        callables = tuple(dict.fromkeys(
             target
             for metadata in cls._metadata_cache.values()
             for target in CallableProjection.from_callable(metadata.func).prepare_targets()
-        )
+        ))
         emit_status("Preparing registered kernel caches")
         PreparationCacheBatch.from_callables(callables).populate_child_caches(
             max_workers=os.cpu_count() or 1,
@@ -161,6 +161,9 @@ class RegistryService:
             emit_status(
                 f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
             )
+        emit_status("Resolving prepared callable signatures")
+        for func in callables:
+            CallableContract.warm_canonical_signature(func)
         emit_status(f"Registered kernels ready ({len(callables)} callables)")
         emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache

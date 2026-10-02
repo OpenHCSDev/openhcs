@@ -1265,7 +1265,7 @@ class NormalizeFunctionGroupAuthority:
             func, kwargs = _split_function_item(item)
             if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
                 continue
-            contract = CallableContract.from_callable(func)
+            contract = CallableContract.from_prepared_callable(func)
             position = len(normalized_items)
             normalized_items.append(
                 NormalizedFunctionItem(

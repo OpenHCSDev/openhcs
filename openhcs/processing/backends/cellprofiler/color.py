@@ -1494,7 +1494,7 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def gray_to_color(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     color_scheme: GrayToColorModule.Scheme = GrayToColorModule.Scheme.RGB,
     rescale_intensity: bool = True,
     red_channel: int = -1,
@@ -1593,7 +1593,7 @@ def gray_to_color(
 )
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def color_to_gray(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     mode: ColorToGrayMode = ColorToGrayMode.SPLIT,
     image_type: ImageChannelType = ImageChannelType.RGB,
     channel_indices: tuple[int, ...] = ColorToGrayModule.default_channel_indices,
@@ -1634,7 +1634,7 @@ def color_to_gray(
 
 
 def _invert_for_printing_channels(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     input_mode: InvertInputMode,
     use_red_input: bool,
@@ -1676,7 +1676,7 @@ def _invert_for_printing_channels(
 
 
 def _invert_for_printing_result(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     input_mode: InvertInputMode,
     use_red_input: bool,
@@ -1758,7 +1758,7 @@ def _invert_for_printing_result(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1794,7 +1794,7 @@ def invert_for_printing(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_grayscale(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1837,7 +1837,7 @@ def invert_for_printing_grayscale(
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
 def invert_for_printing_without_output(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     input_mode: InvertInputMode = InvertInputMode.COLOR,
     use_red_input: bool = True,
     use_green_input: bool = True,
@@ -1876,7 +1876,7 @@ def invert_for_printing_without_output(
 
 
 def combine_color_to_gray(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     channel_indices: tuple[int, ...],
     contributions: tuple[float, ...],
 ) -> np.ndarray:
@@ -1892,7 +1892,7 @@ def combine_color_to_gray(
     return restore_color_to_gray_shape(image, result)
 
 
-def color_to_gray_combine_output_metadata(image: np.ndarray):
+def color_to_gray_combine_output_metadata(image: RuntimeArrayData):
     """Return metadata for a color-to-grayscale semantic collapse."""
     return (
         image_payload_metadata(image)
@@ -1902,7 +1902,7 @@ def color_to_gray_combine_output_metadata(image: np.ndarray):
 
 
 def split_color_to_gray(
-    image: np.ndarray, image_type: ImageChannelType, channel_indices: tuple[int, ...]
+    image: RuntimeArrayData, image_type: ImageChannelType, channel_indices: tuple[int, ...]
 ) -> tuple[np.ndarray, ...]:
     color_stack = nhwc_color_stack(image).astype(np.float32)
     source_stack = (
@@ -1928,7 +1928,7 @@ def color_to_gray_channel(color_stack: np.ndarray, channel_index: int) -> np.nda
     return color_stack[..., channel_index]
 
 
-def nhwc_color_stack(image: np.ndarray) -> np.ndarray:
+def nhwc_color_stack(image: RuntimeArrayData) -> np.ndarray:
     """Return NHWC pixels from explicitly declared image layout metadata."""
     image_data = np.asarray(image_payload_data(image))
     metadata = image_payload_metadata(image)
@@ -1959,7 +1959,7 @@ def nhwc_color_stack(image: np.ndarray) -> np.ndarray:
     return channel_last
 
 
-def restore_color_to_gray_shape(original: np.ndarray, stack: np.ndarray) -> np.ndarray:
+def restore_color_to_gray_shape(original: RuntimeArrayData, stack: np.ndarray) -> np.ndarray:
     metadata = image_payload_metadata(original)
     if metadata.is_declared_source_channel_plane(original):
         if stack.shape[0] != 1:
@@ -2017,7 +2017,7 @@ def rgb_to_hsv_stack(rgb_stack: np.ndarray) -> np.ndarray:
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def unmix_colors(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     stain_names: Sequence[StainType] = (),
     custom_absorbances: Sequence[Sequence[float] | None] = (),
     stain1: StainType = StainType.HEMATOXYLIN,

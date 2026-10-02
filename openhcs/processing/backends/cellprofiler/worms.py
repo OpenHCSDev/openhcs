@@ -2112,7 +2112,7 @@ del _function_name
 @special_inputs("worm_labels")
 @runtime_bound_parameters(_StraightenWormControlPointsRuntimeParameter)
 def straighten_worms(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     worm_labels: ObjectLabelValue,
     control_points: np.ndarray | None = None,
     worm_width: int = 20,

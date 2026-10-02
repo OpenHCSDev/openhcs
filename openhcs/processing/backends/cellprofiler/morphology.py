@@ -690,6 +690,7 @@ from openhcs.core.runtime_relationships import (
     object_label_identity_lineage_payload,
     object_label_parent_child_payload,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -1491,7 +1492,7 @@ def _morph_image_pixels(
 
 
 def _morph_image_payload(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElement,
     size: int,
     operation: Callable[[np.ndarray, np.ndarray], np.ndarray],
@@ -1508,7 +1509,7 @@ def _morph_image_payload(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def closing(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,
@@ -1530,7 +1531,7 @@ def closing(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def opening(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,

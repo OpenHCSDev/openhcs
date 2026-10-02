@@ -207,6 +207,7 @@ class RuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
         """Return kwargs accepted by ``func`` under this policy."""
 
@@ -220,8 +221,9 @@ class PassThroughRuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        del func
+        del func, signature
         return dict(kwargs)
 
 
@@ -234,8 +236,11 @@ class SignatureFilteredRuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        parameters = _runtime_callable_parameters(func)
+        from openhcs.core.callable_contract import CallableMetadata
+
+        parameters = (CallableMetadata.callable_signature(func) if signature is None else signature).parameters
         if any(
             parameter.kind is inspect.Parameter.VAR_KEYWORD
             for parameter in parameters.values()
@@ -255,6 +260,7 @@ class RuntimeCallableInvocation:
     kwarg_policy: RuntimeInvocationKwargPolicy = (
         RuntimeInvocationKwargPolicy.PASS_THROUGH
     )
+    signature: inspect.Signature | None = None
 
     def call(self) -> Any:
         target = RuntimeCallableViewStrategy.for_view(self.callable_view).resolve(
@@ -264,7 +270,7 @@ class RuntimeCallableInvocation:
             *self.args,
             **RuntimeInvocationKwargPolicyStrategy.for_policy(
                 self.kwarg_policy
-            ).accepted_kwargs(target, self.kwargs),
+            ).accepted_kwargs(target, self.kwargs, signature=self.signature),
         )
 
 
@@ -282,6 +288,7 @@ class RuntimeCallablePolicy:
         func: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> RuntimeCallableInvocation:
         return RuntimeCallableInvocation(
             func=func,
@@ -289,14 +296,8 @@ class RuntimeCallablePolicy:
             kwargs=kwargs,
             callable_view=self.callable_view,
             kwarg_policy=self.kwarg_policy,
+            signature=signature,
         )
-
-
-@lru_cache(maxsize=256)
-def _runtime_callable_parameters(
-    func: Callable[..., Any],
-) -> Mapping[str, inspect.Parameter]:
-    return inspect.signature(func).parameters
 
 
 def _registry_runtime_parameter_exclusions(
@@ -1012,7 +1013,7 @@ class ProcessingContractDeclaration(ABC):
         self, callable_contract: "CallableContract", source_payload: Any,
     ) -> Any:
         """Expose the raw ABI when this contract needs no earlier plane slicing."""
-        return callable_contract.raw_main_flow_call_argument(source_payload)
+        return callable_contract.runtime_main_flow_call_argument(source_payload)
 
     def injected_semantic_control_parameter_names(self) -> frozenset[str]:
         """Semantic controls that this contract may inject into public callables."""
@@ -1027,10 +1028,14 @@ class ProcessingContractDeclaration(ABC):
         kwargs: MutableMapping[str, Any],
         *,
         func: Callable[..., Any] | None = None,
+        parameters: Mapping[str, inspect.Parameter] | None = None,
     ) -> dict[str, Any]:
         """Consume and return semantic selectors owned by this declaration."""
 
-        parameters = {} if func is None else inspect.signature(func).parameters
+        if parameters is None:
+            from openhcs.core.callable_contract import CallableMetadata
+
+            parameters = {} if func is None else CallableMetadata.callable_signature(func).parameters
         values: dict[str, Any] = {}
         for parameter_type in self.runtime_parameter_types():
             if not parameter_type.is_semantic_control:
@@ -1739,7 +1744,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             RuntimeCallablePolicy()
             .invocation(
                 func,
-                (callable_contract.raw_main_flow_call_argument(image), *args),
+                (callable_contract.runtime_main_flow_call_argument(image), *args),
                 kwargs,
             )
             .call()
@@ -1773,7 +1778,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             result = (
                 RuntimeCallablePolicy().invocation(
                     func,
-                    (callable_contract.raw_main_flow_call_argument(image), *args),
+                    (callable_contract.runtime_main_flow_call_argument(image), *args),
                     kwargs,
                 ).call()
             )
@@ -1837,7 +1842,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 RuntimeCallablePolicy()
                 .invocation(
                     slice_func,
-                    (callable_contract.raw_main_flow_call_argument(slice_2d), *args),
+                    (callable_contract.runtime_main_flow_call_argument(slice_2d), *args),
                     projected_kwargs,
                 )
                 .call()

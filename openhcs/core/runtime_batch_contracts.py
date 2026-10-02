@@ -6,14 +6,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
 from dataclasses import dataclass, replace
 from enum import Enum
-from functools import lru_cache
 import inspect
 from types import MappingProxyType
 from typing import ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import KeywordRuntimeParameter
+from openhcs.core.callable_contract import CallableMetadata, KeywordRuntimeParameter
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -48,11 +47,12 @@ class RuntimePlaneAxisValueProjectionParameter(KeywordRuntimeParameter):
     parameter_default = None
 
 
-@lru_cache(maxsize=1024)
-def runtime_callable_defaults(func: Callable[..., object]) -> Mapping[str, object]:
+def runtime_callable_defaults(
+    func: Callable[..., object], *, signature: inspect.Signature | None = None,
+) -> Mapping[str, object]:
     """Return callable defaults visible to runtime batch executors."""
     try:
-        callable_signature = inspect.signature(func)
+        callable_signature = CallableMetadata.callable_signature(func) if signature is None else signature
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"Runtime batch function {func!r} must expose an inspectable signature."
@@ -190,6 +190,7 @@ class RuntimePure2DSliceBatchRequest(
         ],
         RuntimeSliceResultT,
     ]
+    signature: inspect.Signature | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -197,7 +198,7 @@ class RuntimePure2DSliceBatchRequest(
             "kwargs",
             MappingProxyType(
                 {
-                    **runtime_callable_defaults(self.func),
+                    **runtime_callable_defaults(self.func, signature=self.signature),
                     **dict(self.kwargs),
                 }
             ),

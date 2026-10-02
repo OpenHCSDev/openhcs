@@ -43,7 +43,6 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import (
     CallableRuntimeCacheKey,
-    prepare_processing_callable,
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
@@ -245,9 +244,6 @@ class FunctionInvocationCallableResolver:
     def prepare(cls, invocation: CompiledFunctionInvocation) -> None:
         """Resolve and cache one invocation callable before timed execution."""
         cls.resolve(invocation)
-        prepare_processing_callable(
-            invocation.contract.resolve_canonical_raw_callable()
-        )
 
     @classmethod
     def resolve(cls, invocation: CompiledFunctionInvocation) -> Callable:
