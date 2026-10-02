@@ -1310,9 +1310,9 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         layer_name="Nuclei",
         data="image-1",
         layer_kwargs={
-            **NapariImageLayerPresentationPolicy.layer_kwargs(
-                "image-1", ImagePayloadMetadata(), None
-            ),
+            **NapariImageLayerPresentationPolicy.for_payload(
+                "image-1", ImagePayloadMetadata()
+            ).layer_kwargs(None),
             "axis_labels": ("z", "y", "x"),
         },
     )
@@ -1324,11 +1324,10 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         layer_name="Nuclei",
         data="image-2",
         layer_kwargs={
-            **NapariImageLayerPresentationPolicy.layer_kwargs(
+            **NapariImageLayerPresentationPolicy.for_payload(
                 "image-2",
                 ImagePayloadMetadata(),
-                "green",
-            ),
+            ).layer_kwargs("green"),
             "axis_labels": ("c", "y", "x"),
         },
     )
@@ -1341,7 +1340,7 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         "image",
         "image-1",
         "Nuclei",
-        {"blending": "additive", "colormap": "gray", "axis_labels": ("z", "y", "x")},
+        {"blending": "additive", "rgb": False, "colormap": "gray", "axis_labels": ("z", "y", "x")},
     )
     assert viewer.calls[1] == (
         "image",
@@ -1349,6 +1348,7 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         "Nuclei",
         {
             "blending": "additive",
+            "rgb": False,
             "colormap": "green",
             "axis_labels": ("c", "y", "x"),
         },
@@ -1370,11 +1370,10 @@ def test_napari_layer_update_authority_preserves_user_selected_layer():
         route_key="route-overlay",
         layer_name="Overlay",
         data="image",
-        layer_kwargs=NapariImageLayerPresentationPolicy.layer_kwargs(
+        layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
             "image",
             ImagePayloadMetadata(),
-            None,
-        ),
+        ).layer_kwargs(None),
     )
 
     assert new_layer in viewer.layers
@@ -1393,11 +1392,10 @@ def test_napari_layer_update_authority_transfers_active_replaced_layer():
         route_key="route-nuclei",
         layer_name="Nuclei",
         data="image-1",
-        layer_kwargs=NapariImageLayerPresentationPolicy.layer_kwargs(
+        layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
             "image-1",
             ImagePayloadMetadata(),
-            None,
-        ),
+        ).layer_kwargs(None),
     )
     viewer.layers.selection.active = first
     second = authority.create_or_update(
@@ -1407,11 +1405,10 @@ def test_napari_layer_update_authority_transfers_active_replaced_layer():
         route_key="route-nuclei",
         layer_name="Nuclei",
         data="image-2",
-        layer_kwargs=NapariImageLayerPresentationPolicy.layer_kwargs(
+        layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
             "image-2",
             ImagePayloadMetadata(),
-            None,
-        ),
+        ).layer_kwargs(None),
     )
 
     assert first not in viewer.layers
@@ -1431,11 +1428,10 @@ def test_napari_layer_update_authority_marks_color_images_as_rgb():
         route_key="route-overlay",
         layer_name="Overlay",
         data=image,
-        layer_kwargs=NapariImageLayerPresentationPolicy.layer_kwargs(
+        layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
             image,
             ImagePayloadMetadata(source_channel_axis=-1),
-            "green",
-        ),
+        ).layer_kwargs("green"),
     )
 
     assert layer in viewer.layers
@@ -1445,11 +1441,10 @@ def test_napari_layer_update_authority_marks_color_images_as_rgb():
 def test_napari_image_presentation_uses_payload_local_color_axis():
     image_payload = np.zeros((16, 16, 3), dtype=np.uint8)
 
-    layer_kwargs = NapariImageLayerPresentationPolicy.layer_kwargs(
+    layer_kwargs = NapariImageLayerPresentationPolicy.for_payload(
         image_payload,
         ImagePayloadMetadata(source_channel_axis=2),
-        "green",
-    )
+    ).layer_kwargs("green")
 
     assert layer_kwargs == {"blending": "additive", "rgb": True}
 
@@ -4923,11 +4918,10 @@ def test_napari_configured_colormap_reaches_native_layer_and_invalid_name_fails(
                 route_key="invalid-colormap",
                 layer_name="Invalid colormap",
                 data=np.ones((3, 4), dtype=np.uint8),
-                layer_kwargs=NapariImageLayerPresentationPolicy.layer_kwargs(
+                layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
                     np.ones((3, 4), dtype=np.uint8),
                     ImagePayloadMetadata(),
-                    "not-a-real-napari-colormap",
-                ),
+                ).layer_kwargs("not-a-real-napari-colormap"),
             )
     finally:
         viewer.close()
