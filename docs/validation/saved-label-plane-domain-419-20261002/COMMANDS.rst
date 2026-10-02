@@ -34,6 +34,10 @@ are never reused/overwritten. Targets:
 * adjacent-controls: tests/unit/test_cellprofiler_image_output_metadata.py
   tests/unit/test_source_spatial_domain.py tests/unit/test_cellprofiler_shape_hotpath.py.
 * distance-original-red: validation/reproduce_saved_label_distance_419.py.
+* projection-owner-controls and final-owner-controls: all five unit files
+  above (saved_source_label_plane_domain, runtime_values, image_output_metadata,
+  source_spatial_domain, shape_hotpath). Final adds the paired-projection
+  cooperative capability cases. Both commands have distinct log/XML paths.
 
 Original R0 source is loaded directly from retained Git, never copied or changed::
 
@@ -68,3 +72,13 @@ Result 566238fd230dd1f7e5b7861fe7702772a45da7e5 is the head of the separate
 original-R0 proposal command (same invocation above, only --head differs).
 It is NOT the PR branch or an installed source. Source behavior for this
 unapplied shared-owner hook remains pending receiving-owner integration.
+
+This metadata proposal was subsequently REJECTED: original R0 reports god-class
+growth10. It is not the current requested correction. Current production uses
+the existing RuntimePlaneAxisValueProjection constructor outside PR394's seams.
+Actual production e6fde72ae is tested with the original command above, substituting
+that head and inserting the existing run_bounded_source.py monitor between the
+outer Python3.14 and the inner Python3.14 invocation. Output is retained in
+r0-final-production.log.gz: zero positive deltas / exit0 / aggregate95584KiB /
+18.286s. The source controls are 211 PASS / aggregate418932KiB / 9.629s.
+No command modifies PR394's files or applies the rejected metadata proposal.

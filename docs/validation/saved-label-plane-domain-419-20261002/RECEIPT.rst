@@ -13,6 +13,11 @@ preserve()/selection; no metadata hook, second registry or compatibility reader
 is introduced. Both production files are outside PR394's listed shared seams.
 The earlier rejected metadata-owner proposal below is historical, not required.
 
+SOURCE CHECKPOINT: production e6fde72ae qualified by final211 source controls
+and original pinned R0 PASS with zero positive deltas. Subsequent receipt-only
+publication preserves those exact production bytes. Parent owns installed
+saved-label acceptance; the distinct Morph failure remains with PR394.
+
 Original failures remain in the parent-owned neurite-development-skill383
 evidence root. Geometry job 7ff51e34-b98f-4d56-953d-2ea32dba612a and distance
 job 0f9f7236-ae18-440b-bedf-1dfa2946c427 are not replayed or reclassified.
@@ -109,7 +114,18 @@ the same three-source declaration. Generic consumers need no new leaf branch.
 
 Projection-owner controls before adding the new paired capability cases:
 209 PASS, 8.771s / 416796KiB aggregate RSS (projection-owner-controls.log/xml).
-Final source cases and original pinned R0 will be appended at the current head.
+Final211 source controls PASS, 9.629s / 418932KiB aggregate RSS
+(final-owner-controls.log/xml). This includes both original declared axes in
+the new cooperative paired-projection capability, inherited source construction
+and selection, over-cardinality rejection and original unbounded acceptance.
+
+Original pinned R0 PASS on actual production e6fde72ae, base c32447f1:
+all positive deltas zero, 18.286s / 95584KiB aggregate RSS, exit0. Both changed
+production paths are admitted (runtime_object_label_building.py and
+runtime_plane_projection.py). r0-final-production.log.gz preserves exact
+original output; it is checked losslessly against the retained local log.
+The original source pin, Python3.14, original detector and budgets are unchanged.
+No guard exception, count reuse, new detector or shared metadata edit is used.
 
 R1 full-context qualification is not claimed. This reused source worktree's
 eight recorded dependencies are uninitialized; the original SourceRevision
@@ -123,7 +139,8 @@ distance-plan-2.py 3fefcf9113143728b98db2ba1a23e40b60625a60ee717958f0e20c44ad8f3
 Frozen public388 driver still has original SHA256
 d3f259fae72ed5f70117646befa6b68a8301e168d785a7a56159cce1726bfd23.
 
-Remaining acceptance: finish current-production unchanged R0, receiving PR394
-owner settles raw invocation seam, then parent-installed original saved-label
+Remaining acceptance: receiving PR394 owner settles raw invocation seam,
+then parent-installed original saved-label
 geometry/EDT acceptance. Full-context R1 remains a separate unqualified scope.
-No merge-readiness, biological readiness or original issue closure is claimed.
+Geometry source checkpoint is qualified for parent review/integration;
+no installed/biological readiness or original issue closure is claimed.
