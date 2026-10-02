@@ -11,7 +11,11 @@ from openhcs.core.callable_contract import (
     declares_primary_image_carrier_transition, preserves_primary_image_carrier,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.function_patterns import CompiledFunctionGroup, CompiledFunctionPattern
+from openhcs.core.function_patterns import (
+    CompiledFunctionGroup, CompiledFunctionPattern, PrimaryImageCarrierProof,
+    InheritedPrimaryImageCarrierProof, CreatedPrimaryImageCarrierProof,
+    UnprovedPrimaryImageCarrierProof,
+)
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.runtime_image_values import image_payload_data, image_payload_mask, image_payload_metadata
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext, ImagePayloadExecutionMode
@@ -176,12 +180,82 @@ def test_group_proof_stops_at_creator_but_rejects_later_unknown(unknown_after_cr
     proof = CompiledFunctionGroup("default", invocations).primary_image_carrier_proof(
         PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
     )
-    assert not proof.requires_source_validation
-    if unknown_after_creator:
-        with pytest.raises(ValueError, match="unknown"):
-            proof.require_proven_invocations(lambda invocation: invocation.contract.function_name)
-    else:
-        proof.require_proven_invocations(lambda invocation: pytest.fail("Unexpected failed proof"))
+    failures = []
+    assert proof.validate_obligation(
+        failure_message=lambda invocation: invocation.contract.function_name,
+        source_validation=lambda: pytest.fail("Creation/rejection must stop source validation"),
+        failures=failures,
+    )
+    assert failures == (["unknown"] if unknown_after_creator else [])
+
+
+@pytest.mark.parametrize("source_complete", [False, True])
+def test_inherited_proof_executes_actual_source_obligation_once(source_complete):
+    visits, failures = [], []
+
+    def validate_source():
+        visits.append("source")
+        return source_complete
+
+    complete = InheritedPrimaryImageCarrierProof().validate_obligation(
+        source_validation=validate_source,
+        failure_message=lambda invocation: pytest.fail("Inherited proof has no failed invocation"),
+        failures=failures,
+    )
+    assert complete is source_complete
+    assert visits == ["source"]
+    assert failures == []
+
+
+@pytest.mark.parametrize("capability_first", [False, True])
+@pytest.mark.parametrize("proof_type,args,expected_visits,expected_failures", [
+    (InheritedPrimaryImageCarrierProof, (), ["before", "source", "after"], []),
+    (CreatedPrimaryImageCarrierProof, (), ["before", "after"], []),
+    (UnprovedPrimaryImageCarrierProof,
+     tuple(_compiled_pattern(color_to_gray).iter_invocations()), ["before", "after"], ["rejected color_to_gray"]),
+])
+def test_independent_same_node_validation_capability_composes_both_mro_orders(
+    capability_first, proof_type, args, expected_visits, expected_failures,
+):
+    visits, failures = [], []
+
+    class ValidationVisitCapability(PrimaryImageCarrierProof):
+        def validate_obligation(self, **kwargs):
+            visits.append("before")
+            result = super().validate_obligation(**kwargs)
+            visits.append("after")
+            return result
+
+    # Same nominal owner in both bases puts the independent capability before
+    # the shared operation in C3, regardless of its position beside the leaf.
+    bases = (ValidationVisitCapability, proof_type) if capability_first else (proof_type, ValidationVisitCapability)
+    declared_proof = type("IndependentlyObservedProof", bases, {})(*args)
+
+    def validate_source():
+        visits.append("source")
+        return True
+
+    assert declared_proof.validate_obligation(
+        source_validation=validate_source,
+        failure_message=lambda invocation: "rejected " + invocation.contract.function_name,
+        failures=failures,
+    )
+    assert visits == expected_visits
+    assert failures == expected_failures
+
+
+def test_source_validation_rejection_is_collected_once_by_proof_owner():
+    failures = []
+
+    def reject_source():
+        raise ValueError("exact source missing its declared carrier")
+
+    assert InheritedPrimaryImageCarrierProof().validate_obligation(
+        source_validation=reject_source,
+        failure_message=lambda invocation: pytest.fail("No failed invocation"),
+        failures=failures,
+    )
+    assert failures == ["exact source missing its declared carrier"]
 
 
 def test_color_to_gray_does_not_preserve_consumed_carrier_for_later_consumer(tmp_path):

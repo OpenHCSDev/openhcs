@@ -842,43 +842,49 @@ class CompiledFunctionGroup:
 class PrimaryImageCarrierProof(ABC):
     """One group-owned proof result, not another carrier metadata authority."""
 
-    def require_proven_invocations(
+    def validate_obligation(
+        self,
+        *,
+        failure_message: Callable[[CompiledFunctionInvocation], str],
+        source_validation: Callable[[], bool],
+        failures: list[str],
+    ) -> bool:
+        """Execute this proof's obligation; report whether ancestry work is done.
+
+        Completion is not success: rejected obligations are recorded in the
+        caller's existing failure collection and still stop this ancestry walk.
+        """
+        try:
+            return self._fulfill_obligation(failure_message, source_validation)
+        except ValueError as error:
+            failures.append(str(error))
+            return True
+
+    @abstractmethod
+    def _fulfill_obligation(
         self,
         failure_message: Callable[[CompiledFunctionInvocation], str],
-    ) -> None:
-        """Accept proven transitions; a failed proof owns its rejection."""
-
-    @property
-    @abstractmethod
-    def requires_source_validation(self) -> bool:
-        """Return whether proof still needs the exact original source carrier."""
+        source_validation: Callable[[], bool],
+    ) -> bool:
+        """Fulfill this member's source obligation or reject its invocation."""
 
 
 class InheritedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
-    @property
-    def requires_source_validation(self) -> bool:
-        return True
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
+        return source_validation()
 
 
 class CreatedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
-    @property
-    def requires_source_validation(self) -> bool:
-        return False
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
+        return True
 
 
 @dataclass(frozen=True, slots=True)
 class UnprovedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
     invocation: CompiledFunctionInvocation
 
-    def require_proven_invocations(
-        self,
-        failure_message: Callable[[CompiledFunctionInvocation], str],
-    ) -> None:
+    def _fulfill_obligation(self, failure_message, source_validation) -> bool:
         raise ValueError(failure_message(self.invocation))
-
-    @property
-    def requires_source_validation(self) -> bool:
-        return False
 
 
 @dataclass(frozen=True, slots=True)
