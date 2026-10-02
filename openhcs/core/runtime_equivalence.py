@@ -69,6 +69,8 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_relationships import (
+    ObjectInstanceKey,
+    ObjectInstanceRelationship,
     ObjectRelationship,
 )
 from openhcs.core.equivalence.policy import (
@@ -141,6 +143,7 @@ from openhcs.core.equivalence.object_label_measurements import (
 from openhcs.core.equivalence.relationships import (
     RelationshipAggregateFeatureSemantics,
     RelationshipMeasurementSemantics,
+    ExportedRelationshipMeasurementSemantics,
     RuntimeObjectRelationshipIdentity,
     RuntimeScopedMeasurementTable,
     object_measurement_values_by_label,
@@ -1708,7 +1711,7 @@ RuntimeMeasurementFeatureCachePayload = tuple[
     str | None,
 ]
 RuntimeCellSignatureCachePayload = tuple[str, str]
-RuntimeMeasurementSnapshotCachePayload = tuple[
+RuntimeMeasurementFactCachePayload = tuple[
     tuple[
         RuntimeMeasurementFeatureCachePayload,
         tuple[tuple[RuntimeCellSignatureCachePayload, int], ...],
@@ -1717,11 +1720,24 @@ RuntimeMeasurementSnapshotCachePayload = tuple[
 ]
 
 
+RuntimeRelationshipCorrelationCachePayload = tuple[
+    tuple[RuntimeMeasurementFeatureCachePayload, tuple[tuple[tuple[int, int | None], tuple[int, int | None]], ...], int | None],
+    ...,
+]
+RuntimeMeasurementSnapshotCachePayload = tuple[
+    RuntimeMeasurementFactCachePayload,
+    RuntimeRelationshipCorrelationCachePayload | None,
+]
+
+
 @dataclass(slots=True)
 class RuntimeMeasurementSnapshot:
     """Semantic measurement facts independent of table layout."""
 
     measurement_fact_counts: RuntimeMeasurementFactCounterMapping
+    correlated_relationships: (
+        Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship] | None
+    ) = None
 
     @classmethod
     def from_output_snapshot(
@@ -1736,18 +1752,29 @@ class RuntimeMeasurementSnapshot:
             policy=policy,
             known_source_names=known_source_names,
         )
-        state.record_measurement_tables(
-            tuple(
-                RuntimeScopedMeasurementTable(measurement_table)
-                for table in snapshot.tables
-                for measurement_table in table.measurement_tables(
-                    policy.measurement_dialect
-                )
-            ),
-            None,
+        tables = tuple(
+            RuntimeScopedMeasurementTable(measurement_table)
+            for table in ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                snapshot.tables, policy
+            )
+            for measurement_table in table.measurement_tables(
+                policy.measurement_dialect
+            )
         )
+        image_offset = RuntimeImageNumberOffset.from_runtime_rows(
+            row for table in tables for row in table.table.rows.iter_row_mappings()
+        )
+        correlations = (
+            ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
+                tables, image_offset
+            )
+        )
+        state.record_measurement_tables(tables, None)
         state.required_measurement_keys = frozenset(state.explicit_measurement_keys)
-        return cls(measurement_fact_counts=state.project_measurement_fact_counts())
+        return cls(
+            measurement_fact_counts=state.project_measurement_fact_counts(),
+            correlated_relationships=correlations,
+        )
 
     @classmethod
     def from_artifact_execution_observation(
@@ -1779,48 +1806,100 @@ class RuntimeMeasurementSnapshot:
             }
         )
 
+        if self.correlated_relationships is not None:
+            self.correlated_relationships = MappingProxyType(
+                dict(self.correlated_relationships)
+            )
+
     @property
     def is_empty(self) -> bool:
         return not self.measurement_fact_counts
 
-    def to_cache_payload(
+    def relationship_differences(
         self,
-    ) -> RuntimeMeasurementSnapshotCachePayload:
-        """Return a stable semantic cache payload for repeated equivalence checks."""
-        return tuple(
+        candidate: (
+            Mapping[RuntimeMeasurementFeatureKey, ObjectInstanceRelationship] | None
+        ),
+    ) -> tuple[RuntimeEquivalenceDifference, ...]:
+        """Compare saved correlations; None denotes the typed value-only scope."""
+        if self.correlated_relationships is None or candidate is None:
+            return ()
+        if self.correlated_relationships == candidate:
+            return ()
+        return (
+            RuntimeEquivalenceDifference(
+                RuntimeEquivalenceDifferenceKind.MEASUREMENT_CONTENT,
+                "directed relationship endpoint/image correlations differ",
+            ),
+        )
+
+    def to_cache_payload(self) -> RuntimeMeasurementSnapshotCachePayload:
+        """Transport numeric facts and known/unknown relationship evidence together."""
+        facts = tuple(
             (
                 feature.to_cache_payload(),
                 tuple(
                     (value.to_cache_payload(), int(count))
                     for value, count in sorted(
-                        values.items(),
-                        key=lambda item: item[0].sort_key,
+                        values.items(), key=lambda item: item[0].sort_key
                     )
                 ),
             )
             for feature, values in sorted(
-                self.measurement_fact_counts.items(),
-                key=lambda item: item[0].sort_key,
+                self.measurement_fact_counts.items(), key=lambda item: item[0].sort_key
             )
         )
+        relationships = None
+        if self.correlated_relationships is not None:
+            relationships = tuple(
+                (
+                    key.to_cache_payload(),
+                    tuple(
+                        (
+                            (source.object_id, source.slice_index),
+                            (target.object_id, target.slice_index),
+                        )
+                        for source, target in zip(
+                            value.source_keys, value.target_keys, strict=True
+                        )
+                    ),
+                    value.slice_count,
+                )
+                for key, value in sorted(
+                    self.correlated_relationships.items(),
+                    key=lambda item: item[0].sort_key,
+                )
+            )
+        return facts, relationships
 
     @classmethod
     def from_cache_payload(
-        cls,
-        payload: RuntimeMeasurementSnapshotCachePayload,
+        cls, payload: RuntimeMeasurementSnapshotCachePayload
     ) -> "RuntimeMeasurementSnapshot":
-        """Rebuild a semantic measurement snapshot from cache payload data."""
-        measurement_fact_counts: RuntimeMeasurementFactCounterMap = {}
-        for feature_payload, values_payload in payload:  # type: ignore[union-attr]
-            counter: Counter[RuntimeCellSignature] = Counter()
-            for value_payload, count in values_payload:
-                counter[RuntimeCellSignature.from_cache_payload(value_payload)] = int(
-                    count
+        """Restore the same evidence scope, retaining every directed endpoint pair."""
+        fact_payload, relationship_payload = payload
+        facts = {
+            RuntimeMeasurementFeatureKey.from_cache_payload(feature): Counter(
+                {
+                    RuntimeCellSignature.from_cache_payload(value): count
+                    for value, count in values
+                }
+            )
+            for feature, values in fact_payload
+        }
+        relationships = None
+        if relationship_payload is not None:
+            relationships = {
+                RuntimeMeasurementFeatureKey.from_cache_payload(
+                    key
+                ): ObjectInstanceRelationship(
+                    tuple(ObjectInstanceKey(*source) for source, _target in pairs),
+                    tuple(ObjectInstanceKey(*target) for _source, target in pairs),
+                    slice_count,
                 )
-            measurement_fact_counts[
-                RuntimeMeasurementFeatureKey.from_cache_payload(feature_payload)
-            ] = counter
-        return cls(measurement_fact_counts=measurement_fact_counts)
+                for key, pairs, slice_count in relationship_payload
+            }
+        return cls(facts, relationships)
 
 
 @dataclass(slots=True)
@@ -1881,9 +1960,18 @@ def runtime_measurement_equivalence(
     *,
     policy: RuntimeEquivalencePolicy = RuntimeEquivalencePolicy(),
 ) -> RuntimeEquivalenceReport:
-    """Compare precomputed semantic measurement snapshots."""
+    """Compare measurement facts and any jointly supplied saved edge correlations.
+
+    Typed artifact snapshots retain their value-only scope when global saved
+    image numbering is unavailable. Full saved qualification must use the
+    known correlation evidence produced by ``from_output_snapshot`` on both
+    sides; an UNKNOWN typed projection is not such a qualification.
+    """
     return RuntimeEquivalenceReport(
-        differences=_measurement_differences(reference, candidate, policy)
+        differences=(
+            *_measurement_differences(reference, candidate, policy),
+            *reference.relationship_differences(candidate.correlated_relationships),
+        )
     )
 
 
