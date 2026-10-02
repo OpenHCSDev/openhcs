@@ -25,6 +25,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowStateResult,
 )
 from openhcs.runtime.viewer_controls import ViewerNativeDimensions
+from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
 from zmqruntime.viewer_protocol import (
     ViewerNativeImageIntensityPresentation,
     ViewerNativeLayerTransform,
@@ -201,7 +202,7 @@ def test_native_sections_distinguish_absence_from_supplied_zero_and_empty_facts(
             native_intensity=ViewerNativeImageIntensityPresentation((0, 1), 1),
             native_transform=ViewerNativeLayerTransform(scale=(1.3556, 1.3556), translate=(0, 0)),
             component_values=({"channel": 0, "note": ""},),
-            payload_summaries=tuple({"shape": [1, 2], "min": index} for index in range(4)),
+            payload_summaries=tuple(ViewerPayloadSummary(shape=(1, 2), min=index) for index in range(4)),
             payload_summary_count=4,
         ),),
     )
@@ -315,3 +316,35 @@ def test_typed_viewer_declarations_do_not_reintroduce_known_raw_record_readers()
                     and node.args
                     and isinstance(node.args[0], ast.Constant)
                 ), (declaration, node.lineno)
+
+
+def test_native_summary_absence_is_not_an_external_json_value():
+    from copy import deepcopy
+    from pydantic import TypeAdapter
+    from openhcs.runtime.viewer_protocol import VIEWER_FIELD_ABSENT, ViewerArrayStatistics
+
+    assert deepcopy(VIEWER_FIELD_ABSENT) is VIEWER_FIELD_ABSENT
+    # The native scalar capability supports optional Pydantic schema descent.
+    # Full JsonObject's existing implicit recursive alias is not a Pydantic
+    # decoder; the public agent route uses dataclass_from_mapping instead.
+    adapter = TypeAdapter(ViewerArrayStatistics)
+    schema = adapter.json_schema()
+    assert {"not": {}} in schema["properties"]["nonzero_count"]["anyOf"]
+    assert to_jsonable(adapter.validate_python({"nonzero_count": 0})) == {"nonzero_count": 0}
+    for value in ("absent", {}, False):
+        with pytest.raises((TypeError, ValueError)):
+            adapter.validate_python({"nonzero_count": value})
+
+
+def test_receipt_plane_owner_requires_explicit_domain_and_full_positive_window():
+    for record in (ViewerPayloadSummary(), ViewerPayloadSummary(aggregate_component_values=None)):
+        with pytest.raises(ValueError, match="explicit plane component domain"):
+            record.require_plane_components()
+        with pytest.raises(ValueError, match="full three-axis"):
+            record.full_image_plane_count
+    record = ViewerPayloadSummary(
+        shape=(2, 8, 9), spatial_origin_yx=(0, 0), source_spatial_shape_yx=(8, 9),
+        aggregate_component_values={"channel": (2, 1)},
+    )
+    assert record.require_plane_components() == {"channel": (2, 1)}
+    assert record.full_image_plane_count == 2

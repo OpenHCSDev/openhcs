@@ -24,7 +24,6 @@ from zmqruntime.viewer_protocol import (
     ViewerNativeImageIntensityPresentation,
     ViewerNativeLayerTransform,
     ViewerNativeViewportPresentation,
-    ViewerSourceSpatialDomainPayload,
 )
 
 from openhcs.agent.dto.common import (
@@ -60,6 +59,10 @@ from openhcs.runtime.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.serialization.json import to_jsonable
+from openhcs.runtime.viewer_protocol import (
+    ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
+    ViewerProjectionRecord, ViewerShapeCoordinateBounds,
+)
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
 
@@ -919,7 +922,7 @@ class ViewerWindowLayerState(ViewerWindowLayerDescriptor):
     component_values: tuple[JsonObject, ...] = ()
     component_value_count: int = 0
     component_values_truncated: bool = False
-    payload_summaries: tuple[JsonObject, ...] = ()
+    payload_summaries: tuple[ViewerPayloadSummary, ...] = ()
     payload_summary_count: int = 0
     payload_summaries_truncated: bool = False
     axis_offsets: tuple[int, ...] = ()
@@ -1103,7 +1106,7 @@ class ViewerWindowStateResult(
             (layer, summary)
             for layer in self.layers
             for summary in layer.payload_summaries
-            if summary.get("path") == path
+            if summary.path == path
         )
         if len(matches) != 1:
             raise ValueError("Image receipt requires exactly one matching source path.")
@@ -1115,7 +1118,7 @@ class ViewerWindowStateResult(
             or layer.payload_summary_count != len(layer.payload_summaries)
             or layer.item_count != len(layer.payload_summaries)
             or len(layer.producer_identities) != 1
-            or summary.get("data_type") != StreamingDataType.IMAGE.value
+            or summary.data_type != StreamingDataType.IMAGE.value
         ):
             raise ValueError(
                 "Image receipt has incomplete or non-image payload evidence."
@@ -1131,34 +1134,12 @@ class ViewerWindowStateResult(
             raise ValueError(
                 "Image receipt requires explicit identity pixel placement."
             )
-        domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
-            summary, source_label="image receipt"
-        )
-        if any(
-            type(value) is not int
-            for wire_field in domain.to_wire_mapping()
-            for value in summary[wire_field]
-        ):
-            raise ValueError("Image receipt window coordinates require exact integers.")
-        shape = summary.get("shape")
-        if (
-            not isinstance(shape, (tuple, list))
-            or len(shape) != 3
-            or any(type(value) is not int or value <= 0 for value in shape)
-            or domain.origin_yx != (0, 0)
-            or domain.source_shape_yx != tuple(shape[-2:])
-        ):
-            raise ValueError(
-                "Image receipt requires an explicit full three-axis image window."
-            )
-        projected = {
-            member.name: summary[member.name]
-            for member in dataclass_fields(ViewerWindowPayloadRecord)
-            if member.name in summary
-        }
-        projected.update(route_key=layer.route_key, summary=summary)
+        summary.require_full_image_window()
         return (
-            dataclass_from_mapping(ViewerWindowPayloadRecord, projected),
+            ViewerWindowPayloadRecord(
+                route_key=layer.route_key, data_type=summary.data_type,
+                path=summary.path, components=summary.components, summary=summary,
+            ),
             layer.producer_identities[0],
         )
 
@@ -1167,18 +1148,23 @@ class ViewerWindowStateResult(
         return self.image_payload_binding_for(path)[0]
 
 
-@dataclass(frozen=True, slots=True)
-class ViewerWindowPayloadRecord:
-    route_key: str
-    data_type: str
-    path: str
-    components: JsonObject
-    axis_indices: tuple[int, ...] = ()
-    aggregate_axis_indices: tuple[int, ...] = ()
-    summary: JsonObject = field(default_factory=dict)
-    array_values: tuple[JsonValue, ...] = ()
-    array_value_summary: JsonObject = field(default_factory=dict)
-    shape_payloads: tuple[JsonObject, ...] = ()
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowPayloadRecord(ViewerPayloadRecord):
+    """Agent payload identity inherits the original native content declaration."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerWindowLayerPayloadAssociation(ViewerProjectionRecord):
+    layer_route_key: str
+    layer_title: str | None
+    payload_route_key: str
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowImageSampleRecord(
+    ViewerWindowLayerPayloadAssociation, ViewerPayloadContent,
+):
+    """Layer association composes independently with original payload content."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -1376,7 +1362,50 @@ class ViewerWindowImageSampleResult(AgentResultEnvelope):
     sample_protocol_supported: bool = False
     sample_included_count: int = 0
     sample_omitted_count: int = 0
-    records: tuple[JsonObject, ...] = ()
+    records: tuple[ViewerWindowImageSampleRecord, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiNumericStatistics(ViewerProjectionRecord):
+    min: float
+    median: float
+    mean: float
+    max: float
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiExample(ViewerProjectionRecord):
+    """Known projection fields; analysis metadata values remain extensible JSON."""
+
+    type: JsonValue = None
+    label: JsonValue = None
+    area: JsonValue = None
+    centroid_yx: JsonValue = None
+    bbox_yxyx: JsonValue = None
+    perimeter: JsonValue = None
+    source_spatial_shape_yx: JsonValue = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowRoiPayloadSummary(ViewerWindowLayerPayloadAssociation):
+    path: str
+    components: JsonObject
+    axis_indices: tuple[StrictInt, ...]
+    roi_count: StrictInt
+    returned_roi_count: StrictInt
+    roi_count_exact: bool
+    roi_member_count: StrictInt
+    returned_roi_member_count: StrictInt
+    roi_duplicate_member_count: StrictInt
+    roi_payloads_truncated: bool
+    area: ViewerWindowRoiNumericStatistics | None
+    perimeter: ViewerWindowRoiNumericStatistics | None
+    bounds_yx: ViewerShapeCoordinateBounds | None
+    coordinate_count: StrictInt | None
+    spatial_origin_yx: tuple[StrictInt, StrictInt] | None
+    source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None
+    out_of_source_bounds_count: StrictInt | None
+    example_rois: tuple[ViewerWindowRoiExample, ...]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1394,7 +1423,12 @@ class ViewerWindowRoiSummaryResult(AgentResultEnvelope):
     total_roi_member_count: int = 0
     returned_roi_member_count: int = 0
     roi_payloads_truncated: bool = False
-    payloads: tuple[JsonObject, ...] = ()
+    payloads: tuple[ViewerWindowRoiPayloadSummary, ...] = ()
+
+    @property
+    def should_explain_missing_rois(self) -> bool:
+        """An empty successful ROI observation admits absence guidance."""
+        return not self.errors and not self.payloads and self.total_roi_count == 0
 
 
 @dataclass(frozen=True, kw_only=True)
