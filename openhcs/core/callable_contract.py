@@ -445,6 +445,11 @@ class CallableMetadata:
 
         primary_name = self.primary_input_name(signature.parameters)
         annotation = None if primary_name is None else signature.parameters[primary_name].annotation
+        if (
+            annotation is inspect.Parameter.empty
+            and self.image_payload_consumption is ImagePayloadConsumption.COMPOSED
+        ):
+            return source_payload
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in self._nominal_argument_types(annotation)

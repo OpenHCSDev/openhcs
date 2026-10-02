@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from dataclasses import replace
 from functools import wraps
 from unittest.mock import Mock
+from typing import Any
 
 import cloudpickle
 import numpy as np
@@ -22,6 +23,8 @@ from openhcs.core.function_patterns import NormalizeFunctionGroupAuthority
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.pipeline.function_contracts import composed_image_payload
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor, RuntimeBatchExecutionDomain,
@@ -35,6 +38,70 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
 
 def raw_numeric(image: np.ndarray, scale: float = 2.0) -> np.ndarray:
     return image * scale
+
+
+@composed_image_payload
+def unannotated_composed_echo(image):
+    return image
+
+
+@pytest.mark.parametrize(
+    ("composed", "annotation", "retains_payload"),
+    ((True, inspect.Parameter.empty, True),
+     (False, inspect.Parameter.empty, False),
+     (True, np.ndarray, False),
+     (True, Any, False),
+     (True, ArrayPayload, True)),
+)
+def test_composition_default_respects_explicit_raw_carrier_boundary(
+    composed, annotation, retains_payload, fake_preparation,
+):
+    received = []
+    def raw(image):
+        received.append(image)
+        return image
+    if annotation is not inspect.Parameter.empty:
+        raw.__annotations__["image"] = annotation
+    if composed:
+        composed_image_payload(raw)
+    contract = CallableContract.from_prepared_callable(raw)
+    pixels = np.arange(20, dtype=np.float32).reshape(1, 4, 5)
+    mask = np.ones((1, 4, 5), dtype=bool)
+    mask[0, 0, 0] = False
+    source = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_image_names=("FITC",),
+    ).payload_with(pixels, mask)
+    expected = source if retains_payload else pixels
+
+    result = RuntimeCallablePolicy().contract_invocation(contract, raw, source, {}).call()
+
+    assert result is expected
+    assert received[0] is expected
+    assert source.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(source.mask, mask)
+
+
+@pytest.mark.parametrize("serializer", (pickle, cloudpickle))
+def test_prepared_composition_default_survives_transport_without_introspection(
+    serializer, fake_preparation, monkeypatch,
+):
+    contract = CallableContract.from_prepared_callable(unannotated_composed_echo)
+    reference = ImportableFunctionReference(
+        import_identity=CallableImportIdentity.from_callable(unannotated_composed_echo),
+        composite_key="test:unannotated_composed_echo", metadata=contract.metadata,
+    )
+    restored = CallableContract.from_callable(serializer.loads(serializer.dumps(reference)))
+    def forbidden(*args, **kwargs):
+        pytest.fail("Prepared composed ABI must not inspect live callable declarations")
+    monkeypatch.setattr(contract_module, "get_type_hints", forbidden)
+    monkeypatch.setattr(inspect, "signature", forbidden)
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_image_names=("FITC",),
+    ).payload_with(np.ones((1, 4, 5)), np.ones((1, 4, 5), dtype=bool))
+    for _ in range(40):
+        assert restored.raw_main_flow_call_argument(payload) is payload
 
 
 @pytest.fixture
