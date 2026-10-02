@@ -7,6 +7,7 @@ import tifffile
 
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
+    ImageFileSourceMetadata,
     NumpyImageFileFormat,
     PngImageFileFormat,
     TiffImageFileFormat,
@@ -124,6 +125,7 @@ def test_tiff_source_metadata_reads_dtype_and_declared_scale_without_imageio(
 
     assert metadata.source_dtype == np.dtype(np.uint16)
     assert metadata.intensity_scale == 4095.0
+    assert metadata.image_shape_yx == (1, 2)
     assert metadata.pixel_semantics.channel_axis is None
     assert metadata.pixel_semantics.channel_count is None
 
@@ -150,6 +152,7 @@ def test_tiff_source_metadata_reads_rgb_semantics_without_generic_reopen(
     assert metadata.intensity_scale == 255.0
     assert metadata.pixel_semantics.channel_axis == -1
     assert metadata.pixel_semantics.channel_count == 3
+    assert metadata.image_shape_yx == (4, 5)
     assert metadata.pixel_semantics.validated_channel_axis(tifffile.imread(path)) == -1
 
 
@@ -177,6 +180,71 @@ def test_required_source_metadata_does_not_reuse_replaced_header(
 
     assert require_image_file_source_metadata(path).pixel_semantics.channel_axis is None
     assert image_file_source_metadata(path).pixel_semantics.channel_axis is None
+    assert require_image_file_source_metadata(path).image_shape_yx == (4, 5)
+
+
+def test_numpy_source_header_owns_shape_dtype_and_revision_without_pixel_decode(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "illum.npy"
+    np.save(path, np.zeros((5, 7), dtype=np.float32))
+    original_load = np.load
+    calls = []
+
+    def load_header(file, *, mmap_mode, allow_pickle):
+        assert mmap_mode == "r"
+        assert allow_pickle is False
+        calls.append(file)
+        return original_load(file, mmap_mode=mmap_mode, allow_pickle=allow_pickle)
+
+    monkeypatch.setattr(np, "load", load_header)
+    metadata = require_image_file_source_metadata(path)
+    assert metadata.image_shape_yx == (5, 7)
+    assert metadata.source_dtype == np.dtype(np.float32)
+    assert require_image_file_source_metadata(path) is metadata
+    assert len(calls) == 1
+    np.save(path, np.zeros((3, 4), dtype=np.uint16))
+    replaced = require_image_file_source_metadata(path)
+    assert replaced.image_shape_yx == (3, 4)
+    assert replaced.source_dtype == np.dtype(np.uint16)
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "shape", ((1,), (1, 2, 3), (0, 2), (-1, 2), (True, 2), (1.0, 2))
+)
+def test_source_header_refuses_invalid_declared_yx_dimensions(shape) -> None:
+    with pytest.raises(ValueError, match="two positive integer dimensions"):
+        ImageFileSourceMetadata(image_shape_yx=shape)
+
+
+def test_numpy_non_image_header_does_not_infer_spatial_axes(tmp_path) -> None:
+    for name, shape in (("scalar", ()), ("volume", (2, 5, 7)), ("color", (5, 7, 3))):
+        path = tmp_path / f"{name}.npy"
+        np.save(path, np.zeros(shape, dtype=np.float32))
+        metadata = require_image_file_source_metadata(path)
+        assert metadata.image_shape_yx is None
+        assert metadata.source_frame_shape is None
+        with pytest.raises(ValueError, match="container-frame mapping"):
+            metadata.frame_for_source_indices((0,))
+
+
+def test_tiff_header_owns_selected_frame_grid_and_bounds(tmp_path) -> None:
+    path = tmp_path / "frames.tif"
+    tifffile.imwrite(
+        path,
+        np.zeros((2, 3, 5, 7), dtype=np.uint16),
+        photometric="minisblack",
+        metadata={"axes": "TZYX"},
+    )
+    metadata = require_image_file_source_metadata(path)
+    assert metadata.image_shape_yx == (5, 7)
+    assert metadata.source_frame_shape == (2, 3)
+    assert metadata.frame_for_source_indices((1, 2)) == 5
+    with pytest.raises(ValueError, match="complete container-frame mapping"):
+        metadata.frame_for_source_indices((1,))
+    with pytest.raises(ValueError, match="outside dimension"):
+        metadata.frame_for_source_indices((2, 0))
 
 
 def test_tiff_source_metadata_uses_declared_planar_sample_axis(tmp_path) -> None:

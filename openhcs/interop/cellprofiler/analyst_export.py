@@ -30,6 +30,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
 )
@@ -185,10 +186,13 @@ def _source_image_projection_values(
     source_path: Path,
     source_image_name: str,
     dialect: CellProfilerDatabaseColumnDialect,
+    *,
+    source_axis_indices: tuple[int, ...] = (),
 ) -> Mapping[str, Any]:
-    with Image.open(source_path) as source_image:
-        width, height = source_image.size
-        source_dtype = np.asarray(source_image).dtype
+    header = ImageFileFormat.require_path(source_path).require_source_metadata(
+        source_path
+    )
+    source_dtype, height, width = header.require_image_geometry()
     if np.issubdtype(source_dtype, np.integer):
         scaling = float(np.iinfo(source_dtype).max)
     elif np.issubdtype(source_dtype, np.bool_):
@@ -196,7 +200,9 @@ def _source_image_projection_values(
     else:
         scaling = 1.0
     values_by_field = {
-        CellProfilerSourceImageProjectionField.FRAME: 0,
+        CellProfilerSourceImageProjectionField.FRAME: header.frame_for_source_indices(
+            source_axis_indices
+        ),
         CellProfilerSourceImageProjectionField.HEIGHT: height,
         CellProfilerSourceImageProjectionField.MD5_DIGEST: md5(
             source_path.read_bytes(),
@@ -877,6 +883,7 @@ class CPATableRowProjection:
         ],
         thumbnail_field: FieldSpec | None = None,
         auto_scale_thumbnail_intensities: bool = True,
+        source_axis_indices: tuple[int, ...] = (),
     ) -> None:
         """Fold typed source provenance directly into projected image rows."""
 
@@ -899,11 +906,13 @@ class CPATableRowProjection:
                             source_path,
                             source_image_name,
                             self.dialect,
+                            source_axis_indices=source_axis_indices,
                         )
                     )
                     if thumbnail_field is not None:
-                        with Image.open(source_path) as source_image:
-                            pixels = np.asarray(source_image)
+                        pixels = ImageFileFormat.require_path(source_path).read(
+                            source_path
+                        )
                         values[thumbnail_field.name] = _thumbnail_png_base64(
                             pixels,
                             auto_scale=auto_scale_thumbnail_intensities,
@@ -938,6 +947,97 @@ class CPATableRowProjection:
                 owner=f"CPA image {image_number}",
             )
             source_metadata_by_image_number[image_number].append(metadata_items)
+
+    def collect_recorded_image_provenance(
+        self,
+        *,
+        records: Sequence[StoredRuntimeValue],
+        image_channels: Sequence[CPAImageChannelSpec],
+        image_rows_by_number: dict[int, dict[str, Any]],
+        source_metadata_by_image_number: dict[
+            int,
+            list[Mapping[str, SourceMetadataScalar]],
+        ],
+    ) -> None:
+        for channel in image_channels:
+            channel_records = tuple(
+                record for record in records if record.key.name == channel.alias
+            )
+            for record in channel_records:
+                provenance = image_payload_metadata(record.value.data).source_provenance
+                self.collect_image_provenance(
+                    provenance,
+                    scope=record.key.scope,
+                    source_image_name=channel.alias,
+                    image_rows_by_number=image_rows_by_number,
+                    source_metadata_by_image_number=source_metadata_by_image_number,
+                )
+
+    def collect_source_bound_image_provenance(
+        self,
+        *,
+        source_binding_plan: CompiledSourceBindingPlan,
+        image_channels: Sequence[CPAImageChannelSpec],
+        axis_id: str,
+        image_rows_by_number: dict[int, dict[str, Any]],
+        source_metadata_by_image_number: dict[
+            int, list[Mapping[str, SourceMetadataScalar]]
+        ],
+    ) -> None:
+        """Project declared source occurrences for image sets actually exported."""
+
+        if self.context is None:
+            return
+        workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            self.context,
+            cache=self.context.runtime_source_workspace_projection_cache,
+        ).projection_if_available()
+        if workspace is None:
+            return
+        channel_aliases = frozenset(channel.alias for channel in image_channels)
+        scope = RuntimeExecutionAxisScope(axis_id)
+        for binding in source_binding_plan.binding_declarations:
+            if (
+                binding.alias not in channel_aliases
+                or binding.artifact_kind is not ImageArtifactType
+            ):
+                continue
+            for path, projection in workspace.source_occurrences_for_binding(
+                binding, axis_id=axis_id
+            ):
+                lookup = VirtualWorkspacePathLookup.from_paths(path, path)
+                provenance = SourceImageProvenance(
+                    source_path=path,
+                    source_component_metadata=workspace.source_metadata_for(lookup),
+                    source_image_names=(binding.alias,),
+                )
+                if (
+                    self.image_set_numbering.existing_number_for_source_slice(
+                        scope=scope,
+                        provenance=provenance,
+                        slice_index=0,
+                        owner=binding.alias,
+                    )
+                    is None
+                ):
+                    continue
+                selection = binding.explicit_source
+                if selection is not None and (
+                    selection.series not in (None, "0")
+                    or selection.index not in (None, "0")
+                ):
+                    raise ValueError(
+                        f"CPA source image {binding.alias!r} requires format-owned "
+                        "Frame/Series projection for its embedded source selection."
+                    )
+                self.collect_image_provenance(
+                    provenance,
+                    scope=scope,
+                    source_image_name=binding.alias,
+                    image_rows_by_number=image_rows_by_number,
+                    source_metadata_by_image_number=source_metadata_by_image_number,
+                    source_axis_indices=projection.ref.source_axis_indices,
+                )
 
     def image_numbers_for_provenance(
         self,
@@ -1128,11 +1228,16 @@ class CellProfilerAnalystProjectionBuilder:
                 image_rows_by_number=image_rows_by_number,
                 source_metadata_by_image_number=source_metadata_by_image_number,
             )
-            self._collect_image_provenance(
+            row_projection.collect_recorded_image_provenance(
                 records=image_records[axis_id],
                 image_channels=image_channels,
-                settings=settings,
-                row_projection=row_projection,
+                image_rows_by_number=image_rows_by_number,
+                source_metadata_by_image_number=source_metadata_by_image_number,
+            )
+            row_projection.collect_source_bound_image_provenance(
+                source_binding_plan=self.source_binding_plan,
+                image_channels=image_channels,
+                axis_id=axis_id,
                 image_rows_by_number=image_rows_by_number,
                 source_metadata_by_image_number=source_metadata_by_image_number,
             )
@@ -1443,33 +1548,6 @@ class CellProfilerAnalystProjectionBuilder:
             relationship_declarations_by_name[relationship.name] = declaration
             rows = row_projection.relationship_rows(record, relationship)
             relationship_rows_by_name[relationship.name].extend(rows)
-
-    @staticmethod
-    def _collect_image_provenance(
-        *,
-        records: Sequence[StoredRuntimeValue],
-        image_channels: Sequence[CPAImageChannelSpec],
-        settings: CellProfilerDatabaseExportSettings,
-        row_projection: CPATableRowProjection,
-        image_rows_by_number: dict[int, dict[str, Any]],
-        source_metadata_by_image_number: dict[
-            int,
-            list[Mapping[str, SourceMetadataScalar]],
-        ],
-    ) -> None:
-        for channel in image_channels:
-            channel_records = tuple(
-                record for record in records if record.key.name == channel.alias
-            )
-            for record in channel_records:
-                provenance = image_payload_metadata(record.value.data).source_provenance
-                row_projection.collect_image_provenance(
-                    provenance,
-                    scope=record.key.scope,
-                    source_image_name=channel.alias,
-                    image_rows_by_number=image_rows_by_number,
-                    source_metadata_by_image_number=source_metadata_by_image_number,
-                )
 
     @staticmethod
     def _collect_measurement_provenance(

@@ -67,6 +67,15 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenanceContributor,
 )
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourceArtifactProjection,
+    SourcePlaneProjection,
+    SourceProjectionMetadataSerializer,
+    SourceProjectionSet,
+)
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from polystore.virtual_workspace import SourcePixelRef
 from openhcs.interop.cellprofiler.analyst_export import (
     CPAImageChannelSpec,
     CPAPropertiesRenderer,
@@ -680,6 +689,228 @@ def test_projection_renders_source_builtins_and_thumbnail_from_declared_image(
         "Image_URL_DNA",
         "Image_Width_DNA",
     } <= {field_spec.name for field_spec in projection.image_table.columns}
+
+
+def _borrowed_source_export_fixture(
+    tmp_path: Path,
+    *,
+    embedded_tiff: bool = False,
+    calibration_scope=None,
+):
+    """Real source workspace occurrences and measurements, without image records."""
+    calibration = tmp_path / ("IllumDNA.tif" if embedded_tiff else "IllumDNA.npy")
+    if embedded_tiff:
+        import tifffile
+
+        tifffile.imwrite(
+            calibration,
+            np.ones((3, 5, 7), dtype=np.uint16),
+            photometric="minisblack",
+            metadata={"axes": "ZYX"},
+        )
+    else:
+        np.save(calibration, np.ones((5, 7), dtype=np.float32))
+    sources = []
+    source_metadata = []
+    for site in (1, 2, 3):
+        original = tmp_path / f"dna-{site}.tif"
+        Image.fromarray(np.zeros((5, 7), dtype=np.uint16)).save(original)
+        metadata = {"well": "A01", "site": str(site), "z_index": "1", "timepoint": "1"}
+        source_metadata.append(metadata)
+        sources.extend(
+            (
+                SourcePlaneProjection(
+                    address=OpenHCSPlaneAddress.from_values("A01", site, 1, 1, 1),
+                    ref=SourcePixelRef("disk", str(original)),
+                    source_alias="DNA",
+                    source_metadata=metadata,
+                ),
+                SourceArtifactProjection(
+                    address=OpenHCSPlaneAddress.from_values("A01", site, 2, 1, 1),
+                    ref=SourcePixelRef(
+                        "disk", str(calibration), (site - 1,) if embedded_tiff else ()
+                    ),
+                    source_alias="IllumDNA",
+                    artifact_kind=ImageArtifactType,
+                    source_metadata=metadata,
+                    execution_scope=calibration_scope,
+                ),
+            )
+        )
+    serializer = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser())
+    document = {
+        "subdirectories": {
+            "source": serializer.metadata_dict(
+                SourceProjectionSet(tuple(sources)),
+                microscope_handler_name="openhcs",
+                source_filename_parser_name="source_schema",
+                grid_dimensions=[1, 1],
+                pixel_size=1.0,
+            )
+        }
+    }
+    context = _export_context()
+    context.plate_path = tmp_path
+    context.microscope_handler = SimpleNamespace(
+        metadata_handler=SimpleNamespace(
+            source_workspace_metadata_document=lambda _plate_path: document,
+        )
+    )
+    context.filemanager = SimpleNamespace(
+        exists=lambda *_args: False,
+        source_path=lambda address, backend, *, base_path: address,
+    )
+    plan = CompiledSourceBindingPlan(
+        bindings=(
+            NamedSourceBinding(alias="DNA"),
+            NamedSourceBinding(
+                alias="IllumDNA", projection_role=SourceProjectionRole.SOURCE_ARTIFACT
+            ),
+        )
+    )
+    table = MeasurementTable(
+        name="ImageMeasurements",
+        rows=MeasurementSparseColumnarRows.from_rows(
+            tuple(
+                {RUNTIME_IMAGE_FIELD: index, "Count_Nuclei": index + 1}
+                for index in range(2)
+            ),
+            fields=(
+                FieldSpec(RUNTIME_IMAGE_FIELD, int),
+                FieldSpec("Count_Nuclei", int),
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            component_metadata=tuple(source_metadata[:2]),
+        ),
+    )
+    store = RuntimeValueStore()
+    output = ArtifactOutputPlan(
+        name=table.name,
+        path="/memory/measurements.pkl",
+        artifact_type=MeasurementsArtifactType,
+    )
+    store.record(
+        RuntimeValue.normalize(output, table, axis_id="A01"),
+        path=output.path,
+        backend="memory",
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=(
+            ArtifactSpec.input("DNA", ImageArtifactType),
+            ArtifactSpec.input("IllumDNA", ImageArtifactType),
+            ArtifactSpec.input(table.name, MeasurementsArtifactType),
+        ),
+        records_by_axis={"A01": store.values()},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(
+            frozenset((AllComponents.CHANNEL,))
+        ),
+        source_binding_plan=plan,
+    )
+    builder = CellProfilerAnalystProjectionBuilder(plan, context=context)
+    channels = CPAImageChannelSpec.defaults_for_artifacts(
+        batch.specs_of_type(ImageArtifactType), source_binding_plan=plan
+    )
+    return builder, batch, channels, calibration, document
+
+
+def test_source_only_calibration_occurrences_export_each_executed_site(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    builder, batch, channels, calibration, _document = _borrowed_source_export_fixture(
+        tmp_path
+    )
+    assert batch.records_of_type(ImageArtifactType)["A01"] == ()
+    monkeypatch.setattr(
+        np,
+        "asarray",
+        lambda *_args, **_kwargs: pytest.fail(
+            "Source headers must not decode pixel arrays"
+        ),
+    )
+
+    projection = builder.build(batch, _settings(), channels)
+
+    rows = _external_rows(projection.image_table)
+    assert len(rows) == 2  # The third declared source site was never executed.
+    for image_number, row in enumerate(rows, start=1):
+        assert row["ImageNumber"] == image_number
+        assert row["Image_FileName_IllumDNA"] == calibration.name
+        assert row["Image_PathName_IllumDNA"] == str(tmp_path)
+        assert row["Image_URL_IllumDNA"] == calibration.as_uri()
+        assert row["Image_Height_IllumDNA"] == 5
+        assert row["Image_Width_IllumDNA"] == 7
+        assert row["Image_Frame_IllumDNA"] == row["Image_Series_IllumDNA"] == 0
+        assert row["Image_Scaling_IllumDNA"] == 1.0
+        assert len(row["Image_MD5Digest_IllumDNA"]) == 32
+        assert row["Image_FileName_DNA"] == f"dna-{image_number}.tif"
+        assert row["Image_Scaling_DNA"] == 65535.0
+
+
+def test_source_bound_export_refuses_conflicting_recorded_alias(tmp_path: Path) -> None:
+    builder, batch, channels, _calibration, _document = _borrowed_source_export_fixture(
+        tmp_path
+    )
+    other = tmp_path / "different.npy"
+    np.save(other, np.ones((5, 7), dtype=np.float32))
+    store = RuntimeValueStore()
+    output = ArtifactOutputPlan(
+        name="IllumDNA", path="/memory/conflict.pkl", artifact_type=ImageArtifactType
+    )
+    payload = ImagePayloadMetadata(
+        source_path=str(other),
+        source_component_metadata={
+            "well": "A01",
+            "site": "1",
+            "z_index": "1",
+            "timepoint": "1",
+        },
+    ).attach_to(np.ones((5, 7), dtype=np.float32))
+    store.record(
+        RuntimeValue.normalize(output, payload, axis_id="A01"),
+        path=output.path,
+        backend="memory",
+    )
+    batch = replace(
+        batch, records_by_axis={"A01": (*batch.records_by_axis["A01"], *store.values())}
+    )
+    with pytest.raises(ValueError, match="conflicting values.*Image_FileName_IllumDNA"):
+        builder.build(batch, _settings(), channels)
+
+
+def test_source_bound_export_retains_exact_embedded_tiff_frame_selection(
+    tmp_path: Path,
+) -> None:
+    builder, batch, channels, calibration, _document = _borrowed_source_export_fixture(
+        tmp_path, embedded_tiff=True
+    )
+    rows = _external_rows(builder.build(batch, _settings(), channels).image_table)
+    assert tuple(row["Image_Frame_IllumDNA"] for row in rows) == (0, 1)
+    assert (
+        tuple(row["Image_FileName_IllumDNA"] for row in rows) == (calibration.name,) * 2
+    )
+    assert (
+        tuple(
+            (row["Image_Height_IllumDNA"], row["Image_Width_IllumDNA"]) for row in rows
+        )
+        == ((5, 7),) * 2
+    )
+
+
+def test_source_bound_export_does_not_cross_declared_execution_scope(
+    tmp_path: Path,
+) -> None:
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+
+    builder, batch, channels, _calibration, _document = _borrowed_source_export_fixture(
+        tmp_path, calibration_scope=RuntimeExecutionAxisScope("B01")
+    )
+    rows = _external_rows(builder.build(batch, _settings(), channels).image_table)
+    assert len(rows) == 2
+    assert all(row.get("Image_FileName_IllumDNA") is None for row in rows)
+    assert all(row["Image_FileName_DNA"] for row in rows)
 
 
 def test_measurement_provenance_projects_exact_named_contributors_by_site(

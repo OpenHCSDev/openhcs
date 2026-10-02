@@ -43,18 +43,38 @@ class CellProfilerImageSetNumbering:
 
         return {
             slice_index: self._numbers.setdefault(
-                (
-                    scope.axis_id,
-                    self._source_identity(
-                        provenance,
-                        slice_index,
-                        owner=owner,
-                    ),
-                ),
+                self._source_key(scope, provenance, slice_index, owner=owner),
                 len(self._numbers) + 1,
             )
             for slice_index in slice_indices
         }
+
+    def existing_number_for_source_slice(
+        self,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        provenance: SourceImageProvenance,
+        slice_index: int,
+        owner: str,
+    ) -> int | None:
+        """Find an executed image set without admitting an unused source occurrence."""
+
+        return self._numbers.get(
+            self._source_key(scope, provenance, slice_index, owner=owner)
+        )
+
+    def _source_key(
+        self,
+        scope: RuntimeExecutionAxisScope,
+        provenance: SourceImageProvenance,
+        slice_index: int,
+        *,
+        owner: str,
+    ) -> tuple[str, SourceImageSetIdentity]:
+        return (
+            scope.axis_id,
+            self._source_identity(provenance, slice_index, owner=owner),
+        )
 
     def for_source_slice(
         self,

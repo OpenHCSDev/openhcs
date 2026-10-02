@@ -707,6 +707,11 @@ class SourceProjection:
             and self.artifact_kind is binding.artifact_kind
         )
 
+    def belongs_to_execution_axis(self, axis_id: str) -> bool:
+        """Retain an unscoped source or its exact declared execution axis."""
+
+        return self.execution_scope is None or self.execution_scope.axis_id == axis_id
+
 
 def declared_optional_payload_field(cls, payload_type: type) -> str:
     """Derive the one declared field carrying ``payload_type | None``.
