@@ -361,8 +361,85 @@ class MeasureColocalizationObjectMeasurementRowPolicy(
             raise ValueError(
                 "MeasureColocalization row projection requires an exact source pair."
             )
-        return MeasureColocalizationModule.project_source_pair_columnar_rows(
+        return self.project_source_pair_columnar_rows(
             rows, invocation.source_pair, metric_kwargs=invocation.kwargs
+        )
+
+    @classmethod
+    def project_source_pair_columnar_rows(
+        cls,
+        rows: ColumnarRows,
+        source_pair: CellProfilerSourceImagePair,
+        *,
+        metric_kwargs: Mapping[str, object] = MappingProxyType({}),
+    ) -> ColumnarRows:
+        """Project columnar colocalization fields to exact source-pair names."""
+        if isinstance(rows, ConcatenatedColumnarRows):
+            return ConcatenatedColumnarRows(
+                tuple(
+                    cls.project_source_pair_columnar_rows(
+                        row_batch, source_pair, metric_kwargs=metric_kwargs
+                    )
+                    for row_batch in rows.row_batches
+                )
+            )
+        object_scope = MeasurementRowAxisField.OBJECT_LABEL.value in rows.columns
+        row_type = (
+            ObjectColocalizationMeasurements
+            if object_scope
+            else ColocalizationMeasurements
+        )
+        expected_fields = FieldSpec.from_dataclass_type(row_type)
+        if rows.fields != expected_fields:
+            raise ValueError(
+                f"{cls.__name__} requires exact raw colocalization fields "
+                f"{expected_fields!r}, got {rows.fields!r}."
+            )
+        measurement_scope = (
+            MeasurementScope.OBJECT if object_scope else MeasurementScope.IMAGE
+        )
+        features_by_field_name = {
+            feature.measurement_row_field_name: feature
+            for feature in MeasureColocalizationModule.MeasurementFeature
+        }
+        axis_field_names = MeasurementRowAxisField.field_names()
+        projected_field_columns: list[tuple[FieldSpec, object]] = []
+        for field_spec in expected_fields:
+            field_name = field_spec.name
+            if field_name in axis_field_names:
+                projected_field_columns.append(
+                    (field_spec, rows.column_values(field_name))
+                )
+                continue
+            if field_name not in features_by_field_name:
+                continue
+            feature = features_by_field_name[field_name]
+            if not feature.source_pair_relation.enabled_for_kwargs(metric_kwargs):
+                continue
+            if not feature.emitted_in_scope(measurement_scope):
+                continue
+            projected_field_columns.append(
+                (
+                    FieldSpec(
+                        name=feature.source_pair_feature_name(source_pair),
+                        dtype=field_spec.dtype,
+                        required=field_spec.required,
+                    ),
+                    rows.column_values(field_name),
+                )
+            )
+        return MeasurementProjectedColumnarRows(
+            MappingProxyType(
+                {
+                    field_spec.name: values
+                    for field_spec, values in projected_field_columns
+                }
+            ),
+            fields=tuple(field_spec for field_spec, _values in projected_field_columns),
+            declared_object_measurement_domain_covered=(
+                rows.covers_declared_object_measurement_domain
+            ),
+            object_row_identity=rows.object_row_identity,
         )
 
     def table_source_image_name(
@@ -631,83 +708,6 @@ class MeasureColocalizationModule(
             MeasurementFeature.OVERLAP_K_FIRST.feature_family(),
         }
     )
-
-    @classmethod
-    def project_source_pair_columnar_rows(
-        cls,
-        rows: ColumnarRows,
-        source_pair: CellProfilerSourceImagePair,
-        *,
-        metric_kwargs: Mapping[str, object] = MappingProxyType({}),
-    ) -> ColumnarRows:
-        """Project columnar colocalization fields to exact source-pair names."""
-        if isinstance(rows, ConcatenatedColumnarRows):
-            return ConcatenatedColumnarRows(
-                tuple(
-                    cls.project_source_pair_columnar_rows(
-                        row_batch, source_pair, metric_kwargs=metric_kwargs
-                    )
-                    for row_batch in rows.row_batches
-                )
-            )
-        object_scope = MeasurementRowAxisField.OBJECT_LABEL.value in rows.columns
-        row_type = (
-            ObjectColocalizationMeasurements
-            if object_scope
-            else ColocalizationMeasurements
-        )
-        expected_fields = FieldSpec.from_dataclass_type(row_type)
-        if rows.fields != expected_fields:
-            raise ValueError(
-                f"{cls.__name__} requires exact raw colocalization fields "
-                f"{expected_fields!r}, got {rows.fields!r}."
-            )
-        measurement_scope = (
-            MeasurementScope.OBJECT if object_scope else MeasurementScope.IMAGE
-        )
-        features_by_field_name = {
-            feature.measurement_row_field_name: feature
-            for feature in cls.MeasurementFeature
-        }
-        axis_field_names = MeasurementRowAxisField.field_names()
-        projected_field_columns: list[tuple[FieldSpec, object]] = []
-        for field_spec in expected_fields:
-            field_name = field_spec.name
-            if field_name in axis_field_names:
-                projected_field_columns.append(
-                    (field_spec, rows.column_values(field_name))
-                )
-                continue
-            if field_name not in features_by_field_name:
-                continue
-            feature = features_by_field_name[field_name]
-            if not feature.source_pair_relation.enabled_for_kwargs(metric_kwargs):
-                continue
-            if not feature.emitted_in_scope(measurement_scope):
-                continue
-            projected_field_columns.append(
-                (
-                    FieldSpec(
-                        name=feature.source_pair_feature_name(source_pair),
-                        dtype=field_spec.dtype,
-                        required=field_spec.required,
-                    ),
-                    rows.column_values(field_name),
-                )
-            )
-        return MeasurementProjectedColumnarRows(
-            MappingProxyType(
-                {
-                    field_spec.name: values
-                    for field_spec, values in projected_field_columns
-                }
-            ),
-            fields=tuple(field_spec for field_spec, _values in projected_field_columns),
-            declared_object_measurement_domain_covered=(
-                rows.covers_declared_object_measurement_domain
-            ),
-            object_row_identity=rows.object_row_identity,
-        )
 
     @classmethod
     def ignored_settings_for(
