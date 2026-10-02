@@ -1,6 +1,9 @@
 #432/#434 working created-carrier and scalar-output repair
 ========================================================
 
+Historical6370 guard findings below are retained. Their subsequent narrow
+owner repair and current qualification are in obligation-owner-receipt.rst.
+
 Ownership and predecessor
 -------------------------
 
