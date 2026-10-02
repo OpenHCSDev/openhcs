@@ -904,7 +904,7 @@ class OpenHCSMetadataWriter:
                             SourcePlaneProjection(
                                 address=address,
                                 ref=SourcePixelRef(self.backend, virtual_path),
-                                source_alias=record.persisted_source_alias,
+                                source_alias=record.output_context.persisted_source_alias,
                                 source_metadata=source_metadata,
                                 image_metadata=metadata,
                             ),

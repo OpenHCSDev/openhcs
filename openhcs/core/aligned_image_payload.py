@@ -1012,6 +1012,11 @@ class AlignedImageSliceContext:
     projection_key: str
     artifact_kind: str | None = None
 
+    @property
+    def persisted_source_alias(self) -> str | None:
+        """Expose a declared artifact name, preserving anonymous main flow."""
+        return self.output_key if self.artifact_kind is not None else None
+
     @classmethod
     def main_flow(
         cls,
