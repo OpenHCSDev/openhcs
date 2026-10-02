@@ -36,6 +36,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.processing.custom_functions.runtime_registry import CustomFunctionCanonicalLookup
 
 logger = logging.getLogger(__name__)
 
@@ -338,7 +339,7 @@ def _memory_type_from_decorator(
         return None
 
 
-class OpenHCSRegistry(LibraryRegistryBase):
+class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     """
     Registry for OpenHCS native functions with explicit contract support.
 

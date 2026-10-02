@@ -1,9 +1,9 @@
-"""Compatibility facade over the canonical function metadata catalog.
+"""Public function lookup and registry-owned import projections.
 
 ``RegistryService`` owns the complete catalog. Persisted custom functions have a
 separate process-local projection owned by ``CustomFunctionRuntimeRegistry``;
-this module coordinates source reconciliation and retains the small public
-lookup API used by older callers without copying catalog state.
+this module coordinates source reconciliation and delegates exact canonical
+lookup to the registry declaration without copying catalog state.
 """
 
 from __future__ import annotations
@@ -309,10 +309,7 @@ def get_function(function_id: str) -> Callable:
         RegistryService,
     )
 
-    metadata = RegistryService.get_all_functions_with_metadata().get(function_id)
-    if metadata is None:
-        raise KeyError(f"Unknown canonical function ID {function_id!r}.")
-    return metadata.func
+    return RegistryService.metadata_for_canonical_key(function_id).func
 
 
 def get_all_function_names(memory_type: str) -> list[str]:
