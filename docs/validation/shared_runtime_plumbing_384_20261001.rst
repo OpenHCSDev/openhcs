@@ -1879,3 +1879,76 @@ and complete actual input freezes pass. Source-freeze SHA256:
 dc8a40519a10b7dd13ba9809a95bd6e2070622a326afa66ee2684adbe892a28d.
 Issue487's source fix passes156 controls and original scoped R0/R1, but actual
 candidate pipeline science and paired ordinary timing remain outstanding.
+
+Metric policy, saved parity and readiness follow-up, 2026-10-02
+-------------------------------------------------------------
+
+Main3705c071b13c29d354417d85dccf78c765b4a580 is normally merged at05ea538a.
+Independent PR488 closes480 and PR489 closes487. Their production changes
+are already integrated; subsequent main synchronization changes documentation
+only. PR489 passes156 controls and original scoped R0/R1. Existing metric
+declarations now derive enabled output columns; disabled Costes computations
+and columns are omitted without changing enabled numerical implementations.
+
+Frozen baseline4904884 and sealed candidate d567d4d7 each have two cached
+ordinary observations. Baseline execution5.527808428/5.327760458s and total
+7.723725582/7.677667536s compare with candidate execution4.583703041/
+4.648376942s and total6.814110309/6.839743058s. Means improve execution
+5.427784443 to4.616039992s (0.811744451s) and total7.700696559 to6.826926684s
+(0.873769875s). Startup/readiness and shutdown are excluded; one worker
+executes inline, with ordinary OUTCOMES and memory observation enabled.
+This is a full-branch cached comparison, not an exclusive Costes attribution,
+ABBA experiment, statistical claim or fully prewarmed qualification.
+
+The original baseline6.981277943/9.296563831s is excluded from that comparison:
+three kernel overloads were written inside its pipeline timing window. The
+later runs have no cache writes, which does not prove absence of cache loads.
+Existing public library preparation omits object correlation and prepares
+float64 threshold/RWC arrays; canonical runtime stages require float32 arrays.
+A fresh private-cache public-preparation probe refuses later compilation and
+cache loading: base passes; correlation, threshold and RWC fail. Requested
+argument types exactly match retained production cache signatures. This is
+readiness evidence using lawful synthetic values, not actual-input science
+or performance evidence. Issue491 tracks canonical-stage preparation.
+
+All seven common CSV domains and two images are unchanged;100 unauthorized
+Costes columns disappear (80 canonical and20 derived parent columns).
+Candidate repeat scientific bytes are exact. Complete saved native replay
+still fails solely for63 missing parent-mean features in both repetitions,
+with no Costes, image, other numeric or physical-inventory differences. All
+five relationship correlation keys and2093 pairs agree. Numerical tolerances
+and required outputs are unchanged; full-case native parity remains RED.
+
+Issue492 identifies its first loss: all16 object-intensity tables exist, and
+the producer has channel groups1/2/5/3, but compilation selects only child
+channel3 for the prior-measurement input. Other channels never reach runtime
+scope filtering. Repair belongs to the existing artifact relation/projection
+contracts and must preserve child subject and image-set correlation. It adds
+required scientific work; no speedup is claimed for this correctness repair.
+
+The bounded joint diagnostic pipeline succeeds with exact scientific bytes,
+but capture admission is RED: no batch arrays are captured, and one final
+store metadata event exceeds the4MiB cap. Earlier complete selection events
+establish the bounded first-loss fact. The worker profile reaches28 serial
+measurement invocations and zero batch calls; the earlier assumed batch
+capture route is invalidated. A narrower serial-owner capture and nominal
+batch-executor transport audit are next, not a claimed admitted replay.
+
+Cached comparison receipt:
+/var/tmp/openhcs-beginner-metric-487-ordinary-cached-comparison-v1-20261002.json
+SHA25636883d131c224f20b44139b02078c6ddba8b78a2e598901651910e12a92e4c2b.
+Strict saved native receipt:
+/var/tmp/openhcs-beginner-metric-487-strict-native-science-v1-20261002/receipt.json.
+Fresh READY probe:
+/var/tmp/openhcs-colocalization-public-ready-signatures-v2-20261002/observations.json.
+Parent-mean first-loss receipt:
+/var/tmp/openhcs-beginner-parent-means-first-loss-v2-20261002.json
+SHA256c127ff3c79d82ddad4df38bb197606a25ee44a934e1909759922fc62b560f135.
+Joint diagnostic admission/science receipt:
+/var/tmp/issue487-joint-v2-original-admission-and-science-20261002.json
+SHA256b29d5df0cd203e40a6e7f018e59b42d91e815a21af3e623811bc6b87a00ae53e.
+
+Whole-branch scalar-classifier R0 and issue479 validator-relocation R1 remain
+RED. Installed419/433/435/450, original native image differences, full30-case
+and scaling reruns and fresh figures remain open. The optimization goal stays
+active; these measured gains do not redefine or complete the target.
