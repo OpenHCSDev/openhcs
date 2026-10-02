@@ -37,8 +37,10 @@ from zmqruntime.execution import (
 from zmqruntime.messages import (
     CancelRequest,
     ControlMessageType,
+    ControlRequestHeader,
     MessageFields,
     PongResponse,
+    ServerRole,
 )
 from zmqruntime.startup import (
     EndpointStartupObserver,
@@ -48,6 +50,7 @@ from zmqruntime.startup import (
 )
 from zmqruntime.transport import TransportEndpoint
 
+from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -667,6 +670,17 @@ class ZMQClientResponseView:
         return str(value)
 
 
+class FunctionCatalogEndpointUnavailableError(AgentFacingErrorMixin, RuntimeError):
+    """The selected catalog connection cannot prove its execution owner."""
+
+    agent_error_code = "function_catalog_endpoint_unavailable"
+    agent_error_hint = (
+        "The catalog owner is unavailable or changed. Explicitly select an existing "
+        "execution runtime with openhcs_start_function_catalog_preparation; "
+        "no catalog request was delivered and no replacement runtime was started."
+    )
+
+
 class ZMQExecutionClient(
     ExecutionClient[OpenHCSExecutionSubmission, None],
     EndpointCompatibilityClientABC,
@@ -936,22 +950,10 @@ class ZMQExecutionClient(
     ) -> FunctionCatalogPage:
         """Read the authoritative callable catalog from this execution endpoint."""
 
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionCatalogControlResponse,
-        )
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
 
-        if not self.is_connected():
-            connection_attempt = self.new_connection_attempt(
-                cancellation=cancellation,
-            )
-            if not connection_attempt.connect(
-                EndpointConnectionPolicy.ATTACH_OR_START,
-                self.config.client_connect_timeout_seconds,
-            ):
-                raise RuntimeError("Failed to connect to execution server")
         response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict(),
+            request,
             cancellation=cancellation,
         )
         return FunctionCatalogControlResponse.from_control_response(response).catalog
@@ -962,16 +964,9 @@ class ZMQExecutionClient(
     ) -> FunctionCatalogPage:
         """Search this endpoint through the authoritative catalog ranking policy."""
 
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionCatalogControlResponse,
-        )
+        from openhcs.agent.dto.functions import FunctionCatalogControlResponse
 
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
+        response = self._send_function_catalog_control_request(request)
         return FunctionCatalogControlResponse.from_control_response(response).catalog
 
     def get_function_detail(
@@ -980,16 +975,9 @@ class ZMQExecutionClient(
     ) -> FunctionDetail:
         """Read one callable detail from an exact endpoint catalog revision."""
 
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionDetailControlResponse,
-        )
+        from openhcs.agent.dto.functions import FunctionDetailControlResponse
 
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
+        response = self._send_function_catalog_control_request(request)
         return FunctionDetailControlResponse.from_control_response(response).detail
 
     def get_function_reference(
@@ -998,16 +986,9 @@ class ZMQExecutionClient(
     ) -> FunctionReference:
         """Read one exact compiler reference from this execution endpoint."""
 
-        from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
-            FunctionReferenceControlResponse,
-        )
+        from openhcs.agent.dto.functions import FunctionReferenceControlResponse
 
-        if not self.is_connected() and not self.connect():
-            raise RuntimeError("Failed to connect to execution server")
-        response = self._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict()
-        )
+        response = self._send_function_catalog_control_request(request)
         return FunctionReferenceControlResponse.from_control_response(
             response
         ).reference
@@ -1026,23 +1007,11 @@ class ZMQExecutionClient(
 
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationControlResponse,
-            FunctionCatalogControlPayload,
         )
 
-        deadline = operation_deadline or OperationDeadline.after_milliseconds(
-            self.config.control_timeout_ms,
-            operation="custom function registration",
-        )
-        if not self.is_connected() and not self.connect_existing(
-            timeout=deadline.cap_seconds(1.0),
-        ):
-            raise RuntimeError(
-                "Custom registration requires an existing execution endpoint."
-            )
-        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = self._send_control_request(
-            payload,
-            timeout_ms=deadline.remaining_milliseconds(),
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
         )
         return CustomFunctionRegistrationControlResponse.from_control_response(
             response
@@ -1057,23 +1026,11 @@ class ZMQExecutionClient(
         """Require the selected endpoint's native admission contract before mutation."""
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationDestinationControlResponse,
-            FunctionCatalogControlPayload,
         )
 
-        deadline = operation_deadline or OperationDeadline.after_milliseconds(
-            self.config.control_timeout_ms,
-            operation="custom registration destination",
-        )
-        if not self.is_connected() and not self.connect_existing(
-            timeout=deadline.cap_seconds(1.0),
-        ):
-            raise RuntimeError(
-                "Registration destination requires an existing execution endpoint."
-            )
-        payload = FunctionCatalogControlPayload.from_request(request).to_dict()
-        response = self._send_control_request(
-            payload,
-            timeout_ms=deadline.remaining_milliseconds(),
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
         )
         return (
             CustomFunctionRegistrationDestinationControlResponse.from_control_response(
@@ -1089,23 +1046,12 @@ class ZMQExecutionClient(
     ) -> FunctionCatalogPreparationState:
         """One responsive start/status/cancel exchange on an existing endpoint."""
         from openhcs.agent.dto.functions import (
-            FunctionCatalogControlPayload,
             FunctionCatalogPreparationStateControlResponse,
         )
 
-        deadline = operation_deadline or OperationDeadline.after_milliseconds(
-            self.config.control_timeout_ms,
-            operation="function catalog preparation observation",
-        )
-        if not self.is_connected() and not self.connect_existing(
-            timeout=deadline.cap_seconds(1.0)
-        ):
-            raise RuntimeError(
-                "Function catalog preparation requires an existing execution endpoint."
-            )
-        response = self._send_control_request(
-            FunctionCatalogControlPayload.from_request(request).to_dict(),
-            timeout_ms=deadline.remaining_milliseconds(),
+        response = self._send_function_catalog_exchange(
+            request,
+            operation_deadline=operation_deadline,
         )
         return FunctionCatalogPreparationStateControlResponse.from_control_response(
             response
@@ -1113,7 +1059,7 @@ class ZMQExecutionClient(
 
     def _send_function_catalog_control_request(
         self,
-        request: dict,
+        request: FunctionCatalogControlRequestABC,
         *,
         cancellation: OperationCancellation | None = None,
     ) -> dict:
@@ -1128,7 +1074,9 @@ class ZMQExecutionClient(
         while True:
             if cancellation.requested():
                 raise CancelledError("Function catalog preparation was cancelled")
-            response = self._send_control_request(request)
+            response = self._send_function_catalog_exchange(
+                request, cancellation=cancellation
+            )
             pending = FunctionCatalogPreparationControlResponse.from_control_response(
                 response
             )
@@ -1147,6 +1095,80 @@ class ZMQExecutionClient(
                 )
             if cancellation.wait(pending.retry_after_seconds):
                 raise CancelledError("Function catalog preparation was cancelled")
+
+    def _send_function_catalog_exchange(
+        self,
+        request: FunctionCatalogControlRequestABC,
+        *,
+        operation_deadline: OperationDeadline | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> dict:
+        """Admit one nominal catalog control without creating or adopting an owner.
+
+        The original connection handshake is the only incarnation authority.
+        Read-only preparation polling calls this per exchange; mutations call it
+        once and never enter that polling path.
+        """
+        from openhcs.agent.dto.functions import FunctionCatalogControlPayload
+        from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+
+        payload = FunctionCatalogControlPayload.from_request(request)
+        deadline = operation_deadline or OperationDeadline.after_milliseconds(
+            self.config.control_timeout_ms, operation="function catalog control"
+        )
+        deadline.remaining_seconds()
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        if not self.is_connected() and not self.new_connection_attempt(
+            cancellation=cancellation
+        ).connect(EndpointConnectionPolicy.ATTACH_EXISTING, deadline.cap_seconds(1.0)):
+            raise FunctionCatalogEndpointUnavailableError(
+                "Function catalog requires an existing execution endpoint."
+            )
+        expected = self.connected_endpoint
+        if expected is None or expected.process_identity is None:
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection has no native process-incarnation proof."
+            )
+        if self.known_server_process_is_alive() is False:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Selected catalog owner {expected.process_identity!r} has exited."
+            )
+        if expected.server_role is not ServerRole.EXECUTION or not (
+            OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
+                expected.application
+            ).matches
+        ):
+            raise FunctionCatalogEndpointUnavailableError(
+                "Catalog connection is not a compatible OpenHCS execution runtime."
+            )
+        # PING is the existing generic endpoint observation, not a catalog request.
+        # Clamp its original one-second observation to the caller's remaining budget.
+        try:
+            observed = PongResponse.from_dict(
+                self._send_control_request(
+                    ControlRequestHeader(ControlMessageType.PING).to_dict(),
+                    timeout_ms=min(1000, deadline.remaining_milliseconds()),
+                )
+            )
+        except (TimeoutError, KeyError, TypeError, ValueError) as error:
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Could not verify selected catalog owner: {error}"
+            ) from error
+        if (
+            observed.process_identity != expected.process_identity
+            or observed.server_role is not expected.server_role
+            or observed.application != expected.application
+        ):
+            raise FunctionCatalogEndpointUnavailableError(
+                f"Catalog endpoint no longer belongs to {expected.process_identity!r}; "
+                f"observed {observed.process_identity!r} ({observed.server_role.value})."
+            )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError("Function catalog preparation was cancelled")
+        return self._send_control_request(
+            payload.to_dict(), timeout_ms=deadline.remaining_milliseconds()
+        )
 
     def send_debug_worker_command(
         self,
@@ -1236,7 +1258,9 @@ class ZMQExecutionClient(
         return self._runtime_launch_plan
 
     @override
-    def _endpoint_startup_observer(self, process: EndpointProcess) -> EndpointStartupObserver:
+    def _endpoint_startup_observer(
+        self, process: EndpointProcess
+    ) -> EndpointStartupObserver:
         """Supply the execution child's journal to the inherited readiness owner."""
         return EndpointStartupStatusMonitor(
             self._startup_status_path,

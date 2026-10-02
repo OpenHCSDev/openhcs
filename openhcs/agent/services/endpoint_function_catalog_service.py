@@ -466,14 +466,24 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
         self, connection: ExecutionConnectionSpec
     ) -> FunctionCatalogPreparationState:
         endpoint = self._endpoint_for_connection(connection)
-        state = self._client_for(endpoint).function_catalog_preparation(
-            FunctionCatalogPreparationStartRequest(connection),
-        )
-        if state.handle.connection != connection:
-            raise RuntimeError(
-                "Catalog preparation response changed the explicit connection."
+        # Explicit selection is the recovery boundary. Ordinary reads keep the
+        # original connection incarnation, even if its address has been reused.
+        client = self._client_factory(endpoint)
+        try:
+            state = client.function_catalog_preparation(
+                FunctionCatalogPreparationStartRequest(connection),
             )
+            if state.handle.connection != connection:
+                raise RuntimeError(
+                    "Catalog preparation response changed the explicit connection."
+                )
+        except BaseException:
+            client.disconnect()
+            raise
         self.invalidate()
+        if self._client_session is not None:
+            self._client_session.disconnect()
+        self._client_session = FunctionCatalogClientSession(endpoint, client)
         self._config_provider = lambda: endpoint
         return state
 
