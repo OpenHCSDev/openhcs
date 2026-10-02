@@ -22,7 +22,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.projected_image_output import (
     SelectedPlaneImageOutput,
-    SourceProjectedImageOutput,
+    SourcePlaneSelectionImageOutput,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
@@ -207,7 +207,7 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
             return tuple(reversed(super().selected_source_plane_indices()))
 
     # The leaf supplies its declaration after the independent capabilities in MRO.
-    class PlaneDeclaration(SourceProjectedImageOutput):
+    class PlaneDeclaration(SourcePlaneSelectionImageOutput):
         def selected_source_plane_indices(self):
             calls.append("declaration")
             return (0, 1)
