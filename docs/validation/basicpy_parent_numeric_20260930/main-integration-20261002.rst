@@ -52,3 +52,21 @@ introduced. IMPL-4/AGENT-4: complete the real field owner, not the generic god
 class. This removal touches only PR217's own metadata addition and leaves
 current main/PR394's metadata implementation unchanged. Controls must retain
 the same negative-axis and contributor behavior.
+
+The next R0 retained one foreign negative-absence probe in the field's early
+return, exit1,20.5s/83.11MiB. The actual rule is a restriction on annotated
+sources, not missing-state recovery. State it positively: when the existing
+metadata owner reports a domain present, require exactly the declared SITE
+variation. Plain NumPy remains the original supported unannotated direct-call
+contract; retained-plane derivation remains inside its original metadata owner.
+No attribute-default reader, reinterpretation of None, exceptions, measure
+suppression or extra registry is introduced. Independent direct-array and
+wrong annotated-axis controls retain this exact distinction.
+
+The first mixed fixture helper failed the real stale-external import guard
+because it preloaded a foreign metaclass checkout before this populated source
+tree. It remains failed; no guard was bypassed. Original source bootstrap next
+passes40 controls and fails both real publication journeys because the existing
+PolyStore gitlink worktree is older and lacks metadata_config. That actual
+source-dependency mismatch is not an application-regression or green journey.
+Use the reviewed package/paired source identities for whole-path acceptance.

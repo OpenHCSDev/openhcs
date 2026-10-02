@@ -36,13 +36,15 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
         metadata = image_payload_metadata(source)
-        if not metadata.has_values:
-            return
         retained_axes = tuple(
             AllComponents.from_value(name)
             for name in metadata.retained_plane_component_values()
         )
-        if retained_axes != (AllComponents.from_value(cls.observation_axis.value),):
+        # Plain NumPy observations have no claimed acquisition domain. Restrict
+        # annotated sources using the metadata owner's declared presence state.
+        if metadata.has_values and retained_axes != (
+            AllComponents.from_value(cls.observation_axis.value),
+        ):
             raise ValueError(
                 f"BaSiC requires independent {cls.observation_axis.name} observations "
                 "with every other source component fixed."
