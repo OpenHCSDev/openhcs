@@ -758,7 +758,7 @@ class AnalysisOutputDescriptorAuthority:
             )
         elif scope.component is not None:
             component_metadata = with_source_component_metadata(
-                dict(metadata.source_component_metadata or {}),
+                metadata.source_component_metadata or {},
                 scope.component,
                 scope.require_value_text(),
             )

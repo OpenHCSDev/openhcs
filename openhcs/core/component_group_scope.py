@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from openhcs.constants.constants import AllComponents
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_metadata import (
+    SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
@@ -467,7 +468,7 @@ class RuntimeExecutionAxisScope:
     def fixed_component_metadata(
         self,
         metadata: SourceMetadataMapping | None = None,
-    ) -> dict[str, SourceMetadataValue]:
+    ) -> SourceMetadataMapping:
         """Merge fixed execution coordinates into source component metadata."""
 
         from openhcs.constants.constants import get_multiprocessing_axis
@@ -476,7 +477,9 @@ class RuntimeExecutionAxisScope:
             with_source_component_metadata,
         )
 
-        merged: dict[str, SourceMetadataValue] = dict(metadata or {})
+        merged = SourceMetadataFields.composition_snapshot(
+            metadata if metadata is not None else {}
+        )
         fixed_values = (
             (get_multiprocessing_axis(), self.axis_id),
             *self.fixed_component_values,

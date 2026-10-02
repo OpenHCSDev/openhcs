@@ -34,9 +34,9 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
-    SourceMetadataIdentityProjection,
+    SourceMetadataFields,
+    ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
     SourceMetadataValue,
     source_metadata_dict,
     source_metadata_scalar,
@@ -448,7 +448,7 @@ class SourceCandidate:
             self.declared_address,
             self.dataset_identity,
             self.store_identity,
-            SourceMetadataIdentityProjection(self.metadata).items(),
+            SourceMetadataFields.identity_items(self.metadata),
         )
 
 
@@ -1219,7 +1219,7 @@ class SourceProjectionMetadataSerializer:
         metadata = source_metadata_dict(projection.source_metadata)
         source_component_fields = {
             field: value
-            for field, value in SourceMetadataRoleView(metadata).scalar_items()
+            for field, value in SourceMetadataFields.scalar_items(metadata)
             if (
                 (component := source_metadata_component(field)) is not None
                 and field != component.value
@@ -1231,7 +1231,7 @@ class SourceProjectionMetadataSerializer:
                 source_component_fields,
                 path=projection.ref.backend_address,
             )
-        original_metadata = dict(SourceMetadataRoleView(metadata).original_items())
+        original_metadata = dict(SourceMetadataFields.original_items(metadata))
         for component, value in projection.source_component_values():
             canonical_value = metadata.get(component.value)
             conflicts_with_address = (
@@ -1303,21 +1303,6 @@ def _padded(value: str, width: int) -> str:
     return f"{int(value):0{width}d}" if value.isdecimal() else value
 
 
-def _normalized_source_metadata_value(
-    value: SourceMetadataValue,
-) -> SourceMetadataValue:
-    """Freeze one source-metadata value without erasing its nominal shape."""
-
-    if isinstance(value, Mapping):
-        return MappingProxyType(
-            {
-                str(key): source_metadata_scalar(nested_value)
-                for key, nested_value in value.items()
-            }
-        )
-    return source_metadata_scalar(value)
-
-
 def _normalize_projection(projection: SourceProjection) -> None:
     """Normalize fields shared by every nominal source projection."""
 
@@ -1338,12 +1323,7 @@ def _normalize_projection(projection: SourceProjection) -> None:
     object.__setattr__(
         projection,
         "source_metadata",
-        MappingProxyType(
-            {
-                str(key): _normalized_source_metadata_value(value)
-                for key, value in projection.source_metadata.items()
-            }
-        ),
+        ResolvedSourceMetadataRecord.normalized_mapping(projection.source_metadata),
     )
     object.__setattr__(
         projection,

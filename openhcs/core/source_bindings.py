@@ -38,9 +38,9 @@ from openhcs.core.components.validation import convert_enum_by_value
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataIdentityItems,
-    SourceMetadataIdentityProjection,
+    SourceMetadataFields,
+    ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
     SourceMetadataScalar,
     SourceMetadataValue,
     SourceVoxelSpacing,
@@ -2000,7 +2000,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         declared_names = frozenset(field.name for field in declared_fields)
         values_by_name: dict[str, list[SourceMetadataScalar]] = {}
         for metadata in realized_source_metadata:
-            for field_name, value in SourceMetadataRoleView(metadata).original_items():
+            for field_name, value in SourceMetadataFields.original_items(metadata):
                 if (
                     field_name not in declared_names
                     and field_name not in excluded_names
@@ -2360,30 +2360,12 @@ class SourceBindingRuntimeMetadataNormalizer:
     def normalized(self) -> Mapping[str, SourceMetadataMapping]:
         return MappingProxyType(
             {
-                str(path): MappingProxyType(
-                    {
-                        str(key): self.normalized_value(value)
-                        for key, value in source_metadata_dict(metadata).items()
-                    }
+                str(path): ResolvedSourceMetadataRecord.normalized_mapping(
+                    source_metadata_dict(metadata)
                 )
                 for path, metadata in self.source_metadata_by_path.items()
             }
         )
-
-    @classmethod
-    def normalized_value(cls, value: SourceMetadataValue) -> SourceMetadataValue:
-        if isinstance(value, Mapping):
-            return MappingProxyType(
-                {
-                    str(key): cls.normalized_scalar(nested_value)
-                    for key, nested_value in value.items()
-                }
-            )
-        return cls.normalized_scalar(value)
-
-    @staticmethod
-    def normalized_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
-        return source_metadata_scalar(value)
 
 
 @dataclass(frozen=True)
@@ -2538,7 +2520,7 @@ class SourceBindingRuntimeContext:
         cached = self._source_metadata_identity
         if cached is None:
             cached = tuple(
-                (path, SourceMetadataIdentityProjection(metadata).items())
+                (path, SourceMetadataFields.identity_items(metadata))
                 for path, metadata in sorted(self.source_metadata_by_path.items())
             )
             object.__setattr__(self, "_source_metadata_identity", cached)
@@ -2673,9 +2655,9 @@ class SourceBindingRuntimeContext:
         identity: list[tuple[str, SourceMetadataIdentityItems]] = []
         for path in paths:
             if path in self.source_metadata_by_path:
-                metadata = SourceMetadataIdentityProjection(
+                metadata = SourceMetadataFields.identity_items(
                     self.source_metadata_by_path[path]
-                ).items()
+                )
             else:
                 metadata = ()
             identity.append((path, metadata))

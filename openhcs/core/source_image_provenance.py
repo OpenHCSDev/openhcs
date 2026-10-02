@@ -20,6 +20,8 @@ from openhcs.constants.constants import AllComponents
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    OwnedSourceMetadataFields,
+    SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
@@ -69,20 +71,12 @@ def normalize_source_path(source_path: str | None) -> str | None:
     return str(source_path)
 
 
-def _normalize_component_metadata(
-    metadata: SourceComponentMetadata | None,
-) -> SourceComponentMetadata | None:
-    if metadata is None:
-        return None
-    return MappingProxyType(dict(metadata))
-
-
 def _component_metadata_identity(
     metadata: SourceComponentMetadata | None,
 ) -> tuple[tuple[str, str], ...] | None:
     if metadata is None:
         return None
-    return tuple(sorted((str(key), repr(value)) for key, value in metadata.items()))
+    return SourceMetadataFields.provenance_identity_items(metadata)
 
 
 def _tuple_value(values: tuple[Any, ...], index: int) -> Any | None:
@@ -101,7 +95,10 @@ class SourceImageIdentity:
 
     def __post_init__(self) -> None:
         self.path = normalize_source_path(self.path)
-        self.component_metadata = _normalize_component_metadata(self.component_metadata)
+        if self.component_metadata is not None:
+            self.component_metadata = SourceMetadataFields.readonly_snapshot(
+                self.component_metadata
+            )
         self._identity = (
             self.path,
             _component_metadata_identity(self.component_metadata),
@@ -147,21 +144,10 @@ class SourceImageIdentity:
         if fallback.component_metadata is None:
             return self.component_metadata
 
-        merged = dict(self.component_metadata)
-        for component in AllComponents:
-            if source_component_metadata_value(merged, component) is not None:
-                continue
-            fallback_value = source_component_metadata_raw_value(
-                fallback.component_metadata,
-                component,
-            )
-            if fallback_value is not None:
-                merged[component.value] = fallback_value
-        if self.filename_extension is None:
-            extension = fallback.filename_extension
-            if extension is not None:
-                merged["extension"] = extension
-        return MappingProxyType(merged)
+        merged = SourceMetadataFields.with_missing_from(
+            self.component_metadata, fallback.component_metadata
+        )
+        return SourceMetadataFields.readonly_snapshot(merged)
 
     def with_parsed_path_components(
         self,
@@ -1505,18 +1491,15 @@ class SourcePlaneIndexedMetadata:
         self,
         plane_index: int,
     ) -> SourceComponentMetadata:
-        metadata = {
-            **dict(self.scalar_metadata),
-            SOURCE_PLANE_INDEX_FIELD: str(plane_index),
-            SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
-        }
-        return MappingProxyType(
-            with_source_component_metadata(
-                metadata,
-                AllComponents.Z_INDEX,
-                self.z_index_for_plane(plane_index),
-            )
+        metadata = SourceMetadataFields.with_fields(
+            SourceMetadataFields.composition_snapshot(self.scalar_metadata),
+            {
+                SOURCE_PLANE_INDEX_FIELD: str(plane_index),
+                SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
+            },
+            components=((AllComponents.Z_INDEX, self.z_index_for_plane(plane_index)),),
         )
+        return SourceMetadataFields.readonly_snapshot(metadata)
 
     def z_index_for_plane(self, plane_index: int) -> int:
         scalar_z_index = source_component_metadata_value(
@@ -1585,7 +1568,9 @@ def common_source_component_metadata(
     }
     if not common_metadata:
         return None
-    return MappingProxyType(common_metadata)
+    return SourceMetadataFields.readonly_snapshot(
+        SourceMetadataFields.derived_mapping(consensus, common_metadata)
+    )
 
 
 def source_component_metadata_consensus(
@@ -1594,7 +1579,9 @@ def source_component_metadata_consensus(
     """Return every metadata field, nulling values that differ between planes."""
 
     metadata_values = tuple(
-        dict(metadata) for metadata in metadata_by_plane if metadata is not None
+        SourceMetadataFields.composition_snapshot(metadata)
+        for metadata in metadata_by_plane
+        if metadata is not None
     )
     if len(metadata_values) != len(metadata_by_plane):
         return None
@@ -1618,7 +1605,17 @@ def source_component_metadata_consensus(
             and all(value == present_values[0] for value in present_values)
             else None
         )
-    return MappingProxyType(consensus)
+    owner = (
+        metadata_values[0]
+        if all(
+            isinstance(metadata, OwnedSourceMetadataFields)
+            for metadata in metadata_values
+        )
+        else {}
+    )
+    return SourceMetadataFields.readonly_snapshot(
+        SourceMetadataFields.derived_mapping(owner, consensus)
+    )
 
 
 def common_source_path(paths: Sequence[str | None]) -> str | None:

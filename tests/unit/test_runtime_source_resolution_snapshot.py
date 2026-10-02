@@ -11,9 +11,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     DeclaredSourceMetadataRecord,
-    ResolvedSourceMetadataRecord,
     SourceBindingMatchedImageSet,
-    SourceMetadataRecord,
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
@@ -22,7 +20,10 @@ from openhcs.core.source_bindings import (
     SourceBindingRuntimeContext,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
+from openhcs.core.source_metadata import (
+    ORIGINAL_SOURCE_METADATA_FIELD,
+    ResolvedSourceMetadataRecord,
+)
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.microscopes.microscope_interfaces import FilenameParseResult
@@ -72,7 +73,7 @@ def snapshot(cache, source_projection, parser, rules=()):
 
 def test_declared_record_resolves_live_parser_and_nested_metadata():
     nested = {"Plate": "before"}
-    record = SourceMetadataRecord.from_mapping(
+    record = DeclaredSourceMetadataRecord.from_mapping(
         {ORIGINAL_SOURCE_METADATA_FIELD: nested, "site": 8}
     )
     assert isinstance(record, DeclaredSourceMetadataRecord)
@@ -218,19 +219,19 @@ def test_snapshot_rejects_nested_values_outside_existing_metadata_grammar():
 
 
 def test_declared_and_resolved_records_preserve_family_value_identity():
-    declared = SourceMetadataRecord.from_mapping({"site": 1, "well": "A01"})
-    resolved = ResolvedSourceMetadataRecord.from_resolved_mapping(
-        {"site": 1, "well": "A01"}
-    )
+    declared = DeclaredSourceMetadataRecord.from_mapping({"site": 1, "well": "A01"})
+    resolved = ResolvedSourceMetadataRecord.from_mapping({"site": 1, "well": "A01"})
     assert declared == resolved
     assert hash(declared) == hash(resolved)
     assert hash(declared) == hash((declared.fields,))
-    assert declared != SourceMetadataRecord.from_mapping({"site": 2, "well": "A01"})
+    assert declared != DeclaredSourceMetadataRecord.from_mapping(
+        {"site": 2, "well": "A01"}
+    )
     nested = {ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}}
     with pytest.raises(TypeError):
-        hash(SourceMetadataRecord.from_mapping(nested))
+        hash(DeclaredSourceMetadataRecord.from_mapping(nested))
     with pytest.raises(TypeError):
-        hash(ResolvedSourceMetadataRecord.from_resolved_mapping(nested))
+        hash(ResolvedSourceMetadataRecord.from_mapping(nested))
 
 
 def test_snapshot_owns_position_and_projection_map_views():
@@ -302,3 +303,30 @@ def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned)
     rebuilt = snapshot(restored, source_projection, parser)
     assert rebuilt is not context
     assert rebuilt.metadata_for_path(PATH) == context.metadata_for_path(PATH)
+
+
+def test_durable_workspace_mapping_still_runs_selector_parser_and_rule_fallbacks():
+    from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataRecord
+
+    metadata = DurableSourceMetadata.from_mapping({"site": 8, "literal": "kept"})
+    parser = CountingParser()
+    context = SourcePatternResolutionContext.from_sources(
+        parser=parser,
+        source_paths_by_virtual_path={PATH: "/source/image.tif"},
+        source_metadata_by_path={PATH: metadata},
+        metadata_rules=(
+            MetadataExtractionRule(
+                source=MetadataSource.FILE_NAME, pattern=r"(?P<Plate>A01)"
+            ),
+        ),
+    )
+    assert not isinstance(metadata, SourceMetadataRecord)
+    assert isinstance(
+        context.source_metadata_by_path[PATH], DeclaredSourceMetadataRecord
+    )
+    resolved = context.metadata_for_path(PATH)
+    assert resolved["site"] == 8
+    assert resolved["well"] == "A01"
+    assert resolved["literal"] == "kept"
+    assert resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "A01"
+    assert parser.calls == [PATH]

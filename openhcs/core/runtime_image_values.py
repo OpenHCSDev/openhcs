@@ -47,6 +47,8 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.core.source_metadata import (
     SourceMetadataScalar,
+    OwnedSourceMetadataFields,
+    SourceMetadataFields,
     SourceMetadataValue,
     SourceVoxelSpacing,
     SourceVoxelSpacingFields,
@@ -1884,7 +1886,9 @@ class _ImagePayloadMetadataComposer:
         """Return source metadata shared by the composed payload."""
         metadata_values = tuple(values)
         metadata_by_plane = tuple(
-            dict(metadata.source_component_metadata)
+            SourceMetadataFields.composition_snapshot(
+                metadata.source_component_metadata
+            )
             for metadata in metadata_values
             if metadata.source_component_metadata is not None
         )
@@ -1915,7 +1919,21 @@ class _ImagePayloadMetadataComposer:
             )
         if not common_metadata:
             return None
-        return MappingProxyType(common_metadata)
+        owner = (
+            metadata_by_plane[0]
+            if metadata_by_plane
+            and all(
+                isinstance(metadata, OwnedSourceMetadataFields)
+                for metadata in metadata_by_plane
+            )
+            else {}
+        )
+        derived = SourceMetadataFields.derived_mapping(owner, common_metadata)
+        return (
+            derived
+            if isinstance(derived, OwnedSourceMetadataFields)
+            else MappingProxyType(derived)
+        )
 
     @staticmethod
     def common_metadata_value(

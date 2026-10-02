@@ -3,7 +3,7 @@ from types import MappingProxyType
 import pytest
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.source_binding_selection import SourceMetadataRecord
+from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
 from openhcs.core.source_matching import (
     ORIGINAL_SOURCE_METADATA_FIELD,
     semantic_source_metadata_value,
@@ -31,7 +31,7 @@ def test_metadata_queries_observe_scalar_mutation(readonly_outer):
 
 
 @pytest.mark.parametrize(
-    "view", (dict, MappingProxyType, SourceMetadataRecord.from_mapping)
+    "view", (dict, MappingProxyType, DeclaredSourceMetadataRecord.from_mapping)
 )
 def test_literal_queries_observe_nested_original_mutation(view):
     original = {"Well": "LiteralA"}
