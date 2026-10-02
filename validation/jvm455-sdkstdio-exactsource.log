@@ -1,0 +1,4 @@
+Running as unit: dewey-jvm455-sdkstdio-exactsource.scope; invocation ID: 1a8b1a83945343da917b8d8f17ba3fe1
+SDK_STDIO_DECLARED_RESOURCE 4041075 0 False
+SDK_STDIO_DECLARED_RESOURCE 4041110 1 True
+BOUNDED_SOURCE peak_aggregate_rss_kib=387788 elapsed_seconds=7.634 returncode=0 reason=None

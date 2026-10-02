@@ -7,7 +7,8 @@ Owner and current checkpoint
 Dewey owns MCP process lifetime. Parent owns installed qualification. Base is
 merged main b68029c0cfc017c5a4b086bc607bff3c0bec6c01. Root394 compiler/runtime,
 PR404 result publication and PR454 viewer presentation files are untouched.
-This working draft has not yet qualified a live JVM shutdown.
+Production checkpoint is d3a07da38. This draft has not yet qualified a live JVM
+shutdown. Addresses #455 without auto-closing its installed acceptance.
 
 Original witness
 ----------------
@@ -60,15 +61,81 @@ basicpy-live-candidate backing, not a guessed source checkout. Import, inheritan
 call, write and decision sites were read semantically. Dynamic import effects,
 callback timing and JVM internals are not established by static parsing.
 The first census invocation used the wrong ``measure_source`` signature;
-its TypeError is retained here, not presented as a completed audit.
+its TypeError is retained here, not presented as a completed audit. The full
+before/after closure in ``validation/jvm455-owner-closure.log`` also includes
+the actual external MCP SDK root, absent from the first root list. Before source
+comes from the exact Git base; after is the current production patch. Dependency
+sources are readonly and unchanged. Static parse completion does not prove all
+dynamic resolution or actual JVM shutdown.
+The completed census parses 1177 modules per snapshot: OpenHCS 703, PolyStore
+63, pyqt-reactive 193, zmqruntime 32, JPype 31, scyjava 11, imagej 7, MCP SDK
+110 and ObjectState 27. Zero actual parse omissions in either snapshot.
+
+Bounded source qualification
+-----------------------------
+
+One CPU, aggregate RSS below 512 MiB and wall below 60 seconds for each serial
+shard, using the original scope monitor and readonly paired Python3.12:
+
+* ``jvm455-lifetime-first.log``: 11 PASS, 472832 KiB, 11.587 seconds. Six new
+  lifetime cases and five unchanged established-session/no-replay controls.
+  Tests exercise original context detachment/gateway disposal, main-thread JVM
+  call, independent registered resource, cooperative MI close, duplicate callback
+  registration/idempotence and propagated failure. Off-main close is rejected
+  before resource release. Real child processes retain exact EOF exit 0 and 7;
+  a stuck child reaches SIGKILL using unchanged two-second budgets.
+* ``jvm455-resident-first.log``: 1 PASS, 467588 KiB, 7.659 seconds. Two real SDK
+  connections reuse the resident server; disconnect never releases the process
+  resource. Original server closure releases it once on main.
+* ``jvm455-sdkstdio-exactsource.log``: 2 PASS, 387788 KiB, 7.634 seconds. Real
+  FastMCP/stdio SDK initialize, two successful health requests, EOF and registered
+  cleanup, then exact child exit 0 (success) or 1 (original cleanup error).
+  Child import root is explicitly derived from original runtime import authority.
+
+The two earlier standalone SDK attempts remain RED. First omitted original
+native ABI admission and failed import. The second launched its arbitrary test
+script through a spec which, correctly, does not carry PYTHONPATH; it therefore
+loaded installed source rather than the owned patch, exited 0 but did not write
+the required resource-close marker. The corrected test proves its child source
+identity. No production fallback, assertion weakening or installed-package edit
+was used to repair either harness failure.
 
 Acceptance still pending
 -------------------------
 
-Bounded source controls must cover declared callback closure on the main thread,
-cooperative close, error propagation/idempotence, ordinary EOF versus stuck-child
-escalation and exact child exit status. Parent installed qualification must compare
+Parent installed qualification must compare
 a fresh health-only session and one distinct read-only physical query session,
 then close each and retain exact exit codes and complete diagnostics. Shared Fiji
 is reused with downloads disabled. No biological/native execution or viewer launch
 is part of this acceptance.
+
+``docs/validation/mcp-jvm-lifetime-455-20261002/qualify.py`` is ready for parent
+invocation with explicit installed root and a fresh evidence directory. Invoke
+once without ``--plate-path`` for health-only, and separately with the approved
+readonly physical plate for inventory. It uses the original public dev client,
+generic ten-second request idle policy, no resident adoption, no poller and no
+mutations. Complete diagnostics, original requests/replies and exact child exit
+are retained even if a request or shutdown assertion fails. Parent retains the
+shared Fiji/no-download and serialized live-resource admission policy.
+
+Original scoped R0
+-------------------
+
+``validation/jvm455-pinned-r0-first.log.gz``: PASS, zero positive deltas,
+180980 KiB aggregate RSS, 15.974 seconds. Unchanged original tool comes from
+agent-comms Git 3b03785f45df2ef5dc62ba6aed99294192ecbb01, with actual Python3.14
+and readonly basicpy-live-candidate metaclass backing. Exact comparison is
+main b68029c0cfc017c5a4b086bc607bff3c0bec6c01 to production
+d3a07da381df6bf66b4563ed08667960dd43af9b, scope ``openhcs``; two changed
+production files. This is scoped R0, not global FULL/R1 qualification. Later
+tests and evidence do not change production. No completed453/443 gate rerun.
+
+Storage and remaining blocker
+------------------------------
+
+Existing WT and readonly dependency environment reused. Owned scratch totals
+about 140 KiB across lifetime/resident/corrected-SDK cases; failed marker evidence
+is preserved. No cleanup, new worktree, environment, download or installed byte
+change. Source ownership and bounded controls are ready; live health-only versus
+physical inventory/JVM-close acceptance, exact child exits and fatal-diagnostic
+absence remain parent-owned and unqualified by these source controls.
