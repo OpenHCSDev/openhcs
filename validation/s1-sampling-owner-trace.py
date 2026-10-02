@@ -2,8 +2,9 @@
 
 from pathlib import Path
 import sys
+import subprocess
 
-from nominal_refactor_advisor.ast_tools import parse_python_module_roots
+from nominal_refactor_advisor.ast_tools import SourceModule, parse_python_module_roots
 from nominal_refactor_advisor.semantic_inspection import inspect_modules
 
 
@@ -25,6 +26,17 @@ roots = (
 print("NRA", __import__("nominal_refactor_advisor").__file__, flush=True)
 print("ROOTS", *(str(root) for root in roots), sep="\n", flush=True)
 modules = parse_python_module_roots(roots, use_parse_cache=False, parse_workers=1)
+if len(sys.argv) > 2:
+    revision = sys.argv[2]
+    print("EXACT SOURCE REVISION", revision, flush=True)
+    modules = [
+        SourceModule.from_path_identity(
+            module.module_path_identity,
+            subprocess.check_output(("git", "-C", str(repo), "show",
+                                     revision + ":" + module.path.relative_to(repo).as_posix()), text=True),
+        ).parse() if module.path.is_relative_to(repo) else module
+        for module in modules
+    ]
 print("PARSED", len(modules), flush=True)
 report = inspect_modules(modules, findings=())
 for module in report.modules:
