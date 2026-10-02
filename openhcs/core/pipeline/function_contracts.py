@@ -1,6 +1,6 @@
 """Function-level artifact contract decorators for the pipeline compiler."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from enum import Enum
 from functools import lru_cache
@@ -34,6 +34,8 @@ from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
     VariableComponentStackRequirement,
@@ -128,6 +130,35 @@ class ObjectLabelInputExecutionMode(str, Enum):
         return self is self.FULL_STACK or (
             self is self.MATCH_IMAGE_STACK and image_stack_required
         )
+
+
+    def invocation_kwargs(
+        self,
+        kwargs: Mapping[str, Any],
+        *,
+        execution_mode: ImagePayloadExecutionMode,
+        image_projection: RuntimePlaneAxisValueProjection | None,
+        runtime_projection: RuntimePlaneAxisValueProjection | None,
+        semantic_controls: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Match scalar images to their declared singleton runtime root.
+
+        Explicit full-stack label consumers keep their domain. Matching labels
+        can consume a singleton root only after the image's final execution
+        mode and retained plane projection have been resolved.
+        """
+        if (
+            self is self.MATCH_IMAGE_STACK
+            and execution_mode is ImagePayloadExecutionMode.NATURAL
+            and image_projection is None
+        ):
+            if runtime_projection is not None and runtime_projection.axis_size == 1:
+                from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+                kwargs = RuntimeSliceProjection.kwargs_for_slice(
+                    kwargs, runtime_projection.selected_plane(0)
+                )
+        return {**kwargs, **semantic_controls}
 
 
 def _artifact_spec_from_output_declaration(
