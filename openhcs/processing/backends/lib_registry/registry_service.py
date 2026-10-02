@@ -7,6 +7,7 @@ Follows OpenHCS generic solution principle - automatically adapts to new registr
 
 import inspect
 import logging
+import os
 import subprocess
 import sys
 import tempfile
@@ -20,7 +21,12 @@ from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
+from openhcs.core.callable_contract import CallableProjection
 from openhcs.core.function_reference import ResolvedRegistryFunction
+from openhcs.core.processing_preparation import (
+    CallablePreparation,
+    PreparationCacheBatch,
+)
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -131,7 +137,7 @@ class RegistryService:
     def prepare_in_current_process(
         cls, *, status_callback: RegistryPreparationCallback | None = None
     ) -> Dict[str, FunctionMetadata]:
-        """Discover the catalog, leaving kernel readiness to selected compilation."""
+        """Prepare registered declarations before publishing execution readiness."""
 
         emit_status = status_callback or logger.debug
         emit_status("Discovering registered callables")
@@ -139,6 +145,23 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
+        callables = tuple(
+            target
+            for metadata in cls._metadata_cache.values()
+            for target in CallableProjection.from_callable(metadata.func).prepare_targets()
+        )
+        emit_status("Preparing registered kernel caches")
+        PreparationCacheBatch.from_callables(callables).populate_child_caches(
+            max_workers=os.cpu_count() or 1,
+            status_callback=emit_status,
+        )
+        for func in callables:
+            preparation = CallablePreparation.from_callable(func)
+            preparation.prepare()
+            emit_status(
+                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
+            )
+        emit_status(f"Registered kernels ready ({len(callables)} callables)")
         emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache
 
@@ -237,12 +260,12 @@ class RegistryService:
         status_callback: RegistryPreparationCallback | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Prepare catalog metadata in a dedicated interpreter main thread."""
+        """Prepare registered declarations in a dedicated interpreter main thread."""
 
         if cancellation is not None and cancellation.requested():
             raise CancelledError
         status_callback = status_callback or logger.debug
-        status_callback("Preparing function catalog metadata")
+        status_callback("Preparing function catalog and declared kernels")
 
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (
