@@ -112,7 +112,12 @@ class SourceImageObjectLabelBuildRequest:
         )
 
     def plane_semantics(self) -> RuntimePlaneAxisValueProjection | None:
-        """Return the exact source-plane axis declared for these labels."""
+        """Validate the object-domain projection declared by this producer.
+
+        Source-image storage axes retain acquisition provenance; they do not
+        declare whether object IDs identify a whole volume or separate planes.
+        Saved label-image admission supplies its projection at the ingress owner.
+        """
         if self.domain_scope is ObjectLabelDomainScope.PAYLOAD:
             if self.plane_projection is not None:
                 raise ValueError(
@@ -129,21 +134,6 @@ class SourceImageObjectLabelBuildRequest:
                 f"or None; got {self.domain_scope!r}."
             )
         projection = self.plane_projection
-        metadata = self.metadata
-        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
-            metadata.plane_axis, metadata.source_provenance,
-        )
-        if declared_projection is not None:
-            if projection is None:
-                projection = declared_projection
-            elif (
-                projection.axis is not declared_projection.axis
-                or projection.axis_size != declared_projection.axis_size
-            ):
-                raise ValueError(
-                    "Object-label plane projection conflicts with the source-image "
-                    "axis declaration."
-                )
         if projection is None:
             if self.domain_scope is ObjectLabelDomainScope.PLANE:
                 raise ValueError(
@@ -151,6 +141,19 @@ class SourceImageObjectLabelBuildRequest:
                     "projection."
                 )
             return None
+        metadata = self.metadata
+        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+            metadata.plane_axis, metadata.source_provenance,
+        )
+        if declared_projection is not None:
+            if (
+                projection.axis is not declared_projection.axis
+                or projection.axis_size != declared_projection.axis_size
+            ):
+                raise ValueError(
+                    "Object-label plane projection conflicts with the source-image "
+                    "axis declaration."
+                )
         label_array = np.asarray(self.labels)
         projection.validate_shape(
             label_array.shape,

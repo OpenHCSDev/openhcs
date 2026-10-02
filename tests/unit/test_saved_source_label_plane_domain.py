@@ -34,6 +34,13 @@ def _source(labels, *, axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_count=None, sp
     ).payload_with(labels, None)
 
 
+def _saved_label_input(source):
+    spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
+    return RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
+        RuntimeArtifactInputRequest(spec=spec, value=source)
+    )
+
+
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     labels = np.zeros((2, 8, 9), dtype=np.int32)
@@ -76,16 +83,14 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
 def test_singleton_runtime_slice_is_not_a_physical_volume():
     labels = np.zeros((1, 6, 7), dtype=np.int32)
     labels[0, 1:4, 2:5] = 61
-    value = SourceImageObjectLabelBuildRequest(image=_source(labels), labels=labels).payload()
+    value = _saved_label_input(_source(labels))
     assert value.domain.declared_object_id_domains == ((61,),)
     assert value.measurement_planes()[0].labels.shape == (6, 7)
 
 
 def test_declared_runtime_planes_can_each_contain_a_genuine_calibrated_volume():
     labels = np.ones((2, 3, 6, 7), dtype=np.int32)
-    value = SourceImageObjectLabelBuildRequest(
-        image=_source(labels, spacing=(2.0, 1.3556, 1.3556)), labels=labels,
-    ).payload()
+    value = _saved_label_input(_source(labels, spacing=(2.0, 1.3556, 1.3556)))
     assert tuple(plane.labels.shape for plane in value.measurement_planes()) == ((3, 6, 7), (3, 6, 7))
     assert value.parent_image_source_voxel_spacing.spacing_for_ndim(3) == (2.0, 1.3556, 1.3556)
 
@@ -108,16 +113,25 @@ def test_undeclared_volume_and_explicit_payload_override_are_not_guessed_planar(
 def test_declared_axis_rejects_missing_or_conflicting_cardinality(plane_count):
     labels = np.ones((2, 6, 7), dtype=np.int32)
     with pytest.raises(ValueError):
-        SourceImageObjectLabelBuildRequest(image=_source(labels, plane_count=plane_count), labels=labels).payload()
+        _saved_label_input(_source(labels, plane_count=plane_count))
 
 
 def test_declared_axis_rejects_payload_wide_ids_and_mismatched_label_geometry():
     labels = np.ones((2, 6, 7), dtype=np.int32)
     source = _source(labels)
+    projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+        source.metadata.plane_axis, source.metadata.source_provenance,
+    )
     with pytest.raises(ValueError, match="per-plane domains"):
-        SourceImageObjectLabelBuildRequest(image=source, labels=labels, declared_object_ids=(1,)).payload()
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=labels, declared_object_ids=(1,),
+            plane_projection=projection,
+        ).payload()
     with pytest.raises(ValueError, match="spatial shape"):
-        SourceImageObjectLabelBuildRequest(image=source, labels=np.ones((2, 5, 7), dtype=np.int32)).payload()
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=np.ones((2, 5, 7), dtype=np.int32),
+            plane_projection=projection,
+        ).payload()
 
 
 def test_explicit_projection_conflicting_with_source_declaration_is_rejected():
@@ -143,12 +157,18 @@ class CalibratedSavedLabels(PhysicalCalibrationRequired, SourceImageObjectLabelB
 
 def test_new_calibrated_leaf_executes_cooperative_admission_and_plane_building():
     labels = np.ones((2, 6, 7), dtype=np.int32)
-    value = CalibratedSavedLabels(image=_source(labels), labels=labels).payload()
+    source = _source(labels)
+    projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+        source.metadata.plane_axis, source.metadata.source_provenance,
+    )
+    value = CalibratedSavedLabels(
+        image=source, labels=labels, plane_projection=projection,
+    ).payload()
     assert value.domain.scope is ObjectLabelDomainScope.PLANE
     assert len(value.measurement_planes()) == 2
     with pytest.raises(ValueError, match="Physical scalar pixel size requires"):
-        CalibratedSavedLabels(image=_source(labels, spacing=()), labels=labels).payload()
-    assert SourceImageObjectLabelBuildRequest(image=_source(labels, spacing=()), labels=labels).payload().domain.scope is ObjectLabelDomainScope.PLANE
+        CalibratedSavedLabels(image=_source(labels, spacing=()), labels=labels, plane_projection=projection).payload()
+    assert _saved_label_input(_source(labels, spacing=())).domain.scope is ObjectLabelDomainScope.PLANE
 
 
 class PairedSourceAdmission:
@@ -178,3 +198,98 @@ def test_source_constructor_admits_a_new_cooperative_projection_capability(axis)
     assert RuntimePlaneAxisValueProjection.from_source_declaration(axis, bigger.metadata.source_provenance).axis_size == 3
     # Absence is a declaration, not inferred from three source records.
     assert PairedSourceProjection.from_source_declaration(None, bigger.metadata.source_provenance) is None
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_produced_volume_global_object_domain_is_independent_of_source_plane_axis(axis):
+    labels = np.ones((2, 6, 7), dtype=np.int32)
+    source = _source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556))
+    value = SourceImageObjectLabelBuildRequest(
+        image=source,
+        labels=labels,
+        declared_object_count=2,
+        declared_object_ids=(1, 2),
+    ).payload()
+
+    assert value.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert value.domain.declared_object_count == 2
+    assert value.domain.declared_object_ids == (1, 2)
+    assert value.domain.declared_object_id_domains == ()
+    assert value.plane_axis is None
+    assert len(value.measurement_planes()) == 1
+    np.testing.assert_array_equal(value.measurement_planes()[0].labels, labels)
+    assert value.source_provenance.identity() == source.metadata.source_provenance.identity()
+    assert value.parent_image_source_voxel_spacing == source.metadata.source_voxel_spacing
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_produced_volume_without_explicit_ids_keeps_one_global_present_id_domain(axis):
+    labels = np.zeros((2, 6, 7), dtype=np.int32)
+    labels[0, 1:3, 2:4] = 29
+    labels[1, 2:4, 3:5] = 106
+    value = SourceImageObjectLabelBuildRequest(
+        image=_source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556)),
+        labels=labels,
+    ).payload()
+
+    assert value.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert value.domain.declared_object_ids == (29, 106)
+    assert value.domain.declared_object_id_domains == ()
+    assert value.plane_axis is None
+    assert len(value.measurement_planes()) == 1
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_explicit_plane_domain_still_requires_projection_and_rejects_global_count(axis):
+    labels = np.ones((2, 6, 7), dtype=np.int32)
+    source = _source(labels, axis=axis)
+    with pytest.raises(ValueError, match="requires an exact plane projection"):
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=labels, domain_scope=ObjectLabelDomainScope.PLANE,
+        ).payload()
+    projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+        source.metadata.plane_axis, source.metadata.source_provenance,
+    )
+    with pytest.raises(ValueError, match="per-plane domains"):
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=labels, domain_scope=ObjectLabelDomainScope.PLANE,
+            plane_projection=projection, declared_object_count=1,
+        ).payload()
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
+    from openhcs.core.steps.function_runtime import NumpyArrayObjectLabelOutputValueContextStrategy
+
+    labels = np.zeros((2, 6, 7), dtype=np.int32)
+    labels[0, 1:3, 2:4] = 29
+    labels[1, 2:4, 3:5] = 106
+    source = _source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556))
+    strategy = NumpyArrayObjectLabelOutputValueContextStrategy()
+    volume = strategy.contextualize(source, labels, None)
+    assert volume.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert volume.domain.declared_object_ids == (29, 106)
+    np.testing.assert_array_equal(volume.measurement_planes()[0].labels, labels)
+    projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+        source.metadata.plane_axis, source.metadata.source_provenance,
+    )
+    planes = strategy.contextualize(source, labels, projection)
+    assert planes.domain.scope is ObjectLabelDomainScope.PLANE
+    assert planes.domain.declared_object_id_domains == ((29,), (106,))
+    assert planes.plane_axis is axis
+    for index, plane in enumerate(planes.measurement_planes()):
+        np.testing.assert_array_equal(plane.labels, labels[index])
+    assert planes.source_provenance.identity() == volume.source_provenance.identity()
+
+
+def test_saved_ingress_preserves_already_typed_object_domain_and_identity():
+    labels = np.ones((2, 6, 7), dtype=np.int32)
+    source = _source(labels, spacing=(2.0, 1.3556, 1.3556))
+    produced = SourceImageObjectLabelBuildRequest(
+        image=source, labels=labels, declared_object_count=1,
+    ).label_set(name="saved_labels")
+    admitted = _saved_label_input(produced)
+    assert admitted is produced
+    assert admitted.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert admitted.domain.declared_object_count == 1
+    np.testing.assert_array_equal(admitted.measurement_planes()[0].labels, labels)
