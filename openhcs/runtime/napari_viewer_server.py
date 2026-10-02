@@ -4987,7 +4987,7 @@ class NapariWindowPresentationControlMessageAction(NapariPresentationControlMess
 
     def apply_presentation(self, server, request):
         control = NapariNativeWindowPresentation(server.viewer.window.qt_viewer.window())
-        control.apply(request)
+        request.apply_to(control)
         return control.snapshot()
 
 

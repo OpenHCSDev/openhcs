@@ -14,7 +14,7 @@ from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, ClassVar, Self, TypeAlias, TypeVar, cast
+from typing import TYPE_CHECKING, Annotated, ClassVar, Self, TypeAlias, TypeVar, cast
 
 from annotated_types import Gt, Le
 
@@ -94,6 +94,9 @@ from openhcs.runtime.viewer_controls import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.serialization.json import JsonObject, JsonScalar, JsonValue, to_jsonable
+
+if TYPE_CHECKING:
+    from openhcs.runtime.napari_streaming_handlers import NapariNativeWindowPresentation
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -245,6 +248,13 @@ class ViewerNativeWindowControlOptions(ViewerProjectionRecord):
 
     geometry: ViewerNativeWindowGeometry | None = None
     focus: bool = False
+
+    def apply_to(self, presentation: NapariNativeWindowPresentation) -> None:
+        """The declaration owns which requested native effects run and their order."""
+        if self.geometry is not None:
+            presentation.position(self.geometry)
+        if self.focus:
+            presentation.focus()
 
 
 @dataclass(frozen=True)

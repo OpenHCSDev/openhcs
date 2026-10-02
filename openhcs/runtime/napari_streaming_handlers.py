@@ -38,7 +38,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerComponentValueOrdering,
     ViewerSettlePhase,
     ViewerSettleProgress,
-    ViewerNativeWindowControlOptions,
     ViewerNativeWindowGeometry,
     ViewerNativeWindowState,
 )
@@ -66,25 +65,21 @@ class NapariNativeWindowPresentation:
         self.window.raise_()
         self.window.activateWindow()
 
-    def apply(self, request: ViewerNativeWindowControlOptions) -> None:
+    def position(self, geometry: ViewerNativeWindowGeometry) -> None:
         from qtpy.QtCore import QRect
 
-        if request.geometry is not None:
-            geometry = request.geometry
-            rectangle = QRect(geometry.x, geometry.y, geometry.width, geometry.height)
-            screen = self.window.screen()
-            if screen is None or not screen.availableGeometry().contains(rectangle):
-                raise ValueError("Window geometry must fit the current native screen.")
-            if (
-                geometry.width < self.window.minimumWidth()
-                or geometry.height < self.window.minimumHeight()
-            ):
-                raise ValueError("Window geometry is smaller than the native minimum size.")
-            if self.window.isMaximized() or self.window.isMinimized():
-                self.window.showNormal()
-            self.window.setGeometry(rectangle)
-        if request.focus:
-            self.focus()
+        rectangle = QRect(geometry.x, geometry.y, geometry.width, geometry.height)
+        screen = self.window.screen()
+        if screen is None or not screen.availableGeometry().contains(rectangle):
+            raise ValueError("Window geometry must fit the current native screen.")
+        if (
+            geometry.width < self.window.minimumWidth()
+            or geometry.height < self.window.minimumHeight()
+        ):
+            raise ValueError("Window geometry is smaller than the native minimum size.")
+        if self.window.isMaximized() or self.window.isMinimized():
+            self.window.showNormal()
+        self.window.setGeometry(rectangle)
 
     def snapshot(self) -> ViewerNativeWindowState:
         geometry = self.window.geometry()
