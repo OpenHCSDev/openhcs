@@ -18,6 +18,11 @@ source_ref = "94ee1079d22540f9b5ed48b69481d7e7ab51095d"
 receipt_ref = "dd3242d01fc74203ef077e88a7d18a4cc81f9e1d"
 artifact_root = Path(sys.argv[1]).resolve()
 wheel, = (artifact_root / "wheels").glob("*.whl")
+target = Path(sys.argv[2]).resolve() if len(sys.argv) == 3 else None
+if target is not None:
+    assert target != artifact_root and target.is_relative_to(artifact_root)
+    assert target.is_dir()
+    assert not list(target.rglob("*.pth")), "Unexpected installed path injection"
 
 subprocess.run(
     ["git", "diff", "--exit-code", source_ref, "--", "openhcs", "benchmark",
@@ -45,6 +50,7 @@ for name in tracked:
 
 members = []
 matched = set()
+installed_members = 0
 with zipfile.ZipFile(wheel) as archive:
     names = archive.namelist()
     assert len(names) == len(set(names)), "Duplicate wheel members"
@@ -53,6 +59,15 @@ with zipfile.ZipFile(wheel) as archive:
         name: (digest, size)
         for name, digest, size in csv.reader(io.StringIO(archive.read(record_name).decode()))
     }
+    installed_record = None
+    if target is not None:
+        installed_record = {
+            name: (digest, size)
+            for name, digest, size in csv.reader(
+                io.StringIO((target / record_name).read_text())
+            )
+        }
+        assert (target / Path(record_name).parent / "INSTALLER").read_text() == "pip\n"
     assert set(record) == set(names), "Wheel RECORD/member mismatch"
     for name in names:
         data = archive.read(name)
@@ -64,6 +79,10 @@ with zipfile.ZipFile(wheel) as archive:
             record_hash = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).decode().rstrip("=")
             assert recorded_hash == f"sha256={record_hash}", name
             assert recorded_size == str(len(data)), name
+            if target is not None:
+                assert (target / name).read_bytes() == data, name
+                assert installed_record[name] == record[name], name
+                installed_members += 1
         tracked_source = name in tracked
         if tracked_source:
             assert (source / name).read_bytes() == data, name
@@ -78,6 +97,10 @@ with zipfile.ZipFile(wheel) as archive:
 
 with wheel.open("rb") as stream:
     wheel_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+if target is not None:
+    direct_url = json.loads((target / Path(record_name).parent / "direct_url.json").read_text())
+    assert direct_url["url"] == wheel.as_uri()
+    assert direct_url["archive_info"]["hashes"]["sha256"] == wheel_sha256
 print(json.dumps({
     "source_ref": source_ref,
     "receiving_ref": receipt_ref,
@@ -92,5 +115,12 @@ print(json.dumps({
     "record_verified": True,
     "generated_native_members": generated_native,
     "members": members,
-    "installed": False,
+    "installed": target is not None,
+    "installed_target": None if target is None else str(target),
+    "installed_original_members_equal": installed_members,
+    "installed_metadata_byte_equal": target is not None,
+    "installed_record_policy": (
+        "Original payload hashes/sizes equal; pip rewrites RECORD and adds installer metadata/scripts"
+        if target is not None else None
+    ),
 }, indent=2, sort_keys=True))
