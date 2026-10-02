@@ -1,0 +1,70 @@
+{
+  "results": [
+    {
+      "sample": "baseline-ordinary-v1",
+      "scope": "Conservative entire pipeline total interval ending receipt completion; includes compilation/job/client closure, excludes prior READY. Does NOT prove precise step/exclusiveJIT attribution; later-overwritten files not recoverable. Read-only cache metadata snapshot.",
+      "start": 1790978744.0957837,
+      "end": 1790978753.3923476,
+      "cache_writes": [
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_rwc_reductions-255.py312.2.nbc",
+          "mtime": 1790978749.380759,
+          "bytes": 59172,
+          "sha256": "aab13e790a01f4571dea6891c8998d07eb6075a5cff5063bcf677735ba85c465"
+        },
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_rwc_reductions-255.py312.nbi",
+          "mtime": 1790978749.380555,
+          "bytes": 3104,
+          "sha256": "a14a5e31903662ce3a4b6c2ae6e179ad40bebeffc4d97262a20e9304eca0c5fb"
+        },
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_threshold_reductions-174.py312.2.nbc",
+          "mtime": 1790978749.207735,
+          "bytes": 106674,
+          "sha256": "a3d79a4a1bbf7128f856a5a2800b0a1456baf6a464ae558174066d9a8bbe9144"
+        },
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_threshold_reductions-174.py312.nbi",
+          "mtime": 1790978749.207488,
+          "bytes": 3054,
+          "sha256": "10ace4cea33845cd839100e0459215ea898cd688adde9d871d82875d86d34e2f"
+        },
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_correlation_reductions-129.py312.1.nbc",
+          "mtime": 1790978748.8160837,
+          "bytes": 86014,
+          "sha256": "36e52d951d9e2e91d74bd5dd82060717db112a92a58ba659d3f8c949c8795b25"
+        },
+        {
+          "path": "/tmp/openhcs-source-identity-shared-cache-20260930/cellprofiler_9b93a47dc3d04890bebd726a87c27767fd222d1c/colocalization_costes.object_colocalization_correlation_reductions-129.py312.nbi",
+          "mtime": 1790978748.815894,
+          "bytes": 1830,
+          "sha256": "bd78e885dac9a7bde821c7d2d005cc7293ff5fc3754a5b1950c76542471f0769"
+        }
+      ]
+    },
+    {
+      "sample": "baseline-ordinary-v2",
+      "scope": "Conservative entire pipeline total interval ending receipt completion; includes compilation/job/client closure, excludes prior READY. Does NOT prove precise step/exclusiveJIT attribution; later-overwritten files not recoverable. Read-only cache metadata snapshot.",
+      "start": 1790979757.2532153,
+      "end": 1790979764.9769409,
+      "cache_writes": []
+    },
+    {
+      "sample": "candidate-ordinary-v1",
+      "scope": "Conservative entire pipeline total interval ending receipt completion; includes compilation/job/client closure, excludes prior READY. Does NOT prove precise step/exclusiveJIT attribution; later-overwritten files not recoverable. Read-only cache metadata snapshot.",
+      "start": 1790979495.5443203,
+      "end": 1790979502.3584306,
+      "cache_writes": []
+    },
+    {
+      "sample": "candidate-ordinary-v2",
+      "scope": "Conservative entire pipeline total interval ending receipt completion; includes compilation/job/client closure, excludes prior READY. Does NOT prove precise step/exclusiveJIT attribution; later-overwritten files not recoverable. Read-only cache metadata snapshot.",
+      "start": 1790979644.3219926,
+      "end": 1790979651.1617358,
+      "cache_writes": []
+    }
+  ],
+  "cache": "/tmp/openhcs-source-identity-shared-cache-20260930"
+}
