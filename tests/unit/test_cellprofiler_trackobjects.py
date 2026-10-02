@@ -614,3 +614,118 @@ def test_track_objects_final_age_marks_terminal_track_labels():
         )
         == 3.0
     )
+
+
+def test_retained_tracking_image_uses_track_palette_and_preserves_measurements():
+    from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
+    from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
+
+    labels = np.zeros((2, 32, 40), dtype=np.int32)
+    labels[0, 8:20, 8:20] = 1
+    labels[1, 8:20, 10:22] = 1
+    label_payload = _timepoint_labels(labels, axis_size=2)
+    image = np.zeros(labels.shape, dtype=np.float32)
+    baseline = unwrap(track_objects)(image, label_payload, pixel_radius=37)
+    retained = unwrap(track_objects)(
+        image,
+        label_payload,
+        pixel_radius=37,
+        save_color_coded_image=True,
+        display_mode=TrackingDisplayMode.COLOR,
+    )
+    assert baseline.output_image is image
+    pixels = image_payload_data(retained.output_image)
+    metadata = image_payload_metadata(retained.output_image)
+    assert pixels.shape == (2, 32, 40, 3)
+    assert pixels.dtype == np.float32
+    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.source_channel_axis == -1
+    assert metadata.unit_interval_intensity_scale == 255
+    np.testing.assert_array_equal(pixels[:, 0, 0], np.zeros((2, 3)))
+    assert np.any(pixels[0, 12, 12] != pixels[0, 12, 12, 0])
+    np.testing.assert_array_equal(image, np.zeros(labels.shape, dtype=np.float32))
+    np.testing.assert_array_equal(label_payload.variant_data.labels, labels)
+    assert not np.shares_memory(pixels, image)
+    assert not np.shares_memory(pixels, labels)
+    assert retained.parent_relationship == baseline.parent_relationship
+    retained_rows = _projected_measurement_rows(retained)
+    baseline_rows = _projected_measurement_rows(baseline)
+    assert len(retained_rows) == len(baseline_rows)
+    for left, right in zip(retained_rows, baseline_rows, strict=True):
+        assert left.keys() == right.keys()
+        for key in left:
+            if isinstance(left[key], float) and math.isnan(left[key]):
+                assert math.isnan(right[key])
+            else:
+                assert left[key] == right[key]
+
+
+def test_tracking_image_modes_share_palette_but_only_numbered_mode_draws_ids():
+    from openhcs.processing.backends.cellprofiler.tracking import (
+        TrackingDisplayMode,
+        TrackingImageDisplayStrategy,
+    )
+
+    labels = np.zeros((40, 60), dtype=np.int32)
+    labels[10:30, 10:30] = 1
+    ids = np.array([257], dtype=np.int64)
+    centers = (np.array([19.5]), np.array([19.5]))
+    color = TrackingImageDisplayStrategy.for_enum_member(TrackingDisplayMode.COLOR)
+    numbered = TrackingImageDisplayStrategy.for_enum_member(
+        TrackingDisplayMode.COLOR_AND_NUMBER
+    )
+    color_pixels = color.render_frame(labels, ids, centers)
+    numbered_pixels = numbered.render_frame(labels, ids, centers)
+    assert color_pixels.shape == numbered_pixels.shape == (40, 60, 3)
+    assert color_pixels.dtype == numbered_pixels.dtype == np.uint8
+    # The native palette repeats after the low eight bits; no random color shuffle.
+    np.testing.assert_array_equal(
+        color_pixels, color.render_frame(labels, np.array([1]), centers)
+    )
+    assert np.any(numbered_pixels != color_pixels)
+    np.testing.assert_array_equal(numbered_pixels[0, 0], color_pixels[0, 0])
+    # Missing dense-label slots retain their IDs but must not create NaN text positions.
+    missing = color.render_frame(
+        labels, np.array([1, 2]), (np.array([19.5, np.nan]), np.array([19.5, np.nan]))
+    )
+    assert missing.shape == color_pixels.shape
+
+
+def test_retained_tracking_image_preserves_empty_frame_measurement_scale():
+    from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
+    from openhcs.core.runtime_image_values import image_payload_data
+
+    labels = np.zeros((2, 24, 32), dtype=np.int32)
+    labels[0, 8:12, 8:12] = 1
+    result = unwrap(track_objects)(
+        np.zeros(labels.shape, dtype=np.float32),
+        _timepoint_labels(labels, axis_size=2),
+        pixel_radius=37,
+        save_color_coded_image=True,
+        display_mode=TrackingDisplayMode.COLOR,
+    )
+    assert image_payload_data(result.output_image).shape == (2, 24, 32, 3)
+    image_rows = result.tracking_measurements.row_batches[1].rows
+    assert tuple(row.scale for row in image_rows) == (37, 37)
+    assert tuple(row.new_object_count for row in image_rows) == (1, 0)
+
+
+def test_tracking_display_refuses_an_unmatched_id_center_domain():
+    import pytest
+    from openhcs.processing.backends.cellprofiler.tracking import (
+        ColorTrackingImageDisplayStrategy,
+    )
+
+    display = ColorTrackingImageDisplayStrategy()
+    with pytest.raises(ValueError, match="one label domain"):
+        display.render_frame(
+            np.zeros((20, 30), dtype=np.int32),
+            np.array([1]),
+            (np.array([]), np.array([])),
+        )
+    with pytest.raises(ValueError, match="2-D label plane"):
+        display.render_frame(
+            np.zeros((1, 20, 30), dtype=np.int32),
+            np.array([]),
+            (np.array([]), np.array([])),
+        )

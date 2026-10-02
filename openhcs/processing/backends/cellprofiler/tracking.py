@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, Any, ClassVar, NamedTuple, TYPE_CHECKING
 
+import io
+
+import imageio.v3 as imageio
 import numpy as np
+from matplotlib import colormaps, colors, transforms
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
@@ -37,6 +43,14 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.core.runtime_image_values import (
+    RuntimeArrayData,
+    image_payload_data,
+    image_payload_metadata,
+)
+from openhcs.interop.cellprofiler.image_normalization import (
+    normalize_cellprofiler_image_payload,
+)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -331,12 +345,12 @@ class TrackObjectsModule(
     minimum_lifetime_setting = "Minimum lifetime"
     use_maximum_lifetime_setting = "Filter using a maximum lifetime?"
     maximum_lifetime_setting = "Maximum lifetime"
+    display_option_setting = "Select display option"
     retain_image_setting = "Save color-coded image?"
     output_image_setting = "Name the output image"
     ignored_settings = (
         "Average cell diameter in pixels",
         "Cost of cell to empty matching",
-        "Select display option",
         "Select object measurement to use for tracking",
         "Use advanced configuration parameters",
         "Weight of area difference in function matching cost",
@@ -379,6 +393,11 @@ class TrackObjectsModule(
         return cls.default_output_image_name
 
     setting_bindings = (
+        SettingToKeywordBinding(
+            display_option_setting,
+            "display_mode",
+            normalize_cellprofiler_setting_name,
+        ),
         tracked_objects_binding,
         output_image_binding,
         SettingToKeywordBinding(
@@ -595,6 +614,11 @@ class TrackObjectsModule(
         kwargs = dict(bound.kwargs)
         tracking_method = cls.require_supported_tracking_method(module)
         kwargs["tracking_method"] = tracking_method
+        display_option = optional_setting_value(module, cls.display_option_setting)
+        if display_option is not None:
+            kwargs["display_mode"] = coerce_cellprofiler_enum(
+                TrackingDisplayMode, display_option
+            )
         movement_model = optional_setting_value(module, cls.movement_model_setting)
         if movement_model is not None:
             kwargs["movement_model"] = coerce_cellprofiler_enum(
@@ -627,6 +651,89 @@ class TrackObjectsModule(
             unmapped_kwargs,
             bound.setting_coverage,
         )
+
+
+class TrackingDisplayMode(Enum):
+    """Serialized CellProfiler choices for a retained tracked-object image."""
+
+    COLOR = "Color"
+    COLOR_AND_NUMBER = "Color and Number"
+
+
+class TrackingImageDisplayStrategy(
+    EnumKeyedStrategyMixin[TrackingDisplayMode], ABC, metaclass=AutoRegisterMeta
+):
+    """Render stable track identities independently of correspondence methods."""
+
+    def render_frame(
+        self,
+        labels: np.ndarray,
+        object_numbers: np.ndarray,
+        centers: tuple[np.ndarray, np.ndarray],
+    ) -> np.ndarray:
+        """Draw one label plane with CellProfiler's stable ID palette."""
+        if labels.ndim != 2:
+            raise ValueError("Tracked-image rendering requires a 2-D label plane.")
+        if len(object_numbers) != len(centers[0]) or len(object_numbers) != len(centers[1]):
+            raise ValueError("Tracked-image IDs and centers must share one label domain.")
+        indexer = np.zeros(len(object_numbers) + 1, dtype=int)
+        indexer[1:] = object_numbers
+        powers = 2 ** np.mgrid[0:8, 0:len(indexer)][0]
+        bits = (indexer & powers).astype(bool)
+        indexer = np.sum(bits.transpose() * (2 ** np.arange(7, -1, -1)), axis=1)
+        figure = Figure()
+        FigureCanvasAgg(figure)
+        axes = figure.add_subplot(1, 1, 1)
+        colormap = colormaps["jet"].copy()
+        colormap.set_bad((0, 0, 0))
+        axes.imshow(
+            np.ma.array(indexer[labels], mask=labels == 0),
+            cmap=colormap,
+            norm=colors.BoundaryNorm(list(range(256)), 256),
+        )
+        self.annotate_numbers(axes, object_numbers, centers)
+        figure.set_frameon(False)
+        axes.set_axis_off()
+        figure.subplots_adjust(0, 0, 1, 1, 0, 0)
+        dpi = figure.dpi
+        width, height = float(labels.shape[1]) / dpi, float(labels.shape[0]) / dpi
+        figure.set_figheight(height)
+        figure.set_figwidth(width)
+        figure.bbox = transforms.TransformedBbox(
+            transforms.Bbox(np.array([[0.0, 0.0], [width, height]])),
+            transforms.Affine2D(np.array([[dpi, 0, 0], [0, dpi, 0], [0, 0, 1]])),
+        )
+        stream = io.BytesIO()
+        figure.savefig(stream, format="png", dpi=dpi)
+        return np.asarray(imageio.imread(stream.getvalue(), extension=".png"))[:, :, :3]
+
+    @abstractmethod
+    def annotate_numbers(self, axes, object_numbers, centers) -> None:
+        """Apply this display mode's tracked-number annotation behavior."""
+
+
+class ColorTrackingImageDisplayStrategy(TrackingImageDisplayStrategy):
+    """Retain colored object regions without number annotations."""
+
+    strategy_key = TrackingDisplayMode.COLOR
+
+    def annotate_numbers(self, axes, object_numbers, centers) -> None:
+        del axes, object_numbers, centers
+
+
+class NumberedTrackingImageDisplayStrategy(TrackingImageDisplayStrategy):
+    """Annotate stable track IDs at the existing backend's label centroids."""
+
+    strategy_key = TrackingDisplayMode.COLOR_AND_NUMBER
+
+    def annotate_numbers(self, axes, object_numbers, centers) -> None:
+        y_centers, x_centers = centers
+        for number, x, y in zip(object_numbers, x_centers, y_centers, strict=True):
+            if np.isnan(x) or np.isnan(y):
+                continue
+            axes.annotate(
+                str(number), xy=(x, y), color="white", arrowprops={"visible": False}
+            )
 
 
 class TrackingMethod(Enum):
@@ -723,14 +830,83 @@ TrackingFrameResults = list[TrackingFrameResult]
 class TrackObjectsResult(RuntimeOutputBundle):
     """Nominal TrackObjects result with its temporal CP relationship."""
 
-    output_image: np.ndarray
+    output_image: RuntimeArrayData
     parent_relationship: DirectedObjectRelationshipPayload
     tracking_measurements: ConcatenatedColumnarRows
+
+    @classmethod
+    def from_frames(
+        cls,
+        *,
+        image: RuntimeArrayData,
+        labels: ObjectLabelValue,
+        frame_results: TrackingFrameResults,
+        measurement_scale: int,
+        parent_relationship: DirectedObjectRelationshipPayload,
+        save_color_coded_image: bool,
+        display_mode: TrackingDisplayMode,
+        tracking_backend_provider: BackendProviderInput,
+    ) -> "TrackObjectsResult":
+        """Assemble the image and measurement ABI from completed tracking frames."""
+        _apply_final_age_measurements(frame_results)
+        object_measurements = []
+        image_measurements = []
+        for index, rows, new_count, lost_count, split_count, merge_count in frame_results:
+            object_measurements.extend(rows)
+            image_measurements.append(
+                TrackingImageMeasurement(
+                    slice_index=index,
+                    scale=measurement_scale,
+                    new_object_count=new_count,
+                    lost_object_count=lost_count,
+                    split_object_count=split_count,
+                    merged_object_count=merge_count,
+                )
+            )
+        if np.asarray(image).ndim != 3:
+            raise ValueError("TrackObjects requires a declared 3-D timepoint stack.")
+        output_image = image
+        if save_color_coded_image:
+            display = TrackingImageDisplayStrategy.for_enum_member(display_mode)
+            backend = ObjectTrackingBackendStrategy.for_memory_type(
+                backend_provider=tracking_backend_provider
+            )
+            rendered = np.stack(
+                tuple(
+                    display.render_frame(
+                        frame,
+                        np.array([row.label for row in rows], dtype=np.int64),
+                        backend.label_centers(frame),
+                    )
+                    for frame, (_, rows, *_counts) in zip(
+                        _label_frames(labels), frame_results, strict=True
+                    )
+                )
+            )
+            normalized = normalize_cellprofiler_image_payload(rendered)
+            metadata = image_payload_metadata(normalized).replace_fields(
+                source_channel_axis=-1
+            ).with_source_context_from(image_payload_metadata(labels))
+            output_image = metadata.payload_with(image_payload_data(normalized), None)
+        return cls(
+            output_image=output_image,
+            parent_relationship=parent_relationship,
+            tracking_measurements=ConcatenatedColumnarRows(
+                (
+                    DataclassMeasurementColumnarRows(
+                        tuple(object_measurements), row_type=TrackingObjectMeasurement
+                    ),
+                    DataclassMeasurementColumnarRows(
+                        tuple(image_measurements), row_type=TrackingImageMeasurement
+                    ),
+                )
+            ),
+        )
 
     def as_runtime_tuple(
         self,
     ) -> tuple[
-        np.ndarray,
+        RuntimeArrayData,
         DirectedObjectRelationshipPayload,
         ConcatenatedColumnarRows,
     ]:
@@ -1116,7 +1292,7 @@ class DistanceTrackObjectsMethodStrategy(TrackObjectsMethodStrategy):
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
 @special_inputs("labels")
 def track_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     tracking_method: TrackingMethod = TrackingMethod.OVERLAP,
     pixel_radius: int = 50,
@@ -1140,10 +1316,11 @@ def track_objects(
     use_maximum_lifetime: bool = False,
     maximum_lifetime: int = 100,
     save_color_coded_image: bool = False,
+    display_mode: TrackingDisplayMode = TrackingDisplayMode.COLOR_AND_NUMBER,
     name_the_output_image: str = TrackObjectsModule.default_output_image_name,
     tracking_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
 ) -> tuple[
-    np.ndarray,
+    RuntimeArrayData,
     DirectedObjectRelationshipPayload,
     ConcatenatedColumnarRows,
 ]:
@@ -1176,7 +1353,6 @@ def track_objects(
         minimum_lifetime,
         use_maximum_lifetime,
         maximum_lifetime,
-        save_color_coded_image,
         name_the_output_image,
     )
     label_frames = _label_frames(labels)
@@ -1250,50 +1426,20 @@ def track_objects(
         tracking_state["old_labels"] = current_labels.copy()
         tracking_state["old_object_numbers"] = new_labels.copy()
         tracking_state["max_object_number"] = max_object_number
-    _apply_final_age_measurements(frame_results)
-    object_measurements: list[TrackingObjectMeasurement] = []
-    image_measurements: list[TrackingImageMeasurement] = []
-    for (
-        slice_index,
-        object_rows,
-        new_object_count,
-        lost_object_count,
-        split_count,
-        merge_count,
-    ) in frame_results:
-        object_measurements.extend(object_rows)
-        image_measurements.append(
-            TrackingImageMeasurement(
-                slice_index=slice_index,
-                scale=int(pixel_radius),
-                new_object_count=new_object_count,
-                lost_object_count=lost_object_count,
-                split_object_count=split_count,
-                merged_object_count=merge_count,
-            )
-        )
-    if np.asarray(image).ndim != 3:
-        raise ValueError("TrackObjects requires a declared 3-D timepoint stack.")
-    return TrackObjectsResult(
-        output_image=image,
+    return TrackObjectsResult.from_frames(
+        image=image,
+        labels=labels,
+        frame_results=frame_results,
+        measurement_scale=int(pixel_radius),
         parent_relationship=DirectedObjectRelationshipPayload(
             source_ids=tuple(relationship_parent_ids),
             target_ids=tuple(relationship_child_ids),
             slice_indices=tuple(relationship_slice_indices),
             slice_count=len(label_frames),
         ),
-        tracking_measurements=ConcatenatedColumnarRows(
-            (
-                DataclassMeasurementColumnarRows(
-                    tuple(object_measurements),
-                    row_type=TrackingObjectMeasurement,
-                ),
-                DataclassMeasurementColumnarRows(
-                    tuple(image_measurements),
-                    row_type=TrackingImageMeasurement,
-                ),
-            )
-        ),
+        save_color_coded_image=save_color_coded_image,
+        display_mode=display_mode,
+        tracking_backend_provider=tracking_backend_provider,
     )
 
 
@@ -1572,6 +1718,10 @@ __all__ = public_names_from_objects(
     TrackingFrameRequest,
     TrackingKernelFrame,
     TrackingMethod,
+    TrackingDisplayMode,
+    TrackingImageDisplayStrategy,
+    ColorTrackingImageDisplayStrategy,
+    NumberedTrackingImageDisplayStrategy,
     TrackingResult,
     track_objects,
 )
