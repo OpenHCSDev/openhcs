@@ -1,6 +1,13 @@
 BaSiCPy current main integration
 ==============================
 
+Current delivery decision: merge the qualified source checkpoint without
+optional hosted CI waiting. BaSiCPy1.3.1 and ArrayBridge0.3.6, the new registry
+requirements of this PR, are public. The still-unpublished PolyStore/ZMQ/Qt
+minimums are already present on main and do not originate in this PR. Their
+publication and normal installed/live acceptance remain parent-owned next
+actions, not an assertion that this source merge makes the install ready.
+
 Parent integration owner. Ordinary merge of main25d56ae3fb9b80acda80f3cf4e1c8667939147eb
 into retained PR217 produces ce68038a0ece28cd2fadace8f18cc61f9395d3d2.
 No foreign worktree or installed application was edited. Existing gitlink
@@ -35,9 +42,10 @@ packaged path, where vendored source directories are absent.
 
 BaSiCPy1.3.1, metaclass0.2.2 and ArrayBridge0.3.6 are verified available on
 PyPI. ArrayBridge's original publisher36949376897 succeeded01:33:35Z.
-PR217 remains draft until normal published dependency resolution; that
-original attempt now identifies the additional PolyStore/ZMQ/Qt release
-chain described below rather than a pending ArrayBridge publisher.
+The earlier draft checkpoint waited for normal published dependency resolution;
+that attempt identifies the additional PolyStore/ZMQ/Qt release chain described
+below rather than a pending ArrayBridge publisher. The current delivery decision
+above ships source independently while retaining that installed boundary.
 Previous field/MCP24SITE and Python3.14 controls remain pinned to their original
 sources, not projected through this main integration. Original failures and
 UNKNOWN requests remain. No science success or reserve release is claimed.
@@ -167,3 +175,10 @@ available. Parent owns PolyStore publication after public ZMQ exists, then
 ordinary dependency resolution and the closed private installed/native journey.
 The old configured MCP health check is healthy0.8.6 from installed-main-20260929,
 not this checkpoint. Scientific candidate5 remains rejected; reserve sealed.
+
+Prepared wheel33778332f builds offline in7.41s/227.71MiB, passes Twine and
+has SHA2562990c91e8b8665cea047653a181e9c367f9fd5e866c0794f1f9757fc8b6359ef.
+It includes current merged MCP/viewer production code plus this BaSiCPy
+integration. Location: parent issue-batch/basicpy-current-main-20261002/
+wheels-faf8-current-main/openhcs-0.8.7-cp311-abi3-linux_x86_64.whl.
+No scientific/native or installed-package mutation occurred during this build.
