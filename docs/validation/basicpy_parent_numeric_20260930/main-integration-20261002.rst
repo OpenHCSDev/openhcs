@@ -134,3 +134,36 @@ reopen, memory backend and lossless PNG controls remain unchanged.
 The earlier42 actual OpenHCS persistence/reopen controls also used84f322e.
 These are source release qualification, not public PolyStore availability
 or a fresh installed native user journey. That release chain remains active.
+
+Current merged MCP/viewer checkpoint
+-----------------------------------
+
+Ordinary merge8c0db128d600b3895f0f30af143f21e159828673 integrates remote
+mainfaf8e1f263244bf4d3dbb1e16833c416bbc811bf. This retains the other machine's
+compilation/startup placement from PR420 and includes merged PR422 progress
+acknowledgements and PR413 original typed native viewer records. No conflict,
+shared-checkout edit or installed-package mutation occurred.
+
+The same42 field/family/selection/materialization/persistence/reopen controls
+pass through the actual source bootstrap,13.65s/424.37MiB combined RSS under
+the unchanged768MiB/60s supervisor. Original receipt is
+s1-installed-20261001/basicpy-faf8-current-main-source.command.json and log in
+the parent issue-batch ledger. The two existing pytest configuration warnings
+remain. Original changed-product R0 against exact faf8e1f/8c0db128 passes,
+13.0s/83.79MiB, no positive deltas; its original receipt is
+basicpy-faf8-current-main-r0.command.json and log. No global R1 claim follows.
+
+Cleanup exposed four Git object alternates in this worktree's own submodule
+metadata pointing to a retired worktree. The original stable main submodule
+object stores contain every pinned commit. Repointing only those four alternates
+restores exact identities; PolyStore release84f322e remains clean and original
+git fsck --connectivity-only --no-dangling passes. No source or commit was lost,
+no reference/tag rewritten, and no further cleanup is authorized or performed.
+
+Original ZMQRuntime publisher36952353836 is terminal failure at candidate tests
+(exit143); no artifact publication occurred. Schrodinger owns its repair and
+the Qt release. Public ArrayBridge0.3.6, metaclass0.2.2 and BaSiCPy1.3.1 remain
+available. Parent owns PolyStore publication after public ZMQ exists, then
+ordinary dependency resolution and the closed private installed/native journey.
+The old configured MCP health check is healthy0.8.6 from installed-main-20260929,
+not this checkpoint. Scientific candidate5 remains rejected; reserve sealed.
