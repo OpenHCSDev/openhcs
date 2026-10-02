@@ -71,7 +71,28 @@ No global FULL/R1 claim; original failed resource evidence remains independent.
 Qualification
 -------------
 
-Focused source, real generated binding and independent new-case controls pending.
+First bounded shard:19PASS/3FAIL,505756KiB/12.734s. Retained RED records
+the original two-field fake-event assertion (now typed through original codec),
+an incomplete test path-policy constructor, and a cooperative hook placed on a
+terminal concrete _compile implementation rather than the shared compile entry.
+Corrected test boundary/fixtures without changing production behavior, weakening
+domain assertions or adding compatibility readers. Correction shard:4PASS,
+502328KiB/12.269s, including both before/after declared MROs and success/failure.
+Combined unique qualification:22 cases across these shards, including original
+metadata writes/path admission, syntax/enum rejection and actual inventory reads.
+
+Original real compiler plus generated binding stage-order controls:2PASS,
+494232KiB/11.380s. Staged64x64 source, original declared NLM compilation, exact
+A01/source count/step identity, no unrelated catalog, original Qt/main affinity,
+request ContextVar and off-main stage reporting. Actual compiler count1 and one
+stored typed event; all seven preparation/compile/projection stages observed in
+order. This is source qualification, not fresh installed Java cold preparation.
+Existing completed client renewal/26controls/12s experiments were not repeated.
+
+Logs retained in validation/cold436-source-controls-first.log,
+cold436-source-corrections.log and cold436-real-compile.log. Scratch only under
+/home/ts/.cache/agent-scratch/dewey-436-cold-feedback-*; failed inputs retained.
+Original scoped R0 against this production head pending.
 Parent fresh installed cold synthetic inspection and physical reader preparation
 remain required; no new native/viewer/scientific process, install or download here.
 Resource helper reports3.6GiB home and swap pressure; use only existing WT/env,

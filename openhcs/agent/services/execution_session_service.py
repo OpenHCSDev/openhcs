@@ -132,7 +132,7 @@ class AgentProgressQueue(ProgressQueue):
     def __init__(self) -> None:
         self.events: list[ProgressEvent] = []
 
-    def put(self, event) -> None:
+    def put(self, event: dict) -> None:
         progress = ProgressEvent.from_dict(event)
         self.events.append(progress)
         EndpointStartupStatus(

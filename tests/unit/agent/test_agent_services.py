@@ -637,20 +637,20 @@ class _FailingCompileInspectionGateway(_FakeCompileInspectionGateway):
 
 
 class _WorkspacePreparingCompileInspectionGateway(_FakeCompileInspectionGateway):
-    def compile(self, request):
+    def _compile(self, request):
         (request.plate / "openhcs_metadata.json").write_text(
             "{}",
             encoding="utf-8",
         )
-        return super().compile(request)
+        return super()._compile(request)
 
 
 class _MetadataTransactionCompileInspectionGateway(_FakeCompileInspectionGateway):
-    def compile(self, request):
+    def _compile(self, request):
         metadata_module.AtomicMetadataWriter().replace_subdirectory_metadata(
             metadata_module.get_metadata_path(request.plate), "A01", {}
         )
-        return super().compile(request)
+        return super()._compile(request)
 
 
 class _FakeRuntimeServerGateway:
@@ -3419,9 +3419,13 @@ def test_execution_session_service_inspects_pipeline_source_artifact_plan(
         == PipelineConfig()
     )
     assert compile_gateway.requests[0].axis_filter == ("A01",)
-    assert compile_gateway.requests[0].progress_queue.events == [
-        {"phase": "compile", "status": "running"}
-    ]
+    events = compile_gateway.requests[0].progress_queue.events
+    assert len(events) == 1
+    assert events[0].phase is ProgressPhase.COMPILE
+    assert events[0].status is ProgressStatus.RUNNING
+    assert events[0].identity == ProgressIdentity(
+        "inspection", str(tmp_path.resolve()), "A01", "compilation",
+    )
     assert inspection.errors == ()
     assert inspection.axis_count == 1
     assert inspection.axes == ("A01",)
