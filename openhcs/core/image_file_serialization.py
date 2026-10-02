@@ -69,6 +69,62 @@ class ImageFileSourceMetadata:
     source_dtype: Any | None = None
     intensity_scale: float | None = None
     pixel_semantics: SourceImagePixelSemantics = SourceImagePixelSemantics()
+    image_shape_yx: tuple[int, int] | None = None
+    source_frame_shape: tuple[int, ...] | None = ()
+
+    def __post_init__(self) -> None:
+        if self.image_shape_yx is not None:
+            if len(self.image_shape_yx) != 2 or any(
+                not isinstance(value, int) or isinstance(value, bool) or value <= 0
+                for value in self.image_shape_yx
+            ):
+                raise ValueError(
+                    "Image-file YX shape requires two positive integer dimensions."
+                )
+            object.__setattr__(self, "image_shape_yx", tuple(self.image_shape_yx))
+        if self.source_frame_shape is not None:
+            if any(
+                not isinstance(value, int) or isinstance(value, bool) or value <= 0
+                for value in self.source_frame_shape
+            ):
+                raise ValueError(
+                    "Image-file frame shape requires positive integer dimensions."
+                )
+            object.__setattr__(
+                self, "source_frame_shape", tuple(self.source_frame_shape)
+            )
+
+    def frame_for_source_indices(self, indices: tuple[int, ...]) -> int:
+        """Map explicitly selected leading source axes to a container frame."""
+
+        if not indices:
+            return 0
+        if self.source_frame_shape is None or len(indices) != len(
+            self.source_frame_shape
+        ):
+            raise ValueError(
+                "Source selection has no declared complete container-frame mapping."
+            )
+        frame = 0
+        for index, size in zip(indices, self.source_frame_shape, strict=True):
+            if (
+                not isinstance(index, int)
+                or isinstance(index, bool)
+                or not 0 <= index < size
+            ):
+                raise ValueError(
+                    f"Source frame index {index!r} is outside dimension {size}."
+                )
+            frame = frame * size + index
+        return frame
+
+    def require_image_geometry(self) -> tuple[Any, int, int]:
+        """Require complete format-declared dtype and physical image dimensions."""
+
+        if self.image_shape_yx is None or self.source_dtype is None:
+            raise ValueError("Image-file header does not declare image dtype and YX geometry.")
+        height, width = self.image_shape_yx
+        return self.source_dtype, height, width
 
     def project_image_metadata(
         self, metadata: ImagePayloadMetadata, *, values_preserved: bool
@@ -219,14 +275,23 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
 
         import imageio.v3 as iio
 
-        dtype = iio.improps(path).dtype
+        properties = iio.improps(path)
+        dtype = properties.dtype
+        pixel_semantics = cls.require_pixel_semantics(path)
+        shape = tuple(properties.shape)
+        if pixel_semantics.channel_axis is not None:
+            axis = pixel_semantics.channel_axis % len(shape)
+            shape = shape[:axis] + shape[axis + 1 :]
         return ImageFileSourceMetadata(
             source_dtype=dtype,
             intensity_scale=(
                 cls.declared_intensity_scale(path)
                 or image_intensity_scale_for_dtype(dtype)
             ),
-            pixel_semantics=cls.require_pixel_semantics(path),
+            pixel_semantics=pixel_semantics,
+            image_shape_yx=(
+                tuple(int(value) for value in shape) if len(shape) == 2 else None
+            ),
         )
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -313,6 +378,8 @@ class NumpyImageFileFormat(ImageFileFormat):
         return ImageFileSourceMetadata(
             source_dtype=array.dtype,
             intensity_scale=image_intensity_scale_for_dtype(array.dtype),
+            image_shape_yx=tuple(array.shape) if array.ndim == 2 else None,
+            source_frame_shape=() if array.ndim == 2 else None,
         )
 
 
@@ -346,6 +413,18 @@ class TiffImageFileFormat(ImageFileFormat):
             series = tif.series[0]
             dtype = series.dtype
             declared_scale = cls._declared_intensity_scale_from_page(tif.pages[0])
+            image_shape_yx = (
+                int(tif.pages[0].imagelength),
+                int(tif.pages[0].imagewidth),
+            )
+            spatial_axis = series.axes.find("Y")
+            frame_shape = tuple(int(value) for value in series.shape[:spatial_axis])
+            if (
+                spatial_axis < 0
+                or "S" in series.axes[:spatial_axis]
+                or len(series.pages) != np.prod(frame_shape)
+            ):
+                frame_shape = None
             sample_axis = series.axes.find("S")
             sample_count = int(series.shape[sample_axis]) if sample_axis >= 0 else None
             pixel_semantics = SourceImagePixelSemantics()
@@ -360,6 +439,8 @@ class TiffImageFileFormat(ImageFileFormat):
             source_dtype=dtype,
             intensity_scale=(declared_scale or image_intensity_scale_for_dtype(dtype)),
             pixel_semantics=pixel_semantics,
+            image_shape_yx=image_shape_yx,
+            source_frame_shape=frame_shape,
         )
 
     @classmethod

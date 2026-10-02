@@ -21,6 +21,7 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
+    NamedSourceBinding,
     SourceProjectionRole,
 )
 from openhcs.core.source_metadata import SourceMetadataMapping
@@ -366,6 +367,27 @@ class VirtualWorkspaceSourceProjection:
             ).projection_role
             is role
         )
+
+    def source_occurrences_for_binding(
+        self,
+        binding: NamedSourceBinding,
+        *,
+        axis_id: str,
+    ) -> tuple[tuple[str, SourceProjection], ...]:
+        """Select exact declared occurrences without merging physical resources."""
+
+        occurrences = []
+        for path in self.files_for_projection_role(
+            binding.projection_role, axis_id=axis_id
+        ):
+            projection = self.require_source_projection_for(
+                VirtualWorkspacePathLookup.from_paths(path, path)
+            )
+            if projection.matches_binding(
+                binding
+            ) and projection.belongs_to_execution_axis(axis_id):
+                occurrences.append((path, projection))
+        return tuple(occurrences)
 
     def validate_runtime_metadata_projection(
         self,
