@@ -190,15 +190,10 @@ def _require_compared_output_inventory(
         RuntimeMeasurementSnapshot.from_output_snapshot(snapshot)
         for snapshot in (reference_snapshot, candidate_snapshot)
     )
-    if any(
-        measurement.correlated_relationships is None for measurement in measurements
-    ):
-        raise RuntimeError(
-            "Matched saved output inventory requires known relationship correlations."
-        )
-    if measurements[0].relationship_differences(
-        measurements[1].correlated_relationships
-    ):
+    correlations = tuple(
+        measurement.required_relationship_correlations() for measurement in measurements
+    )
+    if correlations[0] != correlations[1]:
         raise RuntimeError("Matched saved output relationship correlations differ.")
     comparable_tables = tuple(
         tuple(
