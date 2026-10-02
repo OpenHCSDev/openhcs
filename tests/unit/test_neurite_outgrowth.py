@@ -141,6 +141,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "minimum_area",
         "intensity_above_local_background",
         "channel_index",
+        "minimum_inscribed_diameter_px",
     ]
     assert [field.name for field in fields(MetaXpressOutgrowthSettings)] == [
         "maximum_width",
@@ -1776,6 +1777,7 @@ def test_cell_body_contract_bounds_each_object_distance_transform(monkeypatch):
         labels,
         response,
         minimum_area_px=100.0,
+        minimum_inscribed_diameter_px=MetaXpressCellBodySettings().minimum_inscribed_diameter_px,
         maximum_width_px=20.0,
         intensity_threshold=100.0,
     )
