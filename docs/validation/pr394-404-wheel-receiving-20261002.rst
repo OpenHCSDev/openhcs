@@ -20,7 +20,7 @@ tools with no isolation, dependency installation, download or environment creati
 
 Private artifacts live only under the existing parent qroot:
 ``/home/ts/wt/openhcs-issue-batch-20260929/carrier434-installed-20261002/engineering394404-wheel-94ee-dd324-20261002``.
-Wheel preparation is pending at this initial source checkpoint. No target is
+The ordinary wheel is built and source/member verification passes. No target is
 installed. Parent resource helper reports home7.0GiB, RAM10.5GiB, swap12.8GiB:
 critical advisory. Preparation remains serial, CPU0/one CPU, kernel512MiB,
 no swap and60s; no heavy fleet, native viewer or scientific run is launched.
@@ -32,3 +32,76 @@ Site001 CYX/order/provenance plus ordinary public result inventory -> source-bea
 native graph reopen, exact source/channel/calibration/geometry/subject features
 and matched raw/result/combined placement. A wheel alone does not establish that
 gate, biological acceptance or Root's performance target.
+
+Terminal build and source-member qualification
+---------------------------------------------
+
+Build source checkpoint ``9d65d4b6cb6b6a66b4bf08cb1c3ef4b2e8e8d6ea`` adds only
+receiving documentation and a build driver atop exact394. No production,
+benchmark, packaging configuration or build-helper bytes differ from94ee1079d.
+The carried graph receipt is byte-identical to404dd3242d01. Current394 remained
+94ee1079d at final verification; later Root heads require separate review.
+
+Private wheel relative to the artifact root above:
+``wheels/openhcs-0.8.7-cp311-abi3-linux_x86_64.whl``.
+Size:4224047 bytes. SHA256:
+``f236ccfb557c2c08f5ac8c174fd0e5350ad4c9f552fb02b1d302b46d52dd8c60``.
+Do not substitute this for a parent-reviewed installed target.
+
+The existing Python3.12.3/setuptools84.0.0/wheel0.45.1/build1.2.2.post1
+environment executed the original PEP517/setuptools owner without isolation or
+dependency resolution. Both declared stable-ABI native extensions are in the
+ordinary wheel. No extension is imported or exercised by this preparation.
+No dependency, Fiji, scientific data or source-tree installation was created.
+
+* ``build-original.log``: exit127,0.01s; systemd's initial working directory
+  did not contain the relative driver. Builder never started; original failure
+  remains unchanged. This is a terminal harness failure, not UNKNOWN input.
+* ``build-qualified.log``: explicit working directory and absolute driver,
+  exit0,17.21s wall; process max147004KiB, aggregate systemd peak224.6MiB,
+  zero swap. Successfully built the ordinary cp311-abi3 wheel.
+* ``member-verification-original.log``: exit0,0.80s; max24680KiB,
+  aggregate peak33.5MiB, zero swap. Every wheel member has its byte count and
+  SHA256 in the original JSON output. All814 tracked wheel members match source;
+  all792 Python members derived from original setuptools include/exclude
+  declarations are covered. Every member's original RECORD hash/size passes.
+
+Both successful commands used ``systemd-run --user --wait --pipe`` with
+``MemoryMax=512M``, ``MemorySwapMax=0`` and ``CPUQuota=100%``; ``timeout60s``
+and ``taskset -c0`` wrap the original build/verifier. Systemd units are terminal
+and auto-unloaded; querying their defaults afterwards is not a new limit proof.
+No operation is running or pending, and no failed/unknown author input is replayed.
+
+Source tree identities at the pinned production head:
+``openhcs`` Git tree ``8767dfdcd5f5944fa961d11c7cafb05219502215``;
+``benchmark`` Git tree ``69f043fbb08d382c42fa2cc0fcb3adc86d8c0cb0``.
+The read-only verifier does not import OpenHCS. It derives package membership from
+pyproject.toml and tracked Git paths, then consumes the wheel's original RECORD;
+it introduces no product registry, schema, native reader or source authority.
+
+Byte-exact original logs and complete wheel-member/source-hash JSON are archived
+in ``pr394-404-wheel-receiving-20261002.tar.gz``. SHA256:
+``782ffa907f02b1759aa62b1a5135cae85116a22badf699f5e6725d62b8112ead``.
+Raw logs retain authentic whitespace. No source tests or ratchets were repeated
+for this unchanged production packaging checkpoint. Diff whitespace passes.
+
+Parent's next action is review of this pinned source/wheel before any installation.
+Then use only a private target beneath the existing artifact root for the actual
+public inventory -> owned native graph receiving journey, plus Site001 CYX/order/
+provenance. Existing retinal QA viewer6006, native/author handoff, original sessions
+and scientific outputs are not touched. Root394 production/performance and404
+installed acceptance remain their original owners, not a new parallel writer.
+
+Owned terminal scratch cleanup
+------------------------------
+
+After logs were archived and byte-exact matches checked, lsof found no handles
+on this build's two newly created disposable directories. Removed only
+``/home/ts/wt/openhcs-knowledge-lazy-conversion-20261001/build`` (20406272 allocated
+bytes) and ``/home/ts/wt/openhcs-knowledge-lazy-conversion-20261001/openhcs.egg-info``
+(98304 bytes), releasing20504576 bytes. Neither existed before this build.
+Removal is permanent; original setup/source and archived build log regenerate
+them. The private wheel and original logs/member receipt remain unchanged.
+All earlier untracked QA ledgers, source, failed fixtures, saved viewers and
+UNKNOWN dispositions remain. No parent cache, environment, dependency/Fiji
+installation, foreign WT or scientific artifact was removed.
