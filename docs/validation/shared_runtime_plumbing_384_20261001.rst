@@ -804,3 +804,47 @@ Receipts remain in the external benchmark RUNS directory:
 outputs/source hashes are retained under
 ``/var/tmp/openhcs-opaque-axis-d092-ordinary-20261002``. The initial failed
 guard-launch arguments and the original R0 growth finding are also retained.
+
+Persisted derived-role publication (issue #435)
+----------------------------------------------
+
+``ce1b7acfc`` repairs duplicate publication of one saved image occurrence in the
+existing metadata writer. The existing output context derives the declared
+source alias; anonymous main flow remains anonymous. Produced records and
+successful materialization outcomes share a path index. A second projection is
+omitted only when declared alias, artifact kind, producer scope, exact path,
+scalar acquisition address and full persisted image metadata agree. Distinct
+files with colliding identities, stale scopes, different kinds and conflicting
+metadata retain their original refusal. No source-projection guard is relaxed.
+The index is linear in produced records and successful outputs.
+
+The actual writer reproducer at baseline ``130c03a26`` saves two distinct role
+images with real C2 addresses and calibration, then reproduces the duplicate
+projection failure. At ``ce1b7acfc``, both roles publish once and reopen through
+the existing virtual workspace; exact pixels, addresses and spacing pass. All
+four independent refusal controls pass, together with 232 focused controls in
+9.42 seconds. These are writer/materialization/reopening controls, not an
+installed five-step acceptance or a performance benchmark.
+
+Unchanged original scoped R0 and R1 pass for ``130c03a26`` to ``ce1b7acfc``.
+The first candidate ``6dfda9597`` failed original R0 for a long producer-match
+Boolean and a foreign absence probe. Moving alias derivation to its existing
+context owner and comparing exact producer tuples resolves those findings.
+The whole-branch scalar gate remains separate. Independent review finds no
+blocker; persisted occurrence identity does not prove stale in-memory pixels
+equal the final overwritten file. Pixel parity remains a separate gate.
+
+The parent has supplied the original five-step source and bounded saved-path
+facts in issue comment ``5948666249``. Actual produced-record and materialized
+output pairs were not serialized there. Installed original-path acceptance
+remains open; no biological replay or fabricated collision pair is claimed.
+The separate #437 owner retains its singleton-consumption repair.
+
+Main ``8551a4864`` (merged #438 and #439) is integrated at ``3de415d63``.
+The integrated publication, axis and new MCP compilation controls pass:
+247 tests in 51.50 seconds, with two existing pytest configuration warnings.
+The scoped guard receipts are retained externally as
+``issue435-ce1-original-r0-retry-20261002.json`` and
+``issue435-ce1-original-r1-20261002.json``; independent review is
+``/var/tmp/openhcs-issue435-independent-publication-review-20261002.json``.
+Original failures and failed guard launches remain retained.
