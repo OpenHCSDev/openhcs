@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import pty
@@ -203,3 +204,52 @@ def test_terminal_stdin_source_keeps_exact_eof_bytes_and_reuses_shell(terminal_c
     assert output.count(b"ADMITTED:openhcs_health_check:") == 1
     assert child.wait(timeout=5) == 0
     assert termios.tcgetattr(slave) == original
+
+
+def test_independent_source_declaration_composes_cooperative_preparation(monkeypatch):
+    from openhcs.mcp import dev_client as cli
+    from openhcs.mcp.dev_client_commanding import McpDevCommandSpec, StdinSourceCommandSpec
+    from openhcs.mcp.dev_client_core import (
+        McpDevToolCall,
+        add_pipeline_source_options,
+        pipeline_source_from_args,
+    )
+
+    events = []
+
+    class IndependentPreparation(McpDevCommandSpec):
+        def prepare_input(self, args, *, stdin_context=cli.nullcontext):
+            events.append(("before", args.source_file))
+            super().prepare_input(args, stdin_context=stdin_context)
+            events.append(("after", args.source_file))
+
+    class IndependentSource(
+        StdinSourceCommandSpec, IndependentPreparation, McpDevCommandSpec
+    ):
+        command = "independent-stdin-source-proof"
+
+        def configure_parser(self, parser):
+            add_pipeline_source_options(parser)
+
+        def calls_from_args(self, args):
+            return (McpDevToolCall(
+                "independent_external_source",
+                {"source": pipeline_source_from_args(args)},
+            ),)
+
+    source = "# exact independent source\nµ = 'unchanged'"
+    monkeypatch.setattr(sys, "stdin", io.StringIO(source))
+    try:
+        args = cli._build_parser().parse_args([
+            IndependentSource.command, "--source-file", "-",
+        ])
+        # Original generic ingress discovers the new declaration and composes
+        # both hooks without a consumer edit or a parallel command roster.
+        calls = cli._calls_from_args(args)
+        assert calls[0].arguments == {"source": source}
+        assert events == [("before", "-"), ("after", "-")]
+        assert args.source_file is None
+        assert args.source_text == source
+        assert sys.stdin.read() == ""
+    finally:
+        McpDevCommandSpec.__registry__.pop(IndependentSource.command)

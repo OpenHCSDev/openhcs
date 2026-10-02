@@ -12,4 +12,8 @@ The original command ancestor owns input preparation. A cooperative StdinSourceC
 - Read-only borrowed compiled tabular extension from byte-matched installed478 target; no install, build or environment change.
 
 ## Remaining acceptance
-Independent cooperative capability/new-declaration proof, complete existing command/persistent-shell controls, owner-after census and original scoped R0 remain to finish. Actual installed future-client/recorder qualification belongs parent; no live fleet or scientific process has been changed. This draft does not claim installed/scientific acceptance or global FULL cleanliness.
+Completed: independent declaration + cooperative preparation behavior through the original metaclass/consumer; 24 existing persistent-session cases plus eight terminal cases (33 distinct). An incomplete pre-existing health mock failed typed ingress; original red retained, fixture now serializes the original health producer with unchanged session/call-count/decode-once/equality controls. Only its failed case reran, PASS.
+
+Original unchanged scopedR0 PASS, 19.28s/86720KiB, five changed production paths/zero positive deltas. Owner-after SAME1057 modules/19 related/zero omissions, 4.79s/115388KiB; dynamic aliases and native callbacks remain explicit limitations. Exact receipts and retained red are in validation.
+
+Remaining: actual installed future-client/recorder qualification; no live fleet or scientific process has been changed. This draft does not claim installed/scientific acceptance or global FULL cleanliness.

@@ -31,6 +31,33 @@ carrier434-installed-20261002/engineering478-installed/target/openhcs/core.
 Original C++ source SHA15acc82b8ab64268bd1ea4f83fa7a68f527bf317f002e9f39e15be321e03b28e
 matches both roots; no dependency/build/install mutation. Preserve that backer.
 
-Remaining: independent cooperative new-case proof, existing CLI controls,
-owner-after census, unchanged original scopedR0 and parent installed recorder
-qualification. No claim about live fleet, scientific outputs or global FULL.
+Completed extension: new independent source declaration composes a separate
+preparation capability through the original C3/super hooks, discovered through
+the original command metaclass. Generic ingress admits exact Unicode stdin
+once, runs both hooks, normalizes the existing source fields and builds its
+call without generic-consumer edits or a mirrored roster. This behavior passed
+in source05, alongside23 original persistent-session controls.
+
+Source05 retained RED:1failure/24passes/8deselected,17.86s327644KiB. The
+existing initialization-count fixture returned only {"status":"ok"} for the
+declared health DTO, missing its required fields since merged400. Production
+ingress rightly rejected it. The fixture now serializes the ORIGINAL
+HealthCheckMcpToolBinding, as another existing control in the same file does.
+Initialization/call counts, timeouts, decode-once and payload equality
+assertions remain intact. Source06 reran ONLY that correction:1PASS5.11s,
+274012KiB. Thus8 terminal+1 independent declaration+24 persistent cases pass;
+the original failing receipt remains, not skipped or represented as green.
+
+Original unchanged pinned scopedR0 PASS, base62c57a8c to production1dfefaa51,
+19.28s86720KiBexit0, all5 changed production paths/zero positive deltas. The
+original Git-pinned agent-comms detector and Python3.14/readonly BasicPy
+backing remain unchanged. No copied detector or threshold waiver.
+
+Owner-after SAME1057 production/dependency modules,19 related, omissions[],
+4.79s115388KiBexit0. Complete lexical declarations/imports/writes/calls and
+inheritance records remain in before/after logs. Dynamic aliases, standard
+readline callbacks and generated metaclass dispatch are not statically proven;
+real terminal/new-case controls cover the affected behaviors. Not globalFULL.
+
+Remaining: actual installed future-client/recorder qualification. No live
+fleet hot edit, scientific pipeline or native/viewer launch occurred here.
