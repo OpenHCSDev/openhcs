@@ -44,3 +44,28 @@ failure and five scratch-parent setup errors,9.53s/398.79MiB. The direct
 selection test member now inherits the focused capability; assertions are
 unchanged. Owned scratch parent is created explicitly before integration tests.
 This initial attempt is not represented as a green journey.
+
+Completed source qualification
+------------------------------
+
+The repaired four-file source journey passes31 tests, including the real
+existing named/ordinary checkpoint writer and reopen flow. Original bounded
+green-2 receipt: exit0, no ceiling,20.93s/424.09MiB. The packaged original
+agent-comms debt ratchet at c8f524fd557510d143061bb9f63e162b144f803d against
+f2aabe45a84d9834eef37d1862f0d0290ba73b63 reports every delta zero, exit0,
+19.88s/84.8MiB; its source-projection-family-r0.log and command.json remain
+in the same original persistent evidence directory.
+
+Current main18317499be069fbe58387137f326ac7b6ff57988 includes independent
+native source discovery PR416. It changes only openhcs_registry.py and its
+declaration-selected tests, not this projection family or persistence owners.
+It was integrated by an ordinary merge. The combined source checkpoint passes
+the same31 checks with no altered assertion or fixture: source-projection-
+family-main416.log/command.json, exit0,24.34s/507.16MiB, kernel limit512MiB
+and60-second shard. No new environment, download or live child was started.
+
+This closes the demonstrated source regression, retaining selection semantics
+and all aggregate contributors. Installed native/viewer acceptance remains
+separate: the running assisted neurite pair has not been changed. Issue417
+remains the owner of installed acceptance; PR217 consumes this restored
+aggregate contract during its separately qualified main integration.
