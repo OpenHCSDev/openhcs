@@ -331,3 +331,53 @@ Pipeline clocks exclude ZMQ server startup, mandatory registry/kernel prewarming
 and shutdown. Timed runs use the ordinary public OUTCOMES path and default memory
 observer, without profiling injection. Candidate and baseline must have frozen
 clean source revisions and the same dependencies, affinity and environment.
+
+Global lifetime counterfactuals: rejected routes
+----------------------------------------------
+
+The next ordinary diagnostics and exact saved-input replays reject several
+insufficient standalone routes before further implementation. These are payoff
+bounds, not candidate speedups. Their observations remain revision-pinned; they
+do not supersede the mixed ordinary ABBA above.
+
+* The eight complete saved IFC geometry owners take 0.4745 seconds in aggregate
+  median replay; the actual complete spreadsheet renderer takes 1.3662 seconds.
+  Even eliminating both separate phases has an optimistic ceiling below two
+  seconds. The isolated geometry/export route is stopped.
+* On main 18317499be069fbe58387137f326ac7b6ff57988, all 634 original Advanced
+  measurement queries take 0.6422 seconds, while complete CPA collection takes
+  1.1943 seconds. Fabricated missing-cell counts alone do not admit this route:
+  eliminating both whole phases still cannot supply two seconds. The saved
+  query capture is a bounded subset, not a substitute for the complete clock.
+* On that same main revision, all 32 3D stack loads and all saves take 0.9927
+  and 0.9526 exclusive diagnostic seconds respectively. Eighteen loads select
+  an actual previously stored named producer; all eighteen allocate independent
+  main-flow pixel buffers. The full saved step-14 Resize input matches the
+  stored Monolayer pixels exactly, but differs in filename-derived extension
+  and per-plane source-name metadata. Direct value reuse would violate existing
+  buffer isolation and provenance. A narrow named-handoff migration is stopped.
+* A low-overhead aggregate diagnostic on that revision measures all 40,673
+  ``ImagePayloadMetadata.__post_init__`` calls at 0.8919 inclusive seconds and
+  all 147,354 ``SourceImageIdentity.__post_init__`` calls at 0.5544 inclusive
+  seconds. These totals overlap and must never be added. Constructor count
+  contraction alone cannot justify the multi-second target, even though counts
+  identify repeated work. The proposed 44.6 percent birth reduction is not a
+  measured speedup. The wider field-derivation lifetime remains unqualified.
+
+Every diagnostic uses the ordinary OUTCOMES path, one worker/thread and the
+default memory observer. Hook overhead is retained; server startup, prewarming,
+compilation and shutdown are outside execution. Exact original-method timing
+does not establish that the whole measured duration can be removed. Controllers,
+source/dependency freezes, successful outputs and failed earlier captures are
+retained under ``/var/tmp`` and the external benchmark evidence directory.
+
+Evidence: ``measurement-lifetime-actual-input-baseline-replay-20261001/receipt.json``,
+``global-plumbing-three-workload-coarse-lifetime-20261001.json``,
+``runtime-value-handoff-step14-fixture-metadata-inspection-20261001.json``, and
+``metadata-initialization-aggregate-decision-20261001.json``. The full query and
+handoff observations reside in their corresponding ``/var/tmp`` captures.
+
+Main 9a04107492ad90233394cf17524d0ca8e74062bb is normally integrated, including
+the merged native-module source-discovery repair in PR416 and source projection
+capability repair in PR418. Earlier behavior/source/performance gates retain
+their exact source pins. PR394 remains a draft formally closing issue384.
