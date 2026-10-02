@@ -1419,30 +1419,14 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             invocation=invocation,
             artifact_ref=artifact_ref,
         )
-        producer_scope = storage_plan.producer_group_scope()
-        if producer_scope.is_ungrouped:
-            producer_selection_scope = PathPlannerGroupScope.ungrouped()
-        elif (
-            producer_scope.has_single_static_key
-            or invocation.contract.execution_scope is FunctionStepExecutionScope.PLATE
-            or producer_scope.component in consumer_variable_components
-        ):
-            producer_selection_scope = PathPlannerGroupScope.from_plan(storage_plan)
-        else:
-            producer_selection_scope = next(
-                (
-                    scope
-                    for scope in component_scopes
-                    if scope.component is producer_scope.component
-                ),
-                None,
-            )
-            if producer_selection_scope is None:
-                raise ValueError(
-                    f"Invocation {invocation.key!r} input {artifact_ref!r} has "
-                    f"producer scope {producer_scope!r} but no exact relation-owned "
-                    "selection coordinate."
-                )
+        producer_selection_scope = ArtifactInputProjectionPlan.producer_selection_for_invocation(
+            input_spec=input_spec,
+            storage_plan=storage_plan,
+            component_scopes=component_scopes,
+            consumer_variable_components=consumer_variable_components,
+            invocation_key=invocation.key,
+            execution_scope=invocation.contract.execution_scope,
+        )
 
         projection = ArtifactInputProjectionPlan(
             invocation_scope=invocation_scope,
