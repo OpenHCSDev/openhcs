@@ -14,9 +14,12 @@ from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import ClassVar, Self, TypeAlias, cast
+from typing import ClassVar, Self, TypeAlias, TypeVar, cast
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping
+from python_introspect.validation import validate_annotated_dataclass
+from pydantic import StrictInt
 from polystore.backend_registry import register_cleanup_callback
 from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
@@ -53,6 +56,8 @@ from zmqruntime.viewer_protocol import (
     ViewerControlReplyPayload as ViewerControlReplyPayload,
 )
 from zmqruntime.viewer_protocol import (
+    ViewerDeclaredWireValue,
+    ViewerSourceSpatialDomainPayload,
     ViewerControlResponseField,
     ViewerProtocolStatus,
     ViewerTransportEndpoint,
@@ -86,6 +91,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.serialization.json import JsonObject, JsonScalar, JsonValue, to_jsonable
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -93,6 +99,7 @@ NaturalTextKey: TypeAlias = tuple[NaturalTokenKey, ...]
 ComponentValueSortKey: TypeAlias = tuple[int, int | float | NaturalTextKey, str, str]
 ComponentTupleSortKey: TypeAlias = tuple[ComponentValueSortKey, ...]
 ViewerLaunchLiteral: TypeAlias = str | int | float | bool | None
+ViewerOptionalT = TypeVar("ViewerOptionalT")
 
 _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
@@ -126,6 +133,255 @@ class ViewerPayloadSummaryField(str, Enum):
     NONZERO_MAX_COORDINATE = "nonzero_max_coordinate"
     NONZERO_EXAMPLE_COORDINATES = "nonzero_example_coordinates"
     NONZERO_COORDINATE_OMISSION_REASON = "nonzero_coordinate_omission_reason"
+
+
+class ViewerFieldAbsent:
+    """An omitted protocol field, distinct from JSON null, false and zero."""
+
+    __slots__ = ()
+
+    def __copy__(self) -> Self:
+        return self
+
+    def __deepcopy__(self, memo) -> Self:
+        return self
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+
+        return core_schema.is_instance_schema(cls)
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema, handler):
+        # Absence is legal only as an omitted field, never as a JSON value.
+        return {"not": {}}
+
+
+VIEWER_FIELD_ABSENT = ViewerFieldAbsent()
+
+
+class ViewerProjectionRecord(ViewerDeclaredWireValue):
+    """Declaration-derived descent and sparse wire projection for native records."""
+
+    def __post_init__(self) -> None:
+        validate_annotated_dataclass(self)
+        self.validate_record()
+
+    def validate_record(self) -> None:
+        """Cooperative capability validation terminates at the record owner."""
+
+    @classmethod
+    def from_wire_mapping(cls, payload: Mapping[str, object]) -> Self:
+        return dataclass_from_mapping(cls, payload)
+
+    def to_wire_mapping(self) -> JsonObject:
+        return {
+            name: value for name, value in super().to_wire_mapping().items()
+            if value is not VIEWER_FIELD_ABSENT
+        } | self.wire_overrides()
+
+    def wire_overrides(self) -> JsonObject:
+        """Independent capabilities project only their owned nested records."""
+        return {}
+
+    @staticmethod
+    def optional(value: ViewerOptionalT | ViewerFieldAbsent) -> ViewerOptionalT | None:
+        """Project an absent declaration to a nullable presentation value."""
+        return None if value is VIEWER_FIELD_ABSENT else value
+
+
+@to_jsonable.register(ViewerProjectionRecord)
+def _jsonable_viewer_projection(value: ViewerProjectionRecord) -> JsonObject:
+    return to_jsonable(value.to_wire_mapping())
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerArrayStatistics(ViewerProjectionRecord):
+    shape: tuple[StrictInt, ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    dtype: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    size: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    min: JsonScalar | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    max: JsonScalar | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_min_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_max_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_example_coordinates: tuple[tuple[StrictInt, ...], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_coordinate_omission_reason: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def known_nonzero_count(self) -> int | None:
+        return self.optional(self.nonzero_count)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerShapeCoordinateBounds(ViewerProjectionRecord):
+    """The wire result of the original ShapeCoordinateBounds algorithm."""
+
+    min_yx: tuple[float, float]
+    max_yx: tuple[float, float]
+    coordinate_count: StrictInt
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerShapeStatistics(ViewerProjectionRecord):
+    item_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    shape_payload_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    missing_source_spatial_shape_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    shape_coordinate_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    shape_out_of_source_bounds_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    shape_coordinate_bounds_yx: ViewerShapeCoordinateBounds | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    def returned_member_count(self, returned_count: int) -> int:
+        return (returned_count if self.shape_payload_count is VIEWER_FIELD_ABSENT
+                else self.shape_payload_count)
+
+    def wire_overrides(self) -> JsonObject:
+        overrides = super().wire_overrides()
+        if self.shape_coordinate_bounds_yx is not VIEWER_FIELD_ABSENT:
+            overrides["shape_coordinate_bounds_yx"] = self.shape_coordinate_bounds_yx.to_wire_mapping()
+        return overrides
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerSourceSpatialSummary(ViewerProjectionRecord):
+    spatial_origin_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def source_domain(self) -> ViewerSourceSpatialDomainPayload:
+        return ViewerSourceSpatialDomainPayload(
+            origin_yx=self.optional(self.spatial_origin_yx),
+            source_shape_yx=self.optional(self.source_spatial_shape_yx),
+        )
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerAggregateComponentSummary(ViewerProjectionRecord):
+    aggregate_component_values: Mapping[str, tuple[ViewerComponentValue, ...]] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def aggregate_values(self) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
+        return self.optional(self.aggregate_component_values) or {}
+
+    def validate_record(self) -> None:
+        super().validate_record()
+        if any(not values for values in self.aggregate_values.values()):
+            raise ValueError("Viewer aggregate component domains must not be empty.")
+
+    def require_plane_components(self) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
+        if self.aggregate_component_values is VIEWER_FIELD_ABSENT or self.aggregate_component_values is None:
+            raise ValueError("Image receipt requires its explicit plane component domain.")
+        return self.aggregate_component_values
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerPayloadSummary(
+    ViewerAggregateComponentSummary, ViewerSourceSpatialSummary,
+    ViewerShapeStatistics, ViewerArrayStatistics,
+):
+    """One original native summary; no agent-side mirror or raw-map carrier."""
+
+    data_type: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    path: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    components: JsonObject | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    payload_type: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    def coordinate_components(self) -> Mapping[str, ViewerComponentValue]:
+        from openhcs.runtime.viewer_component_system import ViewerComponentMetadataPayload
+
+        if self.components is VIEWER_FIELD_ABSENT:
+            raise ValueError("Viewer payload summary missing components.")
+        return ViewerComponentMetadataPayload.component_map(
+            self.components, context="viewer payload summary",
+        )
+
+    @property
+    def component_labels(self) -> tuple[str, ...]:
+        return tuple(self.optional(self.components) or {})
+
+    def require_full_image_window(self) -> None:
+        domain = self.source_domain
+        shape = self.optional(self.shape)
+        if (shape is None or len(shape) != 3 or any(value <= 0 for value in shape)
+                or domain.origin_yx != (0, 0)
+                or domain.source_shape_yx != shape[-2:]):
+            raise ValueError("Image receipt requires an explicit full three-axis image window.")
+
+    @property
+    def full_image_plane_count(self) -> int:
+        self.require_full_image_window()
+        return self.shape[0]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerArrayValueSummary(ViewerArrayStatistics):
+    """The original bounded sampler's result, including explicit omission."""
+
+    requested: bool | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    included: bool | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    omitted_reason: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    max_array_elements: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    slice_ranges: tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    requested_slice_ranges: tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def protocol_supported(self) -> bool:
+        return self.requested is not VIEWER_FIELD_ABSENT
+
+    @property
+    def sample_included(self) -> bool:
+        return self.included is True
+
+    @property
+    def shape_element_count(self) -> int | None:
+        shape = self.optional(self.shape)
+        if not shape or any(value < 0 for value in shape):
+            return None
+        count = 1
+        for value in shape:
+            count *= value
+        return count
+
+    def presentation_omission_reason(self, *, include_requested: bool | None) -> str | None:
+        reason = self.optional(self.omitted_reason)
+        if (include_requested is False and reason == "max_array_elements_exceeded"
+                and self.max_array_elements == 0):
+            return "array_values_not_requested"
+        return reason
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerPayloadContent(ViewerProjectionRecord):
+    """Shared content on the original native payload and its sample projection."""
+
+    data_type: str
+    path: str
+    components: JsonObject
+    axis_indices: tuple[StrictInt, ...] = ()
+    aggregate_axis_indices: tuple[StrictInt, ...] = ()
+    summary: ViewerPayloadSummary = field(default_factory=ViewerPayloadSummary)
+    array_values: tuple[JsonValue, ...] = ()
+    array_value_summary: ViewerArrayValueSummary = field(default_factory=ViewerArrayValueSummary)
+
+    @property
+    def is_image(self) -> bool:
+        return self.data_type == StreamingDataType.IMAGE.value
+
+    @property
+    def is_shapes(self) -> bool:
+        return self.data_type == StreamingDataType.SHAPES.value
+
+    def wire_overrides(self) -> JsonObject:
+        return super().wire_overrides() | {
+            "summary": self.summary.to_wire_mapping(),
+            "array_value_summary": self.array_value_summary.to_wire_mapping(),
+        }
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerPayloadRecord(ViewerPayloadContent):
+    route_key: str
+    shape_payloads: tuple[JsonObject, ...] = ()
 
 
 class ViewerControlField(str, Enum):

@@ -12,7 +12,7 @@ from typing import ClassVar, Generic, TypeVar, cast
 
 import zmq
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, project_dataclass
 from polystore.streaming.identity import StreamProducerIdentity
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureSpec,
@@ -51,6 +51,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowImageIntensityResult,
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
+    ViewerWindowImageSampleRecord,
     ViewerWindowIntensityPayloadIdentity,
     ViewerWindowIntensityWindowRequest,
     ViewerWindowIntensityWindowResult,
@@ -68,6 +69,9 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowProbeResult,
     ViewerWindowRoiSummaryRequest,
     ViewerWindowRoiSummaryResult,
+    ViewerWindowRoiNumericStatistics,
+    ViewerWindowRoiExample,
+    ViewerWindowRoiPayloadSummary,
     ViewerWindowSnapshotRequest,
     ViewerWindowSnapshotResult,
     ViewerWindowStateRequest,
@@ -86,7 +90,6 @@ from openhcs.runtime.viewer_controls import ViewerNativeDimensions
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
     ComponentValues,
-    ViewerComponentMetadataPayload,
     ViewerComponentValueParser,
     ViewerLayerAxisProjection,
 )
@@ -101,7 +104,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLayerField,
     ViewerLayerIsolationField,
     ViewerPayloadField,
-    ViewerPayloadSummaryField,
+    ViewerPayloadSummary,
+    ViewerArrayValueSummary,
     ViewerRuntimeEndpoint,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
@@ -134,11 +138,11 @@ class ViewerPayloadComponentProjection:
     @classmethod
     def from_summary(
         cls,
-        payload_summary: JsonObject,
+        payload_summary: ViewerPayloadSummary,
     ) -> "ViewerPayloadComponentProjection":
         return cls(
-            components=cls._payload_components(payload_summary),
-            aggregate_values=cls._aggregate_component_values(payload_summary),
+            components=payload_summary.coordinate_components(),
+            aggregate_values=payload_summary.aggregate_values,
         )
 
     def projected_values(self, component: str) -> tuple[ComponentValue, ...]:
@@ -167,51 +171,6 @@ class ViewerPayloadComponentProjection:
             ),
         }
 
-    @staticmethod
-    def _payload_components(payload_summary: JsonObject) -> dict[str, ComponentValue]:
-        components_payload = payload_summary.get("components")
-        if not isinstance(components_payload, Mapping):
-            raise ValueError("Viewer payload summary missing components.")
-        return ViewerComponentMetadataPayload.component_map(
-            components_payload,
-            context="viewer payload summary",
-        )
-
-    @classmethod
-    def _aggregate_component_values(
-        cls,
-        payload_summary: JsonObject,
-    ) -> dict[str, tuple[ComponentValue, ...]]:
-        aggregate_values_payload = payload_summary.get("aggregate_component_values")
-        if aggregate_values_payload is None:
-            return {}
-        if not isinstance(aggregate_values_payload, Mapping):
-            raise TypeError(
-                "Viewer aggregate component values must be a component mapping."
-            )
-        return {
-            str(component): cls._component_value_sequence(
-                values,
-                context=f"viewer aggregate component {component!r}",
-            )
-            for component, values in aggregate_values_payload.items()
-        }
-
-    @staticmethod
-    def _component_value_sequence(
-        values: JsonValue,
-        *,
-        context: str,
-    ) -> tuple[ComponentValue, ...]:
-        if isinstance(values, str) or not isinstance(values, Sequence):
-            raise TypeError(f"{context} must be a sequence.")
-        if not values:
-            raise ValueError(f"{context} must not be empty.")
-        return tuple(
-            ViewerComponentValueParser.parse(value, context=context) for value in values
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class ViewerLayerPayloadCoordinateSet:
     """Payload coordinates projected through the shared viewer-axis projection."""
@@ -232,7 +191,7 @@ class ViewerLayerPayloadCoordinateSet:
         cls,
         *,
         projection: ViewerLayerAxisProjection,
-        payload_summaries: Sequence[JsonObject],
+        payload_summaries: Sequence[ViewerPayloadSummary],
     ) -> "ViewerLayerPayloadCoordinateSet":
         indices: list[ComponentIndex] = []
         invalid_payload_count = 0
@@ -570,7 +529,7 @@ class ViewerWindowValidationAuthority:
         zero_payload_count = 0
         missing_nonzero_count = 0
         for payload_summary in layer.payload_summaries:
-            nonzero_count = cls.payload_nonzero_count(payload_summary)
+            nonzero_count = payload_summary.known_nonzero_count
             if nonzero_count is None:
                 missing_nonzero_count += 1
             elif nonzero_count > 0:
@@ -647,28 +606,9 @@ class ViewerWindowValidationAuthority:
                 str(component) for component in component_values.keys()
             )
         for payload_summary in layer.payload_summaries:
-            components = payload_summary.get("components")
-            if isinstance(components, Mapping):
-                component_labels.update(
-                    str(component) for component in components.keys()
-                )
-            aggregate_values = payload_summary.get("aggregate_component_values")
-            if isinstance(aggregate_values, Mapping):
-                component_labels.update(
-                    str(component) for component in aggregate_values.keys()
-                )
+            component_labels.update(payload_summary.component_labels)
+            component_labels.update(payload_summary.aggregate_values)
         return tuple(sorted(component_labels))
-
-    @staticmethod
-    def payload_nonzero_count(payload_summary: JsonObject) -> int | None:
-        field_name = ViewerPayloadSummaryField.NONZERO_COUNT
-        if field_name not in payload_summary:
-            return None
-        value = payload_summary[field_name]
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise TypeError("Viewer payload nonzero_count must be an integer.")
-        return value
-
 
 class ViewerValidationWarningCode:
     """Warning codes emitted by viewer state validation."""
@@ -1905,28 +1845,19 @@ class ViewerWindowService:
     ) -> ViewerWindowImageSampleResult:
         result = self.window_payloads(request.payload_request())
         raw_image_records = tuple(
-            {
-                "layer_route_key": layer.route_key,
-                "layer_title": layer.title,
-                "payload_route_key": payload.route_key,
-                "data_type": payload.data_type,
-                "path": payload.path,
-                "components": payload.components,
-                "axis_indices": payload.axis_indices,
-                "aggregate_axis_indices": payload.aggregate_axis_indices,
-                "summary": payload.summary,
-                "array_value_summary": payload.array_value_summary,
-                "array_values": payload.array_values,
-            }
+            project_dataclass(
+                ViewerWindowImageSampleRecord, payload,
+                layer_route_key=layer.route_key, layer_title=layer.title,
+                payload_route_key=payload.route_key,
+            )
             for layer in result.layers
             for payload in layer.payloads
-            if payload.data_type == "image"
+            if payload.is_image
         )
         image_layer_route_keys = tuple(
             dict.fromkeys(
-                record["layer_route_key"]
+                record.layer_route_key
                 for record in raw_image_records
-                if isinstance(record["layer_route_key"], str)
             )
         )
         requested_route_key = request.route_key
@@ -1987,7 +1918,7 @@ class ViewerWindowService:
             image_records = tuple(
                 record
                 for record in raw_image_records
-                if record["layer_route_key"] == resolved_route_key
+                if record.layer_route_key == resolved_route_key
             )
         axis_filter_applied_by_viewer = True
         client_side_axis_filter_applied = False
@@ -1996,7 +1927,7 @@ class ViewerWindowService:
             image_records = tuple(
                 record
                 for record in route_filtered_image_records
-                if tuple(record["axis_indices"]) == request.axis_indices
+                if record.axis_indices == request.axis_indices
             )
             axis_filter_applied_by_viewer = len(image_records) == len(
                 route_filtered_image_records
@@ -2017,7 +1948,7 @@ class ViewerWindowService:
                     )
                 )
         sample_protocol_supported = any(
-            "requested" in record["array_value_summary"] for record in image_records
+            record.array_value_summary.protocol_supported for record in image_records
         )
         if image_records and not sample_protocol_supported:
             local_warnings.append(
@@ -2038,7 +1969,7 @@ class ViewerWindowService:
         sample_included_count = sum(
             1
             for record in returned_image_records
-            if record["array_value_summary"].get("included") is True
+            if record.array_value_summary.sample_included
         )
         total_record_count = sum(len(layer.payloads) for layer in result.layers)
         raw_image_record_count = len(raw_image_records)
@@ -2092,13 +2023,10 @@ class ViewerWindowService:
                 payload_type_counts[payload.data_type] = (
                     payload_type_counts.get(payload.data_type, 0) + 1
                 )
-                if payload.data_type != "shapes":
+                if not payload.is_shapes:
                     continue
-                shape_payload_count = int(
-                    payload.summary.get(
-                        "shape_payload_count",
-                        len(payload.shape_payloads),
-                    )
+                shape_payload_count = payload.summary.returned_member_count(
+                    len(payload.shape_payloads)
                 )
                 returned_shape_payload_count = len(payload.shape_payloads)
                 payload_truncated = returned_shape_payload_count < shape_payload_count
@@ -2118,40 +2046,34 @@ class ViewerWindowService:
                 areas = self._numeric_metadata(semantic_payloads, "area")
                 perimeters = self._numeric_metadata(semantic_payloads, "perimeter")
                 payload_summaries.append(
-                    {
-                        "layer_route_key": layer.route_key,
-                        "layer_title": layer.title,
-                        "payload_route_key": payload.route_key,
-                        "path": payload.path,
-                        "components": payload.components,
-                        "axis_indices": payload.axis_indices,
-                        "roi_count": len(semantic_payloads),
-                        "returned_roi_count": len(semantic_payloads),
-                        "roi_count_exact": not payload_truncated,
-                        "roi_member_count": shape_payload_count,
-                        "returned_roi_member_count": returned_shape_payload_count,
-                        "roi_duplicate_member_count": duplicate_member_count,
-                        "roi_payloads_truncated": payload_truncated,
-                        "area": self._numeric_stats(areas),
-                        "perimeter": self._numeric_stats(perimeters),
-                        "bounds_yx": payload.summary.get("shape_coordinate_bounds_yx"),
-                        "coordinate_count": payload.summary.get(
-                            "shape_coordinate_count"
-                        ),
-                        "spatial_origin_yx": payload.summary.get("spatial_origin_yx"),
-                        "source_spatial_shape_yx": payload.summary.get(
-                            "source_spatial_shape_yx"
-                        ),
-                        "out_of_source_bounds_count": payload.summary.get(
-                            "shape_out_of_source_bounds_count"
-                        ),
-                        "example_rois": tuple(
+                    ViewerWindowRoiPayloadSummary(
+                        layer_route_key=layer.route_key,
+                        layer_title=layer.title,
+                        payload_route_key=payload.route_key,
+                        path=payload.path,
+                        components=payload.components,
+                        axis_indices=payload.axis_indices,
+                        roi_count=len(semantic_payloads),
+                        returned_roi_count=len(semantic_payloads),
+                        roi_count_exact=not payload_truncated,
+                        roi_member_count=shape_payload_count,
+                        returned_roi_member_count=returned_shape_payload_count,
+                        roi_duplicate_member_count=duplicate_member_count,
+                        roi_payloads_truncated=payload_truncated,
+                        area=self._numeric_stats(areas),
+                        perimeter=self._numeric_stats(perimeters),
+                        bounds_yx=payload.summary.optional(payload.summary.shape_coordinate_bounds_yx),
+                        coordinate_count=payload.summary.optional(payload.summary.shape_coordinate_count),
+                        spatial_origin_yx=payload.summary.source_domain.origin_yx,
+                        source_spatial_shape_yx=payload.summary.source_domain.source_shape_yx,
+                        out_of_source_bounds_count=payload.summary.optional(payload.summary.shape_out_of_source_bounds_count),
+                        example_rois=tuple(
                             self._example_roi(shape_payload)
                             for shape_payload in semantic_payloads[
                                 : request.max_examples
                             ]
                         ),
-                    }
+                    )
                 )
 
         return ViewerWindowRoiSummaryResult(
@@ -2208,31 +2130,26 @@ class ViewerWindowService:
         return tuple(unique.values())
 
     @staticmethod
-    def _numeric_stats(values: tuple[float, ...]) -> dict[str, float] | None:
+    def _numeric_stats(values: tuple[float, ...]) -> ViewerWindowRoiNumericStatistics | None:
         if not values:
             return None
         ordered = sorted(values)
-        return {
-            "min": ordered[0],
-            "median": ordered[len(ordered) // 2],
-            "mean": sum(ordered) / len(ordered),
-            "max": ordered[-1],
-        }
+        return ViewerWindowRoiNumericStatistics(
+            min=ordered[0], median=ordered[len(ordered) // 2],
+            mean=sum(ordered) / len(ordered), max=ordered[-1],
+        )
 
     @staticmethod
-    def _example_roi(shape_payload: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
+    def _example_roi(shape_payload: Mapping[str, JsonValue]) -> ViewerWindowRoiExample:
         metadata = shape_payload.get("metadata")
         if not isinstance(metadata, Mapping):
             metadata = {}
-        return {
-            "type": shape_payload.get("type"),
-            "label": metadata.get("label"),
-            "area": metadata.get("area"),
-            "centroid_yx": metadata.get("centroid"),
-            "bbox_yxyx": metadata.get("bbox"),
-            "perimeter": metadata.get("perimeter"),
-            "source_spatial_shape_yx": metadata.get("source_spatial_shape_yx"),
-        }
+        return ViewerWindowRoiExample(
+            type=shape_payload.get("type"), label=metadata.get("label"),
+            area=metadata.get("area"), centroid_yx=metadata.get("centroid"),
+            bbox_yxyx=metadata.get("bbox"), perimeter=metadata.get("perimeter"),
+            source_spatial_shape_yx=metadata.get("source_spatial_shape_yx"),
+        )
 
     def validation_summary(
         self,
@@ -2548,14 +2465,15 @@ class ViewerWindowService:
                 ViewerPayloadField.AGGREGATE_AXIS_INDICES,
                 int,
             ),
-            summary=self._required_mapping(payload, ViewerPayloadField.SUMMARY),
+            summary=ViewerPayloadSummary.from_wire_mapping(
+                self._required_mapping(payload, ViewerPayloadField.SUMMARY)
+            ),
             array_values=self._required_sequence(
                 payload,
                 ViewerPayloadField.ARRAY_VALUES,
             ),
-            array_value_summary=self._optional_mapping(
-                payload,
-                ViewerPayloadField.ARRAY_VALUE_SUMMARY,
+            array_value_summary=ViewerArrayValueSummary.from_wire_mapping(
+                self._optional_mapping(payload, ViewerPayloadField.ARRAY_VALUE_SUMMARY)
             ),
             shape_payloads=self._required_mapping_tuple(
                 payload,
@@ -2609,9 +2527,11 @@ class ViewerWindowService:
                 bool,
             )
             or False,
-            payload_summaries=self._required_mapping_tuple(
-                payload,
-                ViewerLayerField.PAYLOAD_SUMMARIES,
+            payload_summaries=tuple(
+                ViewerPayloadSummary.from_wire_mapping(summary)
+                for summary in self._required_mapping_tuple(
+                    payload, ViewerLayerField.PAYLOAD_SUMMARIES,
+                )
             ),
             payload_summary_count=self._optional_typed(
                 payload,

@@ -2212,9 +2212,9 @@ def test_viewer_window_service_reads_payload_records():
     payload = layer.payloads[0]
     assert payload.components["well"] == "A14"
     assert payload.axis_indices == (0, 0, 0)
-    assert payload.summary["nonzero_count"] == 128
+    assert payload.summary.nonzero_count == 128
     assert payload.array_values == (1, 2, 3)
-    assert payload.array_value_summary == {
+    assert payload.array_value_summary.to_wire_mapping() == {
         "requested": True,
         "included": True,
         "shape": (3,),
