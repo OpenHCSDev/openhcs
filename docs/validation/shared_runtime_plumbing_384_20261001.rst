@@ -871,8 +871,12 @@ modules, post_run and Measurements.close. These are single observations with
 different explicit setup/publication accounting; they do not establish a
 kernel ratio, statistical significance or a new patch's speedup.
 
-IFC's existing strict exported-science comparison passes with zero differences,
-1800 nonempty rows and 527 columns in each CSV. The observed native/OH ratios
+IFC's existing strict exported-science comparison passes with zero differences
+and 1800 nonempty rows in each CSV. Native has 528 physical columns and OH 527:
+the native redundant Number_Object_Number equals ObjectNumber for all 1800
+rows, and the existing nominal identity policy recognizes that declaration.
+This is semantic measurement equality, not identical cross-tool CSV headers.
+The observed native/OH ratios
 are 5.019781 for server-job execution and 4.279647 for pipeline total. Unsaved
 segmentation masks are outside these retained outputs. Advanced's existing
 scientific database comparison also passes with zero differences, but complete
@@ -914,3 +918,30 @@ launch failed collection because the MCP test imports the streaming fixture
 module by its short name; the corrected command includes that actual fixture
 owner first. Both logs are retained in ``/var/tmp``. No source/test guard was
 modified to obtain the pass.
+
+The actual IFC capture completed the public pipeline and exact source/dependency
+freeze, but its four-snapshot admission remains RED: step22 never invokes
+MeasurementsOutputRecorder.record. Only the terminal spreadsheet before/after
+graphs were captured (44,935,114 and 56,109,057 bytes), with no graph or budget
+rejection. The nine real recorder calls publish identification/filtering/
+expansion/relationship core tables. Texture and intensity-distribution tables
+use the separate per-object recorder. Thus the proposed capture and the premise
+that all outer recording cost is redundant wide-feature conversion are rejected.
+
+Independent export-only qualification passes both unchanged V6 loads (615 arrays
+each), exact original CSV bytes, existing strict CP science, and all determining
+field/source/array aliases. Thirty-five immutable metadata owners drop their
+derived views by their existing declared transport policy; every populated view
+matches fresh recomputation from the same fields. Original raw-heap equality
+remains RED for that intentionally untransported cache state, separately from
+declared-state equality. The actual exporter graph has 31 measurement tables
+and two relationship records, with no label pixels; it cannot validate a dense
+label-storage optimization. Local diagnostic profiling finds repeated row
+identity/axis scanning and assignment; it is not end-to-end speedup evidence.
+The ordinary export ceiling is 1.4077 seconds, so export alone cannot save two
+seconds. Preserving the native CSV span leaves an optimistic combined outer
+recording/export ceiling of 2.4189 seconds; a two-second saving requires about
+82.68% collapse. No implementation is admitted by that ceiling alone.
+Receipts are ``openhcs-measurement-export-declared-state-profile-20261002`` and
+``openhcs-measurement-export-declared-fields-alias-control-20261002.json`` under
+``/var/tmp``. The original four-snapshot and raw-heap failures remain retained.
