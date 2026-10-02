@@ -134,6 +134,21 @@ rank remain unmodified in the parent evidence root. This route is not an OOM
 guarantee for arbitrary plane size and is not a validated biological parameter
 choice. Root394 owns any subsequent runtime/core correction.
 
+Normal main integration checkpoint
+----------------------------------
+
+After the 26-case source checkpoint, current PR394 was checked at
+``01875a7724532932787efa7522b5da0406fae321``. Its roster includes the shared
+CallableContract, unified registry and CP smoothing owners, but does not include
+``processors/numpy_processor.py``. None of those shared files was edited.
+Main ``cc9fcdfd4eb87feac96759bfc18ff174763d2677`` (merged parent-qualified454)
+was fetched and merged normally into this retained branch. New declaration
+bytes and its 26-case tested sources are unchanged; production comparison to
+that main remains solely the original54-line NumPy addition. No qualified
+source shard or R0 is rerun for this integration. Parent's ordinary wheel and
+small public installed/native qualification are distinct ongoing work; this
+worker does not launch them or touch any live scientific environment.
+
 Finite installed engineering handoff
 ------------------------------------
 
