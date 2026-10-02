@@ -700,3 +700,31 @@ clocks or instrumented captures. Evidence includes
 ``issue419-grid-context-fix-20261002.json`` and
 ``pr394-84e99-grid-science-qualification-20261002.json`` in the benchmark RUNS
 directory. All original failed source-pinned runs remain retained.
+
+Graph ROI source-bearing writer integration (issue #134)
+-------------------------------------------------------
+
+The receiving owner requested narrow integration from PR #404 checkpoint
+``f3e566485a391a270a6d2c40dbfddf07881dcd3d``. The exact patch binds existing
+ROIArchiveSourceMetadata to graph ROI content and places the same existing
+ImagePayloadMetadata on Output. Graph provenance already selects its declared
+source plane; no second global-plane selection is performed. Coordinate spacing
+uses existing SourceVoxelSpacing. The binder, disk ZIP transport, geometry
+projection and native admission retain their existing owners and guards.
+
+On current ``38067a4a5`` before the production patch, the receiving seven-case
+fixture reproduces three source-bearing failures and four refusal controls
+pass. After integration, all seven pass alongside the original graph, batch
+outcome and materialization controls: 87 PASS in 2.28 seconds. The existing
+geometry test obtains geometry through the original archive projection before
+its unchanged coordinate and feature assertions; bound transport metadata is not
+mistaken for a graph feature. An independent cooperative graph subtype and new
+feature require no new writer or consumer registration. Missing, unbound, mixed
+and conflicting native source declarations remain refused before transport.
+
+This is current-source synthetic writer/disk/archive qualification. Actual
+installed public/native graph reopening remains with the receiving owner, and
+no performance or biological acceptance claim follows. Original failures remain
+in ``pr394-38067-graph-roi-before-20261002.log``; integrated controls are in
+``pr394-graph-roi-integrated-after-20261002.log`` in RUNS. The historical PR #404
+branch and its older publication proposal are not merged as a whole.
