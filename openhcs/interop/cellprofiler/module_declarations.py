@@ -382,7 +382,7 @@ class CellProfilerModule(
 
     @classmethod
     def declared_function_names(cls) -> tuple[str, ...]:
-        """Return the primary and variant function names declared by this module."""
+        """Project this module's primary/variant declaration into catalog names."""
         if cls.function_name is None:
             return ()
         return (str(cls.function_name), *cls.function_variants)
@@ -411,6 +411,11 @@ class CellProfilerModule(
                 "CellProfiler source binding import requires SourceBindingsConfig, "
                 f"got {type(config).__name__}."
             )
+        modules = tuple(modules)
+        cls.discover_source_declarations(
+            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
+            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
+        )
         for module in modules:
             if not module.enabled:
                 continue
@@ -436,30 +441,6 @@ class CellProfilerModule(
         """Return whether axis execution requires the CellProfiler workspace adapter."""
 
         return True
-
-    @classmethod
-    def for_backend_function_name(
-        cls,
-        function_name: str,
-    ) -> type["CellProfilerModule"] | None:
-        """Resolve a function exposed inside the CellProfiler backend namespace."""
-        normalized_name = _required_string(
-            function_name,
-            "function_name",
-            cls.__name__,
-        )
-        matches = tuple(
-            module_type
-            for module_type in cls.__registry__.values()
-            if normalized_name in module_type.declared_function_names()
-        )
-        if len(matches) > 1:
-            raise ValueError(
-                f"CellProfiler function {normalized_name!r} is owned by multiple "
-                "module declarations: "
-                f"{tuple(item.require_module_name() for item in matches)!r}."
-            )
-        return matches[0] if matches else None
 
     @classmethod
     def for_callable_import_identity(
@@ -626,14 +607,11 @@ class CellProfilerModule(
     def for_module(cls, module_name: str) -> type["CellProfilerModule"] | None:
         """Return the registered module class for a canonical name or alias."""
         lookup_key = _module_lookup_key(module_name)
-        for module_type in cls.__registry__.values():
-            if _module_lookup_key(module_type.require_module_name()) == lookup_key:
-                return module_type
-            if lookup_key in {
-                _module_lookup_key(alias) for alias in module_type.aliases
-            }:
-                return module_type
-        return None
+        matches = cls.discover_source_declarations(
+            frozenset((lookup_key,)), ("module_name", "aliases"), _module_lookup_key,
+            _declared_lookup_keys,
+        )
+        return matches[0] if matches else None
 
     @classmethod
     def invocation_module_blocks(
