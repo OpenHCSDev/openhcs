@@ -1779,3 +1779,63 @@ changes beyond the receiving review's original four-file eb2/wheel delta.
 Installed receiving obligations419/433/435/450, whole-branch R0, full native
 image parity, full-catalog/scaling and figures remain open. A first-wave fresh
 four-case ordinary/native qualification is in progress, not a completed gate.
+
+Library readiness and saved-reader checkpoint, 2026-10-02
+-------------------------------------------------------
+
+Main ``b4405ff3541add6b91004002b7d6f389f1208636`` is normally merged.
+Independent PR482 closes issue477 and PR486 closes issue481. Main's singleton
+invocation fix passes 401 controls and original scoped R0/R1; its actual public
+translocation observation is 1.679128s execution / 3.094840s total / 1.008657s
+compilation. Both saved warm native repetitions pass full database, schema,
+discrete and numerical measurements, properties, exact image and physical
+inventory gates. This single main-based observation is not a measured gain.
+Receipt: /var/tmp/openhcs-singleton-label-main-477-saved-native-science-20261002.json
+(SHA256 5c5c4c497df1ee4b115aba42650941f451fac3ae3f784cfcfe3144e0ae94d6ac).
+
+Issue481 prepares canonical masked float32/float64 declumping signatures through
+the existing morphology backend library lifecycle. Numerical bodies are
+unchanged. Eight isolated controls and original scoped R0/R1 pass; cold and
+disk-cache witnesses reject subsequent compilation or cache loading. Frozen
+integrated ``adef79b4ff3825b35a41ef96b60f3bc421a5ddd5`` Speckles execution is
+1.915174s, total 3.212164s, compilation 0.959121s. No kernel-cache writes occur
+inside execution. All three scientific CSVs match the original fully native
+qualified output exactly, with complete inventory and freezes. This necessary
+readiness repair does not establish a speedup. Receipt:
+/var/tmp/openhcs-pr394-morphology-ready-speckles-science-20261002.json
+(SHA256 29526b6c5c37bbd840c706393b9290695894bc80a2247aedc7c718cb58ee5477).
+
+Issue479's saved relationship reader is integrated from ``2de4e021f``. It
+validates directed edge declarations, object/image domains, reverse pairs and
+redundant Parent/Children fields before using scalar projections. Saved
+snapshots and cache transport retain endpoint correlations; typed value-only
+snapshots explicitly retain UNKNOWN evidence. Both-root scoped R0 passes,
+but original R1 remains RED for an unchanged validator's relocation (+1 core,
+-1 interop, zero global type-check change). This is not all-guards admission.
+The merged-parent controls pass 380; root integration passes 235.
+
+Corrected saved Beginner replay uses the actual complete output root. Both
+native repetitions have exact two-image agreement, complete physical-file
+coverage and five matching correlation keys / 2,093 directed pairs. Full
+measurement parity remains RED: 80 extra Costes features and 63 missing Nuclei
+child-mean features. The earlier helper's incorrect results-directory root and
+missing-image report are rejected, retained harness evidence. Reader receipt:
+/var/tmp/openhcs-relationship-479-full-saved-replay-v2-20261002/receipt.json.
+
+Issue487 isolates the first loss for unwanted Costes work: existing settings
+postprocessing treats legacy Run all metrics=Accurate as true and overwrites
+the five authored flags. Native CellProfiler uses this aggregate setting only
+for UI visibility, including when Yes; individual choices remain authoritative.
+The correct existing owner is ModuleOnlySettingBinding, with the obsolete
+runtime override removed. Public-importer RED and native/global AST census are
+retained. Qualification is in progress. Colocalization's ordinary 2.514475s
+inclusive step cost inside 6.424050s execution is an upper bound, not measured
+Costes-exclusive work or a promised saving. The separate 63 missing means
+still require first-loss evidence. No numerical tolerance or parity gate changes.
+
+Compiler profiling confirms repeated effective-configuration construction and
+cold schema analysis, but its timings overlap and are diagnostic only. A
+private prototype is not admitted: default-factory/callback and mutable-state
+laws remain unproved. This route is deferred while the larger unauthorized
+metric execution is qualified. Full scaling and fresh figures remain pending;
+the long-running optimization goal remains active.
