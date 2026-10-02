@@ -1306,6 +1306,8 @@ def compose_aligned_image_payload(
     metadata_mode: ImagePayloadMetadataCompositionMode = (
         ImagePayloadMetadataCompositionMode.BUNDLE
     ),
+    *,
+    retain_single_input: bool = True,
 ) -> ImagePayloadComposition:
     """Compose one or more image payloads into an executor-ready payload."""
     if not image_payloads:
@@ -1384,7 +1386,7 @@ def compose_aligned_image_payload(
                 "unaligned inputs require an explicit aligned stack owner. "
                 f"Unowned input indices: {unowned_inputs!r}."
             )
-        if len(aligned_payloads) == 1:
+        if len(aligned_payloads) == 1 and retain_single_input:
             if len(image_payloads) == 1:
                 return ImagePayloadComposition(
                     payload=aligned_payloads[0],
@@ -1424,7 +1426,7 @@ def compose_aligned_image_payload(
             ),
             execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
         )
-    if len(image_payloads) == 1:
+    if len(image_payloads) == 1 and retain_single_input:
         return ImagePayloadComposition(
             payload=image_payloads[0],
             execution_mode=ImagePayloadExecutionMode.NATURAL,

@@ -16,7 +16,6 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImageOutputBundle,
     ImagePayloadExecutionMode,
-    compose_aligned_image_payload,
 )
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -1344,7 +1343,7 @@ class CellProfilerModuleExecutor:
         align_primary_images = len(image_inputs) > 1 and broadcast_sources == tuple(
             spec.ref() for spec in image_inputs
         )
-        composition = compose_aligned_image_payload(
+        composition = self.callable_contract.image_payload_consumption.compose_image_payload(
             f"{module_type.require_module_name()} image inputs "
             f"{tuple(spec.name for spec in image_inputs)!r}",
             tuple(payloads),
