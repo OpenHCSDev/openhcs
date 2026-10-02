@@ -37,17 +37,23 @@ gate admission, independent area/intensity/upper-width rejection, physical
 calibration1.3556 and unchanged2-D boundary. No scientific pixels or outputs are
 read. No biological parameter is selected or biological success claimed.
 
-Original red:7 failures, missing public setting;506080KiB/21.754s,512MiB limit.
+Original red:6 missing-setting failures and1 incorrect detector-mask fixture;
+506080KiB/21.754s,512MiB limit.
 Initial post-fix fixture:2 failures/5 passes;432172KiB/6.867s. CP expanded the
 binary rectangle before the soma gate, invalidating the fixture's assumed
 exact56-pixel detector mask. That raw failure is preserved in green.log/XML.
 Corrected controls use exact synthetic labels for the gate and separately
-exercise actual unmodified CP default behavior. Qualification is in progress.
+exercise actual unmodified CP default behavior. See QUALIFICATION.rst for the
+published source, completed controls, same-base failure and original R0 result.
 
 Resource scope
 --------------
 
 Existing read-only paired parent Python and extension ABIs, source PYTHONPATH.
-Serial oneCPU512MiB/no-swap/60s shards via original retained monitor; no new
-environment, install, download, native viewer/process, science execution or
-pipeline materialization. Scratch and logs live only in this owned worktree.
+Serial oneCPU512..768MiB/no-swap/60s shards.512MiB monitor stops are retained;
+768MiB is the owner's authorized source ceiling, not a biological bound change.
+No environment, install, download, viewer, listener or scientific job. Early
+source fixtures reached catalog-preparation subprocesses which failed before
+preparation on the unavailable source extension import; those failures remain.
+Final authoring controls use already-declared original metadata in the original
+catalog owner, not a fresh installed catalog. Scratch/logs are owned here.
