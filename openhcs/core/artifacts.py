@@ -14,6 +14,7 @@ from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import astuple, dataclass, field, is_dataclass, replace
 from enum import Enum
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Self, cast
 
 from metaclass_registry import AutoRegisterMeta
@@ -3009,6 +3010,14 @@ class ArtifactInputPlan(ArtifactPlan):
         if self.retains_producer_stack(consumer_variable_components):
             return consumer_variable_components
         return ComponentSet()
+
+    def runtime_query_snapshot(self) -> Self:
+        """Own a point-in-time producer address without retaining mutable maps."""
+
+        paths_by_group = self.paths_by_group
+        if paths_by_group is not None:
+            paths_by_group = MappingProxyType(dict(paths_by_group))
+        return replace(self, paths_by_group=paths_by_group)
 
     def path_for_runtime_query(self, group_key: str | None) -> str:
         """Return the persisted input path addressed by a runtime query."""

@@ -2087,3 +2087,28 @@ def test_dynamic_query_retains_absent_and_empty_path_declarations(paths):
     assert query.target.input_plan.paths_by_group == paths
     assert plan.paths_by_group is paths
     assert query.target.input_plan.path_for_runtime_query("DAPI") == plan.path
+
+
+def test_input_plan_owns_independent_immutable_runtime_address_snapshot():
+    paths = {None: "/memory/measurements.pkl", "DAPI": "/first/measurements.pkl"}
+    plan = ArtifactInputPlan(
+        name="measurements",
+        path="/memory/measurements.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_component=AllComponents.CHANNEL,
+        paths_by_group=paths,
+        source_step_id=7,
+        source_step_scope_id="producer-scope",
+    )
+    snapshot = plan.runtime_query_snapshot()
+    assert snapshot == plan
+    assert snapshot is not plan
+    assert snapshot.paths_by_group is not paths
+    assert plan.paths_by_group is paths
+    paths["DAPI"] = "/second/measurements.pkl"
+    assert snapshot.path_for_runtime_query("DAPI") == "/first/measurements.pkl"
+    assert plan.path_for_runtime_query("DAPI") == "/second/measurements.pkl"
+    assert snapshot.source_step_id == plan.source_step_id
+    assert snapshot.source_step_scope_id == plan.source_step_scope_id
+    with pytest.raises(TypeError):
+        snapshot.paths_by_group["DAPI"] = "/mutated/query.pkl"

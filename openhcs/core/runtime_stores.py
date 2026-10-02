@@ -121,11 +121,6 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
     backend: str
 
     def __post_init__(self) -> None:
-        if not isinstance(self.input_plan, ArtifactInputPlan):
-            raise TypeError(
-                "RuntimeArtifactDynamicComponentTarget.input_plan must be an "
-                "ArtifactInputPlan value."
-            )
         if not self.input_plan.producer_group_scope().is_dynamic:
             raise ValueError(
                 "RuntimeArtifactDynamicComponentTarget requires a dynamic "
@@ -135,13 +130,8 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
             raise ValueError(
                 "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
             )
-        paths_by_group = self.input_plan.paths_by_group
-        if paths_by_group is not None:
-            paths_by_group = MappingProxyType(dict(paths_by_group))
         object.__setattr__(
-            self,
-            "input_plan",
-            replace(self.input_plan, paths_by_group=paths_by_group),
+            self, "input_plan", self.input_plan.runtime_query_snapshot()
         )
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
