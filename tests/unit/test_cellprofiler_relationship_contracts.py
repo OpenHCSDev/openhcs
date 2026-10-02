@@ -6,6 +6,10 @@ from pathlib import Path
 
 import numpy as np
 
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureDeclaration,
+    DirectParentReferenceMeasurementFeature,
+)
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -49,10 +53,6 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 )
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.setting_names import setting_values
-from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureDeclaration,
-    DirectParentReferenceMeasurementFeature,
-)
 from openhcs.processing.backends.cellprofiler.neighbors import (
     MeasureObjectNeighborsModule,
 )
