@@ -1366,3 +1366,43 @@ cover; installed acceptance remains open. No original biological replay or
 performance claim follows from this synthetic check. Source/input/dependency,
 native, request/reply and failure evidence:
 ``/var/tmp/openhcs-derived-role-435-synthetic-acceptance-v2-20261002``.
+
+Current main integration and publication diagnosis, 2026-10-02
+-----------------------------------------------------------
+
+Main 283119c42 is normally merged after the declared independent-plane NLM
+implementation and its documentation land. The combined affected NLM,
+cold-feedback, agent-service, prepared geometry, native presentation and MCP
+resource-lifetime controls pass 168 cases in 25.84s. Log:
+``/var/tmp/openhcs-pr394-main-283119c42-integration-controls-20261002.log``.
+The qualified benchmark sources and clocks above remain unchanged.
+
+The separately retained issue 435 public diagnostic reproduces the original
+failure. Four actual projections show two correctly qualified main-flow images
+but both retained artifacts address the same unqualified TIFF. The final raw
+artifact overwrites the capped artifact. The same-occurrence ownership comparator
+is never called: destination matching fails before that comparison. The existing
+duplicate guard therefore detects a physical filename collision, not a guard
+that should be relaxed. Both observer hooks call their original implementation
+once; no capture errors are reported. The exact owned runtime is closed through
+the public API and all SDK children are terminal. Receipt:
+``/var/tmp/openhcs-derived-role-435-collision-facts-v3-20261002.json``.
+An isolated repair on existing materialization-purpose and filename owners is
+under review; its local test results do not yet establish public acceptance.
+
+The owned source-field composition prototype is also rejected: the eleven
+captured valid leaves and additional mutation/constructor controls agree, but
+the five context, three normalization and three identity calls save only 9.24ms
+warm or 5.96ms cold. No candidate pipeline qualification or PR is opened for it.
+Receipt:
+``/var/tmp/openhcs-owned-source-composition-exploratory-REJECTED-20261002.json``.
+
+SaveImages reconstructs two source stacks solely for materialization metadata,
+whose downstream consumer reads provenance. Its earlier 0.346s envelope includes
+four contextualization children already measured elsewhere. After separating
+those children in the retained diagnostics, the residual envelope is only about
+0.10--0.114s. This is rejected as a standalone performance route; it cannot be
+counted as an independent 0.346s saving. The complete source-query preimage was
+not captured, so resulting metadata leaves are not a source-lookup replay.
+Read-only audit:
+``/var/tmp/openhcs-b764-save-images-artifact-subtree-readonly-audit-20261002.json``.
