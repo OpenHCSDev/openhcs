@@ -1,0 +1,7 @@
+Script started on 2026-10-02 18:49:19-04:00 [COMMAND="systemd-run --user --scope --unit=dewey-mcp-pty-483-source06 -p MemoryMax=512M -p MemorySwapMax=0 -p CPUQuota=100% /usr/bin/time -f "elapsed=%e maxrss_KiB=%M exit=%x" timeout 60s env PYTHONPATH=/home/ts/wt/openhcs-mcp-affine-progress-436-20261002 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python -B -m pytest --noconftest -p pytest_asyncio.plugin -q --override-ini addopts= --basetemp=validation/mcp-pty-test-scratch06 tests/unit/test_mcp_dev_client_persistent_session.py::test_persistent_client_initializes_once_for_distinct_command_specs" <not executed on terminal>]
+Running as unit: dewey-mcp-pty-483-source06.scope; invocation ID: 716f157ea895435d9d369c7cff974244
+.                                                                        [100%]
+1 passed in 4.39s
+elapsed=5.11 maxrss_KiB=274012 exit=0
+
+Script done on 2026-10-02 18:49:24-04:00 [COMMAND_EXIT_CODE="0"]
