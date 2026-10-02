@@ -81,7 +81,6 @@ from openhcs.core.steps.stream_component_semantics import (
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentityAuthority,
-    FunctionOutputParserContext,
     FunctionOutputPathAuthority,
 )
 from openhcs.processing.materialization.constants import (
@@ -1734,6 +1733,25 @@ class MaterializationContext:
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan | None = None
+    materialization_spec: MaterializationSpec | None = None
+
+    def named_source_filename(
+        self, metadata: ImagePayloadMetadata, extension: str,
+    ) -> str | None:
+        """Name a retained image from the actual rendering purpose and role."""
+        if self.materialization_spec is None:
+            return None
+        qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
+        if qualifier is None:
+            return None
+        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
+        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(parser, metadata)
+        if identity is None:
+            raise ValueError("Retained image output has no addressable source filename identity.")
+        identity = self.materialization_spec.filename_identity_for_output(
+            replace(identity, extension=extension), self.output_plan,
+        )
+        return FunctionOutputPathAuthority.filename_for_identity(parser, identity)
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)
@@ -2522,30 +2540,12 @@ def write_image_file(
         elif preserves_planned_path:
             path = paths.primary_output_path(options)
         else:
-            output_plan = context.output_plan
-            qualifier = (
-                output_plan.materialization.filename_qualifier(output_plan)
-                if output_plan is not None and output_plan.materialization is not None
-                else None
-            )
-            if qualifier is None:
+            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
+            if filename is None:
                 filename = (
                     source_stem_authority.required_source_stem(item.metadata)
                     + options.primary_output_suffix
                 )
-            else:
-                parser = FunctionOutputParserContext.from_processing_context(
-                    context.context,
-                ).parser
-                identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
-                    parser, item.metadata,
-                )
-                if identity is None:
-                    raise ValueError("Retained image output has no addressable source filename identity.")
-                identity = output_plan.materialization.filename_identity_for_output(
-                    replace(identity, extension=options.primary_output_suffix), output_plan,
-                )
-                filename = FunctionOutputPathAuthority.filename_for_identity(parser, identity)
             path = str(paths.parent / filename)
         outputs.append((path, item))
     output_paths = tuple(path for path, _item in outputs)
@@ -4186,6 +4186,7 @@ class MaterializationBatch:
         *,
         output_path_filter: Callable[[Path], bool] | None = None,
     ) -> MaterializationBatch:
+        context = replace(context, materialization_spec=spec)
         groups = tuple(
             (
                 writer,

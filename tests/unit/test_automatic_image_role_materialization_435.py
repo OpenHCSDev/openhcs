@@ -139,7 +139,8 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
 
 @pytest.mark.parametrize("purpose", (
     "explicit_source", "explicit_template", "terminal_template",
-    "explicit_artifact", "terminal_artifact", "unnamed_terminal",
+    "explicit_artifact", "terminal_artifact", "unnamed_terminal", "unnamed_explicit",
+    "explicit_source_declared_terminal", "terminal_source_declared_explicit",
 ))
 def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_path, purpose):
     from openhcs.processing.materialization import (
@@ -159,9 +160,14 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
         TerminalMaterializationSpec(options) if purpose.startswith("terminal") or purpose == "unnamed_terminal"
         else MaterializationSpec(options)
     )
-    output_plan = None if purpose == "unnamed_terminal" else ArtifactOutputPlan(
+    declared_spec = (
+        TerminalMaterializationSpec(options) if purpose == "explicit_source_declared_terminal"
+        else MaterializationSpec(options) if purpose == "terminal_source_declared_explicit"
+        else spec
+    )
+    output_plan = None if purpose in ("unnamed_terminal", "unnamed_explicit") else ArtifactOutputPlan(
         name="DeclaredRole", path="/memory/DeclaredRole.pkl",
-        artifact_type=ImageArtifactType, materialization=spec,
+        artifact_type=ImageArtifactType, materialization=declared_spec,
     )
     payloads = tuple(
         ImageMetadataPayload(np.ones((4, 5), dtype=np.float32) * index, ImagePayloadMetadata(
@@ -185,6 +191,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
     expected_paths = (
         ("authored/plane_1.tif", "authored/plane_2.tif") if purpose.endswith("template")
         else ("AuthoredBase.tif",) if purpose.endswith("artifact")
+        else ("A01_s001_w2_z001_t001_DeclaredRole.tif", "A01_s001_w2_z002_t001_DeclaredRole.tif") if purpose == "terminal_source_declared_explicit"
         else ("A01_s001_w2_z001_t001.tif", "A01_s001_w2_z002_t001.tif")
     )
     assert tuple(Path(output.path).relative_to(tmp_path).as_posix() for output in outputs) == expected_paths
@@ -214,3 +221,158 @@ def test_authored_duplicate_template_still_fails_before_any_save(tmp_path):
                                 context=context_stub(manager, parser=SourceSchemaFilenameParser()),
                                 output_plan=output_plan)
     assert not (tmp_path / "same.tif").exists()
+
+
+@pytest.mark.parametrize("suffix", (".tif", ".png", ".ome.tif", ".labels.tif"))
+@pytest.mark.parametrize("plane_count", (1, 2))
+def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suffix, plane_count):
+    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization
+    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
+
+    manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
+    context = context_stub(manager, parser=SourceSchemaFilenameParser())
+    plan = function_step_plan("Retained format role", variable_components=(VariableComponents.Z_INDEX,) if plane_count > 1 else ())
+    plan.output_dir = tmp_path / "images"
+    plan.analysis_results_dir = str(plan.output_dir)
+    output_plan = ArtifactOutputPlan(
+        name="Role Name", path="/memory/role.pkl", artifact_type=ImageArtifactType,
+        materialization=TerminalMaterializationSpec(ImageFileOptions(filename_suffix=suffix)),
+    )
+    payloads = tuple(
+        ImageMetadataPayload(np.ones((4, 5), dtype=np.uint8) * index, ImagePayloadMetadata(
+            source_component_metadata={"well": "A01", "site": "1", "channel": "2", "z_index": str(index), "timepoint": "1", "extension": ".tif"},
+        )) for index in range(1, plane_count + 1)
+    )
+    value = payloads[0] if plane_count == 1 else ImagePayloadBundleContext.from_payloads(
+        payloads, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+    ).compose()
+    store = RuntimeValueStore()
+    record = store.record(RuntimeValue.normalize(output_plan, value, axis_id="A01"), path=output_plan.path, backend=Backend.MEMORY.value)
+    outputs = RuntimeArtifactMaterialization.from_record(
+        output_plan=output_plan, record=record, plan=plan, context=context,
+    ).outputs(plan, context)
+    assert len(outputs) == plane_count
+    for index, (output, payload) in enumerate(zip(outputs, payloads, strict=True), 1):
+        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+            context.microscope_handler.parser, payload.metadata,
+        ).with_filename_qualifier(output_plan.name)
+        expected = FunctionOutputPathAuthority.filename_for_identity(
+            context.microscope_handler.parser, replace(identity, extension=suffix),
+        )
+        assert Path(output.path).name == expected
+        assert Path(output.path).name.endswith("_Role_Name" + suffix)
+        assert output.metadata.source_component_metadata["channel"] == "2"
+        assert output.metadata.source_component_metadata["z_index"] == str(index)
+        np.testing.assert_array_equal(output.content, payload.data)
+
+
+def test_distinct_aliases_that_normalize_to_one_filename_still_conflict(tmp_path):
+    from openhcs.core.steps.function_artifact_materialization import RuntimeArtifactMaterialization
+    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
+
+    manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
+    context = context_stub(manager, parser=SourceSchemaFilenameParser())
+    plan = function_step_plan("Ambiguous role spelling")
+    plan.output_dir = tmp_path / "images"
+    plan.analysis_results_dir = str(plan.output_dir)
+    value = ImageMetadataPayload(np.ones((4, 5), dtype=np.float32), ImagePayloadMetadata(
+        source_component_metadata={"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1", "extension": ".tif"},
+    ))
+    paths = []
+    store = RuntimeValueStore()
+    for name in ("a/b", "a b"):
+        output_plan = ArtifactOutputPlan(name=name, path=f"/memory/{name}.pkl", artifact_type=ImageArtifactType,
+                                        materialization=TerminalMaterializationSpec(ImageFileOptions(filename_suffix=".tif")))
+        record = store.record(RuntimeValue.normalize(output_plan, value, axis_id="A01"), path=output_plan.path, backend=Backend.MEMORY.value)
+        outputs = RuntimeArtifactMaterialization.from_record(output_plan=output_plan, record=record, plan=plan, context=context).outputs(plan, context)
+        paths.append(outputs[0].path)
+    assert paths[0] == paths[1]
+    # Existing main-flow destination authority rejects this declared naming
+    # collision instead of choosing a new suffix or inventing a channel.
+    from openhcs.core.steps.function_runtime import OutputPathBatchUniqueness
+    with pytest.raises(ValueError, match="duplicate"):
+        OutputPathBatchUniqueness(output_paths=paths, input_paths=[], step_name=plan.step_name, pattern_repr="declared roles").validate()
+
+
+def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkeypatch, tmp_path):
+    from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec
+    from openhcs.processing.materialization.constants import MaterializationFormat
+    from openhcs.processing.materialization.core import MaterializationBatch, MaterializationContext, Output, WriterSpec, _WRITERS_BY_OPTIONS
+
+    options = ImageFileOptions(filename_suffix=".tif")
+    declared = TerminalMaterializationSpec(options)
+    explicit = MaterializationSpec(options)
+    plan = ArtifactOutputPlan(name="Role", path="/memory/role", artifact_type=ImageArtifactType, materialization=declared)
+    manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
+    source = {"physical_source": "original"}
+    context = MaterializationContext(
+        base_path=str(tmp_path / "role"), backends=[], backend_kwargs={},
+        filemanager=manager, extra_inputs=source, output_plan=plan,
+        materialization_spec=declared,
+    )
+    seen = []
+    def custom_writer(data, actual_options, actual_context):
+        assert actual_options is options
+        assert actual_context.output_plan is plan
+        assert actual_context.extra_inputs is source
+        seen.append(actual_context)
+        return [Output(path=str(tmp_path / "custom.tif"), content=data)]
+    monkeypatch.setitem(_WRITERS_BY_OPTIONS, ImageFileOptions, WriterSpec(
+        format=MaterializationFormat.IMAGE_FILE, options_type=ImageFileOptions,
+        write=custom_writer, primary_path=lambda outputs: outputs[0].path,
+        candidate_paths=lambda _options, base: (base,),
+    ))
+    pixels = np.ones((4, 5), dtype=np.float32)
+    first = MaterializationBatch.render(explicit, pixels, context)
+    second = MaterializationBatch.render(declared, pixels, first.context)
+    assert seen == [first.context, second.context]
+    assert seen[0] is first.context and seen[1] is second.context
+    assert first.context.materialization_spec is explicit
+    assert second.context.materialization_spec is declared
+    assert context.materialization_spec is declared
+    assert plan.materialization is declared
+    assert source == {"physical_source": "original"}
+
+
+def test_direct_image_writer_without_purpose_binding_retains_legacy_source_path(tmp_path):
+    from openhcs.processing.materialization import ImageFileOptions, TerminalMaterializationSpec
+    from openhcs.processing.materialization.core import MaterializationContext, write_image_file
+
+    options = ImageFileOptions(filename_suffix=".tif")
+    plan = ArtifactOutputPlan(name="Role", path="/memory/role", artifact_type=ImageArtifactType,
+                              materialization=TerminalMaterializationSpec(options))
+    manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
+    value = ImageMetadataPayload(np.ones((4, 5), dtype=np.float32), ImagePayloadMetadata(
+        source_component_metadata={"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1", "extension": ".tif"},
+    ))
+    context = MaterializationContext(base_path=str(tmp_path / "role"), backends=[], backend_kwargs={},
+                                     filemanager=manager, extra_inputs={}, output_plan=plan,
+                                     context=context_stub(manager, parser=SourceSchemaFilenameParser()))
+    outputs = write_image_file(value, options, context)
+    assert Path(outputs[0].path).name == "A01_s001_w2_z001_t001.tif"
+    assert context.materialization_spec is None
+    assert context.output_plan is plan
+    np.testing.assert_array_equal(outputs[0].content, value.data)
+
+
+@pytest.mark.parametrize("purpose", ("named_terminal", "explicit", "unnamed_terminal"))
+def test_parser_free_render_requires_parser_only_for_automatic_named_role(tmp_path, purpose):
+    from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec, TerminalMaterializationSpec, materialization_outputs
+
+    options = ImageFileOptions(filename_suffix=".tif")
+    spec = MaterializationSpec(options) if purpose == "explicit" else TerminalMaterializationSpec(options)
+    plan = None if purpose == "unnamed_terminal" else ArtifactOutputPlan(
+        name="Role", path="/memory/role", artifact_type=ImageArtifactType, materialization=spec,
+    )
+    manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
+    value = ImageMetadataPayload(np.ones((4, 5), dtype=np.float32), ImagePayloadMetadata(
+        source_path="/physical/OriginalSource.tif",
+    ))
+    if purpose == "named_terminal":
+        with pytest.raises(ValueError, match="Parser-backed source-stem authority requires a parser"):
+            materialization_outputs(spec, value, str(tmp_path / "Role"), manager, output_plan=plan)
+    else:
+        outputs = materialization_outputs(spec, value, str(tmp_path / "Role"), manager, output_plan=plan)
+        assert Path(outputs[0].path).name == "OriginalSource.tif"
+        np.testing.assert_array_equal(outputs[0].content, value.data)
+    assert value.metadata.source_path == "/physical/OriginalSource.tif"
