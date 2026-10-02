@@ -2051,6 +2051,14 @@ class PlateInspectionService:
     ) -> PlateImageInventory:
         try:
             handler.register_source_backends(filemanager)
+            source_dataset = handler.metadata_handler.source_dataset(plate_path)
+            if source_dataset is not None:
+                return PlateImageInventory.from_source_dataset(
+                    plate_path=plate_path,
+                    handler=handler,
+                    filemanager=filemanager,
+                    source_dataset=source_dataset,
+                )
             source_projection = (
                 VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
                     plate_path=plate_path,
