@@ -24,7 +24,7 @@ from zmqruntime.viewer_protocol import (
 from openhcs.serialization.json import to_jsonable
 from collections.abc import Mapping
 
-from openhcs.constants.constants import AllComponents, VariableComponents
+from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
@@ -195,23 +195,6 @@ class ImagePayloadMetadata(
         return self.source_provenance.varying_plane_component_values(
             tuple(AllComponents)
         )
-
-    def require_independent_observation_axis(
-        self, axis: VariableComponents, *, value_name: str
-    ) -> None:
-        """Admit one source-coordinate ensemble without inventing raw-array identity."""
-
-        if not self.has_values:
-            return
-        retained_axes = tuple(
-            AllComponents.from_value(name)
-            for name in self.retained_plane_component_values()
-        )
-        if retained_axes != (AllComponents.from_value(axis.value),):
-            raise ValueError(
-                f"{value_name} requires independent {axis.name} observations "
-                "with every other source component fixed."
-            )
 
     @classmethod
     def for_array(

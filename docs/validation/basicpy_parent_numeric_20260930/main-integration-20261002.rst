@@ -39,3 +39,16 @@ draft until actual artifact/API and normal published dependency resolution.
 Previous field/MCP24SITE and Python3.14 controls remain pinned to their original
 sources, not projected through this main integration. Original failures and
 UNKNOWN requests remain. No science success or reserve release is claimed.
+
+Current-main R0 rejected the inherited domain admission method on the generic
+ImagePayloadMetadata: GodClassExcess grows17, original exit1,24.83s/79.44MiB.
+The original complete changed-product scan and all limits are retained. Fix
+ownership, not the measure: independent-observation admission belongs to the
+existing FittedIlluminationFieldOutput declaring observation_axis. Move that
+algorithm into its existing validate_observation_domain, deleting the generic
+metadata extension and forwarding call. It still queries the original metadata
+owner's retained component values; no facts are mirrored or new source registry
+introduced. IMPL-4/AGENT-4: complete the real field owner, not the generic god
+class. This removal touches only PR217's own metadata addition and leaves
+current main/PR394's metadata implementation unchanged. Controls must retain
+the same negative-axis and contributor behavior.

@@ -4,7 +4,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
 
-from openhcs.constants.constants import VariableComponents
+from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import image_payload_metadata
@@ -35,9 +35,18 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     @classmethod
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
-        image_payload_metadata(source).require_independent_observation_axis(
-            cls.observation_axis, value_name="BaSiC"
+        metadata = image_payload_metadata(source)
+        if not metadata.has_values:
+            return
+        retained_axes = tuple(
+            AllComponents.from_value(name)
+            for name in metadata.retained_plane_component_values()
         )
+        if retained_axes != (AllComponents.from_value(cls.observation_axis.value),):
+            raise ValueError(
+                f"BaSiC requires independent {cls.observation_axis.name} observations "
+                "with every other source component fixed."
+            )
 
     def with_data(self, data: RuntimeArrayData) -> "FittedIlluminationFieldOutput":
         return replace(self, data=data)
