@@ -282,6 +282,15 @@ class McpDevTypedOutputRenderer(McpDevOutputRenderer):
 
     unavailable_summary: ClassVar[str] = "Result: <unavailable>"
 
+    @classmethod
+    def json_value_count(cls, value: JsonValue) -> int:
+        """Count preview scalars in the declared dynamic JSON value algebra."""
+        if isinstance(value, list | tuple):
+            return sum(cls.json_value_count(item) for item in value)
+        if isinstance(value, Mapping):
+            return sum(cls.json_value_count(item) for item in value.values())
+        return 0 if value is None else 1
+
     @staticmethod
     def optional_lines(
         value: PresentationValue | None,

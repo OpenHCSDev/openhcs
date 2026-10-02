@@ -605,25 +605,10 @@ class ViewerImageSampleRenderer(ViewerResultRenderer):
             array_values = record.array_values
             if (
                 array_summary.sample_included
-                and cls._json_value_count(array_values) <= 64
+                and cls.json_value_count(array_values) <= 64
             ):
                 lines.append(f"  sample values: {json.dumps(to_jsonable(array_values))}")
         return lines
-
-    @staticmethod
-    def _json_value_count(value: JsonValue) -> int:
-        if isinstance(value, list | tuple):
-            return sum(
-                ViewerImageSampleRenderer._json_value_count(item) for item in value
-            )
-        if isinstance(value, Mapping):
-            return sum(
-                ViewerImageSampleRenderer._json_value_count(item)
-                for item in value.values()
-            )
-        if value is None:
-            return 0
-        return 1
 
 class ViewerNavigationRenderer(McpDevOutputRenderer):
     """Compact renderer for viewer navigation and layer isolation results."""
