@@ -1952,3 +1952,80 @@ Whole-branch scalar-classifier R0 and issue479 validator-relocation R1 remain
 RED. Installed419/433/435/450, original native image differences, full30-case
 and scaling reruns and fresh figures remain open. The optimization goal stays
 active; these measured gains do not redefine or complete the target.
+
+Canonical READY and current generic-query frontier
+-------------------------------------------------
+
+PR493 is merged on mainb85f1e4add6075a71f4fd4e5ba7e2512e48990e5 and
+closes491. Root normally integrates it atb015526c7c491abf80ea0958a08eb8723131c152.
+Canonical image/object stages replace the duplicate kernel list and threshold
+arithmetic.23 focused controls and original three-root R0/R1 pass; the actual
+root fresh-cache integration control passes1test/9.86s. Compilation and disk
+cache loading are refused after public preparation across IMAGE/OBJECT/BOTH
+and threshold/Costes option states. This establishes readiness, not a speedup.
+
+One source-pinned Beginner diagnostic on clean b015 completes with exactly one
+existing worker profile, nonempty existing runtime events,108 actual CP
+executor calls,133 declared callable calls and no diagnostic errors. Profile
+and event files occupy1.19MiB. Ten prelaunch controls preserve original calls,
+errors, alias/mutation, descriptor/loader and thread partition behavior. The
+instrumented12.9997s execution/15.2588s total is not an ordinary benchmark or
+a regression. Profiling overhead is substantial and nonuniform.
+
+The same-thread orchestrator region partitions exactly12.988882s. This region
+omits prior source/config decode; it is not the complete server-job clock.
+Disjoint instrumented exclusive costs include module-output recording4.918576s,
+declared callable invocations2.300491s, stack loading1.007764s, per-object output
+recording0.920284s and worker residual0.861094s. cProfile costs overlap these
+regions and must not be added or scaled to ordinary clocks.
+
+The determining generic query path makes312 full-column queries directly from
+upstream parent-mean derivation:803488 structural-missing checks and195808
+qualification calls within those queries. Whole-worker structural checks are
+1187866. Qualification precedes feature/source/row/object selection. Issue496
+tracks an operation-local schema/index fold on the existing nominal owners.
+Opaque callback order, errors and mutation must remain observable; explicit
+NaN propagation differs from default finite-value qualification. No new cache,
+callback-identity dispatch or per-Relate numerical optimization is admitted.
+
+Strict replay of this diagnostic retains exactly63 missing parent means in both
+saved native repetitions, with zero other numeric, image or inventory failures.
+All seven CSVs/two TIFFs are byte-identical to ordinary candidated567; full
+physical inventories agree and five correlation keys/2093pairs match. Source,
+outputs, inputs, native and dependencies remain unchanged through replay.
+Final all-zero science assertion correctly fails: no63-feature waiver exists.
+Receipt /var/tmp/openhcs-current-generic-job-profile-strict-native-science-v1-20261002/receipt.json
+SHA256bbc135e6de97628ddbabe8d350381a76a8af3000b4fba28f19e1879c27a220a8.
+
+Saved CSV readers cannot reconstruct preexport long rows, structural padding,
+explicit missing cells, ownership or query order. That route is rejected;
+metadata/relationship reader-domain errors are harness counterevidence, not
+science failures. A bounded post492 actual logical-column/query capture must
+demonstrate material absolute payoff before production optimization. The prior
+ordinary Relate span near0.8s is only a whole-operation ceiling; the corrected
+four-channel frontier and transfer remain unmeasured.
+
+Independent client residual evidence is0.818/0.804s for cached Beginner and
+0.379s for QC. Two submissions occupy0.367/0.368s and0.120s respectively;
+waiting beyond server clocks occupies0.03-0.08s. Four pipeline renders and
+three config renders are observed in source, but their exact elapsed and byte
+equality remain unproved. Blind memoization is rejected because shallow-frozen
+documents contain mutable steps. This client-only route cannot remove server
+execution work or independently close the seconds-wide target gap.
+
+Issue492's prepared four-channel/two-site repair passes its original controls
+and guards. New prerequisite495 proves complete dynamic queries previously
+ignored compiled producer path/backend, allowing foreign locations or an
+ambiguous retained producer after legal rebinding. Existing planned query and
+location authorities own the repair and point-in-time address law. Combined
+qualification and actual full native63-field acceptance remain pending.
+
+The shared /home filesystem temporarily blocked Git commits. Only the owned
+mutable worktree's website projection was made sparse through standard Git;
+all75 website files were first preserved byte-exact at
+/var/tmp/openhcs-owned-runtime-website-sparse-preserved-20261002/website with
+their manifest receipt. Git objects retain the same files. This freed27MiB;
+canonical ROOT, source code, benchmark inputs/outputs, dependencies and shared
+caches were untouched. Earlier b015 source freezes completed before this
+projection change; future freezes must explicitly record the sparse website.
+All remaining acceptance and full-catalog/scaling/figure obligations stay open.
