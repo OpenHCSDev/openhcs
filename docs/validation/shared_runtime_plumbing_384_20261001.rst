@@ -650,3 +650,53 @@ of ten graph snapshots. V4 identifies an unsupported native allocation owner in
 the four remaining before-state graphs; those graphs remain missing. Diagnostic
 capture clocks do not establish a speedup, and the additional multi-second
 whole-value plumbing payoff remains unmeasured.
+
+
+Prepared payload contract qualification (2026-10-02)
+--------------------------------------------------
+
+The integrated library/kernel readiness run at ``1ad3898`` prepares all 267
+functions and 976 targets before READY. It creates 265 distinct actual raw
+signature snapshots and reuses the canonical snapshot for two identical actual
+targets. Three rounds of prepared annotation, carrier, raw-signature, batch
+default and invocation-construction queries perform zero additional live
+signature/type-hint resolutions. The fresh-cache 90.381-second preparation is
+server startup diagnostics, excluded from pipeline clocks. Later explicit-plane
+validation and test-producer changes do not change these warming/signature owner
+sources. This finite check does not claim zero reflection for arbitrary
+unprepared authoring or unsupported callable mutation.
+
+The annotation-only follow-up ``9ae4c9426`` corrects twelve existing context
+consumers, three forwarding helpers and CropRequest.image. Existing
+RuntimeArrayData preserves their nominal image payload at the actual raw
+boundary; NumPy-only consumers still receive NumPy arrays. Scientific bodies,
+defaults, decorators and return declarations are unchanged by AST comparison.
+Frozen ``7241ca99b`` passes native-science comparison for Colocalization,
+Neighbors, YeastColonies and pixel classification with zero differences.
+YeastPatches passes its previous Crop failure but subsequently exposes an
+incorrect RGB source domain from IdentifyObjectsInGrid.
+
+Saved actual RGB pixels, source metadata and both 93-ID label artifacts isolate
+the remaining defect: IdentifyObjectsInGrid's primary argument and its existing
+request field/from_runtime argument falsely declare np.ndarray despite passing
+the image to SourceImageObjectLabelBuildRequest. Their raw ABI strips the
+1200-by-1600 source domain and (150, 170) crop origin, producing a (1255, 3)
+domain for (835, 1255) labels. ``84e99c0dd`` changes only those declarations and
+their direct RuntimeArrayData import. Scientific bodies and the refusing domain
+guard are unchanged. Seventy-seven scoped controls and 127 integrated controls
+pass. A fresh YeastPatches execution at that revision passes the existing native
+comparator with zero differences. Its replay uses retained source-pinned native
+artifacts, not newly timed native execution. The original 84-entry/38-module AST
+frontier now has no remaining exact classmethod context leads; aliases, inherited
+dispatch and dynamic routes remain outside that finite inventory.
+
+The five affected cases have passed across these two targeted sources. The full
+all-30 latest-head science gate, the execution-server OOM retaining-owner gate,
+the whole-branch scalar per-file architecture gate and fresh ordinary performance
+qualification remain open. No current native speedup is inferred from retained
+clocks or instrumented captures. Evidence includes
+``issue419-actual-integrated-1ad-signature-owner-readiness-20261002.json``,
+``pr394-7241-context5-science-qualification-20261002.json``,
+``issue419-grid-context-fix-20261002.json`` and
+``pr394-84e99-grid-science-qualification-20261002.json`` in the benchmark RUNS
+directory. All original failed source-pinned runs remain retained.
