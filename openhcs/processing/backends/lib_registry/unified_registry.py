@@ -28,7 +28,7 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable as CallableABC
+from collections.abc import Callable as CallableABC, Iterator
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import lru_cache, wraps
@@ -1260,6 +1260,9 @@ class FunctionMetadata:
 
         return f"{self.registry.library_name}:{self.name}"
 
+    def require_current_declaration(self) -> None:
+        """Validate declaration lifetimes specialized by metadata owners."""
+
     @property
     def display_name(self) -> str:
         """Human-readable function name for catalogs and selectors."""
@@ -1306,11 +1309,9 @@ class FunctionMetadata:
 
 
 class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
-    """
-    Minimal ABC for all library registries.
+    """ABC for declared library registries.
 
-    Provides only essential contracts that all registries must implement,
-    regardless of whether they use runtime testing or explicit contracts.
+    Catalog projection, cache identity and runtime contracts live on this owner.
 
     Registry auto-created and stored as LibraryRegistryBase.__registry__.
     Subclasses auto-register by setting _registry_name class attribute.
@@ -1434,6 +1435,22 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         del func
         return None
 
+    @classmethod
+    def _canonical_metadata_claims(
+        cls, function_id: str, *, prepare_catalog: bool = True,
+    ) -> Iterator[FunctionMetadata]:
+        """Supply catalog-owned claims; independent capabilities compose via super."""
+
+        from .registry_service import RegistryService
+
+        catalog = (
+            RegistryService.get_all_functions_with_metadata()
+            if prepare_catalog else RegistryService.cached_metadata_snapshot()
+        )
+        metadata = catalog.get(function_id)
+        if metadata is not None:
+            yield metadata
+
     def composite_keys_for_declared_callable(
         self,
         func: Callable,
@@ -1463,20 +1480,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 for module_name in module_names
             )
         )
-
-    def require_declared_callable_composite_key(
-        self,
-        func: Callable,
-        composite_key: str,
-    ) -> None:
-        """Require a transported key to be owned by the declaration inventory."""
-
-        declared_keys = self.composite_keys_for_declared_callable(func)
-        if composite_key not in declared_keys:
-            raise RuntimeError(
-                f"Function reference {composite_key!r} contradicts "
-                f"declaration-owned identity candidates {declared_keys!r}."
-            )
 
     # ===== CONTRACT HANDLING =====
     def apply_contract_wrapper(
