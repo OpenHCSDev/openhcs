@@ -841,23 +841,6 @@ class RuntimeValueStore:
             type[BoundedCache[Any, Any]],
             BoundedCache[Any, Any],
         ] = {}
-        self._find_cache: dict[
-            tuple[
-                int,
-                str | None,
-                ArtifactType | None,
-                str | None,
-                AllComponents | None,
-                str | None,
-                bool,
-                bool,
-            ],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
-        self._find_matching_cache: dict[
-            tuple[int, RuntimeArtifactQuery],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
 
     def query_cache(self, cache_type: type[StoreQueryCacheT]) -> StoreQueryCacheT:
         """Return a bounded derived-value cache owned by this store's lifetime.
@@ -874,15 +857,11 @@ class RuntimeValueStore:
     def __getstate__(self) -> dict[str, object]:
         state = dict(self.__dict__)
         del state["_query_caches"]
-        del state["_find_cache"]
-        del state["_find_matching_cache"]
         return state
 
     def __setstate__(self, state: dict[str, object]) -> None:
         self.__dict__.update(state)
         self._query_caches = {}
-        self._find_cache = {}
-        self._find_matching_cache = {}
 
     @staticmethod
     def address_matches_plan(
@@ -1001,7 +980,8 @@ class RuntimeValueStore:
     ) -> tuple[StoredRuntimeValue, ...]:
         """Return stored records matched by a typed runtime artifact query."""
         cache_key = (self._revision, query)
-        cached = self._find_matching_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         result = tuple(
@@ -1009,7 +989,7 @@ class RuntimeValueStore:
             for record in self._records_by_location.values()
             if query.matches(record)
         )
-        self._find_matching_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def get(self, key: ArtifactKey) -> StoredRuntimeValue:
@@ -1041,7 +1021,8 @@ class RuntimeValueStore:
             match_component,
             match_group,
         )
-        cached = self._find_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         records: list[StoredRuntimeValue] = []
@@ -1059,7 +1040,7 @@ class RuntimeValueStore:
                 continue
             records.append(record)
         result = tuple(records)
-        self._find_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def find_by_location(
@@ -1144,8 +1125,6 @@ class RuntimeValueStore:
         self._revision += 1
         for cache in self._query_caches.values():
             cache.clear()
-        self._find_cache.clear()
-        self._find_matching_cache.clear()
 
 
 def _validate_overwrite(

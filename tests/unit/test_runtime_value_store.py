@@ -2144,8 +2144,10 @@ def test_store_transport_excludes_all_derived_lookup_caches():
     assert pickle.dumps(store, protocol=5) == original_transport
     restored = pickle.loads(original_transport)
     assert restored.revision == store.revision
-    assert restored._find_cache == {}
-    assert restored._find_matching_cache == {}
+    assert "_find_cache" not in vars(store)
+    assert "_find_matching_cache" not in vars(store)
+    assert "_find_cache" not in vars(restored)
+    assert "_find_matching_cache" not in vars(restored)
     assert restored._query_caches == {}
     assert restored.values()[0].key == record.key
     assert restored.values()[0].location == record.location
@@ -2156,3 +2158,70 @@ def test_store_transport_excludes_all_derived_lookup_caches():
     assert restored.observed_values == restored.values()
     assert restored.values()[0] is restored.observed_values[0]
     assert restored.values()[0].value is restored.values()[1].value
+
+
+def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
+    from openhcs.core.process_local_cache import BoundedCache
+
+    store = RuntimeValueStore()
+    record = store.record(_runtime_value(), path="/memory/measurements.pkl", backend="memory")
+    query = RuntimeArtifactQuery.from_input_plan(
+        ArtifactInputPlan(
+            name="measurements",
+            path=record.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+        ),
+        axis_id="A01",
+        backend="memory",
+    )
+    semantic = store.find(name=record.key.name)
+    planned = store.find_matching(query)
+    empty = store.find(name="absent")
+    assert semantic == planned == (record,)
+    assert store.find(name=record.key.name) is semantic
+    assert store.find_matching(query) is planned
+    cache = store.query_cache(BoundedCache)
+    assert len(cache.entries) == 3
+    assert empty == ()
+    assert sum(value == () for value in cache.entries.values()) == 1
+    assert store.find(name="absent") is empty
+    assert len(cache.entries) == 3
+
+
+def test_unified_store_cache_eviction_recomputes_order_without_changing_record_aliases():
+    from openhcs.core.process_local_cache import BoundedCache
+
+    store = RuntimeValueStore()
+    first_value = _runtime_value(name="first")
+    second_value = _runtime_value(name="second")
+    first = store.record(first_value, path="/memory/first.pkl", backend="memory")
+    second = store.record(second_value, path="/memory/second.pkl", backend="memory")
+    cache = store.query_cache(BoundedCache)
+    cache.max_entries = 2
+    all_records = store.find()
+    assert all_records == (first, second)
+    query = RuntimeArtifactQuery.from_output_plan(
+        ArtifactOutputPlan(
+            name="first",
+            path=first.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+            group_keys=("DAPI",),
+        ),
+        axis_id="A01",
+        backend="memory",
+        group_key="DAPI",
+    )
+    assert store.find_matching(query) == (first,)
+    assert store.find(name="missing") == ()
+    assert len(cache.entries) == 2
+    recomputed = store.find()
+    assert recomputed == all_records
+    assert recomputed is not all_records
+    assert recomputed[0] is first and recomputed[1] is second
+    replacement = store.replace(first_value, path=first.path, backend="memory")
+    assert cache.entries == {}
+    assert store.find_matching(query)[0] is replacement
+    assert store.find() == (replacement, second)
+    assert store.find()[1] is second
