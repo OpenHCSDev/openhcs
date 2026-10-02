@@ -945,3 +945,76 @@ recording/export ceiling of 2.4189 seconds; a two-second saving requires about
 Receipts are ``openhcs-measurement-export-declared-state-profile-20261002`` and
 ``openhcs-measurement-export-declared-fields-alias-control-20261002.json`` under
 ``/var/tmp``. The original four-snapshot and raw-heap failures remain retained.
+
+
+Current-main integration and recording attribution (2026-10-02)
+---------------------------------------------------------------
+
+Main was normally merged through 3cb701770 at 6097ec4ff. Independent PR447
+merged the source-only CPA metadata repair and closed issue444. Its own
+220 controls, original architecture check, public Advanced run and independent
+scientific/source-identity comparison are documented in
+``cpa-secondary-source-metadata-444.rst``. The larger branch still has open
+acceptance gates and remains draft.
+
+The main58ee singleton controls exposed a real prepared-ABI integration bug:
+unannotated COMPOSED functions lost their nominal carrier. d4e800a75 derives
+that default from the existing consumption declaration while preserving
+explicit ndarray/Any/nominal ABI precedence. 136 isolated and249 integrated
+controls pass; the original scoped architecture check has zero increases.
+
+A fresh frozen746 Advanced run completed with compilation1.7983s,
+execution9.4002s and total12.3852s, default observers and startup excluded.
+Its scientific database comparison has zero differences. All90 previously
+NULL calibration fields are present;70 match literally and20 native staging
+PathName/URL strings are proven to identify the same source files using
+same-inode, resolved-source and original native input-inventory SHA checks.
+The raw path-string comparison remains separatelyRED. This is one observation,
+not a performance benefit: colocalization and one primary identification step
+were slower than frozen919, while database export changed1.8378 to1.7538s.
+
+The first nine-recorder cProfile diagnostic is scopeRED. It omitted the
+existing monitoring callback thread filter and attributed background sleeps
+to arbitrary numeric callers. A separate companion-thread experiment
+reproduced the error and confirmed the existing worker-profiling policy
+removes it after every profiler enable. No production workaround or duplicate
+issue for the already-fixed profiler infrastructure was introduced.
+
+The corrected frozen919 diagnostic has zero foreign sleep/server/poller
+events, exact original IFC CSV bytes, and zero scientific differences against
+native CP for1800rows. Its disjoint recording attribution is diagnostic only:
+
+===============================  ============
+Region                           Profile time
+===============================  ============
+Centroid calculation             0.6766s
+Sparse relationship row assembly 0.4404s
+Repeated axis-domain scans       0.2159s
+Other table assembly             0.3644s
+Ownership validation             0.000027s
+Measurement storage              0.0123s
+===============================  ============
+
+Centroid-to-IJV conversion is nested within centroid calculation and must not
+be added to it. Storage/ownership are immaterial targets for these recording
+calls; centroid-only cannot deliver the multi-second goal. Recording plus
+nonserialization export remains an optimistic2.4189s ceiling, not a measured
+counterfactual improvement.
+
+A real source-born3D diagnostic on isolated8dec failed mask alignment at
+step18. It observed300 source births and18 completed producer groups with
+no observation errors. RescaledDNA starts with60 correlated physical Z rows;
+Resize preserves60planes and changes onlyXY but drops the source domain.
+Resize after ImageMath repeats the loss. Source audit identifies bare ndarray
+annotations on the public Resize entries despite their shared implementation
+requiring metadata/masks. Direct unwrapped tests bypassed this boundary.
+Issue450 is formally linked to PR394; truthful RuntimeArrayData declarations,
+prepared-contract tests and a fresh production rerun are required. No source
+facts are injected into legacy captures, and no3D speedup/parity claim is made.
+
+Retained thread-scope/science receipts:
+``/var/tmp/openhcs-nine-recorders-profile-thread-scope-control-20261002.json``,
+``/var/tmp/openhcs-nine-recorders-profile-thread-owned-science-20261002.json``
+and ``/var/tmp/openhcs-nine-recorders-thread-owned-disjoint-analysis-20261002.json``.
+Actual failed3D proof:
+``/var/tmp/openhcs-spatial-plane-sourceborn-diagnostic-v2-20261002/observations.json``.
