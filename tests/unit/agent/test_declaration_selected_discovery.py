@@ -1,6 +1,7 @@
 """Declaration-only extension through real imports and cooperative class hooks."""
 
 import importlib
+import py_compile
 import sys
 from dataclasses import replace
 from types import ModuleType
@@ -11,6 +12,51 @@ from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+
+
+def test_selected_declaration_without_source_uses_normal_registry_discovery(
+    tmp_path, monkeypatch
+):
+    package_name = "selected_bytecode_declarations"
+    package = tmp_path / package_name
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    source = package / "declaration.py"
+    source.write_text(
+        "from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule\n"
+        "class BytecodeDeclaration(CellProfilerModule):\n"
+        "    module_name = 'SelectedBytecodeDeclaration'\n"
+        "    aliases = ('SelectedBytecodeAlias',)\n"
+        "    function_name = 'selected_bytecode_function'\n"
+    )
+    py_compile.compile(str(source), cfile=str(source.with_suffix(".pyc")), doraise=True)
+    source.unlink()
+    monkeypatch.syspath_prepend(str(tmp_path))
+    registry = CellProfilerModule.__registry__
+    monkeypatch.setattr(registry, "_discovered", False)
+    monkeypatch.setattr(
+        registry, "_config", replace(registry._config, discovery_package=package_name)
+    )
+
+    def forbid_full_discovery():
+        raise AssertionError("selected bytecode lookup attempted full discovery")
+
+    monkeypatch.setattr(registry, "_discover", forbid_full_discovery)
+    try:
+        spec = importlib.util.find_spec(f"{package_name}.declaration")
+        assert spec.loader.get_source(spec.name) is None
+        declaration = CellProfilerModule.require_module("SelectedBytecodeAlias")
+        assert declaration.__module__ == spec.name
+        assert declaration is CellProfilerModule.for_backend_function_name(
+            "selected_bytecode_function"
+        )
+        assert not registry._discovered
+    finally:
+        dict.pop(registry, "SelectedBytecodeDeclaration", None)
+        for name in tuple(sys.modules):
+            if name == package_name or name.startswith(f"{package_name}."):
+                monkeypatch.delitem(sys.modules, name)
+        importlib.invalidate_caches()
 
 
 @pytest.mark.parametrize("audit_first", [True, False])
