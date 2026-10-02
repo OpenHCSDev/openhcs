@@ -426,3 +426,70 @@ def test_failed_owned_axis_transform_does_not_mutate_source(monkeypatch, combine
     assert metadata.source_channel_axis == 2
     assert metadata.source_plane_intensity_scales == (255.0, 65535.0)
     assert metadata.source_plane_dtypes == ("uint8", "uint16")
+
+
+@pytest.mark.parametrize(
+    "plane_index,expected_scale",
+    ((None, 255), (-1, 255), (0, 255), (1, 65535), (2, 255)),
+)
+def test_owned_proof_projection_preserves_scalar_fallback_and_axis_removal(
+    plane_index, expected_scale
+):
+    proof = ImageUnitIntervalIntensityMetadata(
+        scale=255, source_plane_scales=(None, 65535)
+    )
+    metadata = ImagePayloadMetadata(unit_interval_intensity=proof)
+    projected = metadata.project_intensity_proof(plane_index)
+    assert projected is not proof
+    assert projected.scale == expected_scale
+    assert projected.source_plane_scales == ()
+    assert metadata.unit_interval_intensity is proof
+    assert proof.source_plane_scales == (None, 65535)
+    if plane_index is not None:
+        assert metadata.unit_interval_intensity_scale_for_source_plane(plane_index) == (
+            expected_scale
+        )
+
+
+@pytest.mark.parametrize("plane_index", (None, 0, 1))
+def test_owned_proof_projection_observes_absence_and_live_replacement(plane_index):
+    metadata = ImagePayloadMetadata(intensity_scale=255)
+    assert metadata.project_intensity_proof(plane_index) is None
+    if plane_index is not None:
+        assert (
+            metadata.unit_interval_intensity_scale_for_source_plane(plane_index) is None
+        )
+    proof = ImageUnitIntervalIntensityMetadata(scale=7, source_plane_scales=(11, 13))
+    metadata.unit_interval_intensity = proof
+    assert metadata.project_intensity_proof(plane_index).scale == (
+        7 if plane_index is None else (11, 13)[plane_index]
+    )
+    metadata.unit_interval_intensity = None
+    assert metadata.project_intensity_proof(plane_index) is None
+
+
+def test_quantization_queries_preserve_integer_conversion_and_fallback_identity():
+    calls = []
+
+    class ObservedInt(int):
+        def __int__(self):
+            calls.append(self)
+            return super().__int__()
+
+    scalar = ObservedInt(255)
+    plane = ObservedInt(65535)
+    metadata = ImagePayloadMetadata(
+        unit_interval_intensity=ImageUnitIntervalIntensityMetadata(
+            scale=scalar, source_plane_scales=(None, plane)
+        )
+    )
+    assert metadata.unit_interval_intensity_scale_for_source_plane(0) is scalar
+    assert metadata.unit_interval_intensity_scale_for_source_plane(-1) is scalar
+    assert calls == []
+    assert metadata.unit_interval_intensity_scale_for_source_plane(1) == 65535
+    assert calls == [plane]
+    calls.clear()
+    assert metadata.project_intensity_proof(1).scale == 65535
+    assert calls == [plane]
+    assert metadata.project_intensity_proof(None).scale is scalar
+    assert calls == [plane]

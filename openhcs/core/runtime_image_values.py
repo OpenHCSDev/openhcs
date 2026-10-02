@@ -672,11 +672,7 @@ class ImagePayloadMetadata(
         projected.source_channel_axis = source_channel_axis
         projected.source_plane_intensity_scales = ()
         projected.source_plane_dtypes = ()
-        projected.unit_interval_intensity = (
-            None
-            if self.unit_interval_intensity is None
-            else self.unit_interval_intensity.without_source_planes()
-        )
+        projected.unit_interval_intensity = self.project_intensity_proof(None)
         projected.normalize_metadata_fields()
         return projected
 
@@ -714,22 +710,27 @@ class ImagePayloadMetadata(
 
     def intensity_scale_for_source_plane(self, plane_index: int) -> float | None:
         """Return the best available intensity scale for one source plane."""
-        if 0 <= plane_index < len(self.source_plane_intensity_scales):
-            plane_scale = self.source_plane_intensity_scales[plane_index]
-            if plane_scale is not None:
-                return plane_scale
-        return self.intensity_scale
+        plane_scale = _tuple_value(self.source_plane_intensity_scales, plane_index)
+        return self.intensity_scale if plane_scale is None else plane_scale
 
     def unit_interval_intensity_scale_for_source_plane(
         self,
         plane_index: int,
     ) -> int | None:
         """Return the scale proving current pixels are exact integer/scale values."""
-        if 0 <= plane_index < len(self.source_plane_unit_interval_intensity_scales):
-            plane_scale = self.source_plane_unit_interval_intensity_scales[plane_index]
-            if plane_scale is not None:
-                return int(plane_scale)
-        return self.unit_interval_intensity_scale
+        if self.unit_interval_intensity is None:
+            return None
+        return self.unit_interval_intensity.scale_for_source_plane(plane_index)
+
+    def project_intensity_proof(
+        self, plane_index: int | None
+    ) -> ImageUnitIntervalIntensityMetadata | None:
+        """Select a plane's proof, or retain only the proof for the whole image."""
+        if self.unit_interval_intensity is None:
+            return None
+        if plane_index is None:
+            return self.unit_interval_intensity.without_source_planes()
+        return self.unit_interval_intensity.for_source_plane(plane_index)
 
     @property
     def source_plane_metadata_count(self) -> int:
@@ -1476,12 +1477,8 @@ class SourcePlaneImageMetadataProjection(ImageMetadataProjection):
             )
             or self.metadata.source_dtype,
             source_provenance=provenance,
-            unit_interval_intensity=(
-                None
-                if self.metadata.unit_interval_intensity is None
-                else self.metadata.unit_interval_intensity.for_source_plane(
-                    self.plane_index
-                )
+            unit_interval_intensity=self.metadata.project_intensity_proof(
+                self.plane_index
             ),
             source_plane_intensity_scales=(),
             source_plane_dtypes=(),
