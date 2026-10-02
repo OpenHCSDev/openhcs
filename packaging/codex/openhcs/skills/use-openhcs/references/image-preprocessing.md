@@ -136,25 +136,39 @@ close pair and noise-only background before accepting a filter.
 
 ### Fast non-local means recipe
 
-Discover `openhcs:cellprofiler_reducenoise`. This existing CPU implementation
-uses scikit-image's `denoise_nl_means(..., fast_mode=True)` with `patch_size`,
-`patch_distance` and `cutoff_distance` (the upstream `h`). It needs no GPU or
-`torch_nlm`. Start with a small odd patch below the feature scale and a bounded
-search distance; increase search support only when the improvement justifies
-measured runtime and memory. Fast mode trades additional memory for speed.
+Choose the spatial domain before the implementation. For independent grayscale
+planes, discover
+`openhcs:processors_numpy_processor_non_local_means_denoise_planes` and confirm
+its live `PURE_2D` contract. The existing contract slices the declared runtime
+plane axis and restores the stack's metadata and provenance; scikit-image owns
+the denoising algorithm. A singleton SITE axis is still an acquisition axis,
+not evidence that the input should receive volumetric NLM. This operation
+rejects bare volumes instead of guessing an axis. When patches should cross
+physical Z planes, inspect the original
+`skimage:restoration.denoise_nl_means` volumetric route instead. Compile the
+actual source and axis scope; do not squeeze or relabel axes to select a method.
 
-Establish the incoming detection-image units and noise scale first. The wrapper
-casts integer input to float without normalising its values, so `h=0.1` has a
-different meaning on raw detector counts and unit-range data. Use a registered
-noise estimate or bounded local statistics when available, and test a modest
-noise-scale-based cutoff bracket rather than copying a normalised-image default.
-This wrapper does not expose upstream `sigma`; do not invent that kwarg or claim
-noise-variance compensation. Keep estimated noise and cutoff in the same units.
+The per-plane operation exposes upstream `patch_size`, `patch_distance`, `h`,
+`fast_mode`, `sigma` and `preserve_range`. Inspect the incoming dtype and
+intensity units: upstream integer-to-float conversion and `preserve_range`
+affect the meaning of `h` and `sigma`. Use a registered noise estimate or
+bounded local statistics and test a modest noise-scale-based cutoff bracket,
+not a normalised-image default applied to detector counts. Start with a small
+odd patch below the feature scale and a bounded search distance. Fast mode
+trades additional memory for speed; per-plane execution does not bound memory
+for an arbitrarily large plane. Check the intended image size and working set
+before widening a trial. A tiny compile/pixel-equivalence check proves an
+engineering route, not preservation of faint biology on a new assay.
 
-Describe the full-stack execution contract and compile the observation/axis
-scope: avoid denoising across independent fields, channels or time points merely
-because they share a stack. Keep runtime-owned slice controls out of callable
-kwargs. Review raw-minus-denoised residuals for erased puncta, bodies and thin
+For CellProfiler recipe transfer, `openhcs:cellprofiler_reducenoise` remains an
+alternative with its own full-stack contract. It uses fast scikit-image NLM,
+names the upstream `h` parameter `cutoff_distance`, casts integers to float
+without normalising their values, and does not expose `sigma`. Do not assume
+the same settings have the same intensity or axis semantics across wrappers.
+These CPU routes need no GPU or `torch_nlm`. Keep runtime-owned slice controls
+out of callable kwargs; choose the declaration that owns the required behavior.
+
+Review raw-minus-denoised residuals for erased puncta, bodies and thin
 paths, plus denoised foreground/markers and downstream labels at dim and bright
 witnesses. Reject newly joined neighbours or lost weak positives even if noise
 looks lower. For original-fluorescence photometry, use the named original or
