@@ -4,8 +4,10 @@ import argparse
 import json
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from types import ModuleType
+from packaging.requirements import Requirement
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("dependency", type=Path)
@@ -25,6 +27,17 @@ requirement = next(
     item for item in project.dependencies if item.name == candidate.name
 )
 compatibility = floors.CandidateRequirementCompatibility(requirement, candidate)
+original_project = tomllib.loads(subprocess.check_output(
+    ["git", "-C", str(root), "show", "f2aabe45:pyproject.toml"], text=True,
+))
+original_requirement = next(
+    Requirement(item) for item in original_project["project"]["dependencies"]
+    if Requirement(item).name == candidate.name
+)
+assert original_requirement.specifier.contains("0.2.1")
+assert not floors.CandidateRequirementCompatibility(
+    original_requirement, candidate,
+).requires_candidate_floor
 assert compatibility.accepts_candidate
 assert compatibility.requires_candidate_floor
 assert compatibility.excludes_next_breaking_series
@@ -63,6 +76,8 @@ output = {
     "dependency_module": metaclass_registry.__file__,
     "candidate_version": str(candidate.version),
     "openhcs_requirement": str(requirement),
+    "original_openhcs_requirement": str(original_requirement),
+    "original_accepts_api_incompatible_021": True,
     "original_021_commit": old_commit,
     "original_missing_api_error": missing_api_error,
     "new_api_call": "passed; unconfigured registry performs no discovery",

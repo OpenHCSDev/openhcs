@@ -29,3 +29,45 @@ this seam. Both old376WTs and branches/history are retained; new draft branches
 reuse those same owned persistent worktrees, with no new worktree or environment.
 NRA MEMB-1/TIME-3 review: version/requirements remain package metadata facts;
 original declarative API and cooperative discovery mechanisms remain unchanged.
+
+Visible drafts and bounded evidence
+-----------------------------------
+
+Dependency https://github.com/OpenHCSDev/metaclass-registry/pull/3 prepares the
+version declaration0.2.2 from main3294a69. OpenHCS
+https://github.com/OpenHCSDev/openhcs/pull/414 stages the coordinated minimum;
+DO NOT MERGE before the availability gate above. The dependency implementation
+and tests remain original mergedPR2; only __version__ and changelog change.
+
+Source reproducer diagnose-selected-discovery-release-022.py reads actual
+f2aabe45 OpenHCS metadata, invokes original v0.2.1 core from exact commit
+ca0a87e873f929b311a87a4d60cd3bfba315dbcf and observes missing-method AttributeError.
+Common imports use current source; this is a narrow API-absence witness, not a
+fresh old-wheel/install proof. Draft requirement rejects0.2.1, accepts0.2.2,
+excludes0.3 and requires the actual Hatch-declared candidate version. Original
+metadata-only probe_release reports0.2.2 unavailable,0.35s/31904KiB; exit0
+means source witness completed, NOT that dependency publication succeeded.
+
+48source checks pass,0.87s/42372KiB, covering selected/full discovery/core and
+original Hatch metadata authority. Version declaration9d18172 is tested; original
+pinned R0 main3294a69 ->9d18172 has24projections,zero positive,0.81s/44240KiB.
+Original tool3b03785f/Python3.14 unchanged. OpenHCS production/tests are identical
+to mergedf2aabe45; no redundant full R0/R1 retry for metadata-only changes.
+Prior CP new-declaration/cooperative MRO controls remain the reviewed376 evidence.
+
+Exact commands/resources: selected-discovery-release-022-probe.resources.txt,
+selected-discovery-release-022-source.log and dependency-r0.resources.txt;
+probe/dependency-r0 JSON persist separately. Original read-only Python3.12 for
+source checks, Python3.14 for original R0, CPU0/512MiB/no swap/60s serial.
+No tag, artifact upload, workflow dispatch, private install, provider/native or
+uncertain registration/input replay. Publication authorization remains explicit.
+
+Cleanup: after terminal source workers, no matching process/open lsof handles,
+and canonical no-symlink check, removed only owned
+/home/ts/.cache/agent-scratch/selected-discovery-release-022-20261001 (300KiB).
+Durable source/history/original failures and the previous376worktree are retained.
+
+Exact paired prepared gitlink4b7d491e816ed8806a1f52e6302d38c05c78dfcb is published
+on dependency PR3. Only receipt text follows tested version source9d18172;
+src/tests are byte-identical. This is prepared source, not published0.2.2.
+No dependency tag is created. Checksums are in selected-discovery-release-022-SHA256SUMS.
