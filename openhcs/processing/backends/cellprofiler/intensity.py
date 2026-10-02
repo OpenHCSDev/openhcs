@@ -1560,7 +1560,7 @@ def _object_intensity_batch_key(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 def measure_object_intensity(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     object_intensity_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     slice_index: int = OBJECT_INTENSITY_DEFAULT_SLICE_INDEX,
