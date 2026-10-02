@@ -172,6 +172,9 @@ from openhcs.runtime.viewer_protocol import (
     ViewerPayloadField,
     ViewerPayloadProjectionOptions,
     ViewerPayloadSummaryField,
+    ViewerPayloadSummary,
+    ViewerArrayValueSummary,
+    ViewerPayloadRecord,
     ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
     ViewerSettlePhase,
@@ -3750,6 +3753,8 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
 
     MAX_NONZERO_COORDINATE_PROJECTION_COUNT: ClassVar[int] = 65_536
     MAX_NONZERO_EXAMPLE_COORDINATE_COUNT: ClassVar[int] = 16
+    payload_summary_type: ClassVar[type[ViewerPayloadSummary]] = ViewerPayloadSummary
+    payload_record_type: ClassVar[type[ViewerPayloadRecord]] = ViewerPayloadRecord
 
     server: "NapariViewerServer"
     viewer: NapariViewerLayerCreator
@@ -3916,7 +3921,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
                 aggregate_axis_bindings.item_scalar_components(item),
                 item.data,
                 aggregate_axis_bindings,
-            )
+            ).to_wire_mapping()
             for item in self._bounded_items(
                 items,
                 controls.max_payload_summaries_per_layer,
@@ -4019,7 +4024,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
         components: Mapping[str, ComponentValue],
         data: LayerData,
         aggregate_axis_bindings: NapariAggregateAxisBindingSet | None = None,
-    ) -> dict[str, NapariWireValue]:
+    ) -> ViewerPayloadSummary:
         summary: dict[str, NapariWireValue] = {
             ViewerPayloadField.DATA_TYPE.value: item.address.stream_layer_data_type.value,
             ViewerPayloadField.PATH.value: item.address.path,
@@ -4036,13 +4041,11 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             }
         if isinstance(data, np.ndarray):
             summary.update(cls.array_summary(data))
-            return summary
-        if isinstance(data, (list, tuple)):
+        elif isinstance(data, (list, tuple)):
             summary["item_count"] = len(data)
             summary[ViewerPayloadSummaryField.NONZERO_COUNT.value] = len(data)
             summary.update(cls.shape_payload_summary(data))
-            return summary
-        return summary
+        return cls.payload_summary_type.from_wire_mapping(summary)
 
     @classmethod
     def shape_payload_summary(
@@ -4435,27 +4438,18 @@ class NapariViewerPayloadProjection(
             source_data=item.data,
             removed_leading_axes=len(aggregate_indices),
         )
-        return {
-            ViewerPayloadField.ROUTE_KEY.value: route_key,
-            ViewerPayloadField.DATA_TYPE.value: (
-                item.address.stream_layer_data_type.value
-            ),
-            ViewerPayloadField.PATH.value: item.address.path,
-            ViewerPayloadField.COMPONENTS.value: components,
-            ViewerPayloadField.AXIS_INDICES.value: axis_indices,
-            ViewerPayloadField.AGGREGATE_AXIS_INDICES.value: aggregate_indices,
-            ViewerPayloadField.SUMMARY.value: NapariViewerStateProjection.payload_summary(
-                item,
-                components,
-                data,
-            ),
-            ViewerPayloadField.ARRAY_VALUES.value: array_values,
-            ViewerPayloadField.ARRAY_VALUE_SUMMARY.value: array_value_summary,
-            ViewerPayloadField.SHAPE_PAYLOADS.value: self.shape_payloads(
-                data,
-                payload_budget,
-            ),
-        }
+        return self.payload_record_type(
+            route_key=route_key,
+            data_type=item.address.stream_layer_data_type.value,
+            path=item.address.path,
+            components=components,
+            axis_indices=axis_indices,
+            aggregate_axis_indices=aggregate_indices,
+            summary=self.payload_summary(item, components, data),
+            array_values=array_values,
+            array_value_summary=array_value_summary,
+            shape_payloads=self.shape_payloads(data, payload_budget),
+        ).to_wire_mapping()
 
     @staticmethod
     def aggregate_data_slice(
@@ -4475,16 +4469,16 @@ class NapariViewerPayloadProjection(
         image_metadata: ImagePayloadMetadata | None = None,
         source_data: LayerData | None = None,
         removed_leading_axes: int = 0,
-    ) -> tuple[tuple[NapariWireValue, ...], dict[str, NapariWireValue]]:
+    ) -> tuple[tuple[NapariWireValue, ...], ViewerArrayValueSummary]:
         if not self.request.controls.include_array_values:
-            return (), {}
+            return (), ViewerArrayValueSummary()
         summary: dict[str, NapariWireValue] = {
             "requested": True,
             "included": False,
         }
         if not isinstance(data, np.ndarray):
             summary["omitted_reason"] = "payload_not_ndarray"
-            return (), summary
+            return (), ViewerArrayValueSummary.from_wire_mapping(summary)
 
         sample, slice_summary = self.array_value_sample(
             data,
@@ -4509,17 +4503,17 @@ class NapariViewerPayloadProjection(
             summary["min"] = self.json_scalar(np.min(sample))
             summary["max"] = self.json_scalar(np.max(sample))
         if "omitted_reason" in summary:
-            return (), summary
+            return (), ViewerArrayValueSummary.from_wire_mapping(summary)
         if sample.size > self.request.controls.max_array_elements:
             summary["omitted_reason"] = "max_array_elements_exceeded"
             summary["max_array_elements"] = self.request.controls.max_array_elements
-            return (), summary
+            return (), ViewerArrayValueSummary.from_wire_mapping(summary)
 
         summary["included"] = True
         value = self.wire_value(sample)
         if isinstance(value, tuple):
-            return value, summary
-        return (value,), summary
+            return value, ViewerArrayValueSummary.from_wire_mapping(summary)
+        return (value,), ViewerArrayValueSummary.from_wire_mapping(summary)
 
     def array_value_sample(
         self,

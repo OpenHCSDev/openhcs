@@ -26,6 +26,7 @@ class OpenHCSProcessEnvironment:
     numba_sys_monitoring_key = "NUMBA_ENABLE_SYS_MONITORING"
     subprocess_no_gpu_key = "OPENHCS_SUBPROCESS_NO_GPU"
     polystore_subprocess_no_gpu_key = "POLYSTORE_SUBPROCESS_NO_GPU"
+    jax_platforms_key = "JAX_PLATFORMS"
     use_threading_key = "OPENHCS_USE_THREADING"
 
     @staticmethod
@@ -119,6 +120,8 @@ class OpenHCSProcessEnvironment:
         if cls.gpu_imports_disabled(values):
             values[cls.subprocess_no_gpu_key] = "1"
             values[cls.polystore_subprocess_no_gpu_key] = "1"
+        if cls.cpu_only_mode(values):
+            values[cls.jax_platforms_key] = "cpu"
 
     @classmethod
     def worker_profile_directory(

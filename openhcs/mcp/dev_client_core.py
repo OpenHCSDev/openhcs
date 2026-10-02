@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
+from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -75,6 +75,9 @@ from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+if TYPE_CHECKING:
+    from mcp.types import ProgressNotification
 
 DEFAULT_CALL_TIMEOUT_SECONDS = 5.0
 DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS = 30.0
@@ -1377,6 +1380,8 @@ class McpDevStdioSession:
         *,
         timeout_seconds: float,
     ) -> Mapping[str, JsonValue]:
+        from mcp.types import ProgressNotification
+
         request_id = self.next_request_id()
         message: dict[str, JsonValue] = {
             "jsonrpc": "2.0",
@@ -1389,33 +1394,35 @@ class McpDevStdioSession:
                 request_params["_meta"] = {"progressToken": request_id}
             message["params"] = request_params
         await self.write_message(message)
-        while True:
-            response = await self.read_message(timeout_seconds=timeout_seconds)
-            if response.get("method") == McpWireMethod.PROGRESS.value:
-                self.record_progress_notification(response)
-            if response.get("id") != request_id:
-                continue
-            error = response.get("error")
-            if isinstance(error, Mapping):
-                raise McpDevJsonRpcError(method, error)
-            result = response.get("result")
-            if not isinstance(result, Mapping):
-                raise McpDevProtocolError(
-                    f"MCP {method.value} response did not contain an object result."
-                )
-            return result
+        loop = asyncio.get_running_loop()
+        async with asyncio.timeout(timeout_seconds) as inactivity:
+            while True:
+                response = await self.read_message(timeout_seconds=timeout_seconds)
+                if response.get("method") == McpWireMethod.PROGRESS.value:
+                    notification = ProgressNotification.model_validate(response)
+                    if notification.params.progressToken == request_id:
+                        self.record_progress_notification(notification)
+                        inactivity.reschedule(loop.time() + timeout_seconds)
+                if response.get("id") != request_id:
+                    continue
+                error = response.get("error")
+                if isinstance(error, Mapping):
+                    raise McpDevJsonRpcError(method, error)
+                result = response.get("result")
+                if not isinstance(result, Mapping):
+                    raise McpDevProtocolError(
+                        f"MCP {method.value} response did not contain an object result."
+                    )
+                return result
 
     def record_progress_notification(
         self,
-        notification: Mapping[str, JsonValue],
+        notification: ProgressNotification,
     ) -> None:
         """Write one standard progress notification to the diagnostic stream."""
 
-        params = notification.get("params")
-        if not isinstance(params, Mapping):
-            return
-        progress = params.get("progress")
-        message = params.get("message")
+        progress = notification.params.progress
+        message = notification.params.message
         self.server_stderr.write(
             f"MCP progress: progress={progress!r} message={message!r}\n"
         )

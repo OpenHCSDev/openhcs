@@ -49,10 +49,9 @@ class SourcePlaneSelectionImageOutput(SourceProjectedImageOutput):
         projection: RuntimePlaneAxisValueProjection | None,
     ) -> RuntimeArrayData:
         """Attach selected provenance, consuming an explicitly singleton axis."""
-        if projection is None or projection.plane_index is not None:
-            raise ValueError(
-                "Selecting source planes requires a complete input stack projection."
-            )
+        projection = RuntimePlaneAxisValueProjection.require_complete_projection(
+            projection, value_name="Selecting source planes"
+        )
         indices = self.selected_source_plane_indices()
         if any(index >= projection.axis_size for index in indices):
             raise ValueError("Selected source plane is outside the input stack.")
