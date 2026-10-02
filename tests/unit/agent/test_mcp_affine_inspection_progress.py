@@ -286,8 +286,12 @@ def test_async_cancellation_after_start_retains_exactly_one_owned_callback():
 class WireInspectionService(AffineInspectionService):
     """Bound only synthetic work; never replace transport or progress owners."""
 
+    def __init__(self, request_identity, *, work_seconds=2.4):
+        super().__init__(request_identity)
+        self.work_seconds = work_seconds
+
     def wait_for_completion(self):
-        time.sleep(2.4)
+        time.sleep(self.work_seconds)
         return True
 
     def inspect_pipeline_source_artifact_plan_request(self, request):
@@ -295,18 +299,24 @@ class WireInspectionService(AffineInspectionService):
         return super().inspect_pipeline_source_artifact_plan_request(request)
 
 
-def serve_stdio_inspection_fixture():
+def serve_stdio_inspection_fixture(*, work_seconds=2.4):
     from openhcs.mcp.stdio import McpStdioTransport
 
     identity = ContextVar("wire-source-identity", default="wire")
     with McpStdioTransport.reserve_process_stdio() as transport:
         transport.run(build_server(
-            SimpleNamespace(execution_service=WireInspectionService(identity)),
+            SimpleNamespace(execution_service=WireInspectionService(identity, work_seconds=work_seconds)),
             main_thread_dispatcher=transport.execution.dispatcher,
         ))
 
 
-def test_resident_continuous_connections_keep_affinity_and_wire_progress(tmp_path):
+@pytest.mark.parametrize("work_seconds,idle_seconds,connection_count", (
+    pytest.param(2.4, 1.6, 2, id="original-continuous"),
+    pytest.param(12.0, 10.0, 1, id="ordinary-ten-second-idle"),
+))
+def test_resident_continuous_connections_keep_affinity_and_wire_progress(
+    tmp_path, work_seconds, idle_seconds, connection_count,
+):
     from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevSocketSession
     from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
@@ -314,23 +324,42 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(tmp_pat
     import sys
 
     transport = McpSocketTransport(tmp_path / "affine.sock")
-    service = WireInspectionService(ContextVar("resident-source-identity", default="resident"))
+    service = WireInspectionService(
+        ContextVar("resident-source-identity", default="resident"), work_seconds=work_seconds,
+    )
     built = build_server(SimpleNamespace(execution_service=service), main_thread_dispatcher=transport.execution.dispatcher)
     clients = AsyncOperationExecutor(max_workers=1)
     diagnostics = io.StringIO()
 
+    class ObservedSession(McpDevSocketSession):
+        def record_progress_notification(self, notification):
+            super().record_progress_notification(notification)
+            progress.append((time.monotonic(), notification.params.progressToken))
+
+    progress = []
+
     async def exercise():
         assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
         try:
-            for connection in range(2):
-                async with McpDevSocketSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
+            for connection in range(connection_count):
+                async with ObservedSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
                     await session.initialize(timeout_seconds=10)
                     for source in ("cold", "failed"):
+                        started = time.monotonic()
+                        before = len(progress)
+                        request_id = session.request_id + 1
                         result = await session.call_tool(
                             InspectPipelineSourceArtifactPlanCapability.name,
                             {"plate_path": "/synthetic", "pipeline_source": source},
-                            timeout_seconds=1.6,
+                            timeout_seconds=idle_seconds,
                         )
+                        elapsed = time.monotonic() - started
+                        assert elapsed >= work_seconds > idle_seconds
+                        events = progress[before:]
+                        assert events and all(token == request_id for _, token in events)
+                        assert events[0][0] - started < 1
+                        assert events[-1][0] - started > idle_seconds
+                        print("RESIDENT_AFFINE_TERMINAL", source, elapsed, idle_seconds, flush=True)
                         payload = result["structuredContent"]
                         if source == "failed":
                             assert payload["errors"][0]["message"] == "Original controlled source error"
@@ -346,7 +375,7 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(tmp_pat
     try:
         transport.serve(built)
         future.result()
-        assert len(service.calls) == 4
+        assert len(service.calls) == 2 * connection_count
         assert "still running" in diagnostics.getvalue()
         assert "Source inspection on original main thread" in diagnostics.getvalue()
     finally:
