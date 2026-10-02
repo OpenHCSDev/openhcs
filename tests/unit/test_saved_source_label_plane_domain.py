@@ -149,3 +149,32 @@ def test_new_calibrated_leaf_executes_cooperative_admission_and_plane_building()
     with pytest.raises(ValueError, match="Physical scalar pixel size requires"):
         CalibratedSavedLabels(image=_source(labels, spacing=()), labels=labels).payload()
     assert SourceImageObjectLabelBuildRequest(image=_source(labels, spacing=()), labels=labels).payload().domain.scope is ObjectLabelDomainScope.PLANE
+
+
+class PairedSourceAdmission:
+    """An independent declared requirement limiting a projection to two sources."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.axis_size > 2:
+            raise ValueError("Paired projection accepts at most two source planes.")
+
+
+class PairedSourceProjection(PairedSourceAdmission, RuntimePlaneAxisValueProjection):
+    """An independent projection leaf using the unchanged source constructor."""
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+def test_source_constructor_admits_a_new_cooperative_projection_capability(axis):
+    source = _source(np.ones((2, 6, 7), dtype=np.int32), axis=axis)
+    value = PairedSourceProjection.from_source_declaration(axis, source.metadata.source_provenance)
+    assert isinstance(value, PairedSourceProjection)
+    assert value.axis is axis
+    assert value.axis_size == 2
+    assert value.selected_plane(1).require_plane_index() == 1
+    bigger = _source(np.ones((3, 6, 7), dtype=np.int32), axis=axis)
+    with pytest.raises(ValueError, match="at most two source planes"):
+        PairedSourceProjection.from_source_declaration(axis, bigger.metadata.source_provenance)
+    assert RuntimePlaneAxisValueProjection.from_source_declaration(axis, bigger.metadata.source_provenance).axis_size == 3
+    # Absence is a declaration, not inferred from three source records.
+    assert PairedSourceProjection.from_source_declaration(None, bigger.metadata.source_provenance) is None

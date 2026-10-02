@@ -130,12 +130,10 @@ class SourceImageObjectLabelBuildRequest:
             )
         projection = self.plane_projection
         metadata = self.metadata
-        if metadata.plane_axis is not None:
-            declared_projection = RuntimePlaneAxisValueProjection.preserve(
-                axis=metadata.plane_axis,
-                axis_size=metadata.source_provenance.source_plane_count,
-                source_aliases=metadata.source_image_names,
-            )
+        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+            metadata.plane_axis, metadata.source_provenance,
+        )
+        if declared_projection is not None:
             if projection is None:
                 projection = declared_projection
             elif (
