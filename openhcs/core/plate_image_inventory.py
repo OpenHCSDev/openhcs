@@ -35,7 +35,11 @@ if TYPE_CHECKING:
         FilenameParser,
         MetadataHandler,
     )
-    from openhcs.core.source_projection import SourceCandidate, SourceProjection
+    from openhcs.core.source_projection import (
+        SourceCandidate,
+        SourcePlaneDataset,
+        SourceProjection,
+    )
     from polystore.filemanager import FileManager
     from polystore.roi import ROI, ROIShape
 
@@ -92,6 +96,43 @@ class PlateImageInventory:
     records: tuple[PlateImageRecord, ...]
 
     @classmethod
+    def from_read_only_handler(
+        cls,
+        *,
+        plate_path: Path,
+        handler: "MicroscopeHandler",
+        filemanager: "FileManager",
+    ) -> "PlateImageInventory":
+        """Inventory the selected metadata owner, not a different source domain.
+
+        Acquisition owners expose their exact physical dataset. Workspace owners
+        retain the persisted projection. Neither path prepares or rewrites it.
+        """
+
+        handler.register_source_backends(filemanager)
+        source_dataset = handler.metadata_handler.source_dataset(plate_path)
+        if source_dataset is not None:
+            return cls.from_source_dataset(
+                plate_path=plate_path,
+                handler=handler,
+                filemanager=filemanager,
+                source_dataset=source_dataset,
+            )
+        source_projection = cls._projection(
+            plate_path, handler.metadata_handler, filemanager
+        )
+        if source_projection is not None:
+            handler.register_workspace_backends(plate_path, filemanager)
+        return cls.from_handler(
+            plate_path=plate_path,
+            handler=handler,
+            filemanager=filemanager,
+            backend=handler.get_primary_backend(plate_path, filemanager),
+            source_projection=source_projection,
+            all_subdirs=True,
+        )
+
+    @classmethod
     def from_orchestrator(
         cls,
         orchestrator: "PipelineOrchestrator",
@@ -135,21 +176,11 @@ class PlateImageInventory:
     ) -> "PlateImageInventory":
         source_dataset = handler.metadata_handler.source_dataset(plate_path)
         if source_projection is None and source_dataset is not None:
-            parser = handler.require_filename_parser(
-                "Exact source datasets require a filename parser for inventory projection."
-            )
-            return cls(
+            return cls.from_source_dataset(
                 plate_path=plate_path,
-                records=tuple(
-                    cls._record_from_source_candidate(
-                        plate_path=plate_path,
-                        candidate=candidate,
-                        handler=handler,
-                        parser=parser,
-                        filemanager=filemanager,
-                    )
-                    for candidate in source_dataset.candidates
-                ),
+                handler=handler,
+                filemanager=filemanager,
+                source_dataset=source_dataset,
             )
         image_files = (
             tuple(sorted(source_projection.relative_virtual_paths()))
@@ -176,6 +207,34 @@ class PlateImageInventory:
             for image_file in image_files
         )
         return cls(plate_path=plate_path, records=records)
+
+    @classmethod
+    def from_source_dataset(
+        cls,
+        *,
+        plate_path: Path,
+        handler: "MicroscopeHandler",
+        filemanager: "FileManager",
+        source_dataset: "SourcePlaneDataset",
+    ) -> "PlateImageInventory":
+        """Expose the metadata owner's exact acquisition planes, without writes."""
+
+        parser = handler.require_filename_parser(
+            "Exact source datasets require a filename parser for inventory projection."
+        )
+        return cls(
+            plate_path=plate_path,
+            records=tuple(
+                cls._record_from_source_candidate(
+                    plate_path=plate_path,
+                    candidate=candidate,
+                    handler=handler,
+                    parser=parser,
+                    filemanager=filemanager,
+                )
+                for candidate in source_dataset.candidates
+            ),
+        )
 
     @staticmethod
     def _record_from_source_candidate(
