@@ -49,9 +49,13 @@ production modules plus32 zmqruntime,193 pyqt-reactive and63 PolyStore modules:
 991 modules, zero parse failures. Class bases, imports, field writes, comparisons,
 calls and progress-family declarations were searched across these roots, then
 the actual sites read. Initial guessed ObjectState root was absent (0files),
-not evidence of complete dependency coverage; its actual .pth backing is traced
-separately. Dynamic imports/metaclass execution were not resolved by this static
-search. Generated binding/MRO and real compiler behavioral checks follow.
+not evidence of complete dependency coverage. Its actual .pth backing resolves
+to basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/objectstate:
+27 more modules parsed, zero parse omissions, no progress queue/gateway/status
+consumers. Total1018 parsed modules. Original NRA PythonEnumBaseAuthority also
+identified ProgressPhase/ProgressStatus/channel declarations and original
+EndpointStartupPhase; no enum changed. Dynamic imports/metaclass resolution
+is not claimed from this AST search; actual generated MRO/codec tests are below.
 
 Search found only the original AgentProgressQueue and one production concrete
 CompileInspectionGatewayABC leaf. Original queue setter remains process-global
@@ -92,7 +96,18 @@ Existing completed client renewal/26controls/12s experiments were not repeated.
 Logs retained in validation/cold436-source-controls-first.log,
 cold436-source-corrections.log and cold436-real-compile.log. Scratch only under
 /home/ts/.cache/agent-scratch/dewey-436-cold-feedback-*; failed inputs retained.
-Original scoped R0 against this production head pending.
+Original scoped R0 at037511e85: RED, sole positive GodClassExcess+13 on original
+PlateInspectionService,180836KiB/17.630s. Traced existing duplicate complete
+inventory construction: _plate_file_inventory had one inspection consumer and
+duplicated the combined branch of _plate_file_inventory_for_query. Deleted that
+procedure, migrated the caller to the existing owner and passed its original
+warning policy explicitly. No forwarding facade or compatibility alias survives.
+Query continues suppressing recovered-listing warnings, inspection keeps them
+enabled. Both consumers now use the same preparation-status boundary.
+Original inventory closure6PASS/26deselected,442432KiB/7.218s: read-only source
+identity, path-planned results, result-only roots, low parse coverage, path-policy
+errors and once-only source projection. See cold436-inventory-closure.log.
+Corrected exact production R0 pending.
 Parent fresh installed cold synthetic inspection and physical reader preparation
 remain required; no new native/viewer/scientific process, install or download here.
 Resource helper reports3.6GiB home and swap pressure; use only existing WT/env,

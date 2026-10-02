@@ -1620,12 +1620,14 @@ class PlateInspectionService:
         pixel_size = self._pixel_size(handler, plate_path, warnings)
         available_backends = self._available_backends(handler, plate_path, warnings)
         parser = self._parser(handler, warnings)
-        file_inventory = self._plate_file_inventory(
+        file_inventory = self._plate_file_inventory_for_query(
             handler,
             plate_path,
             parser,
             filemanager,
+            None,
             warnings,
+            warn_on_recovered_listing_failure=True,
         )
         image_files = tuple(
             record.virtual_path for record in file_inventory.image_records
@@ -1967,6 +1969,8 @@ class PlateInspectionService:
         filemanager: "FileManager",
         query_kind: PlateFileKind | None,
         warnings: list[AgentWarning],
+        *,
+        warn_on_recovered_listing_failure: bool = False,
     ) -> PlateFileInventory:
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
@@ -1985,7 +1989,7 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 )
                 if result_inventory.records:
                     warnings.append(
@@ -2011,7 +2015,7 @@ class PlateInspectionService:
                     plate_path,
                     parser,
                     warnings,
-                    warn_on_recovered_listing_failure=False,
+                    warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
                 ),
             )
         return PlateFileInventory.from_inventories(
@@ -2026,31 +2030,9 @@ class PlateInspectionService:
                 plate_path,
                 parser,
                 warnings,
-                warn_on_recovered_listing_failure=False,
+                warn_on_recovered_listing_failure=warn_on_recovered_listing_failure,
             ),
         )
-
-    def _plate_file_inventory(
-        self,
-        handler: "MicroscopeHandler",
-        plate_path: Path,
-        parser: "FilenameParser | None",
-        filemanager: "FileManager",
-        warnings: list[AgentWarning],
-    ) -> PlateFileInventory:
-        image_inventory = PlateInspectionService._image_inventory(
-            handler,
-            plate_path,
-            filemanager,
-            warnings,
-        )
-        result_inventory = self._result_file_inventory(
-            handler,
-            plate_path,
-            parser,
-            warnings,
-        )
-        return PlateFileInventory.from_inventories(image_inventory, result_inventory)
 
     @staticmethod
     def _image_inventory(
