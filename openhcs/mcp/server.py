@@ -106,6 +106,7 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
+from openhcs.mcp.execution import McpMainThreadDispatcher
 from openhcs.mcp.lifecycle import (
     McpProcessLifecycle,
     McpProcessRecoveryStatus,
@@ -2171,6 +2172,7 @@ def build_server(
     capability_transport: CapabilityTransport = CapabilityTransport.LOCAL_STDIO,
     capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
     invocation_observer: McpInvocationObserver | None = None,
+    main_thread_dispatcher: McpMainThreadDispatcher | None = None,
 ):
     """Build the transport-neutral FastMCP surface without importing GUI services.
 
@@ -2189,6 +2191,11 @@ def build_server(
         fastmcp_factory = FastMCP
 
     ctx = context or create_agent_context()
+    dispatcher = (
+        main_thread_dispatcher
+        if main_thread_dispatcher is not None
+        else McpMainThreadDispatcher()
+    )
     capability_surface_selection = AgentCapabilitySurfaceSelection(
         transport=capability_transport,
         local_profile=(
@@ -2267,7 +2274,7 @@ def build_server(
                             return await fn(*args, **kwargs)
                         if capability.progress_worker_thread_safe:
                             return await asyncio.to_thread(fn, *args, **kwargs)
-                        return fn(*args, **kwargs)
+                        return await dispatcher.invoke(lambda: fn(*args, **kwargs))
 
                     try:
                         with _verbose_blocking_operation_diagnostics(capability):
@@ -2319,7 +2326,7 @@ def build_server(
                     if stale is not None:
                         return stale
                     try:
-                        result = fn(*args, **kwargs)
+                        result = dispatcher.call(lambda: fn(*args, **kwargs))
                         return project_success(result)
                     except Exception as exc:
                         return project_failure(exc)

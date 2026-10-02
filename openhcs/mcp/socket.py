@@ -21,6 +21,8 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from openhcs.mcp.execution import McpTransportExecutor
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
@@ -101,8 +103,20 @@ class McpSocketTransport:
         self._last_activity = time.monotonic()
         self._stop = threading.Event()
         self._listener: socket.socket | None = None
+        self.execution = McpTransportExecutor()
 
     def serve(self, server: "FastMCP") -> None:
+        try:
+            self.execution.run(self._serve_off_main, server)
+        finally:
+            self.execution.close()
+
+    async def _serve_off_main(self, server: "FastMCP") -> None:
+        import asyncio
+
+        await asyncio.to_thread(self._serve, server)
+
+    def _serve(self, server: "FastMCP") -> None:
         """Accept client connections and serve one MCP session per connection."""
 
         directory = self.socket_path.parent

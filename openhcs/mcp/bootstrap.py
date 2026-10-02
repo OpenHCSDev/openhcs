@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from openhcs.agent.capabilities import LocalCapabilitySurfaceProfile
+    from openhcs.mcp.execution import McpMainThreadDispatcher
     from mcp.server.fastmcp import FastMCP
 
 
@@ -146,6 +147,8 @@ def build_bootstrap_failure_server(
 
 def build_bootstrapped_server(
     capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    *,
+    main_thread_dispatcher: "McpMainThreadDispatcher | None" = None,
 ) -> "FastMCP":
     """Build the full OpenHCS MCP server, or a fail-soft bootstrap server."""
     try:
@@ -153,6 +156,7 @@ def build_bootstrapped_server(
         from openhcs.mcp.server import build_server
 
         return build_server(
+            main_thread_dispatcher=main_thread_dispatcher,
             capability_surface_profile=(
                 DesktopLocalCapabilitySurfaceProfile()
                 if capability_surface_profile is None
@@ -199,10 +203,9 @@ def run_bootstrapped_server(
 
     with McpStdioTransport.reserve_process_stdio() as stdio_transport:
         try:
-            server = (
-                build_bootstrapped_server()
-                if capability_surface_profile is None
-                else build_bootstrapped_server(capability_surface_profile)
+            server = build_bootstrapped_server(
+                capability_surface_profile,
+                main_thread_dispatcher=stdio_transport.execution.dispatcher,
             )
             stdio_transport.run(server)
         except Exception as exc:
@@ -247,10 +250,9 @@ def _run_resident_socket_server(
         ),
     )
     try:
-        server = (
-            build_bootstrapped_server()
-            if capability_surface_profile is None
-            else build_bootstrapped_server(capability_surface_profile)
+        server = build_bootstrapped_server(
+            capability_surface_profile,
+            main_thread_dispatcher=transport.execution.dispatcher,
         )
     except Exception as exc:
         transport._log(
