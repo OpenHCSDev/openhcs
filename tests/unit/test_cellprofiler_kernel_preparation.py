@@ -148,3 +148,83 @@ def test_registry_preparation_covers_volume_erosion_and_quantized_diagnostics(tm
         timeout=120,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_illumination_preparation_covers_masked_polynomial_and_array_views(tmp_path):
+    """READY must include every canonical pixel/mask mutability signature."""
+    script = textwrap.dedent("""
+        from contextlib import ExitStack
+        from unittest.mock import patch
+        import numpy as np
+        from openhcs.core.callable_contract import prepare_processing_callable
+        from openhcs.processing.backends.cellprofiler import illumination
+
+        dispatchers = (
+            illumination._fit_polynomial_unmasked_gram_numba,
+            illumination._fit_polynomial_unmasked_rhs_numba,
+            illumination._fit_polynomial_normal_equations_numba,
+            illumination._evaluate_polynomial_surface_numba,
+        )
+        assert all(not dispatcher.signatures for dispatcher in dispatchers)
+        prepare_processing_callable(illumination.correct_illumination_calculate)
+        signatures = tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers)
+        assert all(signatures), "A reached masked polynomial kernel was not prepared"
+
+        def reject_late_compilation(signature):
+            raise AssertionError("Polynomial kernel compiled or loaded after READY: " + str(signature))
+
+        # The polynomial spans the exact solver feature basis, so the expected
+        # answer is independent of production warmup and implementation details.
+        shape = (11, 13)
+        y, x = np.indices(shape, dtype=np.float64)
+        expected = 1.0 + x / shape[1] + y / shape[0] + (x / shape[1]) ** 2
+        mask = np.ones(shape, dtype=bool)
+        mask[2:4, 3:5] = False
+        with ExitStack() as stack:
+            for dispatcher in dispatchers:
+                stack.enter_context(patch.object(dispatcher, "compile", reject_late_compilation))
+            for dtype in (np.float32, np.float64):
+                for order in ("C", "F", "reversed"):
+                    for readonly_image in (False, True):
+                        image = np.array(expected, dtype=dtype, order="F" if order == "F" else "C")
+                        selected_mask = mask.copy(order="F" if order == "F" else "C")
+                        if order == "reversed":
+                            image = image[::-1, ::-1]
+                            selected_mask = selected_mask[::-1, ::-1]
+                        if readonly_image:
+                            image.flags.writeable = False
+                        for mask_mode in ("absent", "writable", "readonly"):
+                            active_mask = None if mask_mode == "absent" else selected_mask.copy(order="K")
+                            if mask_mode == "readonly":
+                                active_mask.flags.writeable = False
+                            before_image = image.copy()
+                            before_mask = None if active_mask is None else active_mask.copy()
+                            result = illumination.fit_polynomial_surface(image, active_mask)
+                            oracle = expected[::-1, ::-1] if order == "reversed" else expected
+                            np.testing.assert_allclose(result, oracle, atol=1e-6, rtol=1e-6)
+                            np.testing.assert_array_equal(image, before_image)
+                            if active_mask is not None:
+                                np.testing.assert_array_equal(active_mask, before_mask)
+                            assert not np.shares_memory(result, image)
+                            if active_mask is not None:
+                                assert not np.shares_memory(result, active_mask)
+            with np.testing.assert_raises_regex(ValueError, "mask must match"):
+                illumination.fit_polynomial_surface(expected, np.ones((3, 4), dtype=bool))
+            with np.testing.assert_raises_regex(NotImplementedError, "2-D"):
+                illumination.fit_polynomial_surface(expected[None, ...], None)
+        assert tuple(tuple(dispatcher.signatures) for dispatcher in dispatchers) == signatures
+    """)
+    environment = os.environ.copy()
+    environment.update(
+        {"OPENHCS_CPU_ONLY": "true", "NUMBA_CACHE_DIR": str(tmp_path / "polynomial-kernels")}
+    )
+    result = subprocess.run(
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
