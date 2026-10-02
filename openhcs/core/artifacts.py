@@ -23,6 +23,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
+    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
     from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
     from openhcs.core.runtime_artifact_values import (
         RuntimeValue,
@@ -213,6 +214,11 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         return Path(analysis_output_dir) / descriptor_filename
 
     @classmethod
+    def retained_filename_qualifier(cls, artifact_name: str) -> str | None:
+        """Retain families whose existing paths already own artifact identity."""
+        return None
+
+    @classmethod
     def normalize_runtime_payload(
         cls,
         name: str,
@@ -381,6 +387,11 @@ class ImageArtifactType(ArtifactType):
     participates_in_measurement_source_names = True
     participates_in_main_flow_output = True
     carries_source_image_context = True
+
+    @classmethod
+    def retained_filename_qualifier(cls, artifact_name: str) -> str:
+        """Distinguish named retained images sharing one physical source plane."""
+        return artifact_name
 
     @classmethod
     def projected_materialization_base_path(
@@ -1050,6 +1061,19 @@ class ArtifactMaterializationPayload(ABC):
     @abstractmethod
     def uses_source_identity_filename(self) -> bool:
         """Return whether this materialization names files by source identity."""
+
+    @abstractmethod
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+        """Derive the output role required by this materialization purpose."""
+
+    def filename_identity_for_output(
+        self,
+        identity: FunctionOutputIdentity,
+        output_plan: ArtifactOutputPlan | None,
+    ) -> FunctionOutputIdentity:
+        """Apply a declared role through the shared filename identity algorithm."""
+        qualifier = self.filename_qualifier(output_plan)
+        return identity if qualifier is None else identity.with_filename_qualifier(qualifier)
 
 
 def _coerce_artifact_plan_type(

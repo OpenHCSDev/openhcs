@@ -79,6 +79,10 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamViewerComponentMetadataProjector,
 )
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentityAuthority,
+    FunctionOutputPathAuthority,
+)
 from openhcs.processing.materialization.constants import (
     MaterializationFormat,
     WriteMode,
@@ -1729,6 +1733,25 @@ class MaterializationContext:
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan | None = None
+    materialization_spec: MaterializationSpec | None = None
+
+    def named_source_filename(
+        self, metadata: ImagePayloadMetadata, extension: str,
+    ) -> str | None:
+        """Name a retained image from the actual rendering purpose and role."""
+        if self.materialization_spec is None:
+            return None
+        qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
+        if qualifier is None:
+            return None
+        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
+        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(parser, metadata)
+        if identity is None:
+            raise ValueError("Retained image output has no addressable source filename identity.")
+        identity = self.materialization_spec.filename_identity_for_output(
+            replace(identity, extension=extension), self.output_plan,
+        )
+        return FunctionOutputPathAuthority.filename_for_identity(parser, identity)
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)
@@ -2508,32 +2531,23 @@ def write_image_file(
         options.filename_identity is MaterializedFilenameIdentity.ARTIFACT_NAME
         or paths.source_identity_base_path(options) is not None
     )
-    outputs = tuple(
-        (
-            (
-                _image_relative_output_path(
-                    item.value,
-                    options,
-                    context,
-                    sequence_index=sequence_index,
+    outputs = []
+    for sequence_index, item in enumerate(projected_items, start=1):
+        if options.relative_path_template is not None:
+            path = _image_relative_output_path(
+                item.value, options, context, sequence_index=sequence_index,
+            )
+        elif preserves_planned_path:
+            path = paths.primary_output_path(options)
+        else:
+            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
+            if filename is None:
+                filename = (
+                    source_stem_authority.required_source_stem(item.metadata)
+                    + options.primary_output_suffix
                 )
-                if options.relative_path_template is not None
-                else (
-                    paths.primary_output_path(options)
-                    if preserves_planned_path
-                    else str(
-                        paths.parent
-                        / (
-                            source_stem_authority.required_source_stem(item.metadata)
-                            + options.primary_output_suffix
-                        )
-                    )
-                )
-            ),
-            item,
-        )
-        for sequence_index, item in enumerate(projected_items, start=1)
-    )
+            path = str(paths.parent / filename)
+        outputs.append((path, item))
     output_paths = tuple(path for path, _item in outputs)
     if len(set(output_paths)) != len(output_paths):
         raise ValueError(
@@ -4007,6 +4021,10 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         """Explicit materialization specs are externally observed exports."""
         return True
 
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+        """Preserve the source filenames authored by an explicit export."""
+        return None
+
     def participates_in_persistent_materialization(self) -> bool:
         """Explicit materialization specs write to configured persistent targets."""
         return True
@@ -4168,6 +4186,7 @@ class MaterializationBatch:
         *,
         output_path_filter: Callable[[Path], bool] | None = None,
     ) -> MaterializationBatch:
+        context = replace(context, materialization_spec=spec)
         groups = tuple(
             (
                 writer,
