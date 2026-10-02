@@ -1459,3 +1459,20 @@ frontier is 3.0201s with incomplete whole-lane replay coverage; counts from the
 instrumented profile cannot establish its reducible fraction. Audit and smallest
 missing capture recipe:
 ``/var/tmp/openhcs-b764-whole-lifecycle-architecture-reassessment-20261002.json``.
+
+Issue 435 supplemental public readback passes on the unchanged V4 output. Two
+fresh SDK processes expose identical complete inventory, sample and projection
+facts. Both 1024-by-1024 float32 role images pass the unchanged existing CP pixel
+comparison with zero out-of-tolerance pixels: raw maximum difference is zero;
+capped maximum difference is 1.1920928955078125e-7 under atol=rtol=1e-6. Both
+roles retain physical C2 and calibration within the existing inspection spacing
+tolerance of 1e-12. The original controller, journey, inputs, source, dependencies,
+native binaries and all physical output hashes remain unchanged, and both reader
+children exit zero. The original V4 journey remains RED. The supplemental
+inspection check follows the existing status policy, retaining PARTIAL for the
+sole undeclared-grid warning without fabricating grid metadata; spacing uses the
+existing inspection tolerance rather than literal equality after TIFF formatting.
+This is synthetic source qualification, not original biological or installed-root
+acceptance. Supplemental receipt:
+``/var/tmp/openhcs-derived-role-435-v4-readback-supplement-20261002/receipt.json``
+(SHA256 4f0f0550e50aaff297d134ee5accf2b2da01297305394a155fe79e827b844fdf).
