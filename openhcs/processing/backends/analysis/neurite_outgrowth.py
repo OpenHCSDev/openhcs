@@ -1,6 +1,7 @@
 """MetaXpress-style 2D neurite outgrowth analysis.
 
-The public controls mirror the documented MetaXpress Neurite Outgrowth module.
+The public controls include MetaXpress-style Neurite Outgrowth settings and an
+OpenHCS-exposed lower-size acceptance gate from the existing segmentation engine.
 The opinionated implementation composes the existing CellProfiler-compatible
 segmentation leaves and measures the final soma-rooted neurite topology.
 """
@@ -216,7 +217,7 @@ CELLPROFILER_NEURITE_ENGINE_PROFILE = CellProfilerNeuriteEngineProfile()
 
 @dataclass(frozen=True)
 class MetaXpressCellBodySettings:
-    """Documented cell-body controls for Neurite Outgrowth."""
+    """MetaXpress-style body controls plus an OpenHCS engine acceptance gate."""
 
     approximate_max_width: float = 30.0
     """Approximate maximum short-axis width in micrometers."""
@@ -233,7 +234,7 @@ class MetaXpressCellBodySettings:
     minimum_inscribed_diameter_px: float = (
         CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_min_diameter_px
     )
-    """Minimum maximum-inscribed diameter (2 * EDT radius - 1) in pixels.
+    """OpenHCS minimum maximum-inscribed diameter (2 * EDT radius - 1) in pixels.
 
     This acceptance gate is independent of calibrated area and maximum
     short-axis width. Zero disables only this lower-size gate; it does not
@@ -766,12 +767,14 @@ def neurite_outgrowth_metaxpress(
 ]:
     """Measure cell bodies and attached neurites in one 2D channel stack.
 
-    The user-facing controls follow the MetaXpress Neurite Outgrowth module:
+    The MetaXpress-style controls cover:
     neurite image and illumination; optional cell-body channel, maximum width,
-    minimum area, minimum inscribed diameter in pixels, and local-background
-    intensity; outgrowth maximum width,
+    minimum area, and local-background intensity; outgrowth maximum width,
     local-background intensity, and scoring threshold; plus an optional nuclear
     wavelength with minimum/maximum width and local-background intensity.
+    OpenHCS additionally exposes the existing engine's minimum-inscribed-
+    diameter acceptance gate in pixels. This is not a claim that the vendor's
+    MetaXpress module exposes that control or that segmentation is equivalent.
 
     This implementation is deliberately 2D. ``image`` must have shape
     ``(C, Y, X)`` and should be produced by a step whose variable component is
