@@ -27,6 +27,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableMetadata,
+    CallableProjection,
     callable_request,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -55,6 +56,9 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     morphologicalskeleton,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.lib_registry.unified_registry import (
+    RuntimeCallablePolicy, RuntimeInvocationKwargPolicy,
+)
 
 
 def _compiled_contract(
@@ -422,9 +426,9 @@ def test_raw_abi_child_preserves_cooperative_executor_constructor_contract() -> 
             super().__init__(plane_projection=plane_projection)
             constructed.append(self)
 
-        def invoke_raw(self, callable_contract, func, image, kwargs):
+        def execute_pure_2d_slice(self, *args, **kwargs):
             raw_calls.append(self)
-            return super().invoke_raw(callable_contract, func, image, kwargs)
+            return super().execute_pure_2d_slice(*args, **kwargs)
 
     def raw(image: np.ndarray) -> np.ndarray:
         assert isinstance(image, np.ndarray)
@@ -456,7 +460,8 @@ def test_raw_abi_child_preserves_cooperative_executor_constructor_contract() -> 
 
     foreign_contract = _compiled_contract(foreign_raw, ProcessingContract.PURE_2D)
     child = constructed[1]
-    assert child.invoke_raw(foreign_contract, foreign_raw, source, {}) is source
+    policy = RuntimeCallablePolicy(kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED)
+    assert policy.contract_invocation(foreign_contract, foreign_raw, source, {}).call() is source
     assert not hasattr(child, "_scope_contract")
 
 
@@ -465,7 +470,7 @@ def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(monke
     def raw(image: np.ndarray, scale: int = 2) -> np.ndarray:
         calls.append(image.shape)
         return image * scale
-    CallableContract.warm_canonical_signature(raw)
+    CallableProjection.from_callable(raw).warm_canonical_signature()
     contract = _compiled_contract(
         raw, ProcessingContract.PURE_2D,
         artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),),
