@@ -316,6 +316,125 @@ class CallableMetadata:
         signature = cls.prepared_callable_signature(func)
         return inspect.signature(func) if signature is None else signature
 
+    def resolve_canonical_raw_callable(self, func: Any) -> Callable[..., object]:
+        """Return the declaration-owned callable whose signature defines behavior."""
+
+        declared = self.raw_processing_function
+        if declared is None:
+            declared = func
+        return _resolve_declared_callable(declared)
+
+    def resolve_raw_runtime_callable(self, func: Any) -> Callable[..., object]:
+        """Remove runtime wrappers without crossing a semantic request binding."""
+
+        canonical = self.resolve_canonical_raw_callable(func)
+        if self.request_binding is None:
+            return inspect.unwrap(canonical)
+
+        binding_key = FunctionContractAttribute.callable_request_binding
+
+        def is_request_boundary(candidate: Callable[..., object]) -> bool:
+            namespace = _callable_namespace(candidate)
+            if binding_key not in namespace:
+                return False
+            wrapped = namespace.get("__wrapped__")
+            return not callable(wrapped) or binding_key not in _callable_namespace(
+                wrapped
+            )
+
+        resolved = inspect.unwrap(canonical, stop=is_request_boundary)
+        if binding_key not in _callable_namespace(resolved):
+            raise RuntimeError(
+                f"Callable {CallableProjection.from_callable(func).name!r} declares a request binding, but "
+                "its canonical raw callable has no request-binding boundary."
+            )
+        return resolved
+
+    def resolve_signature(self, raw_callable: Callable[..., object]) -> inspect.Signature:
+        """Resolve the semantic ABI once after declaration preparation."""
+        signature = inspect.signature(raw_callable)
+        annotations = (
+            self.request_binding.public_annotations_dict
+            if self.request_binding is not None
+            else get_type_hints(raw_callable, include_extras=True)
+        )
+        return signature.replace(
+            parameters=tuple(
+                parameter.replace(annotation=annotations.get(name, parameter.annotation))
+                for name, parameter in signature.parameters.items()
+            ),
+            return_annotation=annotations.get("return", signature.return_annotation),
+        )
+
+    @staticmethod
+    def primary_input_name(parameters: Mapping[str, inspect.Parameter]) -> str | None:
+        for parameter in parameters.values():
+            if parameter.kind in (
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            ):
+                return parameter.name
+        return None
+
+    @classmethod
+    def _nominal_argument_types(cls, annotation: object) -> tuple[type, ...]:
+        annotation = resolve_annotated(annotation)
+        if is_union_type(annotation):
+            return tuple(
+                argument_type for member in get_args(annotation)
+                for argument_type in cls._nominal_argument_types(member)
+            )
+        return (
+            (annotation,)
+            if annotation is not Any and isinstance(annotation, type)
+            else ()
+        )
+
+    def raw_main_flow_call_argument(self, source_payload: Any, signature: inspect.Signature) -> Any:
+        """Admit a declared nominal carrier at the canonical image boundary."""
+        from openhcs.core.runtime_image_values import image_payload_data
+
+        primary_name = self.primary_input_name(signature.parameters)
+        annotation = None if primary_name is None else signature.parameters[primary_name].annotation
+        return source_payload if any(
+            isinstance(source_payload, argument_type)
+            for argument_type in self._nominal_argument_types(annotation)
+        ) else image_payload_data(source_payload)
+
+    def canonical_signature_for(self, func: Any) -> inspect.Signature:
+        """Use the prepared semantic ABI; unprepared authoring remains live."""
+        if self.canonical_signature is not None:
+            return self.canonical_signature
+        return self.resolve_signature(self.resolve_canonical_raw_callable(func))
+
+    def raw_runtime_signature_for(self, func: Any) -> inspect.Signature:
+        """Own the distinct raw ABI or the shared canonical target snapshot."""
+        if self.raw_runtime_signature is not None:
+            return self.raw_runtime_signature
+        if self.canonical_signature is not None:
+            return self.canonical_signature
+        return self.resolve_signature(self.resolve_raw_runtime_callable(func))
+
+    def with_prepared_signatures(self, canonical: Callable, runtime: Callable) -> "CallableMetadata":
+        """Snapshot each actual target independently after declaration preparation."""
+        return dataclasses.replace(
+            self, canonical_signature=self.resolve_signature(canonical),
+            raw_runtime_signature=None if runtime is canonical else self.resolve_signature(runtime),
+        )
+
+    def with_missing_signatures(self, canonical: Callable[[], Callable], runtime: Callable[[], Callable]) -> "CallableMetadata":
+        """Reuse library readiness or capture the newly prepared authored targets."""
+        if self.canonical_signature is not None:
+            return self
+        return self.with_prepared_signatures(canonical(), runtime())
+
+    def publish_signatures(self, namespace: MutableMapping[str, Any]) -> None:
+        """Replace the namespace pair as one library preparation epoch."""
+        namespace[FunctionContractAttribute.canonical_signature] = self.canonical_signature
+        namespace.pop(FunctionContractAttribute.raw_runtime_signature, None)
+        if self.raw_runtime_signature is not None:
+            namespace[FunctionContractAttribute.raw_runtime_signature] = self.raw_runtime_signature
+
     @property
     def artifact_output_policy(self) -> type[ArtifactOutputPolicy]:
         """Project recording ownership from this callable's adapter declaration."""
@@ -959,43 +1078,9 @@ class CallableContract(ArtifactPlanKeySelector):
             return source_payload
         return self.raw_main_flow_call_argument(source_payload)
 
-    def raw_main_flow_call_argument(
-        self, source_payload: Any,
-    ) -> Any:
-        """Project one image argument at the canonical raw callable boundary."""
-        from openhcs.core.runtime_image_values import image_payload_data
-
-        return (
-            source_payload
-            if any(
-                isinstance(source_payload, argument_type)
-                for argument_type in self.raw_main_flow_argument_types()
-            )
-            else image_payload_data(source_payload)
-        )
-
-    def raw_main_flow_argument_types(self) -> tuple[type, ...]:
-        """Derive the nominal argument view for one canonical invocation."""
-        parameters = self.canonical_parameter_declarations
-        primary_name = self._primary_input_name(parameters)
-        annotation = (
-            None if primary_name is None else parameters[primary_name].annotation
-        )
-        return self._nominal_argument_types(annotation)
-
-    @classmethod
-    def _nominal_argument_types(cls, annotation: object) -> tuple[type, ...]:
-        annotation = resolve_annotated(annotation)
-        if is_union_type(annotation):
-            return tuple(
-                argument_type for member in get_args(annotation)
-                for argument_type in cls._nominal_argument_types(member)
-            )
-        return (
-            (annotation,)
-            if annotation is not Any and isinstance(annotation, type)
-            else ()
-        )
+    def raw_main_flow_call_argument(self, source_payload: Any) -> Any:
+        """Project the metadata-owned raw carrier declaration for this contract."""
+        return self.metadata.raw_main_flow_call_argument(source_payload, self.canonical_signature)
 
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""
@@ -1064,17 +1149,7 @@ class CallableContract(ArtifactPlanKeySelector):
     def primary_input_parameter_name(self) -> str | None:
         """FunctionStep input payload parameter declared by callable signature."""
         signature = self.canonical_signature
-        return self._primary_input_name(signature.parameters)
-
-    @staticmethod
-    def _primary_input_name(parameters: Mapping[str, inspect.Parameter]) -> str | None:
-        for parameter in parameters.values():
-            if parameter.kind in (
-                inspect.Parameter.POSITIONAL_ONLY,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            ):
-                return parameter.name
-        return None
+        return self.metadata.primary_input_name(signature.parameters)
 
     @property
     def accepts_implicit_main_flow_input(self) -> bool:
@@ -1112,12 +1187,8 @@ class CallableContract(ArtifactPlanKeySelector):
         return runtime_adapter.executable_callable(resolved, self)
 
     def resolve_canonical_raw_callable(self) -> Callable[..., object]:
-        """Return the declaration-owned callable whose signature defines behavior."""
-
-        declared = self.raw_processing_function
-        if declared is None:
-            declared = self.func
-        return _resolve_declared_callable(declared)
+        """Return the declaration-owned semantic target."""
+        return self.metadata.resolve_canonical_raw_callable(self.func)
 
     def canonical_raw_import_identity(self) -> CallableImportIdentity:
         """Return the complete import identity of the canonical raw callable."""
@@ -1127,30 +1198,8 @@ class CallableContract(ArtifactPlanKeySelector):
         )
 
     def resolve_raw_runtime_callable(self) -> Callable[..., object]:
-        """Remove runtime wrappers without crossing a semantic request binding."""
-
-        canonical = self.resolve_canonical_raw_callable()
-        if self.request_binding is None:
-            return inspect.unwrap(canonical)
-
-        binding_key = FunctionContractAttribute.callable_request_binding
-
-        def is_request_boundary(candidate: Callable[..., object]) -> bool:
-            namespace = _callable_namespace(candidate)
-            if binding_key not in namespace:
-                return False
-            wrapped = namespace.get("__wrapped__")
-            return not callable(wrapped) or binding_key not in _callable_namespace(
-                wrapped
-            )
-
-        resolved = inspect.unwrap(canonical, stop=is_request_boundary)
-        if binding_key not in _callable_namespace(resolved):
-            raise RuntimeError(
-                f"Callable {self.function_name!r} declares a request binding, but "
-                "its canonical raw callable has no request-binding boundary."
-            )
-        return resolved
+        """Resolve the metadata-owned raw target without crossing request binding."""
+        return self.metadata.resolve_raw_runtime_callable(self.func)
 
     @property
     def canonical_parameter_annotations(self) -> Mapping[str, object]:
@@ -1167,88 +1216,30 @@ class CallableContract(ArtifactPlanKeySelector):
 
     @property
     def canonical_signature(self) -> inspect.Signature:
-        """Use the prepared declaration, or query an uncompiled authoring callable."""
-        if self.metadata.canonical_signature is not None:
-            return self.metadata.canonical_signature
-        return self.resolve_signature(self.resolve_canonical_raw_callable())
-
-    def resolve_signature(self, raw_callable: Callable[..., object]) -> inspect.Signature:
-        """Resolve the semantic ABI once after declaration preparation."""
-        signature = inspect.signature(raw_callable)
-        annotations = (
-            self.request_binding.public_annotations_dict
-            if self.request_binding is not None
-            else get_type_hints(raw_callable, include_extras=True)
-        )
-        return signature.replace(
-            parameters=tuple(
-                parameter.replace(annotation=annotations.get(name, parameter.annotation))
-                for name, parameter in signature.parameters.items()
-            ),
-            return_annotation=annotations.get("return", signature.return_annotation),
-        )
+        """The metadata-owned semantic signature for this contract's target."""
+        return self.metadata.canonical_signature_for(self.func)
 
     def with_prepared_signature(self) -> "CallableContract":
-        """Capture the prepared ABI on the declaration transported to workers."""
-        canonical = self.resolve_canonical_raw_callable()
-        signature = self.resolve_signature(canonical)
-        runtime = self.resolve_raw_runtime_callable()
-        runtime_signature = None
-        if runtime is not canonical:
-            candidate = self.resolve_signature(runtime)
-            canonical_parameters = tuple(signature.parameters.values())
-            runtime_parameters = tuple(candidate.parameters.values())
-            same_parameters = len(canonical_parameters) == len(runtime_parameters) and all(
-                left.name == right.name and left.kind is right.kind
-                and left.default is right.default and left.annotation is right.annotation
-                for left, right in zip(canonical_parameters, runtime_parameters)
-            )
-            if not (same_parameters and signature.return_annotation is candidate.return_annotation):
-                runtime_signature = candidate
-        return dataclasses.replace(
-            self,
-            metadata=dataclasses.replace(
-                self.metadata, canonical_signature=signature,
-                raw_runtime_signature=runtime_signature,
-            ),
-        )
+        """Freeze the prepared declaration into its existing compiled contract."""
+        return dataclasses.replace(self, metadata=self.metadata.with_prepared_signatures(
+            self.resolve_canonical_raw_callable(), self.resolve_raw_runtime_callable(),
+        ))
 
     @property
     def raw_runtime_signature(self) -> inspect.Signature:
-        """The exact unwrapped execution ABI, preserving request boundaries."""
-        if self.metadata.raw_runtime_signature is not None:
-            return self.metadata.raw_runtime_signature
-        if self.metadata.canonical_signature is not None:
-            return self.metadata.canonical_signature
-        return self.resolve_signature(self.resolve_raw_runtime_callable())
-
-    @classmethod
-    def warm_canonical_signature(cls, func: Callable[..., object]) -> None:
-        """Publish one refreshed ABI after all library preparation hooks finish."""
-        contract = cls.from_callable(func).with_prepared_signature()
-        _mutable_callable_namespace(func)[FunctionContractAttribute.canonical_signature] = (
-            contract.metadata.canonical_signature
-        )
-        namespace = _mutable_callable_namespace(func)
-        namespace.pop(FunctionContractAttribute.raw_runtime_signature, None)
-        if contract.metadata.raw_runtime_signature is not None:
-            namespace[FunctionContractAttribute.raw_runtime_signature] = contract.metadata.raw_runtime_signature
+        """The metadata-owned execution signature for this contract's target."""
+        return self.metadata.raw_runtime_signature_for(self.func)
 
     @classmethod
     def from_prepared_callable(cls, func: Callable[..., object]) -> "CallableContract":
-        """Reuse library warmup; prepare authored declarations before validation."""
+        """Construct a compiled view only after the declaration owner prepares it."""
         projection = CallableProjection.from_callable(func)
-        if projection.namespace.get(FunctionContractAttribute.canonical_signature) is not None:
-            return cls.from_callable(func)
-        resolved = _resolve_declared_callable(func)
-        for target in CallableProjection.from_callable(resolved).prepare_targets():
-            prepare_processing_callable(target)
-        prepared = cls.from_callable(resolved)
-        if prepared.metadata.canonical_signature is None:
-            prepared = prepared.with_prepared_signature()
+        prepared = cls.from_callable(projection.prepared_callable())
         return dataclasses.replace(
-            prepared, func=func, function_name=projection.name,
-            module_name=projection.module_name,
+            prepared, func=func, function_name=projection.name, module_name=projection.module_name,
+            metadata=prepared.metadata.with_missing_signatures(
+                prepared.resolve_canonical_raw_callable, prepared.resolve_raw_runtime_callable,
+            ),
         )
 
     def decode_public_kwargs(self, kwargs: Mapping[str, object]) -> dict[str, object]:
@@ -1951,6 +1942,21 @@ class CallableProjection:
             )
         return cls(func=func, name=name, module_name=module_name, namespace=namespace)
 
+    def prepared_callable(self) -> Any:
+        """Keep ready library references or prepare live authored targets before validation."""
+        reader = CallableMetadataReader(self.namespace, self.name)
+        if reader.has_prepared_signature():
+            return self.func
+        resolved = _resolve_declared_callable(self.func)
+        for target in type(self).from_callable(resolved).prepare_targets():
+            prepare_processing_callable(target)
+        return resolved
+
+    def warm_canonical_signature(self) -> None:
+        """Publish prepared target signatures only after all library hooks finish."""
+        contract = CallableContract.from_callable(self.func).with_prepared_signature()
+        contract.metadata.publish_signatures(_mutable_callable_namespace(self.func))
+
     def prepare_targets(self) -> tuple[Any, ...]:
         """Return wrapper/raw callables that may carry preparation metadata."""
         targets: list[Any] = []
@@ -1995,6 +2001,10 @@ class CallableMetadataReader:
 
     namespace: CallableNamespace
     function_name: str
+
+    def has_prepared_signature(self) -> bool:
+        """Validate the namespace-owned readiness declaration before phase selection."""
+        return self.optional_signature(FunctionContractAttribute.canonical_signature) is not None
 
     def optional_signature(self, field_name: str) -> inspect.Signature | None:
         value = self.namespace.get(field_name)

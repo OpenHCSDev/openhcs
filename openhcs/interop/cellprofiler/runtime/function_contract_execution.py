@@ -18,7 +18,6 @@ from openhcs.core.measurement_lookup_dialect import runtime_measurement_lookup_d
 from openhcs.core.memory import detect_memory_type, stack_slices
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
-    RuntimeBatchExecutionDomain,
     RuntimeBatchInvocationRequest,
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
@@ -75,21 +74,6 @@ class CellProfilerFunctionContractExecutor:
         plane_projection: RuntimePlaneAxisValueProjection | None = None,
     ) -> None:
         self.plane_projection = plane_projection
-
-    def invoke_raw(
-        self,
-        callable_contract: CallableContract,
-        func: Callable[..., RuntimeFunctionOutput],
-        image: RuntimeCallableArgument,
-        kwargs: RuntimeCallableKwargs,
-    ) -> RuntimeCallableArgument:
-        """Project the canonical ABI after the input domain has been selected."""
-        return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.invocation(
-            func,
-            (callable_contract.raw_main_flow_call_argument(image),),
-            kwargs,
-            signature=callable_contract.raw_runtime_signature,
-        ).call()
 
     def execute(
         self,
@@ -232,14 +216,7 @@ class CellProfilerFunctionContractExecutor:
         if slice_request.slice_count <= 0:
             return [], 0.0
 
-        declared_batch_executor = callable_contract.runtime_batch_executor(
-            RuntimeBatchExecutionDomain.PURE_2D_SLICES
-        )
-        batch_executor = (
-            declared_batch_executor
-            if callable(declared_batch_executor)
-            else Pure2DSliceBatchExecutor.default_executor()
-        )
+        batch_executor = Pure2DSliceBatchExecutor.from_executors(callable_contract.runtime_batch_executors)
         slice_started_at = time.perf_counter()
         if batch_executor is not None and slice_request.slice_count > 1:
             slice_results = list(batch_executor(slice_request))
@@ -278,12 +255,12 @@ class CellProfilerFunctionContractExecutor:
             ),
         )
         call_started_at = time.perf_counter()
-        result = self.invoke_raw(
+        result = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
             callable_contract,
             func,
             projected_image,
             projected_kwargs,
-        )
+        ).call()
         CellProfilerRuntimeProfileLogger.log_module_profile(
             "cp_full_stack_raw_call",
             time.perf_counter() - call_started_at,
@@ -357,7 +334,7 @@ class CellProfilerFunctionContractExecutor:
             slice_index: int,
             slice_count: int,
         ) -> RuntimeCallableArgument:
-            return self.invoke_raw(
+            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,
                 slice_func,
                 slice_payload,
@@ -367,7 +344,7 @@ class CellProfilerFunctionContractExecutor:
                     slice_count,
                     reference_payload=slice_payload,
                 ),
-            )
+            ).call()
 
         slice_results, _slice_execute_seconds = self.execute_pure_2d_slice_batch(
             callable_contract,
@@ -476,12 +453,12 @@ class CellProfilerFunctionContractExecutor:
         )
         image_data = image_payload_data(image)
         if not isinstance(image_data, np.ndarray):
-            return self.invoke_raw(
+            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,
                 func,
                 image,
                 kwargs,
-            )
+            ).call()
 
         prepare_started_at = time.perf_counter()
         memory_type = detect_memory_type(image_data)
@@ -504,12 +481,12 @@ class CellProfilerFunctionContractExecutor:
                     "declared plane projection. Kwargs cannot create image-axis "
                     "execution semantics."
                 )
-            return self.invoke_raw(
+            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,
                 func,
                 image,
                 kwargs,
-            )
+            ).call()
         declared_plane_axis = image_payload_metadata(image).plane_axis
         if declared_plane_axis is not self.plane_projection.axis:
             raise RuntimeSliceProjectionDeclarationError(
@@ -609,12 +586,12 @@ class CellProfilerFunctionContractExecutor:
         callable_contract: CallableContract,
         **kwargs: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument:
-        result_2d = self.invoke_raw(
+        result_2d = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
             callable_contract,
             func,
             image,
             kwargs,
-        )
+        ).call()
         result_data = image_payload_data(result_2d)
         result_mask = image_payload_mask(result_2d)
         result_metadata = image_payload_metadata(result_2d)
@@ -642,12 +619,12 @@ class CellProfilerFunctionContractExecutor:
             sliced_kwargs = dict(sliced_kwargs)
             slice_index_name = SliceIndexRuntimeParameter.require_parameter_name()
             sliced_kwargs[slice_index_name] = slice_index
-        result = self.invoke_raw(
+        result = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
             callable_contract,
             func,
             slice_2d,
             sliced_kwargs,
-        )
+        ).call()
         return contextualize_main_image_output(slice_2d, result)
 
     def slice_pure_2d_kwargs(

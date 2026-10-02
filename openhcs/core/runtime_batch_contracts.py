@@ -281,6 +281,14 @@ class Pure2DSliceBatchExecutor(RuntimeBatchExecutor):
     """Base contract for equivalent pure-2D slice batch execution."""
 
     @classmethod
+    def from_executors(
+        cls, executors: Mapping[RuntimeBatchExecutionDomain, Callable] | None,
+    ) -> Callable:
+        """Honor a declared pure-2D executor before the nominal serial default."""
+        declared = None if executors is None else executors.get(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
+        return declared if callable(declared) else cls.default_executor()
+
+    @classmethod
     def default_executor(cls) -> "Pure2DSliceBatchExecutor":
         """Return the single-thread default pure-2D batch executor."""
         return SerialPure2DSliceBatchExecutor()

@@ -14,7 +14,7 @@ from arraybridge import ArrayPayload
 
 import openhcs.core.callable_contract as contract_module
 from openhcs.core.callable_contract import (
-    CallableContract, CallableImportIdentity, CallableMetadata,
+    CallableContract, CallableImportIdentity, CallableMetadata, CallableProjection,
     attach_callable_contract_metadata, attach_processing_prepare,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
@@ -23,7 +23,10 @@ from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.core.runtime_batch_contracts import runtime_callable_defaults
+from openhcs.core.runtime_batch_contracts import (
+    Pure2DSliceBatchExecutor, RuntimeBatchExecutionDomain,
+    SerialPure2DSliceBatchExecutor, runtime_callable_defaults,
+)
 from openhcs.core.pipeline.function_contracts import resolved_callable_parameter
 from openhcs.processing.backends.lib_registry.unified_registry import (
     RuntimeCallablePolicy, RuntimeInvocationKwargPolicy,
@@ -204,7 +207,7 @@ def test_custom_signature_and_mutable_default_are_retained_until_recompilation(m
 def test_supported_declaration_changes_invalidate_published_signature(mutation):
     def raw(image: np.ndarray):
         return image
-    CallableContract.warm_canonical_signature(raw)
+    CallableProjection.from_callable(raw).warm_canonical_signature()
     assert FunctionContractAttribute.canonical_signature in vars(raw)
     mutation(raw)
     assert FunctionContractAttribute.canonical_signature not in vars(raw)
@@ -221,7 +224,7 @@ def test_malformed_signature_declaration_is_rejected():
 def test_exact_raw_default_filter_and_type_views_refresh_with_library_snapshot():
     def raw(image: np.ndarray, scale: float = 2):
         return image * scale
-    CallableContract.warm_canonical_signature(raw)
+    CallableProjection.from_callable(raw).warm_canonical_signature()
     policy = RuntimeCallablePolicy(kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED)
     assert runtime_callable_defaults(raw)["scale"] == 2
     assert resolved_callable_parameter(raw, "scale").annotation is float
@@ -230,7 +233,7 @@ def test_exact_raw_default_filter_and_type_views_refresh_with_library_snapshot()
     raw.__annotations__["scale"] = int
     assert runtime_callable_defaults(raw)["scale"] == 2
     assert resolved_callable_parameter(raw, "scale").annotation is float
-    CallableContract.warm_canonical_signature(raw)
+    CallableProjection.from_callable(raw).warm_canonical_signature()
     assert runtime_callable_defaults(raw)["scale"] == 4
     assert resolved_callable_parameter(raw, "scale").annotation is int
 
@@ -241,7 +244,7 @@ def test_different_wrapper_signature_remains_live_for_default_filter_and_paramet
     def wrapper(image: np.ndarray, public: int = 2):
         return image * public
     wrapper.__dict__[FunctionContractAttribute.raw_processing_function] = raw
-    CallableContract.warm_canonical_signature(wrapper)
+    CallableProjection.from_callable(wrapper).warm_canonical_signature()
     assert runtime_callable_defaults(wrapper) == {"public":2}
     assert resolved_callable_parameter(wrapper, "public").annotation is int
     policy = RuntimeCallablePolicy(kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED)
@@ -257,7 +260,7 @@ def test_prepared_type_query_preserves_legacy_nested_annotation_stripping():
         return image
     raw.__annotations__ = {"image":Annotated[np.ndarray,"image"],"labels":tuple[Annotated[int,"id"],...],"return":Annotated[np.ndarray,"result"]}
     expected = get_type_hints(raw)
-    CallableContract.warm_canonical_signature(raw)
+    CallableProjection.from_callable(raw).warm_canonical_signature()
     assert resolved_callable_parameter(raw,"image").annotation == expected["image"]
     assert resolved_callable_parameter(raw,"labels").annotation == expected["labels"]
     assert CallableContract.from_callable(raw).canonical_parameter_annotations["labels"] == raw.__annotations__["labels"]
@@ -290,7 +293,7 @@ def test_distinct_authored_runtime_signature_transport_and_new_compilation_refre
     assert second.raw_runtime_signature.parameters["scale"].annotation is float
 
 
-def test_same_runtime_layout_reuses_canonical_without_comparing_mutable_defaults(fake_preparation):
+def test_distinct_targets_own_signatures_even_when_layouts_match_without_comparing_defaults(fake_preparation):
     class RejectEquality:
         def __eq__(self, other):
             raise AssertionError("Signature reuse compared a mutable default")
@@ -301,6 +304,31 @@ def test_same_runtime_layout_reuses_canonical_without_comparing_mutable_defaults
     def wrapper(*args, **kwargs):
         return raw(*args, **kwargs)
     contract = CallableContract.from_prepared_callable(wrapper)
+    assert contract.metadata.raw_runtime_signature is not None
+    assert contract.raw_runtime_signature is not contract.canonical_signature
+    assert contract.raw_runtime_signature.parameters["values"].default is default
+    raw.__defaults__ = ("new raw default",)
+    second = CallableContract.from_prepared_callable(wrapper)
+    assert second.raw_runtime_signature.parameters["values"].default == "new raw default"
+    assert contract.raw_runtime_signature.parameters["values"].default is default
+
+
+def test_same_actual_target_shares_canonical_signature(fake_preparation):
+    contract = CallableContract.from_prepared_callable(raw_numeric)
     assert contract.metadata.raw_runtime_signature is None
     assert contract.raw_runtime_signature is contract.canonical_signature
-    assert contract.raw_runtime_signature.parameters["values"].default is default
+
+
+@pytest.mark.parametrize("executors", (None, {}, {RuntimeBatchExecutionDomain.PURE_2D_SLICES: None}))
+def test_pure_2d_executor_selection_retains_serial_fallback(executors):
+    assert isinstance(Pure2DSliceBatchExecutor.from_executors(executors), SerialPure2DSliceBatchExecutor)
+
+
+def test_pure_2d_executor_selection_retains_exact_declared_executor():
+    def declared(*args, **kwargs):
+        raise AssertionError("Selecting an executor must not execute it")
+
+    selected = Pure2DSliceBatchExecutor.from_executors({
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES: declared,
+    })
+    assert selected is declared

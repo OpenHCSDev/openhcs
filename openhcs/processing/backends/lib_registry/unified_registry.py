@@ -75,7 +75,6 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload, is_array_payload
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
-    RuntimeBatchExecutionDomain,
     RuntimePure2DSliceBatchRequest,
     runtime_batch_executors_from_callable,
 )
@@ -282,6 +281,16 @@ class RuntimeCallablePolicy:
     kwarg_policy: RuntimeInvocationKwargPolicy = (
         RuntimeInvocationKwargPolicy.PASS_THROUGH
     )
+
+    def contract_invocation(
+        self, contract: "CallableContract", func: Callable[..., Any],
+        image: Any, kwargs: Mapping[str, Any],
+    ) -> RuntimeCallableInvocation:
+        """Bind the prepared main-image carrier and actual raw execution ABI."""
+        return self.invocation(
+            func, (contract.raw_main_flow_call_argument(image),), kwargs,
+            signature=contract.raw_runtime_signature,
+        )
 
     def invocation(
         self,
@@ -1813,14 +1822,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 kwargs.setdefault(parameter.name, value)
             args = args[len(positional_parameters) :]
         slices = slicer.slice_value(image, input_memory_type)
-        declared_batch_executor = runtime_batch_executors_from_callable(func).get(
-            RuntimeBatchExecutionDomain.PURE_2D_SLICES
-        )
-        batch_executor = (
-            declared_batch_executor
-            if callable(declared_batch_executor)
-            else Pure2DSliceBatchExecutor.default_executor()
-        )
+        batch_executor = Pure2DSliceBatchExecutor.from_executors(runtime_batch_executors_from_callable(func))
 
         def execute_slice(
             slice_func: Callable[..., Any],
