@@ -725,3 +725,38 @@ def test_relation_selection_conflicts_fail_without_last_writer_precedence():
         ArtifactInputProjectionPlan.declared_producer_selection_scope(
             spec, edge.storage_plan
         )
+
+
+def test_complete_dynamic_input_rejects_foreign_producer_location():
+    edge, _ = _compiled_edge(dynamic=True)
+    foreign = RuntimeValueStore()
+    for record in _measurement_store(edge).values():
+        foreign.record(
+            record.value,
+            path=record.path.replace("/memory/", "/another-producer/"),
+            backend=record.backend,
+        )
+    with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
+        _runtime_input(edge).records(foreign)
+
+
+def test_complete_dynamic_input_rejects_foreign_producer_backend():
+    edge, _ = _compiled_edge(dynamic=True)
+    foreign = RuntimeValueStore()
+    for record in _measurement_store(edge).values():
+        foreign.record(record.value, path=record.path, backend="disk")
+    with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
+        _runtime_input(edge).records(foreign)
+
+
+def test_complete_dynamic_input_selects_compiled_producer_after_workspace_rebinding():
+    edge, _ = _compiled_edge(dynamic=True)
+    store = _measurement_store(edge)
+    original = store.values()
+    for record in original:
+        store.replace(
+            record.value,
+            path=record.path.replace("/memory/", "/later-producer/"),
+            backend=record.backend,
+        )
+    assert _runtime_input(edge).records(store) == original

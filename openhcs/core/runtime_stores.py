@@ -115,20 +115,44 @@ class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
-    """Runtime-artifact query target for all discovered keys of one component."""
+    """Match discovered groups at their compiled producer-owned locations."""
 
-    component: AllComponents
+    input_plan: ArtifactInputPlan = dataclass_field(hash=False)
+    backend: str
 
     def __post_init__(self) -> None:
-        if not isinstance(self.component, AllComponents):
+        if not isinstance(self.input_plan, ArtifactInputPlan):
             raise TypeError(
-                "RuntimeArtifactDynamicComponentTarget.component must be an "
-                "AllComponents value."
+                "RuntimeArtifactDynamicComponentTarget.input_plan must be an "
+                "ArtifactInputPlan value."
             )
+        if not self.input_plan.producer_group_scope().is_dynamic:
+            raise ValueError(
+                "RuntimeArtifactDynamicComponentTarget requires a dynamic "
+                "producer group scope."
+            )
+        if not self.backend:
+            raise ValueError(
+                "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
+            )
+        paths_by_group = self.input_plan.paths_by_group
+        if paths_by_group is not None:
+            paths_by_group = MappingProxyType(dict(paths_by_group))
+        object.__setattr__(
+            self,
+            "input_plan",
+            replace(self.input_plan, paths_by_group=paths_by_group),
+        )
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
         scope = record.key.scope
-        return scope.component is self.component and scope.value_text is not None
+        producer_scope = self.input_plan.producer_group_scope()
+        if scope.component is not producer_scope.component or scope.value_text is None:
+            return False
+        return record.location == RuntimeArtifactLocation(
+            path=self.input_plan.path_for_runtime_query(scope.value_text),
+            backend=self.backend,
+        )
 
 
 def replace_runtime_artifact_payload(
@@ -171,9 +195,7 @@ class RuntimeArtifactQuery:
                 name=input_plan.name,
                 artifact_type=input_plan.artifact_type,
                 axis_id=axis_id,
-                target=RuntimeArtifactDynamicComponentTarget(
-                    input_scope.component,
-                ),
+                target=RuntimeArtifactDynamicComponentTarget(input_plan, backend),
             )
         return cls(
             name=input_plan.name,
@@ -336,12 +358,12 @@ class RuntimeArtifactInput:
             )
         records = tuple(
             record
-            for record in store.find(
-                name=storage_plan.name,
-                artifact_type=storage_plan.artifact_type,
-                axis_id=self.axis_scope.axis_id,
-                group_component=producer_scope.component,
-                match_component=True,
+            for record in store.find_matching(
+                RuntimeArtifactQuery.from_input_plan(
+                    storage_plan,
+                    axis_id=self.axis_scope.axis_id,
+                    backend=self.backend,
+                )
             )
             if self._matches_execution_scope(record)
         )
