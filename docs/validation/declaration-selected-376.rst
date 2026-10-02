@@ -238,3 +238,31 @@ normal-resolver OpenHCS installation and affected user entrypoint. Publication
 and installation remain parent integration/explicit authorization boundaries.
 No version bump, package upload, registry publication or compatibility shim was
 performed. Existing PR2 source/tests and its own WT remain preserved unchanged.
+
+Actual merged dependency main
+-----------------------------
+
+Public metaclass-registry PR2 is MERGED; remote and local main are
+3294a69dabc9f99dd646c32571b8f97cc139d378. Normally fast-forwarded the owned
+dependency WT from b27722bc to that merge head, preserving all source/history.
+Final OpenHCS gitlink now records3294a69dabc9f99dd646c32571b8f97cc139d378,
+not an unmerged/private dependency revision. Parent's source/private-wheel route
+above can use this actual merged head; its source is identical to b27722bc.
+
+Verified exact Git tree identities after integration:
+
+* OpenHCS production63e25ee7 and final openhcs tree:
+  81db5d4fb926a8e53b0dfcae52cd09f21b715b1e.
+* OpenHCS production63e25ee7 and final tests tree:
+  73f6a1b329b33d1a4fa79d8659f9dc6d11896c2b.
+* Dependency original R0-tested dc65ebe and actual merged3294a69 src tree:
+  70fed7cd3e231d211fe01b01d65d9c430c0d46cb.
+* Dependency dc65ebe and3294a69 tests tree:
+  b7db15a49f719ea053da31a39dcb62eaa313fb43.
+
+Thus the scoped53source controls and final OpenHCS5179/dependency31 original
+R0 zero-positive evidence remain exact for the merged production source; only
+gitlink/provenance changed, no repeated tests or uncertain registration replay.
+Released409cooperative MI/import remains intact. Public version still0.2.1 and
+OpenHCS minimum>=0.2.1: coordinated publication/minimum followup remains open.
+No private install, registry upload, native process or scientific run.
