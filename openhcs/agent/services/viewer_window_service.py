@@ -82,8 +82,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationPolicy,
     ViewerWindowValidationRequest,
     ViewerWindowValidationSummaryResult,
-    ViewerWindowViewportRequest,
-    ViewerWindowViewportResult,
+    ViewerWindowPresentationRequest,
+    ViewerWindowPresentationResult,
     viewer_window_probe_from_state,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
@@ -1027,7 +1027,7 @@ class ViewerWindowGatewayABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def viewport(self, request: ViewerWindowViewportRequest) -> JsonObject:
+    def presentation_control(self, request: ViewerWindowPresentationRequest) -> JsonObject:
         raise NotImplementedError
 
     @abstractmethod
@@ -1098,12 +1098,12 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             },
         )
 
-    def viewport(self, request: ViewerWindowViewportRequest) -> JsonObject:
+    def presentation_control(self, request: ViewerWindowPresentationRequest) -> JsonObject:
         return self._send_control_message(
             request,
             {
-                ViewerControlResponseField.TYPE.value: ViewerControlMessageType.VIEWPORT.value,
-                ViewerControlResponseField.PAYLOAD.value: request.presentation,
+                ViewerControlResponseField.TYPE.value: request.message_type,
+                ViewerControlResponseField.PAYLOAD.value: request.control_payload,
             },
         )
 
@@ -1397,34 +1397,18 @@ class ViewerWindowService:
                 ),
             )
 
-    def viewport(
-        self, request: ViewerWindowViewportRequest
-    ) -> ViewerWindowViewportResult:
+    def presentation(
+        self, request: ViewerWindowPresentationRequest
+    ) -> ViewerWindowPresentationResult:
         try:
-            response = self._gateway.viewport(request)
-            status = self._required_scalar(
-                response, ViewerControlResponseField.STATUS, str, "a string"
-            )
-            if status != self.SUCCESS_STATUS:
-                raise ValueError(
-                    self._required_scalar(
-                        response, ViewerControlResponseField.MESSAGE, str, "a string"
-                    )
-                )
-            presentation = ViewerNativeViewportPresentation.from_wire_mapping(
-                self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT)
-            )
-            return ViewerWindowViewportResult(
-                schema_version=SCHEMA_VERSION,
-                connection=request.connection,
-                observed=True,
-                applied=True,
-                native_viewport=presentation,
+            response = self._gateway.presentation_control(request)
+            return request.result_type.from_native_response(
+                request.connection, response,
             )
         except Exception as error:
-            return ViewerWindowViewportResult.from_error(
+            return request.result_type.from_error(
                 connection=request.connection,
-                error=AgentError.from_exception("viewer_viewport_failed", error),
+                error=AgentError.from_exception("viewer_presentation_failed", error),
             )
 
     def image_intensity(

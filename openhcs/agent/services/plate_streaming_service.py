@@ -479,7 +479,7 @@ class PlateStreamingService:
             "enabled": True,
             **request.connection.specified_runtime_arguments(),
         }
-        return config_type(**values)
+        return config_type(**values).with_display_config(request.display_config)
 
     @classmethod
     def _resolve_records(

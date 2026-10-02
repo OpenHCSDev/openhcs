@@ -792,7 +792,7 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
         self.requests.append(request)
         return EndpointShutdownResult(succeeded=True, endpoint_terminated=True)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         self.requests.append(request)
         return {
             "status": "success",
@@ -1117,7 +1117,7 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
         del request
         return EndpointShutdownResult(succeeded=False, endpoint_terminated=False)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         del request
         return {"status": "success", "native_viewport": {"zoom": 1}}
 

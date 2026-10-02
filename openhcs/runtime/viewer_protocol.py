@@ -14,7 +14,9 @@ from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import ClassVar, Self, TypeAlias, TypeVar, cast
+from typing import TYPE_CHECKING, Annotated, ClassVar, Self, TypeAlias, TypeVar, cast
+
+from annotated_types import Gt, Le
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
@@ -24,7 +26,7 @@ from polystore.backend_registry import register_cleanup_callback
 from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
-from zmqruntime.config import TransportMode, ZMQConfig
+from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (
     ControlMessageType,
     EndpointApplicationCompatibility,
@@ -92,6 +94,9 @@ from openhcs.runtime.viewer_controls import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.serialization.json import JsonObject, JsonScalar, JsonValue, to_jsonable
+
+if TYPE_CHECKING:
+    from openhcs.runtime.napari_streaming_handlers import NapariNativeWindowPresentation
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -164,6 +169,23 @@ VIEWER_FIELD_ABSENT = ViewerFieldAbsent()
 class ViewerProjectionRecord(ViewerDeclaredWireValue):
     """Declaration-derived descent and sparse wire projection for native records."""
 
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        """Use original nested declaration descent before native validation."""
+        from pydantic_core import core_schema
+
+        def descend(value):
+            if isinstance(value, Mapping):
+                try:
+                    return cls.from_wire_mapping(value)
+                except TypeError as error:
+                    raise ValueError(str(error)) from error
+            return value
+
+        return core_schema.no_info_before_validator_function(
+            descend, super().__get_pydantic_core_schema__(source_type, handler),
+        )
+
     def __post_init__(self) -> None:
         validate_annotated_dataclass(self)
         self.validate_record()
@@ -194,6 +216,56 @@ class ViewerProjectionRecord(ViewerDeclaredWireValue):
 @to_jsonable.register(ViewerProjectionRecord)
 def _jsonable_viewer_projection(value: ViewerProjectionRecord) -> JsonObject:
     return to_jsonable(value.to_wire_mapping())
+
+
+@dataclass(frozen=True)
+class ViewerNativeImageColorPresentation(ViewerProjectionRecord):
+    """Native extensible colormap and blending names, not source channel identity."""
+
+    colormap: NonBlankString
+    blending: NonBlankString
+
+
+@dataclass(frozen=True)
+class ViewerImageColorControlOptions(ViewerProjectionRecord):
+    route_key: NonBlankString
+    presentation: ViewerNativeImageColorPresentation
+
+
+@dataclass(frozen=True)
+class ViewerNativeWindowGeometry(ViewerProjectionRecord):
+    """Qt logical client geometry; actual screen admission belongs to native Qt."""
+
+    x: StrictInt
+    y: StrictInt
+    width: Annotated[StrictInt, Gt(0), Le(16777215)]
+    height: Annotated[StrictInt, Gt(0), Le(16777215)]
+
+
+@dataclass(frozen=True)
+class ViewerNativeWindowControlOptions(ViewerProjectionRecord):
+    """Read, focus or position the exact already-running detached window."""
+
+    geometry: ViewerNativeWindowGeometry | None = None
+    focus: bool = False
+
+    def apply_to(self, presentation: NapariNativeWindowPresentation) -> None:
+        """The declaration owns which requested native effects run and their order."""
+        if self.geometry is not None:
+            presentation.position(self.geometry)
+        if self.focus:
+            presentation.focus()
+
+
+@dataclass(frozen=True)
+class ViewerNativeWindowState(ViewerProjectionRecord):
+    geometry: ViewerNativeWindowGeometry
+    visible: bool
+    active: bool
+    minimized: bool
+
+    def wire_overrides(self):
+        return {**super().wire_overrides(), "geometry": self.geometry.to_wire_mapping()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -416,6 +488,8 @@ class ViewerControlField(str, Enum):
     CURRENT_STEP = "current_step"
     AXIS_LABELS = "axis_labels"
     NATIVE_VIEWPORT = "native_viewport"
+    NATIVE_IMAGE_COLOR = "native_image_color"
+    NATIVE_WINDOW = "native_window"
     NATIVE_DIMENSIONS = "native_dimensions"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
@@ -428,6 +502,8 @@ class OpenHCSViewerControlMessageType(str, Enum):
     PROCESS_LAUNCH = "process_launch"
     MEASURE_POLYLINE = "measure_polyline"
     MEASURE_REGION = "measure_region"
+    IMAGE_COLOR = "image_color"
+    WINDOW_PRESENTATION = "window_presentation"
 
 
 class ViewerLayerIsolationField(str, Enum):

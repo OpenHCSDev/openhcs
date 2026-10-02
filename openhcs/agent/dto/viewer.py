@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields as dataclass_fields
 from typing import ClassVar, Self, cast
@@ -62,6 +63,10 @@ from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_protocol import (
     ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
     ViewerProjectionRecord, ViewerShapeCoordinateBounds,
+    ViewerControlField, ViewerControlResponseField, ViewerControlMessageType,
+    OpenHCSViewerControlMessageType, ViewerProtocolStatus,
+    ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
+    ViewerNativeWindowControlOptions, ViewerNativeWindowState,
 )
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -406,11 +411,36 @@ class ViewerWindowPayloadRequest(ViewerWindowControlRequest):
         return payload
 
 
+class ViewerWindowPresentationRequest(ViewerWindowControlRequest, ABC):
+    """One typed operation owns its payload and native reply declaration."""
+
+    message_type: ClassVar[str]
+
+    @property
+    @abstractmethod
+    def result_type(self) -> type[ViewerWindowPresentationResult]:
+        """Return the declaration that owns this operation's native readback."""
+
+    @property
+    @abstractmethod
+    def control_payload(self):
+        """Return the original typed payload sent to the native action."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerWindowViewportRequest(ViewerWindowControlRequest):
+class ViewerWindowViewportRequest(ViewerWindowPresentationRequest):
     """Apply native 2D camera properties without changing layer or pixel state."""
 
     presentation: ViewerNativeViewportPresentation
+    message_type = ViewerControlMessageType.VIEWPORT.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowViewportResult
+
+    @property
+    def control_payload(self):
+        return self.presentation
 
     @classmethod
     def from_fields(
@@ -456,6 +486,57 @@ class ViewerWindowImageIntensityRequest(ViewerWindowControlRequest):
         payload = self.connection_tool_arguments()
         payload.update(to_jsonable(self.intensity))
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowImageColorRequest(ViewerWindowPresentationRequest):
+    color: ViewerImageColorControlOptions
+    message_type = OpenHCSViewerControlMessageType.IMAGE_COLOR.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowImageColorResult
+
+    @property
+    def control_payload(self):
+        return self.color
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec, route_key: str,
+        presentation: ViewerNativeImageColorPresentation,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(connection=connection, timeout_ms=timeout_ms,
+                   color=ViewerImageColorControlOptions(route_key, presentation))
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), **to_jsonable(self.color)}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowNativePresentationRequest(ViewerWindowPresentationRequest):
+    presentation: ViewerNativeWindowControlOptions
+    message_type = OpenHCSViewerControlMessageType.WINDOW_PRESENTATION.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowNativePresentationResult
+
+    @property
+    def control_payload(self):
+        return self.presentation
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec,
+        presentation: ViewerNativeWindowControlOptions,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(connection=connection, timeout_ms=timeout_ms, presentation=presentation)
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {**self.connection_tool_arguments(), "presentation": to_jsonable(self.presentation)}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1212,16 +1293,53 @@ class ViewerWindowRegionMeasurementResult(
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerWindowViewportResult(
+class ViewerWindowPresentationResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
     ExecutionConnectionProjection,
 ):
-    registry_key: ClassVar[str] = "viewport"
+    """One reply admission and error lifecycle shared by native presentations."""
 
+    response_field: ClassVar[ViewerControlField]
+    snapshot_type: ClassVar[type]
     observed: bool
     applied: bool = False
+
+    @classmethod
+    def from_native_response(cls, connection, response: Mapping[str, object]):
+        status = response[ViewerControlResponseField.STATUS.value]
+        if status != ViewerProtocolStatus.SUCCESS.value:
+            raise ValueError(response[ViewerControlResponseField.MESSAGE.value])
+        payload = response[cls.response_field.value]
+        if not isinstance(payload, Mapping):
+            raise TypeError("Native presentation readback must be a mapping.")
+        snapshot = cls.snapshot_type.from_wire_mapping(payload)
+        return cls(schema_version=SCHEMA_VERSION, connection=connection,
+                   observed=True, applied=True, **{cls.response_field.value: snapshot})
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowViewportResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "viewport"
+    response_field = ViewerControlField.NATIVE_VIEWPORT
+    snapshot_type = ViewerNativeViewportPresentation
     native_viewport: ViewerNativeViewportPresentation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowImageColorResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "image_color"
+    response_field = ViewerControlField.NATIVE_IMAGE_COLOR
+    snapshot_type = ViewerNativeImageColorPresentation
+    native_image_color: ViewerNativeImageColorPresentation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowNativePresentationResult(ViewerWindowPresentationResult):
+    registry_key: ClassVar[str] = "native_window"
+    response_field = ViewerControlField.NATIVE_WINDOW
+    snapshot_type = ViewerNativeWindowState
+    native_window: ViewerNativeWindowState | None = None
 
 
 @dataclass(frozen=True, slots=True)
