@@ -2348,6 +2348,14 @@ def build_server(
                 meta=_mcp_tool_meta(capability),
                 structured_output=True,
             )(guarded_tool)
+            # Keep the SDK's declaration-generated model as the argument owner.
+            # Its default extra-ignore policy otherwise drops endpoint intent
+            # before our request DTO can reject an undeclared parameter.
+            registered_tool = server._tool_manager.get_tool(capability.name)
+            argument_model = registered_tool.fn_metadata.arg_model
+            argument_model.model_config["extra"] = "forbid"
+            argument_model.model_rebuild(force=True)
+            registered_tool.parameters = argument_model.model_json_schema(by_alias=True)
             return guarded_tool
 
         return decorator

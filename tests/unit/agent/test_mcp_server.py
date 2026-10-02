@@ -331,6 +331,78 @@ def test_mcp_server_publishes_canonical_instructions():
     assert "structured execution results" in built.instructions
 
 
+def test_mcp_tool_argument_family_rejects_unknown_parameters_before_dispatch():
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    invocations = []
+    built = server.build_server(
+        SimpleNamespace(),
+        invocation_observer=lambda capability, outcome: invocations.append(
+            (capability, outcome)
+        ),
+    )
+
+    async def exercise():
+        tools = await built.list_tools()
+        assert tools
+        for tool in tools:
+            assert tool.inputSchema["additionalProperties"] is False, tool.name
+            with pytest.raises(ToolError, match="extra_forbidden"):
+                await built.call_tool(tool.name, {"unadvertised_parameter": True})
+
+    asyncio.run(exercise())
+    assert invocations == []
+
+
+def test_mcp_source_session_strict_decoder_preserves_declared_flat_connection():
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    requests = []
+
+    class ExecutionService:
+        def create_session_from_pipeline_source_request(self, request):
+            requests.append(request)
+            return OrchestratorSessionRef(
+                schema_version=SCHEMA_VERSION,
+                session_id=f"session-{len(requests)}",
+                uri=f"openhcs://execution/sessions/session-{len(requests)}",
+            )
+
+    built = server.build_server(SimpleNamespace(execution_service=ExecutionService()))
+    common = {"plate_path": "/not-opened", "pipeline_source": "not-executed"}
+    connection = {
+        "host": "127.0.0.1",
+        "port": 6014,
+        "transport_mode": "tcp",
+        "persistent": True,
+    }
+
+    async def exercise():
+        await built.call_tool(
+            "openhcs_create_orchestrator_session_from_pipeline_source",
+            common | connection,
+        )
+        with pytest.raises(ToolError, match="extra_forbidden"):
+            await built.call_tool(
+                "openhcs_create_orchestrator_session_from_pipeline_source",
+                common | {"connection": connection},
+            )
+        assert len(requests) == 1
+        await built.call_tool(
+            "openhcs_create_orchestrator_session_from_pipeline_source", common
+        )
+
+    asyncio.run(exercise())
+    assert len(requests) == 2
+    assert requests[0].connection.tool_arguments() == connection
+    assert requests[1].connection.tool_arguments() == {
+        "host": "localhost",
+        "port": None,
+        "transport_mode": None,
+        "persistent": True,
+    }
+
+
 def test_mcp_server_factory_receives_canonical_identity_and_binds_tools():
     if importlib.util.find_spec("mcp") is None:
         return
