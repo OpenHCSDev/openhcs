@@ -22,6 +22,9 @@ import fcntl, hashlib, json, os, sys, termios
 from contextlib import contextmanager
 fcntl.ioctl(0, termios.TIOCSCTTY, 0)
 import openhcs.mcp.dev_client as cli
+expected_root = os.environ.get("OPENHCS_PTY_EXPECT_IMPORT_ROOT")
+if expected_root:
+    assert cli.__file__.startswith(expected_root + os.sep), cli.__file__
 
 class ControlledClient:
     def __init__(self, *args, **kwargs):
@@ -49,8 +52,20 @@ class ControlledClient:
             print("ADMITTED:" + call.name + ":" + hashlib.sha256(body).hexdigest(), flush=True)
         return cli.McpDevCommandExecution(tuple(argv), {}, "CONTROLLED_RESULT", 0, None)
 
-cli.McpDevClient = ControlledClient
-raise SystemExit(cli.main(["--timeout-seconds", "10", "shell", "--no-prompt"]))
+class PublicClient(cli.McpDevClient):
+    def __enter__(self):
+        print("INITIALIZING", flush=True)
+        os.read(int(sys.argv[1]), 1)
+        return super().__enter__()
+    def __exit__(self, *args):
+        result = super().__exit__(*args)
+        print("CLIENT_CLOSED", flush=True)
+        return result
+
+cli.McpDevClient = PublicClient if sys.argv[2] == "public" else ControlledClient
+raise SystemExit(cli.main([
+    "--no-resident", "--timeout-seconds", "10", "shell", "--no-prompt"
+]))
 '''
 
 

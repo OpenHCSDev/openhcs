@@ -59,5 +59,8 @@ inheritance records remain in before/after logs. Dynamic aliases, standard
 readline callbacks and generated metaclass dispatch are not statically proven;
 real terminal/new-case controls cover the affected behaviors. Not globalFULL.
 
-Remaining: actual installed future-client/recorder qualification. No live
-fleet hot edit, scientific pipeline or native/viewer launch occurred here.
+Installed qualification COMPLETE in engineering490 through ordinary wheel
+bytes, original realPTY fixture9PASS, actual public health/long-query/reuse
+and distinct stdio entrypoint. See docs/validation/mcp-terminal-input-483/
+INSTALLED-ACCEPTANCE.rst for exact bytes/scope/retained observer failure.
+No live fleet hot edit, scientific pipeline or native/viewer launch occurred.

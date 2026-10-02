@@ -16,4 +16,10 @@ Completed: independent declaration + cooperative preparation behavior through th
 
 Original unchanged scopedR0 PASS, 19.28s/86720KiB, five changed production paths/zero positive deltas. Owner-after SAME1057 modules/19 related/zero omissions, 4.79s/115388KiB; dynamic aliases and native callbacks remain explicit limitations. Exact receipts and retained red are in validation.
 
-Remaining: actual installed future-client/recorder qualification; no live fleet or scientific process has been changed. This draft does not claim installed/scientific acceptance or global FULL cleanliness.
+## Ordinary installed acceptance COMPLETE
+
+Exact ebfc snapshot wheel: 4212182B/SHA256 `0ff7dd9cac2c17f6f7a2ca7bc2d2750d8c6f49c43e06372f393266da519913db`; all 883 non-RECORD target entries/RECORD hashes, 725 tracked payloads, zero missing tracked Python, and five production source/wheel/target byte matches. Private output only, reused dependencies, no download/new environment.
+
+Installed original real-PTY fixture **9/9 PASS** (50.08s/246560KiB), every child asserts wheel-target import. Real public CLI/SDK/MCP **PTY PASS** (18.39s/302388KiB): 6111-byte quoted JSON command, exact 6030-byte Unicode query echo, health/same-server reuse, client/server exit0 and terminal restoration. Distinct real public **stdio PASS** (15.39s/307148KiB), same query/reuse/exit; whole scope peak577556480B, Swap0/OOM0 under1GiB/CPU1. Original 10s idle unchanged. A first stdio observer failed before launching any client on write-only kernel memory.reclaim; original red retained, readable-file correction only.
+
+Full receipt: `docs/validation/mcp-terminal-input-483/INSTALLED-ACCEPTANCE.rst`; originals under persistent issue-batch `engineering490`. Final proof-only head keeps production identical to1dfefaa51. No fleet hot edit, SCI/native/viewer/provider launch or biological/globalFULL/latest-main package claim. Ready for parent normal integration; no hostedCI wait.
