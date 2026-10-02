@@ -36,7 +36,6 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
     object_label_input_execution_mode_from_callable,
 )
 from openhcs.core.runtime_adapters import (
@@ -1484,50 +1483,32 @@ class CellProfilerModuleExecutor:
             image_request=image_request,
             runtime_kwargs=runtime_kwargs,
         )
-        invocation_image = image_request.payload
-        default_execution_mode = (
-            self.callable_contract.runtime_image_execution_mode
-            or image_request.execution_mode
-        )
         execution_mode = module_type.execution_mode(
-            default_execution_mode,
-            image=invocation_image,
+            self.callable_contract.runtime_image_execution_mode
+            or image_request.execution_mode,
+            image=image_request.payload,
             kwargs=runtime_kwargs,
             variable_components=adapter.request.variable_components,
         )
-        # A scalar image can result from composing channels on a declared
-        # singleton runtime root. Match-image labels consume that root only
-        # after the module has chosen its final image domain and execution mode.
-        if (
-            object_label_input_execution_mode_from_callable(self.raw_func)
-            is ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK
-            and execution_mode is ImagePayloadExecutionMode.NATURAL
-            and image_request.plane_projection is None
-            and runtime_projection is not None
-            and runtime_projection.axis_size == 1
-        ):
-            runtime_kwargs = cast(
-                dict[str, RuntimeCallableArgument],
-                RuntimeSliceProjection.kwargs_for_slice(
-                    runtime_kwargs,
-                    runtime_projection.selected_plane(0),
-                ),
-            )
         if profile_enabled:
             CellProfilerRuntimeProfileLogger.log_module_profile(
                 "cp_invocation_execution_mode_policy",
                 time.perf_counter() - phase_started_at,
                 module=module_name,
             )
-        invocation_kwargs = {
-            **runtime_kwargs,
-            **_execution_mode_semantic_control_kwargs(
+        invocation_kwargs = object_label_input_execution_mode_from_callable(
+            self.raw_func
+        ).invocation_kwargs(
+            runtime_kwargs, execution_mode=execution_mode,
+            image_projection=image_request.plane_projection,
+            runtime_projection=runtime_projection,
+            semantic_controls=_execution_mode_semantic_control_kwargs(
                 self.callable_contract.require_processing_contract(),
                 execution_mode,
             ),
-        }
+        )
         return RuntimeFunctionInvocationRequest(
-            image=invocation_image,
+            image=image_request.payload,
             kwargs=invocation_kwargs,
             source_image_name=image_request.source_image_name,
             image_count=image_request.image_count,
