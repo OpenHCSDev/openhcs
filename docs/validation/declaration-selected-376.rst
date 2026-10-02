@@ -174,3 +174,44 @@ Cleanup: removed only verified task scratch
 356KiB, after all three workers exited, no matching preparation/source-test
 process, no open lsof handles and canonical no-symlink path check. Durable
 source/evidence remain. No package install or live runtime/science changes.
+
+Final released409 seam integration
+----------------------------------
+
+Normal merge of released main d0b4f5b5e6947c8f9ed5d99f73064145ad678b71
+produces production checkpoint63e25ee7e6099ec20bceb1c29fe1a29716531339.
+No conflict or manual production edits. OpenHCSRegistry retains the original
+CustomFunctionCanonicalLookup import and declared MRO before LibraryRegistryBase;
+matching super owns the remainder of canonical claims. Issue376 remains on
+OpenHCSFunctionCatalogDeclaration / CellProfiler declaration hooks, unchanged.
+The old pending409 boundary above is now closed by this ordinary merge.
+No379takeover, new lookup roster, importer or compatibility mechanism.
+
+Public dependency https://github.com/OpenHCSDev/metaclass-registry/pull/2
+head/gitlink b27722bc71282ddd1ca1c5847208a72c800fe0b6 (branch
+fix/declaration-selected-discovery-376-20261001). Its src/tests are byte-identical
+to R0-tested dc65ebe; final original dependency31projection zero-positive
+evidence remains integration-dependency-r0.json.gz. No dependency source changed
+during released409 integration. Parent's379source controls remain its own
+reviewed predecessor, not a repeated or claimed local run here.
+
+Final53focused source tests pass,7.10s/344084KiB;1canonical-custom witness
+deselected, no replay of uncertain custom registration/input. Tests include
+real imported callable identity, fail-closed discovery and cooperative independent
+capabilities before/after the ancestor in real C3 order, with no consumer edits.
+Original pinned R0 tool3b03785f/checksum above unchanged, Python3.14 owner:
+main d0b4f5b5 -> production63e25ee7,5179projections,zero positive,exit0,
+13.48s/86916KiB. Only two376production files differ against released main.
+IMPL-3/4/12/13 and MEMB-1/2 review preserves both independent owner mechanisms.
+
+Exact commands reuse integration-376-commands.sh: mode tests, then
+r0-openhcs d0b4f5b5e6947c8f9ed5d99f73064145ad678b71, each under the declared
+systemd512MiB/no-swap/oneCPU scope, tasksetCPU0 and timeout60s. Interpreter and
+ABI environment remain read-only. post409-* logs, resources, lossless JSON and
+POST409-SHA256SUMS retain this checkpoint separately from all original failures.
+No installs/native/science/provider operations. Full NRA/R1 remains unqualified.
+
+Regenerated the same owned disposable integration scratch for these two checks,
+then removed only that exact path after terminal workers/no-open-handles/process
+and canonical-path checks;356KiB released again. No source, failure evidence,
+foreign worktree, private environment or parent live process changed.
