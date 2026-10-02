@@ -771,8 +771,8 @@ def test_numbered_tracking_image_reuses_the_measurement_centroid_domain(monkeypa
 
 
 def test_tracking_display_setting_binds_both_authored_choices():
-    from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+    from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
     from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
 
     for mode in TrackingDisplayMode:
@@ -782,10 +782,9 @@ def test_tracking_display_setting_binds_both_authored_choices():
             setting_records=[
                 ModuleSetting(TrackObjectsModule.tracking_method_setting, "Overlap"),
                 ModuleSetting(TrackObjectsModule.display_option_setting, mode.value),
+                ModuleSetting(TrackObjectsModule.pixel_radius_setting, "37"),
             ],
         )
-        bound = TrackObjectsModule.postprocess_bound_settings(
-            module, BoundModuleSettings({"pixel_radius": 37})
-        )
+        bound = TrackObjectsModule.bind_settings(module, binder=SettingsBinder())
         assert bound.kwargs["display_mode"] is mode
         assert bound.kwargs["pixel_radius"] == 37

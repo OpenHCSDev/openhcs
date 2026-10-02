@@ -611,11 +611,6 @@ class TrackObjectsModule(
         kwargs = dict(bound.kwargs)
         tracking_method = cls.require_supported_tracking_method(module)
         kwargs["tracking_method"] = tracking_method
-        display_option = optional_setting_value(module, cls.display_option_setting)
-        if display_option is not None:
-            kwargs["display_mode"] = coerce_cellprofiler_enum(
-                TrackingDisplayMode, display_option
-            )
         movement_model = optional_setting_value(module, cls.movement_model_setting)
         if movement_model is not None:
             kwargs["movement_model"] = coerce_cellprofiler_enum(

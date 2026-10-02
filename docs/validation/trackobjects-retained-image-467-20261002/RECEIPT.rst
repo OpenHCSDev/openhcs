@@ -8,6 +8,8 @@ choices using the native stable track-ID palette and optional centroid labels.
 The existing TrackObjectsResult assembles the image and unchanged measurement
 ABI. Completed TrackingFrameResult values retain the exact centroid domain
 used for measurement arithmetic and rendering. No tracking kernel changed.
+Authored display values use the existing setting binding and canonical callable
+enum coercion; the module does not read and coerce the same setting again.
 
 The renderer uses the current declared Matplotlib dependency. It reads the Agg
 RGBA buffer directly and copies RGB pixels into the owned output; it does not
