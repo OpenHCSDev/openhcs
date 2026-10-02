@@ -43,6 +43,11 @@ modules and19 actual paired FastMCP modules; zero parse omissions. The original
 AST report contains144 named declaration/consumer/owner-access sites and is
 retained as H002-484-AST-BEFORE.json under the parent issue-batch root.
 Dynamic callback resolution was read semantically; AST is not behavioral proof.
+After implementation20077663c1a9e881cda28bc45f487602aaeddd5d, the same coverage
+has149 sites and zero omissions (H002-484-AST-AFTER.json). The five additional
+sites access the original ToolManager/model and rebuild its schema. Searching
+all production OpenHCS source finds exactly ONE extra-forbid declaration,
+at this registration seam; no competing per-tool policy or input codec exists.
 
 All nine MCP binding families converge on this one registration seam:
 no-argument, UI-connection, UI-request, scalar, UI-scalar, config-patch,
@@ -92,6 +97,24 @@ Initial focused batch:5 passed,294 deselected,10.77s. It verifies every register
 argument model rejects unknown parameters before invocation, flat/default
 source routing, configured transport factory and both progress thread policies.
 Full299-test module/hostedCI is not claimed or used as an integration hold.
+
+Supplementary boundary batch:8 passed,1 failed,290 deselected,12.00s. Valid
+declared UI connection, widget-tree and snapshot arguments, client UI/viewer
+argument projections, health and progress policies passed. The unchanged
+viewer-state rendering fixture omits the required McpDevToolBatchResponse.server
+field and fails in the separate dev-client response decoder, not server.py or
+MCP argument admission. No client source/contract was weakened to hide it.
+That fixture gap remains explicit for the existing client/integration owners.
+
+An earlier broader shard reported only two completed tests before its exact
+1GiB cgroup OOM at2026-10-02T22:19:27Z. Systemd records Result=oom-kill and peak
+1073741824B despite the script wrapper returning0; it is NOT a passing batch.
+The selected shard included a direct function-field-help/catalog case; an
+active allocation frame was not retained, so the precise allocating operation
+is not claimed. Original log and scope journal are retained. The runtime limit
+was not increased. The narrower boundary batch above completed under the same
+limit. Installed stdio acceptance and the initial five focused passes remain
+distinct from these supplementary outcomes.
 
 Retained original acceptance files under parent issue-batch/engineering484:
 INSTALLED-JOURNEY-journey03-RESULT.json
