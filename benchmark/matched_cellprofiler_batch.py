@@ -62,6 +62,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -203,9 +204,12 @@ def _require_compared_output_inventory(
                 "Matched output inventory contains files without a value comparison: "
                 f"{tuple(sorted(files - compared_files))!r}."
             )
+        snapshot.require_image_file_coverage(frozenset(exports.image_outputs))
         count = (
             len(files)
             - len(snapshot.tables)
+            - len(exports.image_outputs)
+            + len(snapshot.images)
             + sum(table.participates_in_comparison for table in snapshot.tables)
         )
         if count < 1:
@@ -785,7 +789,11 @@ def main(argv: list[str] | None = None) -> int:
                 native_exports
             )
             candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
-                candidate_exports
+                candidate_exports,
+                source_workspaces=completed.output_roots,
+                image_set_policy=SourceImageSetIdentityPolicy.from_pipeline_config(
+                    pipeline_config
+                ),
             )
             csv_report = runtime_measurement_equivalence(
                 RuntimeMeasurementSnapshot.from_output_snapshot(
@@ -846,6 +854,8 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 "native_image_count": len(native_images),
                 "candidate_image_count": len(candidate_images),
+                "native_physical_image_count": len(native_exports.image_outputs),
+                "candidate_physical_image_count": len(candidate_exports.image_outputs),
                 "native_output_file_count": len(native_output_files),
                 "candidate_output_file_count": len(actual_output_files),
                 "declared_output_file_count": (
@@ -904,7 +914,6 @@ def main(argv: list[str] | None = None) -> int:
             if (
                 not native_output_files
                 or not actual_output_files
-                or len(native_images) != len(candidate_images)
                 or (
                     declared_output_files is not None
                     and len(declared_output_files - managed_output_files)

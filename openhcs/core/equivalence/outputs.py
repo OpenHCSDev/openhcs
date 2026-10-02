@@ -19,6 +19,15 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.constants.constants import AllComponents
+from openhcs.core.source_bindings import SourceProjectionRole
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source_projection import SourceProjectionSet
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.virtual_workspace_metadata import (
+    METADATA_CONFIG,
+    OpenHCSMetadataSubdirectories,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +41,9 @@ class RuntimeOutputSnapshot:
     def from_export_observation(
         cls,
         observation: RuntimeExportObservation,
+        *,
+        source_workspaces: tuple[Path, ...] = (),
+        image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
     ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from observed runtime exports."""
         return cls(
@@ -41,37 +53,114 @@ class RuntimeOutputSnapshot:
                     for path in observation.table_outputs
                 )
             ),
-            images=tuple(
-                RuntimeImageSnapshot.from_image_file(path)
-                for path in observation.image_outputs
+            images=cls.image_snapshots(
+                observation.image_outputs,
+                source_workspaces=source_workspaces,
+                image_set_policy=image_set_policy,
             ),
         )
+
+    @classmethod
+    def image_snapshots(
+        cls,
+        paths: tuple[Path, ...],
+        *,
+        source_workspaces: tuple[Path, ...],
+        image_set_policy: SourceImageSetIdentityPolicy,
+    ) -> tuple[RuntimeImageSnapshot, ...]:
+        """Compare declared Z image sets while retaining every physical export."""
+        if (
+            not paths
+            or not source_workspaces
+            or image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+        ):
+            return tuple(RuntimeImageSnapshot.from_image_file(path) for path in paths)
+        expected_paths = frozenset(path.absolute() for path in paths)
+        images = []
+        for root in dict.fromkeys(Path(root).absolute() for root in source_workspaces):
+            metadata = OpenHCSMetadataSubdirectories.from_path(
+                METADATA_CONFIG.metadata_path(root)
+            ).metadata
+            workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+                root, metadata
+            )
+            projections = tuple(
+                projection
+                for virtual_path in workspace.relative_virtual_paths()
+                for projection in (
+                    workspace.source_projections_by_virtual_path[virtual_path],
+                )
+                if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+                and (root / projection.ref.backend_address).absolute() in expected_paths
+            )
+            if not projections:
+                continue
+            for group in SourceProjectionSet(projections).image_plane_groups(
+                image_set_policy
+            ):
+                if group[0].address is None:
+                    if group[0].ref.source_axis_indices:
+                        raise ValueError(
+                            "Whole image exports cannot select hidden source axes."
+                        )
+                    images.append(
+                        RuntimeImageSnapshot.from_image_file(
+                            (root / group[0].ref.backend_address).absolute()
+                        )
+                    )
+                else:
+                    images.append(
+                        RuntimeImageSnapshot.from_source_planes(
+                            group, workspace_root=root
+                        )
+                    )
+        snapshot = cls(images=tuple(images))
+        snapshot.require_image_file_coverage(expected_paths)
+        return snapshot.images
+
+    def require_image_file_coverage(self, paths: frozenset[Path]) -> None:
+        """Require each physical image export to own exactly one compared image."""
+        covered = tuple(
+            path.absolute() for image in self.images for path in image.physical_paths
+        )
+        if len(covered) != len(set(covered)) or frozenset(covered) != frozenset(
+            path.absolute() for path in paths
+        ):
+            raise ValueError(
+                "Compared images must cover every physical image file exactly once."
+            )
 
     @classmethod
     def from_artifact_execution_observation(
         cls,
         observation: RuntimeArtifactExecutionObservation,
+        *,
+        source_workspaces: tuple[Path, ...] = (),
     ) -> "RuntimeOutputSnapshot":
         """Build a snapshot from files owned by observed runtime artifacts."""
         return cls.from_export_observation(
             observation.exports.with_runtime_artifact_tables(
                 observation.records_by_axis
-            )
+            ),
+            source_workspaces=source_workspaces,
+            image_set_policy=observation.source_image_set_identity_policy,
         )
 
     @classmethod
-    def from_output_root(cls, output_root: Path) -> "RuntimeOutputSnapshot":
+    def from_output_root(
+        cls,
+        output_root: Path,
+        *,
+        image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
+    ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from an output directory."""
         root = Path(output_root)
         if not root.exists():
             raise FileNotFoundError(f"Runtime output root does not exist: {root}")
-        return cls(
-            tables=RuntimeTableNamespaceAdapter.normalize(
-                tuple(RuntimeTableSnapshot.from_csv(path) for path in table_paths(root))
-            ),
-            images=tuple(
-                RuntimeImageSnapshot.from_image_file(path) for path in image_paths(root)
-            ),
+        return cls.from_export_observation(
+            RuntimeExportObservation.from_output_root(root),
+            source_workspaces=(root,),
+            image_set_policy=image_set_policy,
         )
 
 
