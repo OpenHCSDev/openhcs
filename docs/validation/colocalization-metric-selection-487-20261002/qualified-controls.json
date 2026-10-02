@@ -1,0 +1,65 @@
+{
+  "issue": 487,
+  "head": "ba78535d6dedad84a9758968bad191e28c689c38",
+  "base": "b4405ff3541add6b91004002b7d6f389f1208636",
+  "original_scope_receipt": "/var/tmp/issue487-metric-authority-controls-and-original-guards-20261002.json",
+  "original_scope_receipt_sha256": "7d84c78020eaa0a39103d150a099a3dd7efca6460097a9a6808a3379c94085a7",
+  "controls": {
+    "log": "/var/tmp/issue487-main-synchronized-controls-20261002.log",
+    "result": "156 PASS28.25s"
+  },
+  "r0": {
+    "openhcs": {
+      "receipt": "/var/tmp/issue487-final-original-r0-openhcs-20261002.json",
+      "sha256": "8907e4d63d955158f49d8ce7d29e8e2041da893cd343a316de9b7aa11aff85f6",
+      "nonzero_delta": {
+        "GodClassExcess:openhcs/processing/backends/cellprofiler/colocalization.py::MeasureColocalizationModule": -58
+      }
+    },
+    "scripts": {
+      "receipt": "/var/tmp/issue487-final-original-r0-scripts-20261002.json",
+      "sha256": "9d12dfdcfd2ca5698d486c4d0a01bfae17fd3cd749cef623231d84adeadbf261",
+      "nonzero_delta": {}
+    },
+    "benchmark": {
+      "receipt": "/var/tmp/issue487-final-original-r0-benchmark-20261002.json",
+      "sha256": "fda84867e4c36af797581570d6ebaa9debc5274e7ff26a55af02208ed4b70069",
+      "nonzero_delta": {}
+    }
+  },
+  "r1": {
+    "base": "b4405ff3541add6b91004002b7d6f389f1208636",
+    "head": "ba78535d6dedad84a9758968bad191e28c689c38",
+    "changed": [
+      "openhcs/processing/backends/cellprofiler/colocalization.py"
+    ],
+    "before": [
+      {
+        "check": "mapping_read",
+        "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+        "count": 1
+      },
+      {
+        "check": "unmodeled_record_shape",
+        "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+        "count": 1
+      }
+    ],
+    "after": [
+      {
+        "check": "mapping_read",
+        "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+        "count": 1
+      },
+      {
+        "check": "unmodeled_record_shape",
+        "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+        "count": 1
+      }
+    ],
+    "increased": []
+  },
+  "limits": [
+    "No saved real ndarray replay yet. No runtime gain forecast or full public scientific acceptance yet. Numerical unit test is synthetic, not runtime evidence. Raw fixed-schema buffers intentionally still contain unused zero slots; emitted source-pair columns are selected. Original malformed-scope synthetic RED is not classified as issue witness."
+  ]
+}
