@@ -56,26 +56,29 @@ def cellprofiler_database_export_equivalence(
     reference_root = Path(reference_output_root)
     reference_properties = tuple(sorted(reference_root.rglob("*.properties")))
     candidate_properties = _outputs_with_suffix(candidate_exports, ".properties")
-    differences = [
-        *_sqlite_export_differences(
-            _declared_sqlite_paths(
-                tuple(sorted(reference_root.rglob("*.db"))),
-                reference_properties,
-            ),
-            _declared_sqlite_paths(
-                _outputs_with_suffix(candidate_exports, ".db"),
-                candidate_properties,
-            ),
+    reference_databases = _declared_sqlite_paths(
+        tuple(sorted(reference_root.rglob("*.db"))), reference_properties
+    )
+    candidate_databases = _declared_sqlite_paths(
+        _outputs_with_suffix(candidate_exports, ".db"), candidate_properties
+    )
+    reference_workspaces = tuple(sorted(reference_root.rglob("*.workspace")))
+    candidate_workspaces = _outputs_with_suffix(candidate_exports, ".workspace")
+    reports = (
+        _sqlite_export_equivalence(
+            reference_databases,
+            candidate_databases,
             _declared_sqlite_table_subjects(reference_properties),
             _declared_sqlite_table_subjects(candidate_properties),
             policy,
         ),
-        *_properties_export_differences(
-            reference_properties,
-            candidate_properties,
-        ),
-    ]
-    return RuntimeEquivalenceReport(tuple(differences))
+        _workspace_export_equivalence(reference_workspaces, candidate_workspaces),
+        _properties_export_equivalence(reference_properties, candidate_properties),
+    )
+    return RuntimeEquivalenceReport(
+        tuple(difference for report in reports for difference in report.differences),
+        frozenset(path for report in reports for path in report.compared_output_files),
+    )
 
 
 def cellprofiler_native_shard_equivalence(
@@ -155,7 +158,15 @@ def cellprofiler_native_shard_equivalence(
     for root in shard_roots:
         shard_properties = tuple(sorted(root.rglob("*.properties")))
         differences.extend(
-            _properties_export_differences(reference_properties, shard_properties)
+            _properties_export_equivalence(
+                reference_properties, shard_properties
+            ).differences
+        )
+        differences.extend(
+            _workspace_export_equivalence(
+                tuple(sorted(reference_root.rglob("*.workspace"))),
+                tuple(sorted(root.rglob("*.workspace"))),
+            ).differences
         )
         shard_subjects = _declared_sqlite_table_subjects(shard_properties)
         if shard_subjects != reference_subjects:
@@ -272,18 +283,19 @@ def _declared_sqlite_paths(
     return tuple(path for path in database_paths if path.name in declared_names)
 
 
-def _sqlite_export_differences(
+def _sqlite_export_equivalence(
     reference_paths: Sequence[Path],
     candidate_paths: Sequence[Path],
     reference_subjects: Mapping[str, Mapping[str, MeasurementSubject]],
     candidate_subjects: Mapping[str, Mapping[str, MeasurementSubject]],
     policy: RuntimeEquivalencePolicy,
-) -> tuple[RuntimeEquivalenceDifference, ...]:
+) -> RuntimeEquivalenceReport:
     differences, reference_by_name, candidate_by_name = _named_output_differences(
         reference_paths,
         candidate_paths,
         output_label="SQLite database",
     )
+    compared_paths: set[Path] = set()
     for name in sorted(reference_by_name.keys() & candidate_by_name.keys()):
         differences.extend(
             _sqlite_database_differences(
@@ -294,7 +306,8 @@ def _sqlite_export_differences(
                 policy,
             )
         )
-    return tuple(differences)
+        compared_paths.update((reference_by_name[name], candidate_by_name[name]))
+    return RuntimeEquivalenceReport(tuple(differences), frozenset(compared_paths))
 
 
 def _sqlite_database_differences(
@@ -587,15 +600,16 @@ def _normalized_sqlite_row(
     return tuple(values)
 
 
-def _properties_export_differences(
+def _properties_export_equivalence(
     reference_paths: Sequence[Path],
     candidate_paths: Sequence[Path],
-) -> tuple[RuntimeEquivalenceDifference, ...]:
+) -> RuntimeEquivalenceReport:
     differences, reference_by_name, candidate_by_name = _named_output_differences(
         reference_paths,
         candidate_paths,
         output_label="CPA properties file",
     )
+    compared_paths: set[Path] = set()
     for name in sorted(reference_by_name.keys() & candidate_by_name.keys()):
         reference_properties = _read_cpa_properties(reference_by_name[name])
         candidate_properties = _read_cpa_properties(candidate_by_name[name])
@@ -624,7 +638,8 @@ def _properties_export_differences(
                     f"{mismatched_values!r}",
                 )
             )
-    return tuple(differences)
+        compared_paths.update((reference_by_name[name], candidate_by_name[name]))
+    return RuntimeEquivalenceReport(tuple(differences), frozenset(compared_paths))
 
 
 def _read_cpa_properties(path: Path) -> dict[str, str]:
@@ -686,3 +701,28 @@ def _unique_paths_by_name(
             )
         by_name[path.name] = path
     return by_name
+
+
+def _workspace_export_equivalence(reference_paths, candidate_paths):
+    from openhcs.interop.cellprofiler.workspace_export import CPAWorkspacePanel
+
+    differences, reference_by_name, candidate_by_name = _named_output_differences(
+        reference_paths, candidate_paths, output_label="CPA workspace"
+    )
+    compared_paths: set[Path] = set()
+    for name in reference_by_name.keys() & candidate_by_name.keys():
+        reference = CPAWorkspacePanel.parse_workspace(
+            reference_by_name[name].read_text()
+        )
+        candidate = CPAWorkspacePanel.parse_workspace(
+            candidate_by_name[name].read_text()
+        )
+        if reference != candidate:
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_CONTENT,
+                    f"CPA workspace {name!r} panel declarations differ.",
+                )
+            )
+        compared_paths.update((reference_by_name[name], candidate_by_name[name]))
+    return RuntimeEquivalenceReport(tuple(differences), frozenset(compared_paths))

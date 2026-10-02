@@ -524,7 +524,9 @@ class OpenHCSAdapter(ToolAdapter):
                     (
                         *equivalence_report.differences,
                         *database_export_report.differences,
-                    )
+                    ),
+                    equivalence_report.compared_output_files
+                    | database_export_report.compared_output_files,
                 )
             if not equivalence_report.is_equivalent:
                 equivalence_failure_message = (

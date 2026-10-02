@@ -1536,7 +1536,10 @@ def test_module_contract_selects_ordered_tables_and_cpa_images_and_declares_bund
     )
 
 
-def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
+@pytest.mark.parametrize("workspace", [False, True])
+def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
+    workspace: bool,
+) -> None:
     store = RuntimeValueStore()
     measurements = _record_measurements(
         store,
@@ -1575,6 +1578,22 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
         ),
     )
 
+    from openhcs.interop.cellprofiler.workspace_export import (
+        CPAWorkspacePanel,
+        CPAWorkspaceAxis,
+    )
+
+    panels = (
+        (
+            CPAWorkspacePanel.from_settings(
+                "Histogram",
+                CPAWorkspaceAxis.from_settings("Image", "None", "Count", "ImageNumber"),
+                CPAWorkspaceAxis.from_settings("Image", "None", "None", "ImageNumber"),
+            ),
+        )
+        if workspace
+        else ()
+    )
     bundle = export_to_database(
         artifact_batch=batch,
         context=context,
@@ -1582,9 +1601,19 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
         experiment_name="Example",
         add_table_prefix=True,
         table_prefix="CPA_",
+        wants_workspace_file=workspace,
+        workspace_panels=panels,
     )
 
-    assert tuple(bundle) == ("analysis.sqlite", "analysis_CPA.properties")
+    assert tuple(bundle) == (
+        ("analysis.sqlite", "analysis_CPA.properties", "analysis_CPA.workspace")
+        if workspace
+        else ("analysis.sqlite", "analysis_CPA.properties")
+    )
+    if workspace:
+        assert CPAWorkspacePanel.parse_workspace(bundle["analysis_CPA.workspace"]) == (
+            ("Histogram", (("x-axis", "Image_Count"), ("table", "CPA_Per_Image"))),
+        )
     assert isinstance(bundle["analysis.sqlite"], bytes)
     assert str(bundle["analysis_CPA.properties"]).startswith("db_type = sqlite\n")
 
