@@ -15,6 +15,18 @@ class SourceProjectedImageOutput(DataBackedRuntimeArrayPayload, ABC):
     """A result whose declaration proves its source-context transformation."""
 
     @abstractmethod
+    def resolve_source_context(
+        self,
+        source: RuntimeArrayData,
+        projection: RuntimePlaneAxisValueProjection | None,
+    ) -> RuntimeArrayData:
+        """Validate and attach the source context declared by this result."""
+
+
+class SourcePlaneSelectionImageOutput(SourceProjectedImageOutput):
+    """A projection that retains an exact ordered subset of source planes."""
+
+    @abstractmethod
     def selected_source_plane_indices(self) -> tuple[int, ...]:
         """Return the exact ordered source planes represented by this result."""
 
@@ -59,7 +71,7 @@ class SourceProjectedImageOutput(DataBackedRuntimeArrayPayload, ABC):
 
 
 @dataclass(frozen=True)
-class SelectedPlaneImageOutput(SourceProjectedImageOutput):
+class SelectedPlaneImageOutput(SourcePlaneSelectionImageOutput):
     """A cropped array retaining an explicit ordered subset of source planes."""
 
     data: RuntimeArrayData
