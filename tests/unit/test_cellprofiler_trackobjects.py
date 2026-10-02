@@ -729,3 +729,63 @@ def test_tracking_display_refuses_an_unmatched_id_center_domain():
             np.array([]),
             (np.array([]), np.array([])),
         )
+
+
+def test_numbered_tracking_image_reuses_the_measurement_centroid_domain(monkeypatch):
+    from openhcs.processing.backends.cellprofiler.tracking import (
+        NumberedTrackingImageDisplayStrategy,
+        TrackingDisplayMode,
+    )
+
+    measured_centers = []
+    rendered_centers = []
+    original_centers = NumbaNumpyObjectTrackingBackendStrategy.label_centers
+    original_render = NumberedTrackingImageDisplayStrategy.render_frame
+
+    def centers_for_labels(self, labels):
+        centers = original_centers(self, labels)
+        measured_centers.append(centers)
+        return centers
+
+    def render_with_centers(self, labels, numbers, centers):
+        rendered_centers.append(centers)
+        return original_render(self, labels, numbers, centers)
+
+    monkeypatch.setattr(
+        NumbaNumpyObjectTrackingBackendStrategy, "label_centers", centers_for_labels
+    )
+    monkeypatch.setattr(
+        NumberedTrackingImageDisplayStrategy, "render_frame", render_with_centers
+    )
+    labels = np.zeros((2, 24, 32), dtype=np.int32)
+    labels[:, 8:12, 8:12] = 1
+    unwrap(track_objects)(
+        np.zeros(labels.shape, dtype=np.float32),
+        _timepoint_labels(labels, axis_size=2),
+        save_color_coded_image=True,
+        display_mode=TrackingDisplayMode.COLOR_AND_NUMBER,
+    )
+    assert len(measured_centers) == len(rendered_centers) == 2
+    for measured, rendered in zip(measured_centers, rendered_centers, strict=True):
+        assert rendered is measured
+
+
+def test_tracking_display_setting_binds_both_authored_choices():
+    from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
+    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+    from openhcs.processing.backends.cellprofiler.tracking import TrackingDisplayMode
+
+    for mode in TrackingDisplayMode:
+        module = ModuleBlock(
+            name="TrackObjects",
+            module_num=7,
+            setting_records=[
+                ModuleSetting(TrackObjectsModule.tracking_method_setting, "Overlap"),
+                ModuleSetting(TrackObjectsModule.display_option_setting, mode.value),
+            ],
+        )
+        bound = TrackObjectsModule.postprocess_bound_settings(
+            module, BoundModuleSettings({"pixel_radius": 37})
+        )
+        assert bound.kwargs["display_mode"] is mode
+        assert bound.kwargs["pixel_radius"] == 37

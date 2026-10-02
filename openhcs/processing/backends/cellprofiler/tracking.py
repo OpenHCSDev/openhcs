@@ -7,9 +7,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, Any, ClassVar, NamedTuple, TYPE_CHECKING
 
-import io
-
-import imageio.v3 as imageio
 import numpy as np
 from matplotlib import colormaps, colors, transforms
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -682,10 +679,9 @@ class TrackingImageDisplayStrategy(
         bits = (indexer & powers).astype(bool)
         indexer = np.sum(bits.transpose() * (2 ** np.arange(7, -1, -1)), axis=1)
         figure = Figure()
-        FigureCanvasAgg(figure)
+        canvas = FigureCanvasAgg(figure)
         axes = figure.add_subplot(1, 1, 1)
-        colormap = colormaps["jet"].copy()
-        colormap.set_bad((0, 0, 0))
+        colormap = colormaps["jet"].with_extremes(bad=(0, 0, 0))
         axes.imshow(
             np.ma.array(indexer[labels], mask=labels == 0),
             cmap=colormap,
@@ -703,9 +699,8 @@ class TrackingImageDisplayStrategy(
             transforms.Bbox(np.array([[0.0, 0.0], [width, height]])),
             transforms.Affine2D(np.array([[dpi, 0, 0], [0, dpi, 0], [0, 0, 1]])),
         )
-        stream = io.BytesIO()
-        figure.savefig(stream, format="png", dpi=dpi)
-        return np.asarray(imageio.imread(stream.getvalue(), extension=".png"))[:, :, :3]
+        canvas.draw()
+        return np.asarray(canvas.buffer_rgba())[:, :, :3].copy()
 
     @abstractmethod
     def annotate_numbers(self, axes, object_numbers, centers) -> None:
@@ -822,7 +817,18 @@ class TrackingImageMeasurement(MeasurementFeatureRecord):
     merged_object_count: int
 
 
-TrackingFrameResult = tuple[int, list[TrackingObjectMeasurement], int, int, int, int]
+class TrackingFrameResult(NamedTuple):
+    """Completed frame measurements and their shared label-centroid domain."""
+
+    slice_index: int
+    object_rows: list[TrackingObjectMeasurement]
+    new_object_count: int
+    lost_object_count: int
+    split_count: int
+    merge_count: int
+    centers: tuple[np.ndarray, np.ndarray]
+
+
 TrackingFrameResults = list[TrackingFrameResult]
 
 
@@ -845,22 +851,21 @@ class TrackObjectsResult(RuntimeOutputBundle):
         parent_relationship: DirectedObjectRelationshipPayload,
         save_color_coded_image: bool,
         display_mode: TrackingDisplayMode,
-        tracking_backend_provider: BackendProviderInput,
     ) -> "TrackObjectsResult":
         """Assemble the image and measurement ABI from completed tracking frames."""
         _apply_final_age_measurements(frame_results)
         object_measurements = []
         image_measurements = []
-        for index, rows, new_count, lost_count, split_count, merge_count in frame_results:
-            object_measurements.extend(rows)
+        for frame_result in frame_results:
+            object_measurements.extend(frame_result.object_rows)
             image_measurements.append(
                 TrackingImageMeasurement(
-                    slice_index=index,
+                    slice_index=frame_result.slice_index,
                     scale=measurement_scale,
-                    new_object_count=new_count,
-                    lost_object_count=lost_count,
-                    split_object_count=split_count,
-                    merged_object_count=merge_count,
+                    new_object_count=frame_result.new_object_count,
+                    lost_object_count=frame_result.lost_object_count,
+                    split_object_count=frame_result.split_count,
+                    merged_object_count=frame_result.merge_count,
                 )
             )
         if np.asarray(image).ndim != 3:
@@ -868,17 +873,17 @@ class TrackObjectsResult(RuntimeOutputBundle):
         output_image = image
         if save_color_coded_image:
             display = TrackingImageDisplayStrategy.for_enum_member(display_mode)
-            backend = ObjectTrackingBackendStrategy.for_memory_type(
-                backend_provider=tracking_backend_provider
-            )
             rendered = np.stack(
                 tuple(
                     display.render_frame(
                         frame,
-                        np.array([row.label for row in rows], dtype=np.int64),
-                        backend.label_centers(frame),
+                        np.array(
+                            [row.label for row in frame_result.object_rows],
+                            dtype=np.int64,
+                        ),
+                        frame_result.centers,
                     )
-                    for frame, (_, rows, *_counts) in zip(
+                    for frame, frame_result in zip(
                         _label_frames(labels), frame_results, strict=True
                     )
                 )
@@ -1395,15 +1400,17 @@ def track_objects(
         relationship_slice_indices.extend(
             frame_index for _parent_id, _child_id in relationship_pairs
         )
+        centers = ObjectTrackingBackendStrategy.for_memory_type(
+            backend_provider=tracking_backend_provider
+        ).label_centers(current_labels)
         object_rows = _tracking_object_rows(
-            current_labels,
+            centers,
             slice_index=frame_index,
             measurement_scale=int(pixel_radius),
             track_labels=new_labels,
             parent_object_numbers=parent_obj_nums,
             parent_image_numbers=parent_img_nums,
             previous_object_states=tracking_state["track_states"],
-            tracking_backend_provider=tracking_backend_provider,
         )
         new_object_count = int(np.sum(parent_obj_nums == 0))
         lost_object_count, split_count, merge_count = _tracking_transition_counts(
@@ -1414,13 +1421,14 @@ def track_objects(
             tracking_backend_provider,
         )
         frame_results.append(
-            (
+            TrackingFrameResult(
                 frame_index,
                 object_rows,
                 new_object_count,
                 lost_object_count,
                 split_count,
                 merge_count,
+                centers,
             )
         )
         tracking_state["old_labels"] = current_labels.copy()
@@ -1439,7 +1447,6 @@ def track_objects(
         ),
         save_color_coded_image=save_color_coded_image,
         display_mode=display_mode,
-        tracking_backend_provider=tracking_backend_provider,
     )
 
 
@@ -1470,7 +1477,7 @@ def _label_frames(labels: ObjectLabelValue) -> np.ndarray:
 
 
 def _tracking_object_rows(
-    labels: np.ndarray,
+    centers: tuple[np.ndarray, np.ndarray],
     *,
     slice_index: int,
     measurement_scale: int,
@@ -1478,11 +1485,8 @@ def _tracking_object_rows(
     parent_object_numbers: np.ndarray,
     parent_image_numbers: np.ndarray,
     previous_object_states: dict[int, dict[str, Any]],
-    tracking_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
 ) -> list[TrackingObjectMeasurement]:
-    y_centers, x_centers = ObjectTrackingBackendStrategy.for_memory_type(
-        backend_provider=tracking_backend_provider
-    ).label_centers(labels)
+    y_centers, x_centers = centers
     next_object_states: dict[int, dict[str, Any]] = {}
     rows: list[TrackingObjectMeasurement] = []
     for object_index, track_label in enumerate(track_labels):
@@ -1591,15 +1595,16 @@ def _apply_final_age_measurements(frame_results: TrackingFrameResults) -> None:
     labels_by_frame: dict[int, set[int]] = {}
     object_values: dict[TrackingObjectFrameKey, tuple[int, int]] = {}
     final_age_records: dict[TrackingObjectFrameKey, TrackingObjectMeasurement] = {}
-    for slice_index, object_rows, *_counts in frame_results:
-        for measurement in object_rows:
+    for frame_result in frame_results:
+        slice_index = frame_result.slice_index
+        for measurement in frame_result.object_rows:
             object_label = measurement.object_label
             key = (slice_index, object_label)
             track_label = int(float(measurement.label))
             labels_by_frame.setdefault(slice_index, set()).add(track_label)
             object_values[key] = (track_label, int(measurement.lifetime))
             final_age_records[key] = measurement
-    last_slice_index = frame_results[-1][0] if frame_results else 0
+    last_slice_index = frame_results[-1].slice_index if frame_results else 0
     for (slice_index, object_label), (track_label, lifetime) in object_values.items():
         next_labels = labels_by_frame.get(slice_index + 1, set())
         if slice_index != last_slice_index and track_label in next_labels:
