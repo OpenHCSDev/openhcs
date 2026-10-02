@@ -1,0 +1,4 @@
+Running as unit: dewey-436-cold-feedback-real-compile-20261002.scope; invocation ID: bb96b895c8c34b219d23b6b5520b51e7
+..                                                                       [100%]
+2 passed in 6.35s
+BOUNDED_SOURCE peak_aggregate_rss_kib=494232 elapsed_seconds=11.380 returncode=0 reason=None
