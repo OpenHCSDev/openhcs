@@ -297,6 +297,10 @@ class RuntimeArtifactInput:
         if producer_scope.is_ungrouped:
             return self._records(store, producer_scope, None)
         selection_scope = projection.producer_selection_scope
+        if projection.selects_declared_complete_producer(
+            self.edge_plan.spec, storage_plan
+        ):
+            return self.all_records(store)
         if storage_plan.composes_producer_groups(
             ComponentSet.coerce(projection.consumer_variable_components)
         ):

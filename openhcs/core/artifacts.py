@@ -23,6 +23,8 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
+    from openhcs.core.callable_contract import FunctionStepExecutionScope
+    from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
     from openhcs.core.runtime_artifact_values import (
         RuntimeValue,
@@ -1316,6 +1318,13 @@ class ArtifactSpecRelation(ABC, metaclass=AutoRegisterMeta):
 
         return None
 
+    def input_producer_selection_scope(
+        self, producer_scope: ComponentGroupScope
+    ) -> ComponentGroupScope | None:
+        """Return an explicitly declared producer domain for an input edge."""
+
+        return None
+
     def dependency_refs(self) -> tuple[ArtifactSpecRef, ...]:
         """Return every artifact that must exist before the relation target."""
 
@@ -1469,6 +1478,39 @@ class ObjectMeasurementSubjectRelation(ArtifactSpecRelation):
         if self.id_field is None:
             return None
         return ObjectArtifactSubjectBinding(self.source, self.id_field)
+
+
+class InputObjectMeasurementSourceRelation(ObjectMeasurementSubjectRelation):
+    """Consume all prior producer groups measuring the declared object source."""
+
+    relation_key: ClassVar[str] = "input_object_measurement_source"
+
+    def matches_output(self, output: ArtifactSpec) -> bool:
+        """Admit a measurement producer declared against this exact object source."""
+
+        return (
+            output.plan_type is ArtifactOutputPlan
+            and output.artifact_type is MeasurementsArtifactType
+            and any(relation.source == self.source for relation in output.relations)
+        )
+
+    def input_spec_for_output(self, output: ArtifactSpec) -> ArtifactSpec:
+        """Project the original producer declaration and bind its consumed subject."""
+
+        if not self.matches_output(output):
+            raise ValueError(
+                f"Artifact output {output.ref()!r} does not measure declared "
+                f"object source {self.source!r}."
+            )
+        input_spec = output.for_plan_type(ArtifactInputPlan)
+        return replace(input_spec, relations=(*input_spec.relations, self))
+
+    def input_producer_selection_scope(
+        self, producer_scope: ComponentGroupScope
+    ) -> ComponentGroupScope:
+        """Object measurements retain their channels independently of the child."""
+
+        return producer_scope
 
 
 @dataclass(frozen=True)
@@ -2985,6 +3027,79 @@ class ArtifactInputProjectionPlan:
     component_scopes: tuple[ComponentGroupScope, ...] = ()
     consumer_variable_components: tuple[AllComponents, ...] = ()
 
+    @staticmethod
+    def declared_producer_selection_scope(
+        input_spec: ArtifactSpec, storage_plan: ArtifactInputPlan
+    ) -> ComponentGroupScope | None:
+        """Resolve one producer selection declared by the input's relations."""
+
+        producer_scope = storage_plan.producer_group_scope()
+        scopes = tuple(
+            dict.fromkeys(
+                scope
+                for relation in input_spec.relations
+                for scope in (relation.input_producer_selection_scope(producer_scope),)
+                if scope is not None
+            )
+        )
+        if len(scopes) > 1:
+            raise ValueError(
+                f"Artifact input {input_spec.ref()!r} declares conflicting producer "
+                f"selection scopes: {scopes!r}."
+            )
+        return scopes[0] if scopes else None
+
+    @classmethod
+    def producer_selection_for_invocation(
+        cls,
+        *,
+        input_spec: ArtifactSpec,
+        storage_plan: ArtifactInputPlan,
+        component_scopes: tuple[ComponentGroupScope, ...],
+        consumer_variable_components: ComponentSet,
+        invocation_key: FunctionInvocationKey,
+        execution_scope: FunctionStepExecutionScope,
+    ) -> ComponentGroupScope:
+        """Keep declaration-owned consumption separate from invocation dispatch."""
+
+        from openhcs.core.callable_contract import FunctionStepExecutionScope
+
+        declared = cls.declared_producer_selection_scope(input_spec, storage_plan)
+        if declared is not None:
+            return declared
+        producer_scope = storage_plan.producer_group_scope()
+        if producer_scope.is_ungrouped:
+            return producer_scope
+        if (
+            producer_scope.has_single_static_key
+            or execution_scope is FunctionStepExecutionScope.PLATE
+            or producer_scope.component in consumer_variable_components
+        ):
+            return producer_scope
+        for scope in component_scopes:
+            if scope.component is producer_scope.component:
+                return scope
+        raise ValueError(
+            f"Invocation {invocation_key!r} input {storage_plan.ref()!r} has "
+            f"producer scope {producer_scope!r} but no exact relation-owned "
+            "selection coordinate."
+        )
+
+    def selects_declared_complete_producer(
+        self, input_spec: ArtifactSpec, storage_plan: ArtifactInputPlan
+    ) -> bool:
+        """Require compiled selection to retain its original relation semantics."""
+
+        declared = self.declared_producer_selection_scope(input_spec, storage_plan)
+        if declared is None:
+            return False
+        if self.producer_selection_scope != declared:
+            raise ValueError(
+                f"Artifact input {input_spec.ref()!r} compiled selection "
+                f"{self.producer_selection_scope!r} contradicts declaration {declared!r}."
+            )
+        return declared == storage_plan.producer_group_scope()
+
     def __post_init__(self) -> None:
         if not isinstance(self.invocation_scope, ComponentGroupScope):
             raise TypeError(
@@ -3165,6 +3280,8 @@ ArtifactSpecRelation.target_plan_type = ArtifactOutputPlan
 InputGroupLineageSourceRelation.target_plan_type = ArtifactInputPlan
 InputStackBroadcastSourceRelation.target_plan_type = ArtifactInputPlan
 InputStackBroadcastSourceRelation.target_artifact_type = ImageArtifactType
+InputObjectMeasurementSourceRelation.target_plan_type = ArtifactInputPlan
+InputObjectMeasurementSourceRelation.target_artifact_type = MeasurementsArtifactType
 MaterializationSourceIdentityRelation.target_artifact_type = ImageArtifactType
 ObjectMeasurementSubjectRelation.target_artifact_type = MeasurementsArtifactType
 ImageMeasurementSubjectRelation.target_artifact_type = MeasurementsArtifactType
