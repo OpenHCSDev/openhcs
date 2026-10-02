@@ -10,6 +10,10 @@ ABI. Completed TrackingFrameResult values retain the exact centroid domain
 used for measurement arithmetic and rendering. No tracking kernel changed.
 Authored display values use the existing setting binding and canonical callable
 enum coercion; the module does not read and coerce the same setting again.
+Supported tracking methods derive from the existing tracking strategy registry.
+The module no longer maintains a separate Overlap / Distance support roster.
+Unsupported authored methods retain the same NotImplementedError, while the
+runtime strategy lookup retains its original KeyError for absent methods.
 
 The renderer uses the current declared Matplotlib dependency. It reads the Agg
 RGBA buffer directly and copies RGB pixels into the owned output; it does not
@@ -20,10 +24,12 @@ source context, and declares a trailing RGB channel axis and intensity proof.
 Gates and limits
 ---------------
 
-* The focused module has 18 passing tests. These cover the original measurement
+* The focused module has 19 passing tests. These cover the original measurement
   and relationship controls, both display choices, retained-image shape/dtype,
   channel/axis/intensity metadata, input isolation, empty-frame measurement
   scale, malformed ID/center domains, and centroid ownership reuse.
+  The method-registration control verifies the exact supported choices and
+  original unsupported declaration/runtime errors.
 * The original frozen 9aa capture admitted 44 actual typed graphs covering all
   21 frames. Its original OpenHCS output has two CSVs / 86 rows and 21 PNGs,
   exactly unchanged by capture. No PNG-derived segmentation or track IDs were
@@ -69,3 +75,9 @@ at /var/tmp/openhcs-trackobjects-main142-nra-owner-census-20261002.json using th
 original NRA owner tooling; the tracked display behavior is independent of the
 existing cv2 measurement display renderer's different palette/blending/font
 contract. Original architectural R0/R1 qualification remains a separate gate.
+The original unmodified gate at f2b passed R1 and R0 scripts/benchmark, but R0
+OpenHCS reported TrackObjectsModule GodClassExcess +5 and StringSubscript +1.
+That original RED is retained. The follow-up moves real supported-method
+validation to its registry owner and uses the colormap's get_cmap API; no guard
+budget or formatting rule changed. All 21 renderer frames and four rc controls
+remain exact to the previous algorithm, with the same native text-pixel RED.

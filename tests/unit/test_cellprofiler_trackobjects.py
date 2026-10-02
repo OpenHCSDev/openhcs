@@ -788,3 +788,31 @@ def test_tracking_display_setting_binds_both_authored_choices():
         bound = TrackObjectsModule.bind_settings(module, binder=SettingsBinder())
         assert bound.kwargs["display_mode"] is mode
         assert bound.kwargs["pixel_radius"] == 37
+
+
+def test_tracking_method_declaration_matches_registered_implementations():
+    import pytest
+    from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+    from openhcs.processing.backends.cellprofiler.tracking import TrackObjectsMethodStrategy
+
+    registered = {
+        strategy.method for strategy in TrackObjectsMethodStrategy.registered_strategy_types()
+    }
+    assert registered == {TrackingMethod.OVERLAP, TrackingMethod.DISTANCE}
+    for method in TrackingMethod:
+        module = ModuleBlock(
+            name="TrackObjects",
+            module_num=7,
+            setting_records=[ModuleSetting(TrackObjectsModule.tracking_method_setting, method.value)],
+        )
+        if method in registered:
+            assert TrackObjectsModule.tracking_method(module) is method
+        else:
+            with pytest.raises(NotImplementedError) as raised:
+                TrackObjectsModule.tracking_method(module)
+            assert str(raised.value) == (
+                "TrackObjects tracking method is not supported by the converter: "
+                f"{method.value!r}"
+            )
+            with pytest.raises(KeyError):
+                TrackObjectsMethodStrategy.for_method(method)

@@ -516,24 +516,11 @@ class TrackObjectsModule(
     def tracking_method(cls, module: "ModuleBlock") -> "TrackingMethod":
         """Return the nominal tracking method declared by one module."""
 
-        return coerce_cellprofiler_enum(
+        method = coerce_cellprofiler_enum(
             TrackingMethod,
             required_setting_value(module, cls.tracking_method_setting),
         )
-
-    @classmethod
-    def require_supported_tracking_method(
-        cls,
-        module: "ModuleBlock",
-    ) -> "TrackingMethod":
-        """Fail before contract emission for methods absent from the runtime."""
-
-        method = cls.tracking_method(module)
-        if method not in {TrackingMethod.OVERLAP, TrackingMethod.DISTANCE}:
-            raise NotImplementedError(
-                "TrackObjects tracking method is not supported by the converter: "
-                f"{method.value!r}"
-            )
+        TrackObjectsMethodStrategy.require_supported_method(method)
         return method
 
     @classmethod
@@ -560,7 +547,7 @@ class TrackObjectsModule(
     ):
         """Declare CP's temporal Parent relationship before measurement rows."""
 
-        cls.require_supported_tracking_method(module)
+        cls.tracking_method(module)
         tracked_objects = cls.tracked_object_input(module, artifact_inputs)
         declaration = ObjectRelationshipDeclaration(
             source=tracked_objects.ref(),
@@ -609,7 +596,7 @@ class TrackObjectsModule(
         bound: "BoundModuleSettings",
     ) -> "BoundModuleSettings":
         kwargs = dict(bound.kwargs)
-        tracking_method = cls.require_supported_tracking_method(module)
+        tracking_method = cls.tracking_method(module)
         kwargs["tracking_method"] = tracking_method
         movement_model = optional_setting_value(module, cls.movement_model_setting)
         if movement_model is not None:
@@ -676,7 +663,7 @@ class TrackingImageDisplayStrategy(
         figure = Figure()
         canvas = FigureCanvasAgg(figure)
         axes = figure.add_subplot(1, 1, 1)
-        colormap = colormaps["jet"].with_extremes(bad=(0, 0, 0))
+        colormap = colormaps.get_cmap("jet").with_extremes(bad=(0, 0, 0))
         axes.imshow(
             np.ma.array(indexer[labels], mask=labels == 0),
             cmap=colormap,
@@ -1159,6 +1146,15 @@ class TrackObjectsMethodStrategy(
     __enum_label_attr__ = "method_label"
     method: ClassVar[TrackingMethod | None] = None
     method_label: ClassVar[str | None] = None
+
+    @classmethod
+    def require_supported_method(cls, method: TrackingMethod) -> None:
+        """Validate compiler choices against the actual registered implementations."""
+        if method.value not in cls.__registry__:
+            raise NotImplementedError(
+                "TrackObjects tracking method is not supported by the converter: "
+                f"{method.value!r}"
+            )
 
     @classmethod
     def for_method(cls, method: TrackingMethod) -> "TrackObjectsMethodStrategy":
