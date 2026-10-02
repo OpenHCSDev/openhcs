@@ -210,3 +210,86 @@ Only terminal install tmp was removed: the empty, handle-free owned
 artifact qroot (4096 allocated bytes). rmdir removed no files; this disposable
 container is regenerable. All source, original logs, saved viewers, private target,
 ordinary wheel, earlier evidence and UNKNOWN dispositions remain untouched.
+
+Receiving comparison with current394 eb2f23ef
+--------------------------------------------
+
+Parent requested this source-only review before its installed graph journey.
+Compared immutable wheel production94ee1079d with live394 head
+``eb2f23efdf6c9f7d4da0e5692567b3535f23f257``; the latter incorporates main
+``a6c18f054457b7693fb0585ca2167b43325a0c01``. Neither source movement nor this
+review authorizes another build/install. The approved wheel, target, byte
+receipts,404dd324 graph receipt and original failed/UNKNOWN inputs stay unchanged.
+
+Read the complete Git delta (23 files, four production files), then the original
+graph/provenance/projection/alignment/publication/role consumers, public inventory
+and streaming contracts, strict native reader, Napari source/feature projection,
+renderer inheritance and processing-preparation callers. The comparison includes
+all production roots, not only the historical graph patch. Reproduce the complete
+production/dependency difference with::
+
+    git diff --name-status 94ee1079d eb2f23ef -- openhcs benchmark external \
+      packaging scripts tools pyproject.toml setup.py setup.cfg MANIFEST.in \
+      .gitmodules requirements-omero.txt server.json
+
+Exactly four paths differ:
+
+* ``openhcs/mcp/dev_client_renderers/plate.py``: merged469 direct/selected sample
+  formatting now inherits ``McpDevTypedOutputRenderer``. Original typed decoding
+  and diagnostics replace raw outer-envelope reads and a manufactured nested
+  MCP response. Compact missing/error/omission presentation is changed.
+* ``openhcs/mcp/dev_client_renderers/viewer.py``: only
+  ``ViewerImageSampleRenderer`` uses the inherited scalar-preview counter instead
+  of its deleted copy. Inventory, stream, state, payload, ROI summary, navigation
+  and snapshot renderer implementations are unchanged.
+* ``openhcs/mcp/dev_client_rendering.py``: the existing typed ancestor gains
+  ``json_value_count`` shared by those three sample leaves. Its existing decoding,
+  diagnostics and nominal payload dispatch methods are unchanged. Public sample
+  producers, DTOs, serialization and generated commands are unchanged; compact
+  sample rendering cannot be represented as byte-identical current acceptance.
+* ``openhcs/processing/backends/cellprofiler/illumination.py``: merged474 adds ten
+  lines to the declared ``_prepare_correct_illumination_calculate`` hook, preparing
+  canonical float64 contiguous images and bool masks in masked/unmasked and
+  writable/read-only combinations. Numerical processing bodies are unchanged;
+  the registered readiness lifecycle now performs additional JIT preparation.
+  The94ee target does not exercise that newer readiness behavior.
+
+Every other production/dependency path above has zero diff, including all core,
+agent and runtime declarations/consumers, interop, IO, processing materialization,
+graph leaf, benchmark, packaging and dependency/configuration sources. Complete
+tree identities agree at both heads (not a selected-file equality assertion):
+
+* ``openhcs/core``: ``54ec18e75054af860534a40064cdc4c8760de89f``.
+* ``openhcs/runtime``: ``2713fda4ec6185b465d0f28a1c2a41c73cea8770``.
+* ``openhcs/agent``: ``62f607cb7486270fb4d2ca82b02af09b3aabd651``.
+* ``openhcs/processing/materialization``:
+  ``3df1b7ce9f402014f14d17766cba33f3244f0dbc``.
+
+The graph writer still derives ``ImagePayloadMetadata`` from graph provenance
+and coordinate spacing, then calls original ``ROIArchiveSourceMetadata.bind``
+for archive content and supplies the same metadata to ``Output``. Public result
+inventory/selection stays under original inspection/streaming services. The
+reader still rejects missing represented source identities before projecting
+geometry; image source-receipt guards are not relaxed. ``SourceProjectionSet``,
+``AlignedImageSliceContext``, selected-source axis/CYX normalization, role and
+filename identity, materialization/publication and Napari feature/scale consumers
+are unchanged across their complete core/runtime/agent families. No old writer
+proposal is reapplied and no acquisition/scientific file is inspected.
+
+All eight external gitlinks and dependency declarations are identical. This is
+Git source/declaration identity, not a fresh dependency installation or native ABI
+test. Existing469 AST/new-capability evidence is reused, not rerun. Current NRA
+and authoritative audit catalog were read: BOUND-1/2 concern the removed raw
+sample reader, IMPL-12 the deleted preview counter copies, BOUND-8 the preserved
+typed source/role boundaries, and AGENT-7 prohibits a ceremonial rebuild. No
+structural implementation is performed here and no new R0/R1 pass is asserted.
+
+Root retains production integration and the two semantic deltas above. Direct
+coordination on394 receives these exact pins/deltas; Dalton receives the same
+source/publication boundary. Parent can qualify the immutable94ee graph/Site001/
+roles path at its actual installed strength. That does not qualify current394
+sampling presentation or merged474 readiness, and source identity alone is not
+live reopening evidence. WholeRoot R0 remains RED (+1 switch/+3 arms), exactly as
+its current public body records; neither472 readiness nor pinned receiving
+acceptance waives it or queues a final-main merge. Parent's public inventory ->
+native graph reopening and Site001 CYX/order/provenance gate remains outstanding.
