@@ -4,14 +4,50 @@ Graph ROI native-source roundtrip: receiving 134
 Status and ownership
 --------------------
 
-Singer owns the receiving source test/proposal in draft404. Root owns production
-integration in394, including ``openhcs/processing/materialization/core.py``.
-The tested proposal is against actual394 head
-``82243634ce097d0d1a2d9e77664cbfeac3e6ec94``. Production files in Singer's branch
-remain unchanged. Shared writer coordination is visible at
-https://github.com/OpenHCSDev/openhcs/pull/394#issuecomment-5945727465.
-This is a source checkpoint, not installed/native readiness. Saved-directory
-publication is already integrated by Root and is not reimplemented here.
+Tristan's latest explicit correction on2026-10-02 restores Singer's ownership of
+draft404 after the temporary handoff/stop. Root retains394 and shared production
+ownership, including ``openhcs/processing/materialization/core.py``. Parent owns
+actual installed/native graph reopening;404 retains that receiving acceptance.
+
+The graph writer repair is now integrated by Root at
+``45f3a721e115b37ab662f362fa5ab4d5e58e1f6e``. Singer verified the actual source,
+test bytes and source receipt. No shared-hunk release remains pending.394 is
+still open;404 is not merged wholesale. Production files in Singer's branch
+remain unchanged, and the original822-qualified proposal is retained as history.
+Saved-directory publication at822 is not reapplied. Source integration does not
+establish installed/native readiness; parent reports livefa049 remains unchanged.
+
+Verified integrated source checkpoint
+-------------------------------------
+
+Root's commit45f3a721e has parent
+``38067a4a5c348e0c7fcedd1d48f69bb99b7be19b``. Its production diff is exactly the
+published narrow writer patch: one bare-content line replaced, nine lines added
+for original typed metadata/spacing and binder reuse. Whole core.py and existing
+``test_spatial_graph_materialization.py`` have zero differences from the qualified
+proposal comparison3913c5008. The imported seven-case receiving fixture has the
+same Git blob as f3e566485:
+``83f0b9b4789a14a3d762d2f63d6599c7b939536f``.
+
+The original graph context hook still owns explicit source-plane selection;
+the writer performs no second selection. ``ROIArchiveSourceMetadata`` retains
+encoding, decoding and geometry projection. ``Output.metadata`` carries the same
+declaration. The native reader and its missing/conflicting-source guard are not
+changed by this integration. The geometry-test adaptation and cooperative
+new-declaration/edge-feature behaviour are the exact receiving version.
+
+Root's committed integration receipt reports original current-source3RED/4PASS
+and87 integrated controls PASS in2.28s, with original before/after logs retained
+under RUNS.394's body reports the isolated original R0 graph delta passed with
+zero positive deltas. These are Root's execution evidence, not a receiving rerun
+or a waiver of394's separate whole-branch architecture/native/performance gates.
+Receipt:
+https://github.com/OpenHCSDev/openhcs/blob/45f3a721e115b37ab662f362fa5ab4d5e58e1f6e/docs/validation/shared_runtime_plumbing_384_20261001.rst.
+
+NRA/refactor-audit source review accepts the exact BOUND-2/BOUND-8 repair using
+the existing projection/binder owners, without IMPL-12 duplication or another
+consumer/registry. No test was repeated, source patch reapplied, foreign worktree
+edited or live installation changed for this receiving checkpoint.
 
 Original receiving witness
 --------------------------
@@ -51,12 +87,13 @@ into the existing ``ImagePayloadMetadata`` and ``SourceVoxelSpacing`` owners.
 decoding and presentation procedures. ``Output.metadata`` carries the same
 declaration into downstream materialisation. No new source schema is introduced.
 
-Exact unapplied proposal
-------------------------
+Historical exact source proposal
+--------------------------------
 
 ``graph-roi-source-roundtrip-134.patch`` contains the narrow production hunk and
-one geometry-test adaptation. It uses zero-context Git hunks; integrate with
-``git apply --unidiff-zero`` against the named Root source. The production change removes one bare-content
+one geometry-test adaptation. Its historical822 admission used zero-context
+``git apply --unidiff-zero``. Do not reapply it over Root's integrated45f3a721e.
+The production change removes one bare-content
 line and adds nine lines in the existing registered leaf writer/imports. The
 unchanged binder performs archive encoding. The reader, source-plane projection,
 writer registry, subject projection, capture and viewer implementations are
@@ -151,10 +188,11 @@ earlier bounded global-scan failures remain in the historical receiving receipts
 Disposition and later acceptance
 --------------------------------
 
-Root integrates this tested hunk/test in394 or explicitly releases only that
-shared hunk before Singer edits production.404 publishes the receiving test,
-patch and evidence rather than another competing writer. Parent controls the
-installed freeze release and later public inventory→owned native reopen of a
+Source integration is complete in394 at45f3a721e; no production-hunk dependency
+remains for404.404 retains the receiving record and pending installed/native
+acceptance, not another implementation to merge over394. Parent controls the
+coherent package qualification, installed freeze release and later public
+inventory→owned native reopen of a
 new correctly written graph ZIP, with source/channel/calibration readbacks and
 personally opened same-coordinate raw/result/combined placement. Existing failed
 jobs/archives remain unchanged; no biological acceptance is claimed.

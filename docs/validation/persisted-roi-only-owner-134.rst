@@ -9,10 +9,11 @@ evidence/native-acceptance record, not another production implementation to merg
 Committed PR source is distinct from merged, installed and native acceptance.
 The exact review and remaining parent gate appear in the final section.
 
-The distinct remaining graph source-metadata writer defect has a tested exact
-proposal and source ZIP roundtrip in ``graph-roi-source-roundtrip-134.rst``.
-Root retains the shared core.py integration; the publication proposal below is
-still superseded and must not be reapplied.
+Root integrated the distinct graph source-metadata writer repair in394 at45f3a721e.
+Singer resumes404 receiving ownership under Tristan's latest explicit correction;
+the verified source checkpoint and parent-owned installed/native gate are in
+``graph-roi-source-roundtrip-134.rst``. The publication proposal below is still
+superseded and must not be reapplied.
 
 The historical proposal below was qualified against PR394
 ``faf61ad87c550fa2d8ef44313344db74b378b857`` before Root's integration.
