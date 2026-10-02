@@ -18,62 +18,63 @@ from openhcs.mcp.execution import McpTransportExecutor
 
 @pytest.mark.parametrize("failure", (None, ValueError("original resource failure")))
 def test_original_resource_declaration_and_cooperative_close(monkeypatch, failure):
-    calls = []
+    with monkeypatch.context() as resource_patch:
+        calls = []
 
-    class Gateway:
-        def dispose(self):
+        class Gateway:
+            def dispose(self):
+                assert threading.current_thread() is threading.main_thread()
+                calls.append("gateway disposed")
+
+        class Java:
+            def shutdown_jvm(self):
+                assert threading.current_thread() is threading.main_thread()
+                calls.append("JVM stopped")
+
+        context = BioFormatsJavaContext(imagej_module=None, scyjava_module=Java())
+        context.ij = Gateway()
+        resource_patch.setattr(BioFormatsJavaContext, "_instance", context)
+        resource_patch.setattr(backend_registry, "_cleanup_callbacks", [])
+        backend_registry.register_cleanup_callback(BioFormatsJavaContext.shutdown_instance)
+
+        class AuditCloseCapability:
+            def close(self):
+                calls.append("cooperative enter")
+                super().close()
+                calls.append("cooperative exit")
+
+        class AuditedExecutor(AuditCloseCapability, McpTransportExecutor):
+            pass
+
+        executor = AuditedExecutor()
+
+        def independent_resource():
+            assert executor._closed
+            assert executor.active_futures() == ()
             assert threading.current_thread() is threading.main_thread()
-            calls.append("gateway disposed")
+            calls.append("independent resource")
+            if failure is not None:
+                raise failure
 
-    class Java:
-        def shutdown_jvm(self):
-            assert threading.current_thread() is threading.main_thread()
-            calls.append("JVM stopped")
-
-    context = BioFormatsJavaContext(imagej_module=None, scyjava_module=Java())
-    context.ij = Gateway()
-    monkeypatch.setattr(BioFormatsJavaContext, "_instance", context)
-    monkeypatch.setattr(backend_registry, "_cleanup_callbacks", [])
-    backend_registry.register_cleanup_callback(BioFormatsJavaContext.shutdown_instance)
-
-    class AuditCloseCapability:
-        def close(self):
-            calls.append("cooperative enter")
-            super().close()
-            calls.append("cooperative exit")
-
-    class AuditedExecutor(AuditCloseCapability, McpTransportExecutor):
-        pass
-
-    executor = AuditedExecutor()
-
-    def independent_resource():
-        assert executor._closed
-        assert executor.active_futures() == ()
-        assert threading.current_thread() is threading.main_thread()
-        calls.append("independent resource")
-        if failure is not None:
-            raise failure
-
-    # A new resource needs only its original declaration, not an MCP edit.
-    backend_registry.register_cleanup_callback(independent_resource)
-    backend_registry.register_cleanup_callback(independent_resource)
-    if failure is None:
-        executor.close()
-    else:
-        with pytest.raises(ExceptionGroup) as caught:
+        # A new resource needs only its original declaration, not an MCP edit.
+        backend_registry.register_cleanup_callback(independent_resource)
+        backend_registry.register_cleanup_callback(independent_resource)
+        if failure is None:
             executor.close()
-        assert caught.value.exceptions == (failure,)
-    assert BioFormatsJavaContext._instance is None
-    assert context.ij is None
-    assert calls[:4] == [
-        "cooperative enter", "gateway disposed", "JVM stopped", "independent resource"
-    ]
-    assert calls.count("cooperative exit") == int(failure is None)
-    executor.close()
-    assert calls.count("gateway disposed") == 1
-    assert calls.count("JVM stopped") == 1
-    assert calls.count("independent resource") == 1
+        else:
+            with pytest.raises(ExceptionGroup) as caught:
+                executor.close()
+            assert caught.value.exceptions == (failure,)
+        assert BioFormatsJavaContext._instance is None
+        assert context.ij is None
+        assert calls[:4] == [
+            "cooperative enter", "gateway disposed", "JVM stopped", "independent resource"
+        ]
+        assert calls.count("cooperative exit") == int(failure is None)
+        executor.close()
+        assert calls.count("gateway disposed") == 1
+        assert calls.count("JVM stopped") == 1
+        assert calls.count("independent resource") == 1
 
 
 def test_off_main_close_rejected_before_resource_release(monkeypatch):
@@ -165,9 +166,9 @@ def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fai
     script.write_text(
         f"import sys\nsys.path.insert(0, {str(source_root)!r})\n"
         "from pathlib import Path\nimport threading,inspect\n"
+        "from openhcs.mcp.stdio import McpStdioTransport\n"
         "from mcp.server.fastmcp import FastMCP\n"
         "from polystore import register_cleanup_callback\n"
-        "from openhcs.mcp.stdio import McpStdioTransport\n"
         f"assert Path(inspect.getfile(McpStdioTransport)).resolve().is_relative_to(Path({str(source_root)!r}))\n"
         "server = FastMCP('declared-resource-lifetime')\n"
         "@server.tool()\ndef health() -> dict[str, bool]:\n    return {'ok': True}\n"
