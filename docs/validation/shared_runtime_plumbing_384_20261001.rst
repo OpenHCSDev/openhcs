@@ -1406,3 +1406,56 @@ counted as an independent 0.346s saving. The complete source-query preimage was
 not captured, so resulting metadata leaves are not a source-lookup replay.
 Read-only audit:
 ``/var/tmp/openhcs-b764-save-images-artifact-subtree-readonly-audit-20261002.json``.
+
+Automatic image-role repair and public execution, 2026-10-02
+----------------------------------------------------------
+
+Commits 0b6c66560 and 2d756646b repair the physical issue 435 collision on
+existing owners. Artifact type and materialization purpose supply the retained
+role; shared filename identity supplies parser-backed names. MaterializationBatch
+binds the original rendering spec onto its existing context, because a public
+caller may render a spec different from the compiled plan's default. The original
+output plan and source references remain intact. Explicit exports keep their
+authored paths. Both scalar and projected retained images preserve physical
+coordinates and complete filename suffixes. Missing parsers use the existing
+required-parser error policy. Strict projection and path-conflict guards remain
+unchanged.
+
+The initial candidate's two actual-purpose mismatch controls fail before this
+binding repair. The initial scoped R0 also reports a foreign optional-plan probe;
+the corrected owner eliminates that probe without changing the guard. Original
+scoped R0 and R1 pass for the complete repair versus 51533665e. Both original
+failures are retained. Related controls pass 171 cases; after normal main
+283119c42 integration at 053c9d445, 183 affected controls pass. An attempted
+unrelated Torch NLM control stops at collection because Torch is absent; that
+failure remains separate and no dependency changes follow. Handoff:
+``/var/tmp/openhcs-automatic-image-role-435-reviewed-handoff-20261002.json``.
+
+The clean frozen 053c9d445 source completes public MCP startup preparation,
+compilation and all five original processing steps. The output contains exactly
+the two distinct qualified role TIFFs and two matching source-projection rows.
+The fourth journey then stops at its inspection assertion: the API reports
+PARTIAL with the sole missing-grid warning, because the synthetic declaration
+does not supply plate grid dimensions. This original whole-journey RED is
+retained; it is not a pixel-comparison failure or a completed fresh-process
+readback acceptance. The runtime and all SDK children are terminal. Receipt:
+``/var/tmp/openhcs-derived-role-435-synthetic-acceptance-v4-20261002/journey.json``.
+Supplemental public inventory, complete pixel and fresh-process checks remain
+pending on these unchanged outputs.
+
+The reviewed source is normally integrated into PR394 at fa694eb56. Its affected
+current NLM, cold-feedback, agent-service, prepared geometry, native presentation,
+MCP lifetime and new role controls pass 194 cases in 20.43s. Log:
+``/var/tmp/openhcs-pr394-automatic-role-435-current-integration-controls-20261002.log``.
+Neither this bug repair nor its public synthetic run establishes a performance
+gain. Accepted benchmark clocks remain pinned to main4754 and candidateb764.
+
+The global runtime reassessment finds no sufficient measured optimization route
+yet. Removing 485 provenance births and 485 identity births in captured context
+leaves already saved only 4.82ms and changed malformed-input ordering. The next
+candidate must remove whole repeated projection/adapter transactions, rather
+than another constructor or field-query leaf. The strongest remaining joint
+frontier is 3.0201s with incomplete whole-lane replay coverage; counts from the
+instrumented profile cannot establish its reducible fraction. Audit and smallest
+missing capture recipe:
+``/var/tmp/openhcs-b764-whole-lifecycle-architecture-reassessment-20261002.json``.
