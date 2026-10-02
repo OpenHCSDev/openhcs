@@ -1,6 +1,6 @@
 """Synthetic controls for the declared soma acceptance gate, not biology QA."""
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pytest
@@ -10,6 +10,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,
     _identify_cell_bodies_cellprofiler,
+    _identify_nuclear_seeded_cell_bodies_cellprofiler,
 )
 
 
@@ -86,6 +87,35 @@ def test_gate_pixel_units_do_not_replace_area_calibration_and_zero_is_explicit()
     settings.validate()
     np.testing.assert_array_equal(_small_body_contract(settings), [False, True])
     np.testing.assert_array_equal(_small_body_contract(settings, 1.0), [False, False])
+
+
+@pytest.mark.parametrize("nuclear_seeded", (False, True))
+def test_independent_gate_audit_composes_through_original_detector_consumers(nuclear_seeded):
+    gates = []
+
+    class GateAudit:
+        def contract_candidates(self, labels, response, pixel_size_um):
+            gates.append(self.minimum_inscribed_diameter_px)
+            return super().contract_candidates(labels, response, pixel_size_um)
+
+    @dataclass(frozen=True)
+    class AuditedBodySettings(GateAudit, MetaXpressCellBodySettings):
+        """Audit contribution composes the original calibrated gate owner."""
+
+    settings = AuditedBodySettings(minimum_inscribed_diameter_px=5.0)
+    if nuclear_seeded:
+        nuclei = np.zeros((64, 64), dtype=np.int32)
+        nuclei[30:33, 30:33] = 1
+        _identify_nuclear_seeded_cell_bodies_cellprofiler(
+            _small_body_image(), settings, 1.3556, bright_objects=True,
+            nuclei_labels=nuclei,
+        )
+        assert gates == [5.0, 5.0]
+    else:
+        _identify_cell_bodies_cellprofiler(
+            _small_body_image(), settings, 1.3556, bright_objects=True
+        )
+        assert gates == [5.0]
 
 
 @pytest.mark.parametrize("diameter", (-1.0, np.nan, np.inf))
