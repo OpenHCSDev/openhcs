@@ -1433,14 +1433,17 @@ class PipelineCompiler:
                             stop_before=invocation_index,
                         )
                     )
-                    unproved_prefix = prefix_proof.unproved_invocation
-                    if unproved_prefix is not None:
-                        failures.append(
-                            f"{owner}: carrier requirement {requirement.value!r} "
-                            "is not preserved by earlier callable "
-                            f"{unproved_prefix.contract.function_name!r} in the "
-                            "same group."
+                    try:
+                        prefix_proof.require_proven_invocations(
+                            lambda unproved: (
+                                f"{owner}: carrier requirement {requirement.value!r} "
+                                "is not preserved by earlier callable "
+                                f"{unproved.contract.function_name!r} in the "
+                                "same group."
+                            )
                         )
+                    except ValueError as error:
+                        failures.append(str(error))
                         continue
                     if not prefix_proof.requires_source_validation:
                         continue
@@ -1594,13 +1597,16 @@ class PipelineCompiler:
             proof = producer_group.primary_image_carrier_proof(
                 requirement
             )
-            unproved = proof.unproved_invocation
-            if unproved is not None:
-                failures.append(
-                    f"{owner}: carrier requirement {requirement.value!r} is not "
-                    f"preserved by producer step {producer.step_index} callable "
-                    f"{unproved.contract.function_name!r}."
+            try:
+                proof.require_proven_invocations(
+                    lambda unproved: (
+                        f"{owner}: carrier requirement {requirement.value!r} is not "
+                        f"preserved by producer step {producer.step_index} callable "
+                        f"{unproved.contract.function_name!r}."
+                    )
                 )
+            except ValueError as error:
+                failures.append(str(error))
                 return
             if not proof.requires_source_validation:
                 return

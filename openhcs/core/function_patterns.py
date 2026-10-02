@@ -842,9 +842,11 @@ class CompiledFunctionGroup:
 class PrimaryImageCarrierProof(ABC):
     """One group-owned proof result, not another carrier metadata authority."""
 
-    @property
-    def unproved_invocation(self) -> CompiledFunctionInvocation | None:
-        return None
+    def require_proven_invocations(
+        self,
+        failure_message: Callable[[CompiledFunctionInvocation], str],
+    ) -> None:
+        """Accept proven transitions; a failed proof owns its rejection."""
 
     @property
     @abstractmethod
@@ -868,9 +870,11 @@ class CreatedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
 class UnprovedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
     invocation: CompiledFunctionInvocation
 
-    @property
-    def unproved_invocation(self) -> CompiledFunctionInvocation:
-        return self.invocation
+    def require_proven_invocations(
+        self,
+        failure_message: Callable[[CompiledFunctionInvocation], str],
+    ) -> None:
+        raise ValueError(failure_message(self.invocation))
 
     @property
     def requires_source_validation(self) -> bool:

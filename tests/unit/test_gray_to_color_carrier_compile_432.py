@@ -178,9 +178,10 @@ def test_group_proof_stops_at_creator_but_rejects_later_unknown(unknown_after_cr
     )
     assert not proof.requires_source_validation
     if unknown_after_creator:
-        assert proof.unproved_invocation is invocations[-1]
+        with pytest.raises(ValueError, match="unknown"):
+            proof.require_proven_invocations(lambda invocation: invocation.contract.function_name)
     else:
-        assert proof.unproved_invocation is None
+        proof.require_proven_invocations(lambda invocation: pytest.fail("Unexpected failed proof"))
 
 
 def test_color_to_gray_does_not_preserve_consumed_carrier_for_later_consumer(tmp_path):
