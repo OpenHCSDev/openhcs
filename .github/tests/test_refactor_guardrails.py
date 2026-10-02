@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from scripts import check_refactor_r1 as policy
 from scripts.check_refactor_r1 import (
     R1EmptyReportScope,
     SourceRevision,
@@ -164,8 +165,7 @@ def test_deleted_source_scope_is_unmeasured_and_never_parsed(
     command = subprocess.run(
         [
             sys.executable,
-            "-m",
-            "scripts.check_refactor_r1",
+            policy.__file__,
             "--base",
             base,
             "--head",
@@ -218,6 +218,11 @@ def test_empty_scope_rejects_an_uninitialized_repository_child(repository, tmp_p
             + "\ndef check(row: Record):\n    return isinstance(row.alpha, str)\n",
             True,
         ),
+        (
+            SCHEMA
+            + "\ndef check(row: Record):\n    return isinstance(row.beta, int)\n",
+            True,
+        ),
     ],
 )
 def test_actual_r1_cli_json_and_exit_status(repository, tmp_path, source, increased):
@@ -226,8 +231,7 @@ def test_actual_r1_cli_json_and_exit_status(repository, tmp_path, source, increa
     result = subprocess.run(
         [
             sys.executable,
-            "-m",
-            "scripts.check_refactor_r1",
+            policy.__file__,
             "--base",
             base,
             "--head",
@@ -313,8 +317,6 @@ def test_staged_schema_membership_matches_fresh_original_analysis(
 ):
     from nominal_refactor_advisor.semantic_descent import SemanticAuthorityKind
 
-    import scripts.check_refactor_r1 as policy
-
     if transition != "added":
         commit(repository, "openhcs/model.py", SCHEMA)
     base = commit(repository, "openhcs/consumer.py", RAW)
@@ -369,8 +371,6 @@ def test_fixed_address_reuses_original_projection_cache(
     repository, tmp_path, monkeypatch
 ):
     from nominal_refactor_advisor.analysis import CompactProjectionCacheSource
-
-    import scripts.check_refactor_r1 as policy
 
     commit(repository, "openhcs/model.py", SCHEMA)
     base = commit(repository, "openhcs/consumer.py", DECODE)
@@ -464,8 +464,6 @@ def test_transition_releases_original_graph_before_next_analysis(
     repository, tmp_path, monkeypatch
 ):
     import weakref
-
-    import scripts.check_refactor_r1 as policy
 
     commit(repository, "openhcs/model.py", SCHEMA)
     base = commit(repository, "openhcs/consumer.py", RAW)
