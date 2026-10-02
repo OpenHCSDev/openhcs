@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 
 class RuntimeEquivalenceDifferenceKind(str, Enum):
@@ -43,6 +44,14 @@ class RuntimeEquivalenceReport:
     """Semantic equivalence result for two runtime outputs."""
 
     differences: tuple[RuntimeEquivalenceDifference, ...]
+    compared_output_files: frozenset[Path] = frozenset()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "compared_output_files",
+            frozenset(Path(path) for path in self.compared_output_files),
+        )
 
     @property
     def is_equivalent(self) -> bool:
