@@ -70,6 +70,10 @@ def cellprofiler_database_export_equivalence(
             _declared_sqlite_table_subjects(candidate_properties),
             policy,
         ),
+        *_workspace_export_differences(
+            tuple(sorted(reference_root.rglob("*.workspace"))),
+            _outputs_with_suffix(candidate_exports, ".workspace"),
+        ),
         *_properties_export_differences(
             reference_properties,
             candidate_properties,
@@ -156,6 +160,12 @@ def cellprofiler_native_shard_equivalence(
         shard_properties = tuple(sorted(root.rglob("*.properties")))
         differences.extend(
             _properties_export_differences(reference_properties, shard_properties)
+        )
+        differences.extend(
+            _workspace_export_differences(
+                tuple(sorted(reference_root.rglob("*.workspace"))),
+                tuple(sorted(root.rglob("*.workspace"))),
+            )
         )
         shard_subjects = _declared_sqlite_table_subjects(shard_properties)
         if shard_subjects != reference_subjects:
@@ -686,3 +696,26 @@ def _unique_paths_by_name(
             )
         by_name[path.name] = path
     return by_name
+
+
+def _workspace_export_differences(reference_paths, candidate_paths):
+    from openhcs.interop.cellprofiler.workspace_export import CPAWorkspacePanel
+
+    differences, reference_by_name, candidate_by_name = _named_output_differences(
+        reference_paths, candidate_paths, output_label="CPA workspace"
+    )
+    for name in reference_by_name.keys() & candidate_by_name.keys():
+        reference = CPAWorkspacePanel.parse_workspace(
+            reference_by_name[name].read_text()
+        )
+        candidate = CPAWorkspacePanel.parse_workspace(
+            candidate_by_name[name].read_text()
+        )
+        if reference != candidate:
+            differences.append(
+                RuntimeEquivalenceDifference(
+                    RuntimeEquivalenceDifferenceKind.TABLE_CONTENT,
+                    f"CPA workspace {name!r} panel declarations differ.",
+                )
+            )
+    return tuple(differences)

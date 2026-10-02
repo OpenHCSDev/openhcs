@@ -6,6 +6,8 @@ runtime artifacts. It does not make CPA tables a new semantic authority.
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.workspace_export import CPAWorkspacePanel
+
 from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -283,6 +285,8 @@ class CellProfilerDatabaseExportSettings:
     selected_objects: tuple[str, ...] | None
     wants_properties_file: bool
     wants_relationship_tables: bool
+    wants_workspace_file: bool = False
+    workspace_panels: tuple[CPAWorkspacePanel, ...] = ()
     maximum_column_name_length: int = 64
     location_object: str | None = None
     plate_type: str | None = None

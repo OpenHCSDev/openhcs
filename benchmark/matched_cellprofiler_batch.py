@@ -196,7 +196,7 @@ def _require_compared_output_inventory(
             | frozenset(
                 path
                 for path in exports.output_files
-                if path.suffix.lower() in {".db", ".properties"}
+                if path.suffix.lower() in {".db", ".properties", ".workspace"}
             )
         )
         if files != compared_files:
