@@ -45,7 +45,7 @@ in the original ``FunctionDetail.parameters`` derived from the final signature.
 FLEXIBLE's supported control/default/help remains present there. PURE_2D and
 PURE_3D do not advertise the removed control. Authored mentions of
 ``slice_by_slice`` or ``Additional Parameters`` are preserved exactly.
-Applicable patterns: MEMB-2 (derive control membership), BOUND-4/8 (do not recover
+Applicable patterns: MEMB-2 (derive control membership), BOUND-4 (do not recover
 owned control facts from generated prose), IMPL-5 (one shared projection).
 
 Root394 head``133da74ecb58e92138b4da5b40ecca8021386ba7`` file roster was checked;
