@@ -38,15 +38,59 @@ from openhcs.runtime.viewer_protocol import (
     ViewerComponentValueOrdering,
     ViewerSettlePhase,
     ViewerSettleProgress,
+    ViewerNativeWindowGeometry,
+    ViewerNativeWindowState,
 )
 
 if TYPE_CHECKING:
+    from qtpy.QtWidgets import QWidget
     from polystore.streaming.receivers.napari import NapariBatchProcessor
 
     from openhcs.runtime.napari_viewer_server import NapariViewerServer
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class NapariNativeWindowPresentation:
+    """The existing detached Qt window owns geometry and focus, not a cache."""
+
+    window: QWidget
+
+    def focus(self) -> None:
+        if self.window.isMinimized():
+            self.window.showNormal()
+        self.window.show()
+        self.window.raise_()
+        self.window.activateWindow()
+
+    def position(self, geometry: ViewerNativeWindowGeometry) -> None:
+        from qtpy.QtCore import QRect
+
+        rectangle = QRect(geometry.x, geometry.y, geometry.width, geometry.height)
+        screen = self.window.screen()
+        if screen is None or not screen.availableGeometry().contains(rectangle):
+            raise ValueError("Window geometry must fit the current native screen.")
+        if (
+            geometry.width < self.window.minimumWidth()
+            or geometry.height < self.window.minimumHeight()
+        ):
+            raise ValueError("Window geometry is smaller than the native minimum size.")
+        if self.window.isMaximized() or self.window.isMinimized():
+            self.window.showNormal()
+        self.window.setGeometry(rectangle)
+
+    def snapshot(self) -> ViewerNativeWindowState:
+        geometry = self.window.geometry()
+        return ViewerNativeWindowState(
+            geometry=ViewerNativeWindowGeometry(
+                geometry.x(), geometry.y(), geometry.width(), geometry.height()
+            ),
+            visible=self.window.isVisible(),
+            active=self.window.isActiveWindow(),
+            minimized=self.window.isMinimized(),
+        )
 
 
 LayerKwargValue: TypeAlias = str | int | float | bool | tuple | list | dict | None

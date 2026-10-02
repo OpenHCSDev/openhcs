@@ -408,7 +408,7 @@ class CameraGateway(ViewerWindowGatewayABC):
     def close_window(self, request):
         raise AssertionError(request)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         return {
             "status": "success",
             "native_viewport": ViewerNativeViewportPresentation(
@@ -440,7 +440,7 @@ def test_service_returns_native_acknowledgement_not_requested_echo():
         connection=ExecutionConnectionSpec(port=5585),
         presentation=ViewerNativeViewportPresentation((0, 1, 2), 2),
     )
-    result = ViewerWindowService(gateway=CameraGateway()).viewport(request)
+    result = ViewerWindowService(gateway=CameraGateway()).presentation(request)
     assert result.applied
     assert result.native_viewport == ViewerNativeViewportPresentation((0, 9, 11), 4)
 
@@ -460,7 +460,7 @@ def test_mcp_viewport_schema_and_invocation_are_derived_from_typed_contract():
             self.calls = 0
             self.intensity_calls = 0
 
-        def viewport(self, request):
+        def presentation_control(self, request):
             self.calls += 1
             control = NapariNativeViewportPresentation(self.viewer)
             control.apply(request.presentation)
