@@ -251,7 +251,9 @@ def test_new_request_declaration_and_cooperative_capability_need_no_consumer_edi
         def send_data(self, data):
             pytest.fail("Catalog controls do not send scientific arrays")
 
-    client = AuditedCatalogClient(port=22319, persistent=True)
+    client = AuditedCatalogClient(
+        port=22319, persistent=True, config=OPENHCS_ZMQ_CONFIG
+    )
     expected = _handshake(client)
     client._connection = AttachedEndpointConnection(expected)
     observed = []
