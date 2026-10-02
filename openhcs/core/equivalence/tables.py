@@ -78,6 +78,12 @@ class RuntimeTableSnapshot:
     rows: tuple[tuple[str, ...], ...]
     column_context: tuple[str | None, ...] = ()
 
+    def required_rows(self) -> tuple[tuple[str, ...], ...]:
+        """Admit actual rows when a consumer needs a determining declaration."""
+        if not self.rows:
+            raise ValueError(f"Runtime table {self.path} has no determining declaration rows.")
+        return self.rows
+
     @property
     def participates_in_comparison(self) -> bool:
         """Compare output tables except the engine's Experiment key/value receipt."""
