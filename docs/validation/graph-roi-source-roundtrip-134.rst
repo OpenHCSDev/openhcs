@@ -9,13 +9,62 @@ draft404 after the temporary handoff/stop. Root retains394 and shared production
 ownership, including ``openhcs/processing/materialization/core.py``. Parent owns
 actual installed/native graph reopening;404 retains that receiving acceptance.
 
-The graph writer repair is now integrated by Root at
-``45f3a721e115b37ab662f362fa5ab4d5e58e1f6e``. Singer verified the actual source,
-test bytes and source receipt. No shared-hunk release remains pending.394 is
-still open;404 is not merged wholesale. Production files in Singer's branch
-remain unchanged, and the original822-qualified proposal is retained as history.
-Saved-directory publication at822 is not reapplied. Source integration does not
-establish installed/native readiness; parent reports livefa049 remains unchanged.
+The graph writer repair integrated by Root at
+``45f3a721e115b37ab662f362fa5ab4d5e58e1f6e`` remains present at current394
+``94ee1079d22540f9b5ed48b69481d7e7ab51095d``. No shared-hunk release remains
+pending. Root owns production integration; Singer owns404 receiving acceptance;
+parent owns installed/native qualification after the retinal11 slot yields.
+404 is not merged wholesale. Its historical production base/proposal is not a
+replacement for current394. Saved-directory publication at822 is not reapplied.
+
+Account-switch resume and current source
+---------------------------------------
+
+Tristan explicitly resumed work on2026-10-02. The preceding pause interrupted
+no owned qualification operation: the last completed task was disposable-scratch
+cleanup. On resume there is no active goal and no owned QA/ratchet process.
+Original logs, failed fixtures, source proposals and uncertain dispositions
+remain intact; no interrupted input is replayed.
+
+The existing persistent checkout is reused. The unpublished445 integration
+receipt/archive is preserved on its local branch at1574ee396, without pushing
+that branch.404 resumes from its existing published5f17851cd checkpoint; all
+three untracked QA ledgers remain. No new WT, environment, dependency download,
+package change, native launch, test rerun or cleanup is needed for this update.
+Recorded submodule gitlinks differ from local dependency worktrees; none is
+changed or represented as an installed qualification.
+
+Read the current394/404 claims and open468/469 rosters before this review.
+468 owns tracking renderer correctness;469 owns MCP sampling presentation.
+Neither claims the graph writer/binder or404 receipt. Root's shared production
+files remain untouched. No competing404 implementation is started.
+
+At pinned94ee1079d, both graph test files and original ``SpatialGraph``,
+``ROIArchiveSourceMetadata``, ``SourceImageProvenance``, ``SourceVoxelSpacing``,
+``ImagePayloadMetadata`` and ``StreamingService`` modules are byte-identical to
+the integrated45f3 checkpoint. Whole materialization/core.py has44 additions and
+25 deletions since45f3 for retained-image role filename/context ownership; its
+graph writer is unchanged. Function-runtime changes leave the graph context
+strategy unchanged. Public plate streaming adds progress/typed failure receipts
+and retains ``require_source_metadata=request.result_directory is not None``.
+These differences do not justify copying the writer or weakening source admission.
+
+Current source still follows the original graph projection -> typed metadata ->
+shared archive binder -> strict reader relationship. BOUND-2/BOUND-8 and
+IMPL-12 remain resolved at that receiving boundary. The unchanged seven-case
+fixture retains actual cooperative ``AuditedGraph(ProjectionAudit, SpatialGraph)``
+hooks and independent edge-feature roundtrip evidence; no generic consumer edit
+is required for that new declaration. Historical executed source controls below
+are reused, not presented as a new run at94ee1079d or a whole394 qualification.
+
+The finite remaining404 gate is a fresh correctly materialized source-bearing
+graph ZIP through public ``kind=result`` inventory and the explicitly owned
+native reopen route, with actual source/channel/plane/calibration, geometry and
+subject/edge feature readbacks plus matched raw/result/combined placement review.
+Parent owns that serial installed check. Original candidate6's broken archive
+and failed job are historical evidence, not an input to repair/replay. Root's
+optimization target, whole-branch R0 adjudication and separate saved-image parity
+work do not require another404 source implementation.
 
 Verified integrated source checkpoint
 -------------------------------------
