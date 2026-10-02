@@ -112,7 +112,9 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
 
         Source literals are eligibility only, never registered membership or
         callable metadata. Nonliteral declarations must be imported to resolve
-        their value; failures remain authoritative. No projection is cached.
+        their value. Loaders without source likewise require discovery rather
+        than a source-based exclusion; failures remain authoritative. No
+        projection is cached.
         """
         missing = lookup_keys.difference(
             key for declaration in dict.values(cls.__registry__)
@@ -130,7 +132,7 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
                 raise ImportError(f"No declaration source loader for {module_name!r}")
             source = spec.loader.get_source(module_name)
             if source is None:
-                raise ImportError(f"No declaration source for {module_name!r}")
+                return True
             module_ast = ast.parse(source, filename=spec.origin or module_name)
             selection = _CatalogDeclarationSourceSelection(missing, attributes, normalize)
             selection.visit(module_ast)
