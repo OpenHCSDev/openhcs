@@ -1,0 +1,58 @@
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "axes": [],
+          "axis_count": 0,
+          "axis_filter": [
+            "A01"
+          ],
+          "errors": [
+            {
+              "code": "compile_inspection_failed",
+              "exception_type": "ValueError",
+              "hint": "Check plate inspection, the embedded pipeline config, and the external global config before retrying compile inspection.",
+              "message": "Primary image carrier requirements failed before execution:\n- step 4 ('ProjectColorChannelsToAlignedProcessingRoles'), group 'default', invocation 'color_to_gray': carrier requirement 'source_channel_axis' is not preserved by producer step 3 callable 'gray_to_color'.",
+              "path": null
+            }
+          ],
+          "plate_path": "/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/input",
+          "progress_event_count": 0,
+          "schema_version": "openhcs.agent.v1",
+          "source_workspace": {
+            "axis_file_counts": {},
+            "file_count": 0,
+            "files": [],
+            "truncated_file_count": 0
+            "sequence": 21
+          },
+          "response": {
+            "execution": {
+              "client_address": null,
+              "compile_only": false,
+              "end_time": 1790921328.8941765,
+              "error": null,
+              "execution_id": "5e3474f4-f736-4e61-a27f-1d7eb6ec7abd",
+              "plate_id": "/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/input",
+              "results_summary": {
+                "auto_add_output_plate_to_plate_manager": false,
+                "output_plate_root": "/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/assisted-4-fa049/named-role-assembly-control-v2/input_openhcs",
+                "runtime_observation_export_path": "/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/assisted-4-fa049/binary-assembly-runtime-outcomes.gzip-pickle",
+                "runtime_observation_export_scope": "outcomes",
+                "well_count": 1,
+                "wells": [
+                  "A01"
+                ]
+              },
+              "start_time": 1790921327.8205662,
+              "status": "complete"
+            },
+            "status": "ok"
+          },
+          "schema_version": "openhcs.agent.v1",
+          "server_execution_id": "5e3474f4-f736-4e61-a27f-1d7eb6ec7abd",
+          "session_id": "session-2",
+          "status": "complete",
+          "uri": "openhcs://execution/jobs/job-4",
+          "warnings": [

@@ -1,0 +1,76 @@
+Interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+Discovery owner: /home/ts/wt/metaclass-registry-selected-discovery-376-20261001/src/metaclass_registry/__init__.py
+FF....                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_declared_fitc_runtime_plane_retains_values_and_physical_identity[False] _
+tests/unit/test_gray_to_color_binding_axis_432.py:91: in test_declared_fitc_runtime_plane_retains_values_and_physical_identity
+    result = CellProfilerFunctionContractExecutor().execute(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:134: in execute
+    result = processing_contract.execute(
+openhcs/processing/backends/lib_registry/unified_registry.py:1239: in execute
+    return self.declaration.execute(registry, func, image, *args, **kwargs)
+openhcs/processing/backends/lib_registry/unified_registry.py:1092: in execute
+    return registry.execute_pure_3d(func, image, *args, **kwargs)
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:330: in execute_pure_3d
+    ).call()
+openhcs/processing/backends/lib_registry/unified_registry.py:263: in call
+    return target(
+openhcs/processing/backends/cellprofiler/color.py:1560: in gray_to_color
+    raise ValueError(
+E   ValueError: GrayToColor image metadata requires a source-binding plane axis, got <RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>.
+_ test_declared_fitc_runtime_plane_retains_values_and_physical_identity[True] __
+tests/unit/test_gray_to_color_binding_axis_432.py:91: in test_declared_fitc_runtime_plane_retains_values_and_physical_identity
+    result = CellProfilerFunctionContractExecutor().execute(
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:134: in execute
+    result = processing_contract.execute(
+openhcs/processing/backends/lib_registry/unified_registry.py:1239: in execute
+    return self.declaration.execute(registry, func, image, *args, **kwargs)
+openhcs/processing/backends/lib_registry/unified_registry.py:1092: in execute
+    return registry.execute_pure_3d(func, image, *args, **kwargs)
+openhcs/interop/cellprofiler/runtime/function_contract_execution.py:330: in execute_pure_3d
+    ).call()
+openhcs/processing/backends/lib_registry/unified_registry.py:263: in call
+    return target(
+openhcs/processing/backends/cellprofiler/color.py:1560: in gray_to_color
+    raise ValueError(
+E   ValueError: GrayToColor image metadata requires a source-binding plane axis, got <RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>.
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_gray_to_color_binding_axis_432.py::test_declared_fitc_runtime_plane_retains_values_and_physical_identity[False]
+FAILED tests/unit/test_gray_to_color_binding_axis_432.py::test_declared_fitc_runtime_plane_retains_values_and_physical_identity[True]
+2 failed, 4 passed, 2 warnings in 6.01s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python docs/validation/knowledge-selected-source-tests.py --basetemp=/home/ts/.cache/agent-scratch/graytocolor-role-axis-20261002/pytest tests/unit/test_gray_to_color_binding_axis_432.py -q --tb=short"
+	User time (seconds): 6.47
+	System time (seconds): 0.39
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.94
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 350904
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 26
+	Minor (reclaiming a frame) page faults: 71430
+	Voluntary context switches: 31
+	Involuntary context switches: 37
+	Swaps: 0
+	File system inputs: 616
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
