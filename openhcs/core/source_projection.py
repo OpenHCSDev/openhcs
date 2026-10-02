@@ -25,6 +25,7 @@ from openhcs.core.source_bindings import (
     SourceProjectionRole,
 )
 from openhcs.core.source_matching import (
+    SourceImageSetIdentityPolicy,
     source_component_metadata_raw_value,
     source_component_metadata_values,
     source_metadata_component,
@@ -831,6 +832,26 @@ class SourceArtifactProjection(SourceProjection):
             return identity
         return (*identity, self.execution_scope, self.ref)
 
+    def image_plane_cohort_key(
+        self, image_set_policy: SourceImageSetIdentityPolicy
+    ) -> tuple[object, ...] | None:
+        """Derive an exact scalar Z cohort, or retain this whole image export."""
+        if (
+            image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+            or self.address is None
+        ):
+            return None
+        return (
+            self.source_alias,
+            self.artifact_kind,
+            self.execution_scope,
+            tuple(
+                (component, value)
+                for component, value in self.source_component_values()
+                if component is not AllComponents.Z_INDEX
+            ),
+        )
+
     def component_value(self, component: AllComponents) -> str | None:
         """Return scalar address or runtime-scope identity for one component."""
 
@@ -965,6 +986,52 @@ class SourceProjectionSet:
                 if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
             ),
         )
+
+    def image_export_groups(
+        self,
+        image_set_policy: SourceImageSetIdentityPolicy,
+    ) -> tuple[
+        tuple[SourceArtifactProjection, ...],
+        tuple[tuple[SourceArtifactProjection, ...], ...],
+    ]:
+        """Partition whole exports and ordered scalar Z cohorts from one set.
+
+        Producer, execution scope and all other source coordinates remain
+        distinct. Coordinates alone never declare a pixel axis.
+        """
+        whole_images = []
+        groups: dict[tuple[object, ...], list[SourceArtifactProjection]] = {}
+        for projection in self.artifact_projections:
+            key = projection.image_plane_cohort_key(image_set_policy)
+            if key is None:
+                whole_images.append(projection)
+            else:
+                groups.setdefault(key, []).append(projection)
+        ordered_groups = []
+        for group in groups.values():
+            z_indexes = tuple(
+                projection.component_value(AllComponents.Z_INDEX)
+                for projection in group
+            )
+            if any(value is None or not value.isdecimal() for value in z_indexes):
+                raise ValueError(
+                    "Exported Z planes require integral source coordinates."
+                )
+            ordered = tuple(
+                projection
+                for _, projection in sorted(
+                    zip((int(value) for value in z_indexes), group, strict=True),
+                    key=lambda item: item[0],
+                )
+            )
+            first_z_index = int(ordered[0].component_value(AllComponents.Z_INDEX))
+            if tuple(
+                int(projection.component_value(AllComponents.Z_INDEX))
+                for projection in ordered
+            ) != tuple(range(first_z_index, first_z_index + len(ordered))):
+                raise ValueError("Exported Z planes must be unique and contiguous.")
+            ordered_groups.append(ordered)
+        return tuple(whole_images), tuple(ordered_groups)
 
     @property
     def execution_anchor_projections(self) -> tuple[SourceProjection, ...]:

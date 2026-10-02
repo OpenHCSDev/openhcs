@@ -137,6 +137,21 @@ class ImagePayloadMetadata(
             if member.metadata.get(ViewerWireField.IMAGE_METADATA, False)
         )
 
+    def require_scalar_source_plane(self) -> None:
+        """Require source metadata for one scalar grayscale image plane."""
+        if self.plane_axis is not None:
+            raise ValueError("Exported source planes require scalar image metadata.")
+        if self.source_channel_axis is not None:
+            raise ValueError("Exported Z planes cannot carry an undeclared color axis.")
+
+    def require_source_image_pixels(self, data: Any) -> None:
+        """Validate decoded pixels against declared XY placement and dtype."""
+        self.source_spatial_domain.require_image_window(data.shape)
+        if self.source_dtype is not None and np.dtype(self.source_dtype) != data.dtype:
+            raise ValueError(
+                "Exported image pixels conflict with their declared dtype."
+            )
+
     def singleton_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
         """Select a declared leading axis only with one exact runtime source plane."""
         plane_count = self.source_provenance.source_plane_count
@@ -440,7 +455,7 @@ class ImagePayloadMetadata(
     ) -> RuntimeArrayData:
         """Project one channel while preserving metadata and mask semantics."""
         if channel_data is None:
-            channel_data = self._channel_axis_slice(
+            channel_data = ImageMaskDomain.channel_axis_slice(
                 source_data,
                 channel_axis=channel_axis,
                 channel_index=channel_index,
@@ -462,7 +477,7 @@ class ImagePayloadMetadata(
             metadata = metadata.without_source_channel_axis()
         mask = image_payload_mask(source_payload)
         if mask is not None:
-            mask = self._projected_channel_mask(
+            mask = ImageMaskDomain.projected_channel_mask(
                 mask,
                 source_data=source_data,
                 channel_data=channel_data,
@@ -470,56 +485,6 @@ class ImagePayloadMetadata(
                 channel_axis=channel_axis,
             )
         return metadata.payload_with(channel_data, mask)
-
-    @staticmethod
-    def _channel_axis_slice(
-        value: Any,
-        *,
-        channel_axis: int,
-        channel_index: int,
-    ) -> Any:
-        geometry = image_payload_geometry(
-            value,
-            value_name="Channel-bearing image payload",
-        )
-        normalized_axis = channel_axis % geometry.ndim
-        slices = [slice(None)] * geometry.ndim
-        slices[normalized_axis] = slice(channel_index, channel_index + 1)
-        return value[tuple(slices)]
-
-    @classmethod
-    def _projected_channel_mask(
-        cls,
-        mask: Any,
-        *,
-        source_data: Any,
-        channel_data: Any,
-        channel_index: int,
-        channel_axis: int,
-    ) -> Any:
-        mask_array = np.asarray(mask, dtype=bool)
-        if mask_array.shape != image_payload_geometry(source_data).shape:
-            return mask_array
-        channel_mask = cls._channel_axis_slice(
-            mask_array,
-            channel_axis=channel_axis,
-            channel_index=channel_index,
-        )
-        if (
-            image_payload_geometry(channel_mask).shape
-            == image_payload_geometry(channel_data).shape
-        ):
-            return channel_mask
-        squeezed_mask = np.squeeze(
-            channel_mask,
-            axis=channel_axis % channel_mask.ndim,
-        )
-        if (
-            image_payload_geometry(squeezed_mask).shape
-            == image_payload_geometry(channel_data).shape
-        ):
-            return squeezed_mask
-        return channel_mask
 
     def has_complete_source_identity(
         self,
@@ -1980,6 +1945,56 @@ class ImageMaskDomain:
                 "Image mask spatial axes must be two distinct data axes; "
                 f"got {spatial_axes_yx!r} for shape {data_shape!r}."
             )
+
+    @staticmethod
+    def channel_axis_slice(
+        value: Any,
+        *,
+        channel_axis: int,
+        channel_index: int,
+    ) -> Any:
+        geometry = image_payload_geometry(
+            value,
+            value_name="Channel-bearing image payload",
+        )
+        normalized_axis = channel_axis % geometry.ndim
+        slices = [slice(None)] * geometry.ndim
+        slices[normalized_axis] = slice(channel_index, channel_index + 1)
+        return value[tuple(slices)]
+
+    @classmethod
+    def projected_channel_mask(
+        cls,
+        mask: Any,
+        *,
+        source_data: Any,
+        channel_data: Any,
+        channel_index: int,
+        channel_axis: int,
+    ) -> Any:
+        mask_array = np.asarray(mask, dtype=bool)
+        if mask_array.shape != image_payload_geometry(source_data).shape:
+            return mask_array
+        channel_mask = cls.channel_axis_slice(
+            mask_array,
+            channel_axis=channel_axis,
+            channel_index=channel_index,
+        )
+        if (
+            image_payload_geometry(channel_mask).shape
+            == image_payload_geometry(channel_data).shape
+        ):
+            return channel_mask
+        squeezed_mask = np.squeeze(
+            channel_mask,
+            axis=channel_axis % channel_mask.ndim,
+        )
+        if (
+            image_payload_geometry(squeezed_mask).shape
+            == image_payload_geometry(channel_data).shape
+        ):
+            return squeezed_mask
+        return channel_mask
 
     @property
     def shared_spatial_mask_shape(self) -> tuple[int, int] | None:
