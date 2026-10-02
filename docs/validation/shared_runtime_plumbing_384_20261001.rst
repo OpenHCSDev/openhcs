@@ -431,9 +431,9 @@ after axis compilation, over 48.2219 seconds, ending immediately before compilat
 completes. The cold candidate source-path kernel cache exposes a startup regression.
 Commit 2b86bfbe49f36d302dcd67c5b0a0cb4f656f1eb0 implemented registry kernel warming;
 ffba8426cefcaa87b6b00ff056e4cb96855233e4 in PR358 subsequently removed that loop
-and deferred readiness to selected compilation. Restoring the existing registry
-warmup lifecycle is tracked by issue162. No total-time improvement is claimed
-until that repair is verified with fresh caches.
+and deferred readiness to selected compilation. PR420 restores the existing registry warmup lifecycle and closes issue162.
+Its separate empty-cache regression gate is recorded below; the integrated
+field-owner performance still requires requalification.
 
 The field-owner integration into this draft passes 81 scoped lifetime/ownership
 controls with metaclass-registry 0.2.2. A subsequent projection correctness repair
@@ -453,3 +453,35 @@ Main 25d56ae3fb9b80acda80f3cf4e1c8667939147eb is normally merged; the shared
 environment and PR submodule consume the declared published metaclass-registry
 0.2.2 source 393a7e03003cdc56df9013f932ed4f26e632d77a. Earlier observations retain
 their measured source/dependency pins.
+
+Restored registry readiness on main
+----------------------------------
+
+PR420 merges the startup correction to main
+107498cfacf3b12d926c55f84c4b3cb7c04aa50f. That main is normally merged into
+this performance branch. Existing affinity admission, cancellation ownership
+and compiler guards for declarations introduced after startup are retained.
+
+An ordinary, uninstrumented 3D 1w_1t run at fix source
+e55e2ec0bc98ad750837cd4dcfd830ad04096286 starts with a new empty Numba cache.
+Compilation is 1.720214 s, execution 11.151797 s and pipeline total 13.637182 s.
+All 481 cache files are written before pipeline submission; the last write is
+6.001317 s before run creation and no cache files are written during compilation
+or execution. Server startup, warmup and shutdown are excluded from pipeline
+clocks. All six CSVs and 120 TIFF arrays exactly match retained main9a output,
+including dtype, shape and matching inventories. This is a lifecycle regression
+gate, not an ABBA performance comparison or current integrated-candidate timing.
+
+The fix passes 37 scoped tests with five single-affinity skips and both actual
+two-core fork controls. Original unmodified R0 passes for openhcs, scripts and
+benchmark; R1 reports no increases against main25d56ae under its unchanged
+160-second budget. The failed Python3.12 ratchet launch and uninitialized
+worktree R1 launch remain retained; final guards use Python3.14 and the initialized
+main repository, respectively, without modifying either detector.
+
+Evidence: ``registry-startup-readiness-162-empty-cache-pipeline-20261002.json``,
+``registry-startup-readiness-162-validation-20261001.json`` and
+``registry-startup-readiness-162-original-r0-py314-20261002.log`` plus
+``registry-startup-readiness-162-original-r1-initialized-root-20261002.log``.
+The original 50.800-second compilation regression remains retained. Current
+combined performance, IFC behavior and source guards remain draft gates.
