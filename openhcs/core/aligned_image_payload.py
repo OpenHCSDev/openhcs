@@ -423,6 +423,26 @@ class ImagePayloadStackComposition(ABC):
     @abstractmethod
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode: ...
 
+    @staticmethod
+    def copy_whole_image(
+        value: RuntimeArrayData,
+        *,
+        memory_type: str,
+        device_id: int | None,
+    ) -> RuntimeArrayData:
+        """Copy pixels, mask and metadata without adding a composition axis."""
+        copied_data = stack_runtime_slices(
+            (image_payload_data(value),), memory_type, device_id,
+        )[0]
+        mask = image_payload_mask(value)
+        copied_mask = (
+            None if mask is None
+            else stack_runtime_slices((mask,), memory_type, device_id)[0]
+        )
+        return image_payload_metadata(value).replace_fields().payload_with(
+            copied_data, copied_mask,
+        )
+
     def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
         return tuple(
             self.composition_payload_metadata(image_payload_metadata(payload))

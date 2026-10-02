@@ -74,6 +74,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
+    ImagePayloadStackComposition,
     ImageOutputBundle,
     flatten_aligned_image_payload_slices,
     stack_image_payload_context,
@@ -1576,6 +1577,69 @@ class PatternGroupData:
     )
 
 
+    @staticmethod
+    def validate_main_flow_cohort(
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+    ) -> None:
+        """One input cohort has one declared whole-image composition domain."""
+        if producer_records and len({record.main_flow_plane_axis for record in producer_records}) != 1:
+            raise ValueError("One main-flow cohort cannot combine different declared image axes.")
+
+    @classmethod
+    def from_loaded_images(
+        cls,
+        matching_files: list[str],
+        payloads: Sequence[RuntimeArrayData],
+        *,
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+        source_binding_context: SourceBindingRuntimeContext,
+        execution_plan: CompiledStepPlan,
+        source_projection: VirtualWorkspaceSourceProjection | None,
+        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
+    ) -> "PatternGroupData":
+        """Compose a selected admissible input cohort in its declared image domain."""
+        if (
+            producer_records
+            and len(producer_records) == 1
+            and producer_records[0].main_flow_plane_axis is image_payload_metadata(payloads[0]).plane_axis
+        ):
+            main_data_stack = ImagePayloadStackComposition.copy_whole_image(
+                payloads[0], memory_type=execution_plan.input_memory_type,
+                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+            )
+        else:
+            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
+            if producer_records:
+                declared_axis = producer_records[0].main_flow_plane_axis
+                metadata_mode = (
+                    ImagePayloadMetadataCompositionMode.BUNDLE
+                    if declared_axis is None
+                    else ImagePayloadMetadataCompositionMode.for_plane_axis(declared_axis)
+                )
+            if source_projection is not None and workspace_source_lookups:
+                metadata_mode = source_projection.payload_composition_mode(
+                    workspace_source_lookups
+                )
+            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
+                main_data_stack = stack_runtime_slices(
+                    tuple(image_payload_data(payload) for payload in payloads),
+                    execution_plan.input_memory_type,
+                    execution_plan.device_id_for(execution_plan.input_memory_type),
+                )
+                main_data_stack = stack_image_payload_context(
+                    payloads, main_data_stack, metadata_mode=metadata_mode,
+                )
+            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+                main_data_stack = ImagePayloadBundleContext.from_payloads(
+                    tuple(payloads), metadata_mode=metadata_mode,
+                ).compose()
+        return cls(
+            matching_files=matching_files,
+            main_data_stack=main_data_stack,
+            source_binding_context=source_binding_context,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class OutputPathBatchEntry:
     """Resolved identity for one output path in a runtime save batch."""
@@ -2444,19 +2508,11 @@ class PatternGroupOutputData:
         device_id: int | None,
     ) -> "PatternGroupOutputData":
         """Copy one whole image for main-flow reuse without declaring a new axis."""
-        copied_data = stack_runtime_slices(
-            (image_payload_data(value),), memory_type, device_id,
-        )[0]
-        mask = image_payload_mask(value)
-        copied_mask = (
-            None if mask is None
-            else stack_runtime_slices((mask,), memory_type, device_id)[0]
-        )
         return cls(
             slices=(value,),
             slice_contexts=slice_contexts,
-            stack_payload=image_payload_metadata(value).replace_fields().payload_with(
-                copied_data, copied_mask,
+            stack_payload=ImagePayloadStackComposition.copy_whole_image(
+                value, memory_type=memory_type, device_id=device_id,
             ),
             main_flow_source=value,
         )
@@ -2853,8 +2909,7 @@ class PatternGroupRuntime:
             if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
             else None
         )
-        if producer_records and len({record.main_flow_plane_axis for record in producer_records}) != 1:
-            raise ValueError("One main-flow cohort cannot combine different declared image axes.")
+        PatternGroupData.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
             memory_type=plan.input_memory_type,
@@ -2891,53 +2946,15 @@ class PatternGroupRuntime:
                     f"Check file integrity and format compatibility."
                 )
 
-            if (
-                producer_records
-                and len(producer_records) == 1
-                and producer_records[0].main_flow_plane_axis is image_payload_metadata(raw_slices[0]).plane_axis
-            ):
-                main_data_stack = PatternGroupOutputData.from_single_image(
-                    raw_slices[0],
-                    memory_type=plan.input_memory_type,
-                    device_id=plan.device_id_for(plan.input_memory_type),
-                ).stack_payload
-                return PatternGroupData(
-                    matching_files=matching_files,
-                    main_data_stack=main_data_stack,
-                    source_binding_context=source_binding_context,
-                )
-
-            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
-            if producer_records:
-                declared_axis = producer_records[0].main_flow_plane_axis
-                metadata_mode = (
-                    ImagePayloadMetadataCompositionMode.BUNDLE
-                    if declared_axis is None
-                    else ImagePayloadMetadataCompositionMode.for_plane_axis(declared_axis)
-                )
-            if source_projection is not None and workspace_source_lookups:
-                metadata_mode = source_projection.payload_composition_mode(
-                    workspace_source_lookups
-                )
-            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
-                raw_slice_data = tuple(
-                    image_payload_data(slice_data) for slice_data in raw_slices
-                )
-                main_data_stack = stack_runtime_slices(
-                    raw_slice_data,
-                    plan.input_memory_type,
-                    plan.device_id_for(plan.input_memory_type),
-                )
-                main_data_stack = stack_image_payload_context(
-                    raw_slices,
-                    main_data_stack,
-                    metadata_mode=metadata_mode,
-                )
-            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
-                main_data_stack = ImagePayloadBundleContext.from_payloads(
-                    tuple(raw_slices),
-                    metadata_mode=metadata_mode,
-                ).compose()
+            return PatternGroupData.from_loaded_images(
+                matching_files,
+                raw_slices,
+                producer_records=producer_records,
+                source_binding_context=source_binding_context,
+                execution_plan=plan,
+                source_projection=source_projection,
+                workspace_source_lookups=workspace_source_lookups,
+            )
         else:
             main_data_stack = cached_stack
 

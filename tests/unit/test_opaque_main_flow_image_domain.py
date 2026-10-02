@@ -418,3 +418,28 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
     assert image_payload_metadata(output.stack_payload).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     np.testing.assert_array_equal(image_payload_data(output.stack_payload), image_payload_data(expected))
     np.testing.assert_array_equal(image_payload_mask(output.stack_payload), image_payload_mask(expected))
+
+
+def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
+    from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
+    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+    plan = replace(_runtime().request.execution_plan, output_dir=tmp_path)
+    records = tuple(ProducedOutputSemantics.from_output(
+        plan, tmp_path / f"A01_s001_w1_z001_t001_{name}.tif",
+        FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
+        main_flow_plane_axis=None,
+    ) for name in ("First", "Second"))
+    payloads = tuple(ImagePayloadMetadata(source_image_names=(name,)).payload_with(
+        np.ones((4, 5), dtype=np.float32) * i) for i, name in enumerate(("First", "Second")))
+
+    def unexpected_device_resolution(self, memory_type):
+        raise AssertionError("BUNDLE composition must retain its own memory allocation authority")
+
+    monkeypatch.setattr(CompiledStepPlan, "device_id_for", unexpected_device_resolution)
+    output = PatternGroupData.from_loaded_images(
+        [r.output_path for r in records], payloads,
+        producer_records=records, source_binding_context=SourceBindingRuntimeContext.empty(),
+        execution_plan=plan, source_projection=None, workspace_source_lookups=(),
+    )
+    assert image_payload_metadata(output.main_data_stack).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(image_payload_data(output.main_data_stack), np.stack([image_payload_data(p) for p in payloads]))
