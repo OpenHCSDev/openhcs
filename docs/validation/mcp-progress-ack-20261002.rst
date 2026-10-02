@@ -80,3 +80,20 @@ are unchanged. The main-thread-affine source-session leaf remains unchanged;
 this patch does not make its blocking work thread-safe. No timeout increased,
 new poller, alternate startup observer, job store or transport schema added.
 Compilation and kernel placement remain with the other machine's owner.
+
+Current-main integration
+------------------------
+
+Draft PR422 is public. Product6e6c4c3c7 is integrated normally with main107498cfa
+(external owner's PR420 restores registered kernel readiness). Integration
+head1fc40ea3209d01f5c46919b9e08e4cbd27ffbf6e changes only the two MCP declaration/
+client product files relative to that main; no external gitlink changed.
+Current-main capability/inspection/startup/client source selection58 passes
+8.09s/296.97MiB; seven unrelated child-process or large-buffer/fixture cases
+are outside that selection, not waived assertions. F/E9 and diff whitespace
+checks pass. Original pinned R0 source at the retained
+openhcs-s1-original-ratchet-20261001/src authority passes across the complete
+openhcs production context15.52s/84.55MiB, with no increases. Its source import
+path is explicit because concurrent disk cleanup removed the old uv cache.
+No global R1/native equivalence proof or installed scientific acceptance is
+inferred from this structural ratchet or controlled real-wire journey.
