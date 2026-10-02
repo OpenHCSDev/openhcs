@@ -1282,22 +1282,29 @@ class McpDevStdioSession:
     ) -> None:
         del exc_type, exc_value, traceback
         process = self.require_process()
-        if process.stdin is not None:
-            process.stdin.close()
-            try:
-                await asyncio.wait_for(
-                    process.stdin.wait_closed(),
-                    timeout=self.teardown_timeout_seconds,
-                )
-            except (BrokenPipeError, asyncio.TimeoutError):
-                pass
+        # EOF is the stdio server's normal shutdown request. Give its original
+        # resource owners the existing teardown budget before sending a signal.
+        # Pipe closure and graceful exit share one deadline, not two waits.
+        try:
+            async with asyncio.timeout(self.teardown_timeout_seconds):
+                if process.stdin is not None:
+                    process.stdin.close()
+                    try:
+                        await process.stdin.wait_closed()
+                    except BrokenPipeError:
+                        pass
+                await process.wait()
+        except asyncio.TimeoutError:
+            pass
         if process.returncode is None:
             try:
                 process.terminate()
             except ProcessLookupError:
                 pass
             try:
-                await asyncio.wait_for(process.wait(), timeout=2.0)
+                await asyncio.wait_for(
+                    process.wait(), timeout=self.teardown_timeout_seconds
+                )
             except asyncio.TimeoutError:
                 process.kill()
                 await process.wait()

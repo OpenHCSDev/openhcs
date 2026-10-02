@@ -1,0 +1,36 @@
+Running as unit: dewey-jvm455-sdkstdio.scope; invocation ID: c853db4185a34acb87faa8a2bcc043ea
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "tests/unit/agent/test_mcp_process_resource_lifetime.py", line 15, in <module>
+    from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevStdioSession
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/mcp/dev_client_core.py", line 32, in <module>
+    from openhcs.agent.capabilities import (
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/capabilities.py", line 20, in <module>
+    from openhcs.agent.services.execution_session_service import ExecutionSessionService
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/services/execution_session_service.py", line 32, in <module>
+    from openhcs.agent.dto.execution import (
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/agent/dto/execution.py", line 47, in <module>
+    from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/runtime/zmq_execution_signature.py", line 16, in <module>
+    from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/orchestrator/__init__.py", line 3, in <module>
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/orchestrator/orchestrator.py", line 21, in <module>
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/compiled_execution.py", line 12, in <module>
+    from openhcs.core.context.processing_context import ProcessingContext
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/context/__init__.py", line 5, in <module>
+    from .processing_context import ProcessingContext
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/context/processing_context.py", line 32, in <module>
+    from openhcs.core.runtime_stores import RuntimeValueStore
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/runtime_stores.py", line 42, in <module>
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/runtime_slice_projection.py", line 18, in <module>
+    from openhcs.core.measurement_row_materialization import MeasurementRowsAxisProjection
+  File "/home/ts/wt/openhcs-mcp-affine-progress-436-20261002/openhcs/core/measurement_row_materialization.py", line 23, in <module>
+    from openhcs.core._tabular_native import (
+ModuleNotFoundError: No module named 'openhcs.core._tabular_native'
+BOUNDED_SOURCE peak_aggregate_rss_kib=94416 elapsed_seconds=1.260 returncode=1 reason=None
