@@ -33,9 +33,11 @@ or a corrected036 installed context. Do not bypass the bootstrap's stale-source
 guard. Current wheel/fresh installation acceptance must use the original
 packaged path, where vendored source directories are absent.
 
-BaSiCPy1.3.1 and metaclass0.2.2 are verified available on PyPI; ArrayBridge's
-new original publisher36949376897 is queued at this checkpoint. PR217 remains
-draft until actual artifact/API and normal published dependency resolution.
+BaSiCPy1.3.1, metaclass0.2.2 and ArrayBridge0.3.6 are verified available on
+PyPI. ArrayBridge's original publisher36949376897 succeeded01:33:35Z.
+PR217 remains draft until normal published dependency resolution; that
+original attempt now identifies the additional PolyStore/ZMQ/Qt release
+chain described below rather than a pending ArrayBridge publisher.
 Previous field/MCP24SITE and Python3.14 controls remain pinned to their original
 sources, not projected through this main integration. Original failures and
 UNKNOWN requests remain. No science success or reserve release is claimed.
@@ -101,3 +103,34 @@ directories. Five affected production files match the source exactly. Public
 dependency requirements are present in wheel metadata. This is a prepared
 candidate, not a private install, registry selection, native viewer or biological
 acceptance. Keep PR217 visible and retain all original failed evidence.
+
+Actual public dependency checkpoint
+----------------------------------
+
+The public ArrayBridge0.3.6 wheel AND sdist contain all17 reviewed source
+files byte-identical to main/tag1e53d03d. Original metadata/index probe and
+materialize_release_files were used once; the hosted wheel SHA256 is
+f7fa23f5dcf1925742592109b396fe17662fb56f15e1755a304a45c90e79a249.
+Its sdist SHA256 is
+b3b8a5821597a3341739657298ce94928cd1f4297a083fec3b28ceb406e09afb.
+11 unchanged controls pass importing the actual public wheel in a fresh
+process,0.66s/57.57MiB,512MiB kernel/no swap/oneCPU. This is actual
+dependency artifact/API acceptance, not an installed OpenHCS journey.
+
+The original ordinary uv installer dry-run of the prepared wheel against
+PyPI fails because only PolyStore<=0.2.19 is public and existing OpenHCS main
+requires>=0.3.0,<0.4. Exact probes also show ZMQRuntime0.3.0 and
+pyqt-reactive0.3.25 unavailable. PolyStore main84f322e requires ZMQ0.3.0,
+so publication order follows that dependency. Parent owns PolyStore release;
+Schrodinger owns ZMQ/Qt release coordination. No downgrade, local-only
+substitute, repeated download, private environment mutation or optional CI
+wait. Original failed normal-resolution log/command remains retained.
+
+PolyStore source54 controls pass at the unchanged reviewed main84f322e
+using current source ZMQ and metaclass plus the actual public ArrayBridge
+wheel,4.83s/447.61MiB,768MiB kernel/no swap/oneCPU. Payload fidelity,
+namespace declaration ownership, ACK routes, cropped ROI topology/archive
+reopen, memory backend and lossless PNG controls remain unchanged.
+The earlier42 actual OpenHCS persistence/reopen controls also used84f322e.
+These are source release qualification, not public PolyStore availability
+or a fresh installed native user journey. That release chain remains active.
