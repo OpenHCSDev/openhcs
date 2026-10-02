@@ -6,12 +6,14 @@ owns private-wheel/live integration. Ordinary branch from remote main
 33701725f5b53874c1a18c0837d2c2bb2bb3b99e, where PR412 is merged. Source
 worktree remains /home/ts/wt/openhcs-s1-typed-viewer-presentation-20261001;
 no new environment/worktree/native/scientific job. Parent explicitly released
+runtime/viewer_protocol.py, runtime/napari_viewer_server.py,
 agent/dto/viewer.py and agent/services/viewer_window_service.py for this closure.
 Original execution.py/runtime response needs separate ownership proof and is
 not released; PR394 runtime source/image/materialization files remain untouched.
 
-The receipt is receiving evidence, not an implemented record model or a claim
-of completed closure. Camera/canvas/contrast/gamma checkpoint412 is shipped at
+This receipt records the original receiving trace; the implemented record model
+and finite closure qualification are recorded in NATIVE-RECORDS-INCREMENT.rst.
+Camera/canvas/contrast/gamma checkpoint412 is shipped at
 source; private installed acceptance is deferred until parent obtains a safely
 closed handoff from the current post411 author. No installation or mutation by
 this source owner. Both original own stashes are protected unchanged.
@@ -59,12 +61,31 @@ Concrete native declaration and producer trace
   validation/component coordinate coverage and historical image binding consumers
   must move with that authority,not retain a compatibility reader or raw backup.
 
-Proposed exact original producer seams are runtime/viewer_protocol.py and
-NapariViewerProjectionABC in runtime/napari_viewer_server.py, before the released
-DTO/service bridge. PR394's current actual changed-file list touches neither.
-Parent has been notified of those exact additional original owner sites through
-issue407#issuecomment-5942954912; conflicting native source ownership must be
-resolved before edits. No shared native producer source has been edited yet.
+Parent reviewed this trace and explicitly released the original native seams
+after refreshing all PR394 changed files; neither overlaps. Normal main merge
+ff6cc0a837686e531733e459026b7a9df54af30e integrates
+f2aabe45a84d9834eef37d1862f0d0290ba73b63. The release does not extend to
+execution.py or PR394's source files. Both original own stashes remain unchanged.
+Current authoritative catalog read includes boundaries/membership/implementation
+and surface-receipt; relevant rules are BOUND1/2/8, MEMB1/2/5 and IMPL4/5/12/13.
+
+Additional historical receipt release and current-main crossing
+--------------------------------------------------------------
+
+Parent subsequently reviewed published6b76266 and released
+agent/services/plate_streaming_service.py's historical receipt admission
+seam398-412 to this same owner and worktree. The fresh PR394 census excludes
+this service; parent217/414/418 do not touch it. No additional release of
+execution.py or PR394 files is inferred. The three replaced summary map reads
+now use original ViewerPayloadSummary.require_plane_components,
+full_image_plane_count and source_domain; original plane-domain/provenance,
+resource authentication and source projection algorithms are unchanged.
+
+Normal main merge6dfd632ee376013dfb9ef88667bc69f8670bc46a incorporates
+25d56ae3fb9b80acda80f3cf4e1c8667939147eb, including418/414. Both own stashes
+6d1d1dd255f79db955fa28249f96e5aabaa5b01a and
+f16dc72a027427359495eee9a76a4869e0dc44ac remain unchanged. Source tests borrow
+only the existing readonly parent ABI; no installation or live mutation.
 
 Acceptance and bounded follow-through
 ------------------------------------
