@@ -38,6 +38,7 @@ from tests.unit.test_bioformats_java_adapter import (
     FakeBioFormatsMetadata,
     PhysicalSize,
 )
+from tests.unit.bioformats_fixture import write_bioformats_manifest_fixture
 
 
 class _Header(FakeBioFormatsMetadata):
@@ -193,3 +194,19 @@ def test_partial_ome_calibration_is_not_inferred(tmp_path, monkeypatch):
         BioFormatsAdapterUnavailableError, match="both PhysicalSizeX and PhysicalSizeY"
     ):
         _prepare(tmp_path, monkeypatch, 0.65, _IncompleteHeader)
+
+
+def test_existing_manifest_decoder_uses_the_same_typed_spacing_owner(tmp_path):
+    write_bioformats_manifest_fixture(tmp_path)
+    filemanager = FileManager({Backend.DISK.value: DiskStorageBackend()})
+    BioFormatsHandler(filemanager).initialize_workspace(tmp_path, filemanager)
+    reopened = OpenHCSMetadataHandler(filemanager)
+    assert reopened.get_pixel_size(tmp_path) == 0.5
+    document = json.loads((tmp_path / "openhcs_metadata.json").read_text())
+    persisted = document["subdirectories"]["."]
+    assert persisted["pixel_size"] == 0.5
+    assert len(persisted["source_metadata"]) == 2
+    assert all(
+        SourceVoxelSpacing.from_source_metadata(metadata) == SourceVoxelSpacing((0.5, 0.5))
+        for metadata in persisted["source_metadata"].values()
+    )

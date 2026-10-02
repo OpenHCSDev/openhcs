@@ -1200,6 +1200,7 @@ def _image_from_mapping(
         _absolute_path(root, str(value)) for value in source_file_values
     )
     pixels = payload["pixels"]
+    pixel_size = float(payload["pixel_size"])
     return BioFormatsImage(
         image_id=str(payload["image_id"]),
         image_name=(
@@ -1215,7 +1216,7 @@ def _image_from_mapping(
             None if value is None else str(value) for value in payload["channel_names"]
         ),
         source_voxel_spacing=SourceVoxelSpacing(
-            (float(payload["pixel_size"]), float(payload["pixel_size"]))
+            (pixel_size, pixel_size)
         ),
         pixels=BioFormatsPixels(
             size_c=int(pixels["size_c"]),
