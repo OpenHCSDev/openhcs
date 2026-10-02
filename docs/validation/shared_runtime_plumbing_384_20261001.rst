@@ -1742,3 +1742,40 @@ prepared-Resize consumer. The original whole-branch scalar-classifier R0 RED
 remains separately retained. These draft closing references do not establish
 completion. Full native scaling, all30 benchmark reruns and fresh figures remain
 outstanding, and the long-running performance goal stays active.
+
+Shared geometry release and coordinate-owner checkpoint
+------------------------------------------------------
+
+Main ``5b7f3c48d89da4415de001375d0e06de881153c9`` is normally merged.
+Independent PR476 ships the shared quantized hull/Bresenham geometry and
+officially closes issue475. Earlier hull issues158/268 and PR161 remain
+completed. The full-source PR394 ABBA comparison pins eb2 versus b470:
+BrightField total4.635292249 ->3.294145465s, Untangle3.234328632 ->2.311149861s,
+Illumination1.988957128 ->1.892348221s. All16 complete saved outputs pass exact
+science and source/env/native/input freezes. Wound is a variance control, not
+an attributed hull saving. See the committed shared-quantized-hull report for
+every sample, readiness/source guards and retained native-image RED.
+
+The existing object-label storage family now owns the single shared dense
+coordinate reducer. Tracking and relationships inherit/use its primitive;
+two duplicate kernels are removed. Resource/domain-effect and C/F/A readiness
+controls pass. Isolated100 and integrated101 tests pass, both with2 existing
+skips; original scoped R0/R1 pass unchanged against eb2. Frozen b470 versus
+6e69 ordinary ABBA Wound total3.866369809 ->3.562642806s; Track execution
+5.338271976 ->5.052027345s, but total6.629491309 ->6.684317434s regresses
+with higher compilation. All8 full saved outputs/freeze gates pass. The separate
+shared-dense-coordinate report retains all samples, no causal late-JIT claim
+and the original tracking image RED. No reduction resolves issue433's original
+allocation owner or the whole-branch scalar-classifier R0 RED.
+
+Owner WT remains /home/ts/code/projects/openhcs-shared-runtime-plumbing. All
+production edits are committed here. Agent-owned implementation branches are
+integrated; no additional unpublished production files are claimed. Frozen
+benchmark WTs remain unchanged. Compared with receiving checkpoint eb2, new
+production edits are precisely three CP geometry/illumination modules plus
+core/runtime_object_labels.py and four CP backend/preparation/tracking/
+relationships modules. These are indirect numerical/coordinate and preparation
+changes beyond the receiving review's original four-file eb2/wheel delta.
+Installed receiving obligations419/433/435/450, whole-branch R0, full native
+image parity, full-catalog/scaling and figures remain open. A first-wave fresh
+four-case ordinary/native qualification is in progress, not a completed gate.
