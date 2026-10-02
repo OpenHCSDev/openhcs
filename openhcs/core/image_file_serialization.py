@@ -47,6 +47,26 @@ class SourceImagePixelSemantics:
         if axis is None:
             return None
         shape = tuple(int(value) for value in np.shape(image_payload_data(payload)))
+        return self._validated_channel_axis_for_shape(axis, shape)
+
+    def image_shape_yx_for_shape(
+        self,
+        shape: tuple[int, ...],
+    ) -> tuple[int, int] | None:
+        """Project format-declared channel bands without inferring image axes."""
+
+        axis = self.channel_axis
+        if axis is not None:
+            self._validated_channel_axis_for_shape(axis, shape)
+            normalized = axis if axis >= 0 else len(shape) + axis
+            shape = shape[:normalized] + shape[normalized + 1 :]
+        return shape if len(shape) == 2 else None
+
+    def _validated_channel_axis_for_shape(
+        self,
+        axis: int,
+        shape: tuple[int, ...],
+    ) -> int:
         normalized = axis if axis >= 0 else len(shape) + axis
         if normalized < 0 or normalized >= len(shape):
             raise ValueError(
@@ -279,9 +299,6 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
         dtype = properties.dtype
         pixel_semantics = cls.require_pixel_semantics(path)
         shape = tuple(properties.shape)
-        if pixel_semantics.channel_axis is not None:
-            axis = pixel_semantics.channel_axis % len(shape)
-            shape = shape[:axis] + shape[axis + 1 :]
         return ImageFileSourceMetadata(
             source_dtype=dtype,
             intensity_scale=(
@@ -289,8 +306,8 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
                 or image_intensity_scale_for_dtype(dtype)
             ),
             pixel_semantics=pixel_semantics,
-            image_shape_yx=(
-                tuple(int(value) for value in shape) if len(shape) == 2 else None
+            image_shape_yx=pixel_semantics.image_shape_yx_for_shape(
+                tuple(int(value) for value in shape)
             ),
         )
 

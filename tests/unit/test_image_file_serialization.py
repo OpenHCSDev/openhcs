@@ -10,6 +10,7 @@ from openhcs.core.image_file_serialization import (
     ImageFileSourceMetadata,
     NumpyImageFileFormat,
     PngImageFileFormat,
+    SourceImagePixelSemantics,
     TiffImageFileFormat,
     image_file_source_metadata,
     prepare_disk_image_payloads,
@@ -216,6 +217,53 @@ def test_numpy_source_header_owns_shape_dtype_and_revision_without_pixel_decode(
 def test_source_header_refuses_invalid_declared_yx_dimensions(shape) -> None:
     with pytest.raises(ValueError, match="two positive integer dimensions"):
         ImageFileSourceMetadata(image_shape_yx=shape)
+
+
+@pytest.mark.parametrize(
+    "axis,shape,expected",
+    (
+        (-1, (5, 7, 3), (5, 7)),
+        (0, (3, 5, 7), (5, 7)),
+        (None, (5, 7), (5, 7)),
+        (None, (5, 7, 3), None),
+    ),
+)
+def test_format_declared_image_shape_shares_loaded_channel_validation(
+    axis, shape, expected
+) -> None:
+    semantics = SourceImagePixelSemantics(axis, 3 if axis is not None else None)
+    assert semantics.image_shape_yx_for_shape(shape) == expected
+    assert semantics.validated_channel_axis(np.zeros(shape, dtype=np.uint8)) == axis
+
+
+@pytest.mark.parametrize("shape", ((5, 7, 4), (5, 7), ()))
+def test_source_header_and_loaded_pixels_refuse_same_invalid_channel_layout(
+    shape,
+) -> None:
+    semantics = SourceImagePixelSemantics(2, 3)
+    with pytest.raises(ValueError):
+        semantics.image_shape_yx_for_shape(shape)
+    with pytest.raises(ValueError):
+        semantics.validated_channel_axis(np.zeros(shape, dtype=np.uint8))
+
+
+def test_no_channel_declaration_does_not_inspect_payload(monkeypatch) -> None:
+    from openhcs.core import image_file_serialization
+
+    monkeypatch.setattr(
+        image_file_serialization,
+        "image_payload_data",
+        lambda _payload: pytest.fail("No-axis guard must precede payload inspection"),
+    )
+    assert SourceImagePixelSemantics().validated_channel_axis(object()) is None
+
+
+def test_declared_negative_channel_axis_is_not_wrapped_into_valid_range() -> None:
+    semantics = SourceImagePixelSemantics(-4, 3)
+    with pytest.raises(ValueError, match="axis -4 is invalid"):
+        semantics.image_shape_yx_for_shape((5, 7, 3))
+    with pytest.raises(ValueError, match="axis -4 is invalid"):
+        semantics.validated_channel_axis(np.zeros((5, 7, 3)))
 
 
 def test_numpy_non_image_header_does_not_infer_spatial_axes(tmp_path) -> None:
