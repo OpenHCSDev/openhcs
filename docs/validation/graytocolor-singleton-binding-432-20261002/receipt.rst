@@ -23,6 +23,10 @@ original-unary-red.log: 2FAIL/5deselected, pytest5.46s, wall6.27s,
 CPUQuota100%, tasksetCPU0, timeout60s, numerical thread pools1, existing
 read-only Python3.12.3 and original source/ABI driver. New owned disposable
 scratch: /home/ts/.cache/agent-scratch/graytocolor-singleton-binding-432-20261002.
+After the terminal test, lsof found no open handles; the scratch root contained
+no files (du -sb reported0 bytes). Removed that exact empty directory with
+rmdir; durable original-red log retained,0 payload bytes released. No source,
+ledger or scientific output was removed.
 Resource helper returned advisory warning (RAM15.7GiB/home8.8GiB/root7.8GiB,
 swap15.1GiB), not a hard admission failure; source limits retained.
 
@@ -50,6 +54,9 @@ singleton admission checks in core/aligned_image_payload.py, and the existing
 composition call in interop/cellprofiler/runtime/module_execution.py.
 At this receipt production is untouched and no release has been received.
 This draft is an exact source blocker/proposal, not a shipped repair.
+Visible follow-up: https://github.com/OpenHCSDev/openhcs/pull/437.
+Original-owner follow-through with exact published reproducer:
+https://github.com/OpenHCSDev/openhcs/pull/394#issuecomment-5947837365.
 
 Required controls and honest limits
 -----------------------------------
