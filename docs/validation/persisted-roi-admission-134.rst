@@ -9,6 +9,9 @@ Current source status: Root integrated the publication requirement in PR394
 receipt against the receiving requirements. Root owns the integrated seam; no
 shared-file release remains pending. Draft404 retains evidence and the parent
 native ROI provenance/reopen gate, not a competing source implementation.
+The distinct remaining graph writer omission now has a tested source-bearing
+ZIP proposal in ``graph-roi-source-roundtrip-134.rst``. Root retains production
+core.py ownership; narrow writer integration/release was requested through394.
 Historical investigation below is not a native ROI or biological pass.
 Visible draft: https://github.com/OpenHCSDev/openhcs/pull/404.
 The historical implementation proposal superseded the initial diagnostic-only
