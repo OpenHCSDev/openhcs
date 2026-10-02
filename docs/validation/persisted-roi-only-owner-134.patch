@@ -1,0 +1,91 @@
+diff --git a/openhcs/core/steps/function_outputs.py b/openhcs/core/steps/function_outputs.py
+index 05b7fb539..d44e511e9 100644
+--- a/openhcs/core/steps/function_outputs.py
++++ b/openhcs/core/steps/function_outputs.py
+@@ -784,2 +784,8 @@ class OpenHCSMetadataWriter:
+-        def contains_images(self, context: ProcessingContext) -> bool:
+-            """Return whether the completed target contains image outputs."""
++        def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
++            """Return this declaration's outputs eligible for publication."""
++            return tuple(
++                context.filemanager.list_image_files(self.output_dir, self.backend)
++            )
++
++        def contains_outputs(self, context: ProcessingContext) -> bool:
++            """Return whether this declared destination has publishable outputs."""
+@@ -791,6 +797 @@ class OpenHCSMetadataWriter:
+-            return bool(
+-                context.filemanager.list_image_files(
+-                    self.output_dir,
+-                    self.backend,
+-                )
+-            )
++            return bool(self.stored_output_paths(context))
+@@ -835 +836,4 @@ class OpenHCSMetadataWriter:
+-                results_dir=(Path(self.results_dir).name if self.results_dir else None),
++                results_dir=(
++                    str(Path(self.results_dir).relative_to(self.plate_root))
++                    if self.results_dir is not None else None
++                ),
+@@ -1066 +1070 @@ class OpenHCSMetadataWriter:
+-                if target.contains_images(context):
++                if target.contains_outputs(context):
+@@ -1148,2 +1152,14 @@ class MaterializedImageMetadataTarget(
+-class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-    """Image artifacts persist independently of main-flow image/checkpoint storage."""
++class PersistedResultMetadataCapability:
++    """Declared result destinations include non-image saved writer outputs."""
++
++    def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
++        return tuple(dict.fromkeys((
++            *super().stored_output_paths(context),
++            *context.filemanager.list_files(self.output_dir, self.backend),
++        )))
++
++
++class RuntimeArtifactMetadataTarget(
++    PersistedResultMetadataCapability, OpenHCSMetadataWriter.OutputTarget
++):
++    """Saved artifacts own result destinations independently of image storage."""
+@@ -1161 +1176,0 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-            if ImageFileFormat.is_image_path(output.path)
+@@ -1167 +1182 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-            if target.contains_images(context)
++            if target.contains_outputs(context)
+@@ -1173,0 +1189,2 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
++        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
++
+@@ -1188 +1205,6 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-            for directory in dict.fromkeys((self.output_dir, *directories))
++            for directory in dict.fromkeys((
++                self.output_dir,
++                *directories,
++                *(directory.path for directory in
++                  OpenHCSMetadataHandler(context.filemanager).analysis_result_directories(self.plate_root)),
++            ))
+@@ -1194 +1216,3 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-        return replace(self, output_dir=directory, sub_dir=str(sub_dir))
++        return replace(
++            self, output_dir=directory, sub_dir=str(sub_dir), results_dir=str(directory)
++        )
+@@ -1208 +1232 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
+-            results_dir=None,
++            results_dir=str(output_dir),
+diff --git a/openhcs/core/virtual_workspace_metadata.py b/openhcs/core/virtual_workspace_metadata.py
+index ff4abc6d0..63ce7c84f 100644
+--- a/openhcs/core/virtual_workspace_metadata.py
++++ b/openhcs/core/virtual_workspace_metadata.py
+@@ -235,6 +235,7 @@ class AtomicMetadataWriter:
+-            projections = SourceProjectionSet(
+-                tuple(entries[path] for path in published_paths)
+-            )
+-            subdirectory.update(
+-                serializer.component_metadata(projections, labels=component_labels)
+-            )
++            if published_paths:
++                projections = SourceProjectionSet(
++                    tuple(entries[path] for path in published_paths)
++                )
++                subdirectory.update(
++                    serializer.component_metadata(projections, labels=component_labels)
++                )

@@ -1,0 +1,27 @@
+diff --git a/openhcs/processing/materialization/core.py b/openhcs/processing/materialization/core.py
+index a095267a2..61340a650 100644
+--- a/openhcs/processing/materialization/core.py
++++ b/openhcs/processing/materialization/core.py
+@@ -75,0 +76 @@ from openhcs.core.source_matching import (
++from openhcs.core.source_metadata import SourceVoxelSpacing
+@@ -3286,0 +3288,2 @@ def _write_spatial_graph_roi_zip(
++    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
++
+@@ -3294,0 +3298,4 @@ def _write_spatial_graph_roi_zip(
++    source_metadata = ImagePayloadMetadata(
++        source_provenance=graph.source_provenance,
++        source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
++    )
+@@ -3336 +3343,2 @@ def _write_spatial_graph_roi_zip(
+-            content=rois,
++            content=ROIArchiveSourceMetadata.bind(rois, source_metadata),
++            metadata=source_metadata,
+diff --git a/tests/unit/test_spatial_graph_materialization.py b/tests/unit/test_spatial_graph_materialization.py
+index 6dc0145d2..0c0e70ef3 100644
+--- a/tests/unit/test_spatial_graph_materialization.py
++++ b/tests/unit/test_spatial_graph_materialization.py
+@@ -19,0 +20 @@ from openhcs.core.artifacts import (
++from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+@@ -343 +344 @@ def test_graph_roi_projection_preserves_paths_and_graph_features() -> None:
+-    first_roi = roi_output.content[0]
++    first_roi = ROIArchiveSourceMetadata.geometry(roi_output.content)[0]
