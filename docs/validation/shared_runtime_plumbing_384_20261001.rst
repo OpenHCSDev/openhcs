@@ -728,3 +728,79 @@ no performance or biological acceptance claim follows. Original failures remain
 in ``pr394-38067-graph-roi-before-20261002.log``; integrated controls are in
 ``pr394-graph-roi-integrated-after-20261002.log`` in RUNS. The historical PR #404
 branch and its older publication proposal are not merged as a whole.
+
+Opaque image domain and current 3D frontier (2026-10-02)
+------------------------------------------------------
+
+Frozen ``45f3a721e`` diagnoses the dominant current 3D failure: scalar output
+composition adds a runtime axis to an opaque whole volume. Watershed receives
+``(1, 60, 128, 128)`` and fails after 118.394 seconds inside its raw callable.
+The failed job peaks at 3745.977 MiB. Installed Mahotas 1.4.19's filter-offset
+formula requires a 2 GiB table for that incorrect 4D seed-label neighborhood;
+the singleton changes neighborhood rank without changing image voxel count.
+This is a source-backed bound, not an allocator-stack capture or attribution of
+the original 13.36 GB OOM. No NumBa cache files are created during the observed
+pipeline window. Cache warming does not correct an invalid scientific domain.
+
+``d092a03af`` repairs composition using the existing nominal alignment owners.
+``AlignedImageStack`` retains its declared outer runtime axis; named
+``ImageOutputBundle`` members supply their original individual domains.
+``PatternGroupOutputData`` derives saved member declarations from those original
+values, and ``ProducedOutputSemantics`` retains that domain across physical-leaf
+projection and passthrough. This execution-local fact distinguishes an opaque
+single-Z volume from an explicitly declared one-plane runtime stack after both
+have otherwise similar leaf metadata. It does not replace durable source ingress.
+Mixed cohorts cannot manufacture one combined domain. Cache misses, overwrites,
+named selection and independent pixel/mask/metadata ownership are covered.
+Producer and loader bundle composition use the same existing authority.
+
+The first scoped original R0 rejects ten added lines in the oversized runtime
+class. ``6dd47dd7e`` moves actual input assembly onto existing
+``PatternGroupData`` and shared independent copying onto
+``ImagePayloadStackComposition``, removing the input loader's call into the
+output factory. Both unchanged original scoped R0 and R1 then pass against
+``45f3a721e``; 271 controls pass, including retained lazy device resolution for
+bundle composition. The whole-branch scalar relocation gate remains separate
+and is not waived. Cross-device composition equivalence remains unqualified.
+
+A fresh ordinary CPU5/one-inline-worker execution at frozen ``d092a03af`` gets
+through the first 18 steps. The entire Watershed step completes in 0.156588
+seconds. The older figure is an instrumented raw-call failure, so these are not
+paired successful timings or a native speedup ratio. The full pipeline still
+fails at step 18, MaskImage: a correctly selected 2D invocation receives the
+opaque secondary volume without a source-proved plane projection. The refusing
+2D mask guard is correct. Failure-row zero compile/execute values are wrapper
+placeholders; the public compile-event span is 1.619 seconds. Pipeline clocks
+exclude mandatory registry/kernel server preparation and shutdown.
+
+The generic relation-aware repair belongs at ``RuntimeInputBindingRequest``.
+MaskImage, Crop and CorrectIlluminationApply already declare
+``InputStackBroadcastSourceRelation``. That declaration permits broadcasts but
+does not prove spatial-Z ordering. Contributor provenance or equal array lengths
+cannot supply the missing pixel-coordinate proof. ``SourceSpatialDomain`` is
+currently XY-only; source/transform ownership is being traced before extending
+its existing contract. No function-specific mask path or geometry-guard
+relaxation is included. Latest-head all30/native parity and ordinary performance
+remain open.
+
+Main ``902913616`` (merged PR #434) is integrated at ``ff9d7c79d``. The combined
+14-file source suite has 810 passes and two unary GrayToColor failures. Both
+failures reproduce unchanged on clean main ``902913616``; they are retained,
+not converted into successful assertions or treated as axis-fix regressions.
+No foreign PR implementation is duplicated.
+
+Three completed same-server Human jobs at ``45f3a721e`` pass their scientific
+comparisons and leave zero backend image-array bytes after each job. This
+rejects the proposed completed-job backend leak for that workload. Generic
+worker resource release already executes for inline jobs. The older OOM's full
+allocation mix remains unknown; no speculative global cleanup is added.
+
+Receipts remain in the external benchmark RUNS directory:
+``issue433-rank4-watershed-large-allocation-source-bound-20261002.json``,
+``issue433-three-complete-job-retention-counterevidence-20261002.json``,
+``pr394-opaque-axis-input-owner-original-r0-openhcs-20261002.json``,
+``pr394-opaque-axis-input-owner-original-r1-20261002.json`` and
+``d092-mask-secondary-domain-caller-audit-20261002.json``. Frozen ordinary
+outputs/source hashes are retained under
+``/var/tmp/openhcs-opaque-axis-d092-ordinary-20261002``. The initial failed
+guard-launch arguments and the original R0 growth finding are also retained.
