@@ -70,3 +70,34 @@ passes40 controls and fails both real publication journeys because the existing
 PolyStore gitlink worktree is older and lacks metadata_config. That actual
 source-dependency mismatch is not an application-regression or green journey.
 Use the reviewed package/paired source identities for whole-path acceptance.
+
+Final paired source checkpoint67584e432
+-------------------------------------
+
+The original full changed-product R0 now reports zero positive deltas and one
+removed projection absence probe: basicpy-domain-rule-r0, exit0,
+20.5s/82.26MiB. No limit, detector, exclusion, measure or threshold changed.
+Generic runtime_image_values.py is byte-identical to current main.
+
+The existing owned dependency clones were clean, not symlinks, and their
+git-common directories belong to this worktree. Normal submodule initialization
+and update aligns PolyStore84f322e, ArrayBridge1e53d03d, metaclass393a7e0,
+pyqt-reactivead494877 and ZMQRuntime668edafc with the recorded index. The first
+no-fetch attempt did not have all objects/initializations and remains retained;
+the ordinary update fetched only the missing source history, with no new
+environment, duplicated installation or shared-package mutation.
+
+All42 unchanged field/family/selection/materialization/checkpoint persistence
+and reopen controls pass using that real source bootstrap and actual paired
+dependencies: basicpy-domain-rule-paired-source, exit0,24.1s/466.57MiB,
+kernel768MiB/no swap/oneCPU/60seconds. Two pytest configuration warnings remain.
+Earlier real numerical32-control fit receipt remains separately pinned; its
+solver/correction implementation is unchanged by this observation-owner repair.
+
+The original no-isolation offline package build at67584e432 completes in
+9.9s/230.18MiB. The working wheel remains at parent ledger
+basicpy-current-main-20261002/wheels-domain-owner, with no source external
+directories. Five affected production files match the source exactly. Public
+dependency requirements are present in wheel metadata. This is a prepared
+candidate, not a private install, registry selection, native viewer or biological
+acceptance. Keep PR217 visible and retain all original failed evidence.
