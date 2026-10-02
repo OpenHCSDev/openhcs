@@ -4,18 +4,18 @@ import ast
 import sys
 import _pytest
 import metaclass_registry
+import nominal_refactor_advisor
 
 from nominal_refactor_advisor.ast_tools import parse_python_module_roots
 
 repo = Path(sys.argv[1])
-nra = Path('/home/ts/wt/nra-openhcs-r1-20261001')
+nra = Path(nominal_refactor_advisor.__file__).parent
 roots = (
     repo / 'scripts', repo / '.github/tests',
     repo / 'tests/unit/test_ci_package_boundaries.py',
-    nra / 'nominal_refactor_advisor/detectors/_record_checks.py',
-    nra / 'nominal_refactor_advisor/detectors/_semantic_descent.py',
-    nra / 'nominal_refactor_advisor/json_reports.py',
-    nra / 'nominal_refactor_advisor/deadline.py',
+    nra / 'detectors/_record_checks.py',
+    nra / 'detectors/_semantic_descent.py',
+    nra / 'json_reports.py', nra / 'deadline.py',
     Path(metaclass_registry.__file__).parent,
     Path(_pytest.__file__).parent / 'python.py',
     Path(_pytest.__file__).parent / 'fixtures.py',
