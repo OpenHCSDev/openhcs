@@ -848,3 +848,69 @@ The scoped guard receipts are retained externally as
 ``issue435-ce1-original-r1-20261002.json``; independent review is
 ``/var/tmp/openhcs-issue435-independent-publication-review-20261002.json``.
 Original failures and failed guard launches remain retained.
+
+Fresh native comparison and measurement lifetime frontier (2026-10-02)
+--------------------------------------------------------------------
+
+Frozen ``919fee286f8003a00aafc023ad28767d9713842b`` completed two ordinary
+public-driver observations on CPU5, one inline worker/thread, with default
+OUTCOMES and the default memory observer. Server startup, mandatory registry
+and kernel warmup, and shutdown are excluded from pipeline clocks.
+
+===================== =========== ============== ============== ==============
+Case                  Compilation Server job     Pipeline total Native CP run
+===================== =========== ============== ============== ==============
+Advanced segmentation 1.324832 s  8.078740 s     10.650795 s    34.327521 s
+Imaging flow cytometry 1.941105 s  15.497744 s    18.177965 s    77.795280 s
+===================== =========== ============== ============== ==============
+
+Native CellProfiler 4.2.8.1 uses the same physical input paths and SHA256
+values, CPU5 and one thread. Its invocation excludes interpreter/JVM startup,
+pipeline load and one complete warmup, but includes image-set preparation,
+modules, post_run and Measurements.close. These are single observations with
+different explicit setup/publication accounting; they do not establish a
+kernel ratio, statistical significance or a new patch's speedup.
+
+IFC's existing strict exported-science comparison passes with zero differences,
+1800 nonempty rows and 527 columns in each CSV. The observed native/OH ratios
+are 5.019781 for server-job execution and 4.279647 for pipeline total. Unsaved
+segmentation masks are outside these retained outputs. Advanced's existing
+scientific database comparison also passes with zero differences, but complete
+source-information acceptance remains RED: five illumination sources across
+two sites have 90 NULL cells instead of native values. The original integer
+gate detects 40 Frame/Series/Height/Width cells; independent inventory adds
+ten Scaling and forty FileName/PathName/URL/MD5Digest cells. Issue #444 is
+formally linked to PR #394. No field exclusion or tolerance change is admitted.
+
+A separate coarse diagnostic on the same source partitions IFC's 13.838053 s
+execution into 9.373829 s inside the raw-callable boundary and 4.464224 s
+outside. Advanced's 8.087572 s partitions into 3.836250 s inside and 4.251322 s
+outside. The callable boundary includes decorated processing and result
+assembly, not just numerical kernels. Nested inclusive spans are not added.
+Exclusive recording, table assembly and export work has a combined envelope
+of 2.812474 s for IFC and 2.882479 s for Advanced. Saving two seconds requires
+roughly 71.11% and 69.38% reduction respectively; recording alone is insufficient.
+Stack loading costs 0.126811 s / 0.106307 s. Ordinary progress events bound
+between-step/axis work below 17 ms and other job-minus-axis gaps at
+0.196432 s / 0.100492 s. Those routes cannot close the multi-second target.
+Diagnostic clocks are not ordinary speedup evidence.
+
+Retained evidence lives under ``/var/tmp``: ordinary outputs and source freeze
+in ``openhcs-latest-ordinary-advanced-ifc-20261002``, fresh native inputs,
+reports and IFC comparison in
+``openhcs-current-native-advanced-ifc-v2-919fee-20261002``, and coarse regions
+in ``openhcs-current919-runtime-phase-probe-20261002``. Independent source-field
+inventory is ``advanced-fresh-native-missing-illum-metadata-20261002.json``;
+the dominant cost/owner receipt is
+``openhcs-919-measurement-lifetime-frontier-20261002.json``. Original failed
+native preparation and the exact metadata comparison failure remain retained.
+Actual typed measurement-request/export capture is in progress; no production
+optimization or replay acceptance follows from the cost envelope alone.
+
+Latest main ``3df650bf7`` (merged #442/#443) is integrated at ``436e49755``.
+The incoming BioFormats calibration, MCP streaming and existing publication/
+opaque-domain controls pass: 141 tests in 16.72 seconds. The initial narrow
+launch failed collection because the MCP test imports the streaming fixture
+module by its short name; the corrected command includes that actual fixture
+owner first. Both logs are retained in ``/var/tmp``. No source/test guard was
+modified to obtain the pass.
