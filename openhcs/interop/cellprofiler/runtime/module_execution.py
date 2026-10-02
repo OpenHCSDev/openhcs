@@ -1483,14 +1483,10 @@ class CellProfilerModuleExecutor:
             image_request=image_request,
             runtime_kwargs=runtime_kwargs,
         )
-        invocation_image = image_request.payload
-        default_execution_mode = (
-            self.callable_contract.runtime_image_execution_mode
-            or image_request.execution_mode
-        )
         execution_mode = module_type.execution_mode(
-            default_execution_mode,
-            image=invocation_image,
+            self.callable_contract.runtime_image_execution_mode
+            or image_request.execution_mode,
+            image=image_request.payload,
             kwargs=runtime_kwargs,
             variable_components=adapter.request.variable_components,
         )
@@ -1500,15 +1496,19 @@ class CellProfilerModuleExecutor:
                 time.perf_counter() - phase_started_at,
                 module=module_name,
             )
-        invocation_kwargs = {
-            **runtime_kwargs,
-            **_execution_mode_semantic_control_kwargs(
+        invocation_kwargs = object_label_input_execution_mode_from_callable(
+            self.raw_func
+        ).invocation_kwargs(
+            runtime_kwargs, execution_mode=execution_mode,
+            image_projection=image_request.plane_projection,
+            runtime_projection=runtime_projection,
+            semantic_controls=_execution_mode_semantic_control_kwargs(
                 self.callable_contract.require_processing_contract(),
                 execution_mode,
             ),
-        }
+        )
         return RuntimeFunctionInvocationRequest(
-            image=invocation_image,
+            image=image_request.payload,
             kwargs=invocation_kwargs,
             source_image_name=image_request.source_image_name,
             image_count=image_request.image_count,
