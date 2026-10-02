@@ -1,0 +1,79 @@
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so e1e0517b3706e6f6e8de126e8c3758c3a6bbf0ca024782b795fcb27d509f3e3e
+Read-only native ABI: /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so 9f873070c3e136dd78109a55570852981e989c1d21e3452ce214bbaa753b7308
+Source owner: /home/ts/wt/openhcs-prior-measurement-role-projection-20261001/openhcs/core/function_patterns.py
+Source owner: /home/ts/wt/openhcs-prior-measurement-role-projection-20261001/openhcs/core/pipeline/path_planner.py
+Source owner: /home/ts/wt/openhcs-prior-measurement-role-projection-20261001/openhcs/core/steps/function_runtime.py
+FF........                                                               [100%]
+=================================== FAILURES ===================================
+_ test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[runtime_slice] _
+
+axis = <RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>
+
+    @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+    def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
+        labels = np.zeros((2, 8, 9), dtype=np.int32)
+        labels[0, 1:3, 2:5] = 29
+        labels[1, 2:5, 3:7] = 106
+        source = _source(labels, axis=axis)
+        source_bytes = labels.tobytes()
+        spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
+        value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
+            RuntimeArtifactInputRequest(spec=spec, value=source)
+        )
+        assert value.domain.scope is ObjectLabelDomainScope.PLANE
+        assert value.plane_axis is axis
+        assert value.domain.declared_object_id_domains == ((29,), (106,))
+>       assert value.source_provenance.identity == source.metadata.source_provenance.identity
+E       AssertionError: assert identity == identity
+E        +  where identity = <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d50ce00>.identity
+E        +    where <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d50ce00> = ObjectLabelSet(source_spatial_domain=SourceSpatialDomain(origin_yx=(0, 0), source_shape_yx=(8, 9), fill_value=0, value...rceVoxelSpacingUnit.MICROMETERS: 'micrometers'>), name='saved_labels', dimensions=(), source_image_name='saved_labels').source_provenance
+E        +  and   identity = <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d5ddf40>.identity
+E        +    where <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d5ddf40> = ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.3556, 1.3556), unit=<SourceVoxelSpacingUnit...None, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>).source_provenance
+E        +      where ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.3556, 1.3556), unit=<SourceVoxelSpacingUnit...None, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>) = ImageMetadataPayload(data=array([[[  0,   0,   0,   0,   0,   0,   0,   0,   0],\n        [  0,   0,  29,  29,  29,   0...one, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.RUNTIME_SLICE: 'runtime_slice'>)).metadata
+
+tests/unit/test_saved_source_label_plane_domain.py:51: AssertionError
+_ test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[source_binding] _
+
+axis = <RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>
+
+    @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+    def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
+        labels = np.zeros((2, 8, 9), dtype=np.int32)
+        labels[0, 1:3, 2:5] = 29
+        labels[1, 2:5, 3:7] = 106
+        source = _source(labels, axis=axis)
+        source_bytes = labels.tobytes()
+        spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
+        value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
+            RuntimeArtifactInputRequest(spec=spec, value=source)
+        )
+        assert value.domain.scope is ObjectLabelDomainScope.PLANE
+        assert value.plane_axis is axis
+        assert value.domain.declared_object_id_domains == ((29,), (106,))
+>       assert value.source_provenance.identity == source.metadata.source_provenance.identity
+E       AssertionError: assert identity == identity
+E        +  where identity = <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d73dcc0>.identity
+E        +    where <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed6d73dcc0> = ObjectLabelSet(source_spatial_domain=SourceSpatialDomain(origin_yx=(0, 0), source_shape_yx=(8, 9), fill_value=0, value...rceVoxelSpacingUnit.MICROMETERS: 'micrometers'>), name='saved_labels', dimensions=(), source_image_name='saved_labels').source_provenance
+E        +  and   identity = <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed7c151900>.identity
+E        +    where <openhcs.core.source_image_provenance.SourceImageProvenance object at 0x7fed7c151900> = ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.3556, 1.3556), unit=<SourceVoxelSpacingUnit...ne, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>).source_provenance
+E        +      where ImagePayloadMetadata(source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.3556, 1.3556), unit=<SourceVoxelSpacingUnit...ne, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>) = ImageMetadataPayload(data=array([[[  0,   0,   0,   0,   0,   0,   0,   0,   0],\n        [  0,   0,  29,  29,  29,   0...e, mask_defines_border=None, source_channel_axis=None, plane_axis=<RuntimePlaneAxis.SOURCE_BINDING: 'source_binding'>)).metadata
+
+tests/unit/test_saved_source_label_plane_domain.py:51: AssertionError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ts/wt/openhcs-prior-measurement-role-projection-20261001/docs/validation/saved-label-plane-domain-419-20261002/geometry-focused.xml -
+=========================== short test summary info ============================
+FAILED tests/unit/test_saved_source_label_plane_domain.py::test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[runtime_slice]
+FAILED tests/unit/test_saved_source_label_plane_domain.py::test_original_artifact_admission_and_full_stack_shape_keep_2d_planes[source_binding]
+2 failed, 8 passed, 2 warnings in 1.57s
+BOUNDED_SOURCE peak_aggregate_rss_kib=322596 elapsed_seconds=4.871 returncode=1 reason=None

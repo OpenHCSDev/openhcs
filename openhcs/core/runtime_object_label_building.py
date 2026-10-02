@@ -128,7 +128,23 @@ class SourceImageObjectLabelBuildRequest:
                 "Source-image object-label domain_scope must be payload, plane, "
                 f"or None; got {self.domain_scope!r}."
             )
-        if self.plane_projection is None:
+        projection = self.plane_projection
+        metadata = self.metadata
+        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+            metadata.plane_axis, metadata.source_provenance,
+        )
+        if declared_projection is not None:
+            if projection is None:
+                projection = declared_projection
+            elif (
+                projection.axis is not declared_projection.axis
+                or projection.axis_size != declared_projection.axis_size
+            ):
+                raise ValueError(
+                    "Object-label plane projection conflicts with the source-image "
+                    "axis declaration."
+                )
+        if projection is None:
             if self.domain_scope is ObjectLabelDomainScope.PLANE:
                 raise ValueError(
                     "Plane-scoped object-label output requires an exact plane "
@@ -136,15 +152,15 @@ class SourceImageObjectLabelBuildRequest:
                 )
             return None
         label_array = np.asarray(self.labels)
-        self.plane_projection.validate_shape(
+        projection.validate_shape(
             label_array.shape,
             value_name="Source-image object labels",
         )
-        self.plane_projection.validate_shape(
+        projection.validate_shape(
             runtime_image_values.image_payload_geometry(self.image).shape,
             value_name="Object-label source image",
         )
-        source_shape_yx = self.metadata.spatial_shape_yx(self.image)
+        source_shape_yx = metadata.spatial_shape_yx(self.image)
         if source_shape_yx is None:
             raise ValueError(
                 "Declared source-image plane axis requires a source spatial domain."
@@ -154,4 +170,4 @@ class SourceImageObjectLabelBuildRequest:
                 "Object-label spatial shape must match the declared source-image "
                 f"domain: {tuple(label_array.shape[-2:])!r} != {tuple(source_shape_yx)!r}."
             )
-        return self.plane_projection
+        return projection
