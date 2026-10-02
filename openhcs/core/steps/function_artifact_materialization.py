@@ -821,6 +821,9 @@ class AnalysisOutputDescriptorAuthority:
                 variable_components=plan.variable_components,
             )
         if identity is not None:
+            identity = materialization_spec.filename_identity_for_output(
+                identity, output_plan,
+            )
             try:
                 filename = Path(
                     FunctionOutputPathAuthority.filename_for_identity(
