@@ -192,3 +192,21 @@ Root retains394 source/materialization/projection/performance, Singer retains
 assisted5 journals/scientific custody, and Dewey retains H003 handoff repair.
 No native or scientific run is started by this install. Site001 CYX/order/
 provenance and public inventory -> native graph receiving remain parent's gate.
+
+Parent independent receiving checkpoint
+---------------------------------------
+
+Parent independently reran the updated existing verifier and accepted all883
+non-RECORD installed payload/metadata bytes and the direct URL/wheel hash. Its
+durable review is ``PARENT-PRIVATE-INSTALL-REVIEW.rst`` in the same engineering
+artifact root. This confirms installed identity, not native ABI use or graph QA.
+The ordinary wheel, target and original archives remain retained.472 stays draft;
+it is not merged into Root without Root coordination. Parent retains actual
+Site001/graph validation, prioritizing original H003 allowance restoration before
+any new native/scientific fleet. No application is launched here.
+
+Only terminal install tmp was removed: the empty, handle-free owned
+``engineering394404-wheel-94ee-dd324-20261002/scratch/tmp`` directory under the
+artifact qroot (4096 allocated bytes). rmdir removed no files; this disposable
+container is regenerable. All source, original logs, saved viewers, private target,
+ordinary wheel, earlier evidence and UNKNOWN dispositions remain untouched.
