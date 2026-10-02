@@ -1,0 +1,43 @@
+Owner: Schrodinger, engineering issue350 only, 2026-10-01.
+Worktree: /home/ts/wt/openhcs-paired-raw-bootstrap-20261001
+Branch: fix/paired-raw-bootstrap-20261001
+Base: 094425c8c81324da7a3878379074e1bd8234ff52
+Read-only interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python
+No install/build/download/backing environment or user-state change.
+
+All accepted shards: one sequential CPU via taskset0, thread pools1,
+kernel MemoryMax512M/MemorySwapMax0/CPUQuota100%, outer timeout60s.
+PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENHCS_CPU_ONLY=true
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1
+PYTHONPATH=/home/ts/wt/openhcs-paired-raw-bootstrap-20261001
+XDG_CACHE_HOME=/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/.validation/cache
+Pytest --noconftest -o addopts='' -p no:cacheprovider excludes global foreign
+viewer/client cleanup; asyncio config warnings are retained, not test failures.
+The ViewerModel fixtures create no Qt application or live window/transport.
+Synthetic small arrays/temporary fake files only; no original science-array read.
+No validation.lock or native/MCP/UI startup, restart, replay, evaluator or science.
+
+Owned ignored dependency symlinks used by source tests (targets read-only):
+openhcs/core/_tabular_native.abi3.so ->
+/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core/_tabular_native.abi3.so
+SHA2563c2dc1dcaa4cd8cf7f2c8505a673501de4c79f09372d6fef8fb5c044b6df3d56
+openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so ->
+/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so
+SHA256469297bdce4f4605eb7f7fe0c7703cb520acb5d549352c2784abe980c588adde
+These source-test links are not shipped or claimed as a newly built artifact.
+Owned disposable path: worktree/.validation (caches and pytest-generated fixtures).
+Cleanup completed after all retained execution sessions exited and a process
+check found no active owned ratchet/R1/overlay scanner. Removed exact owned
+/home/ts/wt/openhcs-paired-raw-bootstrap-20261001/.validation (1.6MiB caches and
+synthetic pytest fixtures), and unlinked only the two dependency symlinks above.
+Their frozen installed binary targets remain present with identical SHA256.
+Receipts and source commits are retained; disposable caches/fixtures can be
+regenerated from the committed tests. No source/user state or scientific output
+was removed. Worktree has no other ignored task artifacts at handoff.
+
+Original pre-fix source tests reproduced both issue350 failures. Initial clean
+source collection lacked native extensions; its failure is retained separately.
+Initial global audit timed out at its internal20s parse deadline; measured
+maximum RSS525976KiB exceeded512MiB. Rejected/incomplete, never a global pass.
+Later kernel-bound shards are independently measured; no incomplete guard or
+source-only test is relabelled as installed/live or scientific acceptance.

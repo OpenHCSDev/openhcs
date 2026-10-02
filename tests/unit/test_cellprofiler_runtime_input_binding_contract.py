@@ -40,6 +40,9 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 from openhcs.processing.backends.cellprofiler import identify_primary_objects
+from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+    PrimaryObjectDiagnosticPlanes,
+)
 from openhcs.processing.backends.cellprofiler.watershed import watershed_cellprofiler4
 
 from tests.unit.cellprofiler_runtime_test_support import (
@@ -653,7 +656,7 @@ def test_callable_abi_consumes_callable_contract_without_partition_wrapper() -> 
     CellProfilerModuleCallableABI.validate_callable_artifact_abi(process, contract)
 
 
-def test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots() -> None:
+def test_callable_abi_keeps_main_flow_artifacts_in_declared_slots() -> None:
     source = ArtifactSpec.input("Input", ImageArtifactType)
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
     labels = ArtifactSpec.output(
@@ -662,13 +665,21 @@ def test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots() -> None:
         relations=(GroupLineageSourceRelation(source=source.ref()),),
     )
 
-    for func in (identify_primary_objects, watershed_cellprofiler4):
+    for func, diagnostics in (
+        (
+            identify_primary_objects,
+            PrimaryObjectDiagnosticPlanes.artifact_specs(
+                source_image=source, objects=labels
+            ),
+        ),
+        (watershed_cellprofiler4, ()),
+    ):
         contract = _contract(func, (source,))
         contract = replace(
             contract,
             metadata=replace(
                 contract.metadata,
-                artifact_outputs=(measurements, labels),
+                artifact_outputs=(measurements, labels, *diagnostics),
             ),
         )
 

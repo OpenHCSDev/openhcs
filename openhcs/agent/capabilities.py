@@ -11,10 +11,13 @@ from functools import cache
 from importlib.metadata import distributions
 from inspect import getdoc
 from math import isfinite
-from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
+from types import UnionType
+from typing import ClassVar, Generic, Self, TypeAlias, TypeVar, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from zmqruntime.client import EndpointShutdownResult
+
+from openhcs.agent.services.execution_session_service import ExecutionSessionService
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
@@ -611,7 +614,32 @@ class AgentScalarInputContract:
         return self.field_name
 
 
-AgentContract: TypeAlias = type | AgentScalarInputContract
+@dataclass(frozen=True, slots=True)
+class AgentResultFamilyContract:
+    """Actual producer alternatives and their existing external nominal identity.
+
+    MCP's advertised owner is an external metadata fact, not the entire result
+    family. Keep those questions distinct while deriving decode membership from
+    the producer's declared union. No presentation roster owns that membership.
+    """
+
+    advertised_contract: type
+    producer: Callable[..., object]
+
+    @property
+    def result_type(self) -> UnionType:
+        return get_type_hints(self.producer, include_extras=True)["return"]
+
+    @property
+    def result_types(self) -> tuple[type, ...]:
+        return get_args(self.result_type)
+
+    @property
+    def schema_name(self) -> str:
+        return self.advertised_contract.__name__
+
+
+AgentContract: TypeAlias = type | AgentScalarInputContract | AgentResultFamilyContract
 AgentContextT = TypeVar("AgentContextT")
 AgentServiceT = TypeVar("AgentServiceT")
 AgentRequestT = TypeVar("AgentRequestT")
@@ -635,12 +663,14 @@ def _enum_member_title(value: Enum) -> str:
 def _contract_schema_name(contract: AgentContract | None) -> str | None:
     if contract is None:
         return None
-    if isinstance(contract, AgentScalarInputContract):
+    if isinstance(contract, (AgentScalarInputContract, AgentResultFamilyContract)):
         return contract.schema_name
     return contract.__name__
 
 
 def require_agent_type_contract(contract: AgentContract | None) -> type:
+    if isinstance(contract, AgentResultFamilyContract):
+        return contract.advertised_contract
     if not isinstance(contract, type):
         raise TypeError(f"Expected agent type contract, got {contract!r}.")
     return contract
@@ -958,6 +988,17 @@ class AgentCapabilitySpec:
     progress_worker_thread_safe: bool = True
     input_contract: AgentContract | None = None
     output_contract: AgentContract | None = None
+
+    @property
+    def output_contract_types(self) -> tuple[type, ...]:
+        if isinstance(self.output_contract, AgentResultFamilyContract):
+            return self.output_contract.result_types
+        return (
+            ()
+            if self.output_contract is None
+            else (require_agent_type_contract(self.output_contract),)
+        )
+
     exposition: AgentCapabilityExposition | None = None
 
     def __post_init__(self) -> None:
@@ -1462,6 +1503,8 @@ class ArchitectureCapability(
 class FunctionCatalogCapability(AgentCapabilityDeclaration):
     """Capability that reads or extends the processing-function catalog."""
 
+    progress_heartbeat_seconds = 5.0
+
     exposition = AgentCapabilityExposition(
         workflow_group=CapabilityWorkflowGroup.FUNCTION_AUTHORING,
         workflow_stage=CapabilityWorkflowStage.AUTHORING,
@@ -1859,7 +1902,6 @@ class SearchFunctionsCapability(
         "or an exact declaration-owned backend tag."
     )
     service = "function_catalog"
-    progress_heartbeat_seconds = 5.0
     input_contract = FunctionSearchRequest
     output_contract = FunctionCatalogPage
     request_invocation = AgentDataclassRequestServiceInvocation(
@@ -2696,6 +2738,7 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
 
 
 class SubmitCompileCapability(HeadlessExecutionCapability):
+    progress_heartbeat_seconds = 5.0
     name = "openhcs_submit_compile"
     kind = CapabilityKind.TOOL
     title = "Submit compile job"
@@ -2709,7 +2752,9 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
     mutating = True
     side_effects = ("submits_zmq_compile_job",)
     input_contract = CompileSubmissionRequest
-    output_contract = ExecutionJobRef
+    output_contract = AgentResultFamilyContract(
+        ExecutionJobRef, ExecutionSessionService._submit_job
+    )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.submit_compile(
@@ -2722,6 +2767,7 @@ class SubmitCompileCapability(HeadlessExecutionCapability):
 
 
 class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
+    progress_heartbeat_seconds = 5.0
     name = "openhcs_submit_pipeline_execution"
     kind = CapabilityKind.TOOL
     title = "Submit pipeline execution"
@@ -2740,7 +2786,9 @@ class SubmitPipelineExecutionCapability(HeadlessExecutionCapability):
     mutating = True
     side_effects = ("submits_zmq_execution_job",)
     input_contract = PipelineExecutionSubmissionRequest
-    output_contract = ExecutionJobRef
+    output_contract = AgentResultFamilyContract(
+        ExecutionJobRef, ExecutionSessionService._submit_job
+    )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.execution_service,
         method=lambda service, request: service.submit_execution(
@@ -2833,7 +2881,9 @@ class ObserveOwnedRuntimeCapability(RuntimeServerCliConnectionCapability):
     service = "runtime_server"
     input_contract = RuntimeBootstrapObserveRequest
     output_contract = RuntimeBootstrapState
-    exposition = StartOwnedRuntimeCapability.exposition.refine(workflow_stage=CapabilityWorkflowStage.STATUS)
+    exposition = StartOwnedRuntimeCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.STATUS
+    )
     request_invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.runtime_server_service,
         method=lambda service, request: service.observe_bootstrap(request),

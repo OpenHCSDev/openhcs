@@ -7,6 +7,7 @@ from openhcs._source_dependencies import ensure_source_checkout_external_paths
 ensure_source_checkout_external_paths()
 
 import pytest
+from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 
 from polystore.imagej_distribution import (
     FijiArchiveDistribution,
@@ -25,6 +26,16 @@ if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
 else:
     pytest_plugins = []
+
+
+@pytest.fixture
+def viewer_ack_return_route():
+    """Nominal producer route for message construction without a live listener."""
+    return AckReturnRoute(
+        url="tcp://127.0.0.1:8111",
+        incarnation="00000000-0000-0000-0000-000000000001",
+        owner=ProcessIdentity.current(),
+    )
 
 
 @pytest.fixture(autouse=True)

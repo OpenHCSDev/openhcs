@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import multiprocessing
+import os
 import signal
 import traceback
 from abc import ABC, abstractmethod
@@ -13,6 +14,7 @@ from dataclasses import dataclass, field
 from itertools import islice
 from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
+from pathlib import Path
 from threading import Lock
 from typing import ClassVar
 
@@ -23,6 +25,30 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+
+class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
+    """Admit persistent Numba work only for an empty explicit CPU cache."""
+
+    @classmethod
+    def requires_persistent_kernel_cache(cls) -> bool:
+        """Declared pure kernel operations require a persistent Numba cache."""
+        return True
+
+    @classmethod
+    def can_prepare_in_child(cls) -> bool:
+        if not OpenHCSProcessEnvironment.cpu_only_mode():
+            return False
+        if not cls.requires_persistent_kernel_cache():
+            return False
+        from numba import config as numba_config
+
+        cache_directory = numba_config.CACHE_DIR
+        return (
+            bool(cache_directory)
+            and next(Path(cache_directory).rglob("*.nbi"), None) is None
+        )
 
 
 class PreparationOperation(ABC):
@@ -64,6 +90,33 @@ class PreparationOperation(ABC):
         with cls._lock:
             cls._completed.clear()
         AutoRegisterRegistryPreparation.cached_module_registry_families.cache_clear()
+
+
+class RegisteredNumbaKernelPreparation(
+    PersistentNumbaKernelPreparation, PreparationOperation
+):
+    """Derive independent pure-kernel obligations from each declared registry.
+
+    This abstract parent has no registry. Concrete AutoRegisterMeta declarations
+    own their registries; the common parent owns identity, operation derivation
+    and successful parent preparation.
+    """
+
+    __registry_key__ = "__name__"
+    __registry__: ClassVar[dict[str, type[RegisteredNumbaKernelPreparation]]]
+
+    @property
+    def identity(self) -> Hashable:
+        return type(self)
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        return tuple(declaration() for declaration in cls.__registry__.values())
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
 
 
 @dataclass(frozen=True, slots=True)
@@ -275,9 +328,23 @@ class PreparationCacheBatch:
         return cls(tuple(sources.values()))
 
     def populate_child_caches(
-        self, *, status_callback: Callable[[str], None] | None = None
+        self, *, max_workers: int = 1,
+        status_callback: Callable[[str], None] | None = None
     ) -> None:
+        """Admit optional cache parallelism, never parent process-local readiness."""
+        if max_workers < 1:
+            raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
+            return
+        if max_workers == 1:
+            return
+        try:
+            worker_capacity = min(max_workers, len(os.sched_getaffinity(0)))
+        except AttributeError:
+            # Without an affinity witness there is no admitted parallel cache
+            # work. The existing parent preparation still owns readiness.
+            return
+        if worker_capacity < 2:
             return
         operations = {
             operation.identity: operation
@@ -296,7 +363,7 @@ class PreparationCacheBatch:
         with ExitStack() as resources:
             workers: list[PreparationCacheWorker] = []
             while True:
-                for operation in islice(pending, 4 - len(workers)):
+                for operation in islice(pending, worker_capacity - len(workers)):
                     worker = PreparationCacheWorker.start(context, operation)
                     resources.callback(worker.close)
                     workers.append(worker)

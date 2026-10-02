@@ -57,6 +57,33 @@ class RegistryService:
     _registry_inventory_lock = threading.RLock()
 
     @classmethod
+    def metadata_for_canonical_key(cls, function_id: str) -> FunctionMetadata:
+        """Ask the original registry declaration to resolve one public identity."""
+
+        registry_name, separator, name = function_id.partition(":")
+        registry_type = LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
+        claims = () if registry_type is None else tuple(
+            registry_type._canonical_metadata_claims(function_id)
+        )
+        for metadata in claims:
+            if metadata.composite_key != function_id:
+                raise ValueError(
+                    f"Canonical function {function_id!r} contradicts declaration "
+                    f"{metadata.composite_key!r}."
+                )
+            metadata.require_current_declaration()
+        if not claims:
+            raise KeyError(f"Unknown canonical function ID {function_id!r}.")
+        first = claims[0]
+        if any(
+            metadata.import_identity != first.import_identity
+            or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
+            for metadata in claims[1:]
+        ):
+            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
+        return first
+
+    @classmethod
     def get_all_functions_with_metadata(
         cls,
         *,
@@ -104,12 +131,7 @@ class RegistryService:
     def prepare_in_current_process(
         cls, *, status_callback: RegistryPreparationCallback | None = None
     ) -> Dict[str, FunctionMetadata]:
-        """Discover callables and prepare their declared persistent kernel caches."""
-
-        from openhcs.core.processing_preparation import (
-            CallablePreparation,
-            PreparationCacheBatch,
-        )
+        """Discover the catalog, leaving kernel readiness to selected compilation."""
 
         emit_status = status_callback or logger.debug
         emit_status("Discovering registered callables")
@@ -117,18 +139,7 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        functions = tuple(metadata.func for metadata in cls._metadata_cache.values())
-        emit_status("Preparing declared registry kernel caches")
-        PreparationCacheBatch.from_callables(functions).populate_child_caches(
-            status_callback=emit_status
-        )
-        for function in functions:
-            preparation = CallablePreparation.from_callable(function)
-            preparation.prepare()
-            emit_status(
-                f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
-            )
-        emit_status(f"Registered kernels ready ({len(functions)} callables)")
+        emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache
 
     @classmethod
@@ -226,12 +237,12 @@ class RegistryService:
         status_callback: RegistryPreparationCallback | None = None,
         cancellation: OperationCancellation | None = None,
     ) -> None:
-        """Prepare catalog and kernel caches in a dedicated interpreter main thread."""
+        """Prepare catalog metadata in a dedicated interpreter main thread."""
 
         if cancellation is not None and cancellation.requested():
             raise CancelledError
         status_callback = status_callback or logger.debug
-        status_callback("Preparing function catalog and declared kernel caches")
+        status_callback("Preparing function catalog metadata")
 
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (
@@ -410,7 +421,8 @@ class RegistryService:
         declared = reference.require_current_declaration(declared)
 
         registry = registry_type()
-        registry.require_declared_callable_composite_key(
+        cls._require_declared_callable_composite_key(
+            registry,
             declared,
             reference.composite_key,
         )
@@ -436,6 +448,21 @@ class RegistryService:
                 reference, resolved
             )
         return resolved
+
+    @staticmethod
+    def _require_declared_callable_composite_key(
+        registry: LibraryRegistryBase,
+        func: Callable,
+        composite_key: str,
+    ) -> None:
+        """Validate a transported key against its original declaration inventory."""
+
+        declared_keys = registry.composite_keys_for_declared_callable(func)
+        if composite_key not in declared_keys:
+            raise RuntimeError(
+                f"Function reference {composite_key!r} contradicts "
+                f"declaration-owned identity candidates {declared_keys!r}."
+            )
 
     @staticmethod
     def _validate_reference_metadata(

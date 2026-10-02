@@ -57,6 +57,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ObjectLineageTransformContractModule,
     PlaneRuntimeArtifactModule,
 )
@@ -199,7 +200,7 @@ class CombineobjectsModule(
     PlaneRuntimeArtifactModule,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     CellProfilerModule,
 ):
     module_name = "Combineobjects"
@@ -367,7 +368,10 @@ class ExpandShrinkMode(Enum):
     SKELETONIZE = "skeletonize"
 
 
-class ExpandOrShrinkObjectsModule(ObjectTransformContractModule):
+class ExpandOrShrinkObjectsModule(
+    LabelDimensionObjectArtifactOutputModule,
+    ObjectTransformContractModule,
+):
     module_name = "ExpandOrShrinkObjects"
     function_name = "expand_or_shrink_objects"
     validated = True
@@ -399,6 +403,7 @@ class ExpandOrShrinkObjectsModule(ObjectTransformContractModule):
 
 class MaskObjectsModule(
     ObjectLabelDrivenPrimaryImageInputPolicy,
+    LabelDimensionObjectArtifactOutputModule,
     ObjectLineageTransformContractModule,
 ):
     module_name = "MaskObjects"
@@ -2241,6 +2246,9 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
         self.connected_components(mask, connectivity=2)
         self.fill_labeled_holes(labels)
         self.erode_labeled_objects(labels, footprint)
+        self.erode_labeled_objects(
+            np.stack((labels, labels)), np.ones((3, 3, 3), dtype=np.bool_)
+        )
         self.local_maxima_by_label(image, labels, footprint)
         self.smooth_image_for_declumping(image, mask, 1.0)
         self.smooth_image_for_declumping(
@@ -6957,7 +6965,7 @@ class SplitOrMergeObjectsModule(
     PlaneRuntimeArtifactModule,
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
 ):
     module_name = "SplitOrMergeObjects"
     function_name = "split_or_merge_objects"

@@ -276,6 +276,32 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
             WindowProjectionSource.from_payload_providers(items)
         )
 
+    def with_shared_stack_axes(
+        self,
+        layouts: Sequence[ViewerComponentLayout],
+    ) -> "ViewerComponentLayout":
+        """Derive shared native slots without changing any route's grouping.
+
+        A component stacked by one participating declaration needs the same
+        coordinate slot in every native layer, even when another route groups
+        that component into separate layers. Component order remains explicit.
+        """
+        for layout in layouts:
+            if layout.component_order != self.component_order:
+                raise ValueError("Shared viewer layouts require the same component order.")
+        stack_axes = {
+            component
+            for layout in (self, *layouts)
+            for component in layout.components_for_mode(ViewerComponentMode.STACK)
+        }
+        return self.from_parts(
+            component_modes={
+                **self.component_modes,
+                **{component: ViewerComponentMode.STACK for component in stack_axes},
+            },
+            component_order=self.component_order,
+        )
+
 
 @dataclass(slots=True)
 class ViewerComponentMetadataNormalizer:
@@ -848,6 +874,31 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
     """Shared component-axis layout plus declared value-domain carrier."""
 
     layout: ViewerComponentLayout
+
+    def axis_projection_semantics(self) -> "ViewerComponentAxisSemantics":
+        """Derive the route-addressable axes from its declared value domain."""
+        return self.for_display_layout(self.layout)
+
+    def for_display_layout(
+        self,
+        layout: ViewerComponentLayout,
+    ) -> "ViewerComponentAxisSemantics":
+        """Project this route's declared domain into shared display slots."""
+        declared_components = self.component_values()
+        component_order = tuple(
+            component for component in layout.component_order
+            if component in declared_components
+        )
+        return ViewerComponentAxisSemantics(
+            entries=self.entries,
+            layout=ViewerComponentLayout.from_parts(
+                component_modes={
+                    component: layout.component_modes[component]
+                    for component in component_order
+                },
+                component_order=component_order,
+            ),
+        )
 
     @property
     def component_order(self) -> tuple[str, ...]:

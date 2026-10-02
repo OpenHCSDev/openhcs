@@ -203,11 +203,11 @@ class McpDevClient:
                 server_stderr_tail=captured_server_stderr_tail(self._server_stderr),
             )
         payload = require_json_object_payload(to_jsonable(response))
-        returncode = 0 if args.allow_error_payloads else int(_command_failed(payload))
+        returncode = 0 if args.allow_error_payloads else int(response.has_errors())
         return McpDevCommandExecution(
             argv=normalized_argv,
             payload=payload,
-            rendered_output=command_spec.render_response(payload, args),
+            rendered_output=command_spec.render_result(response, args),
             returncode=returncode,
             server_stderr_tail=captured_server_stderr_tail(self._server_stderr),
         )
@@ -482,16 +482,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _run_persistent_shell(args)
         command_spec = McpDevCommandSpec.for_name(args.command)
         try:
-            payload = require_json_object_payload(
-                to_jsonable(asyncio.run(_run_async(args)))
-            )
+            response = asyncio.run(_run_async(args))
         except McpDevCliUsageError as exc:
             parser.error(str(exc))
-        if not write_stdout(command_spec.render_response(payload, args)):
+        if not write_stdout(command_spec.render_result(response, args)):
             return 0
         if args.allow_error_payloads:
             return 0
-        return 1 if _command_failed(payload) else 0
+        return int(response.has_errors())
     finally:
         logging.disable(disabled_level)
         registry_logger.setLevel(registry_level)

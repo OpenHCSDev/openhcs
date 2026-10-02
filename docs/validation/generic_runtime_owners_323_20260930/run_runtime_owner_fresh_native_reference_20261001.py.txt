@@ -1,0 +1,24 @@
+import json
+from pathlib import Path
+
+from benchmark.adapters.openhcs import OpenHCSAdapter
+from benchmark.cellprofiler_comparison import load_comparison_cases, _comparison_pipeline_params
+from openhcs.core.config import GlobalPipelineConfig
+from openhcs.serialization.json import to_jsonable
+
+runs = Path('/home/ts/code/projects/openhcs-benchmark-runs')
+root = Path('/home/ts/code/projects/openhcs')
+(case,) = tuple(case for case in load_comparison_cases(root / 'benchmark/manifests/official30_portable_axis1.json') if case.name == 'ExampleImagingFlowCytometryObjectsInGrid')
+output = runs / 'perf-runtime-owner-fresh-native-reference-openhcs-20261001'
+assert not output.exists()
+params = _comparison_pipeline_params(case)
+params['equivalence_reference_output_dir'] = str(runs / 'perf-runtime-owner-native-imaging-1w1j-20261001/native_jobs/0/1')
+params['materialize_runtime_artifacts'] = False
+params['compare_image_outputs'] = False
+params['openhcs_timeout_seconds'] = 240
+result = OpenHCSAdapter(global_config=case.effective_global_config(GlobalPipelineConfig(num_workers=1, use_threading=False))).run(
+    dataset_path=case.dataset_path, pipeline_name=case.name, pipeline_params=params,
+    metrics=[], output_dir=output)
+(runs / 'perf-runtime-owner-fresh-native-reference-result-20261001.json').write_text(json.dumps(to_jsonable(result), indent=2) + '\n')
+print(json.dumps(dict(success=result.success, error_message=result.error_message, provenance=result.provenance)), flush=True)
+assert result.success

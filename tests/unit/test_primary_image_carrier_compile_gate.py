@@ -14,6 +14,7 @@ from openhcs.core.callable_contract import (
     PrimaryImageCarrierTransition,
     preserves_primary_image_carrier,
 )
+from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
@@ -22,6 +23,8 @@ from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
     FunctionInvocationKey,
+    InvocationArtifactInputEdgePlan,
+    InvocationArtifactInputProjectionKey,
 )
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.compiler import PipelineCompiler
@@ -51,11 +54,30 @@ class _CarrierTestSession(SimpleNamespace):
         return CompilationSession.main_flow_plan_ancestry(self, index)
 
 
-def _compiled_pattern(callable_=color_to_gray) -> CompiledFunctionPattern:
+def _compiled_pattern(
+    callable_=color_to_gray, *, input_image_name: str | None = None
+) -> CompiledFunctionPattern:
     invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey(callable_.__name__, "default", 0),
         contract=CallableContract.from_callable(callable_),
     )
+    if input_image_name is not None:
+        (edge_key,) = InvocationArtifactInputProjectionKey.for_input_count(
+            invocation.key, 1
+        )
+        invocation = invocation.with_artifact_input_edges(
+            (
+                InvocationArtifactInputEdgePlan(
+                    key=edge_key,
+                    spec=ArtifactSpec.input(
+                        input_image_name, ImageArtifactType, parameter_name="image"
+                    ),
+                    storage_plan=None,
+                    projection=None,
+                    consumes_main_flow=True,
+                ),
+            )
+        )
     return CompiledFunctionPattern(
         groups=(CompiledFunctionGroup("default", (invocation,)),),
         is_grouped=False,
@@ -475,6 +497,63 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
 
     with pytest.raises(ValueError, match="not preserved.*unknown_transform"):
         PipelineCompiler.validate_primary_image_carrier_requirements(session)
+
+
+@pytest.mark.parametrize("source_kind", ("rgb", "gray", "missing-anchor"))
+def test_inherited_bindings_trace_exact_named_carrier_edges(
+    tmp_path: Path, source_kind: str
+) -> None:
+    path = tmp_path / "source.tif"
+    if source_kind == "gray":
+        tifffile.imwrite(path, np.zeros((8, 9), dtype=np.uint8))
+    else:
+        tifffile.imwrite(path, np.zeros((8, 9, 3), dtype=np.uint8), photometric="rgb")
+    session = _session(tmp_path, (path,))
+    bindings = session.plans[0].source_binding_plan
+
+    @preserves_primary_image_carrier
+    def crop_like(image):
+        return image
+
+    plans = {}
+    for index, (callable_, input_name) in enumerate(
+        (
+            (crop_like, "missing" if source_kind == "missing-anchor" else "image"),
+            (crop_like, "FirstCrop"),
+            (color_to_gray, "SecondCrop"),
+        )
+    ):
+        plans[index] = CompiledStepPlan(
+            step_index=index,
+            step_name=f"Carrier step {index}",
+            step_type="FunctionStep",
+            axis_id="A01",
+            step_scope_id=f"step-{index}",
+            main_input_dependency=(
+                StepInputDependency.pipeline_start()
+                if index == 0
+                else StepInputDependency.step_output(
+                    source_step_index=index - 1,
+                    source_step_scope_id=f"step-{index - 1}",
+                )
+            ),
+            source_binding_plan=bindings,
+            compiled_function_pattern=_compiled_pattern(
+                callable_, input_image_name=input_name
+            ),
+        )
+    session.plans = plans
+    session.context.step_plans = plans
+    if source_kind == "rgb":
+        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    else:
+        expected = (
+            "source_channel_axis"
+            if source_kind == "gray"
+            else "exact primary source-binding projection"
+        )
+        with pytest.raises(ValueError, match=expected):
+            PipelineCompiler.validate_primary_image_carrier_requirements(session)
 
 
 def test_generic_main_flow_preservation_does_not_prove_carrier(

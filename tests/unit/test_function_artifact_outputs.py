@@ -3100,3 +3100,30 @@ def test_declared_source_payload_prefers_exact_loaded_ref_over_main_flow() -> No
         )
         is stored
     )
+
+
+def test_missing_source_origin_is_not_satisfied_by_an_authored_kwarg():
+    spec = ArtifactSpec.input("MissingImage", ImageArtifactType, parameter_name="image_to_save")
+    executor = _declared_source_executor(spec)
+    (original_edge,) = executor.invocation.artifact_input_edges
+    edge = replace(original_edge, consumes_main_flow=False, main_flow_projection=None)
+    primary = ImagePayloadMetadata().payload_with(np.zeros((1, 2, 3), dtype=np.uint16))
+    invocation = replace(executor.invocation, kwargs=(("image_to_save", primary),))
+    executor = replace(executor, invocation=invocation,
+                       artifacts=ComponentArtifactPlans(inputs={edge.key: edge}, outputs={}))
+    with pytest.raises(ValueError, match="must resolve to exactly one .* resolved 0"):
+        executor.load_artifact_inputs(invocation.kwargs_dict, primary)
+
+
+def test_declared_source_payload_rejects_ambiguous_stored_and_source_bound_origins():
+    binding = NamedSourceBinding(alias="StoredImage")
+    spec = binding.input_spec()
+    executor = _declared_source_executor(
+        spec, source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,))
+    )
+    primary = ImagePayloadMetadata(source_image_names=("StoredImage",)).payload_with(
+        np.zeros((1, 2, 3), dtype=np.uint16)
+    )
+    with pytest.raises(ValueError, match="must resolve to exactly one .* resolved 2"):
+        executor.declared_source_payload(spec.ref(), primary,
+                                        loaded_artifact_payloads={spec.ref(): primary})

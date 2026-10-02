@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
+    from openhcs.core.steps.function_runtime import FunctionInvocationArtifactScope
 
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
@@ -238,6 +239,8 @@ class InvocationArtifactInputEdgePlan:
         spec: ArtifactSpec,
         main_flow_artifacts: ArtifactSpecCollection,
         invocation_sources: ArtifactSpecCollection,
+        metadata_available: bool = False,
+        source_binding_available: bool = False,
     ) -> "InvocationArtifactInputEdgePlan":
         """Project one unstored source occurrence from its exact declarations."""
 
@@ -245,7 +248,12 @@ class InvocationArtifactInputEdgePlan:
         consumes_main_flow = (
             spec.ref() in main_flow_refs and spec.ref() in invocation_sources.ref_set()
         )
-        return cls(
+        edge_type = (
+            CompiledMetadataArtifactInputEdgePlan
+            if metadata_available and not (consumes_main_flow or source_binding_available)
+            else cls
+        )
+        return edge_type(
             key=key,
             spec=spec,
             storage_plan=None,
@@ -269,6 +277,16 @@ class InvocationArtifactInputEdgePlan:
     def requires_callable_binding(self) -> bool:
         """Admit parameter-bearing sources and validate every stored argument."""
         return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
+
+    def resolve_unstored_payload(
+        self,
+        scope: "FunctionInvocationArtifactScope",
+        primary_source_payload: object,
+    ) -> object:
+        """Resolve source input through the existing exact-origin authority."""
+        return scope.declared_source_payload(
+            self.spec.ref(), primary_source_payload, loaded_artifact_payloads={}
+        )
 
     def __post_init__(self) -> None:
         if type(self.consumes_main_flow) is not bool:
@@ -317,6 +335,18 @@ class InvocationArtifactInputEdgePlan:
         self.projection.validate_storage_plan(self.storage_plan)
 
 
+@dataclass(frozen=True, slots=True)
+class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
+    """Metadata occurrence backed only by its invocation's injected kwarg."""
+
+    def resolve_unstored_payload(
+        self,
+        scope: "FunctionInvocationArtifactScope",
+        primary_source_payload: object,
+    ) -> object:
+        return scope.invocation.artifact_parameter_value(self.spec)
+
+
 @dataclass(frozen=True)
 class FunctionInvocation:
     """One enabled callable extracted from a FunctionStep pattern."""
@@ -347,6 +377,15 @@ class NormalizedFunctionItem:
     def kwargs_dict(self) -> dict:
         """Return invocation kwargs as a runtime dict."""
         return dict(self.kwargs)
+
+    def artifact_parameter_value(self, spec: ArtifactSpec) -> object:
+        """Read one compiled artifact argument without a second value carrier."""
+        for parameter_name, value in self.kwargs:
+            if parameter_name == spec.parameter_name:
+                if value is None and spec.required:
+                    raise ValueError(f"Required metadata artifact {spec.ref()!r} has no value.")
+                return value
+        raise ValueError(f"Metadata artifact {spec.ref()!r} has no compiled parameter value.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -808,6 +847,11 @@ class CompiledFunctionPattern:
     is_grouped: bool
 
     @property
+    def runtime_domain(self) -> RuntimeInvocationDomain:
+        """Derive the shared anchor domain from the compiled invocations."""
+        return RuntimeInvocationDomain.from_invocations(tuple(self.iter_invocations()))
+
+    @property
     def execution_scope(self) -> FunctionStepExecutionScope:
         """Return the uniform lifecycle scope derived from its invocations."""
         return FunctionStepExecutionScope.require_uniform(
@@ -1151,9 +1195,9 @@ def inject_artifact_input_values(
         core_callable = get_core_callable(pattern)
         contract = CallableContract.from_callable(core_callable)
         matched_values = {
-            key: value
-            for key, value in values_by_key.items()
-            if key in contract.artifact_inputs.names()
+            spec.parameter_name: values_by_key[spec.name]
+            for spec in contract.artifact_inputs
+            if spec.binds_callable_parameter() and spec.name in values_by_key
         }
         if not matched_values:
             return pattern

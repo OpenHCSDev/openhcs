@@ -8,14 +8,20 @@ from dataclasses import fields, is_dataclass
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TypeAlias
+from typing import ForwardRef, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import signature_analysis_target
 
 JsonScalar: TypeAlias = str | int | float | bool | None
+# Recursive aliases retain this declaration's namespace when imported by DTOs.
+# Bare strings are evaluated in each consuming dataclass module by get_type_hints.
+_JSON_VALUE_REFERENCE = ForwardRef("JsonValue", module=__name__)
 JsonValue: TypeAlias = (
-    JsonScalar | Mapping[str, "JsonValue"] | tuple["JsonValue", ...] | list["JsonValue"]
+    JsonScalar
+    | Mapping[str, _JSON_VALUE_REFERENCE]
+    | tuple[_JSON_VALUE_REFERENCE, ...]
+    | list[_JSON_VALUE_REFERENCE]
 )
 JsonObject: TypeAlias = Mapping[str, JsonValue]
 

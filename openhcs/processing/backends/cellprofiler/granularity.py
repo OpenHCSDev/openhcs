@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
+from openhcs.core.runtime_profile import RuntimeProfiler
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field, fields as dataclass_fields
+from dataclasses import dataclass, field
 import hashlib
 import logging
-import os
 import re
-from threading import Lock
 import time
 from types import MappingProxyType
 from typing import ClassVar
@@ -42,10 +41,14 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.measurement_row_materialization import (
-    DataclassMeasurementColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
-from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.process_local_cache import (
+    RegisteredProcessLocalBoundedCache,
+    SynchronizedBoundedCache,
+)
 from openhcs.core.runtime_tabular_values import (
+    ColumnarRows,
     FieldSpec,
 )
 from openhcs.core.runtime_measurements import (
@@ -87,9 +90,6 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    LongObjectMeasurementColumnarRows,
-)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._granularity_native import (
     reconstruct_f32 as _reconstruct_f32,
@@ -108,10 +108,9 @@ class GranularitySpectrumDescriptor:
     def __post_init__(self) -> None:
         if not isinstance(self.spectrum_index, int):
             raise TypeError("Granularity spectrum index must be an integer.")
-        if not 1 <= self.spectrum_index <= GRANULARITY_SPECTRUM_LENGTH:
+        if self.spectrum_index < 1:
             raise ValueError(
-                "Granularity spectrum index must be between 1 and "
-                f"{GRANULARITY_SPECTRUM_LENGTH}, got {self.spectrum_index}."
+                f"Granularity spectrum index must be positive, got {self.spectrum_index}."
             )
 
 
@@ -123,8 +122,8 @@ class GranularitySpectrumDescriptorDeclaration(
 
     declaration_key = "cellprofiler_granularity_spectrum"
     feature_category = "Granularity"
-    _row_field_pattern = re.compile(r"gs([1-9]|1[0-6])\Z")
-    _feature_name_pattern = re.compile(r"Granularity_([1-9]|1[0-6])\Z", re.I)
+    _row_field_pattern = re.compile(r"gs([1-9][0-9]*)\Z")
+    _feature_name_pattern = re.compile(r"Granularity_([1-9][0-9]*)\Z", re.I)
 
     @classmethod
     def from_measurement_row_field_name(
@@ -147,6 +146,13 @@ class GranularitySpectrumDescriptorDeclaration(
         if match is None:
             return None
         return GranularitySpectrumDescriptor(int(match.group(1)))
+
+    @classmethod
+    def measurement_row_field_name(
+        cls, descriptor: GranularitySpectrumDescriptor
+    ) -> str:
+        """Render the producer field for one actual spectrum sample."""
+        return f"gs{descriptor.spectrum_index}"
 
     @classmethod
     def feature_name(cls, descriptor: object) -> str:
@@ -325,29 +331,10 @@ class MeasureGranularityModule(
         )
 
 
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
 
 
-def profile_enabled() -> bool:
-    """Return whether per-function granularity runtime profiling is enabled."""
-    return os.environ.get(_PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-@dataclass(frozen=True, slots=True)
-class CellProfilerRuntimeProfiler:
-    """Shared CellProfiler runtime-profile emitter bound to a module logger."""
-
-    logger: logging.Logger
-
-    def enabled(self) -> bool:
-        return profile_enabled()
-
-    def log(self, label: str, seconds: float, **fields: object) -> None:
-        RuntimeProfileLogger.log(self.logger, label, seconds, **fields)
-
-
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 def log_profile(label: str, seconds: float, **fields: object) -> None:
@@ -355,167 +342,84 @@ def log_profile(label: str, seconds: float, **fields: object) -> None:
     runtime_profiler.log(label, seconds, **fields)
 
 
-@dataclass
-class GranularityMeasurement:
-    """Granularity spectrum measurements for an image."""
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GranularitySpectrumMeasurementRows(ColumnarRows, ABC):
+    """One actual spectrum matrix and its derived measurement columns."""
 
-    slice_index: int
-    gs1: float
-    gs2: float
-    gs3: float
-    gs4: float
-    gs5: float
-    gs6: float
-    gs7: float
-    gs8: float
-    gs9: float
-    gs10: float
-    gs11: float
-    gs12: float
-    gs13: float
-    gs14: float
-    gs15: float
-    gs16: float
-
-
-@dataclass
-class ObjectGranularityMeasurement:
-    """Granularity spectrum measurements per object."""
-
-    slice_index: int
-    object_id: int
-    gs1: float
-    gs2: float
-    gs3: float
-    gs4: float
-    gs5: float
-    gs6: float
-    gs7: float
-    gs8: float
-    gs9: float
-    gs10: float
-    gs11: float
-    gs12: float
-    gs13: float
-    gs14: float
-    gs15: float
-    gs16: float
-
-
-def _granularity_measurement(gs_values: list[float]) -> GranularityMeasurement:
-    while len(gs_values) < GRANULARITY_SPECTRUM_LENGTH:
-        gs_values.append(0.0)
-    return GranularityMeasurement(
-        slice_index=0,
-        gs1=gs_values[0],
-        gs2=gs_values[1],
-        gs3=gs_values[2],
-        gs4=gs_values[3],
-        gs5=gs_values[4],
-        gs6=gs_values[5],
-        gs7=gs_values[6],
-        gs8=gs_values[7],
-        gs9=gs_values[8],
-        gs10=gs_values[9],
-        gs11=gs_values[10],
-        gs12=gs_values[11],
-        gs13=gs_values[12],
-        gs14=gs_values[13],
-        gs15=gs_values[14],
-        gs16=gs_values[15],
-    )
-
-
-def _object_granularity_measurement(
-    object_id: int, gs: np.ndarray
-) -> ObjectGranularityMeasurement:
-    return ObjectGranularityMeasurement(
-        slice_index=0,
-        object_id=int(object_id),
-        gs1=gs[0],
-        gs2=gs[1],
-        gs3=gs[2],
-        gs4=gs[3],
-        gs5=gs[4],
-        gs6=gs[5],
-        gs7=gs[6],
-        gs8=gs[7],
-        gs9=gs[8],
-        gs10=gs[9],
-        gs11=gs[10],
-        gs12=gs[11],
-        gs13=gs[12],
-        gs14=gs[13],
-        gs15=gs[14],
-        gs16=gs[15],
-    )
-
-
-def object_granularity_measurement_value_fields() -> tuple[str, ...]:
-    """Return granularity spectrum fields from the row declaration."""
-    return tuple(
-        field.name
-        for field in dataclass_fields(ObjectGranularityMeasurement)
-        if field.name not in {"slice_index", "object_id"}
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectGranularityMeasurementRows(LongObjectMeasurementColumnarRows):
-    """Columnar object granularity rows over the emitted label-id domain."""
-
-    fields: ClassVar[tuple[FieldSpec, ...]] = FieldSpec.from_dataclass_type(
-        ObjectGranularityMeasurement
-    )
-    object_ids: np.ndarray
     gs_values: np.ndarray
     slice_index: int = 0
     _columns: Mapping[str, np.ndarray] = field(init=False, repr=False, compare=False)
+    _fields: tuple[FieldSpec, ...] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
-        object_ids = np.asarray(self.object_ids, dtype=np.int32)
-        gs_values = np.asarray(self.gs_values, dtype=np.float64)
-        if gs_values.ndim != 2:
-            raise ValueError("Object granularity values must be a 2-D array.")
-        if object_ids.size != gs_values.shape[0]:
-            raise ValueError(
-                "Object granularity rows require one spectrum per object ID."
+        values = np.asarray(self.gs_values, dtype=np.float64)
+        if values.ndim != 2:
+            raise ValueError("Granularity values must be a 2-D spectrum matrix.")
+        object.__setattr__(self, "gs_values", values)
+        identities = self.identity_columns()
+        columns = dict(identities)
+        for index in range(values.shape[1]):
+            descriptor = GranularitySpectrumDescriptor(index + 1)
+            name = GranularitySpectrumDescriptorDeclaration.measurement_row_field_name(
+                descriptor
             )
-        columns: dict[str, np.ndarray] = {
-            "slice_index": np.full(
-                object_ids.size, int(self.slice_index), dtype=np.int32
-            ),
-            "object_id": object_ids,
-        }
-        for column_index, field_name in enumerate(
-            object_granularity_measurement_value_fields()
-        ):
-            columns[field_name] = (
-                gs_values[:, column_index]
-                if column_index < gs_values.shape[1]
-                else np.zeros(object_ids.size, dtype=np.float64)
-            )
-        object.__setattr__(self, "object_ids", object_ids)
-        object.__setattr__(self, "gs_values", gs_values)
+            columns[name] = values[:, index]
         object.__setattr__(self, "_columns", MappingProxyType(columns))
+        object.__setattr__(
+            self,
+            "_fields",
+            tuple(
+                FieldSpec(name, int if name in identities else float)
+                for name in columns
+            ),
+        )
         self.validate_fields()
+
+    @abstractmethod
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        """Declare image or object row identities for this spectrum matrix."""
+
+    @property
+    def fields(self) -> tuple[FieldSpec, ...]:
+        return self._fields
 
     @property
     def columns(self) -> Mapping[str, np.ndarray]:
         return self._columns
 
-    def __len__(self) -> int:
-        return int(self.object_ids.size)
 
-    def __iter__(self):
-        for row_index in range(len(self)):
-            yield self[row_index]
+@dataclass(frozen=True, slots=True)
+class ImageGranularityMeasurementRows(GranularitySpectrumMeasurementRows):
+    """A single image's measured spectrum, including its exact sample count."""
 
-    def __getitem__(self, row_index: int) -> ObjectGranularityMeasurement:
-        return _object_granularity_measurement(
-            int(self.object_ids[row_index]),
-            self.gs_values[row_index],
-        )
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        if self.gs_values.shape[0] != 1:
+            raise ValueError("Image granularity rows require exactly one spectrum.")
+        return {"slice_index": np.asarray((self.slice_index,), dtype=np.int32)}
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectGranularityMeasurementRows(
+    GranularitySpectrumMeasurementRows,
+    ObjectMeasurementColumnarRows,
+):
+    """Actual object spectra over the emitted label-id domain."""
+
+    object_ids: np.ndarray
+
+    def identity_columns(self) -> Mapping[str, np.ndarray]:
+        object_ids = np.asarray(self.object_ids, dtype=np.int32)
+        if object_ids.ndim != 1 or object_ids.size != self.gs_values.shape[0]:
+            raise ValueError(
+                "Object granularity rows require one spectrum per object ID."
+            )
+        object.__setattr__(self, "object_ids", object_ids)
+        return {
+            "slice_index": np.full(
+                object_ids.size, int(self.slice_index), dtype=np.int32
+            ),
+            "object_id": object_ids,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -680,8 +584,10 @@ class GranularityBatchInvocation:
             return (
                 self.request.image,
                 ObjectGranularityMeasurementRows(
-                    np.empty(0, dtype=np.int32),
-                    np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
+                    object_ids=np.empty(0, dtype=np.int32),
+                    gs_values=np.empty(
+                        (0, self.settings.spectrum_length), dtype=np.float64
+                    ),
                 ),
             )
         gs_per_object = object_granularity_values(
@@ -694,7 +600,9 @@ class GranularityBatchInvocation:
         )
         return (
             self.request.image,
-            ObjectGranularityMeasurementRows(self.object_range, gs_per_object),
+            ObjectGranularityMeasurementRows(
+                object_ids=self.object_range, gs_values=gs_per_object
+            ),
         )
 
 
@@ -728,12 +636,11 @@ class GranularityImageSeriesRequest:
             int(self.element_radius),
             int(self.spectrum_length),
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            entry = GRANULARITY_IMAGE_SERIES_CACHE.get(key)
-            if entry is not None:
-                GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-                self.log_profile("granularity_series_cache_hit", 0.0)
-                return entry
+        cache = GranularityImageSeriesCache.process_cache()
+        entry = cache.cached_value(key)
+        if entry is not None:
+            self.log_profile("granularity_series_cache_hit", 0.0)
+            return entry
         phase_started_at = time.perf_counter()
         pixels, grid = background_corrected_pixels(
             image_array,
@@ -758,23 +665,23 @@ class GranularityImageSeriesRequest:
         series = GranularityImageSeries(
             pixels=pixels, grid=grid, reconstructions=reconstructions
         )
-        with GRANULARITY_IMAGE_SERIES_CACHE_LOCK:
-            GRANULARITY_IMAGE_SERIES_CACHE[key] = series
-            GRANULARITY_IMAGE_SERIES_CACHE.move_to_end(key)
-            while (
-                len(GRANULARITY_IMAGE_SERIES_CACHE)
-                > GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES
-            ):
-                GRANULARITY_IMAGE_SERIES_CACHE.popitem(last=False)
-        return series
+        return cache.store_value(key, series)
 
 
-GRANULARITY_IMAGE_SERIES_CACHE: dict[
-    tuple[str, tuple[int, ...], bytes, float, float, int, int],
-    GranularityImageSeries,
-] = OrderedDict()
-GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES = 16
-GRANULARITY_IMAGE_SERIES_CACHE_LOCK = Lock()
+@dataclass
+class GranularityImageSeriesCache(
+    SynchronizedBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+    RegisteredProcessLocalBoundedCache[
+        tuple[str, tuple[int, ...], bytes, float, float, int, int],
+        GranularityImageSeries,
+    ],
+):
+    """Process-local reconstructed spectra; calculation and keys stay numerical."""
+
+    max_entries: int = 16
 
 
 def granularity_array_content_key(
@@ -1638,7 +1545,7 @@ def object_granularity_values(
     label_pixels = GranularityLabelPixels.from_labels(labels, object_range)
     current_means = label_pixels.means_from_image(image)
     start_means = np.maximum(current_means, np.finfo(float).eps)
-    gs_per_object = np.zeros((int(object_range.size), 16))
+    gs_per_object = np.zeros((int(object_range.size), int(spectrum_length)))
     for gs_idx, rec in enumerate(series.reconstructions[: int(spectrum_length)]):
         prev_means = current_means.copy()
         if subsample_size < 1:
@@ -1661,7 +1568,7 @@ def measure_granularity(
     background_subsample_size: float = 0.25,
     element_radius: int = 10,
     spectrum_length: int = 16,
-) -> tuple[np.ndarray, DataclassMeasurementColumnarRows]:
+) -> tuple[np.ndarray, ImageGranularityMeasurementRows]:
     """Measure granularity spectrum of an image."""
     series = GranularityImageSeriesRequest(
         image=image,
@@ -1682,10 +1589,7 @@ def measure_granularity(
         gs_values.append(gs)
     return (
         image,
-        DataclassMeasurementColumnarRows(
-            (_granularity_measurement(gs_values),),
-            row_type=GranularityMeasurement,
-        ),
+        ImageGranularityMeasurementRows(gs_values=np.asarray(gs_values).reshape(1, -1)),
     )
 
 
@@ -1711,8 +1615,8 @@ def measure_granularity_objects(
         return (
             image,
             ObjectGranularityMeasurementRows(
-                np.empty(0, dtype=np.int32),
-                np.empty((0, GRANULARITY_SPECTRUM_LENGTH), dtype=np.float64),
+                object_ids=np.empty(0, dtype=np.int32),
+                gs_values=np.empty((0, spectrum_length), dtype=np.float64),
             ),
         )
     series = GranularityImageSeriesRequest(
@@ -1731,7 +1635,12 @@ def measure_granularity_objects(
         subsample_size=subsample_size,
         spectrum_length=spectrum_length,
     )
-    return (image, ObjectGranularityMeasurementRows(object_range, gs_per_object))
+    return (
+        image,
+        ObjectGranularityMeasurementRows(
+            object_ids=object_range, gs_values=gs_per_object
+        ),
+    )
 
 
 def measure_granularity_objects_batch(
@@ -1818,16 +1727,15 @@ def _prepare_granularity_backend() -> None:
 
 
 __all__ = [
-    "GRANULARITY_IMAGE_SERIES_CACHE",
-    "GRANULARITY_IMAGE_SERIES_CACHE_MAX_ENTRIES",
+    "GranularityImageSeriesCache",
     "GRANULARITY_SPECTRUM_LENGTH",
     "GranularitySamplingGrid",
     "GranularityImageSeries",
     "GranularityImageSeriesRequest",
-    "GranularityMeasurement",
+    "GranularitySpectrumMeasurementRows",
+    "ImageGranularityMeasurementRows",
     "GranularitySpectrumDescriptor",
     "GranularitySpectrumDescriptorDeclaration",
-    "ObjectGranularityMeasurement",
     "ObjectGranularityMeasurementRows",
     "OpenCVGranularityReconstructionBackendStrategy",
     "background_corrected_pixels",

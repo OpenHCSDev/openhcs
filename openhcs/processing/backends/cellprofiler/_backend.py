@@ -12,14 +12,9 @@ from typing import Annotated, ClassVar, TypeAlias, TypeVar, cast
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CompilerPreparedAutoRegisterFamily,
-)
+from openhcs.core.callable_contract import CallableContract
+from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
-from openhcs.processing.backends.cellprofiler._preparation import (
-    CellProfilerKernelCachePreparationMixin,
-)
 
 
 class CellProfilerBackendProvider(str, Enum):
@@ -280,9 +275,7 @@ class CellProfilerBackendAuthority:
         )
 
 
-class CellProfilerBackendStrategyMixin(
-    CellProfilerKernelCachePreparationMixin, CompilerPreparedAutoRegisterFamily
-):
+class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
     """Mixin for backend strategies keyed by OpenHCS memory type and provider.
 
     Concrete strategy families keep their own AutoRegisterMeta registry; this

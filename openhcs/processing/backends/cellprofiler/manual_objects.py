@@ -36,7 +36,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     InteractiveCellProfilerModule,
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
@@ -161,7 +161,7 @@ def identify_objects_manually(
 
 class IdentifyObjectsManuallyModule(
     MeasurementArtifactOutputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     InteractiveCellProfilerModule,
 ):
     module_name = "IdentifyObjectsManually"

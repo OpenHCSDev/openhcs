@@ -1,0 +1,195 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_source_binding_members_canonicalize_declared_physical_spellings _____
+
+    def test_source_binding_members_canonicalize_declared_physical_spellings():
+        virtual_paths = tuple(
+            f"A01_s001_w{channel}_z001_t001.tif" for channel in (1, 2)
+        )
+        paths = {path: f"/declared/plate/{path}" for path in virtual_paths}
+        bindings = tuple(
+            NamedSourceBinding(
+                alias=alias,
+                selector=SourceSelector(metadata=(MetadataSelector("channel", channel),)),
+                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+            )
+            for alias, channel in (("DAPI", "1"), ("FITC", "2"))
+        )
+        context = SourcePatternResolutionContext.from_sources(
+            parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths
+        )
+        matched_set = SourceBindingMatchedImageSet.from_plan(
+            bindings=bindings,
+            match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+            source_context=context,
+            identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
+                SourceBindingsConfig(bindings=bindings)
+            ),
+        )
+>       assert matched_set.members_for_binding(
+            bindings[1],
+            anchor_provenance=SourceImageProvenance(source_path=paths[virtual_paths[0]]),
+            source_universe=tuple(paths.values()),
+        ) == (paths[virtual_paths[1]],)
+
+tests/unit/test_source_bindings.py:1217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = SourceBindingMatchedImageSet(parser=<openhcs.microscopes.source_schema.SourceSchemaFilenameParser object at 0x7f02e877... identity_policy=SourceImageSetIdentityPolicy(plane_member_components=frozenset({<AllComponents.CHANNEL: 'channel'>})))
+binding = NamedSourceBinding(alias='FITC', selector=SourceSelector(components=(), metadata=(MetadataSelector(field='channel', va...plicit_source=None, load_as_monochrome=False, load_as_mask=False, source_channel_axis=None, source_channel_counts=None)
+
+    def members_for_binding(
+        self,
+        binding: NamedSourceBinding,
+        *,
+        anchor_provenance: SourceImageProvenance,
+        source_universe: Sequence[SourceCandidatePath],
+    ) -> tuple[SourceCandidatePath, ...]:
+        """Resolve one binding's exact members in the current source image sets."""
+    
+        if binding not in self.bindings:
+            raise ValueError(
+                f"Source binding {binding.alias!r} is not declared by this image set."
+            )
+        anchor_identities = anchor_provenance.represented_source_identities
+        if not anchor_identities:
+            raise ValueError(
+                "Exact source-binding membership requires addressable runtime "
+                "provenance."
+            )
+        candidates = SourceBindingCandidateMatcher.compatible_candidates(
+            source_universe,
+            bindings=(binding,),
+            source_context=self,
+        )
+        if not candidates:
+            return ()
+        declared_candidates = tuple(
+            dict.fromkeys((*self.source_paths_by_virtual_path, *source_universe))
+        )
+        anchors: list[SourceCandidatePath] = []
+        matches_by_identity = self.matching_candidates_for_source_identities(
+            anchor_identities,
+            declared_candidates,
+        )
+        for anchor_identity, matches in zip(anchor_identities, matches_by_identity):
+            if len(matches) != 1:
+>               raise ValueError(
+                    "Source binding requires one exact declared source-set position "
+                    f"for runtime provenance {anchor_identity.identity!r}, got "
+                    f"{matches!r}."
+                )
+E               ValueError: Source binding requires one exact declared source-set position for runtime provenance ('/declared/plate/A01_s001_w1_z001_t001.tif', None), got ('A01_s001_w1_z001_t001.tif', '/declared/plate/A01_s001_w1_z001_t001.tif').
+
+openhcs/core/source_binding_selection.py:1282: ValueError
+_ test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates _
+
+    def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates():
+        from napari.components import ViewerModel
+        from openhcs.core.config import NapariDimensionMode
+        from openhcs.runtime.napari_viewer_server import NapariLayerDisplayPipeline
+        from openhcs.runtime.viewer_component_system import ViewerObjectDisplayConfigInput
+    
+        server = _FakeNapariServer()
+        server.layer_route_state = NapariLayerRouteStateStore.empty()
+        server.viewer = ViewerModel()
+        pipeline = NapariLayerDisplayPipeline(server)
+        for origin, config in (
+            ("raw", NapariDisplayConfig()),
+            ("pipeline", NapariDisplayConfig(channel_mode=NapariDimensionMode.LAYER)),
+        ):
+            for channel in (1, 2):
+                route = f"{origin}-{channel}"
+                item = _layer_item(
+                    {"site": 1, "channel": channel, "z_index": 1,
+                     "timepoint": 1, "well": "A01"},
+                    data=np.full((4, 4), channel, dtype=np.uint16),
+                )
+                semantics = ViewerComponentAxisSemantics(
+                    entries=_component_value_domain({
+                        component: [value] for component, value in item.address.components.items()
+                    }).entries,
+                    layout=ViewerObjectDisplayConfigInput(config).layout(),
+                )
+                server.layer_route_state.set_title(route, route)
+>               work = pipeline.display_layer_batch(
+                    layer_key=route, items=[item],
+                    display_payload=NapariPendingLayerUpdate.from_semantics(
+                        timer=_FakeTimer(), data_type=StreamingDataType.IMAGE,
+                        semantics=semantics, display_config=config,
+                    ),
+                    component_names_metadata=ViewerComponentNameMetadata.empty(),
+                )
+
+tests/unit/test_napari_streaming_handlers.py:1991: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/runtime/napari_viewer_server.py:2497: in display_layer_batch
+    self.reconcile_mounted_axis_projections(
+openhcs/runtime/napari_viewer_server.py:2221: in reconcile_mounted_axis_projections
+    projection = self.display_axis_projection(
+openhcs/runtime/napari_viewer_server.py:2187: in display_axis_projection
+    return self.axis_projector.project(projection_request)
+openhcs/runtime/viewer_component_system.py:1527: in project
+    projected_axes = tuple(
+openhcs/runtime/viewer_component_system.py:1530: in <genexpr>
+    if (projected_axis := step.projected_axis()) is not None
+openhcs/runtime/viewer_component_system.py:1297: in projected_axis
+    route_values = self.route_domain_values()
+openhcs/runtime/viewer_component_system.py:1337: in route_domain_values
+    self.request.viewer_domain.require_contains(
+openhcs/runtime/viewer_component_system.py:1038: in require_contains
+    domain_values = self.required_values(component)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ViewerComponentValueDomainView(values={'site': [1], 'z_index': [1], 'timepoint': [1], 'well': ['A01']}, domain_name='viewer')
+component = 'channel'
+
+    def required_values(self, component: str) -> list[ComponentValue]:
+        if component not in self.values:
+>           raise ValueError(
+                f"{self.domain_name} component domain missing '{component}'."
+            )
+E           ValueError: viewer component domain missing 'channel'.
+
+openhcs/runtime/viewer_component_system.py:1020: ValueError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_source_bindings.py::test_source_binding_members_canonicalize_declared_physical_spellings
+FAILED tests/unit/test_napari_streaming_handlers.py::test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates
+2 failed, 2 warnings in 7.12s
+Command exited with non-zero status 1
+	Command being timed: "timeout 60s taskset -c 0 /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -m pytest --noconftest -o addopts= -p no:cacheprovider tests/unit/test_source_bindings.py::test_source_binding_members_canonicalize_declared_physical_spellings tests/unit/test_napari_streaming_handlers.py::test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates -q"
+	User time (seconds): 7.09
+	System time (seconds): 0.95
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 476516
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6
+	Minor (reclaiming a frame) page faults: 151246
+	Voluntary context switches: 233
+	Involuntary context switches: 265
+	Swaps: 0
+	File system inputs: 152
+	File system outputs: 2704
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+

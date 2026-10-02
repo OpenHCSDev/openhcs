@@ -1,0 +1,239 @@
+[
+  {
+    "case": "ExampleImagingFlowCytometryObjectsInGrid",
+    "seconds": 15.902480440679938,
+    "tables": [
+      {
+        "name": "IdentifyObjectsInGrid_2_measurements",
+        "rows": 5402,
+        "seconds": 0.9146803067997098
+      },
+      {
+        "name": "MeasureObjectIntensity_3_measurements",
+        "rows": 1800,
+        "seconds": 0.30835096491500735
+      },
+      {
+        "name": "FilterObjects_4_measurements",
+        "rows": 6434,
+        "seconds": 1.1209130799397826
+      },
+      {
+        "name": "IdentifyPrimaryObjects_9_measurements",
+        "rows": 3769,
+        "seconds": 0.7406154572963715
+      },
+      {
+        "name": "MeasureObjectSizeShape_10_measurements",
+        "rows": 1255,
+        "seconds": 0.24307905603200197
+      },
+      {
+        "name": "FilterObjects_11_measurements",
+        "rows": 6261,
+        "seconds": 1.2130544520914555
+      },
+      {
+        "name": "MeasureObjectSizeShape_12_measurements",
+        "rows": 1251,
+        "seconds": 0.23967546597123146
+      },
+      {
+        "name": "ExpandOrShrinkObjects_13_measurements",
+        "rows": 3476,
+        "seconds": 0.5791663671843708
+      },
+      {
+        "name": "RelateObjects_14_measurements",
+        "rows": 2409,
+        "seconds": 0.39704686822369695
+      },
+      {
+        "name": "FilterObjects_15_measurements",
+        "rows": 5853,
+        "seconds": 1.108292931690812
+      },
+      {
+        "name": "IdentifyObjectsInGrid_16_measurements",
+        "rows": 5402,
+        "seconds": 1.026462018955499
+      },
+      {
+        "name": "ExpandOrShrinkObjects_17_measurements",
+        "rows": 5402,
+        "seconds": 1.0228130859322846
+      },
+      {
+        "name": "MeasureObjectSizeShape_19_measurements",
+        "rows": 1800,
+        "seconds": 0.3441827157512307
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.1928273760713637
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.1900226939469576
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.19123948505148292
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.19496121490374207
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.19372371397912502
+      },
+      {
+        "name": "MeasureGranularity_20_measurements",
+        "rows": 1143,
+        "seconds": 0.19216730305925012
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 8,
+        "seconds": 0.0015078401193022728
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 7200,
+        "seconds": 1.2095914999954402
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 8,
+        "seconds": 0.0015176893211901188
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 7200,
+        "seconds": 1.2010664553381503
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 8,
+        "seconds": 0.0015164860524237156
+      },
+      {
+        "name": "MeasureTexture_21_measurements",
+        "rows": 7200,
+        "seconds": 1.2162291309796274
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 1800,
+        "seconds": 0.30934798205271363
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 1800,
+        "seconds": 0.31158181885257363
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 1800,
+        "seconds": 0.3125721327960491
+      },
+      {
+        "name": "MeasureObjectIntensityDistribution_23_measurements",
+        "rows": 1800,
+        "seconds": 0.30725437914952636
+      },
+      {
+        "name": "MeasureObjectIntensityDistribution_23_measurements",
+        "rows": 1800,
+        "seconds": 0.31161525193601847
+      },
+      {
+        "name": "MeasureObjectIntensityDistribution_23_measurements",
+        "rows": 1800,
+        "seconds": 0.3054052162915468
+      }
+    ]
+  },
+  {
+    "case": "cp_tutorial_3d_monolayer",
+    "seconds": 0.1054967725649476,
+    "tables": [
+      {
+        "name": "Threshold_4_measurements",
+        "rows": 1,
+        "seconds": 0.0002725329250097275
+      },
+      {
+        "name": "Watershed_6_measurements",
+        "rows": 67,
+        "seconds": 0.0035983570851385593
+      },
+      {
+        "name": "ResizeObjects_7_measurements",
+        "rows": 111,
+        "seconds": 0.012838078197091818
+      },
+      {
+        "name": "ErodeObjects_8_measurements",
+        "rows": 111,
+        "seconds": 0.013410675805062056
+      },
+      {
+        "name": "ResizeObjects_9_measurements",
+        "rows": 111,
+        "seconds": 0.013326278422027826
+      },
+      {
+        "name": "Threshold_11_measurements",
+        "rows": 1,
+        "seconds": 0.00014399131760001183
+      },
+      {
+        "name": "Threshold_18_measurements",
+        "rows": 1,
+        "seconds": 0.00013286061584949493
+      },
+      {
+        "name": "Watershed_21_measurements",
+        "rows": 61,
+        "seconds": 0.0032246927730739117
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 22,
+        "seconds": 0.0012074238620698452
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 20,
+        "seconds": 0.0010956129990518093
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 22,
+        "seconds": 0.0011865240521728992
+      },
+      {
+        "name": "MeasureObjectIntensity_22_measurements",
+        "rows": 20,
+        "seconds": 0.0010741427540779114
+      },
+      {
+        "name": "MeasureObjectSizeShape_23_measurements",
+        "rows": 22,
+        "seconds": 0.028056999668478966
+      },
+      {
+        "name": "MeasureObjectSizeShape_23_measurements",
+        "rows": 20,
+        "seconds": 0.02592860208824277
+      }
+    ]
+  }
+]

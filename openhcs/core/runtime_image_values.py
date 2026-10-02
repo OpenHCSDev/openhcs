@@ -137,6 +137,18 @@ class ImagePayloadMetadata(
             if member.metadata.get(ViewerWireField.IMAGE_METADATA, False)
         )
 
+    def singleton_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
+        """Select a declared leading axis only with one exact runtime source plane."""
+        plane_count = self.source_provenance.source_plane_count
+        if self.plane_axis is None or plane_count != 1:
+            return None
+        return RuntimePlaneAxisValueProjection.from_selected_plane(
+            axis=self.plane_axis,
+            axis_size=plane_count,
+            plane_index=0,
+            source_aliases=self.source_image_names,
+        )
+
     def to_viewer_image_metadata(self) -> ViewerWireMapping:
         return ViewerWirePayload.mapping(
             {

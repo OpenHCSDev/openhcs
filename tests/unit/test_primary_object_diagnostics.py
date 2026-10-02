@@ -129,6 +129,8 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
         assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
         assert not spec.participates_in_main_flow
         assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert spec.materialization.participates_in_persistent_materialization()
+        assert not spec.materialization.participates_in_runtime_export_observation()
         assert spec.materialization.outputs == (
             ImageFileOptions(
                 filename_suffix=".tif",

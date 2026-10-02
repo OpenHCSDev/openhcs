@@ -13,13 +13,19 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
+from functools import singledispatch
 from pathlib import Path
 from typing import ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping, is_enum_type, optional_member_type
+from python_introspect import (
+    dataclass_from_mapping,
+    is_enum_type,
+    optional_member_type,
+    signature_analysis_target,
+)
 from zmqruntime.config import TransportMode
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -46,6 +52,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
     UiSelectedPlateWorkflowResult,
+    UiStateSurfaceDocument,
     UiStateSurfaceRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
@@ -75,6 +82,7 @@ MCP_TOOL_TIMEOUT_MARGIN_SECONDS = 5.0
 DEFAULT_WORKFLOW_POLL_INTERVAL_SECONDS = 0.5
 DEFAULT_WORKFLOW_POLL_TIMEOUT_SECONDS = 30.0
 AliasValueT = TypeVar("AliasValueT")
+DeclaredPayloadT = TypeVar("DeclaredPayloadT")
 MCP_DEV_TRANSPORT_FAILURE_HINT = (
     "The fresh OpenHCS MCP subprocess did not complete the requested stdio "
     "exchange. The dev client captures a bounded server stderr tail on "
@@ -390,12 +398,86 @@ class McpDevTransportFailure:
 
 
 @dataclass(frozen=True, slots=True)
+class McpDevPayloadFailure:
+    """Rejected response contract, retaining the complete external receipt."""
+
+    receipt: JsonValue
+    errors: tuple[AgentError, ...]
+
+
+@to_jsonable.register(McpDevPayloadFailure)
+def _jsonable_payload_failure(value: McpDevPayloadFailure) -> JsonValue:
+    return value.receipt
+
+
+@dataclass(frozen=True, slots=True)
 class McpDevToolResult:
     """JSON-facing result for one MCP tool call."""
 
     tool: str
     mcp_error: bool
-    payloads: tuple[JsonValue, ...]
+    payloads: tuple[object, ...]
+
+    def decoded_for_rendering(self) -> "McpDevToolResult":
+        """Decode declared producer contracts once, independent of presentation."""
+        try:
+            capability = get_agent_capability(self.tool)
+        except KeyError:
+            return self
+        contracts = capability.output_contract_types
+        if not contracts:
+            return self
+        return replace(
+            self,
+            payloads=tuple(
+                self._decode_payload(payload, contracts) for payload in self.payloads
+            ),
+        )
+
+    @staticmethod
+    def _decode_payload(payload, contracts):
+        if isinstance(payload, McpDevPayloadFailure):
+            return payload
+        rejections: list[AgentError] = []
+        for contract in contracts:
+            try:
+                if isinstance(payload, contract):
+                    return payload
+                return dataclass_from_mapping(contract, payload)
+            except (TypeError, ValueError) as error:
+                rejections.append(
+                    AgentError.from_exception("mcp_payload_invalid", error)
+                )
+        return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
+
+    def first_decoded_payload(self):
+        """A missing or rejected payload is not a successful empty record."""
+        if not self.payloads:
+            return None
+        payload = self.payloads[0]
+        return None if isinstance(payload, McpDevPayloadFailure) else payload
+
+    def decoded_payload_as(
+        self, output_contract: type[DeclaredPayloadT]
+    ) -> DeclaredPayloadT | None:
+        """Require the requested nominal member, not an external raw receipt."""
+        payload = self.decoded_for_rendering().first_decoded_payload()
+        return payload if isinstance(payload, output_contract) else None
+
+    def diagnostic_errors(self) -> tuple[AgentError, ...]:
+        errors = tuple(
+            error for payload in self.payloads for error in _agent_errors(payload)
+        )
+        if self.mcp_error and not errors:
+            return (AgentError(code="mcp_tool_error", message=f"{self.tool} failed."),)
+        if not self.payloads and not errors:
+            return (
+                AgentError(
+                    code="mcp_payload_missing",
+                    message=f"{self.tool} returned no payload.",
+                ),
+            )
+        return errors
 
     @classmethod
     def from_payload(
@@ -407,20 +489,16 @@ class McpDevToolResult:
             tool=tool_name,
             mcp_error=result.get("isError") is True,
             payloads=_content_payloads(result),
-        )
+        ).decoded_for_rendering()
 
     def has_errors(self) -> bool:
         """Return whether the tool or any structured agent payload failed."""
-        return self.mcp_error or any(
-            _contains_agent_error(payload) for payload in self.payloads
-        )
+        return bool(self.diagnostic_errors())
 
     def agent_error_codes(self) -> tuple[str, ...]:
         """Project structured agent error codes without interpreting their domain."""
 
-        return tuple(
-            code for payload in self.payloads for code in _agent_error_codes(payload)
-        )
+        return tuple(error.code for error in self.diagnostic_errors())
 
     def has_only_agent_error_code(self, code: str) -> bool:
         """Return whether every structured failure carries one declared code."""
@@ -566,6 +644,7 @@ class WorkflowStatePollPolicy:
 class WorkflowPollSummary:
     """Structured selected-workflow polling summary for agent recovery logic."""
 
+    tool_name: ClassVar[str] = "mcp_dev_selected_workflow_poll"
     workflow: str | None
     status: WorkflowPollSummaryStatus
     poll_requested: bool
@@ -599,6 +678,12 @@ class WorkflowPollSummary:
         return payload
 
 
+@to_jsonable.register(WorkflowPollSummary)
+def _jsonable_workflow_poll_summary(value: WorkflowPollSummary) -> JsonValue:
+    """The owning summary preserves its existing external CLI projection."""
+    return value.as_payload()
+
+
 @dataclass(frozen=True, slots=True)
 class WorkflowPollBaseline:
     """State-surface identity captured before dispatching a UI workflow."""
@@ -616,7 +701,7 @@ class WorkflowPollBaseline:
             return None
         return cls(
             revision_token=optional_str(
-                first_payload_mapping(result).get("current_revision_token")
+                state_surface_document(result).current_revision_token
             )
             or optional_str(state_payload.get("current_revision_token")),
             object_state_token=optional_int(state_payload.get("object_state_token")),
@@ -627,7 +712,7 @@ class WorkflowPollBaseline:
         if not state_payload:
             return False
         revision_token = optional_str(
-            first_payload_mapping(result).get("current_revision_token")
+            state_surface_document(result).current_revision_token
         ) or optional_str(state_payload.get("current_revision_token"))
         object_state_token = optional_int(state_payload.get("object_state_token"))
         return (
@@ -644,6 +729,9 @@ class McpDevResponse(ABC):
 
     server: McpDevServerIdentity
     errors: tuple[McpDevTransportFailure, ...] = ()
+
+    def has_errors(self) -> bool:
+        return bool(self.errors)
 
     @classmethod
     def from_transport_failure(
@@ -671,6 +759,39 @@ class McpDevToolBatchResponse(McpDevResponse):
     """JSON-facing payload for one or more MCP tool calls."""
 
     results: tuple[McpDevToolResult, ...] = ()
+
+    def has_errors(self) -> bool:
+        return super(McpDevToolBatchResponse, self).has_errors() or any(
+            result.has_errors() for result in self.results
+        )
+
+    @classmethod
+    def for_rendering(
+        cls,
+        response: "McpDevToolBatchResponse | JsonObject",
+    ) -> "McpDevToolBatchResponse":
+        """Decode the external framing and selected DTOs once at view ingress."""
+        framed = (
+            response
+            if isinstance(response, cls)
+            else dataclass_from_mapping(cls, response)
+        )
+        return replace(
+            framed,
+            results=tuple(result.decoded_for_rendering() for result in framed.results),
+        )
+
+    def payload_for(self, capability: AgentCapabilitySpec):
+        result = next(
+            (result for result in self.results if result.tool == capability.name), None
+        )
+        return None if result is None else result.first_decoded_payload()
+
+    def diagnostic_errors(self) -> tuple[AgentError | McpDevTransportFailure, ...]:
+        return (
+            *self.errors,
+            *(error for result in self.results for error in result.diagnostic_errors()),
+        )
 
     @classmethod
     def from_results(
@@ -855,20 +976,24 @@ def request_factory_parameter(
 def request_factory_argument_type(
     request_factory,
     field_name: str,
-) -> type | None:
-    """Return an argparse scalar constructor from the declared DTO type."""
+) -> Callable[[str], object] | None:
+    """Return an argparse text decoder from the declared DTO annotation."""
 
-    annotation = get_type_hints(request_factory)[field_name]
+    annotation = get_type_hints(
+        inspect.unwrap(signature_analysis_target(request_factory))
+    )[field_name]
     annotation = optional_member_type(annotation) or annotation
     if annotation in {str, int, float} or is_enum_type(annotation):
         return cast(type, annotation)
+    if is_dataclass(annotation):
+        return parse_json_object
     return None
 
 
 def request_field_argument_type(
     request_type: type,
     field_name: str,
-) -> type | None:
+) -> Callable[[str], object] | None:
     """Return a primitive argparse type from a DTO from_fields annotation."""
     return request_factory_argument_type(request_type.from_fields, field_name)
 
@@ -1039,37 +1164,61 @@ def require_json_object_payload(value: JsonValue) -> JsonObject:
     return cast(JsonObject, value)
 
 
-def _contains_agent_error(value: JsonValue) -> bool:
-    if isinstance(value, Mapping):
-        errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
-        if errors:
-            return True
-        return any(_contains_agent_error(child) for child in value.values())
-    if isinstance(value, list):
-        return any(_contains_agent_error(child) for child in value)
-    return False
-
-
-def _agent_error_codes(value: JsonValue) -> tuple[str, ...]:
-    """Recursively project declared error codes from one JSON-facing payload."""
-
-    if isinstance(value, Mapping):
-        projected: list[str] = []
-        errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
-        if errors is not None:
-            for error in errors:
-                if not isinstance(error, Mapping):
-                    continue
-                code = AgentError.code_from_serialized_mapping(error)
-                if code is not None:
-                    projected.append(code)
-        for child in value.values():
-            if child is not errors:
-                projected.extend(_agent_error_codes(child))
-        return tuple(projected)
-    if isinstance(value, list):
-        return tuple(code for child in value for code in _agent_error_codes(child))
+@singledispatch
+def _agent_errors(value: object) -> tuple[AgentError, ...]:
+    """One diagnostic descent mechanism over actual declared and JSON values."""
+    if is_dataclass(value) and not isinstance(value, type):
+        return tuple(
+            error
+            for declaration in fields(value)
+            for error in _agent_errors(getattr(value, declaration.name))
+        )
     return ()
+
+
+@_agent_errors.register(AgentError)
+def _declared_agent_error(value: AgentError) -> tuple[AgentError, ...]:
+    return (value,)
+
+
+@_agent_errors.register(McpDevPayloadFailure)
+def _failed_payload_errors(value: McpDevPayloadFailure) -> tuple[AgentError, ...]:
+    return value.errors
+
+
+@_agent_errors.register(Mapping)
+def _boundary_agent_errors(value: Mapping) -> tuple[AgentError, ...]:
+    """JSON extension bags and unmigrated wire payloads remain real mappings."""
+    errors = AgentResultEnvelope.error_items_from_serialized_mapping(value)
+    projected: list[AgentError] = []
+    for error in errors or ():
+        try:
+            projected.append(dataclass_from_mapping(AgentError, error))
+        except (TypeError, ValueError) as exception:
+            projected.append(
+                AgentError.from_exception("mcp_diagnostic_invalid", exception)
+            )
+    projected.extend(
+        error
+        for child in value.values()
+        if child is not errors
+        for error in _agent_errors(child)
+    )
+    return tuple(projected)
+
+
+@_agent_errors.register(list)
+@_agent_errors.register(tuple)
+def _sequence_agent_errors(value) -> tuple[AgentError, ...]:
+    return tuple(error for child in value for error in _agent_errors(child))
+
+
+def _contains_agent_error(value: object) -> bool:
+    return bool(_agent_errors(value))
+
+
+def _agent_error_codes(value: object) -> tuple[str, ...]:
+    return tuple(error.code for error in _agent_errors(value))
 
 
 def _command_failed(payload: JsonObject) -> bool:
@@ -2239,15 +2388,8 @@ def workflow_result_operation_id(result: McpDevToolResult) -> str | None:
 def workflow_result_payload(
     result: McpDevToolResult,
 ) -> UiSelectedPlateWorkflowResult | None:
-    """Decode selected-workflow evidence through its declared result schema."""
-
-    try:
-        return dataclass_from_mapping(
-            UiSelectedPlateWorkflowResult,
-            first_payload_mapping(result),
-        )
-    except (TypeError, ValueError):
-        return None
+    """Consume the same nominal result already descended at wire ingress."""
+    return result.decoded_payload_as(UiSelectedPlateWorkflowResult)
 
 
 def workflow_poll_skip_reason(result: McpDevToolResult) -> WorkflowPollSkipReason:
@@ -2264,15 +2406,8 @@ def workflow_result_target_scope_ids(result: McpDevToolResult) -> tuple[str, ...
 def ui_bridge_operation_result(
     result: McpDevToolResult,
 ) -> UiBridgeOperationRef | None:
-    """Decode a bridge-operation receipt through its declared result schema."""
-
-    try:
-        return dataclass_from_mapping(
-            UiBridgeOperationRef,
-            first_payload_mapping(result),
-        )
-    except (TypeError, ValueError):
-        return None
+    """Consume the bridge-operation contract already decoded at ingress."""
+    return result.decoded_payload_as(UiBridgeOperationRef)
 
 
 def workflow_operation_receipt_skip_reason(
@@ -2294,27 +2429,14 @@ def workflow_operation_receipt_skip_reason(
     )
 
 
-def first_payload_mapping(result: McpDevToolResult) -> Mapping[str, JsonValue]:
-    if not result.payloads:
-        return {}
-    payload = result.payloads[0]
-    if not isinstance(payload, Mapping):
-        return {}
-    return payload
-
-
-def nested_mapping(
-    payload: Mapping[str, JsonValue],
-    key: str,
-) -> Mapping[str, JsonValue]:
-    value = payload.get(key)
-    if not isinstance(value, Mapping):
-        return {}
-    return value
+def state_surface_document(result: McpDevToolResult) -> UiStateSurfaceDocument | None:
+    """Retain the declared envelope; only its dynamic document body is JSON."""
+    return result.decoded_payload_as(UiStateSurfaceDocument)
 
 
 def state_surface_payload(result: McpDevToolResult) -> Mapping[str, JsonValue]:
-    return nested_mapping(first_payload_mapping(result), "payload")
+    document = state_surface_document(result)
+    return {} if document is None else document.payload
 
 
 def state_surface_rows(result: McpDevToolResult) -> tuple[WorkflowPollRowState, ...]:
@@ -2444,9 +2566,9 @@ def workflow_poll_summary_result(
         transient_poll_error_count=transient_poll_error_count,
     )
     return McpDevToolResult(
-        tool="mcp_dev_selected_workflow_poll",
+        tool=WorkflowPollSummary.tool_name,
         mcp_error=summary.mcp_error,
-        payloads=(summary.as_payload(),),
+        payloads=(summary,),
     )
 
 

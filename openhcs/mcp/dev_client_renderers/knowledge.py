@@ -26,11 +26,11 @@ from openhcs.agent.dto.knowledge import (
 from openhcs.mcp.dev_client_rendering import (
     AuthoringContextRenderOptions,
     CatalogRenderOptions,
+    CodeDocumentRenderOptions,
     McpDevOutputRenderer,
     McpDevPayloadProjection,
 )
 from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
-from openhcs.mcp.dev_client_renderers.ui_bridge import CodeDocumentRenderer
 from openhcs.mcp.dev_client_renderers.viewer import (
     RuntimeServerRenderer,
     ViewerValidationRenderer,
@@ -286,7 +286,7 @@ class ArchitectureCatalogRenderer(McpDevOutputRenderer):
         bounded_limit = max(limit, 0)
         visible_topics = topics[:bounded_limit]
         lines = [
-            "Architecture topics: " f"matched={len(topics)} shown={len(visible_topics)}"
+            f"Architecture topics: matched={len(topics)} shown={len(visible_topics)}"
         ]
         if contains:
             lines.append(f"Filter: contains={contains}")
@@ -660,6 +660,8 @@ class AuthoringContextRenderer(McpDevOutputRenderer):
         if isinstance(content, str):
             lines.append("Content:")
             lines.append(
-                CodeDocumentRenderer._source_text(content, max_source_chars=max_chars)
+                CodeDocumentRenderOptions(max_source_chars=max_chars).source_text(
+                    content
+                )
             )
         return "\n".join(lines)

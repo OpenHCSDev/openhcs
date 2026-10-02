@@ -8,20 +8,20 @@ constructor descent, attribute contracts and missing-descent certificates.
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import subprocess
 import sys
 import tarfile
 from abc import abstractmethod
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from nominal_refactor_advisor.analysis import (
     AnalysisPathScope,
     analyze_compact_roots_with_cache,
+    release_module_analysis_memory,
 )
 from nominal_refactor_advisor.deadline import ScanDeadline, enforce_scan_deadline
 from nominal_refactor_advisor.detectors import (
@@ -81,7 +81,9 @@ class SourceRevision:
         )
         return tuple(path for path in paths if path.encode() in members)
 
-    def materialize(self, destination: Path, roots: tuple[str, ...] = ()) -> None:
+    def materialize(
+        self, destination: Path, roots: tuple[str, ...] = ()
+    ) -> tuple[Path, ...]:
         """Read committed Python only, recursively at recorded gitlink objects."""
         self.require_repository()
         if roots:
@@ -91,16 +93,43 @@ class SourceRevision:
                 if git(self.repo, "ls-tree", self.revision, "--", root)
             )
             if not roots:
-                return
-        with tarfile.open(
-            fileobj=io.BytesIO(git(self.repo, "archive", self.revision, *roots))
-        ) as archive:
-            for member in archive:
-                if not member.name.endswith(".py"):
-                    continue
-                if not member.isfile():
-                    raise ValueError(f"Non-regular Python source: {member.name}")
-                archive.extract(member, destination, filter="data")
+                return ()
+        members: list[Path] = []
+        # Archive output can include large non-source artifacts. Stream it rather
+        # than retaining an entire repository archive alongside NRA's graph.
+        with subprocess.Popen(
+            ("git", "-C", str(self.repo), "archive", self.revision, *roots),
+            stdout=subprocess.PIPE,
+        ) as process:
+            try:
+                with tarfile.open(fileobj=process.stdout, mode="r|") as archive:
+                    for member in archive:
+                        if not member.name.endswith(".py"):
+                            continue
+                        if not member.isfile():
+                            raise ValueError(
+                                f"Non-regular Python source: {member.name}"
+                            )
+                        filtered = tarfile.data_filter(member, str(destination))
+                        path = destination / filtered.name
+                        source = archive.extractfile(member)
+                        if source is None:
+                            raise ValueError(f"Missing Python source: {member.name}")
+                        with source:
+                            content = source.read()
+                        # Keep identical source's filesystem identity as well as
+                        # its address. NRA still authenticates every cache lookup.
+                        if not path.is_file() or path.read_bytes() != content:
+                            path.parent.mkdir(parents=True, exist_ok=True)
+                            path.write_bytes(content)
+                        members.append(path)
+                returncode = process.wait()
+                if returncode:
+                    raise subprocess.CalledProcessError(returncode, process.args)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                process.wait()
         for entry in git(self.repo, "ls-tree", "-r", "-z", self.revision).split(b"\0"):
             if not entry:
                 continue
@@ -110,7 +139,24 @@ class SourceRevision:
                 continue
             path = path_bytes.decode()
             # All recorded dependency sources are context, not a companion roster.
-            SourceRevision(self.repo / path, object_id).materialize(destination / path)
+            child = replace(self, repo=self.repo / path, revision=object_id)
+            members.extend(child.materialize(destination / path))
+        return tuple(members)
+
+
+@dataclass(frozen=True)
+class StagedSourceRevision(SourceRevision):
+    """Replace a disposable revision at one address, with exact Git membership."""
+
+    def materialize(
+        self, destination: Path, roots: tuple[str, ...] = ()
+    ) -> tuple[Path, ...]:
+        members = super().materialize(destination, roots)
+        retained = set(members)
+        for path in destination.rglob("*.py"):
+            if path not in retained:
+                path.unlink()
+        return members
 
 
 @dataclass(frozen=True, order=True)
@@ -253,15 +299,20 @@ def compare(
     scratch_root.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(prefix="r1-", dir=scratch_root) as temporary:
         work = Path(temporary)
+        snapshot = work / "source"
+        snapshot.mkdir()
         results = []
         with enforce_scan_deadline(ScanDeadline.start(budget_seconds)):
             for revision in (base, head):
-                snapshot = work / revision
-                snapshot.mkdir()
-                SourceRevision(repo, revision).materialize(snapshot, roots)
-                results.append(
-                    scan_counts(snapshot, roots, changed, cache_root=work / "nra")
-                )
+                StagedSourceRevision(repo, revision).materialize(snapshot, roots)
+                try:
+                    results.append(
+                        scan_counts(snapshot, roots, changed, cache_root=work / "nra")
+                    )
+                finally:
+                    # Only policy counts cross revisions. Release scan-bound
+                    # caches and graph cycles through the original NRA owner.
+                    release_module_analysis_memory()
         return R1Comparison(base, head, changed, *results)
 
 

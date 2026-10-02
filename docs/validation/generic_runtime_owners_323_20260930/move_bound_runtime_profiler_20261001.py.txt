@@ -1,0 +1,94 @@
+import json
+from pathlib import Path
+from nominal_refactor_advisor.codemod import (
+    CodemodPlanDocument, CodemodPlanSequence, CodemodSourceSnapshot,
+    MoveSymbolsToModuleOperation, PatchTargetOperation, RefactorRecipe,
+    RenameTopLevelDeclarationAuthorityOperation, SourceRewriteTarget,
+    SourceTextReplacement,
+)
+root=Path('/home/ts/code/projects/openhcs-compile-perf')
+runs=root.parent/'openhcs-benchmark-runs'
+source=str(root/'openhcs/processing/backends/cellprofiler/granularity.py')
+destination=str(root/'openhcs/core/runtime_profile.py')
+sources={str(path):path.read_text() for path in (root/'openhcs').rglob('*.py')}
+sources[str(root/'setup.py')]=(root/'setup.py').read_text()
+snapshot=CodemodSourceSnapshot.from_source_mapping(sources,analysis_roots=(root,))
+obsolete='''def profile_enabled() -> bool:
+    """Return whether per-function granularity runtime profiling is enabled."""
+    return os.environ.get(_PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
+
+
+'''
+initial=sources[source]
+assert initial.count(obsolete)==1
+prepared=initial.replace(obsolete,'').replace('import os\n','').replace('_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"\n','').replace('return profile_enabled()','return RuntimeProfileLogger.enabled()')
+# Imported direct declarations need an explicit export boundary for NRA's rename guard.
+# This is an unexecuted intermediate declaration; closure removes it from the provider.
+prepared=prepared.replace('__all__ = [','__all__ = [\n    "CellProfilerRuntimeProfiler",',1)
+direct_import='from openhcs.processing.backends.cellprofiler.granularity import (\n    CellProfilerRuntimeProfiler,\n)'
+consumers={path for path,text in sources.items() if direct_import in text}
+assert len(consumers)==8,consumers
+prepared_sources={source:prepared}
+for path in consumers:
+    text=sources[path]
+    assert text.count(direct_import)==1
+    prepared_sources[path]=text.replace(direct_import,'from openhcs.core.runtime_profile import RuntimeProfiler').replace('CellProfilerRuntimeProfiler','RuntimeProfiler')
+boundary=CodemodPlanDocument(recipes=(RefactorRecipe(recipe_id='bound-profiler-export-boundary',reason='Migrate exact imported consumers before a guarded declaration move; dynamic numerical public_names exports stay unchanged.',operations=tuple(PatchTargetOperation(target=SourceRewriteTarget(file_path=path),replacements=(SourceTextReplacement(old_source=sources[path],new_source=text),),rationale='Authored consumer migration and gating stage; OPEN dynamic exports are not declared proved by the rename guard.') for path,text in prepared_sources.items())),))
+operations=(
+    RenameTopLevelDeclarationAuthorityOperation(target=SourceRewriteTarget(file_path=source,qualname='CellProfilerRuntimeProfiler'),new_name='RuntimeProfiler',rationale='The bound logger has no CellProfiler-specific semantics.'),
+    MoveSymbolsToModuleOperation(target=SourceRewriteTarget(file_path=source),symbol_qualnames=('RuntimeProfiler',),destination_path=destination,rationale='The existing core runtime event sink determines environment gating and output effects.'),
+)
+documents=(boundary,*tuple(CodemodPlanDocument(recipes=(RefactorRecipe(recipe_id=f'bound-runtime-profiler-owner-{index}',reason='Move the existing generic profiler declaration and close every original consumer.',operations=(operation,)),)) for index,operation in enumerate(operations)))
+projected=CodemodPlanSequence(documents=documents).simulate(snapshot)
+assert projected.is_clean,projected.simulation_payload()
+after=projected.final_snapshot.sources_by_file_path
+(runs/'perf-bound-runtime-profiler-initial-projection-20261001.json').write_text(json.dumps({path:after[path] for path in (source,destination)},indent=2)+'\n')
+changes={}
+for path in (source,destination,*sorted(consumers)):
+    text=after[path]
+    if 'RuntimeProfiler' in text or 'CellProfilerRuntimeProfiler' in text:
+        updated=text.replace('from openhcs.processing.backends.cellprofiler.granularity import (\n    RuntimeProfiler,\n)', 'from openhcs.core.runtime_profile import RuntimeProfiler')
+        updated=updated.replace('CellProfilerRuntimeProfiler','RuntimeProfiler')
+        if path==source:
+            updated=updated.replace('import os\n','')
+            updated=updated.replace('_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"\n','')
+            assert obsolete not in updated
+            updated=updated.replace('    "RuntimeProfiler",\n','')
+            # Move leaves a temporary qualified relative import; derive the new source import directly.
+            lines=updated.splitlines(keepends=True)
+            lines=[line for line in lines if not (line.startswith('from ') and 'core.runtime_profile import RuntimeProfiler' in line)]
+            updated=''.join(lines)
+            if 'from openhcs.core.runtime_profile import RuntimeProfileLogger' in updated:
+                updated=updated.replace('from openhcs.core.runtime_profile import RuntimeProfileLogger','from openhcs.core.runtime_profile import RuntimeProfiler')
+            else:
+                updated=updated.replace('from __future__ import annotations','from __future__ import annotations\n\nfrom openhcs.core.runtime_profile import RuntimeProfiler',1)
+        if path==destination:
+            updated=updated.replace('return profile_enabled()','return RuntimeProfileLogger.enabled()')
+            updated=updated.replace('Shared CellProfiler runtime-profile emitter bound to a module logger.','Runtime-profile emitter bound to a module logger.')
+        if updated!=text:changes[path]=updated
+
+# Consumers may originally import other granularity symbols in the same block.
+for path,text in list(changes.items()):
+    if path in (source,destination):continue
+    if 'RuntimeProfiler,' in text and 'from openhcs.processing.backends.cellprofiler.granularity import (' in text:
+        block=text.split('from openhcs.processing.backends.cellprofiler.granularity import (',1)[1].split(')',1)[0]
+        if 'RuntimeProfiler,' in block:
+            text=text.replace('    RuntimeProfiler,\n','',1)
+            text=text.replace('from __future__ import annotations','from __future__ import annotations\n\nfrom openhcs.core.runtime_profile import RuntimeProfiler',1)
+    changes[path]=text
+
+closure=CodemodPlanDocument(recipes=(RefactorRecipe(recipe_id='bound-runtime-profiler-consumer-closure',reason='Remove the legacy import and duplicated environment gate; all consumers use the core bound owner.',operations=tuple(PatchTargetOperation(target=SourceRewriteTarget(file_path=path),replacements=(SourceTextReplacement(old_source=after[path],new_source=text),),rationale='Authored closure requires executed environment/output checks; syntax simulation alone does not prove effects.') for path,text in changes.items())),))
+complete=CodemodPlanSequence(documents=(*documents,closure)).simulate(snapshot)
+assert complete.is_clean,complete.simulation_payload()
+for path in (source,destination,*sorted(consumers)):
+    text=complete.final_snapshot.sources_by_file_path[path]
+    assert 'CellProfilerRuntimeProfiler' not in text,path
+    if path!=destination:
+        assert 'from openhcs.core.runtime_profile import RuntimeProfiler' in text,path
+# Same-spelled CP module-scoped profiler is a different authority, not this bound logger.
+for relative in ('openhcs/interop/cellprofiler/runtime/module_execution.py','openhcs/interop/cellprofiler/runtime/measurement_execution_support.py'):
+    path=str(root/relative)
+    assert complete.final_snapshot.sources_by_file_path[path]==sources[path]
+(runs/'perf-bound-runtime-profiler-simulation-20261001.json').write_text(json.dumps(complete.simulation_payload(),indent=2)+'\n')
+(runs/'perf-bound-runtime-profiler-transaction-20261001.diff').write_text(complete.unified_diff(sources))
+print(complete.apply())

@@ -15,6 +15,15 @@ histograms and the threshold's assumptions; use the preprocessing guide when
 the foreground failure is illumination, noise or contrast. Record connectivity:
 4/8 in 2-D and 6/26 in 3-D produce different connected objects.
 
+For all-foreground or empty support, compare the reported threshold with values
+from the **current processing alias**, not only the physical source or viewer
+window. Check [current processing intensity units](measurement-interpretation.md#current-processing-intensity-units)
+before changing seeds, watershed or threshold bounds. A threshold clipped to a
+normalised contract bound can be incompatible with unscaled float pixels;
+raising a final bound need not undo an earlier clamp. Establish the units and
+earliest failed operation first, preserving raw and any explicitly converted
+alias rather than retuning downstream stages to compensate.
+
 ## Touching round objects and watershed
 
 A distance-map/marker-controlled watershed is a candidate for separating
@@ -45,6 +54,11 @@ can masquerade as a successful cell segmentation: compare each secondary area
 with its own primary area and inspect zero-growth or implausibly large objects
 on raw body signal. At a crowded boundary, check whether two seeds grow into
 distinct supported bodies or divide one diffuse field arbitrarily.
+
+DAPI candidate count does not establish cell-body count. Require independent
+body-channel boundary support before admitting or splitting a second cell;
+another overlapping nuclear candidate alone is insufficient. Do not assume a
+universal one-nucleus-to-one-cell relation.
 
 Change the failed support/growth parameter rather than compensating with more
 primary seeds. If the stain shows only a subcellular structure, record that a

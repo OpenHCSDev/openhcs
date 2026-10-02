@@ -167,7 +167,11 @@ def test_cache_batch_deduplicates_modules_before_discovery(
         "openhcs.core.processing_preparation.multiprocessing.get_all_start_methods",
         lambda: ["fork"],
     )
-    PreparationCacheBatch.from_callables((process, process)).populate_child_caches()
+    PreparationCacheBatch.from_callables((process, process)).populate_child_caches(max_workers=2)
+    # Serial admission does not discover cache families eagerly.
+    if len(os.sched_getaffinity(0)) < 2:
+        assert not calls
+        return
     assert calls == [declared_module.__name__]
 
 
@@ -192,7 +196,8 @@ def test_new_operation_inherits_readiness_without_a_scheduler_roster(declared_mo
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
     declared_module, tmp_path
@@ -200,7 +205,7 @@ def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
     operations = tuple(
         AdditionalChildCachePreparation(name, tmp_path) for name in ("first", "second")
     )
-    PreparationCacheBatch(operations).populate_child_caches()
+    PreparationCacheBatch(operations).populate_child_caches(max_workers=2)
     assert all(
         int((tmp_path / operation.name).read_text()) != os.getpid()
         for operation in operations
@@ -213,7 +218,7 @@ def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
     )
 
 
-def test_registry_preparation_derives_obligations_even_with_cached_metadata(
+def test_registry_metadata_does_not_execute_kernels_even_with_cached_metadata(
     monkeypatch, declared_module
 ):
     from types import SimpleNamespace
@@ -242,23 +247,24 @@ def test_registry_preparation_derives_obligations_even_with_cached_metadata(
 
     assert RegistryService.prepare_in_current_process() is metadata
     assert RegistryService.prepare_in_current_process() is metadata
-    assert events == [(declared_module.__name__,), "hook", (declared_module.__name__,)]
+    assert events == []
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
-def test_cancelling_registry_child_reaps_its_live_cache_workers(tmp_path):
+def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path):
     """SIGTERM must unwind the owned worker scope, without leaving descendants."""
 
     script = textwrap.dedent("""
         import os
         import sys
         import time
+        import signal
+        from concurrent.futures import CancelledError
         from pathlib import Path
         from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
-        from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-        from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 
         directory = Path(sys.argv[1])
         class SlowPreparation(PreparationOperation):
@@ -271,8 +277,10 @@ def test_cancelling_registry_child_reaps_its_live_cache_workers(tmp_path):
                 time.sleep(60)
 
         batch = PreparationCacheBatch(tuple(SlowPreparation(name) for name in ('first', 'second')))
-        RegistryService.prepare_in_current_process = batch.populate_child_caches
-        FunctionCatalogPreparation.prepare_persistent_catalog()
+        def cancel(signum, frame):
+            raise CancelledError
+        signal.signal(signal.SIGTERM, cancel)
+        batch.populate_child_caches(max_workers=2)
     """)
     process = subprocess.Popen(
         (sys.executable, "-c", script, str(tmp_path)),
@@ -302,7 +310,8 @@ def test_cancelling_registry_child_reaps_its_live_cache_workers(tmp_path):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 4,
+    reason="four admitted fork slots required",
 )
 def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
     """Four held workers bound capacity; releasing one must admit the fifth."""
@@ -327,7 +336,7 @@ def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
                     time.sleep(0.01)
 
         jobs = tuple(HeldPreparation(str(i)) for i in range(4))
-        PreparationCacheBatch((*jobs, WrittenPreparation('fifth'))).populate_child_caches()
+        PreparationCacheBatch((*jobs, WrittenPreparation('fifth'))).populate_child_caches(max_workers=4)
     """)
     process = subprocess.Popen(
         (sys.executable, "-c", script, str(tmp_path)),
@@ -388,7 +397,8 @@ def test_completed_worker_release_is_idempotent(tmp_path):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_path):
     events = []
@@ -402,12 +412,13 @@ def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_
         assert not PreparationOperation._completed
         events.append(pid)
 
-    batch.populate_child_caches(status_callback=report)
+    batch.populate_child_caches(max_workers=2, status_callback=report)
     assert set(events) == {int(path.read_text()) for path in tmp_path.iterdir()}
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
 )
 def test_failure_in_refilled_slot_reaps_all_owned_workers(tmp_path, declared_module):
     class HeldPreparation(AdditionalChildCachePreparation):
@@ -427,7 +438,7 @@ def test_failure_in_refilled_slot_reaps_all_owned_workers(tmp_path, declared_mod
         FailingPreparation("fifth", tmp_path),
     )
     with pytest.raises(RuntimeError, match="failure in refilled slot"):
-        PreparationCacheBatch(operations).populate_child_caches()
+        PreparationCacheBatch(operations).populate_child_caches(max_workers=2)
     assert (tmp_path / "fifth").exists()
     assert not PreparationOperation._completed
     assert all(

@@ -1700,6 +1700,7 @@ def prepare_compiled_function_group(group: CompiledFunctionGroup) -> None:
 
 def prepare_compiled_context_callables(
     compiled_contexts: Mapping[str, ProcessingContext],
+    *, max_workers: int = 1,
 ) -> None:
     """Prepare every compiled callable visible in the compiled contexts."""
     prepared_group_keys: set[tuple[str, int, str]] = set()
@@ -1730,7 +1731,7 @@ def prepare_compiled_context_callables(
         invocation.contract.resolve_canonical_raw_callable()
         for group in groups
         for invocation in group.invocations
-    ).populate_child_caches()
+    ).populate_child_caches(max_workers=max_workers)
     for group in groups:
         # Parent preparation loads child-produced machine code and owns every
         # process-local hook/cache that execution workers inherit.
@@ -1874,9 +1875,7 @@ class FunctionInvocationArtifactScope:
                 else (
                     RuntimeValue.from_spec(
                         input_plan.spec,
-                        self.declared_source_payload(
-                            artifact_ref, source_payload, loaded_artifact_payloads={}
-                        ),
+                        input_plan.resolve_unstored_payload(self, source_payload),
                         execution_scope=self.runtime_scope.axis_scope,
                     ),
                 )

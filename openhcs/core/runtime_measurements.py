@@ -791,6 +791,7 @@ class ObjectLocationCoordinateValues:
 
     values: Any
     include_missing: bool
+    axis_present: bool = True
 
 
 class ObjectLocationCoordinateProjectionStrategy(
@@ -841,7 +842,9 @@ class AxisBackedObjectLocationCoordinateProjectionStrategy(
         values = np.zeros(len(counts))
         if type(self).absent_axis_missing_for_unlabeled_objects:
             values = self.missing_for_absent_labels(values, counts)
-        return ObjectLocationCoordinateValues(values, include_missing=False)
+        return ObjectLocationCoordinateValues(
+            values, include_missing=False, axis_present=False
+        )
 
 
 for _coordinate_projection_spec in (
@@ -1604,6 +1607,17 @@ class MeasurementSubject:
         if self.name.casefold() == MeasurementScope.IMAGE.value:
             return None
         return self.name
+
+    @property
+    def row_identity_domain(self) -> tuple[MeasurementScope, str | None, str | None]:
+        """Return the row domain independently of an image's source qualifier.
+
+        Named image subjects share image-set row identity. Object and relationship
+        names identify different row domains and cannot be combined implicitly.
+        """
+
+        name = None if self.scope is MeasurementScope.IMAGE else self.name
+        return self.scope, name, self.id_field
 
     @property
     def object_name(self) -> str | None:

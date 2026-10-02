@@ -8,6 +8,8 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
+from python_introspect import dataclass_from_mapping
+
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotFrameCondition,
@@ -25,6 +27,8 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldListQuery,
     UiObjectStateFieldMutationRequest,
     UiObjectStateScopeListRequest,
+    UiPlateManagerRowState,
+    UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiWidgetActionInvokeRequest,
     UiWidgetTreeRequest,
@@ -39,6 +43,7 @@ from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
+    TypedCompositeCommandSpec,
     UiBridgeCommandSpec,
 )
 from openhcs.mcp.dev_client_core import (
@@ -52,6 +57,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolResult,
     WorkflowPollBaseline,
     WorkflowPollSkipReason,
+    WorkflowPollSummary,
     WorkflowPollSummaryStatus,
     WorkflowStatePollPolicy,
     add_code_document_source_options,
@@ -65,6 +71,7 @@ from openhcs.mcp.dev_client_core import (
     parse_json_object,
     selected_workflow_tool_arguments,
     state_surface_tool_arguments,
+    state_surface_payload,
     ui_connection_arguments,
     ui_request_tool_arguments,
     ui_tool_arguments,
@@ -82,6 +89,7 @@ from openhcs.mcp.dev_client_rendering import (
     DEFAULT_CODE_DOCUMENT_MAX_CHARS,
     CodeDocumentRenderOptions,
     McpDiagnosticRenderer,
+    McpDevPayloadProjection,
     UiActionCatalogRenderOptions,
     UiActionInvokeRenderOptions,
     WidgetTreeOutputFormat,
@@ -172,8 +180,14 @@ class CallCommandSpec(McpDevCommandSpec):
             args.arguments,
         )
 
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        command_spec = CapabilityBackedCommandSpec.for_capability_name(args.tool_name)
+        if args.json or command_spec is None:
+            return super().render_result(response, args)
+        return command_spec.render_call_result(response, args.arguments)
 
-class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
+
+class SelectedWorkflowCommandSpec(TypedCompositeCommandSpec, CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_selected_plate_workflow
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -429,146 +443,75 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
 
     def render_response(
         self,
-        payload: JsonObject,
+        payload: McpDevToolBatchResponse,
         args: argparse.Namespace,
     ) -> str:
-        if args.json or not args.poll_state:
-            return super().render_response(payload, args)
-        summary = self._poll_summary_payload(payload)
+        response = McpDevToolBatchResponse.for_rendering(payload)
+        summary = next(
+            (result.first_decoded_payload() for result in response.results
+             if result.tool == WorkflowPollSummary.tool_name),
+            None,
+        )
         if summary is None:
-            return super().render_response(payload, args)
+            return super().render_response(response, args)
         lines = [
-            f"Workflow: {self._text(summary.get('workflow'))}",
+            f"Workflow: {McpDevPayloadProjection.text(summary.workflow)}",
             (
                 "Action: "
-                f"{self._text(summary.get('action_status'))} "
-                f"poll={self._text(summary.get('poll_status'))} "
-                f"count={self._text(summary.get('poll_count'))}"
+                f"{McpDevPayloadProjection.text(summary.action_status)} "
+                f"poll={summary.status.value} count={summary.poll_count}"
             ),
         ]
-        target_scope_ids = summary.get("target_scope_ids")
-        if isinstance(target_scope_ids, list) and target_scope_ids:
+        if summary.target_scope_ids:
             lines.append(
-                f"Targets: {', '.join(str(value) for value in target_scope_ids)}"
+                f"Targets: {', '.join(summary.target_scope_ids)}"
             )
-        skip_reason = summary.get("skip_reason")
-        if skip_reason is not None:
-            lines.append(f"Skip reason: {self._text(skip_reason)}")
-        workflow_errors = self._workflow_errors(payload)
+        lines.extend(self._skip_reason_lines(summary))
+        workflow_errors = response.diagnostic_errors()
         if workflow_errors:
             lines.append("Errors:")
-            lines.extend(McpDiagnosticRenderer.error_lines(workflow_errors))
+            lines.extend(McpDiagnosticRenderer.typed_error_lines(workflow_errors))
 
-        final_rows = self._final_state_rows(payload)
+        final_rows = self._final_state_rows(response)
         if final_rows:
             lines.append("Rows:")
             lines.extend(self._row_lines(final_rows))
         return "\n".join(lines)
 
-    def render_call_response(
-        self,
-        payload: JsonObject,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> str:
-        from openhcs.mcp.dev_client_renderers.ui_bridge import UiActionInvokeRenderer
+    @staticmethod
+    def _skip_reason_lines(summary: WorkflowPollSummary) -> tuple[str, ...]:
+        return (() if summary.skip_reason is None else
+                (f"Skip reason: {summary.skip_reason.value}",))
 
-        workflow = optional_str(tool_arguments.get("workflow"))
-        return UiActionInvokeRenderer.render(
-            payload,
-            widget_id=PlateManagerWidgetIdentity.value,
-            action_id=workflow,
+    @staticmethod
+    def _final_state_rows(response: McpDevToolBatchResponse) -> tuple[UiPlateManagerRowState, ...]:
+        result = next(
+            (result for result in reversed(response.results)
+             if result.tool == agent_capabilities.ui_get_state_surface.name),
+            None,
         )
-
-    @staticmethod
-    def _poll_summary_payload(payload: JsonObject) -> Mapping[str, JsonValue] | None:
-        for result in SelectedWorkflowCommandSpec._result_mappings(payload):
-            if result.get("tool") != "mcp_dev_selected_workflow_poll":
-                continue
-            first_payload = SelectedWorkflowCommandSpec._first_payload(result)
-            if first_payload is not None:
-                return first_payload
-        return None
-
-    @staticmethod
-    def _final_state_rows(payload: JsonObject) -> tuple[Mapping[str, JsonValue], ...]:
-        state_payload: Mapping[str, JsonValue] | None = None
-        for result in SelectedWorkflowCommandSpec._result_mappings(payload):
-            if result.get("tool") == agent_capabilities.ui_get_state_surface.name:
-                state_payload = SelectedWorkflowCommandSpec._first_payload(result)
-        if state_payload is None:
+        if result is None or result.has_errors():
             return ()
-        nested_payload = state_payload.get("payload")
-        if not isinstance(nested_payload, Mapping):
-            return ()
-        rows = nested_payload.get("rows")
-        if not isinstance(rows, list):
-            return ()
-        return tuple(row for row in rows if isinstance(row, Mapping))
-
-    @staticmethod
-    def _result_mappings(payload: JsonObject) -> tuple[Mapping[str, JsonValue], ...]:
-        results = payload.get("results")
-        if not isinstance(results, list):
-            return ()
-        return tuple(result for result in results if isinstance(result, Mapping))
-
-    @staticmethod
-    def _first_payload(
-        result: Mapping[str, JsonValue],
-    ) -> Mapping[str, JsonValue] | None:
-        payloads = result.get("payloads")
-        if not isinstance(payloads, list) or not payloads:
-            return None
-        first_payload = payloads[0]
-        if not isinstance(first_payload, Mapping):
-            return None
-        return first_payload
-
-    @staticmethod
-    def _workflow_errors(payload: JsonObject) -> tuple[Mapping[str, JsonValue], ...]:
-        for result in SelectedWorkflowCommandSpec._result_mappings(payload):
-            if result.get("tool") != agent_capabilities.ui_selected_plate_workflow.name:
-                continue
-            first_payload = SelectedWorkflowCommandSpec._first_payload(result)
-            if first_payload is None:
-                continue
-            errors = first_payload.get("errors")
-            if isinstance(errors, list):
-                return tuple(error for error in errors if isinstance(error, Mapping))
-            action_result = first_payload.get("action_result")
-            if isinstance(action_result, Mapping):
-                action_errors = action_result.get("errors")
-                if isinstance(action_errors, list):
-                    return tuple(
-                        error for error in action_errors if isinstance(error, Mapping)
-                    )
-        return ()
+        # The selected workflow targets PlateManager, whose declared state
+        # owns the dynamic document body. Decode that owner once, not its rows
+        # through a second partial record reader.
+        return dataclass_from_mapping(
+            UiPlateManagerState, state_surface_payload(result)
+        ).rows
 
     @classmethod
-    def _row_lines(cls, rows: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
+    def _row_lines(cls, rows: tuple[UiPlateManagerRowState, ...]) -> list[str]:
         lines: list[str] = []
         for row in rows:
             state_parts = [
-                f"state={cls._text(row.get('orchestrator_state'))}",
-                f"status={cls._quoted_text(row.get('status_prefix'))}",
-                f"terminal={cls._text(row.get('terminal_status'))}",
+                f"state={McpDevPayloadProjection.text(row.orchestrator_state)}",
+                f"status={McpDevPayloadProjection.quoted_text(row.status_prefix)}",
+                f"terminal={McpDevPayloadProjection.text(row.terminal_status)}",
             ]
-            if row.get("selected") is True:
+            if row.selected:
                 state_parts.append("selected=True")
-            lines.append(f"- {cls._text(row.get('name'))}: " + ", ".join(state_parts))
+            lines.append(f"- {row.name}: " + ", ".join(state_parts))
         return lines
-
-    @staticmethod
-    def _quoted_text(value: JsonValue) -> str:
-        if value is None:
-            return "<none>"
-        return json.dumps(str(value))
-
-    @staticmethod
-    def _text(value: JsonValue) -> str:
-        if value is None:
-            return "<none>"
-        return str(value)
 
 
 class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
@@ -891,6 +834,9 @@ class InvokeWidgetActionCommandSpec(CapabilityBackedCommandSpec):
 
 class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_get_widget_tree
+
+    def requests_json_output(self, args: argparse.Namespace) -> bool:
+        return WidgetTreeOutputFormat(args.output).is_json
 
     @staticmethod
     def _effective_max_depth(args: argparse.Namespace) -> int | None:

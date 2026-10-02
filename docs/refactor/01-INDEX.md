@@ -99,3 +99,7 @@ NRA's complete scan of the package is running and will be added to the evidence 
 Written just in time: [`R0-stop-the-inflow.md`](R0-stop-the-inflow.md),
 and the authoritative [L0 pattern-resolver checkpoint](L0-pattern-resolver.rst).
 The latter closes one confirmed dead module, not the whole L0 surface.
+
+Current [S1 MCP result-owner surface receipt](S1-mcp-result-owners.rst) records
+the coherent pipeline checkpoint and named remaining renderer families; it does
+not close the full S1 surface or installed acceptance.

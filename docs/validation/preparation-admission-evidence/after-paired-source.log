@@ -1,0 +1,109 @@
+SOURCE_DEPENDENCY /home/ts/wt/zmqruntime-cold-start-355-20261001/src/zmqruntime/client.py
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0 -- /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python
+rootdir: /home/ts/wt/openhcs-gui-cold-connect-355-20261001
+configfile: pytest.ini
+collecting ... collected 65 items
+
+tests/unit/test_preparation_admission.py::test_default_budget_does_not_spawn_implicit_four_worker_pool PASSED [  1%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-1-8-0] PASSED [  3%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-1-0] PASSED [  4%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-2-8-2] PASSED [  6%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-2-2] PASSED [  7%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditBefore-8-3-3] PASSED [  9%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-1-8-0] PASSED [ 10%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-1-0] PASSED [ 12%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-2-8-2] PASSED [ 13%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-2-2] PASSED [ 15%]
+tests/unit/test_preparation_admission.py::test_new_cooperative_capability_obeys_affinity_budget_and_refills[AuditAfter-8-3-3] PASSED [ 16%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[0] PASSED [ 18%]
+tests/unit/test_preparation_admission.py::test_invalid_budget_cannot_discover_or_launch[-1] PASSED [ 20%]
+tests/unit/test_preparation_admission.py::test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does[False] PASSED [ 21%]
+tests/unit/test_preparation_admission.py::test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does[True] PASSED [ 23%]
+tests/unit/test_preparation_admission.py::test_unavailable_affinity_does_not_admit_speculative_parallelism PASSED [ 24%]
+tests/unit/test_preparation_admission.py::test_affinity_query_failure_is_not_misreported_as_success PASSED [ 26%]
+tests/unit/test_preparation_admission.py::test_failure_in_refilled_slot_closes_every_exact_worker PASSED [ 27%]
+tests/unit/test_preparation_admission.py::test_selected_hook_failure_is_not_admitted_as_completed PASSED [ 29%]
+tests/unit/test_processing_preparation.py::test_hooks_are_read_after_preceding_registry_and_module_effects PASSED [ 30%]
+tests/unit/test_processing_preparation.py::test_invalid_callable_hook_fails_after_module_preparation PASSED [ 32%]
+tests/unit/test_processing_preparation.py::test_failed_hook_remains_retryable_then_success_is_shared PASSED [ 33%]
+tests/unit/test_processing_preparation.py::test_replaced_module_hook_keeps_its_distinct_identity PASSED [ 35%]
+tests/unit/test_processing_preparation.py::test_callable_without_module_runs_only_its_declared_hook PASSED [ 36%]
+tests/unit/test_processing_preparation.py::test_cache_batch_deduplicates_modules_before_discovery PASSED [ 38%]
+tests/unit/test_processing_preparation.py::test_new_operation_inherits_readiness_without_a_scheduler_roster PASSED [ 40%]
+tests/unit/test_processing_preparation.py::test_new_cache_operation_runs_in_children_and_still_prepares_parent SKIPPED [ 41%]
+tests/unit/test_processing_preparation.py::test_registry_metadata_does_not_execute_kernels_even_with_cached_metadata PASSED [ 43%]
+tests/unit/test_processing_preparation.py::test_cancelling_cache_batch_reaps_its_live_cache_workers SKIPPED [ 44%]
+tests/unit/test_processing_preparation.py::test_child_slot_refills_before_other_initial_jobs_finish SKIPPED [ 46%]
+tests/unit/test_processing_preparation.py::test_completed_worker_release_is_idempotent PASSED [ 47%]
+tests/unit/test_processing_preparation.py::test_cache_progress_reports_reaped_workers_without_marking_parent_ready SKIPPED [ 49%]
+tests/unit/test_processing_preparation.py::test_failure_in_refilled_slot_reaps_all_owned_workers SKIPPED [ 50%]
+tests/unit/test_fork_compiler_preparation.py::test_child_preparation_deduplicates_registries_and_propagates_failure SKIPPED [ 52%]
+tests/unit/test_fork_compiler_preparation.py::test_backend_child_preparation_requires_empty_explicit_cpu_cache PASSED [ 53%]
+tests/unit/test_fork_compiler_preparation.py::test_platform_without_fork_keeps_parent_preparation_path PASSED [ 55%]
+tests/unit/test_fork_compiler_preparation.py::test_compiled_context_preparation_runs_parent_hook_after_children PASSED [ 56%]
+tests/unit/test_execution_server_startup_preparation.py::test_direct_server_start_warms_main_thread_before_bind_and_reuses_future PASSED [ 58%]
+tests/unit/test_execution_server_startup_preparation.py::test_startup_warm_failure_cannot_bind_or_report_catalogue_ready PASSED [ 60%]
+tests/unit/test_execution_server_startup_preparation.py::test_cancelled_startup_cannot_warm_or_bind PASSED [ 61%]
+tests/unit/test_execution_server_startup_preparation.py::test_cancellation_during_warm_preserves_same_cancelled_future PASSED [ 63%]
+tests/unit/test_execution_server_startup_preparation.py::test_startup_observer_receives_live_kernel_progress_before_binding PASSED [ 64%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_async_connect_cancellation_retires_same_attempt_and_releases_ownership PASSED [ 66%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_concurrent_connects_reuse_same_client PASSED [ 67%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_cancelled_lock_waiter_releases_late_acquisition PASSED [ 69%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_disconnect_sync_cancels_an_in_progress_connection_attempt PASSED [ 70%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_publishes_derived_endpoint_compatibility PASSED [ 72%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_endpoint_compatibility_rejects_a_foreign_application PASSED [ 73%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_foreign_endpoint_is_reported_but_not_admitted PASSED [ 75%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_retired_client_cannot_publish_stale_startup_status PASSED [ 76%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_restarts_the_endpoint_under_one_lifecycle_lock PASSED [ 78%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_version_restart_rejects_changed_compatibility_before_shutdown PASSED [ 80%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_reuses_equivalent_bound_progress_callback PASSED [ 81%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_attaches_to_an_existing_endpoint PASSED [ 83%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_zmq_client_service_leaves_an_absent_endpoint_disconnected PASSED [ 84%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_endpoint_termination_disconnects_only_its_exact_client PASSED [ 86%]
+tests/unit/pyqt_gui/test_zmq_client_service.py::test_old_endpoint_termination_does_not_cancel_replacement_handshake PASSED [ 87%]
+tests/unit/test_zmq_execution_server_process.py::test_execution_server_preserves_worker_interpreter_and_background_flags PASSED [ 89%]
+tests/unit/test_zmq_execution_server_process.py::test_execution_server_launcher_prepares_before_binding_and_ready PASSED [ 90%]
+tests/unit/test_zmq_execution_server_process.py::test_execution_server_launcher_projects_endpoint_overrides_into_config PASSED [ 92%]
+tests/unit/test_zmq_execution_server_process.py::test_execution_server_launcher_prepares_capabilities_without_binding PASSED [ 93%]
+tests/unit/test_zmq_execution_server_process.py::test_child_startup_events_are_resequenced_by_client_owner PASSED [ 95%]
+tests/unit/test_zmq_execution_server_process.py::test_failed_child_startup_journal_remains_available PASSED [ 96%]
+tests/unit/test_zmq_execution_server_process.py::test_execution_client_inherits_shared_readiness_algorithm PASSED [ 98%]
+tests/unit/test_zmq_execution_server_process.py::test_cold_execution_readiness_preserves_working_child_without_journal_churn PASSED [100%]
+
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 59 passed, 6 skipped, 2 warnings in 6.11s ===================
+	Command being timed: "timeout --signal=TERM --kill-after=3s 60s taskset -c 0 /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -I -B -c import sys;sys.path.insert(0,"/home/ts/wt/openhcs-gui-cold-connect-355-20261001");sys.path.insert(0,"/home/ts/wt/zmqruntime-cold-start-355-20261001/src");import openhcs.core,zmqruntime.client;openhcs.core.__path__.append("/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/lib/python3.12/site-packages/openhcs/core");print("SOURCE_DEPENDENCY",zmqruntime.client.__file__,flush=True);import pytest;raise SystemExit(pytest.main(["-v","-o","addopts=","-p","no:cacheprovider","--noconftest","--basetemp=/home/ts/.cache/agent-scratch/openhcs-preparation-admission-355-20261001/pytest-paired-checkpoint","tests/unit/test_preparation_admission.py","tests/unit/test_processing_preparation.py","tests/unit/test_fork_compiler_preparation.py","tests/unit/test_execution_server_startup_preparation.py","tests/unit/pyqt_gui/test_zmq_client_service.py","tests/unit/test_zmq_execution_server_process.py"]))"
+	User time (seconds): 6.28
+	System time (seconds): 0.38
+	Percent of CPU this job got: 95%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 350600
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 91988
+	Voluntary context switches: 224
+	Involuntary context switches: 179
+	Swaps: 0
+	File system inputs: 232
+	File system outputs: 80
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

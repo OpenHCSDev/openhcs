@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import logging
 from collections import defaultdict
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
@@ -323,6 +323,19 @@ class PathPlannerExecutionGroups:
             if input_component_scopes is None
             else input_component_scopes
         )
+        artifact_owned = bool(contracts) and all(
+            contract.group_scope_inputs for contract in contracts
+        )
+        if artifact_owned:
+            source_bindings = (
+                self.planner.source_bindings_for_snapshot(snapshot)
+                if source_bindings is None
+                else source_bindings
+            ).for_artifact_refs(
+                spec.ref()
+                for contract in contracts
+                for spec in contract.group_scope_inputs
+            )
         scope = component_scopes.scope_for_group_by(
             group_by,
         )
@@ -337,7 +350,7 @@ class PathPlannerExecutionGroups:
                 if source_scope.is_ungrouped
                 else source_scope
             )
-        if contracts and all(contract.group_scope_inputs for contract in contracts):
+        if artifact_owned:
             scope = self.artifact_owned_execution_scope(
                 snapshot,
                 contracts,
@@ -560,10 +573,39 @@ class PathPlannerExecutionGroups:
 
 
 @dataclass(frozen=True)
-class PathPlannerArtifactStage:
-    """Artifact declaration, I/O-plan, and FunctionStep injection stage."""
+class PathPlannerMetadataArtifactInjection:
+    """Shared provider selection and invocation-owned metadata injection."""
 
     planner: PathPlanner
+
+    def metadata_artifact_available(self, artifact_name: str) -> bool:
+        """Derive availability from the original microscope provider owner."""
+        return self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
+            artifact_name
+        )
+
+    def inject_metadata(
+        self,
+        pattern: FunctionPatternSyntax,
+        inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
+    ) -> FunctionPatternSyntax:
+        """Inject values once; compiled metadata edges reference these kwargs."""
+        for spec in inputs.values():
+            if (
+                spec.ref().for_plan_type(ArtifactOutputPlan) not in self.planner.declared
+                and self.metadata_artifact_available(spec.name)
+            ):
+                value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
+                    spec.name,
+                    self.planner.ctx.plate_path,
+                )
+                pattern = inject_artifact_input_values(pattern, {spec.name: value})
+        return pattern
+
+
+@dataclass(frozen=True)
+class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
+    """Artifact declaration and I/O planning with inherited metadata binding."""
 
     def prepare_step_declarations(
         self,
@@ -1196,6 +1238,7 @@ class PathPlannerArtifactStage:
             source_bindings=step_context.source_bindings,
             available_artifacts=available_artifacts,
             main_flow_artifacts=step_context.main_flow_artifacts,
+            metadata_artifact_available=self.metadata_artifact_available,
         )
 
     def compile_invocation_input_edges(
@@ -1212,6 +1255,7 @@ class PathPlannerArtifactStage:
         source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
         available_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         main_flow_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
+        metadata_artifact_available: Callable[[str], bool] = lambda _name: False,
     ) -> CompiledFunctionPattern:
         """Compile exact invocation-to-input projections from nominal contracts."""
 
@@ -1274,6 +1318,8 @@ class PathPlannerArtifactStage:
                                 spec=input_spec,
                                 main_flow_artifacts=main_flow_artifacts,
                                 invocation_sources=invocation.contract.group_scope_inputs,
+                                metadata_available=metadata_artifact_available(input_spec.name),
+                                source_binding_available=source_bindings.declares_artifact_ref(input_spec.ref()),
                             )
                         )
                         continue
@@ -1971,26 +2017,6 @@ class PathPlannerArtifactStage:
             return paths_by_group.get(producer_group, producer.path)
         return producer.path
 
-    def inject_metadata(
-        self,
-        pattern: FunctionPatternSyntax,
-        inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
-    ) -> FunctionPatternSyntax:
-        """Inject metadata for artifact inputs."""
-        for input_ref, spec in inputs.items():
-            key = spec.name
-            if input_ref.for_plan_type(
-                ArtifactOutputPlan
-            ) not in self.planner.declared and self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
-                key
-            ):
-                value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
-                    key,
-                    self.planner.ctx.plate_path,
-                )
-                pattern = inject_artifact_input_values(pattern, {key: value})
-        return pattern
-
 
 @dataclass(frozen=True)
 class PathPlannerMaterializationStage:
@@ -2417,12 +2443,7 @@ class PathPlannerStepAssemblyStage:
             contract_source_bindings,
         )
 
-        if isinstance(snapshot.step, FunctionStep) and any(
-            self.planner.ctx.microscope_handler.can_resolve_metadata_artifact(
-                input_ref.name
-            )
-            for input_ref in declarations.inputs
-        ):
+        if isinstance(snapshot.step, FunctionStep):
             func_pattern = self.planner.artifacts.inject_metadata(
                 func_pattern,
                 declarations.inputs,

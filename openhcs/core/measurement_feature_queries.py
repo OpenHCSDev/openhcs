@@ -31,6 +31,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.process_local_cache import (
     IdentityBoundProcessCache,
+    BoundedCache,
     RegisteredProcessLocalBoundedCache,
     identity_owner_tuples_match,
 )
@@ -149,6 +150,15 @@ class RuntimeObjectLabelMeasurementQuery(RuntimeObjectSliceMeasurementQuery):
                 "RuntimeObjectLabelMeasurementQuery.label_plane_domains must be "
                 "canonical positive object-id domains."
             )
+
+
+class RuntimeObjectLabelMeasurementQueryCache(
+    BoundedCache[
+        RuntimeObjectLabelMeasurementQuery,
+        tuple[np.ndarray, ...],
+    ]
+):
+    """Store-owned label-aligned values keyed by their full nominal query."""
 
 
 def _diagnostic_value(value: object | None) -> str:

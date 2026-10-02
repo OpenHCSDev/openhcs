@@ -34,7 +34,6 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import TransportMode
-from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
@@ -372,16 +371,6 @@ class _TestViewerMetadataHandler(ViewerMetadataHandlerABC):
 class _TestViewerMicroscopeHandler(ViewerMicroscopeHandlerABC):
     parser = _TestViewerFilenameParser()
     metadata_handler = _TestViewerMetadataHandler()
-
-
-@pytest.fixture
-def viewer_ack_return_route():
-    """Nominal producer route for message construction without a live listener."""
-    return AckReturnRoute(
-        url="tcp://127.0.0.1:8111",
-        incarnation="00000000-0000-0000-0000-000000000001",
-        owner=ProcessIdentity.current(),
-    )
 
 
 def _viewer_stream_backend_kwargs():
@@ -773,8 +762,10 @@ def test_measurement_table_materializes_csv_and_json_without_losing_its_owner() 
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("source_z_origin", (0, 10))
 def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     tmp_path,
+    source_z_origin,
 ) -> None:
     table = MeasurementTable(
         name="centres",
@@ -801,7 +792,7 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
             paths=("/source/image.ome.tif",) * 4,
             component_metadata=tuple(
                 {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
-                for z in range(4)
+                for z in range(source_z_origin, source_z_origin + 4)
             ),
         ),
         subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
@@ -829,19 +820,23 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
     assert rois[0].metadata["response"] == 4.75
     assert rois[0].shapes == [PointShape(y=1.25, x=3.5)]
     assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(2.375)
-    assert ROIArchiveSourceMetadata.decode(rois).source_path == "/source/image.ome.tif"
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    assert metadata.source_path == "/source/image.ome.tif"
+    source_domain = ROIFractionalZ.source_component_domain(rois, metadata)
+    z_values = [plane["z_index"] for plane in source_domain]
+    assert z_values == list(range(source_z_origin, source_z_origin + 4))
     viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     projection = ViewerLayerAxisProjection(
         projected_axis_components=("z_index",),
-        component_values={"z_index": [0, 1, 2, 3]},
-        routed_component_values={"z_index": [0, 1, 2, 3]},
+        component_values={"z_index": z_values},
+        routed_component_values={"z_index": z_values},
         axis_offsets=(0,),
     )
     points, properties = viewer_server._build_nd_points(
         [
             SimpleNamespace(
                 data=NapariROIConverter.rois_to_shapes(rois),
-                address=SimpleNamespace(components={"z_index": 2}),
+                address=SimpleNamespace(components=source_domain[0]),
             )
         ],
         projection,

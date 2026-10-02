@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, TypeAlias
 
-from polystore.atomic import LOCK_CONFIG, FileLockError, atomic_update_json
+from polystore.atomic import FileLockError, atomic_update_json
+from polystore.metadata_writer import MetadataConfig
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
@@ -36,24 +38,14 @@ from openhcs.core.source_tile_geometry import SourceTileLayout
 
 
 @dataclass(frozen=True)
-class OpenHCSMetadataConfig:
+class OpenHCSMetadataConfig(MetadataConfig):
     """Configuration owned by the OpenHCS metadata file contract."""
 
-    METADATA_FILENAME: str = os.getenv(
-        "OPENHCS_METADATA_FILENAME",
-        "openhcs_metadata.json",
+    METADATA_FILENAME: str = field(
+        default_factory=lambda: os.getenv(
+            "OPENHCS_METADATA_FILENAME", "openhcs_metadata.json"
+        )
     )
-    SUBDIRECTORIES_KEY: str = "subdirectories"
-    AVAILABLE_BACKENDS_KEY: str = "available_backends"
-    DEFAULT_TIMEOUT: float = LOCK_CONFIG.DEFAULT_TIMEOUT
-
-    def metadata_path(self, plate_root: str | Path) -> Path:
-        return Path(plate_root) / self.METADATA_FILENAME
-
-    def managed_paths(self, plate_root: str | Path) -> tuple[Path, Path]:
-        """Files this metadata transaction owns, not scientific source artifacts."""
-        path = self.metadata_path(plate_root)
-        return path, LOCK_CONFIG.lock_path(path)
 
 
 METADATA_CONFIG = OpenHCSMetadataConfig()
@@ -362,6 +354,14 @@ class OpenHCSMetadataSubdirectories:
     """Typed view over OpenHCS metadata subdirectory payloads."""
 
     metadata: OpenHCSMetadataPayload
+
+    @classmethod
+    def from_path(cls, path: Path) -> OpenHCSMetadataSubdirectories:
+        """Load the durable projection document for completed-plate reconciliation."""
+        if not path.is_file():
+            return cls({})
+        with path.open(encoding="utf-8") as stream:
+            return cls(json.load(stream))
 
     def items(self) -> tuple[tuple[str, OpenHCSSubdirectoryPayload], ...]:
         subdirectories = self.metadata.get(FIELDS.SUBDIRECTORIES)

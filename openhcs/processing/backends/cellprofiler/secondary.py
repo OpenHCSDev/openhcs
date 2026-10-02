@@ -76,6 +76,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -112,7 +113,7 @@ class IdentifyTertiaryObjectsModule(
     PairedPrimarySecondaryObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
     ObjectArtifactInputModule,
-    ObjectArtifactOutputModule,
+    LabelDimensionObjectArtifactOutputModule,
     ParentChildLineageArtifactOutputModule,
     MeasurementArtifactOutputModule,
     CellProfilerModule,
@@ -275,9 +276,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     CellProfilerPlaneGeometry,
 )
@@ -310,7 +309,7 @@ from openhcs.processing.backends.cellprofiler.watershed import (
 )
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 ClassNamespaceValue: TypeAlias = (
     str
     | bool
