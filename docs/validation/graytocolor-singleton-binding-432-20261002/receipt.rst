@@ -1,6 +1,10 @@
 Unary GrayToColor #432: original owner follow-up
 ==============================================
 
+Latest: repair-receipt.rst supersedes the historical waiting state below.
+Root explicitly released the three hunks; working productionffc3a4f is pushed
+to existing437 with source controls/R0 and retained incomplete bounded R1.
+
 Owner: Schrodinger. Source base: merged434 main902913616e19f5b242928d4e835b8c2e10ab2fce.
 Branch: fix/graytocolor-singleton-binding-432-20261002, normally fast-forwarded
 from preserved4e745. Same existing owned worktree; no environment/submodule
