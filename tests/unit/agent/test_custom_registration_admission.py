@@ -33,6 +33,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_execution_client import FunctionCatalogEndpointUnavailableError
 
 
 def request(root, **changes):
@@ -104,7 +105,8 @@ def test_write_escape_rejects_before_endpoint_dispatch(tmp_path, escape):
 
 
 @pytest.mark.parametrize(
-    "wrong_store, timeout", ((False, False), (True, False), (False, True))
+    "wrong_store, timeout",
+    ((False, False), (True, False), (False, True), (False, "owner_closed")),
 )
 def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, timeout):
     root = tmp_path / "custom"
@@ -122,6 +124,10 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
             )
 
         def register_custom_function(self, admitted, *, operation_deadline=None):
+            if timeout == "owner_closed":
+                raise FunctionCatalogEndpointUnavailableError(
+                    "Admission rejected before source dispatch"
+                )
             mutations.append(admitted)
             assert admitted.admission_policy == policy(tmp_path)
             assert admitted.server_identity == ProcessIdentity.current()
@@ -154,6 +160,12 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
     )
     if wrong_store:
         with pytest.raises(ValueError, match="no source was dispatched"):
+            catalog.register_custom_function(request(root))
+        assert not mutations
+    elif timeout == "owner_closed":
+        with pytest.raises(
+            FunctionCatalogEndpointUnavailableError, match="before source dispatch"
+        ):
             catalog.register_custom_function(request(root))
         assert not mutations
     elif timeout:

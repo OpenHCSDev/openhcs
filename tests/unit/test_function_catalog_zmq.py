@@ -11,9 +11,15 @@ from dataclasses import replace
 
 import pytest
 from zmqruntime import OperationCancellation, OperationDeadline
-from zmqruntime.client import EndpointConnectionPolicy
+from zmqruntime.client import AttachedEndpointConnection, EndpointConnectionPolicy
 from zmqruntime.execution import ExecutionServer
-from zmqruntime.messages import ProcessIdentity
+from zmqruntime.messages import (
+    ControlMessageType,
+    MessageFields,
+    PongResponse,
+    ProcessIdentity,
+    ServerRole,
+)
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
@@ -48,6 +54,7 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.core.callable_contract import CallableImportIdentity
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_control import (
     ZMQControlMessageRouter,
     ZMQControlRequestContext,
@@ -255,6 +262,21 @@ def _detail(entry: FunctionCatalogEntry | None = None) -> FunctionDetail:
     )
 
 
+def _catalog_connection(client: ZMQExecutionClient) -> PongResponse:
+    """Use the original connection contract, not a fabricated connected flag."""
+    pong = PongResponse(
+        port=client.port,
+        control_port=client.control_port,
+        ready=True,
+        server="source catalog",
+        server_role=ServerRole.EXECUTION,
+        application=OPENHCS_ENDPOINT_APPLICATION,
+        process_identity=ProcessIdentity.current(),
+    )
+    client._connection = AttachedEndpointConnection(pong)
+    return pong
+
+
 def _context(
     preparation_future: Future[None] | None = None,
 ) -> ZMQControlRequestContext:
@@ -411,13 +433,16 @@ def test_catalog_client_polls_typed_preparation_response(monkeypatch) -> None:
             return False
 
     client = ZMQExecutionClient(port=22319, persistent=True)
-    monkeypatch.setattr(
-        client, "_send_control_request", lambda request: next(responses)
-    )
+    pong = _catalog_connection(client)
+
+    def send(request, *, timeout_ms):
+        if request[MessageFields.TYPE] == ControlMessageType.PING.value:
+            return pong.to_dict()
+        return next(responses)
+
+    monkeypatch.setattr(client, "_send_control_request", send)
     response = client._send_function_catalog_control_request(
-        FunctionCatalogControlPayload.from_request(
-            FunctionCatalogControlRequest()
-        ).to_dict(),
+        FunctionCatalogControlRequest(),
         cancellation=_Cancellation(),
     )
 
@@ -439,9 +464,7 @@ def test_catalog_client_cancellation_prevents_another_poll(monkeypatch) -> None:
 
     with pytest.raises(CancelledError, match="catalog preparation"):
         client._send_function_catalog_control_request(
-            FunctionCatalogControlPayload.from_request(
-                FunctionCatalogControlRequest()
-            ).to_dict(),
+            FunctionCatalogControlRequest(),
             cancellation=cancellation,
         )
 
@@ -452,12 +475,14 @@ def test_registration_client_sends_mutation_once_even_if_pending_or_uncertain(
     response_kind,
 ) -> None:
     client = ZMQExecutionClient(port=22319, persistent=True)
-    monkeypatch.setattr(client, "is_connected", lambda: True)
+    pong = _catalog_connection(client)
     observed = []
     result = CustomFunctionRegistrationResult(schema_version="openhcs.agent.v1")
 
     def send(payload, *, timeout_ms):
         assert 0 < timeout_ms <= 5000
+        if payload[MessageFields.TYPE] == ControlMessageType.PING.value:
+            return pong.to_dict()
         observed.append(payload)
         if response_kind == "timeout":
             raise TimeoutError("postdispatch observation")
@@ -603,7 +628,7 @@ def test_registration_expired_deadline_prevents_attachment_and_send(
         calls[operation]()
 
 
-def test_catalog_client_applies_request_cancellation_to_endpoint_startup(
+def test_catalog_client_applies_request_cancellation_to_attach_only(
     monkeypatch,
 ) -> None:
     cancellation = OperationCancellation()
@@ -615,23 +640,23 @@ def test_catalog_client_applies_request_cancellation_to_endpoint_startup(
         def connect(policy, timeout):
             observed["policy"] = policy
             observed["timeout"] = timeout
+            _catalog_connection(client)
             return True
 
     client = ZMQExecutionClient(port=22319, persistent=True)
-    monkeypatch.setattr(client, "is_connected", lambda: False)
 
     def new_connection_attempt(*, cancellation=None):
         observed["cancellation"] = cancellation
         return _ConnectionAttempt()
 
     monkeypatch.setattr(client, "new_connection_attempt", new_connection_attempt)
-    monkeypatch.setattr(
-        client,
-        "_send_function_catalog_control_request",
-        lambda _request, *, cancellation=None: FunctionCatalogControlResponse(
-            page
-        ).to_control_response(),
-    )
+
+    def send(request, *, timeout_ms):
+        if request[MessageFields.TYPE] == ControlMessageType.PING.value:
+            return client.connected_endpoint.to_dict()
+        return FunctionCatalogControlResponse(page).to_control_response()
+
+    monkeypatch.setattr(client, "_send_control_request", send)
 
     result = client.get_function_catalog(
         FunctionCatalogControlRequest(),
@@ -641,8 +666,8 @@ def test_catalog_client_applies_request_cancellation_to_endpoint_startup(
     assert result is page
     assert observed == {
         "cancellation": cancellation,
-        "policy": EndpointConnectionPolicy.ATTACH_OR_START,
-        "timeout": client.config.client_connect_timeout_seconds,
+        "policy": EndpointConnectionPolicy.ATTACH_EXISTING,
+        "timeout": 1.0,
     }
 
 
