@@ -1,0 +1,19 @@
+Script started on 2026-10-02 18:29:40-04:00 [COMMAND="systemd-run --user --scope --unit=dewey-mcp-pty-483-source04 -p MemoryMax=512M -p MemorySwapMax=0 -p CPUQuota=100% /usr/bin/time -f "elapsed=%e maxrss_KiB=%M exit=%x" timeout 60s env PYTHONPATH=/home/ts/wt/openhcs-mcp-affine-progress-436-20261002 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python -B -m pytest --noconftest -q -x --override-ini addopts= --basetemp=validation/mcp-pty-test-scratch04 tests/unit/test_mcp_dev_client_terminal_input.py" <not executed on terminal>]
+Running as unit: dewey-mcp-pty-483-source04.scope; invocation ID: 22c3205edb20488eb14fc1930d6545c7
+........                                                                 [100%]
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+8 passed, 2 warnings in 43.13s
+elapsed=43.40 maxrss_KiB=244284 exit=0
+
+Script done on 2026-10-02 18:30:24-04:00 [COMMAND_EXIT_CODE="0"]

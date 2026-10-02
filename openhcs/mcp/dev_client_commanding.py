@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager, nullcontext
 import inspect
 import json
+import sys
 import tempfile
 from typing import ClassVar
 
@@ -120,6 +122,14 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
     def configure_reflected_parser(self, parser: argparse.ArgumentParser) -> None:
         """Add options reflected from declarations owned outside the command."""
 
+    def prepare_input(
+        self,
+        args: argparse.Namespace,
+        *,
+        stdin_context: Callable[[], AbstractContextManager[None]] = nullcontext,
+    ) -> None:
+        """Resolve declaration-owned input before building or submitting calls."""
+
     @abstractmethod
     def calls_from_args(
         self,
@@ -133,6 +143,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
         """Execute this command through one initialized MCP dev session."""
+        self.prepare_input(args)
         prepared_calls = self.calls_from_args(args)
         for call in prepared_calls:
             call.require_surface_profile(server_spec.surface_profile)
@@ -218,6 +229,22 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
     def requests_json_output(self, args: argparse.Namespace) -> bool:
         """Project this command's declared output selection for shared rendering."""
         return args.json
+
+
+class StdinSourceCommandSpec(McpDevCommandSpec):
+    """Independent source-input capability composed with execution/rendering."""
+
+    def prepare_input(
+        self,
+        args: argparse.Namespace,
+        *,
+        stdin_context: Callable[[], AbstractContextManager[None]] = nullcontext,
+    ) -> None:
+        super().prepare_input(args, stdin_context=stdin_context)
+        if args.source_file == "-":
+            with stdin_context():
+                args.source_text = sys.stdin.read()
+            args.source_file = None
 
 
 class TypedCompositeCommandSpec(McpDevCommandSpec):
