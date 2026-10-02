@@ -2252,7 +2252,7 @@ class SamplePlateImageCapability(PlatePathCapability):
     )
 
 
-class StreamPlateFilesToViewerCapability(PlatePathCapability):
+class StreamPlateFilesToViewerCapability(MainThreadProgressCapability, PlatePathCapability):
     name = "openhcs_stream_plate_files_to_viewer"
     cli_command = "stream-plate-files"
     kind = CapabilityKind.TOOL
@@ -2385,7 +2385,7 @@ class UiSampleSelectedPlateImageCapability(UiSelectedPlateCapability):
     )
 
 
-class UiStreamSelectedPlateFilesToViewerCapability(UiSelectedPlateCapability):
+class UiStreamSelectedPlateFilesToViewerCapability(MainThreadProgressCapability, UiSelectedPlateCapability):
     name = "openhcs_ui_stream_selected_plate_files_to_viewer"
     cli_command = "selected-plate-stream"
     kind = CapabilityKind.TOOL

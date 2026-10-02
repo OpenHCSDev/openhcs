@@ -1,0 +1,172 @@
+Running as unit: dewey-441-stream-source04-20261002.scope; invocation ID: 52bf1520fe4845fab9534e00dfe31b7c
+..FF
+=================================== FAILURES ===================================
+____ test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle ____
+
+tmp_path = PosixPath('/home/ts/.cache/agent-scratch/dewey-441-stream-source04-20261002/test_saved_roi_continuous_sdk_0')
+saved_roi_stream = (<openhcs.agent.services.plate_streaming_service.PlateStreamingService object at 0x7f2923781220>, {'file_paths': ['not...ache/agent-scratch/dewey-441-stream-source04-20261002/test_saved_roi_continuous_sdk_0/results/missing-source.roi.zip'))
+
+    def test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle(
+        tmp_path, saved_roi_stream,
+    ):
+        service, arguments, identity, received, timings, unsigned = saved_roi_stream
+        transport = McpSocketTransport(tmp_path.parent / "stream.sock")
+        built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
+                             main_thread_dispatcher=transport.execution.dispatcher)
+        clients = AsyncOperationExecutor(max_workers=1)
+        diagnostics = io.StringIO()
+        events = []
+    
+        class ObservedSession(McpDevSocketSession):
+            def record_progress_notification(self, notification):
+                super().record_progress_notification(notification)
+                assert threading.current_thread() is not threading.main_thread()
+                events.append((time.monotonic(), notification.params.progressToken, notification.params.message))
+    
+        async def exercise():
+            assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
+            try:
+                async with ObservedSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
+                    await session.initialize(timeout_seconds=10)
+                    for index, paths in enumerate((arguments["file_paths"], [unsigned.name], arguments["file_paths"])):
+                        before = len(events)
+                        request_id = session.request_id + 1
+                        started = time.monotonic()
+                        result = await session.call_tool(StreamPlateFilesToViewerCapability.name,
+                            {**arguments, "file_paths": paths}, timeout_seconds=10)
+                        elapsed = time.monotonic() - started
+                        progress = events[before:]
+                        assert progress and progress[0][0] - started < 1
+                        assert all(event[1] == request_id for event in progress)
+                        payload = result["structuredContent"]
+                        if index == 1:
+                            assert payload["errors"][0]["code"] == "plate_file_stream_failed"
+                            assert "Native ROI source metadata is required" in payload["errors"][0]["message"]
+                            assert len(received) == 1
+                        else:
+                            assert payload["errors"] == []
+                            assert payload["streamed_roi_paths"] == [str(Path(arguments["result_directory"]) / paths[0])]
+                            assert payload["streamed_image_paths"] == []
+                        if index == 0:
+                            assert elapsed >= 12
+                            assert any(event[0] - started > 10 and "still running" in event[2] for event in progress)
+                            assert any("Streaming 1 ROI file(s)" in event[2] for event in progress)
+                        print("ROI_STREAM_TERMINAL", index, elapsed, "idle10", "token", request_id, flush=True)
+            finally:
+                transport._stop.set()
+                if transport._listener is not None:
+                    transport._listener.close()
+    
+        future = clients.submit(exercise)
+        try:
+            transport.serve(built)
+>           future.result()
+
+tests/unit/agent/test_mcp_plate_stream_progress.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.12.3/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+../../.pyenv/versions/3.12.3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../.pyenv/versions/3.12.3/lib/python3.12/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+../openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pyqt_reactive/services/async_operation_executor.py:80: in _run_coroutine
+    return loop.run_until_complete(async_callable(*args, **kwargs))
+../../.pyenv/versions/3.12.3/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def exercise():
+        assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
+        try:
+            async with ObservedSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
+                await session.initialize(timeout_seconds=10)
+                for index, paths in enumerate((arguments["file_paths"], [unsigned.name], arguments["file_paths"])):
+                    before = len(events)
+                    request_id = session.request_id + 1
+                    started = time.monotonic()
+                    result = await session.call_tool(StreamPlateFilesToViewerCapability.name,
+                        {**arguments, "file_paths": paths}, timeout_seconds=10)
+                    elapsed = time.monotonic() - started
+                    progress = events[before:]
+                    assert progress and progress[0][0] - started < 1
+                    assert all(event[1] == request_id for event in progress)
+                    payload = result["structuredContent"]
+                    if index == 1:
+                        assert payload["errors"][0]["code"] == "plate_file_stream_failed"
+                        assert "Native ROI source metadata is required" in payload["errors"][0]["message"]
+                        assert len(received) == 1
+                    else:
+>                       assert payload["errors"] == []
+E                       assert [{'code': 'pl...e diff', ...}] == []
+E                         
+E                         Left contains one more item: {'code': 'plate_file_stream_failed', 'exception_type': 'AssertionError', 'hint': None, 'message': '(((None, None), (),...site\', \'1\'), (\'timepoint\', \'1\'), (\'well\', "\'A01\'"), (\'z_index\', \'1\')))\n  Use -v to get more diff', ...}
+E                         Use -v to get more diff
+
+tests/unit/agent/test_mcp_plate_stream_progress.py:156: AssertionError
+____ test_independent_stream_leaf_cooperative_hook_uses_generated_consumer _____
+
+saved_roi_stream = (<openhcs.agent.services.plate_streaming_service.PlateStreamingService object at 0x7f291f15af60>, {'file_paths': ['not...ache/agent-scratch/dewey-441-stream-source04-20261002/test_independent_stream_leaf_c0/results/missing-source.roi.zip'))
+
+    def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_roi_stream):
+        service, arguments, identity, received, timings, _unsigned = saved_roi_stream
+        timings.append(0.0)  # This declaration test does not repeat the slow experiment.
+        hooks = []
+    
+        class AuditCapability(AgentCapabilityDeclaration):
+            @classmethod
+            def execute_request(cls, context, request):
+                hooks.append("enter")
+                result = super().execute_request(context, request)
+                hooks.append("exit")
+                return result
+    
+        class IndependentStream(AuditCapability, StreamPlateFilesToViewerCapability):
+            name = "openhcs_independent_stream_progress_441"
+            cli_command = None
+    
+        class ProgressContext:
+            request_context = object()
+    
+            async def report_progress(self, progress, total=None, message=None):
+                assert threading.current_thread() is not threading.main_thread()
+                hooks.append(message)
+    
+        executor = McpTransportExecutor()
+        built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
+                             main_thread_dispatcher=executor.dispatcher)
+    
+        async def exercise():
+            token = identity.set("stream-request")
+            try:
+                return await built._tool_manager.get_tool(IndependentStream.name).fn(
+                    mcp_context=ProgressContext(), **arguments)
+            finally:
+                identity.reset(token)
+    
+        try:
+            result = executor.run(exercise)
+>           assert result["errors"] == [] and len(received) == 1
+E           assert ([{'code': 'pl...e diff', ...}] == []
+E             
+E             Left contains one more item: {'code': 'plate_file_stream_failed', 'exception_type': 'AssertionError', 'hint': None, 'message': '(((None, None), (),...site\', \'1\'), (\'timepoint\', \'1\'), (\'well\', "\'A01\'"), (\'z_index\', \'1\')))\n  Use -v to get more diff', ...}
+E             Use -v to get more diff)
+
+tests/unit/agent/test_mcp_plate_stream_progress.py:218: AssertionError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_mcp_plate_stream_progress.py::test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle
+FAILED tests/unit/agent/test_mcp_plate_stream_progress.py::test_independent_stream_leaf_cooperative_hook_uses_generated_consumer
+2 failed, 2 passed, 2 warnings in 6.29s
+BOUNDED_SOURCE peak_aggregate_rss_kib=333188 elapsed_seconds=7.351 returncode=1 reason=None

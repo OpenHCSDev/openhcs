@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from functools import partial
 from pathlib import Path
+
+from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
@@ -87,10 +90,12 @@ class PlateStreamingService:
         *,
         ui_bridge_connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     ) -> PlateFileStreamResult:
+        self._report_progress("Resolving viewer launch context")
         launch_context = self._ui_bridge_service.viewer_launch_context(
             ui_bridge_connection
         )
         context_plate_path = request.context_plate_path or request.plate_path
+        self._report_progress("Resolving physical plate source context")
         context, errors, warnings = self._plate_inspection_service.open_context(
             PlatePathInspectionRequest(
                 plate_path=context_plate_path,
@@ -153,11 +158,13 @@ class PlateStreamingService:
                 result_path = self._plate_inspection_service.resolve_readable_path(
                     request.result_directory
                 )
+                self._report_progress("Resolving retained result inventory")
                 inventory = self._plate_inspection_service.result_directory_inventory(
                     result_path
                 )
                 inventory_warnings = context.warnings
             else:
+                self._report_progress("Resolving plate file inventory")
                 inventory, inventory_warnings = (
                     self._plate_inspection_service.file_inventory(
                         stream_context,
@@ -239,6 +246,7 @@ class PlateStreamingService:
                     request, resolved_records, stream_context
                 )
 
+            self._report_progress("Checking managed viewer lifecycle and readiness")
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
                 filemanager=stream_context.filemanager,
                 config=config,
@@ -246,19 +254,21 @@ class PlateStreamingService:
                 ready_timeout=30.0,
                 launch_context=launch_context,
             )
+            self._report_progress("Managed viewer ready; preparing selected artifacts")
             streaming_service = StreamingService(
                 filemanager=stream_context.filemanager,
                 microscope_handler=stream_context.handler,
                 plate_path=stream_context.plate_path,
             )
             status_messages: list[str] = []
+            record_status = partial(self._record_stream_status, status_messages)
             if image_paths:
                 streaming_service.stream_images(
                     image_request_type(
                         viewer=viewer,
                         config=config,
-                        status_callback=status_messages.append,
-                        error_callback=status_messages.append,
+                        status_callback=record_status,
+                        error_callback=record_status,
                         filenames=image_paths,
                         read_backend=read_backend,
                         source_projection=source_projection,
@@ -283,14 +293,15 @@ class PlateStreamingService:
                     RoiStreamingRequest(
                         viewer=viewer,
                         config=config,
-                        status_callback=status_messages.append,
-                        error_callback=status_messages.append,
+                        status_callback=record_status,
+                        error_callback=record_status,
                         roi_filenames=roi_paths,
                         component_metadata_by_path=roi_component_metadata_by_path,
                         producer=roi_producer,
                         require_source_metadata=request.result_directory is not None,
                     )
                 )
+            self._report_progress("Selected artifacts published and viewer settlement completed")
         except Exception as exc:
             return PlateFileStreamResult(
                 schema_version=SCHEMA_VERSION,
@@ -329,6 +340,18 @@ class PlateStreamingService:
             status_messages=tuple(status_messages),
             warnings=all_warnings,
         )
+
+    @staticmethod
+    def _report_progress(message: str) -> None:
+        """Use the original request-local relay, without a viewer observer/store."""
+        EndpointStartupStatus(
+            EndpointStartupPhase.PREPARING_CAPABILITIES, message,
+        ).publish()
+
+    def _record_stream_status(self, messages: list[str], message: str) -> None:
+        """Preserve the original receipt while relaying its core-owned stage."""
+        messages.append(message)
+        self._report_progress(message)
 
     @staticmethod
     def _inventory_source_projection(

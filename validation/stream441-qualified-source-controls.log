@@ -1,0 +1,71 @@
+Running as unit: dewey-441-stream-source05-20261002.scope; invocation ID: cede8343c2fb4a2ba665b86e04f401c7
+..ROI_STREAM_TERMINAL 0 12.074560674023814 idle10 token 2
+ROI_STREAM_TERMINAL 1 0.024236530996859074 idle10 token 3
+ROI_STREAM_TERMINAL 2 0.028338144009467214 idle10 token 4
+.F
+=================================== FAILURES ===================================
+____ test_independent_stream_leaf_cooperative_hook_uses_generated_consumer _____
+
+saved_roi_stream = (<openhcs.agent.services.plate_streaming_service.PlateStreamingService object at 0x7f0be19becc0>, {'file_paths': ['not...ache/agent-scratch/dewey-441-stream-source05-20261002/test_independent_stream_leaf_c0/results/missing-source.roi.zip'))
+
+    def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_roi_stream):
+        service, arguments, identity, received, timings, _unsigned = saved_roi_stream
+        timings.append(0.0)  # This declaration test does not repeat the slow experiment.
+        hooks = []
+    
+        class AuditCapability(AgentCapabilityDeclaration):
+            @classmethod
+            def execute_request(cls, context, request):
+                hooks.append("enter")
+                result = super().execute_request(context, request)
+                hooks.append("exit")
+                return result
+    
+        class IndependentStream(AuditCapability, StreamPlateFilesToViewerCapability):
+            name = "openhcs_independent_stream_progress_441"
+            cli_command = None
+    
+        class ProgressContext:
+            request_context = object()
+    
+            async def report_progress(self, progress, total=None, message=None):
+                assert threading.current_thread() is not threading.main_thread()
+                hooks.append(message)
+    
+        executor = McpTransportExecutor()
+        built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
+                             main_thread_dispatcher=executor.dispatcher)
+    
+        async def exercise():
+            token = identity.set("stream-request")
+            try:
+                return await built._tool_manager.get_tool(IndependentStream.name).fn(
+                    mcp_context=ProgressContext(), **arguments)
+            finally:
+                identity.reset(token)
+    
+        try:
+            result = executor.run(exercise)
+            assert result["errors"] == [] and len(received) == 1
+>           assert hooks.count("enter") == hooks.count("exit") == 1
+E           AssertionError: assert 0 == 1
+E            +  where 0 = <built-in method count of list object at 0x7f0bdfdfc840>('exit')
+E            +    where <built-in method count of list object at 0x7f0bdfdfc840> = ['Stream plate files to viewer: started', 'Stream plate files to viewer: preparing_capabilities: Resolving viewer laun...ness', 'Stream plate files to viewer: preparing_capabilities: Managed viewer ready; preparing selected artifacts', ...].count
+
+tests/unit/agent/test_mcp_plate_stream_progress.py:223: AssertionError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/agent/test_mcp_plate_stream_progress.py::test_independent_stream_leaf_cooperative_hook_uses_generated_consumer
+1 failed, 3 passed, 2 warnings in 18.70s
+BOUNDED_SOURCE peak_aggregate_rss_kib=333088 elapsed_seconds=19.844 returncode=1 reason=None
