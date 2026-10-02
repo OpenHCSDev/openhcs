@@ -62,6 +62,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.report import RuntimeEquivalenceReport
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
@@ -177,6 +178,7 @@ def _require_compared_output_inventory(
     reference_snapshot: RuntimeOutputSnapshot,
     candidate_snapshot: RuntimeOutputSnapshot,
     candidate_managed_files: frozenset[Path] = frozenset(),
+    compared_file_report: RuntimeEquivalenceReport = RuntimeEquivalenceReport(()),
 ) -> None:
     """Reject unqualified output formats and missing scientific output files."""
     counts = []
@@ -193,11 +195,7 @@ def _require_compared_output_inventory(
         compared_files = (
             frozenset(exports.table_outputs)
             | frozenset(exports.image_outputs)
-            | frozenset(
-                path
-                for path in exports.output_files
-                if path.suffix.lower() in {".db", ".properties", ".workspace"}
-            )
+            | (files & compared_file_report.compared_output_files)
         )
         if files != compared_files:
             raise RuntimeError(
@@ -836,6 +834,7 @@ def main(argv: list[str] | None = None) -> int:
                 reference_snapshot=native_snapshot,
                 candidate_snapshot=candidate_snapshot,
                 candidate_managed_files=managed_output_files,
+                compared_file_report=database_report,
             )
             result = {
                 "repetition": repetition,

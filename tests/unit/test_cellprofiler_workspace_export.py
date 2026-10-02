@@ -231,3 +231,126 @@ def test_workspace_reader_rejects_malformed_version_and_reordered_fields():
     ):
         with pytest.raises(ValueError):
             CPAWorkspacePanel.parse_workspace(malformed)
+
+
+def test_workspace_comparison_coverage_is_physical_and_separate_from_science(tmp_path):
+    from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
+    from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+
+    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    fixture = (
+        Path(__file__).parents[1]
+        / "fixtures/cellprofiler/quality_control_4281.workspace"
+    )
+    paths = tuple(root / "QC.workspace" for root in (reference, candidate))
+    for path in paths:
+        path.write_bytes(fixture.read_bytes())
+    exports = tuple(
+        RuntimeExportObservation.from_output_root(root)
+        for root in (reference, candidate)
+    )
+    report = cellprofiler_database_export_equivalence(
+        reference, exports[1], policy=RuntimeEquivalencePolicy()
+    )
+    assert report.is_equivalent
+    assert report.compared_output_files == frozenset(paths)
+    kwargs = dict(
+        reference_files=frozenset(reference.iterdir()),
+        candidate_files=frozenset(candidate.iterdir()),
+        reference_exports=exports[0],
+        candidate_exports=exports[1],
+        reference_snapshot=RuntimeOutputSnapshot(),
+        candidate_snapshot=RuntimeOutputSnapshot(),
+    )
+    with pytest.raises(RuntimeError, match="without a value comparison"):
+        _require_compared_output_inventory(**kwargs)
+    _require_compared_output_inventory(**kwargs, compared_file_report=report)
+    paths[1].write_text(paths[1].read_text().replace("Image_", "Changed_", 1))
+    changed = cellprofiler_database_export_equivalence(
+        reference, exports[1], policy=RuntimeEquivalencePolicy()
+    )
+    assert not changed.is_equivalent
+    assert changed.compared_output_files == frozenset(paths)
+    _require_compared_output_inventory(**kwargs, compared_file_report=changed)
+    unknown = candidate / "copied-export.unknown"
+    unknown.write_bytes(paths[1].read_bytes())
+    with pytest.raises(RuntimeError, match="without a value comparison"):
+        _require_compared_output_inventory(
+            **{**kwargs, "candidate_files": frozenset(candidate.iterdir())},
+            compared_file_report=changed,
+        )
+
+
+def test_unmatched_workspace_and_reader_failures_never_claim_coverage(
+    tmp_path, monkeypatch
+):
+    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    fixture = (
+        Path(__file__).parents[1]
+        / "fixtures/cellprofiler/quality_control_4281.workspace"
+    )
+    (reference / "QC.workspace").write_bytes(fixture.read_bytes())
+    extra = candidate / "Unmatched.workspace"
+    extra.write_bytes(fixture.read_bytes())
+    exports = RuntimeExportObservation.from_output_root(candidate)
+    report = cellprofiler_database_export_equivalence(
+        reference, exports, policy=RuntimeEquivalencePolicy()
+    )
+    assert not report.is_equivalent
+    assert not report.compared_output_files
+    extra.rename(candidate / "QC.workspace")
+    extra = candidate / "QC.workspace"
+    exports = RuntimeExportObservation.from_output_root(candidate)
+    extra.write_text("not a CPA workspace")
+    with pytest.raises(ValueError):
+        cellprofiler_database_export_equivalence(
+            reference, exports, policy=RuntimeEquivalencePolicy()
+        )
+    extra.write_bytes(fixture.read_bytes())
+    original_read = Path.read_text
+    failure = OSError("actual reader failed")
+
+    def fail_read(path, *args, **kwargs):
+        if path == extra:
+            raise failure
+        return original_read(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", fail_read)
+    with pytest.raises(OSError) as raised:
+        cellprofiler_database_export_equivalence(
+            reference, exports, policy=RuntimeEquivalencePolicy()
+        )
+    assert raised.value is failure
+
+
+def test_workspace_aliases_are_compared_by_each_actual_path(tmp_path):
+    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    fixture = (
+        Path(__file__).parents[1]
+        / "fixtures/cellprofiler/quality_control_4281.workspace"
+    )
+    first = reference / "QC.workspace"
+    first.write_bytes(fixture.read_bytes())
+    second = candidate / "QC.workspace"
+    second.symlink_to(first)
+    report = cellprofiler_database_export_equivalence(
+        reference,
+        RuntimeExportObservation.from_output_root(candidate),
+        policy=RuntimeEquivalencePolicy(),
+    )
+    assert report.is_equivalent
+    assert report.compared_output_files == frozenset((first, second))
+    (candidate / "other").mkdir()
+    (candidate / "other/QC.workspace").symlink_to(first)
+    with pytest.raises(ValueError, match="ambiguous"):
+        cellprofiler_database_export_equivalence(
+            reference,
+            RuntimeExportObservation.from_output_root(candidate),
+            policy=RuntimeEquivalencePolicy(),
+        )
