@@ -1476,3 +1476,44 @@ This is synthetic source qualification, not original biological or installed-roo
 acceptance. Supplemental receipt:
 ``/var/tmp/openhcs-derived-role-435-v4-readback-supplement-20261002/receipt.json``
 (SHA256 4f0f0550e50aaff297d134ee5accf2b2da01297305394a155fe79e827b844fdf).
+
+Current source qualification and workload priority, 2026-10-02
+------------------------------------------------------------
+
+Main 142196857 (callable documentation ownership) is normally merged at
+9aa3918d2. The affected declared-documentation, agent-service, cold-feedback,
+automatic-image-role and plane-NLM integration controls pass 170 cases in
+14.77s. Log:
+``/var/tmp/openhcs-pr394-main142-documentation-role-integration-controls-20261002.log``.
+
+A clean frozen 9aa3918d2 ordinary public-driver observation completes one CPU5
+inline worker/thread with compilation 2.103262s, execution 7.870635s and total
+10.781240s. Server/library/kernel startup and shutdown remain outside pipeline
+clocks. All six CSVs, 120 TIFFs, 180 disk projection references and three source
+volume hashes agree exactly with the retained qualified reference and b764
+output; source, dependencies, interpreter and native binaries remain unchanged.
+Native science is transitive through that exact reference. This single current
+observation does not replace the earlier repeated ABBA comparison or establish
+a new optimization gain. Receipt:
+``/var/tmp/openhcs-pr394-role-qualified-3d-science-20261002.json``.
+
+The descriptive comparison against the two retained warm native 3D observations
+(mean 14.395949s) is 1.829x execution and 1.335x total. 3D is weakest among the
+three qualified representatives (3D, Advanced and IFC), whose OpenHCS revisions
+differ. The global weakest case remains unknown: all30 cached native clocks
+include subprocess startup and the older multicore CP scaling baseline is
+projected. Historical WoundHealing, TrackObjects and worm cases require current
+matched warm-native qualification before ranking the whole catalog. Receipt:
+``/var/tmp/openhcs-current-native-workload-priority-revalidation-20261002.json``.
+
+The next whole-transaction diagnostic is rejected before launch when its saved
+representative identity pairs predict 2,719,141,800 bytes for three 60-request
+cohorts alone, exceeding the transport's 1GiB root budget. No pipeline is run
+for V4 and none of its frozen files are changed. This prediction is not an
+observed complete production roster. A saved grouped-graph experiment reduces
+those three representative graphs to 81,450,818 bytes while preserving actual
+saved payloads; cache subsets contain no arrays. A separate V5 preparation
+must capture actual ordered requests and detached pre/post cache states before
+its replay or a performance candidate can be admitted. Receipts:
+``/var/tmp/openhcs-whole-cohort-v4-budget-preflight-REJECTED-20261002.json`` and
+``/var/tmp/openhcs-grouped-identity-budget-saved-experiment-v3-20261002/receipt.json``.
