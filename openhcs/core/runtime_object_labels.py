@@ -30,6 +30,7 @@ from openhcs.core.registry_strategies import (
     NominalTypeStrategyFamilyMixin,
 )
 from openhcs.core.runtime_object_label_domains import (
+    DenseIntegerObjectLabelIdDomain,
     ObjectLabelDomain,
     ObjectLabelDomainDeclaration,
     ObjectLabelDomainMetadata,
@@ -1218,12 +1219,17 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
 
     @classmethod
     def prepare_coordinates(cls) -> None:
-        """Prepare both mutability signatures of the dense coordinate reducer."""
-        labels = np.array([[0, 1]], dtype=np.int32)
-        for writeable in (True, False):
-            labels.flags.writeable = writeable
-            _dense_label_coordinate_moments_numba(labels.ravel(), 1, 2, 1)
-            dense_label_centers_2d_numba(labels, 1)
+        """Prepare C/F/strided signatures with both input mutability policies."""
+        plane = np.array([[0, 1], [1, 0]], dtype=np.int32)
+        volume = np.stack((plane, plane))
+        for labels in (volume, np.asfortranarray(volume), volume.copy()[..., ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                _dense_label_coordinate_moments_numba(labels, 1)
+        for labels in (plane, np.asfortranarray(plane), plane.copy()[:, ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                dense_label_centers_2d_numba(labels, 1)
 
     def axis_centers(
         self, labels: object, *, domain: Sequence[int]
@@ -1235,11 +1241,19 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
             or any(size > np.iinfo(np.int32).max for size in array.shape)
         ):
             return super().axis_centers(labels, domain=domain)
+        coordinate_planes = array[None, ...] if array.ndim == 2 else array
+        positive_parts = tuple(plane[plane > 0] for plane in coordinate_planes)
+        coordinate_domain = DenseIntegerObjectLabelIdDomain.from_array(
+            np.concatenate(positive_parts or (np.empty(0, dtype=np.int32),))
+        )
+        del positive_parts
+        if coordinate_domain is None:
+            return super().axis_centers(labels, domain=domain)
         coordinate_columns = tuple(range(3 - array.ndim, 3))
         sums, pixel_counts = _dense_label_coordinate_moments_numba(
-            array.ravel(order="C"),
-            array.shape[-2], array.shape[-1], int(array.max(initial=0)),
+            coordinate_planes, coordinate_domain.max_label,
         )
+        del coordinate_domain
         # Like sparse conversion, the moments snapshot precedes domain callbacks.
         object_ids = np.flatnonzero(pixel_counts)
         max_domain_label = max(domain, default=0)
@@ -1622,22 +1636,17 @@ def object_label_axis_centers(
 
 @njit(cache=True)
 def _dense_label_coordinate_moments_numba(
-    flat_labels: np.ndarray,
-    height: int,
-    width: int,
+    labels: np.ndarray,
     maximum_label: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Reduce dense positive labels once in their declared row-major geometry."""
     sums = np.zeros((maximum_label + 1, 3), dtype=np.float64)
     counts = np.zeros(maximum_label + 1, dtype=np.int64)
-    plane_size = height * width
-    plane_count = 0 if plane_size == 0 else flat_labels.size // plane_size
-    offset = 0
+    plane_count, height, width = labels.shape
     for plane in range(plane_count):
         for y in range(height):
             for x in range(width):
-                label_id = int(flat_labels[offset])
-                offset += 1
+                label_id = int(labels[plane, y, x])
                 if label_id > 0 and label_id <= maximum_label:
                     sums[label_id, 0] += plane
                     sums[label_id, 1] += y
@@ -1653,7 +1662,7 @@ def dense_label_centers_2d_numba(
     """Validate compiled two-dimensional geometry and return its y/x centers."""
     height, width = labels.shape
     sums, counts = _dense_label_coordinate_moments_numba(
-        labels.ravel(), height, width, label_count
+        labels[None, :height, :width], label_count
     )
     centers = np.empty((label_count + 1, 2), dtype=np.float64)
     for label_id in range(label_count + 1):

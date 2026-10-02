@@ -198,6 +198,64 @@ def test_invalid_geometry_precedes_domain_iteration():
         assert not effects
 
 
+@pytest.mark.parametrize("shape,label_id", (((1, 1), 2**31 - 1), ((64, 64), 4096)))
+def test_sparse_high_ids_reach_domain_error_before_moment_allocation(monkeypatch, shape, label_id):
+    from openhcs.core import runtime_object_labels
+
+    def reject_moment_allocation(*_args):
+        raise AssertionError("Sparse ID span must not allocate a dense moment table")
+
+    monkeypatch.setattr(runtime_object_labels, "_dense_label_coordinate_moments_numba", reject_moment_allocation)
+    for call in (generic_centers, lambda labels, domain: object_label_axis_centers(labels, domain=domain)):
+        labels = np.zeros(shape, dtype=np.int32)
+        labels.flat[0] = label_id
+        effects = []
+
+        class Domain:
+            def __iter__(self):
+                effects.append("iterate")
+                labels.flat[0] = 1
+                raise RuntimeError("Domain rejected sparse high IDs")
+
+        with pytest.raises(RuntimeError, match="Domain rejected sparse high IDs"):
+            call(labels, Domain())
+        assert effects == ["iterate"]
+        assert labels.flat[0] == 1
+
+
+@pytest.mark.parametrize("dimensions", (2, 3))
+@pytest.mark.parametrize("layout", ("fortran", "reversed", "broadcast"))
+def test_coordinate_scan_borrows_strided_input_without_flatten_copy(monkeypatch, dimensions, layout):
+    from openhcs.core import runtime_object_labels
+
+    labels = np.array([[0, 1, 1], [2, 0, 2]], dtype=np.int32)
+    if dimensions == 3:
+        labels = np.stack((labels, labels))
+    if layout == "fortran":
+        labels = np.asfortranarray(labels)
+    elif layout == "reversed":
+        labels = labels[..., ::-1]
+    else:
+        labels = np.broadcast_to(labels[..., :1, :], (*labels.shape[:-2], 4, 3))
+    expected = generic_centers(labels, (1, 2, 4))
+    before = labels.copy()
+    original = runtime_object_labels._dense_label_coordinate_moments_numba
+    requests = []
+
+    def borrowed_scan(coordinate_planes, maximum_label):
+        assert coordinate_planes.ndim == 3
+        assert np.shares_memory(coordinate_planes, labels)
+        assert coordinate_planes.flags.writeable == labels.flags.writeable
+        assert coordinate_planes.shape == ((1, *labels.shape) if dimensions == 2 else labels.shape)
+        requests.append(coordinate_planes)
+        return original(coordinate_planes, maximum_label)
+
+    monkeypatch.setattr(runtime_object_labels, "_dense_label_coordinate_moments_numba", borrowed_scan)
+    assert_centers(object_label_axis_centers(labels, domain=(1, 2, 4)), expected)
+    assert len(requests) == 1
+    np.testing.assert_array_equal(labels, before)
+
+
 def test_primary_objects_preparation_readies_all_admitted_storage_signatures(tmp_path):
     script = textwrap.dedent("""
         from unittest.mock import patch
@@ -214,15 +272,18 @@ def test_primary_objects_preparation_readies_all_admitted_storage_signatures(tmp
         signatures = tuple(tuple(kernel.signatures) for kernel in kernels)
         assert all(signatures)
 
-        def reject_compilation(signature):
-            raise AssertionError(('Late coordinate compilation', str(signature)))
+        def reject_compilation(*arguments):
+            raise AssertionError(('Late coordinate preparation', tuple(map(str, arguments))))
 
-        with patch.object(_dense_label_coordinate_moments_numba, 'compile',
-                          side_effect=reject_compilation), patch.object(
-                dense_label_centers_2d_numba, 'compile', side_effect=reject_compilation):
+        from contextlib import ExitStack
+        with ExitStack() as guards:
+            for kernel in kernels:
+                guards.enter_context(patch.object(kernel, 'compile', side_effect=reject_compilation))
+                guards.enter_context(patch.object(kernel._cache, 'load_overload', side_effect=reject_compilation))
             for shape in ((4, 5), (3, 4, 5)):
                 base = np.arange(np.prod(shape), dtype=np.int32).reshape(shape) % 4
-                for labels in (base, np.asfortranarray(base), base[..., ::-1], base.copy()):
+                for labels in (base, np.asfortranarray(base), base[..., ::-1],
+                               np.broadcast_to(base[..., :1, :], shape), base.copy()):
                     object_label_axis_centers(labels, domain=(1, 2, 3, 6))
                     labels.flags.writeable = False
                     object_label_axis_centers(labels, domain=(1, 2, 3, 6))
