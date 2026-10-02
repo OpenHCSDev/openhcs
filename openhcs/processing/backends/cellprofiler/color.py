@@ -27,7 +27,9 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.callable_contract import (
+    PrimaryImageCarrierTransition,
     PrimaryImageCarrierRequirement,
+    declares_primary_image_carrier_transition,
     requires_primary_image_carrier,
 )
 from openhcs.core.memory.decorators import numpy
@@ -80,10 +82,53 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 
+class ColorToGrayScalarOutputProjection(ABC):
+    """Own whether a scalar output selects a source channel or derives from all."""
+
+    @abstractmethod
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData: ...
+
+
+class SelectedColorChannelProjection(ColorToGrayScalarOutputProjection):
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData:
+        return image_payload_metadata(image).project_channel_payload(
+            source_payload=image,
+            source_data=image_payload_data(image),
+            channel_index=channel_index,
+            channel_data=output,
+            channel_axis=-1,
+        )
+
+
+class DerivedColorChannelProjection(ColorToGrayScalarOutputProjection):
+    def project(
+        self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
+    ) -> RuntimeArrayData:
+        del channel_index
+        return with_image_payload_data(
+            image, output,
+            metadata=image_payload_metadata(image).without_source_channel_axis(),
+        )
+
+
 class ImageChannelType(Enum):
-    RGB = "rgb"
-    HSV = "hsv"
-    CHANNELS = "channels"
+    def __new__(cls, value: str, projection: type[ColorToGrayScalarOutputProjection]):
+        member = object.__new__(cls)
+        member._value_ = value
+        member._scalar_output_projection = projection()
+        return member
+
+    RGB = ("rgb", SelectedColorChannelProjection)
+    HSV = ("hsv", DerivedColorChannelProjection)
+    CHANNELS = ("channels", SelectedColorChannelProjection)
+
+    @property
+    def scalar_output_projection(self) -> ColorToGrayScalarOutputProjection:
+        return self._scalar_output_projection
 
 
 class ColorToGrayMode(Enum):
@@ -1490,6 +1535,9 @@ class CompositeGrayToColorRunner(GrayToColorSchemeRunner):
         return self.final_rgb(rgb_image, request)
 
 
+@declares_primary_image_carrier_transition(
+    PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
+)
 @required_variable_components(VariableComponents.CHANNEL)
 @composed_image_payload
 @numpy(contract=ProcessingContract.PURE_3D)
@@ -1613,23 +1661,14 @@ def color_to_gray(
             output,
             metadata=color_to_gray_combine_output_metadata(image),
         )
-    image_data = image_payload_data(image)
     outputs = split_color_to_gray(image, image_type, channel_indices)
-    if image_type is ImageChannelType.RGB:
-        return pack_aligned_image_outputs(
-            tuple(
-                image_payload_metadata(image).project_channel_payload(
-                    source_payload=image,
-                    source_data=image_data,
-                    channel_index=channel_index,
-                    channel_data=output,
-                    channel_axis=-1,
-                )
-                for channel_index, output in zip(channel_indices, outputs, strict=True)
-            )
-        )
     return pack_aligned_image_outputs(
-        tuple(with_image_payload_data(image, output) for output in outputs)
+        tuple(
+            image_type.scalar_output_projection.project(
+                image, channel_index=channel_index, output=output,
+            )
+            for channel_index, output in zip(channel_indices, outputs, strict=True)
+        )
     )
 
 

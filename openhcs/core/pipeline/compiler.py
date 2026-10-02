@@ -1427,12 +1427,13 @@ class PipelineCompiler:
                         f"{group.group_key!r}, invocation "
                         f"{invocation.contract.function_name!r}"
                     )
-                    unproved_prefix = (
-                        group.first_unproved_primary_image_carrier_invocation(
+                    prefix_proof = (
+                        group.primary_image_carrier_proof(
                             requirement,
                             stop_before=invocation_index,
                         )
                     )
+                    unproved_prefix = prefix_proof.unproved_invocation
                     if unproved_prefix is not None:
                         failures.append(
                             f"{owner}: carrier requirement {requirement.value!r} "
@@ -1440,6 +1441,8 @@ class PipelineCompiler:
                             f"{unproved_prefix.contract.function_name!r} in the "
                             "same group."
                         )
+                        continue
+                    if not prefix_proof.requires_source_validation:
                         continue
                     source_binding_plan = PipelineCompiler._source_anchor_binding_plan(
                         plan,
@@ -1457,7 +1460,7 @@ class PipelineCompiler:
                                 "projection represents this callable's main flow."
                             )
                             continue
-                        source_proof = PipelineCompiler._carrier_source_plan(
+                        PipelineCompiler._validate_inherited_primary_image_carrier_requirement(
                             session=session,
                             plan=plan,
                             group_key=group.group_key,
@@ -1466,9 +1469,7 @@ class PipelineCompiler:
                             requirement=requirement,
                             failures=failures,
                         )
-                        if source_proof is None:
-                            continue
-                        _source_plan, source_binding_plan = source_proof
+                        continue
                     PipelineCompiler._validate_pipeline_start_carrier_requirement(
                         session=session,
                         source_binding_plan=(
@@ -1536,7 +1537,7 @@ class PipelineCompiler:
             ) from error
 
     @staticmethod
-    def _carrier_source_plan(
+    def _validate_inherited_primary_image_carrier_requirement(
         *,
         session: CompilationSession,
         plan: CompiledStepPlan,
@@ -1545,8 +1546,8 @@ class PipelineCompiler:
         owner: str,
         requirement: PrimaryImageCarrierRequirement,
         failures: list[str],
-    ) -> tuple[CompiledStepPlan, CompiledSourceBindingPlan | None] | None:
-        """Trace a carrier-preserving main-flow chain to its source-owning plan."""
+    ) -> None:
+        """Validate inheritance until a declaration creates the required carrier."""
 
         try:
             ancestry = session.main_flow_plan_ancestry(plan.step_index)
@@ -1555,7 +1556,7 @@ class PipelineCompiler:
                 f"{owner}: carrier requirement {requirement.value!r} has an "
                 f"invalid compiled step dependency: {error}"
             )
-            return None
+            return
 
         current_source_binding_plan = initial_source_binding_plan
         for ancestry_index, producer in enumerate(ancestry):
@@ -1566,7 +1567,7 @@ class PipelineCompiler:
                     f"{owner}: carrier requirement {requirement.value!r} has no "
                     f"compiled producer proof for step {producer.step_index}."
                 )
-                return None
+                return
             try:
                 producer_group = producer.compiled_function_pattern.group_for_component(
                     group_key
@@ -1577,29 +1578,32 @@ class PipelineCompiler:
                     f"select a carrier-producing group from step "
                     f"{producer.step_index}: {error}"
                 )
-                return None
+                return
             if producer_group is None:
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} has no "
                     f"producer group {group_key!r} at step {producer.step_index}."
                 )
-                return None
+                return
             if not producer_group.invocations:
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} has an "
                     f"empty producer group at step {producer.step_index}."
                 )
-                return None
-            unproved = producer_group.first_unproved_primary_image_carrier_invocation(
+                return
+            proof = producer_group.primary_image_carrier_proof(
                 requirement
             )
+            unproved = proof.unproved_invocation
             if unproved is not None:
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} is not "
                     f"preserved by producer step {producer.step_index} callable "
                     f"{unproved.contract.function_name!r}."
                 )
-                return None
+                return
+            if not proof.requires_source_validation:
+                return
             current_source_binding_plan = PipelineCompiler._source_anchor_binding_plan(
                 producer,
                 producer_group,
@@ -1610,14 +1614,21 @@ class PipelineCompiler:
                 current_source_binding_plan is not None
                 and current_source_binding_plan.primary_plane_bindings
             ):
-                return producer, current_source_binding_plan
+                PipelineCompiler._validate_pipeline_start_carrier_requirement(
+                    session=session,
+                    source_binding_plan=current_source_binding_plan,
+                    owner=owner,
+                    requirement=requirement,
+                    failures=failures,
+                )
+                return
             if producer.requires_terminal_source_projection:
                 failures.append(
                     f"{owner}: carrier requirement {requirement.value!r} has no "
                     f"exact primary source-binding projection at producer step "
                     f"{producer.step_index}."
                 )
-                return None
+                return
 
         current = ancestry[-1]
         try:
@@ -1627,8 +1638,18 @@ class PipelineCompiler:
                 f"{owner}: carrier requirement {requirement.value!r} cannot be "
                 f"traced to an exact pipeline-start source: {error}"
             )
-            return None
-        return current, current_source_binding_plan
+            return
+        PipelineCompiler._validate_pipeline_start_carrier_requirement(
+            session=session,
+            source_binding_plan=(
+                CompiledSourceBindingPlan.empty()
+                if current_source_binding_plan is None
+                else current_source_binding_plan
+            ),
+            owner=owner,
+            requirement=requirement,
+            failures=failures,
+        )
 
     @staticmethod
     def _validate_pipeline_start_carrier_requirement(

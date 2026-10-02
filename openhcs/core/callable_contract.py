@@ -241,14 +241,34 @@ class PrimaryImageCarrierRequirement(str, Enum):
 class PrimaryImageCarrierTransition(str, Enum):
     """Declared effect of a callable on its primary-image carrier semantics."""
 
-    PRESERVE = "preserve"
+    def __new__(
+        cls,
+        value: str,
+        preserves: bool,
+        creates: tuple[PrimaryImageCarrierRequirement, ...],
+    ):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member._preserves = preserves
+        member._creates = creates
+        return member
+
+    PRESERVE = ("preserve", True, ())
+    CREATE_SOURCE_CHANNEL_AXIS = (
+        "create_source_channel_axis",
+        False,
+        (PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,),
+    )
+
+    def creates(self, requirement: PrimaryImageCarrierRequirement) -> bool:
+        """Return whether this member supplies evidence without source inheritance."""
+
+        return requirement in self._creates
 
     def proves(self, requirement: PrimaryImageCarrierRequirement) -> bool:
-        """Return whether this transition preserves the requested evidence."""
+        """Return whether this member preserves or creates the requested evidence."""
 
-        if self is PrimaryImageCarrierTransition.PRESERVE:
-            return True
-        raise AssertionError(f"Unhandled primary image carrier transition {self!r}.")
+        return self._preserves or self.creates(requirement)
 
 
 def _validate_optional_enum(
@@ -1703,6 +1723,21 @@ def preserves_primary_image_carrier(func: Any) -> Any:
         primary_image_carrier_transition=PrimaryImageCarrierTransition.PRESERVE,
     )
     return func
+
+
+def declares_primary_image_carrier_transition(
+    transition: PrimaryImageCarrierTransition,
+) -> Any:
+    """Attach a member-owned carrier effect through the original metadata boundary."""
+
+    def decorator(func: Any) -> Any:
+        attach_callable_contract_metadata(
+            func,
+            primary_image_carrier_transition=transition,
+        )
+        return func
+
+    return decorator
 
 
 def prepare_processing_callable(func: Any) -> None:

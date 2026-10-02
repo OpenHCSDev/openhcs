@@ -1,6 +1,9 @@
 GrayToColor #432: creation is not preservation
 ============================================
 
+Historical diagnosis retained verbatim below. The subsequently authorized
+working repair and current ownership are in carrier-repair-receipt.rst.
+
 Latest original installed witness
 --------------------------------
 

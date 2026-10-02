@@ -6,16 +6,20 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.core.callable_contract import CallableContract, PrimaryImageCarrierTransition
+from openhcs.core.callable_contract import (
+    CallableContract, PrimaryImageCarrierRequirement, PrimaryImageCarrierTransition,
+    declares_primary_image_carrier_transition, preserves_primary_image_carrier,
+)
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.function_patterns import CompiledFunctionGroup, CompiledFunctionPattern
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
+from openhcs.core.runtime_image_values import image_payload_data, image_payload_mask, image_payload_metadata
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext, ImagePayloadExecutionMode
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.color import (
     ColorToGrayMode, ImageChannelType, color_to_gray, gray_to_color,
+    split_color_to_gray,
 )
 from test_gray_to_color_binding_axis_432 import _execute_bound_stack, _source_plane
 from test_primary_image_carrier_compile_gate import _compiled_pattern, _session
@@ -43,7 +47,7 @@ def _gray_creator_session(tmp_path):
 
 def test_declared_gray_creator_proves_color_consumer_before_execution(tmp_path):
     # Intended acceptance: unchanged strict consumer accepts a declared creator.
-    # Current RED matches the installed producer-step error, not a live replay.
+    # Original RED matched the installed producer-step error, not a live replay.
     PipelineCompiler.validate_primary_image_carrier_requirements(_gray_creator_session(tmp_path))
 
 
@@ -112,3 +116,112 @@ def test_scalar_role_outputs_consume_the_color_carrier():
     for output in result.slices:
         assert image_payload_data(output).shape == (4, 5)
         assert image_payload_metadata(output).source_channel_axis is None
+
+
+@pytest.mark.parametrize("same_group", [False, True])
+def test_independent_creator_declaration_needs_no_consumer_edits(tmp_path, monkeypatch, same_group):
+    @declares_primary_image_carrier_transition(
+        PrimaryImageCarrierTransition.CREATE_SOURCE_CHANNEL_AXIS,
+    )
+    def independent_lane_creator(image):
+        return np.stack((image, image * 2), axis=-1)
+
+    @preserves_primary_image_carrier
+    def independent_lane_preserver(image):
+        return image.copy()
+
+    # Behavior, not an inheritance assertion or a fake source-color header.
+    gray = np.arange(20, dtype=np.float32).reshape(4, 5)
+    created = independent_lane_preserver(independent_lane_creator(gray))
+    np.testing.assert_array_equal(created[..., 0], gray)
+    np.testing.assert_array_equal(created[..., 1], gray * 2)
+    session = _gray_creator_session(tmp_path)
+    producer_invocations = tuple(
+        invocation
+        for callable_ in (independent_lane_creator, independent_lane_preserver)
+        for invocation in _compiled_pattern(callable_).iter_invocations()
+    )
+    if same_group:
+        consumer_invocations = tuple(session.plans[1].compiled_function_pattern.iter_invocations())
+        session.plans = {0: replace(session.plans[0], compiled_function_pattern=CompiledFunctionPattern(
+            groups=(CompiledFunctionGroup("default", producer_invocations + consumer_invocations),),
+            is_grouped=False,
+        ))}
+    else:
+        session.plans[0] = replace(session.plans[0], compiled_function_pattern=CompiledFunctionPattern(
+            groups=(CompiledFunctionGroup("default", producer_invocations),), is_grouped=False,
+        ))
+    session.context.step_plans = session.plans
+
+    def reject_source_backtracking(*args, **kwargs):
+        pytest.fail("A declared creator must stop source-carrier backtracking")
+
+    monkeypatch.setattr(
+        "openhcs.core.pipeline.compiler.require_image_file_source_metadata",
+        reject_source_backtracking,
+    )
+    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+
+
+@pytest.mark.parametrize("unknown_after_creator", [False, True])
+def test_group_proof_stops_at_creator_but_rejects_later_unknown(unknown_after_creator):
+    def unknown(image):
+        return image
+
+    functions = (gray_to_color, unknown) if unknown_after_creator else (unknown, gray_to_color)
+    invocations = tuple(
+        invocation for callable_ in functions
+        for invocation in _compiled_pattern(callable_).iter_invocations()
+    )
+    proof = CompiledFunctionGroup("default", invocations).primary_image_carrier_proof(
+        PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
+    )
+    assert not proof.requires_source_validation
+    if unknown_after_creator:
+        assert proof.unproved_invocation is invocations[-1]
+    else:
+        assert proof.unproved_invocation is None
+
+
+def test_color_to_gray_does_not_preserve_consumed_carrier_for_later_consumer(tmp_path):
+    session = _gray_creator_session(tmp_path)
+    consumer = session.plans[1]
+    session.plans[2] = replace(
+        consumer, step_index=2, step_name="RejectSecondScalarSplit",
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=1, source_step_scope_id="step-1",
+        ),
+    )
+    session.plans[1] = replace(consumer, step_scope_id="step-1")
+    session.context.step_plans = session.plans
+    with pytest.raises(ValueError, match="not preserved by producer step 1 callable 'color_to_gray'"):
+        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+
+
+@pytest.mark.parametrize("image_type", tuple(ImageChannelType))
+def test_scalar_projection_modes_keep_pixels_mask_and_original_source(image_type):
+    pixels = np.arange(60, dtype=np.float32).reshape(4, 5, 3) / 60
+    mask = np.arange(20).reshape(4, 5) % 3 != 0
+    source = _source_plane(pixels, "OriginalColor")
+    metadata = image_payload_metadata(source).replace_fields(source_channel_axis=-1)
+    source = metadata.payload_with(pixels, mask)
+    expected = split_color_to_gray(source, image_type, (0, 1))
+    contract = CallableContract.from_callable(color_to_gray)
+    result = CellProfilerFunctionContractExecutor().execute(
+        contract, contract.resolve_canonical_raw_callable(), source,
+        {"mode": ColorToGrayMode.SPLIT, "image_type": image_type,
+         "channel_indices": (0, 1), "contributions": (1.0, 1.0)},
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+    )
+    for output, expected_pixels in zip(result.slices, expected, strict=True):
+        np.testing.assert_array_equal(image_payload_data(output), expected_pixels)
+        np.testing.assert_array_equal(image_payload_mask(output), mask)
+        output_metadata = image_payload_metadata(output)
+        assert output_metadata.source_channel_axis is None
+        assert output_metadata.source_path == metadata.source_path
+        assert output_metadata.source_component_metadata == metadata.source_component_metadata
+        assert output_metadata.source_image_names == metadata.source_image_names
+        assert output_metadata.source_voxel_spacing == metadata.source_voxel_spacing
+        assert output_metadata.source_spatial_domain == metadata.source_spatial_domain
+    np.testing.assert_array_equal(image_payload_data(source), pixels)
+    assert image_payload_metadata(source).source_channel_axis == -1

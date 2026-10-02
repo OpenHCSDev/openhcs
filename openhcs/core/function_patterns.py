@@ -8,6 +8,7 @@ gives that unit a named identity for compile-time planning and runtime lookup.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -818,25 +819,62 @@ class CompiledFunctionGroup:
             for invocation in self.invocations
         )
 
-    def first_unproved_primary_image_carrier_invocation(
+    def primary_image_carrier_proof(
         self,
         requirement: PrimaryImageCarrierRequirement,
         *,
         stop_before: int | None = None,
-    ) -> CompiledFunctionInvocation | None:
-        """Return the first invocation without a typed carrier proof."""
+    ) -> PrimaryImageCarrierProof:
+        """Resolve a consumer's evidence backwards to its creation or source."""
 
         invocations = (
             self.invocations if stop_before is None else self.invocations[:stop_before]
         )
-        return next(
-            (
-                invocation
-                for invocation in invocations
-                if not invocation.proves_primary_image_carrier(requirement)
-            ),
-            None,
-        )
+        for invocation in reversed(invocations):
+            if not invocation.proves_primary_image_carrier(requirement):
+                return UnprovedPrimaryImageCarrierProof(invocation)
+            transition = invocation.contract.primary_image_carrier_transition
+            if transition.creates(requirement):
+                return CreatedPrimaryImageCarrierProof()
+        return InheritedPrimaryImageCarrierProof()
+
+
+class PrimaryImageCarrierProof(ABC):
+    """One group-owned proof result, not another carrier metadata authority."""
+
+    @property
+    def unproved_invocation(self) -> CompiledFunctionInvocation | None:
+        return None
+
+    @property
+    @abstractmethod
+    def requires_source_validation(self) -> bool:
+        """Return whether proof still needs the exact original source carrier."""
+
+
+class InheritedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    @property
+    def requires_source_validation(self) -> bool:
+        return True
+
+
+class CreatedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    @property
+    def requires_source_validation(self) -> bool:
+        return False
+
+
+@dataclass(frozen=True, slots=True)
+class UnprovedPrimaryImageCarrierProof(PrimaryImageCarrierProof):
+    invocation: CompiledFunctionInvocation
+
+    @property
+    def unproved_invocation(self) -> CompiledFunctionInvocation:
+        return self.invocation
+
+    @property
+    def requires_source_validation(self) -> bool:
+        return False
 
 
 @dataclass(frozen=True, slots=True)
