@@ -21,6 +21,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import (
+    ModuleOnlySettingBinding,
     SettingToKeywordBinding,
     cellprofiler_enum_setting_parser,
     normalize_cellprofiler_setting_name,
@@ -415,8 +416,8 @@ class RescaleIntensityModule(CellProfilerModule):
     confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
-        SettingToKeywordBinding.input(
-            "Select image to match in maximum intensity", ImageArtifactType
+        ModuleOnlySettingBinding(
+            "Select image to match in maximum intensity"
         ),
         SettingToKeywordBinding.output("Name the output image", ImageArtifactType),
         SettingToKeywordBinding(
