@@ -140,7 +140,7 @@ def test_invalid_budget_cannot_discover_or_launch(monkeypatch, budget):
 
 
 @pytest.mark.parametrize("fails", [False, True])
-def test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does(
+def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded(
     monkeypatch, fails,
 ):
     events = []
@@ -153,7 +153,10 @@ def test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does(
     def unselected(image):
         return image
 
-    for function in (selected, unselected):
+    def dynamic(image):
+        return image
+
+    for function in (selected, unselected, dynamic):
         function.__module__ = module.__name__
 
     def prepare_selected():
@@ -161,32 +164,39 @@ def test_catalog_discovery_does_not_prepare_unselected_hooks_then_compile_does(
         if fails:
             raise RuntimeError("selected preparation failed")
     selected.__dict__[FunctionContractAttribute.processing_prepare] = prepare_selected
-    unselected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: pytest.fail("unselected preparation")
+    unselected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("unselected")
+    dynamic.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("dynamic")
     metadata = {"selected": SimpleNamespace(func=selected), "unselected": SimpleNamespace(func=unselected)}
     monkeypatch.setattr(RegistryService, "_metadata_cache", None)
     monkeypatch.setattr(RegistryService, "_available_registry_instances", classmethod(lambda cls: ()))
     monkeypatch.setattr(RegistryService, "_metadata_from_instances", classmethod(lambda cls, instances: metadata))
     monkeypatch.setattr(AutoRegisterRegistryPreparation, "module_registry_families", staticmethod(lambda module: ()))
+    monkeypatch.setattr(PreparationCacheBatch, "populate_child_caches", lambda self, **kwargs: None)
+    if fails:
+        for _ in range(2):
+            with pytest.raises(RuntimeError, match="selected preparation failed"):
+                RegistryService.prepare_in_current_process()
+        assert events == ["selected", "selected"]
+        events.clear()
+        fails = False
     assert RegistryService.prepare_in_current_process() is metadata
     assert RegistryService.prepare_in_current_process() is metadata
-    assert not events
+    assert events == ["selected", "unselected"]
 
     invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("selected", "default", 0),
         contract=CallableContract.from_callable(selected),
     )
-    group = CompiledFunctionGroup("default", (invocation,))
+    dynamic_invocation = CompiledFunctionInvocation(
+        key=FunctionInvocationKey("dynamic", "default", 1),
+        contract=CallableContract.from_callable(dynamic),
+    )
+    group = CompiledFunctionGroup("default", (invocation, dynamic_invocation))
     pattern = CompiledFunctionPattern(groups=(group,), is_grouped=False)
     context = SimpleNamespace(step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)})
-    if fails:
-        for _ in range(2):
-            with pytest.raises(RuntimeError, match="selected preparation failed"):
-                prepare_compiled_context_callables({"A01": context}, max_workers=1)
-        assert events == ["selected", "selected"]
-    else:
-        prepare_compiled_context_callables({"A01": context}, max_workers=1)
-        prepare_compiled_context_callables({"A01": context}, max_workers=1)
-        assert events == ["selected"]
+    prepare_compiled_context_callables({"A01": context}, max_workers=1)
+    prepare_compiled_context_callables({"A01": context}, max_workers=1)
+    assert events == ["selected", "unselected", "dynamic"]
 
 
 def test_unavailable_affinity_does_not_admit_speculative_parallelism(monkeypatch):
