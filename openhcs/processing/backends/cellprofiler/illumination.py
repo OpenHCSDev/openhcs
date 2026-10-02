@@ -1003,6 +1003,16 @@ def _prepare_correct_illumination_calculate() -> None:
         filter_size_method=FilterSizeMethod.AUTOMATIC,
         rescale_option=RescaleOption.YES,
     )
+    # Polynomial fitting canonicalizes dtype/layout, but retains read-only
+    # contiguous arrays. Prepare masked and unmasked mutability signatures.
+    polynomial_image = np.ascontiguousarray(image, dtype=np.float64)
+    polynomial_mask = np.ones(image.shape, dtype=np.bool_)
+    for image_writeable in (True, False):
+        polynomial_image.flags.writeable = image_writeable
+        fit_polynomial_surface(polynomial_image, None)
+        for mask_writeable in (True, False):
+            polynomial_mask.flags.writeable = mask_writeable
+            fit_polynomial_surface(polynomial_image, polynomial_mask)
     convex_hull_image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape(
         (32, 32)
     )
