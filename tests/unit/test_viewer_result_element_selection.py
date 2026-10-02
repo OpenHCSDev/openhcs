@@ -56,7 +56,7 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
     def close_window(self, request):
         raise AssertionError(request)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         raise AssertionError(request)
 
     def image_intensity(self, request):
