@@ -392,7 +392,7 @@ def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
     from openhcs.constants.constants import Backend
     from openhcs.core.step_dependencies import StepInputDependency
 
-    request, _, _ = _stored_primary_fixture()
+    request, _ = _stored_primary_fixture()
     source = replace(request.execution_plan, step_index=0, step_scope_id="source", write_backend=Backend.MEMORY.value)
     consumer = replace(
         source, step_index=1, step_scope_id="consumer",
@@ -420,7 +420,7 @@ def test_checkpoint_demand_propagates_only_through_preserved_outputs():
     from openhcs.constants.constants import Backend
     from openhcs.core.step_dependencies import StepInputDependency
 
-    request, _, _ = _stored_primary_fixture()
+    request, _ = _stored_primary_fixture()
     source = replace(request.execution_plan, step_index=0, step_scope_id="source", write_backend=Backend.MEMORY.value)
     consumer = replace(
         source, step_index=1, step_scope_id="consumer", visualize=True,
@@ -429,7 +429,7 @@ def test_checkpoint_demand_propagates_only_through_preserved_outputs():
     plans = {0: source, 1: consumer}
     assert consumer.requires_main_flow_checkpoint(plans)
     assert not source.requires_main_flow_checkpoint(plans)
-    preserving, _, _ = _stored_primary_fixture(preserves_main_flow=True)
+    preserving, _ = _stored_primary_fixture(preserves_main_flow=True)
     consumer.compiled_function_pattern = preserving.execution_plan.compiled_function_pattern
     assert source.requires_main_flow_checkpoint(plans)
 
@@ -438,7 +438,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
     from openhcs.constants.constants import Backend
     from openhcs.core.step_dependencies import StepInputDependency
 
-    request, _, _ = _stored_primary_fixture(preserves_main_flow=True)
+    request, _ = _stored_primary_fixture(preserves_main_flow=True)
     first = replace(
         request.execution_plan, step_index=1, step_scope_id="first", write_backend=Backend.MEMORY.value,
         main_input_dependency=StepInputDependency.step_output(source_step_index=2, source_step_scope_id="second"),
