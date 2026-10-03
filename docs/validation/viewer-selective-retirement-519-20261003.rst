@@ -4,6 +4,80 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Current-head selection qualification and received live proof
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Published production/fixtures a78b0d68da141a2923d05deb8e92d45293f9ded2 are frozen
+for this checkpoint. Later receipt-only commits do not invalidate these bytes.
+Selection14 and changed-builder9 are terminal PASS, not repeated old33 controls:
+selection04 10.03s/maxRSS507916KiB/cgroup315.5MiB; builders01 8.01s/
+maxRSS444524KiB/cgroup270MiB. Both CPU1/512MiB/Swap0/60s, original paired
+bootstrap and environment, plugin/conftest/provider-free. Explicit deselections
+21 and139 remain in original raw stdout, not a full-suite claim.
+
+Existing complete-family audit caller before/after parses704 production/669tests/
+401 actual dependency modules, zero parse omissions, selected69/51/42. After
+selection-family02 names actual current a78b0d68d/Root4c0d62e45;17.03s/
+maxRSS85432KiB/cgroup81.9MiB/Swap0. Source declaration search names exactly ONE
+production literal openhcs_source_element: NapariStreamLayerItem's ClassVar.
+Its existing native builders and controller read that declaration; no second
+identity roster, body/object-ID counter, coordinate/camera authority or codec.
+There was no old row-retention algorithm to relocate: the missing bridge is
+implemented on the original controller; obsolete replaced-layer callbacks and
+their original weak derived indices are removed in the same recipe.
+
+Original pinned R0 selection-r0-08 is terminal PASS on actual a78b0d68d versus
+mainf7de, ALL9 changed production paths, positive delta map EMPTY.28.81s/
+maxRSS87148KiB/cgroup75.8MiB/Swap0; unchanged original Git-pinned detector
+3b03785f45df2ef5dc62ba6aed99294192ecbb01 and caller run_pinned_r0_419.py.
+No detector copy, omitted changed file, waived positive delta or widened bound.
+Production/test/docs diff-check passes; authentic raw log whitespace remains.
+
+One actual latest NRA full/raw-record context attempt is UNQUALIFIED:
+selection-r1-01.json is original EMPTY output; stderr records hard cgroup
+OOM-kill at5.889s/peak512MiB/Swap0 before any findings. It used both changed
+files, full OpenHCS production plus original ZMQ/metaclass/paired Qt/PolyStore
+and actual complete Napari source context, parse/analysis workers1,
+--no-auto-context-root --no-cache --json --raw-findings --json-payload full,
+original CPU1/512MiB/Swap0/60s. No product module/provider/native execution,
+runtime mutation or uncertain external side effect. No retry, limit increase,
+copied scanner or falsely clean R1. Complete AST and R0 above remain qualified
+at their own strength; complete NRA raw findings are the explicit remaining
+structural limit, not represented by a local partial result.
+
+Singer read the complete ORIGINAL parent standalone95-live30/ACTUAL-RECEIVING.rst
+under engineering494 and verified its byte SHA256
+c8dace4508bd7ebee524245a4dba94b77af5a6b7d737e54d084aa807d00cc25c.
+The frozen complete public stdout SHA256 is
+1acda7973aee96bcd1bdc3fb6f86c5930a7ca16ff05b270f35ec4474a29340ae.
+Target06/d92 actual canonical9-field public point retirement succeeded;
+raw-only survivor source/payload/calibration/domain/camera unchanged;
+same-native saved ZIP reopened;9 matched XY/XZ/YZ raw/point/combined captures
+personally reviewed by parent. No process-RSS drop or biological claim.
+Original geometry rejection remains. Typed close returned ACK/process_exited/
+endpoint_terminated/succeededtrue; independent native/MCP/port absence proven,
+original parent client63937 terminal1 at10:08:33 (retained aggregate error,
+not a failed close). No replay or runtime operation by Singer.
+
+Parent requests ONE NEW normal package07 source-only future projection,
+coordinated directly with Planck. Immutable borrowed06 does NOT contain a78.
+Parent owns review/funding/normal MCP health and fresh installed selected-row
+receiving; no new source install/build/runtime here, no science contact or hot
+skill/package sync. Native row-survivor preservation remains pending actual
+receiving, not a permanent guide caveat or an old06 success claim.
+
+Byte-exact final selection archive
+viewer-selective-retirement-519-selection-qualified-20261003.tar.gz contains33
+members/1197812bytes, SHA256
+4c1dfc06901cbead1578539fd330fab36a3121a6e638285aa35691419ff2ca48.
+ALL9 current changed production files/two actual fixtures, existing original
+bootstrap/AST/R0 callers, original before/after family logs, ALL01..04 selection
+logs including failures/RSS-limit misses, changed-builder/R0 logs, original EMPTY
+NRA output and OOM stderr, and received parent ACTUAL-RECEIVING.rst are included.
+Each of33 tar members was byte-compared against its actual original, including
+the parent's closed receipt. Historical archives and untracked raw originals
+remain unchanged; no evidence-only warning/whitespace rewriting or deletion.
+
 Survivor row-selection source checkpoint (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
