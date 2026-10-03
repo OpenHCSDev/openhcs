@@ -6252,6 +6252,80 @@ def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
     assert tuple(server.viewer.calls[-1][1][0]) == (2.375, 1.25, 3.5)
 
 
+@pytest.mark.parametrize(
+    "values,unit,expected_scale,expected_units",
+    (
+        ((2.0, 0.65, 0.65), "micrometers", (1.0, 2.0, 0.65, 0.65),
+         ("dimensionless", "micrometer", "micrometer", "micrometer")),
+        ((2.0, 1.0, 1.0), "relative", (1.0, 2.0, 1.0, 1.0),
+         ("dimensionless", "dimensionless", "dimensionless", "dimensionless")),
+        ((0.65, 0.65), "micrometers", (1.0, 1.0, 0.65, 0.65),
+         ("dimensionless", "dimensionless", "micrometer", "micrometer")),
+        ((), "micrometers", (1.0, 1.0, 1.0, 1.0),
+         ("dimensionless", "dimensionless", "pixel", "pixel")),
+    ),
+)
+def test_spatial_presentation_owns_scale_and_world_translation(
+    values, unit, expected_scale, expected_units
+):
+    from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+
+    presentation = _axis_presentation(
+        layer_key="own-calibrated-source",
+        projected_axis_components=("channel", "z_index"),
+        component_values={"channel": [4], "z_index": [2, 3, 4, 5]},
+        axis_offsets=(3, 2),
+    )
+    item = _layer_item(
+        {"channel": 4, "z_index": 2}, np.zeros((5, 7), dtype=np.uint16)
+    )
+    item = replace(item, image_metadata=ImagePayloadMetadata(
+        source_voxel_spacing=SourceVoxelSpacing(values, SourceVoxelSpacingUnit(unit))
+    ))
+    kwargs = presentation.spatial_layer_kwargs([item])
+    assert kwargs["scale"] == expected_scale
+    assert kwargs["units"] == expected_units
+    assert kwargs["translate"] == (3.0, 2 * expected_scale[1], 0.0, 0.0)
+    payload_kwargs = presentation.spatial_layer_kwargs([item], ("band",))
+    assert payload_kwargs["scale"] == (*expected_scale[:2], 1.0, *expected_scale[2:])
+    assert payload_kwargs["units"] == (*expected_units[:2], "dimensionless", *expected_units[2:])
+
+
+def test_calibrated_native_image_point_and_semantic_navigation_agree_without_qt():
+    from napari.layers import Image, Points
+    from openhcs.core.source_metadata import SourceVoxelSpacing
+
+    presentation = _axis_presentation(
+        layer_key="own-calibrated-source",
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [0, 1, 2, 3]},
+    )
+    item = replace(
+        _layer_item({"z_index": 0}, np.zeros((5, 7), dtype=np.uint16)),
+        image_metadata=ImagePayloadMetadata(
+            source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65))
+        ),
+    )
+    kwargs = presentation.spatial_layer_kwargs([item])
+    pixels = np.zeros((4, 5, 7), dtype=np.uint16)
+    point = np.array([[1.5, 1.5, 2.5]])
+    raw = Image(pixels, **kwargs)
+    centres = Points(point, **kwargs)
+    assert raw.data is pixels
+    np.testing.assert_array_equal(centres.data, point)
+    assert raw.data_to_world((1.5, 1.5, 2.5)) == centres.data_to_world(point[0])
+    np.testing.assert_allclose(centres.data_to_world(point[0]), (3.0, 0.975, 1.625))
+    dims = Dims(ndim=3, range=((0, 6, 2), (0, 2.6, 0.65), (0, 3.9, 0.65)))
+    dims.current_step = (presentation.viewer_step(2, 0), 0, 0)
+    assert dims.point[0] == 4.0
+    assert raw.world_to_data(dims.point)[0] == 2.0
+    state = NapariDimensionLayerState(
+        labels={"z_index": ["Z0", "Z1", "Z2", "Z3"]},
+        presentation=presentation,
+    )
+    assert state.label_parts_for_current_step(dims.current_step) == ("Z2",)
+
+
 def test_shape_features_exclude_source_transport_without_mutating_payload():
     from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
