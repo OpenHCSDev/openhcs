@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 import runpy
 import shutil
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 _MANIFEST_SCHEMA = runpy.run_path(
@@ -21,52 +20,13 @@ _SKILL_BUNDLE = runpy.run_path(
 AgentSkillBundle = _SKILL_BUNDLE["AgentSkillBundle"]
 AGENT_PLUGIN_MANIFEST_PATH = _SKILL_BUNDLE["AGENT_PLUGIN_MANIFEST_PATH"]
 unredirected_absolute_path = _SKILL_BUNDLE["unredirected_absolute_path"]
-KnowledgeBaseManifestField = _MANIFEST_SCHEMA["KnowledgeBaseManifestField"]
+knowledge_source_projections = _MANIFEST_SCHEMA["knowledge_source_projections"]
 KNOWLEDGE_MANIFEST_RELATIVE_PATH = _MANIFEST_SCHEMA[
     "DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH"
 ]
 PACKAGED_KNOWLEDGE_ROOT_RELATIVE_PATH = (
     Path("openhcs/agent") / _MANIFEST_SCHEMA["PACKAGED_KNOWLEDGE_BASE_ROOT"]
 )
-
-
-def declared_knowledge_source_paths(project_root: Path) -> tuple[Path, ...]:
-    """Return the canonical manifest and every uniquely declared source path."""
-    root = project_root.resolve()
-    manifest_path = root / KNOWLEDGE_MANIFEST_RELATIVE_PATH
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if not isinstance(manifest, Mapping):
-        raise ValueError("MCP knowledge manifest root must be an object.")
-    documents = manifest.get(KnowledgeBaseManifestField.DOCUMENTS.value)
-    if not isinstance(documents, list) or not documents:
-        raise ValueError("MCP knowledge manifest must declare documents.")
-
-    relative_paths = [KNOWLEDGE_MANIFEST_RELATIVE_PATH]
-    seen = {KNOWLEDGE_MANIFEST_RELATIVE_PATH}
-    for document in documents:
-        if not isinstance(document, Mapping):
-            raise ValueError("MCP knowledge manifest documents must be objects.")
-        raw_source_path = document.get(KnowledgeBaseManifestField.SOURCE_PATH.value)
-        if not isinstance(raw_source_path, str) or not raw_source_path:
-            raise ValueError("MCP knowledge document source_path must be a string.")
-        relative_path = Path(raw_source_path)
-        if relative_path.is_absolute() or ".." in relative_path.parts:
-            raise ValueError(
-                f"MCP knowledge source path must stay within the project: {raw_source_path}"
-            )
-        if relative_path in seen:
-            raise ValueError(
-                f"MCP knowledge source path is declared more than once: {raw_source_path}"
-            )
-        seen.add(relative_path)
-        relative_paths.append(relative_path)
-
-    source_paths = tuple(root / relative_path for relative_path in relative_paths)
-    missing = tuple(path for path in source_paths if not path.is_file())
-    if missing:
-        formatted = ", ".join(path.relative_to(root).as_posix() for path in missing)
-        raise FileNotFoundError(f"MCP knowledge sources are missing: {formatted}")
-    return source_paths
 
 
 def project_knowledge_assets(
@@ -84,18 +44,22 @@ def project_knowledge_assets(
         raise ValueError(
             f"MCP knowledge destination must not own the project root: {destination}"
         )
-    source_paths = declared_knowledge_source_paths(root)
+    projections = knowledge_source_projections(
+        root / KNOWLEDGE_MANIFEST_RELATIVE_PATH, source_root=root
+    )
     plugin_manifest = root / AGENT_PLUGIN_MANIFEST_PATH
     if plugin_manifest.is_file():
         skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
-        source_paths = tuple(dict.fromkeys((*source_paths, *skill_sources)))
-    if any(source.resolve().is_relative_to(destination) for source in source_paths):
+        projections.update({source.relative_to(root): source for source in skill_sources})
+    missing = tuple(source for source in projections.values() if not source.is_file())
+    if missing:
+        raise FileNotFoundError(f"MCP knowledge sources are missing: {missing}")
+    if any(source.resolve().is_relative_to(destination) for source in projections.values()):
         raise ValueError("MCP knowledge destination must not contain canonical sources.")
     if destination.exists():
         shutil.rmtree(destination)
     projected_paths: list[Path] = []
-    for source_path in source_paths:
-        relative_path = source_path.relative_to(root)
+    for relative_path, source_path in projections.items():
         destination_path = destination / relative_path
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source_path, destination_path)
