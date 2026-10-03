@@ -345,9 +345,11 @@ startup tests pass. python-introspect PR #6 and ObjectState PR #9 are merged and
 formally close their issues #5 and #8. Their merge commits change no measured
 source bytes. OpenHCS wiring is pushed in draft #394; a small main-only readiness
 change can be isolated without merging the unresolved broad branch.
-Reviewable measurement receipt and recipes are under
-``benchmark/results/perf_schema_source_readiness_20261003``; original immutable
+The reviewable measurement receipt and immutable recipe links/hashes are under
+``benchmark/results/perf_schema_source_readiness_20261003``. Redundant tracked
+local recipe copies were removed; the originals, source variants and immutable
 outputs/freeze remain under the corresponding maintenance ABBA directory.
+Those recipes depend on local paths and are not turnkey portable commands.
 Runtime plumbing, full-catalog/scaling measurements, fresh native repetitions
 and figures remain outstanding. Original whole-branch R0/R1 failures remain
 explicit and unwaived.
