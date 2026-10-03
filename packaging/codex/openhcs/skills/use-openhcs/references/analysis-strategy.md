@@ -78,6 +78,32 @@ missing biological information, a missing tool contract, new authority or unsafe
 resource use, report the exact boundary and retain the best candidate with its
 known failures. Do not force unsupported structures into a mask to finish.
 
+## Scope conclusions to the evidence
+
+Judge each requested claim at its declared object, relationship and spatial
+scope. Keep supported findings, clear failures and ambiguous cases distinct,
+with their witness and persisted identities. Uncertain body boundaries or path
+ownership do not automatically invalidate independently supported centres or
+path geometry; those findings do not establish complete bodies or correct
+body-to-path associations either. Technical completion remains separate from
+these biological judgements.
+
+Report reviewed coverage, inclusion rules, exclusions with their denominator,
+and unresolved cases alongside the supported result. When ambiguity affects a
+total, retain a justified lower/upper bound or sensitivity analysis if the evidence permits;
+do not invent a confidence interval or silently drop uncertain objects. A few
+accepted witnesses do not establish whole-field completeness. Withhold a
+whole-population claim when unresolved cases invalidate it, not every unrelated
+finding merely because one claim remains uncertain.
+
+Partial support is not a stopping rule for a clear failure. Follow the existing
+[earliest-stage diagnosis](segmentation-diagnostics.md), make one discriminating
+repair while the authorised budget permits, and revisit distributed regression
+controls. Improved downstream paths cannot repair an unchanged failed body
+stage; diagnose that stage rather than repeatedly tuning faint-signal thresholds.
+Preserve frozen evaluations unchanged; this reporting rule applies to newly
+authorised development, not retroactive acceptance of an earlier attempt.
+
 ## Development corrections and autonomous evaluation
 
 Declare the run's purpose before starting. Development aims to reach an
