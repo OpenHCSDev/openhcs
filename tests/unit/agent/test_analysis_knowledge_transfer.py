@@ -145,6 +145,7 @@ def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_pa
     canonical = AgentSkillBundle.from_manifest(ROOT / AGENT_PLUGIN_MANIFEST_PATH)
     packaged = AgentSkillBundle.from_manifest(projection / AGENT_PLUGIN_MANIFEST_PATH)
     for document_id, section_id in (
+        ("openhcs_architecture_quick_start", "task-authorization"),
         ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
         ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
     ):

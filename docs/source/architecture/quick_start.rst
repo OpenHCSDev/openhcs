@@ -123,14 +123,36 @@ Use this sequence:
    ``openhcs_create_pipeline``; rendering and source-backed execution preserve
    that same config inside the resulting ``PipelineDocument``.
 7. Inspect real plate inventory, validate the declaration, inspect its artifact
-   plan, and compile before execution. Begin with read-only operations and ask
-   before mutation, execution, UI actions, viewer launch, or external access.
+   plan, and compile before execution. Begin read-only, then follow
+   :ref:`openhcs-task-authorization` rather than asking again for each routine
+   step of an already authorised workflow.
 
 For example, search for ``ExampleHuman OpenHCS Python`` and retrieve document
 ``openhcs_official30_benchmark_recipes`` section
 ``examplehuman-openhcs-python``. That section defines an importable
 ``pipeline_config`` and ``pipeline_steps`` pair. The corpus contains 30 such
 source-backed recipes; it is the broadest current end-to-end example set.
+
+.. _openhcs-task-authorization:
+
+Task authorization
+~~~~~~~~~~~~~~~~~~
+
+An existing user authorisation covers routine bounded pipeline edits,
+compilation, execution, UI actions and viewer QA within the agreed task,
+sources, destinations and resource budget. Continue that work without another
+approval request for each step. Keep the intended target/change visible,
+refresh actual state and revision/request tokens, validate declarations and
+compile before execution, and retain operation receipts and failed attempts.
+
+Ask when the action is not covered: a scope expansion, additional spending,
+destructive operation, or private/external data exposure needs its own
+authorisation. An analysis request does not authorise overwriting acquisition
+files, accessing another owner's runtime, installing dependencies or changing
+the provider. Capability exposure, path policy and declared confirmation
+requirements still apply; existing task authority is not permission to bypass
+them. A timeout or missing receipt does not authorise replay of an uncertain
+mutation: retain its handle and reconcile the original operation.
 
 CellProfiler pipelines
 ----------------------
