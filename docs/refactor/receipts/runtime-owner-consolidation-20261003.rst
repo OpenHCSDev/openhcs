@@ -38,6 +38,30 @@ bodies are unchanged. Constructor order, frozen slots, pickle, metadata-edge
 polymorphism, debug behavior and first errors pass 158 controls. Historical
 reports naming the old scope remain as evidence of their original source.
 
+``RuntimeImageRequest`` and ``RuntimeFunctionInvocationRequest`` are removed.
+``CellProfilerImageRequest`` owns the image domain and actual callable kwargs
+through execution and output recording, eliminating the five-field copy-back
+step. Original aliases survive object-driven changes in image shape/count.
+The shared ``RuntimeImageExecutionContext`` remains the parent for genuine
+batch and measurement consumers. This lane is merged into main as PR #538,
+closing #537. The clean main candidate ``7e2f97f80`` passes all 780 tests in
+the 17-file execution, library, recording, binding, axis and stream gate.
+The pre-existing retained-plane shape fixture now explicitly declares its
+object plane domain; its Area and true-volume assertions remain intact.
+
+The parsed-module contract boundary now uses the existing prepared-callable
+factory, matching authored compilation. The original Crop equality failure
+reproduces before the carrier deletion. Commit ``5c3e12ecd`` fixes its actual
+production boundary; all 641 execution/library/binding controls pass without
+removing signature fields from equality or changing the original assertion.
+Two additional declaration fixtures failed identically before that fix: they
+omitted the existing seven QA outputs and the step-owned Costes runtime input.
+Their updated assertions retain original ABI counts and add complete diagnostic
+names/roles and runtime parameter checks. The final six-module contract gate
+passes all 100 tests. After merging PR #538, the exact retained-plane and alias
+controls pass all ten tests; an identical test duplicated by Git's merge is
+removed, leaving its original definition intact.
+
 Publication reader consolidation uses the existing document handler and source
 projection builder. Required projection-only viewer consumers remain. Its 94
 reader controls pass; four saved-operand replays remove 151ms median locally
