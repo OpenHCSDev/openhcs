@@ -65,6 +65,7 @@ if TYPE_CHECKING:
 
     from openhcs.core.function_patterns import (
         FunctionInvocationKey,
+        NormalizedFunctionItem,
     )
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -1311,6 +1312,28 @@ class ObjectMeasurementInputModule(
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
         object_measurement_binding,
     )
+
+    @classmethod
+    def finalize_module_blocks_for_invocation(
+        cls,
+        blocks: tuple["ModuleBlock", ...],
+        *,
+        invocation: "NormalizedFunctionItem",
+        step_context: "ArtifactDeclarationStepContext",
+    ) -> tuple["ModuleBlock", ...]:
+        """Require selection intent before reconstructing multiple object subjects."""
+
+        blocks = super().finalize_module_blocks_for_invocation(
+            blocks, invocation=invocation, step_context=step_context,
+        )
+        binding = cls.object_measurement_binding
+        selector = binding.require_parameter_name()
+        if selector not in invocation.kwargs_dict:
+            for block in blocks:
+                subjects = cls.artifact_names_for_binding(block, binding)
+                if len(subjects) > 1:
+                    return ()
+        return blocks
 
     @classmethod
     def processing_group_scope_inputs(

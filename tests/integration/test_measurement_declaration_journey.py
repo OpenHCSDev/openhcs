@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from csv import DictReader
+from inspect import unwrap
 
 import numpy as np
 import pytest
@@ -82,6 +83,10 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+    register_custom_function,
+)
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
 
@@ -134,6 +139,17 @@ def count_with_image_subject(image):
     return image, DataclassMeasurementColumnarRows(
         (CountRow(0, int(np.count_nonzero(image))),), row_type=CountRow
     )
+
+
+@pytest.fixture
+def registered_count_callable(valid):
+    function = count_with_image_subject if valid else count_without_subject
+    registered = register_custom_function(function)
+    try:
+        assert unwrap(registered) is unwrap(function)
+        yield registered
+    finally:
+        CustomFunctionRuntimeRegistry.remove(function.__name__)
 
 
 def _binding_name(module, plan_type, artifact_type):
@@ -329,7 +345,7 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
 
 def test_omitted_secondary_selector_still_fails_closed(tmp_path):
     _write_plate(tmp_path)
-    with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
+    with pytest.raises(ValueError, match="cannot reconstruct an exact module block"):
         _compile(
             tmp_path,
             _document(selected=False),
@@ -355,7 +371,9 @@ def test_omitted_selector_remains_valid_for_one_label_producer(tmp_path):
 
 
 @pytest.mark.parametrize("valid", [False, True])
-def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_path, valid):
+def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
+    tmp_path, valid, registered_count_callable,
+):
     _write_plate(tmp_path)
     document = PipelineDocumentAuthority.from_values(
         pipeline_config=PipelineConfig(
@@ -365,7 +383,7 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
             ),
         ),
         pipeline_steps=[_step(
-            count_with_image_subject if valid else count_without_subject,
+            registered_count_callable,
             "Count pixels", {},
         )],
     )

@@ -192,7 +192,12 @@ def test_scalar_input_ambiguity_precedes_dependent_output_subject_validation(
         compile_function_pattern(measure, {}, {})
 
     # Output obligations remain mandatory once input selection is unambiguous.
-    with pytest.raises(ValueError, match="multiple measurement subjects"):
+    obligation = (
+        "declared measurement_feature_owner"
+        if output_policy is CellProfilerRecordedArtifactOutputPolicy
+        else "multiple measurement subjects"
+    )
+    with pytest.raises(ValueError, match=obligation):
         CallableContract.from_callable(measure).validate_artifact_output_declarations()
 
 
@@ -293,6 +298,42 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     assert tuple(subject.name for subject in subjects) == ("Stain1", "Stain2")
     assert len({subject.row_identity_domain for subject in subjects}) == 1
     assert compiled is not None
+
+
+@pytest.mark.parametrize("policy", [
+    NativeReturnArtifactOutputPolicy,
+    AdapterRecordedArtifactOutputPolicy,
+    CellProfilerRecordedArtifactOutputPolicy,
+])
+def test_measurement_row_owner_controls_named_object_roster_admission(policy):
+    from openhcs.core.artifacts import ArtifactSpecRelation
+    from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
+
+    objects = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType)
+        for name in ("Nuclei", "Cells")
+    )
+    measurements = ArtifactSpec.output(
+        "Measurements", MeasurementsArtifactType,
+        relations=tuple(ObjectMeasurementSubjectRelation(spec.ref()) for spec in objects),
+        measurement_feature_owner=MeasureObjectIntensityModule,
+    )
+
+    @runtime_adapter("runtime", lambda request: object(), artifact_output_policy=policy)
+    @artifact_inputs(*objects)
+    @artifact_outputs(measurements)
+    def measure(image, *, runtime):
+        raise AssertionError("Compile admission must not execute a callable")
+
+    if policy is not CellProfilerRecordedArtifactOutputPolicy:
+        with pytest.raises(ValueError, match="multiple measurement subjects"):
+            compile_function_pattern(measure, {}, {})
+        return
+    compiled = compile_function_pattern(measure, {}, {})
+    subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
+    assert tuple(subject.name for subject in subjects) == ("Nuclei", "Cells")
+    assert len({subject.row_identity_domain for subject in subjects}) == 2
+    assert compiled.default_group.invocations[0].contract.artifact_outputs.specs == (measurements,)
 
 
 def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():

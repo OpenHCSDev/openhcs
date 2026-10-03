@@ -737,13 +737,13 @@ class MeasurementsArtifactType(ArtifactType):
     def validate_output_declaration(cls, spec: "ArtifactSpec") -> None:
         """Reject incompatible row domains before payload-owner validation.
 
-        Source-qualified image rows share one image-set domain. Their recording
-        owner determines whether multiple subjects can occupy the output; native
-        and ordinary recorded tables still require one exact subject.
+        The payload owner determines whether distinct named subjects can occupy
+        the output. Native and ordinary recorded tables require one exact
+        subject; row-owning recorders preserve each subject's identity.
         """
 
         subjects = ArtifactSpecRelation.measurement_subjects_for_output(spec)
-        if len({subject.row_identity_domain for subject in subjects}) > 1:
+        if len({(subject.scope, subject.id_field) for subject in subjects}) > 1:
             ArtifactSpecRelation.measurement_subject_for_output(spec)
 
     @classmethod

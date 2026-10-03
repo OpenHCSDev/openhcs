@@ -1442,6 +1442,10 @@ class CallableContract(ArtifactPlanKeySelector):
                 continue
             if (
                 len(bound_specs) > 1
+                and not (
+                    self.runtime_adapter is not None
+                    and self.runtime_adapter.manages_artifact_inputs
+                )
                 and not special_input_parameter_accepts_sequence(parameter)
                 and any(
                     spec.artifact_type is not ImageArtifactType for spec in bound_specs
