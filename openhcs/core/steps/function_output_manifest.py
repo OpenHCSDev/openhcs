@@ -28,9 +28,7 @@ from openhcs.core.source_metadata import SourceMetadataValue
 
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_identity import (
-    FunctionOutputComponentIdentityAuthority,
     FunctionOutputIdentity,
-    FunctionOutputPathAuthority,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -200,7 +198,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         extension = parsed.extension if parsed is not None else path.suffix or None
         identity = FunctionOutputIdentity(
             component_values=(
-                FunctionOutputComponentIdentityAuthority.from_parsed(parsed)
+                FunctionOutputIdentity.component_values_from_parsed(parsed)
                 if parsed is not None
                 else {}
             ),
@@ -636,10 +634,7 @@ class ProducedPathSet:
                 tokens.add(source_path_identity(value).name)
             if record.filename_qualifier is not None:
                 tokens.add(
-                    FunctionOutputPathAuthority.filename_for_identity(
-                        parser,
-                        record.without_filename_qualifier(),
-                    )
+                    record.without_filename_qualifier().filename(parser)
                 )
         return cls(frozenset(tokens))
 

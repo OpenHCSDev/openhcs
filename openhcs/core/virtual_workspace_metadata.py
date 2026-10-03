@@ -134,7 +134,7 @@ class AtomicMetadataWriter:
         self,
         metadata_path: str | Path,
         subdirectory_name: str,
-        projection_metadata: Mapping[str, Any] | None = None,
+        projection_entries: VirtualWorkspaceSourceProjectionEntries,
     ) -> None:
         """Merge exact produced paths under one lock, preserving other wells."""
 
@@ -143,46 +143,20 @@ class AtomicMetadataWriter:
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            self._merge_source_projection_fields(subdirectory, projection_metadata)
+            entries = projection_entries.merge_into_subdirectory(subdirectory)
             self._update_projection_geometry(
                 subdirectory,
-                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                    subdirectory
-                ).entries.values(),
+                entries.entries.values(),
             )
             return data
 
         self._execute_update(metadata_path, update)
 
-    @staticmethod
-    def _merge_source_projection_fields(
-        subdirectory: dict[str, Any],
-        projection_metadata: Mapping[str, Any] | None,
-    ) -> None:
-        """Merge the one durable projection store; shared by both transactions."""
-        for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
-            subdirectory[key] = {
-                **subdirectory.get(key, {}),
-                **({} if projection_metadata is None else projection_metadata[key]),
-            }
-        entries = {
-            record["virtual_path"]: record
-            for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
-        }
-        if projection_metadata is not None:
-            entries.update(
-                {
-                    record["virtual_path"]: record
-                    for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
-                }
-            )
-        subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
-
     def publish_source_projection_metadata(
         self,
         metadata_path: str | Path,
         subdirectory_name: str,
-        projection_metadata: Mapping[str, Any] | None,
+        projection_entries: VirtualWorkspaceSourceProjectionEntries | None,
         *,
         serializer: SourceProjectionMetadataSerializer,
         saved_image_paths: Sequence[str],
@@ -207,12 +181,12 @@ class AtomicMetadataWriter:
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            self._merge_source_projection_fields(subdirectory, projection_metadata)
-            entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                subdirectory
-            ).entries
+            entries = (
+                VirtualWorkspaceSourceProjectionEntries(MappingProxyType({}))
+                if projection_entries is None else projection_entries
+            ).merged_with_subdirectory(subdirectory).entries
             missing = saved_set.difference(entries)
-            if missing and projection_metadata is None:
+            if missing and projection_entries is None:
                 raise MetadataWriteError(
                     f"Saved images lack typed produced addresses: {sorted(missing)!r}."
                 )
@@ -226,7 +200,7 @@ class AtomicMetadataWriter:
                 (projection, path)
                 for path, projection in entries.items()
                 if (
-                    projection_metadata is not None
+                    projection_entries is not None
                     or path in saved_set
                     or Path(path).parent != Path(subdirectory_name)
                 )
@@ -453,6 +427,93 @@ class VirtualWorkspaceSourceProjectionEntries:
     """Validated nominal source projections keyed by canonical virtual path."""
 
     entries: Mapping[str, SourceProjection]
+
+    @property
+    def projection_paths(self) -> tuple[tuple[SourceProjection, str], ...]:
+        """Expose serialization order directly from the admitted path owner."""
+        return tuple((projection, path) for path, projection in self.entries.items())
+
+    @classmethod
+    def from_projection_paths(
+        cls,
+        projection_paths: Sequence[tuple[SourceProjection, str]],
+    ) -> "VirtualWorkspaceSourceProjectionEntries":
+        """Admit a producer's typed updates in persisted path order."""
+        SourceProjectionSet(
+            tuple(projection for projection, _path in projection_paths)
+        )
+        return cls(
+            MappingProxyType(
+                {path: projection for projection, path in projection_paths}
+            )
+        )
+
+    @staticmethod
+    def _records_by_path(
+        subdirectory: OpenHCSSubdirectoryPayload,
+    ) -> dict[str, JsonValue]:
+        for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+            if not isinstance(subdirectory.get(key, {}), Mapping):
+                raise TypeError(f"virtual_workspace {key} must be a mapping.")
+        # Transactions have always replaced duplicate paths before admitting
+        # records. In particular, a new producer can repair an invalid old record.
+        return {
+            record["virtual_path"]: record
+            for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+        }
+
+    def merged_with_subdirectory(
+        self,
+        subdirectory: OpenHCSSubdirectoryPayload,
+    ) -> "VirtualWorkspaceSourceProjectionEntries":
+        """Admit current durable records, retaining the actual typed replacements."""
+        records = self._records_by_path(subdirectory)
+        return self._admit_retained_records(records)
+
+    def _admit_retained_records(
+        self,
+        records: Mapping[str, JsonValue],
+    ) -> "VirtualWorkspaceSourceProjectionEntries":
+        entries: dict[str, SourceProjection] = {}
+        for path, record in records.items():
+            virtual_path, projection = (
+                (path, self.entries[path])
+                if path in self.entries else self._projection_record(record)
+            )
+            if virtual_path in entries:
+                raise RuntimeError(
+                    "virtual_workspace source_projection contains duplicate path "
+                    f"{virtual_path!r}."
+                )
+            entries[virtual_path] = projection
+        for path, projection in self.entries.items():
+            if path not in records:
+                if path in entries:
+                    raise RuntimeError(
+                        "virtual_workspace source_projection contains duplicate path "
+                        f"{path!r}."
+                    )
+                entries[path] = projection
+        return type(self)(MappingProxyType(entries))
+
+    def merge_into_subdirectory(
+        self,
+        subdirectory: dict[str, Any],
+    ) -> "VirtualWorkspaceSourceProjectionEntries":
+        """Merge producer fields without normalizing opaque retained wire fields."""
+        records = self._records_by_path(subdirectory)
+        admitted = self._admit_retained_records(records)
+        fields = SourceProjectionMetadataSerializer.projection_fields(
+            self.projection_paths
+        )
+        for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+            subdirectory[key] = {**subdirectory.get(key, {}), **fields[key]}
+        records.update(
+            (record["virtual_path"], record)
+            for record in fields[FIELDS.SOURCE_PROJECTION]
+        )
+        subdirectory[FIELDS.SOURCE_PROJECTION] = list(records.values())
+        return admitted
 
     @classmethod
     def from_subdirectory(

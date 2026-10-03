@@ -161,7 +161,10 @@ def _actual_saved_occurrence(tmp_path, scenario):
     )
     target = PrimaryImageMetadataTarget.from_plan(plan)
     # This is the existing accepted main-flow publication, before a mirror is added.
-    original = target.produced_projection_metadata(context, plan)
+    original = target.produced_projection_entries(context, plan)
+    original = SourceProjectionMetadataSerializer.projection_fields(
+        original.projection_paths
+    )
     assert len(original["source_projection"]) == 1
     if scenario == "collapsed_site":
         row = original["source_projection"][0]
@@ -215,7 +218,7 @@ def test_real_same_path_join_observes_original_rejected_pair(tmp_path, scenario)
     with pytest.raises(
         ValueError, match="Conflicting metadata for persisted image occurrence"
     ) as failure:
-        target.produced_projection_metadata(context, plan)
+        target.produced_projection_entries(context, plan)
     pair = _rejected_original_pair(failure.value)
     projection = pair["projection"]
     metadata = pair["metadata"]
@@ -261,7 +264,10 @@ def test_real_scalar_same_path_mirror_remains_admissible(tmp_path):
     context, plan, target, _output_plan, _pixels = _actual_saved_occurrence(
         tmp_path, "scalar"
     )
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert len(structured["source_projection"]) == 1
     assert structured["source_projection"][0]["source_alias"] == "Mosaic"
 
@@ -294,7 +300,10 @@ def test_collapsed_same_path_mirror_retains_filename_and_semantic_views(tmp_path
     context, plan, target, _output_plan, pixels = _actual_saved_occurrence(
         tmp_path, "collapsed_site"
     )
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     (row,) = structured["source_projection"]
     assert row["address"]["site"] == "1"
     assert row["source_alias"] == "Mosaic"

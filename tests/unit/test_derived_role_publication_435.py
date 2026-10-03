@@ -23,6 +23,7 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget, RuntimeArtifactMaterializationAuthority,
@@ -139,11 +140,14 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario):
     if scenario != "same_occurrence":
         message = "Conflicting metadata for persisted image" if scenario == "conflicting_metadata" else "Duplicate source projection address"
         with pytest.raises(ValueError, match=message) as rejection:
-            target.produced_projection_metadata(context, plan)
+            target.produced_projection_entries(context, plan)
         receipt["rejection"] = str(rejection.value)
         (tmp_path / "persisted-occurrence-witness.json").write_text(json.dumps(receipt, indent=2))
         return
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert len(structured["source_projection"]) == 2
     assert {item["source_alias"] for item in structured["source_projection"]} == {"RawRole", "CappedRole"}
     target.write(context, produced_plan=plan)

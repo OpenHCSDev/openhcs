@@ -96,9 +96,7 @@ from openhcs.core.steps.function_execution import (
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
     FunctionOutputIdentityCache,
-    FunctionOutputPathAuthority,
     FunctionOutputPathRequest,
 )
 from openhcs.core.steps.function_output_manifest import (
@@ -4764,14 +4762,12 @@ def test_function_output_path_uses_payload_identity_over_input_carrier(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s002_w3_z001_t001.tif"
 
@@ -4790,14 +4786,12 @@ def test_function_output_path_uses_payload_identity_without_input_path(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path=None,
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s001_w5_z001_t001.tif"
 
@@ -4816,7 +4810,7 @@ def test_function_output_identity_completes_partial_payload_metadata_from_fallba
         },
     )
 
-    identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+    identity = FunctionOutputIdentity.from_metadata(
         parser,
         metadata,
         fallback_identity_path="Sequence1_s001_w1_z001_t000.tif",
@@ -4824,7 +4818,7 @@ def test_function_output_identity_completes_partial_payload_metadata_from_fallba
 
     assert identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        identity.filename(parser)
         == "Sequence1_s001_w1_z001_t000.tif"
     )
 
@@ -4843,7 +4837,7 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
         },
     )
 
-    identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+    identity = FunctionOutputIdentity.from_metadata(
         parser,
         metadata,
         fallback_identity_path="A01_s001_w1_z001_t001.png",
@@ -4851,7 +4845,7 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
 
     assert identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        identity.filename(parser)
         == "A01_s001_w2_z001_t001.png"
     )
 
@@ -4879,14 +4873,12 @@ def test_function_output_path_uses_input_identity_for_multi_plane_carrier(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s001_w1_z001_t001.tif"
 
@@ -4904,14 +4896,12 @@ def test_function_output_path_rejects_multi_plane_carrier_without_input_path(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
     with pytest.raises(ValueError, match="multi-plane source provenance"):
-        FunctionOutputPathAuthority.output_path(
-            FunctionOutputPathRequest(
+        FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
                 output_payload=payload,
                 input_path=None,
-            )
-        )
+            ))
 
 
 def test_function_output_path_uses_variable_component_identity(
@@ -4949,11 +4939,8 @@ def test_function_output_path_uses_variable_component_identity(
         variable_components=(VariableComponents.Z_INDEX,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A14_s001_w1_z001_t001.tif"
     assert identity.component_values == {
@@ -5007,15 +4994,12 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
         variable_components=(VariableComponents.SITE,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    filename_identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+    identity = FunctionOutputIdentity.from_request(request)
+    filename_identity = FunctionOutputIdentity.from_filename_metadata(
         request.parser,
         collapsed_metadata,
     )
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    output_path = identity.path_for_request(request)
 
     assert collapsed_metadata.source_image_provenance_planes.count == 0
     assert collapsed_metadata.source_image_provenance_planes.contributor_count == 2
@@ -5030,10 +5014,7 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
     assert identity.filename_component_values["site"] == 1
     assert filename_identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(
-            request.parser,
-            filename_identity,
-        )
+        filename_identity.filename(request.parser)
         == "A14_s001_w1_z001_t001.tif"
     )
 
@@ -5085,11 +5066,8 @@ def test_composite_then_z_collapse_uses_current_scalar_identity(
         variable_components=(VariableComponents.Z_INDEX,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert z_stack_metadata.source_provenance.source_plane_count == 3
     assert projected_metadata.source_provenance.source_plane_count == 0
@@ -5125,11 +5103,8 @@ def test_variable_component_identity_uses_fallback_path_extension(
         variable_components=(VariableComponents.CHANNEL,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s001_w1_z001_t001.png"
     assert identity.extension == ".png"
@@ -5153,16 +5128,10 @@ def test_declared_main_flow_output_context_qualifies_output_filename(
         output_payload=payload,
         input_path="A01_s001_w1_z001_t001.jpg",
     )
-    identity = FunctionOutputIdentityAuthority.identity(request)
+    identity = FunctionOutputIdentity.from_request(request)
 
-    red_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity.with_filename_qualifier("CorrRed"),
-    )
-    green_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity.with_filename_qualifier("CorrGreen"),
-    )
+    red_path = identity.with_filename_qualifier("CorrRed").path_for_request(request)
+    green_path = identity.with_filename_qualifier("CorrGreen").path_for_request(request)
 
     assert red_path.name == "A01_s001_w1_z001_t001_CorrRed.jpg"
     assert green_path.name == "A01_s001_w1_z001_t001_CorrGreen.jpg"
@@ -5197,7 +5166,7 @@ def test_function_output_path_rejects_variation_outside_identity_components(
     )
 
     with pytest.raises(ValueError, match="varies outside identity components"):
-        FunctionOutputIdentityAuthority.identity(
+        FunctionOutputIdentity.from_request(
             FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
@@ -5221,7 +5190,7 @@ def test_function_output_path_rejects_group_by_component_stack_variation(
         ),
     ).payload_with(np.zeros((3, 4, 5), dtype=np.float32), None)
     with pytest.raises(ValueError, match="varies outside identity components"):
-        FunctionOutputIdentityAuthority.identity(
+        FunctionOutputIdentity.from_request(
             FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
@@ -5252,11 +5221,8 @@ def test_input_aligned_stack_output_uses_input_filename_identity(
         input_aligned_output=True,
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s002_w1_z001_t001.png"
     assert identity.component_values["site"] == 2
@@ -5299,11 +5265,8 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
         input_aligned_output=True,
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s001_w1_z001_t001.tif"
     assert identity.component_values["site"] == 1
@@ -5458,7 +5421,7 @@ def qualified_producer_manifest(tmp_path):
             ProducedOutputSemantics.from_output(
                 producer,
                 tmp_path
-                / FunctionOutputPathAuthority.filename_for_identity(parser, identity),
+                / identity.filename(parser),
                 identity,
                 output_context=AlignedImageSliceContext.main_flow(
                     output_key=f"Output{plane}",
@@ -5478,14 +5441,14 @@ def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicate
 ):
     store, _producer, consumer, records, parser = qualified_producer_manifest
     calls = []
-    original = FunctionOutputPathAuthority.filename_for_identity
+    original = FunctionOutputIdentity.filename
 
-    def count_filename(parser, identity):
+    def count_filename(identity, parser):
         calls.append(identity)
-        return original(parser, identity)
+        return original(identity, parser)
 
     monkeypatch.setattr(
-        FunctionOutputPathAuthority, "filename_for_identity", count_filename
+        FunctionOutputIdentity, "filename", count_filename
     )
     paths = (
         records[1].output_path,
@@ -5501,6 +5464,53 @@ def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicate
         "Output1",
     )
     assert len(calls) == len(records)
+
+
+def test_produced_identity_owns_filename_and_live_storage_coordinate_cache(
+    qualified_producer_manifest,
+    tmp_path,
+    monkeypatch,
+):
+    _store, _producer, _consumer, records, parser = qualified_producer_manifest
+    storage_components = dict(records[0].component_values)
+    storage_components["channel"] = 1
+    semantic_components = {**storage_components, "well": "B02", "channel": 9}
+    record = replace(
+        records[0],
+        component_values=semantic_components,
+        filename_component_values=storage_components,
+    ).with_filename_qualifier(" ./Corrected signal?!.. ")
+    cache = FunctionOutputIdentityCache()
+    calls = []
+    original_construct = parser.construct_filename
+
+    def construct(bound):
+        calls.append(bound)
+        return original_construct(bound)
+
+    monkeypatch.setattr(parser, "construct_filename", construct)
+    first = record.cached_filename(parser, cache)
+    assert first == "A01_s001_w1_z001_t001_Corrected_signal.tif"
+    assert record.cached_filename(parser, cache) == first
+    assert len(calls) == 1
+    # The inherited formatter follows the original live storage mapping;
+    # semantic producer coordinates and its recorded path are independent.
+    storage_components["channel"] = 2
+    second = record.cached_filename(parser, cache)
+    assert second == "A01_s001_w2_z001_t001_Corrected_signal.tif"
+    assert len(calls) == 2
+    assert record.component_metadata()["well"] == "B02"
+    assert record.component_metadata()["channel"] == "9"
+    assert record.output_path == records[0].output_path
+    request = FunctionOutputPathRequest(
+        parser=parser,
+        output_dir=tmp_path / "other",
+        output_payload=np.zeros((3, 4), dtype=np.float32),
+        input_path=None,
+        identity_cache=cache,
+    )
+    assert record.path_for_request(request) == tmp_path / "other" / second
+    assert len(calls) == 2
 
 
 def test_step_output_manifest_batch_lookup_template_deduplicates_record_aliases(

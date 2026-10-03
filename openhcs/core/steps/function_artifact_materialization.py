@@ -54,9 +54,7 @@ from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
     FunctionOutputParserContext,
-    FunctionOutputPathAuthority,
     IncompleteFunctionOutputFilenameIdentityError,
 )
 from openhcs.core.steps.stream_component_semantics import (
@@ -799,7 +797,7 @@ class AnalysisOutputDescriptorAuthority:
             record.value.data
         )
         if use_filename_identity or exact_fixed_scope:
-            identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+            identity = FunctionOutputIdentity.from_filename_metadata(
                 parser_context.parser,
                 metadata,
             )
@@ -810,7 +808,7 @@ class AnalysisOutputDescriptorAuthority:
                     "its declared source metadata has no addressable identity."
                 )
         else:
-            identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+            identity = FunctionOutputIdentity.from_metadata(
                 parser_context.parser,
                 metadata,
                 fallback_identity_path=record.path,
@@ -822,10 +820,7 @@ class AnalysisOutputDescriptorAuthority:
             )
             try:
                 filename = Path(
-                    FunctionOutputPathAuthority.filename_for_identity(
-                        parser_context.parser,
-                        identity,
-                    )
+                    identity.filename(parser_context.parser)
                 ).name
             except IncompleteFunctionOutputFilenameIdentityError as exc:
                 if cls.missing_component_is_aggregated(

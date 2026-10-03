@@ -1874,7 +1874,7 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
     )
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ObjectLabelsArtifactType
-    ).source_image_payload(object_spec, objects)
+    ).source_image_payload_from_runtime_value(object_spec, objects)
 
     assert payload is objects
     assert image_payload_metadata(payload).source_image_provenance_planes.paths == (

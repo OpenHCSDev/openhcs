@@ -76,8 +76,7 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_output_identity import (
-    FunctionOutputIdentityAuthority,
-    FunctionOutputPathAuthority,
+    FunctionOutputIdentity,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
@@ -1626,7 +1625,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 continue
             output_path = Path(output.path)
             for item in items:
-                identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+                identity = FunctionOutputIdentity.from_metadata(
                     parser,
                     item.metadata,
                     fallback_identity_path=output.path,
@@ -1634,10 +1633,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 if identity is None:
                     raise ValueError("Projected viewer output requires a filename identity.")
                 identity = replace(identity, extension=output_path.suffix)
-                filename = FunctionOutputPathAuthority.filename_for_identity(
-                    parser,
-                    identity.with_filename_qualifier(output_path.stem),
-                )
+                filename = identity.with_filename_qualifier(output_path.stem).filename(parser)
                 result.append(
                     replace(
                         output,
@@ -1793,13 +1789,13 @@ class MaterializationContext:
         if qualifier is None:
             return None
         parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
-        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(parser, metadata)
+        identity = FunctionOutputIdentity.from_filename_metadata(parser, metadata)
         if identity is None:
             raise ValueError("Retained image output has no addressable source filename identity.")
         identity = self.materialization_spec.filename_identity_for_output(
             replace(identity, extension=extension), self.output_plan,
         )
-        return FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        return identity.filename(parser)
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)

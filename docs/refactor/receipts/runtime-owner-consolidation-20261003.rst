@@ -123,10 +123,10 @@ nonexistent ``projection_axis.aligned_value``. The merged leaf invokes the
 existing value owner's ``value_for_aligned_slice`` capability, with exact outer
 count/index controls. Original ``AttributeError`` evidence is retained.
 
-The final combined 22-file execution, projection, image topology, save,
+The combined 22-file execution, projection, image topology, save,
 publication, artifact, debug, framework, path and CP gate passes all 1,247 tests
-in 18.97 seconds. This validates the structural batch together. No new ordinary
-pipeline timing has yet been measured for this revision. An isolated main
+in 18.97 seconds. This validates the structural batch together. The subsequent
+paired measurement below does not establish a material speedup. An isolated main
 cherry-pick of the loaded-cohort change was rejected because it depends on the
 earlier executor/output consolidation; that temporary operation was aborted,
 its conflict evidence retained, and the empty branch removed. The coherent
@@ -156,6 +156,52 @@ pass, including unchanged 48-file inventories, metadata reopening, yeast,
 labels, table passthrough and opaque domains. The original saver reproduces
 the new unwrapped-path control failure.
 
+Typed publication and input source resolution
+--------------------------------------------
+
+Produced output projections now stay typed through the atomic publication
+transaction. The existing ``VirtualWorkspaceSourceProjectionEntries`` admits
+incoming projection/path pairs, merges them with the current durable document,
+and supplies serialization at the disk boundary. Producer ``metadata_dict``
+construction and the atomic writer's raw-field merge are deleted. Incoming
+projections are not decoded; unreplaced durable records are decoded once.
+The shared owner retains duplicate-identity admission, replacement repair,
+path order, concurrent-well retention and final reconciliation pruning.
+Metadata-disabled transactions retain opaque existing wire annotations and
+orphan mapping entries. The internal incoming API intentionally requires typed
+entries; persisted JSON remains the external format.
+
+Input source-context queries now consume the value already bound and projected
+by ``RuntimeInputBindingRequest``. They no longer repeat image aliasing,
+intensity normalization or object-label binding. Each post-call source read
+still resolves the current input, including callback mutations.
+
+One output identity owner
+-------------------------
+
+``FunctionOutputIdentity`` now owns construction, component and extension
+normalization, qualifiers, filenames and paths. ``ProducedOutputSemantics``
+inherits these operations. The five detached identity/path/component/extension/
+qualifier facades are deleted and their production consumers migrated.
+Semantic coordinates remain distinct from storage filename coordinates;
+the external parser and execution-local caches retain their own roles.
+
+The unused five-class ``core.progress.emitters`` family and its public
+reexports are deleted. Actual emission still uses the required progress queue,
+the execution server's emitter, and the GUI's event registry.
+
+The publication, source-binding, identity and progress changes pass one coupled
+22-file gate covering execution, recording, masks, live mutations, materialization,
+persisted reopening, projection and progress (971 controls, 10.92s). This is a
+behavioral check of the combined source, not evidence of speedup.
+
+The proposed metadata-only input lane was withdrawn before publication. A real
+compile-only inventory admitted seven 3D groups and no Speckles groups; existing
+cache hits already avoid assembly. The proposed broader lazy composition was
+also rejected: eliminating source snapshots changes in-place callable isolation,
+while preserving them retains the copying cost. Neither route is promoted as
+an unconsumed capability or a dominant performance fix.
+
 Evidence scope
 --------------
 
@@ -172,6 +218,17 @@ scientific comparisons pass. Mean 3D execution is 9.021577s versus native
 Two observations have substantial spread and do not establish a causal gain.
 This source precedes the output-record specialization. Its remaining execution
 gap to 2x is 1.624947s for 3D and 0.572183s for Speckles.
+
+The subsequent ordinary paired run at ``74693f589`` measures mean 3D execution
+8.841s, total 10.823s and native warm invocation 15.230s: 1.723x execution and
+1.407x total. Speckles measures execution 1.415s, total 2.216s and native
+1.896s: 1.340x execution and 0.856x total. All eight scientific comparisons
+pass. The 0.180s difference from the previous 3D execution mean lies within
+the observed spread and is not a causal performance claim. The execution gap
+to 2x native remains 1.227s. Local timing and qualification records are retained
+under ``owner-consolidation-746-paired-v1`` and its preparation sibling in the
+20261003 maintenance evidence root. The typed publication, input binding and
+identity changes described above follow this measurement and remain unmeasured.
 
 PR #394 remains draft. Its original whole-branch R0/R1 obligations, installed
 consumer acceptance, full-catalog parity and fresh full30/scaling figures

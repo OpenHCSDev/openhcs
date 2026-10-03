@@ -177,8 +177,6 @@ from openhcs.core.steps.function_output_manifest import (
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
-    FunctionOutputPathAuthority,
     FunctionOutputPathRequest,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -3172,7 +3170,7 @@ class PatternGroupRuntime:
                 identity_cache=context.runtime_function_output_identity_cache,
             )
             try:
-                output_identity = FunctionOutputIdentityAuthority.identity(
+                output_identity = FunctionOutputIdentity.from_request(
                     output_path_request
                 )
             except ValueError as exc:
@@ -3195,10 +3193,7 @@ class PatternGroupRuntime:
                 output_identity = output_identity.with_filename_qualifier(
                     output_context.output_key
                 )
-            output_path = FunctionOutputPathAuthority.output_path_for_identity(
-                output_path_request,
-                output_identity,
-            )
+            output_path = output_identity.path_for_request(output_path_request)
             output_path_text = str(output_path)
             output_path_entries.append(
                 OutputPathBatchEntry(

@@ -55,7 +55,6 @@ from openhcs.core.source_projection import (
     SourcePlaneProjection,
     SourceProjection,
     SourceProjectionMetadataSerializer,
-    SourceProjectionSet,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
@@ -70,9 +69,8 @@ from openhcs.core.steps.function_io import (
     zarr_output_batch_layout,
 )
 from openhcs.core.steps.function_output_identity import (
-    FunctionOutputIdentityAuthority,
+    FunctionOutputIdentity,
     FunctionOutputParserContext,
-    FunctionOutputPathAuthority,
 )
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -86,6 +84,7 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
+    VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -495,7 +494,7 @@ class StreamOutputBatch:
         """Return the stream-visible path for one projected payload item."""
         if projected_item_count <= 1:
             return produced_path
-        identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+        identity = FunctionOutputIdentity.from_metadata(
             parser,
             projected_item.metadata,
             fallback_identity_path=produced_path,
@@ -506,10 +505,7 @@ class StreamOutputBatch:
             identity = identity.with_filename_qualifier(
                 produced_output.filename_qualifier
             )
-        filename = FunctionOutputPathAuthority.filename_for_identity(
-            parser,
-            identity,
-        )
+        filename = identity.filename(parser)
         return str(Path(produced_path).parent / filename)
 
 
@@ -738,7 +734,7 @@ class OpenHCSMetadataWriter:
                 raise ValueError(
                     "Produced metadata requires declared component labels."
                 )
-            structured_metadata = self.produced_projection_metadata(
+            projection_entries = self.produced_projection_entries(
                 context, produced_plan
             )
             parser_context = FunctionOutputParserContext.from_processing_context(
@@ -753,7 +749,7 @@ class OpenHCSMetadataWriter:
             AtomicMetadataWriter().publish_source_projection_metadata(
                 METADATA_CONFIG.metadata_path(self.plate_root),
                 self.sub_dir,
-                structured_metadata,
+                projection_entries,
                 serializer=SourceProjectionMetadataSerializer(parser_context.parser),
                 saved_image_paths=saved_image_paths,
                 microscope_handler_name=parser_context.microscope_type,
@@ -767,11 +763,11 @@ class OpenHCSMetadataWriter:
                 ),
             )
 
-        def produced_projection_metadata(
+        def produced_projection_entries(
             self,
             context: ProcessingContext,
             plan: CompiledStepPlan | None,
-        ) -> Mapping[str, object] | None:
+        ) -> VirtualWorkspaceSourceProjectionEntries | None:
             """Project the current saved plan while its typed memory outputs remain."""
             if plan is None:
                 return None  # Plate reconciliation must not reload cleaned step memory.
@@ -799,9 +795,6 @@ class OpenHCSMetadataWriter:
             projection_paths = []
             produced_projections = {}
             declared_addresses: set[OpenHCSPlaneAddress] = set()
-            parser_context = FunctionOutputParserContext.from_processing_context(
-                context
-            )
             for record, payload in zip(records, payloads, strict=True):
                 destination = record.path_under(self.output_dir)
                 virtual_path = str(Path(destination).relative_to(self.plate_root))
@@ -855,18 +848,8 @@ class OpenHCSMetadataWriter:
             )
             if not projection_paths:
                 return None
-            projection_set = SourceProjectionSet(
-                tuple(projection for projection, _path in projection_paths)
-            )
-            return SourceProjectionMetadataSerializer(
-                parser_context.parser
-            ).metadata_dict(
-                projection_set,
-                microscope_handler_name=parser_context.microscope_type,
-                source_filename_parser_name=parser_context.parser_name,
-                grid_dimensions=[],
-                pixel_size=1.0,
-                projection_paths=tuple(projection_paths),
+            return VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+                projection_paths
             )
 
         def project_runtime_artifacts(
@@ -994,13 +977,13 @@ class OpenHCSMetadataWriter:
             context, plan, artifact_materializations=artifact_materializations
         ):
             if not plan.create_openhcs_metadata:
-                structured_metadata = target.produced_projection_metadata(context, plan)
-                if structured_metadata is None:
+                projection_entries = target.produced_projection_entries(context, plan)
+                if projection_entries is None:
                     continue
                 AtomicMetadataWriter().merge_source_projection_metadata(
                     METADATA_CONFIG.metadata_path(target.plate_root),
                     target.sub_dir,
-                    structured_metadata,
+                    projection_entries,
                 )
             else:
                 target.write(context, produced_plan=plan)

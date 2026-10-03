@@ -167,12 +167,17 @@ class RuntimeArtifactTypeStrategy(
         del value
         return None
 
-    def source_image_payload(
+    def source_image_payload_from_runtime_value(
         self,
         spec: ArtifactSpec,
         value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
-        """Return an image payload that carries this artifact's source paths."""
+        """Read source context from an already bound, invocation-scoped value.
+
+        Input naming, intensity conversion and plane selection belong to
+        ``RuntimeInputBindingRequest.runtime_value``. A source-context query
+        must consume that result without binding the input a second time.
+        """
         return None
 
     def published_main_flow_output(
@@ -252,12 +257,12 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
             image_payload_metadata(value).source_provenance.represented_source_image_names
         )
 
-    def source_image_payload(
+    def source_image_payload_from_runtime_value(
         self,
         spec: ArtifactSpec,
         value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
-        return self.raw_runtime_input_value(spec, value)
+        return value
 
     def published_main_flow_output(
         self,
@@ -338,12 +343,12 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
     ) -> str | None:
         return cast(ObjectLabelSet, value).source_image_name
 
-    def source_image_payload(
+    def source_image_payload_from_runtime_value(
         self,
         spec: ArtifactSpec,
         value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
-        return self.object_labels(spec, value)
+        return value
 
 
 class MeasurementsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):

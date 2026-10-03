@@ -21,9 +21,10 @@ from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata, ImagePayloadMetadataCompositionMode
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_output_identity import (
-    FunctionOutputIdentityAuthority, FunctionOutputPathAuthority,
+    FunctionOutputIdentity,
 )
 from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget, RuntimeArtifactMaterializationAuthority,
@@ -97,12 +98,10 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
         )
         expected[output.name] = []
         for payload in payloads:
-            identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+            identity = FunctionOutputIdentity.from_filename_metadata(
                 context.microscope_handler.parser, payload.metadata,
             ).with_filename_qualifier(output_context.output_key)
-            destination = plan.output_dir / FunctionOutputPathAuthority.filename_for_identity(
-                context.microscope_handler.parser, identity,
-            )
+            destination = plan.output_dir / identity.filename(context.microscope_handler.parser)
             filemanager.ensure_directory(plan.output_dir, Backend.MEMORY.value)
             filemanager.ensure_directory(plan.output_dir, Backend.DISK.value)
             filemanager.save(payload, str(destination), Backend.MEMORY.value)
@@ -116,7 +115,10 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
     target = replace(PrimaryImageMetadataTarget.from_plan(plan), artifact_materializations=saved)
     # The original implementation raises its real duplicate projection guard
     # here: both automatic materializations used the same unqualified path.
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert {item["source_alias"] for item in structured["source_projection"]} == set(expected)
     assert len(structured["source_projection"]) == 2 * plane_count
     for materialized in saved:
@@ -253,12 +255,10 @@ def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suff
     ).outputs(plan, context)
     assert len(outputs) == plane_count
     for index, (output, payload) in enumerate(zip(outputs, payloads, strict=True), 1):
-        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+        identity = FunctionOutputIdentity.from_filename_metadata(
             context.microscope_handler.parser, payload.metadata,
         ).with_filename_qualifier(output_plan.name)
-        expected = FunctionOutputPathAuthority.filename_for_identity(
-            context.microscope_handler.parser, replace(identity, extension=suffix),
-        )
+        expected = replace(identity, extension=suffix).filename(context.microscope_handler.parser)
         assert Path(output.path).name == expected
         assert Path(output.path).name.endswith("_Role_Name" + suffix)
         assert output.metadata.source_component_metadata["channel"] == "2"

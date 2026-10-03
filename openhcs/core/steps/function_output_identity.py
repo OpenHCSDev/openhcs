@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Mapping, Sequence, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, Mapping, Sequence, TypeAlias
 
 from openhcs.core.source_path_identity import source_path_identity
 from openhcs.constants.constants import AllComponents, VariableComponents
@@ -163,159 +163,82 @@ class FunctionOutputIdentity:
 
     def with_filename_qualifier(self, qualifier: str) -> "FunctionOutputIdentity":
         """Return this identity qualified by a declared output surface name."""
-        return replace(self, filename_qualifier=FilenameQualifier.from_value(qualifier))
+        return replace(
+            self, filename_qualifier=self._normalize_filename_qualifier(qualifier),
+        )
 
     def without_filename_qualifier(self) -> "FunctionOutputIdentity":
         """Return this identity without its output-surface filename qualifier."""
         return replace(self, filename_qualifier=None)
 
-
-class FilenameQualifier:
-    """Normalize declared output surface names for filename disambiguation."""
-
-    _unsafe_pattern = re.compile(r"[^A-Za-z0-9_.-]+")
+    _unsafe_qualifier_pattern: ClassVar[re.Pattern[str]] = re.compile(r"[^A-Za-z0-9_.-]+")
 
     @classmethod
-    def from_value(cls, value: str) -> str:
-        qualifier = cls._unsafe_pattern.sub("_", str(value).strip())
+    def _normalize_filename_qualifier(cls, value: str) -> str:
+        qualifier = cls._unsafe_qualifier_pattern.sub("_", str(value).strip())
         qualifier = qualifier.strip("_.-")
         if not qualifier:
             raise ValueError("Filename qualifier cannot be empty.")
         return qualifier
 
-
-@dataclass(frozen=True, slots=True)
-class FunctionOutputParserContext:
-    """Parser-facing microscope context for FunctionStep output finalization."""
-
-    parser: FilenameParser
-    microscope_type: str
-
-    @classmethod
-    def from_processing_context(
-        cls,
-        context: "ProcessingContext",
-    ) -> "FunctionOutputParserContext":
-        handler = context.microscope_handler
-        return cls(
-            parser=handler.parser,
-            microscope_type=handler.microscope_type,
-        )
-
-    @property
-    def parser_name(self) -> str:
-        return self.parser.__class__.__name__
-
-    def parse_path_metadata(self, path: str | Path) -> SourceComponentMetadata | None:
-        parsed = self.parser.parse_filename(source_path_identity(str(path)).name)
-        return None if parsed is None else parsed.wire_mapping()
-
-
-class FunctionOutputPathAuthority:
-    """Construct output filenames from semantic identity through the parser."""
-
-    @classmethod
-    def output_path(cls, request: FunctionOutputPathRequest) -> Path:
-        return cls.output_path_for_identity(
-            request,
-            FunctionOutputIdentityAuthority.identity(request),
+    def path_for_request(self, request: FunctionOutputPathRequest) -> Path:
+        """Construct this identity's path in the request's output directory."""
+        return Path(request.output_dir) / self.cached_filename(
+            request.parser, request.identity_cache,
         )
 
     @classmethod
-    def output_filename(cls, request: FunctionOutputPathRequest) -> str:
-        return cls.output_filename_for_identity(
-            request,
-            FunctionOutputIdentityAuthority.identity(request),
-        )
+    def path_from_request(cls, request: FunctionOutputPathRequest) -> Path:
+        """Resolve one runtime slice identity and construct its output path."""
+        return cls.from_request(request).path_for_request(request)
 
-    @classmethod
-    def output_path_for_identity(
-        cls,
-        request: FunctionOutputPathRequest,
-        identity: FunctionOutputIdentity,
-    ) -> Path:
-        return Path(request.output_dir) / cls.output_filename_for_identity(
-            request,
-            identity,
-        )
-
-    @classmethod
-    def output_filename_for_identity(
-        cls,
-        request: FunctionOutputPathRequest,
-        identity: FunctionOutputIdentity,
-    ) -> str:
-        return cls.cached_filename_for_identity(
-            request.parser,
-            identity,
-            request.identity_cache,
-        )
-
-    @classmethod
-    def cached_filename_for_identity(
-        cls,
+    def cached_filename(
+        self,
         parser: FilenameParser,
-        identity: FunctionOutputIdentity,
         identity_cache: FunctionOutputIdentityCache,
     ) -> str:
-        cache_key = cls._filename_cache_key(parser, identity)
+        cache_key = self._filename_cache_key(parser)
         cached = identity_cache.filenames_by_identity.get(cache_key)
         if cached is not None:
             return cached
-        filename = cls.filename_for_identity(parser, identity)
+        filename = self.filename(parser)
         identity_cache.filenames_by_identity[cache_key] = filename
         return filename
 
-    @classmethod
-    def filename_for_identity(
-        cls,
-        parser: FilenameParser,
-        identity: FunctionOutputIdentity,
-    ) -> str:
-        component_values = dict(identity.filename_values)
-        extension = identity.extension
+    def filename(self, parser: FilenameParser) -> str:
+        """Construct this value's storage filename through the external parser."""
+        component_values = dict(self.filename_values)
+        extension = self.extension
         try:
-            bound = parser.bind_component_values(
-                component_values,
-                extension=extension,
-            )
+            bound = parser.bind_component_values(component_values, extension=extension)
             filename = parser.construct_filename(bound)
-            return cls._qualified_filename(
-                filename, identity.filename_qualifier, extension=bound.extension
+            return self._qualified_filename(
+                filename, self.filename_qualifier, extension=bound.extension,
             )
         except MissingFilenameComponentError as exc:
             raise IncompleteFunctionOutputFilenameIdentityError(
                 exc.component_name,
-                cls._construction_error_message(
-                    identity,
-                    component_values,
-                    extension,
-                ),
+                self._construction_error_message(component_values, extension),
             ) from exc
         except Exception as exc:
             raise ValueError(
-                cls._construction_error_message(
-                    identity,
-                    component_values,
-                    extension,
-                )
+                self._construction_error_message(component_values, extension),
             ) from exc
 
-    @staticmethod
     def _construction_error_message(
-        identity: FunctionOutputIdentity,
+        self,
         component_values: FunctionOutputComponentValues,
         extension: str | None,
     ) -> str:
         return (
             "Cannot construct FunctionStep output filename from "
-            f"{identity.source} identity. Components={component_values!r}, "
+            f"{self.source} identity. Components={component_values!r}, "
             f"extension={extension!r}."
         )
 
     @staticmethod
     def _qualified_filename(
-        filename: str, qualifier: str | None, *, extension: str
+        filename: str, qualifier: str | None, *, extension: str,
     ) -> str:
         if qualifier is None:
             return filename
@@ -323,43 +246,34 @@ class FunctionOutputPathAuthority:
             raise ValueError("Constructed filename does not retain its declared extension.")
         return f"{filename[:-len(extension)]}_{qualifier}{extension}"
 
-    @staticmethod
-    def _filename_cache_key(
-        parser: FilenameParser,
-        identity: FunctionOutputIdentity,
-    ) -> FunctionOutputFilenameCacheKey:
-        component_values = identity.filename_values
+    def _filename_cache_key(self, parser: FilenameParser) -> FunctionOutputFilenameCacheKey:
         return FunctionOutputFilenameCacheKey(
             parser_id=id(parser),
             component_values=tuple(
-                sorted((str(key), value) for key, value in component_values.items())
+                sorted((str(key), value) for key, value in self.filename_values.items())
             ),
-            extension=identity.extension,
-            filename_qualifier=identity.filename_qualifier,
+            extension=self.extension,
+            filename_qualifier=self.filename_qualifier,
         )
 
-
-class FunctionOutputExtensionAuthority:
-    """Resolve filename extensions from source metadata or paths."""
-
     @classmethod
-    def first(cls, *extensions: str | None) -> str | None:
+    def _first_extension(cls, *extensions: str | None) -> str | None:
         for extension in extensions:
             if extension is not None:
                 return extension
         return None
 
     @classmethod
-    def from_metadata(
+    def _extension_from_metadata(
         cls,
         metadata: SourceComponentMetadata | None,
     ) -> str | None:
-        return cls.from_raw(
+        return cls._extension_from_raw(
             SourceImageIdentity(component_metadata=metadata).filename_extension
         )
 
     @classmethod
-    def from_path(
+    def _extension_from_path(
         cls,
         path: str | None,
         *,
@@ -368,17 +282,17 @@ class FunctionOutputExtensionAuthority:
     ) -> str | None:
         if path is None:
             return None
-        identity = FunctionOutputIdentityAuthority._parsed_path_identity_with_cache(
+        identity = cls._parsed_path_identity_with_cache(
             parser, path, source="source extension", identity_cache=identity_cache
         )
         if identity is not None:
             return identity.extension
         # Physical source paths need not have a canonical plane address. Their
         # terminal file suffix is not a chain of dotted source identity tokens.
-        return cls.from_raw(Path(path).suffix)
+        return cls._extension_from_raw(Path(path).suffix)
 
     @classmethod
-    def from_source(
+    def _extension_from_source(
         cls,
         metadata: SourceComponentMetadata | None,
         path: str | None,
@@ -387,13 +301,13 @@ class FunctionOutputExtensionAuthority:
         identity_cache: FunctionOutputIdentityCache,
     ) -> str | None:
         """Honor retained extension declarations before external path decoding."""
-        extension = cls.from_metadata(metadata)
+        extension = cls._extension_from_metadata(metadata)
         if extension is not None:
             return extension
-        return cls.from_path(path, parser=parser, identity_cache=identity_cache)
+        return cls._extension_from_path(path, parser=parser, identity_cache=identity_cache)
 
     @staticmethod
-    def from_raw(raw_extension: ParsedFilenameValue) -> str | None:
+    def _extension_from_raw(raw_extension: ParsedFilenameValue) -> str | None:
         if raw_extension is None:
             return None
         extension = str(raw_extension)
@@ -401,12 +315,8 @@ class FunctionOutputExtensionAuthority:
             return None
         return extension
 
-
-class FunctionOutputComponentIdentityAuthority:
-    """Normalize parser/source component values for output identity."""
-
     @classmethod
-    def from_source_metadata(
+    def _component_values_from_source_metadata(
         cls,
         metadata: SourceComponentMetadata | None,
     ) -> dict[str, FunctionOutputComponentValue]:
@@ -418,7 +328,7 @@ class FunctionOutputComponentIdentityAuthority:
         }
 
     @classmethod
-    def from_parsed(
+    def component_values_from_parsed(
         cls,
         parsed: FilenameParseResult,
     ) -> dict[str, FunctionOutputComponentValue]:
@@ -438,12 +348,8 @@ class FunctionOutputComponentIdentityAuthority:
         value_text = str(value)
         return int(value_text) if value_text.isdecimal() else value_text
 
-
-class FunctionOutputIdentityAuthority:
-    """Resolve the single source of output identity for a runtime slice."""
-
     @classmethod
-    def identity(cls, request: FunctionOutputPathRequest) -> FunctionOutputIdentity:
+    def from_request(cls, request: FunctionOutputPathRequest) -> FunctionOutputIdentity:
         metadata = image_payload_metadata(request.output_payload)
         payload_identity = cls._identity_from_metadata_with_cache(
             request.parser,
@@ -464,7 +370,7 @@ class FunctionOutputIdentityAuthority:
         return cls._input_aligned_identity(request)
 
     @classmethod
-    def identity_from_metadata(
+    def from_metadata(
         cls,
         parser: FilenameParser,
         metadata: ImagePayloadMetadata,
@@ -484,7 +390,7 @@ class FunctionOutputIdentityAuthority:
         )
 
     @classmethod
-    def identity_from_metadata_with_cache(
+    def from_metadata_with_cache(
         cls,
         parser: FilenameParser,
         metadata: ImagePayloadMetadata,
@@ -585,7 +491,7 @@ class FunctionOutputIdentityAuthority:
 
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
-            extension=FunctionOutputExtensionAuthority.from_source(
+            extension=cls._extension_from_source(
                 metadata.source_component_metadata, metadata.source_path,
                 parser=parser, identity_cache=identity_cache,
             ),
@@ -593,7 +499,7 @@ class FunctionOutputIdentityAuthority:
         )
         if identity is not None:
             if source_plane_count == 0 and len(represented_source_identities) > 1:
-                filename_identity = cls.filename_identity_from_metadata(
+                filename_identity = cls.from_filename_metadata(
                     parser,
                     metadata,
                     fallback_identity_path=fallback_identity_path,
@@ -610,7 +516,7 @@ class FunctionOutputIdentityAuthority:
                 return replace(
                     identity,
                     component_values=semantic_component_values,
-                    extension=FunctionOutputExtensionAuthority.first(
+                    extension=cls._first_extension(
                         identity.extension,
                         filename_identity.extension,
                     ),
@@ -640,7 +546,7 @@ class FunctionOutputIdentityAuthority:
             source_identity = represented_source_identities[0]
             identity = cls._identity_from_metadata(
                 source_identity.component_metadata,
-                extension=FunctionOutputExtensionAuthority.from_source(
+                extension=cls._extension_from_source(
                     source_identity.component_metadata, source_identity.path,
                     parser=parser, identity_cache=identity_cache,
                 ),
@@ -680,7 +586,7 @@ class FunctionOutputIdentityAuthority:
         return None
 
     @classmethod
-    def filename_identity_from_metadata(
+    def from_filename_metadata(
         cls,
         parser: FilenameParser,
         metadata: ImagePayloadMetadata,
@@ -699,7 +605,7 @@ class FunctionOutputIdentityAuthority:
         )
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
-            extension=FunctionOutputExtensionAuthority.from_source(
+            extension=cls._extension_from_source(
                 metadata.source_component_metadata, metadata.source_path,
                 parser=parser, identity_cache=identity_cache,
             ),
@@ -783,7 +689,7 @@ class FunctionOutputIdentityAuthority:
             component_values.update(identity.component_values)
             return FunctionOutputIdentity(
                 component_values=component_values,
-                extension=FunctionOutputExtensionAuthority.first(
+                extension=cls._first_extension(
                     identity.extension,
                     parsed_identity.extension,
                 ),
@@ -823,7 +729,7 @@ class FunctionOutputIdentityAuthority:
         if parsed is None:
             return None
         return FunctionOutputIdentity(
-            component_values=FunctionOutputComponentIdentityAuthority.from_parsed(
+            component_values=cls.component_values_from_parsed(
                 parsed
             ),
             extension=parsed.extension,
@@ -899,7 +805,7 @@ class FunctionOutputIdentityAuthority:
     ) -> FunctionOutputIdentity:
         identity = cls._identity_from_metadata(
             source_identity.component_metadata,
-            extension=FunctionOutputExtensionAuthority.from_source(
+            extension=cls._extension_from_source(
                 source_identity.component_metadata, source_identity.path,
                 parser=parser, identity_cache=identity_cache,
             ),
@@ -987,8 +893,9 @@ class FunctionOutputIdentityAuthority:
         extra_keys = tuple(sorted(keys - frozenset(ordered_keys)))
         return (*ordered_keys, *extra_keys)
 
-    @staticmethod
+    @classmethod
     def _source_stack_extension(
+        cls,
         plane_identities: tuple[FunctionOutputIdentity, ...],
         identity_component_values: frozenset[str],
         *,
@@ -996,7 +903,7 @@ class FunctionOutputIdentityAuthority:
         parser: FilenameParser,
         identity_cache: FunctionOutputIdentityCache,
     ) -> str | None:
-        fallback_extension = FunctionOutputExtensionAuthority.from_path(
+        fallback_extension = cls._extension_from_path(
             fallback_identity_path, parser=parser, identity_cache=identity_cache
         )
         if fallback_extension is not None:
@@ -1093,7 +1000,7 @@ class FunctionOutputIdentityAuthority:
             return replace(
                 identity,
                 component_values=component_values,
-                extension=FunctionOutputExtensionAuthority.first(
+                extension=cls._first_extension(
                     identity.extension,
                     parsed_identity.extension,
                 ),
@@ -1105,7 +1012,7 @@ class FunctionOutputIdentityAuthority:
         return replace(
             identity,
             component_values=component_values,
-            extension=FunctionOutputExtensionAuthority.first(
+            extension=cls._first_extension(
                 identity.extension,
                 parsed_identity.extension,
             ),
@@ -1121,7 +1028,7 @@ class FunctionOutputIdentityAuthority:
         source: str,
     ) -> FunctionOutputIdentity | None:
         component_values = (
-            FunctionOutputComponentIdentityAuthority.from_source_metadata(metadata)
+            cls._component_values_from_source_metadata(metadata)
         )
         if not component_values:
             return None
@@ -1130,3 +1037,30 @@ class FunctionOutputIdentityAuthority:
             extension=extension,
             source=source,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionOutputParserContext:
+    """Parser-facing microscope context for FunctionStep output finalization."""
+
+    parser: FilenameParser
+    microscope_type: str
+
+    @classmethod
+    def from_processing_context(
+        cls,
+        context: "ProcessingContext",
+    ) -> "FunctionOutputParserContext":
+        handler = context.microscope_handler
+        return cls(
+            parser=handler.parser,
+            microscope_type=handler.microscope_type,
+        )
+
+    @property
+    def parser_name(self) -> str:
+        return self.parser.__class__.__name__
+
+    def parse_path_metadata(self, path: str | Path) -> SourceComponentMetadata | None:
+        parsed = self.parser.parse_filename(source_path_identity(str(path)).name)
+        return None if parsed is None else parsed.wire_mapping()

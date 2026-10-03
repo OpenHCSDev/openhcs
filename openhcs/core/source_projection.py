@@ -1179,23 +1179,24 @@ class SourceProjectionMetadataSerializer:
             }
         return metadata
 
+    @classmethod
     def projection_fields(
-        self,
+        cls,
         projection_paths: tuple[tuple[SourceProjection, str], ...],
     ) -> dict[str, Any]:
         """Serialize the coherent path-keyed projection fields as one unit."""
 
         return {
-            self.WORKSPACE_MAPPING_FIELD: {
+            cls.WORKSPACE_MAPPING_FIELD: {
                 path: projection.ref.to_workspace_mapping()
                 for projection, path in projection_paths
             },
-            self.SOURCE_METADATA_FIELD: {
-                path: self._source_metadata(projection)
+            cls.SOURCE_METADATA_FIELD: {
+                path: cls._source_metadata(projection)
                 for projection, path in projection_paths
             },
-            self.SOURCE_PROJECTION_FIELD: [
-                self._source_projection_payload(projection, path)
+            cls.SOURCE_PROJECTION_FIELD: [
+                cls._source_projection_payload(projection, path)
                 for projection, path in projection_paths
             ],
         }
@@ -1298,8 +1299,9 @@ class SourceProjectionMetadataSerializer:
             projection.ref.backend: True for projection in projection_set.projections
         }
 
+    @classmethod
     def _source_metadata(
-        self,
+        cls,
         projection: SourceProjection,
     ) -> dict[str, SourceMetadataValue]:
         metadata = source_metadata_dict(projection.source_metadata)
@@ -1349,8 +1351,9 @@ class SourceProjectionMetadataSerializer:
         projection.extend_source_metadata(metadata)
         return metadata
 
+    @classmethod
     def _source_projection_payload(
-        self,
+        cls,
         projection: SourceProjection,
         path: str,
     ) -> dict[str, Any]:

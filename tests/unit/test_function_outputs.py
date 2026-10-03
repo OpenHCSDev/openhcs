@@ -61,8 +61,6 @@ from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
-    FunctionOutputPathAuthority,
     FunctionOutputPathRequest,
 )
 from openhcs.core.steps.function_output_manifest import (
@@ -1408,7 +1406,7 @@ def test_metadata_target_family_discovers_new_declaration_without_consumer_edits
         assert OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan) == (
             target,
         )
-        assert target.produced_projection_metadata(context, plan) is None
+        assert target.produced_projection_entries(context, plan) is None
     finally:
         for key in set(registry) - original_keys:
             del registry[key]
@@ -1680,7 +1678,10 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
     assert projection.image_metadata is not None
     assert projection.image_metadata.source_dtype == "uint8"
     assert projection.ref == SourcePixelRef(Backend.DISK.value, virtual_path)
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert structured is not None
     [record] = structured[FIELDS.SOURCE_PROJECTION]
     assert record["virtual_path"] == virtual_path
@@ -1810,7 +1811,10 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
         ]
         for index in range(2)
     ) == ("1", "2")
-    structured = target.produced_projection_metadata(context, plan)
+    structured = target.produced_projection_entries(context, plan)
+    structured = SourceProjectionMetadataSerializer.projection_fields(
+        structured.projection_paths
+    )
     assert structured is not None
     [record] = structured[FIELDS.SOURCE_PROJECTION]
     assert record["artifact_kind"] == ObjectLabelsArtifactType.value
@@ -1994,13 +1998,13 @@ def test_produced_address_publication_never_parses_generated_filenames(
             },
             source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
         )
-        identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+        identity = FunctionOutputIdentity.from_metadata(
             parser, metadata
         )
         assert identity is not None
         assert identity.extension == extension
         identity = identity.with_filename_qualifier("centre_dots")
-        filename = FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        filename = identity.filename(parser)
         assert filename == f"{well}_s001_w1_z{z_index:03d}_t001_centre_dots{extension}"
         # Readback is an external boundary; publication below must not parse.
         parsed = parser.parse_filename(filename)
@@ -2099,14 +2103,12 @@ def test_produced_stacked_dotted_identity_keeps_declared_extension(
         input_path=Path(source_paths[0]).name,
         variable_components=(VariableComponents.Z_INDEX,),
     )
-    identity = FunctionOutputIdentityAuthority.identity(request)
+    identity = FunctionOutputIdentity.from_request(request)
     assert identity.extension == extension
     assert "z_index" not in identity.component_values
     assert identity.filename_address.value_for(AllComponents.Z_INDEX) == "3"
     assert identity.filename_address.value_for(AllComponents.WELL) == well
-    filename = FunctionOutputPathAuthority.filename_for_identity(
-        parser, identity.with_filename_qualifier("centre_dots")
-    )
+    filename = identity.with_filename_qualifier("centre_dots").filename(parser)
     assert filename == f"{well}_s001_w1_z003_t001_centre_dots{extension}"
 
 

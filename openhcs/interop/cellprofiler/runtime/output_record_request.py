@@ -223,7 +223,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
         RuntimeInputBindingRequest.__post_init__(self)
         payload = RuntimeArtifactTypeStrategy.for_artifact_type(
             spec.artifact_type
-        ).source_image_payload(
+        ).source_image_payload_from_runtime_value(
             spec,
             self.runtime_value(
                 edge,
