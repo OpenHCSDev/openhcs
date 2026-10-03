@@ -16,7 +16,10 @@ registry's wrapping and metadata procedure (IMPL-12), but injected FLEXIBLE on
 PLATE. Listing confused execution scope with array backend (IDEN-1).
 
 After: OpenHCSRegistry.declared_callable_contract owns admission for both native
-and custom declarations. Its original metadata projection constructs the
+and custom declarations, separately from catalog import availability. Catalog
+discovery and explicit native metadata lookup retain their existing framework
+availability policy; custom source projection does not import or require the
+declared backend. Its original metadata projection constructs the
 requested FunctionMetadata subtype, using the original wrapper and wrapper
 cache. CustomFunctionMetadata retains its original lifetime validation override;
 no second registry is introduced. Custom signature validation delegates PLATE

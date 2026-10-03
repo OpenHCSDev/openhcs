@@ -644,7 +644,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
 
     @classmethod
     def declared_callable_contract(cls, func: Callable) -> CallableContract | None:
-        """Select array or plate declarations through the catalog's one admission."""
+        """Select valid declarations independently of catalog import policy."""
         declared = inspect.unwrap(func)
         if not inspect.isfunction(declared):
             return None
@@ -668,13 +668,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             )
             return None
 
-        declared_memory_types = _catalog_memory_types(func)
-        if declared_memory_types is None:
-            logger.debug(
-                "Skipping %s - declared framework roles are invalid, unavailable, "
-                "or excluded by current catalog policy",
-                declared.__name__,
-            )
+        try:
+            callable_contract.declared_memory_types
+        except ValueError:
             return None
         return callable_contract
 
@@ -742,6 +738,8 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             declared,
         ):
             return None
+        if _catalog_memory_types(func) is None:
+            return None
         return self._metadata_for_function(
             name,
             func,
@@ -765,6 +763,8 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
 
         declared = inspect.unwrap(func)
         if not inspect.isfunction(declared):
+            return None
+        if _catalog_memory_types(func) is None:
             return None
 
         return cls()._metadata_for_function(
