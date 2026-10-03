@@ -10,6 +10,9 @@ PR394 comment5964451823; current Root head22e7acfa6e653649a89fd773d1c5159676bb1f
 was checked. Shared callable ABI validators and the output matcher remain
 Root-owned and unchanged. This supersedes the historical investigation-only
 ownership below. It does not claim installed or scientific acceptance.
+Root advanced to bb9c49c2ad70f1cee49fa0cde47592681edb2be3 during final receipt
+publication; its only production change since22e7 is knowledge_base_service.py.
+The released shape and protected ABI families are unchanged by that advance.
 
 The finished505 source checkout at
 ``/home/ts/wt/openhcs-ui-workflow-rendering-20261001`` was explicitly released by
@@ -83,7 +86,26 @@ plugin autoload, conftest, bytecode and Numba JIT are disabled. These are tiny
 synthetic source controls, not native preparation, scientific execution,
 installed-wheel or public MCP acceptance. Original OOM evidence below remains.
 Production/docs whitespace checks pass. Original pinned R0 qualification is
-the next source gate; PR503 stays draft.
+terminal PASS at production/test checkpoint
+f9a15dcbd12d9e9a72526ac02265613fb2f88925 against merged base
+ae9389f94c9e3e56e8f7d0f3624c6a81fee88731. The original detector is read from
+agent-comms3b03785f45df2ef5dc62ba6aed99294192ecbb01, without changes, and includes
+both actual production deltas: shape.py and object_filtering.py. All5247 reported
+metric deltas are zero; the positive-delta set is empty, with no bound increase
+or waiver. Runtime18.76s, peak86988KiB, cgroup78.8M, swap0, exit0 under the same
+one CPU/512M/60s limits. This is the original scoped R0 gate, not a global NRA
+cleanliness claim or a waiver of Root394's independent whole-branch R0/R1 RED.
+PR503 stays draft for the remaining repeated-output ABI and installed acceptance.
+
+Byte-exact current evidence archive:
+``docs/validation/registered-object-output-working-20261003.tar.gz``.
+All13 members were compared byte-for-byte against the retained source recipe
+and original raw stdout/stderr, including the terminal harness negatives.
+Archive383872bytes, SHA256
+``c8fee189f0e2101d1bd8568094cb58fb1eaa4bc17d070fc2b027d7702e007fc4``.
+The previous source archive and all loose original evidence remain unchanged.
+This receiving publication changes only documentation/archive bytes after the
+qualified product checkpoint; completed source shards are not repeated.
 
 The independent H003 original public reply is retained at
 ``next-recorded-admission-20261003/H003_REPEAT02/author-workspace/output/runtime/mcp.stdout``
