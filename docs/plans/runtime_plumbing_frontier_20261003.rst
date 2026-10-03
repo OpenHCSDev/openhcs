@@ -284,5 +284,104 @@ Local source-qualified receipts:
 * ``/home/ts/.local/state/openhcs-maintenance/20261003/illumination-schema-cache-topology-v4-20261003.json``
   (SHA-256 ``134244ea39004ccfc86d20fa14d4fdc49e78aa72f4a92349092c6f420c1b89e3``).
 
-No production optimization, new native repetition, original R0/R1 waiver,
-full-catalog/scaling completion or accepted ordinary speedup is claimed here.
+The preceding V3/V4 diagnostics are attribution only. They do not establish a
+production saving, new native repetition, original R0/R1 waiver or
+full-catalog/scaling completion.
+
+Registered configuration source readiness
+-----------------------------------------
+
+The decisive source-only prototype found repeated Python 3.10--3.12 class
+source lookup walking the complete config module. The existing
+``SignatureAnalyzer`` now derives bounded module AST and qualified-class source
+views from current immutable source contents. Python 3.13 and newer retain the
+native locator. Live annotations, factories, mutable field/inherited docs,
+loader invalidation and the original completed value-analysis cache remain at
+their existing observation points. Earlier class-identity snapshots failed
+real mutation controls and were rejected.
+
+``LazyDataclassFactory.registered_type_pairs()`` projects the existing registry
+without a second roster or constructing values. ``RegistryService`` prepares
+both public and proxy declarations after callable hooks and before READY,
+including declarations registered after the catalog was cached. Default
+factories are not evaluated during source preparation.
+
+At OpenHCS ``7258826d7198f2bb7010763276dba02320d62142``, four ordinary public
+Illumination runs in ABBA order measured:
+
+.. list-table:: Ordinary 1w_1t mean seconds; two observations per variant
+   :header-rows: 1
+
+   * - Phase
+     - Prior source
+     - Prepared source
+   * - Compilation
+     - 0.962152
+     - 0.587605
+   * - Execution job
+     - 0.382655
+     - 0.400589
+   * - Total pipeline
+     - 1.693765
+     - 1.363694
+
+Compilation saves 0.374547s (38.9%); total saves 0.330070s (19.5%). No execution
+gain is claimed. All four runs use CPU5, INLINE one-worker execution, normal
+OUTCOMES and the default memory observer, without hooks or profilers. Mandatory
+server startup/preparation and shutdown are outside total pipeline timing.
+Exactly three owned source files vary; immutable before/after hashes identify
+actual baseline contents separately from containing dependency Git HEADs.
+All source, dependencies, native binaries, environment and physical inputs were
+checked before/after each run; the clean candidate was restored afterward.
+
+All four complete authored output inventories retain both NPY artifacts exactly
+and match the qualified physical TIFF/pipeline/native evidence. The workload
+authors no tables. Native CellProfiler was not rerun in this experiment; broad
+scaling or new native speedup claims are not made. Science receipt SHA-256:
+``918c36612ec20738ad2d2760da85c9e9be07e81d4cd4bf0f60ec91dfcf906488``.
+
+The 136 upstream, 25 existing lazy-factory and 119 OpenHCS readiness/catalog/
+startup tests pass. python-introspect PR #6 and ObjectState PR #9 are merged and
+formally close their issues #5 and #8. Their merge commits change no measured
+source bytes. OpenHCS wiring is pushed in draft #394; a small main-only readiness
+change can be isolated without merging the unresolved broad branch.
+Reviewable measurement receipt and recipes are under
+``benchmark/results/perf_schema_source_readiness_20261003``; original immutable
+outputs/freeze remain under the corresponding maintenance ABBA directory.
+Runtime plumbing, full-catalog/scaling measurements, fresh native repetitions
+and figures remain outstanding. Original whole-branch R0/R1 failures remain
+explicit and unwaived.
+
+Canonical provenance identity integration
+------------------------------------------
+
+Main readiness #514 is merged into this branch. The overlapping readiness
+regression was removed from the callable ABI suite; the dedicated main test
+remains authoritative. Callable canonical-signature preparation still precedes
+registered declaration preparation and kernel readiness.
+
+The existing ``SourceMetadataFields.provenance_identity_items`` now derives its
+representation from ``identity_items``. Equal nested field mappings have equal
+provenance fingerprints independent of insertion order. Raw wire order, real
+value differences, ordered planes and lifetime-selected views remain intact.
+Existing birth fingerprints are preserved by pickle/cloudpickle; they are not
+recomputed from subsequently mutated public fields. Historical nested-mapping
+fingerprints can therefore differ from newly canonical fingerprints. A fresh
+same-source capture is required before candidate fingerprint replay.
+
+The integrated metadata/transport/readiness controls pass 86 tests in 2.40s.
+The separate exact PR #494 source qualification passes its unchanged 31 writer
+controls plus seven identity controls. Those writer controls cannot collect on
+this branch because its independent ``PointROIOutput`` producer is absent; no
+installed, native or live viewer acceptance is inferred. The integrated receipt
+is ``~/.local/state/openhcs-maintenance/20261003/pr494-identity-owner-scratch/
+integrated-owned-qualification-v1.json``.
+
+V8's original producer and downstream loader replay now pass complete value,
+metadata, manifest and array-alias gates, and the full six-CSV/120-TIFF science
+gate passes. Serialization still drops nested metadata views and source-context
+derived caches. These scoped clocks are not complete production-warm performance
+evidence. The saved downstream cache hit constructs no new provenance objects;
+it does not establish the payoff of a broader loading/recording/publication fix.
+The next capture must retain actual nested caches in the same graph, under the
+existing admission bounds, without rewarming or inventing state.

@@ -24,6 +24,8 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
+    SourceImageProvenancePlanes,
+    SourceImageProvenance,
     SourceImageProvenancePlaneRecord,
     SourcePlaneIndexedMetadata,
     source_component_metadata_consensus,
@@ -269,6 +271,54 @@ def test_source_identity_mapping_equality_keeps_original_class_and_current_field
     assert left == right
     nested["literal"] = "after"
     assert left != right and left.identity == captured
+
+
+def test_nested_mapping_order_does_not_change_provenance_identity_or_wire_order():
+    raw = {"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: {"site": "001", "channel": "1"}}
+    reordered = {ORIGINAL_SOURCE_METADATA_FIELD: {"channel": "1", "site": "001"}, "well": "A01"}
+    owned = DurableSourceMetadata.from_mapping(reordered)
+    before = to_jsonable(owned)
+    original = SourceImageProvenance(source_path="source.tif", source_component_metadata=raw)
+    for metadata in (reordered, owned):
+        candidate = SourceImageProvenance(source_path="source.tif", source_component_metadata=metadata)
+        assert candidate == original
+        assert candidate.equality_identity == original.equality_identity
+    assert SourceMetadataFields.provenance_identity_items(raw) == SourceMetadataFields.provenance_identity_items(owned)
+    assert to_jsonable(owned) == before
+    assert tuple(reordered) == (ORIGINAL_SOURCE_METADATA_FIELD, "well")
+    assert tuple(reordered[ORIGINAL_SOURCE_METADATA_FIELD]) == ("channel", "site")
+    reordered[ORIGINAL_SOURCE_METADATA_FIELD]["site"] = "002"
+    changed = SourceImageProvenance(source_path="source.tif", source_component_metadata=reordered)
+    assert changed.equality_identity != original.equality_identity
+
+
+def test_canonical_metadata_identity_preserves_ordered_provenance_planes():
+    paths = ("a.tif", "b.tif")
+    metadata = ({"site": "1"}, {"site": "2"})
+    forward = SourceImageProvenancePlanes.from_components(paths=paths, component_metadata=metadata)
+    reverse = SourceImageProvenancePlanes.from_components(
+        paths=tuple(reversed(paths)), component_metadata=tuple(reversed(metadata)),
+    )
+    assert SourceImageProvenance(source_image_provenance_planes=forward).equality_identity != SourceImageProvenance(
+        source_image_provenance_planes=reverse,
+    ).equality_identity
+
+
+@pytest.mark.parametrize("serializer", (pickle, cloudpickle))
+def test_identity_transport_preserves_birth_fingerprint_after_current_metadata_changes(serializer):
+    from openhcs.core.orchestrator.execution_result import RuntimeExecutionTransportSerialization
+
+    RuntimeExecutionTransportSerialization.register()
+    nested = {"site": "001", "channel": "1"}
+    identity = SourceImageIdentity("original.tif", {ORIGINAL_SOURCE_METADATA_FIELD: nested})
+    birth = identity.identity
+    nested["site"] = "002"
+    identity.path = "current.tif"
+    restored = serializer.loads(serializer.dumps(identity))
+    assert restored.path == "current.tif"
+    assert restored.component_metadata[ORIGINAL_SOURCE_METADATA_FIELD]["site"] == "002"
+    assert restored.identity == birth
+    assert SourceImageIdentity(restored.path, restored.component_metadata).identity != birth
 
 
 def test_raw_composition_snapshots_once_before_consensus_reads():

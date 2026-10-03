@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/processing/backends/lib_registry/registry_service.py",
+    "baseline_revision": "4eaacf17e5de3dba59ec217f133fa6e1821c8641",
+    "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+    "relative": "openhcs/processing/backends/lib_registry/registry_service.py",
+    "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/0-A.source",
+    "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/0-B.source"
+  },
+  {
+    "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/python-introspect/src/python_introspect/signature_analyzer.py",
+    "baseline_revision": "13f6ff3b43aaa430f5e771848f08d99faf941158",
+    "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/python-introspect",
+    "relative": "src/python_introspect/signature_analyzer.py",
+    "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/1-A.source",
+    "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/1-B.source"
+  },
+  {
+    "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/ObjectState/src/objectstate/lazy_factory.py",
+    "baseline_revision": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+    "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/ObjectState",
+    "relative": "src/objectstate/lazy_factory.py",
+    "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/2-A.source",
+    "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/2-B.source"
+  }
+]
