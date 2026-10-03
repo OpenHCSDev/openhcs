@@ -4546,6 +4546,8 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
             self.layer_route_state = NapariLayerRouteStateStore.empty()
             self.component_groups = NapariComponentGroupStore()
             self.component_values = ViewerRouteComponentValueTracker()
+            self.batch_processors = napari_viewer_server.NapariBatchProcessorStore()
+            self.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(self)
 
     server = _FakeServer()
     route_key = "deleted-channel-1"
@@ -5780,18 +5782,20 @@ def test_napari_shape_layer_payload_assigns_distinct_stable_label_colors():
 def test_napari_shape_feature_columns_fill_sparse_late_columns_in_order():
     columns = NapariShapeFeatureColumns()
 
-    columns.append({"area": 4.0}, label=1, path="first")
-    columns.append({"circularity": 0.8}, label=2, path="second")
+    columns.append({"area": 4.0}, label=1, path="first", element_identity="first:0")
+    columns.append({"circularity": 0.8}, label=2, path="second", element_identity="second:0")
     columns.append(
         {"area": 9.0, "circularity": 0.6},
         label=3,
         path="third",
+        element_identity="third:0",
     )
 
     assert columns.values == {
         "area": [4.0, None, 9.0],
         "label": [1, 2, 3],
         "path": ["first", "second", "third"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: ["first:0", "second:0", "third:0"],
         "circularity": [None, 0.8, 0.6],
     }
 
@@ -6173,24 +6177,18 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
         component_values={"channel": [4]},
         axis_offsets=(3,),
     )
+    item = _layer_item(
+        {"channel": 4},
+        [{"type": "points", "coordinates": [[1, 2]],
+          "metadata": {"label": 7, "component": 4}}],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
 
     napari_viewer_server.NapariPointsLayerDisplayHandler().handle(
         napari_viewer_server.NapariLayerDisplayRequest(
             pipeline=pipeline,
             presentation=presentation,
-            items=[
-                _layer_item(
-                    {"channel": 4},
-                    [
-                        {
-                            "type": "points",
-                            "coordinates": [[1, 2]],
-                            "metadata": {"label": 7, "component": 4},
-                        }
-                    ],
-                    stream_layer_data_type=StreamingDataType.POINTS,
-                )
-            ],
+            items=[item],
             display_config=NapariDisplayConfig(),
         )
     )
@@ -6202,7 +6200,10 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert tuple(data[0]) == (0, 1, 2)
     assert layer_kwargs["axis_labels"] == ("channel", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0)
-    assert layer_kwargs["properties"] == {"label": [7], "component": [4]}
+    assert layer_kwargs["properties"] == {
+        "label": [7], "component": [4],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
+    }
 
 
 def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
@@ -6331,10 +6332,17 @@ def test_shape_features_exclude_source_transport_without_mutating_payload():
     full_metadata = {"label": 7, "response": 0.25,
                      ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"}}
     features = NapariShapeFeatureColumns()
-    features.append(full_metadata, label=7, path="/own/synthetic.roi.zip")
+    item = _layer_item({}, stream_layer_data_type=StreamingDataType.SHAPES)
+    features.append(
+        full_metadata, label=7, path=item.address.path,
+        element_identity=item.element_identity(0),
+    )
     assert ROIArchiveSourceMetadata.FIELD in full_metadata
     assert ROIArchiveSourceMetadata.FIELD not in features.values
     assert features.values["response"] == [0.25]
+    assert features.values[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
 
 
 def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
