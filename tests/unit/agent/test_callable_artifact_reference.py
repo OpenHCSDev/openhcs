@@ -19,6 +19,7 @@ from openhcs.agent.knowledge_manifest import (
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.artifacts import (
+    ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -39,6 +40,7 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
+    ObjectLabelValue,
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -76,12 +78,8 @@ def reference_namespace():
     module = ModuleType("_openhcs_public_artifact_reference")
     sys.modules[module.__name__] = module
     try:
-        exec(
-            compile(
-                _reference_block("callable-artifact-reference"), DOCUMENT_PATH, "exec"
-            ),
-            module.__dict__,
-        )
+        for block in ("callable-artifact-reference", "callable-artifact-input-reference"):
+            exec(compile(_reference_block(block), DOCUMENT_PATH, "exec"), module.__dict__)
         yield module.__dict__
     finally:
         sys.modules.pop(module.__name__, None)
@@ -167,6 +165,45 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
         "pixel_count"
     )
     assert not namespace["FixtureFeatureOwner"].owns_measurement_feature_name("unknown")
+
+
+def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["mask_declared_objects"]
+    declaration = namespace["STORED_LABELS"]
+    contract = CallableContract.from_callable(function)
+    assert declaration.artifact_type.runtime_parameter_types() == (ObjectLabelValue,)
+    assert contract.artifact_input_parameter_names == ("objects",)
+    contract.validate_artifact_input_parameter_bindings()
+    plan = ArtifactInputPlan(
+        declaration.name, "/synthetic/fixture-labels.pkl",
+        artifact_type=declaration.artifact_type,
+    )
+    compiled = compile_function_pattern(function, {plan.ref(): plan}, {})
+    assert compiled.groups[0].invocations[0].contract.artifact_inputs.specs == (
+        declaration,
+    )
+    pixels = np.asarray([[0, 2], [7, 0]], dtype=np.int32)
+    labels = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=pixels))
+    image = np.asarray([[1, 3], [5, 9]], dtype=np.uint16)
+    np.testing.assert_array_equal(function(image, objects=labels), [[0, 3], [5, 0]])
+    np.testing.assert_array_equal(labels.labels, pixels)
+
+    # Exercise the original admission boundary, not a word-match assertion.
+    raw = contract.resolve_canonical_raw_callable()
+    original_annotation = raw.__annotations__["objects"]
+    try:
+        raw.__annotations__["objects"] = np.ndarray
+        from openhcs.core.pipeline.function_contracts import resolved_callable_type_hints
+        resolved_callable_type_hints.cache_clear()
+        with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
+            compile_function_pattern(function, {plan.ref(): plan}, {})
+    finally:
+        raw.__annotations__["objects"] = original_annotation
+        resolved_callable_type_hints.cache_clear()
+    compile_function_pattern(function, {plan.ref(): plan}, {})
 
 
 def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
