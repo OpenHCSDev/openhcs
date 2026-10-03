@@ -50,3 +50,37 @@ logs and original source/helper files. No SCI restart/replay/hotupdate occurred.
 The detached public TCP retirement case needs the parent's released exact
 endpoint custody. Root435 automatic publication and #494 3D receiving remain
 separate acceptance work, not claimed solved here.
+
+Decoder-owned superseding checkpoint
+-----------------------------------
+
+Issue #528 records the bootstrap failure. The preceding target05 checkpoint
+proved construction but did not guarantee original producer admission: default
+Pydantic dataclass validation differs from StreamProducerIdentity.from_payload
+for required empty strings, numeric/bool string normalization and optional empty
+strings. target05 remains historical; it is not relabelled as the final fix.
+
+Published source d92fd0b8c786d52c4290bf764b3cc3a84da9b600 binds the original
+from_payload classmethod directly through BeforeValidator in the existing DTO
+annotation. No validation body, wire TypedDict, schema/codec fork, identity
+field list or PolyStore source change was introduced. The original decoder
+continues to own int/bool/string coercion, optional normalization, missing/null/
+empty-required rejection and ignored producer keys. Unknown root tool parameters
+remain forbidden by the existing generated argument owner.
+
+NEW ordinary target06/wheels05 is source/wheel/installed byte-qualified, not
+an overlay on04/05. Wheel SHA256:
+46070edad4363d406b47ea771d07e795bff5eb268c4fa58d564881b5ec48ca04.
+Full 815 source/90assets/13skill proof: package26.log. Original RECORD/dependencies:
+PACKAGE28-QUALIFICATION.json. Actual installed104-tool construction and fresh
+stdio health27 pass; installed-controls26 has30 passes, including actual SDK
+equivalence to the original decoder and the SDK-to-native Qt queue control.
+Final named AST census includes704 production and162 relevant dependencies,
+zero parse omissions. All original negatives/receipts remain preserved.
+
+READY-MCP28.json and MCP-SEMANTICS28.rst provide the precise immutable pointer.
+The newest parent authorization allows ordinary scientific startup/analysis
+after the original parent resource guard and packet freeze. Archive524 and
+detached public TCP retirement522 remain separate feature-merge acceptance gaps,
+NOT a universal extra gate on fresh scientific health/ordinary analysis.
+No live-feature, independent SCI release or biological acceptance is claimed.
