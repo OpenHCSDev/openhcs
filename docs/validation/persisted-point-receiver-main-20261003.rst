@@ -47,8 +47,15 @@ source, as acknowledged by both owners.
 Qualification boundary
 ----------------------
 
-Coherent source and regression controls are now authored; main-based tests and
-ordinary combined wheel/target qualification are next. Prior59PASS on the full
+Main-only source d7dee6f9ebf20967b50b9d4c58e323933433d607 passed39 controls in
+5.20s under512MiB/noSwap/CPU1, peak332959744B andOOM0. The original retained
+public source records/domain/anchor are admitted unchanged. Receiver controls
+cover singleton/full/nonzero-origin domains,16 real coordinate/calibration
+rejections, fractional bounds, original ROI/source disk roundtrip, reopening,
+native Image/Points transform and semantic navigation without a Qt application,
+and Shapes feature separation. Root-only producer/graph/nestedidentity controls
+are not imported or claimed. Existing fractional-axis/anchor guards remain.
+Ordinary combined wheel/target qualification is next. Prior59PASS on the full
 Root-dependent source is NOT reported as main-only acceptance. No native or
 viewer is launched. The public receiving plan is a NEW standalone reopen of the
 unchanged989B archive SHA256
