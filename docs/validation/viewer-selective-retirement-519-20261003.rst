@@ -4,6 +4,36 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Decoder-parity correction received: qualification pending
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent requires original admission semantics, not merely a constructible SDK
+schema. Plain91d/dataclass and target05 permit some required-empty identities
+and differ from original numeric/bool/optional-empty normalization. Their actual
+construction/health/queue controls remain valid at that strength, but do not
+establish complete decoder parity. They are not merge-ready receipts.
+
+Planck published d92fd0b8c786d52c4290bf764b3cc3a84da9b600 and opened issue528.
+Singer receives only its two-file change as normal cherry-pick4414159b62ae92a901e37861cbe85856ae48f750.
+The canonical DTO now declares Annotated[StreamProducerIdentity,
+BeforeValidator(StreamProducerIdentity.from_payload)] inside the route mapping.
+This calls the existing behavior owner before Pydantic constructs the dataclass;
+there is no new validator body, field list, TypedDict, alias/codec, PolyStore edit
+or generic consumer branch. Original get_type_hints(include_extras=True) already
+carries that declared annotation. The new fixture compares original decoder
+versus actual SDK admission for numeric/bool/string positions and identity
+fields, optional empty values, ignored unknown identity keys and original
+required-empty/null/invalid-integer failures.
+
+All two production/two fixture files are byte-identical to Planck's d92 source;
+no combined ancestry is imported. Owner's new ordinary target06 whole-package,
+actual MCP construction/health/decoder-parity controls are still qualifying;
+actual detached public receiving remains required before merge or fresh SCI.
+No replay, hot target04/05 edit or further install/runtime in this worker.
+The one R0 below remains pinned to5354, before this subsequent annotation change,
+not claimed as a completed current4414 guard. Existing failure and qualification
+archives remain byte-exact; no unchanged test or package work is repeated here.
+
 Actual MCP construction correction received (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
