@@ -9,8 +9,10 @@ inside a `FunctionStep`; scientific execution still belongs to OpenHCS.
 
 Request the live `custom_function` authoring context. Retrieve its relevant
 custom-function, lifecycle and artifact-contract knowledge targets. For labels
-plus object measurements, retrieve `openhcs_callable_artifact_authoring`: its
-executable synthetic example demonstrates the ABI, not an assay algorithm.
+plus object measurements, or a custom consumer of an existing artifact, retrieve
+`openhcs_callable_artifact_authoring`. Its **Consume a nominal artifact input**
+section shows the input annotation/binding and earliest compile-error repair;
+its executable synthetic examples demonstrate the ABI, not an assay algorithm.
 Record the missing operation and expected input axes, dtype, units, memory
 backend, outputs and empty-input behaviour before writing source.
 For centre detection, specify what defines a centre, coordinate order/origin,
