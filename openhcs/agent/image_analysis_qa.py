@@ -197,15 +197,12 @@ class ImageQaEvidenceRule(Enum):
         "component values, or routed payload identity do not match the intended evidence"
     )
     SPATIAL_PREPROCESSING_REGRESSION = (
-        "choose distributed development witnesses before tuning, spanning observed "
-        "bright/dim background, centre/edge and sparse/dense regions. Uneven signal "
-        "requires a nuisance-model check, not a threshold fitted to one crop: "
-        "distinguish additive background, multiplicative shading and real biology. "
-        "Review raw, correction field or denoising residual, processed image and "
-        "downstream result at the same coordinates across those regions. Assess "
-        "local gains alongside remote misses, merges, erased faint structures "
-        "and unsupported background against the declared claim criteria; a prettier "
-        "or more uniform image is not acceptance"
+        "before tuning, choose distributed bright/dim, centre/edge and sparse/dense "
+        "witnesses. Distinguish additive background, multiplicative shading and "
+        "biology rather than fitting one crop. Compare raw, correction field or "
+        "denoising residual, processed image and result at identical coordinates. "
+        "Assess local gains and remote misses, merges, faint-signal loss and "
+        "unsupported background against the declared claim criteria, not aesthetics"
     )
     DEVELOPMENT_REPAIR_CONTINUATION = (
         "a rejected development candidate is a preserved comparison checkpoint, not "
@@ -260,9 +257,8 @@ class ReferenceEvidenceRule(Enum):
     """How external references constrain, but do not replace, spatial QA."""
 
     COUNT_INFORMS_ADMISSION = (
-        "compare detected and reference object counts as diagnostic evidence before "
-        "changing object admission; investigate discrepancies rather than requiring "
-        "exact agreement with imperfect annotations"
+        "compare detected/reference counts before changing admission; investigate "
+        "discrepancies without demanding exact agreement with imperfect annotations"
     )
     COUNT_DOES_NOT_PROVE_IDENTITY = (
         "treat count agreement as diagnostic evidence, not proof that the same "
