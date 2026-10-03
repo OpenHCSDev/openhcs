@@ -2960,9 +2960,6 @@ class PatternGroupRuntime:
         current_memory_type = group_data.execution_plan.input_memory_type
         debug_sink = debug_event_sink_from_context(group_data.context)
         declared_source_bindings = group_data.execution_plan.source_binding_plan
-        active_main_flow_bindings = group_data.active_main_flow_source_binding_plan(
-            group_data.main_data_stack
-        )
         for invocation in group_data.compiled_group.invocations:
             group_key = invocation.key.runtime_group_key(group_data.component_value)
             artifacts = group_data.artifacts.select_for_invocation(
@@ -2970,7 +2967,9 @@ class PatternGroupRuntime:
                 execution_scope=group_data.execution_plan.execution_group_scope,
                 component_key=group_data.component_key,
                 declared_source_bindings=declared_source_bindings,
-                active_source_bindings=active_main_flow_bindings,
+                active_source_bindings=group_data.active_main_flow_source_binding_plan(
+                    current_stack
+                ),
             )
             if artifacts is None:
                 continue
