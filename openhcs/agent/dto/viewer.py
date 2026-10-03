@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields as dataclass_fields
-from typing import ClassVar, Self, cast
+from typing import Annotated, ClassVar, Self, cast
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
@@ -18,7 +18,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowVisualObservation,
 )
 from python_introspect import dataclass_from_mapping, project_dataclass
-from pydantic import StrictFloat, StrictInt
+from pydantic import BeforeValidator, StrictFloat, StrictInt
 from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
     ViewerImageIntensityControlOptions,
@@ -618,7 +618,13 @@ class ViewerWindowLayerRetirementRequest(ViewerWindowPresentationRequest):
     @classmethod
     def from_fields(
         cls, *, connection: ExecutionConnectionSpec,
-        expected_producers: dict[str, list[StreamProducerIdentity]],
+        expected_producers: dict[
+            str,
+            list[Annotated[
+                StreamProducerIdentity,
+                BeforeValidator(StreamProducerIdentity.from_payload),
+            ]],
+        ],
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
     ) -> Self:
         return cls(

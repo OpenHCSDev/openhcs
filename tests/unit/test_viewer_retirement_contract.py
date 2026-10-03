@@ -109,6 +109,43 @@ def test_real_fastmcp_constructs_and_decodes_original_producer_identity():
         model.model_validate({**payload, 'undeclared': 'must not dispatch'})
 
 
+def test_real_fastmcp_producer_admission_is_owned_by_original_decoder():
+    server = build_server()
+    model = server._tool_manager.get_tool(
+        RetireViewerWindowLayersCapability.name,
+    ).fn_metadata.arg_model
+    payload = request().as_tool_arguments()
+    source = producers()['exact-route'][0]
+    # Preserve the original owner's policy, including conversions that differ
+    # from Pydantic's default dataclass validation and ignored extra wire keys.
+    for changes in (
+        {'origin': 0}, {'origin': False}, {'origin': True},
+        {'pipeline_position': True}, {'pipeline_position': False},
+        {'pipeline_position': '12'}, {'pipeline_position': 12},
+        {'step_name': ''}, {'step_name': 0}, {'step_scope_id': False},
+        {'invocation_key': ''}, {'extra_owner_ignored_field': 'retained policy'},
+    ):
+        original = {**source, **changes}
+        expected = StreamProducerIdentity.from_payload(original)
+        decoded = model.model_validate({
+            **payload, 'expected_producers': {'exact-route': [original]},
+        }).expected_producers['exact-route'][0]
+        assert decoded == expected
+        assert decoded.to_payload() == expected.to_payload()
+    for changes in (
+        {'origin': ''}, {'origin': None}, {'output_kind': ''},
+        {'output_key': None}, {'projection_key': ''},
+        {'pipeline_position': 'not-an-integer'},
+    ):
+        original = {**source, **changes}
+        with pytest.raises((TypeError, ValueError)):
+            StreamProducerIdentity.from_payload(original)
+        with pytest.raises((TypeError, ValueError)):
+            model.model_validate({
+                **payload, 'expected_producers': {'exact-route': [original]},
+            })
+
+
 @pytest.mark.parametrize("native", [
     {"status": "error", "message": "original terminal error"},
     {"status": "success", "retirement": {"applied": True, "retired_route_keys": ["foreign"], "remaining_route_keys": []}},
