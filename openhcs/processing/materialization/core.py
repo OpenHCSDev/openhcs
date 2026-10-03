@@ -344,6 +344,17 @@ class Output:
         )
 
 
+@dataclass(frozen=True, kw_only=True)
+class PointROIOutput(Output):
+    """Full point-archive provenance with an exact source-plane stream anchor."""
+
+    metadata: ImagePayloadMetadata = field()
+
+    @property
+    def source_identity(self) -> SourceImageIdentity:
+        return self.metadata.source_provenance.for_source_plane(0).scalar_source_identity
+
+
 @dataclass(frozen=True)
 class TextOutput(Output):
     """Materialization output whose canonical payload is text."""
@@ -3184,11 +3195,8 @@ def _write_point_roi_zip(
     from polystore.roi import PointShape, ROI
     from openhcs.core.roi_point_metadata import ROIFractionalZ
     from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-    from openhcs.core.runtime_measurements import MeasurementTable
 
-    payload = MaterializationInput.from_value(data, options).data
-    if not isinstance(payload, MeasurementTable):
-        raise TypeError("PointROIOptions requires a MeasurementTable payload.")
+    payload = options.measurement_payload(data)
     id_field = payload.subject.object_id_field
     if id_field is None:
         raise ValueError("PointROIOptions requires an object-measurement subject.")
@@ -3259,7 +3267,7 @@ def _write_point_roi_zip(
     metadata = ImagePayloadMetadata(source_provenance=provenance)
     ROIFractionalZ.source_component_domain(rois, metadata)
     return [
-        Output(
+        PointROIOutput(
             path=ctx.paths(options).primary_output_path(options),
             content=ROIArchiveSourceMetadata.bind(rois, metadata),
             metadata=metadata,
@@ -4028,34 +4036,15 @@ class MaterializationSpec(ArtifactMaterializationPayload):
             for output_options in self.outputs
         )
 
-    def emitted_source_identities(
+    def stream_source_identities(
         self,
         data: MaterializationValue,
     ) -> tuple[SourceImageIdentity, ...]:
-        """Return source identities for writers that emit projected planes."""
+        """Return the source domain represented by the selected writer stream."""
         for output_options in self.outputs:
-            if not materialization_emits_variable_component_planes(
-                output_options,
-                data,
-            ):
-                continue
-            materialization_input = (
-                MaterializationInput.from_runtime_slice_projected_value(
-                    data,
-                    output_options,
-                )
-            )
-            if len(materialization_input.items) == 1:
-                provenance = materialization_input.items[0].metadata.source_provenance
-                if provenance.source_plane_count > 1:
-                    return tuple(
-                        provenance.for_source_plane(index).scalar_source_identity
-                        for index in range(provenance.source_plane_count)
-                    )
-            return tuple(
-                item.metadata.source_provenance.scalar_source_identity
-                for item in materialization_input.items
-            )
+            identities = output_options.stream_source_identities(data)
+            if identities:
+                return identities
         return ()
 
     def uses_filename_source_identity(self, data: MaterializationValue) -> bool:

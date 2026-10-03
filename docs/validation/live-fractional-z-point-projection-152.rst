@@ -197,3 +197,35 @@ qualified only at its original immutable installed484 strength, not executed
 against Root4110503. Independent consumer diagnosis is complete. Named dependency:
 Root394's affirmative shared-seam release or coordinated producer implementation.
 The hold and parent-owned later installed native acceptance remain in force.
+
+Released producer implementation checkpoint
+-------------------------------------------
+
+Root394 explicitly released the narrow options/spec declaration, typed point
+output/writer anchor and original artifact source-query migration at
+396379b06769a3f5afe92413b7d9d6a21dd3f66f. The source branch is normally merged
+with main9531d594 (including504); the five foreign dirty gitlinks are untouched.
+Source provenance construction, compiler and generic load/stack remain Root's
+ownership and are not edited. No scientific catalog/endpoint is contacted.
+
+PointROIOptions now owns both typed measurement selection and the represented
+stream source-plane domain. FileOutputOptions carries the previous projected
+plane implementation; MaterializationSpec delegates rather than deciding which
+writer qualifies. The misleading emitted_source_identities entrypoint is
+deleted, with its artifact-metadata consumer and two test consumers migrated to
+stream_source_identities. Number of files and represented source planes remain
+distinct facts (IDEN-1/2, IMPL-4, BOUND-2).
+
+The original point writer returns PointROIOutput, an Output subtype whose
+required original metadata retains the full archive provenance. Its stream
+address derives from provenance.for_source_plane(0), without overwriting common
+archive metadata or adding an anchor store. Existing Output replacement and
+viewer backend batching consume that property normally. All fractional-Z
+guards and persisted metadata formats remain unchanged.
+
+Fresh original refactor-audit file-at-a-time inventory is retained in
+``live-points-152-owner-before09.json`` under the parent issue-batch root.
+The preceding08 invocation rejected an invalid git revision WORKTREE before
+reading source; it is not an accepted census. This is an implemented source
+checkpoint awaiting bounded original-writer/projection regression verification;
+it is not installed live settlement or native reopening acceptance.

@@ -454,10 +454,10 @@ class ArtifactStreamSourceMetadataAuthority:
             fallback_source_identity
             or ArtifactStreamSourceMetadataAuthority.payload_source_identity(data)
         )
-        emitted_identities = materialization_spec.emitted_source_identities(data)
-        if emitted_identities:
+        stream_identities = materialization_spec.stream_source_identities(data)
+        if stream_identities:
             return StreamSourceComponentMetadataItems.from_source_identities(
-                emitted_identities,
+                stream_identities,
                 fallback_source_identity=fallback_source_identity,
             )
         return StreamSourceComponentMetadataItems.from_values(

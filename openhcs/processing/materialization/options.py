@@ -10,13 +10,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
 from openhcs.processing.materialization.path_scopes import (
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.source_image_provenance import SourceImageIdentity
+    from openhcs.processing.materialization.core import MaterializationValue
 
 
 class MaterializedFilenameIdentity(str, Enum):
@@ -52,6 +57,33 @@ class FileOutputOptions:
     def primary_output_suffix(self) -> str:
         """Suffix for this writer's primary materialized output."""
         return self.filename_suffix
+
+    def stream_source_identities(
+        self,
+        data: MaterializationValue,
+    ) -> tuple[SourceImageIdentity, ...]:
+        """Return the source planes represented by this writer's stream."""
+        from openhcs.processing.materialization.core import (
+            MaterializationInput,
+            materialization_emits_variable_component_planes,
+        )
+
+        if not materialization_emits_variable_component_planes(self, data):
+            return ()
+        materialization_input = MaterializationInput.from_runtime_slice_projected_value(
+            data, self
+        )
+        if len(materialization_input.items) == 1:
+            provenance = materialization_input.items[0].metadata.source_provenance
+            if provenance.source_plane_count > 1:
+                return tuple(
+                    provenance.for_source_plane(index).scalar_source_identity
+                    for index in range(provenance.source_plane_count)
+                )
+        return tuple(
+            item.metadata.source_provenance.scalar_source_identity
+            for item in materialization_input.items
+        )
 
 
 @dataclass(frozen=True)
@@ -125,6 +157,27 @@ class PointROIOptions(FileOutputOptions, SourceOptions):
             )
         if len({feature.measurement_row_field_name for feature in features}) != 3:
             raise ValueError("PointROIOptions coordinates require distinct row fields.")
+
+    def measurement_payload(self, data: MaterializationValue) -> MeasurementTable:
+        """Resolve the point writer's declared source to its typed measurements."""
+        from openhcs.core.runtime_measurements import MeasurementTable
+        from openhcs.processing.materialization.core import MaterializationInput
+
+        payload = MaterializationInput.from_value(data, self).data
+        if not isinstance(payload, MeasurementTable):
+            raise TypeError("PointROIOptions requires a MeasurementTable payload.")
+        return payload
+
+    def stream_source_identities(
+        self,
+        data: MaterializationValue,
+    ) -> tuple[SourceImageIdentity, ...]:
+        """One point archive represents all original source planes, not one Z."""
+        provenance = self.measurement_payload(data).source_provenance
+        return tuple(
+            provenance.for_source_plane(index).scalar_source_identity
+            for index in range(max(1, provenance.source_plane_count))
+        )
 
 
 @dataclass(frozen=True)
