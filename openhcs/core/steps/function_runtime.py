@@ -1213,6 +1213,8 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
         *,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
+        declared_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
+        active_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
     ) -> "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan] | None":
         projected = invocation.for_component_execution(
             execution_scope,
@@ -1220,32 +1222,26 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
         )
         if projected is None:
             return None
-        return ComponentArtifactPlans(
-            inputs=projected.select_inputs(self.inputs),
-            outputs=projected.select_outputs(self.outputs),
-        )
-
-    def select_source_bound_inputs(
-        self: "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan]",
-        *,
-        declared_source_bindings: CompiledSourceBindingPlan,
-        active_source_bindings: CompiledSourceBindingPlan,
-    ) -> "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan]":
-        """Keep only source-bound main-flow occurrences active on this component."""
-
-        return replace(
-            self,
-            inputs={
-                edge_key: edge
-                for edge_key, edge in self.inputs.items()
-                if not (
-                    edge.main_flow_projection is not None
-                    and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
-                    and not active_source_bindings.declares_artifact_ref(
-                        edge.spec.ref()
+        inputs = {}
+        for edge_key, edge in projected.select_inputs(self.inputs).items():
+            if (
+                edge.main_flow_projection is not None
+                and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
+                and not active_source_bindings.declares_artifact_ref(edge.spec.ref())
+            ):
+                if not invocation.adapter_manages_artifact_inputs:
+                    continue
+                if edge.storage_plan is not None:
+                    raise ValueError(
+                        f"Stored primary input {edge.spec.ref()!r} is not represented "
+                        "by this main-flow payload; its producer cannot substitute "
+                        "for the current payload epoch."
                     )
-                )
-            },
+                edge = replace(edge, main_flow_projection=None)
+            inputs[edge_key] = edge
+        return ComponentArtifactPlans(
+            inputs=inputs,
+            outputs=projected.select_outputs(self.outputs),
         )
 
     @classmethod
@@ -2973,13 +2969,11 @@ class PatternGroupRuntime:
                 invocation,
                 execution_scope=group_data.execution_plan.execution_group_scope,
                 component_key=group_data.component_key,
-            )
-            if artifacts is None:
-                continue
-            artifacts = artifacts.select_source_bound_inputs(
                 declared_source_bindings=declared_source_bindings,
                 active_source_bindings=active_main_flow_bindings,
             )
+            if artifacts is None:
+                continue
             runtime_invocation = invocation.for_runtime_outputs(
                 output_plans=tuple(artifacts.outputs.values()),
             )

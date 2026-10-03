@@ -2463,6 +2463,43 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     assert request.selected_artifact_input_specs().names() == ("OrigStain1",)
 
 
+def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -> None:
+    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.steps.function_runtime import ComponentArtifactPlans
+
+    bindings = CompiledSourceBindingPlan(bindings=(NamedSourceBinding(alias="Original"),))
+    (source_spec,) = tuple(binding.input_spec() for binding in bindings.binding_declarations)
+
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    @artifact_inputs(source_spec)
+    def consume_original(image, *, runtime):
+        return image
+
+    storage = ArtifactInputPlan(
+        name=source_spec.name, artifact_type=source_spec.artifact_type,
+        path="/memory/Original.pkl", source_step_id=0,
+    )
+    invocation = compile_function_pattern(consume_original, {storage.ref(): storage}, {}).default_group.invocations[0]
+    (key,) = InvocationArtifactInputProjectionKey.for_input_count(invocation.key, 1)
+    invocation = invocation.with_artifact_input_edges((
+        InvocationArtifactInputEdgePlan(
+            key=key, spec=source_spec, storage_plan=storage,
+            projection=ArtifactInputProjectionPlan(
+                invocation_scope=ComponentGroupScope.ungrouped(),
+                producer_selection_scope=storage.producer_group_scope(),
+            ),
+            main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD,
+        ),
+    ))
+    plans = ComponentArtifactPlans(inputs={storage.ref(): storage}, outputs={})
+    with pytest.raises(ValueError, match="producer cannot substitute.*current payload epoch"):
+        plans.select_for_invocation(
+            invocation, execution_scope=ComponentGroupScope.ungrouped(), component_key=None,
+            declared_source_bindings=bindings,
+            active_source_bindings=CompiledSourceBindingPlan.empty(),
+        )
+
+
 def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

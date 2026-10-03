@@ -58,6 +58,8 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
+    SourceBindingMatchMethod,
+    SourceBindingMatchPlan,
     StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -351,6 +353,61 @@ def test_omitted_secondary_selector_still_fails_closed(tmp_path):
             _document(selected=False),
             GlobalPipelineConfig(num_workers=1, use_threading=True),
         )
+
+
+def test_explicit_measurement_rosters_survive_one_matched_source_anchor(tmp_path):
+    from openhcs.core.steps.function_execution import FunctionStepExecutor
+
+    _write_plate(tmp_path)
+    original = _document()
+    for producer in original.pipeline_steps[:-1]:
+        producer.processing_config = replace(producer.processing_config, group_by=GroupBy.CHANNEL)
+    original.pipeline_steps[-1] = _step(
+        measure_object_intensity,
+        "Measure both source images and object sets",
+        {
+            MeasureObjectIntensityModule.image_measurement_binding.require_parameter_name(): ("DNA", "Actin"),
+            MeasureObjectIntensityModule.object_measurement_binding.require_parameter_name(): ("Nuclei", "Cells"),
+        },
+    )
+    document = PipelineDocumentAuthority.from_values(
+        pipeline_config=replace(
+            original.pipeline_config,
+            source_bindings_config=LazySourceBindingsConfig(
+                bindings=(_source("DNA", "1"), _source("Actin", "2")),
+                match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            ),
+        ),
+        pipeline_steps=original.pipeline_steps,
+    )
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    executor = FunctionStepExecutor(context, 2)
+    prepared = executor._prepare_groups(executor._detect_patterns())
+    assert prepared.total_count() == 1
+    invocation = next(executor.plan.compiled_function_pattern.iter_invocations())
+    assert tuple(
+        spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+    ) == ("DNA", "Actin")
+    results = _execute(tmp_path, document, bundle)
+    assert results["A01"].is_success(), results["A01"].error_message
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    for object_name in ("Nuclei", "Cells"):
+        (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
+        area = np.count_nonzero(object_label_dense_array(labels.value.data))
+        for image_name, expected in (("DNA", 4.0), ("Actin", float(area))):
+            values = measurement_values_for_feature(
+                (measurement.value.data,),
+                f"Intensity_IntegratedIntensity_{image_name}",
+                object_count=1,
+                object_name=object_name,
+                dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            )
+            assert tuple(values) == (expected,)
 
 
 def test_omitted_selector_remains_valid_for_one_label_producer(tmp_path):
