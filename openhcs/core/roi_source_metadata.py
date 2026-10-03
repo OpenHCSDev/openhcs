@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import ClassVar
 
@@ -40,13 +40,11 @@ class ROIArchiveSourceMetadata:
     def geometry(cls, rois: Sequence[ROI]) -> list[ROI]:
         """Keep transport-only source declarations out of the ROI feature table."""
         return [
-            replace(
-                roi,
-                metadata={
-                    key: value
-                    for key, value in roi.metadata.items()
-                    if key != cls.FIELD
-                },
-            )
+            replace(roi, metadata=cls.feature_metadata(roi.metadata))
             for roi in rois
         ]
+
+    @classmethod
+    def feature_metadata(cls, metadata: Mapping[str, object]) -> dict[str, object]:
+        """Project features without discarding the transported source record."""
+        return {key: value for key, value in metadata.items() if key != cls.FIELD}
