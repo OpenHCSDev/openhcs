@@ -17,11 +17,15 @@ case "$mode" in
     test ! -e "$run/READY-FREEZE.sha256"
     previous=$(jq -er '.predecessor_program_root' "$run/successor-declaration.json")
     test "$(realpath -m "$previous")" = "$(realpath -m "$funding")"
+    # Membership references come from funding; physical declarations come from
+    # their immutable run owner through the original slot projection.
+    members=$(bash "$operations/slot-env.sh" "$funding" --project-members)
+    original=$(jq -ce --argjson members "$members" '.authors=$members' "$funding/program.json")
     jq --slurpfile replacement <(jq --arg proof "$qualification" '.package_qualification=$proof' "$run/successor-declaration.json") \
       --arg operation_owner_root "$operations" --arg successor_root "$run" \
       --arg source_install "$(jq -er '.target' "$qualification")" \
       --arg source_head "$(jq -er '.source_head' "$qualification")" \
-      -f "$operations/successor-program.jq" "$funding/program.json" > "$run/program.json"
+      -f "$operations/successor-program.jq" <<< "$original" > "$run/program.json"
     ;;
   publish)
     expected=${4:?reviewed current programme SHA256}
@@ -47,7 +51,8 @@ case "$mode" in
     cp "$funding/program.json" "$run/publication-before.json"
     pending=$(mktemp "$funding/.program.XXXXXXXX")
     trap 'test ! -e "$pending" || unlink "$pending"' EXIT
-    cp "$run/program.json" "$pending"
+    # Never mirror physical run declarations into the mutable membership owner.
+    jq '.authors |= map({slot,run_owner_root})' "$run/program.json" > "$pending"
     mv "$pending" "$funding/program.json"
     sha256sum "$funding/program.json"
     ;;

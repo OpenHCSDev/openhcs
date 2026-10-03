@@ -56,3 +56,35 @@ failed; a real programme input passed. Both original outputs remain recorded.
 These controls prove publication, not complete reservation consumers or actual
 live SCI admission. Original tracked recorder/client contents are unchanged.
 The borrowed-byte handoff remains required before that final consumer edit.
+
+Member and reservation consumer checkpoint
+-----------------------------------------
+
+The NEXT slot owner now resolves each current member reference through its
+immutable run declaration. Mutable funding stores only slot/run-owner
+references, not a second physical source/helper catalog. The guard holds the
+original programme lock shared for one complete admission; publication holds
+it exclusive. Its current reservations sum each run's own output/scratch
+limits. Source, operations, helper identities and deadline come from that run,
+not the newest programme's uniform permissions. No current scientist uses
+these NEXT files and neither borrowed recorder nor client was changed.
+
+The actual original publication/member/ledger control passed in
+validation/funded-publication03, terminal0 in0.855s. Continuing A kept its
+original source, operations and1MiB output allowance while independent C
+declared3MiB; the actual ledger reserved2+4MiB rather than newest-policy8MiB.
+The full retired B directory was charged once. Missing original run owner,
+overlapping roots, absent custody, stale revision, unknown retirement and
+ambiguous membership refused. Ledger mode performs no helper/scope/client or
+host-memory admission. Original publication01/02 evidence remains unchanged.
+
+Consumer search on the actual scripts family now places membership resolution
+in fleet_member/fleet_funded_slots, immutable permissions in fleet_limits_for,
+and ledger decisions in resource-check.sh. The two outstanding tracked
+mcp-client.sh reads remain at lines22-23: science cap and CPU quota still read
+FLEET_ROOT/program.json. They must read the immutable run owner at the future
+cutover, but their active borrowed bytes are protected. The original launch
+owner and generic packet's release/config/freeze/numeric-limit reads also
+require complete NEXT migration before this PR can claim end-to-end closure.
+This is published source progress, not a deployed repair or live qualification.
+The full family is Bash/JQ; Python/NRA AST has no parser for these inputs.
