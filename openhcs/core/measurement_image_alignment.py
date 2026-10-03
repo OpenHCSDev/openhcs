@@ -12,7 +12,7 @@ from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBun
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
-    image_payload_metadata_projection,
+    image_payload_metadata,
     with_image_payload_data,
 )
 from openhcs.core.runtime_object_labels import (
@@ -147,7 +147,9 @@ class MeasurementImageLabelAlignmentRequest:
     def with_source_projected_image(self) -> "MeasurementImageLabelAlignmentRequest":
         """Return this request with only the measurement image source-projected."""
         projection = RuntimePlaneAxisValueProjection.from_projector(
-            self.plane_projector, RuntimePlaneAxis.SOURCE_BINDING, self.source_aliases
+            self.plane_projector,
+            RuntimePlaneAxis.SOURCE_BINDING,
+            self.source_aliases,
         )
         if projection is None or projection.plane_index is None:
             return self
@@ -155,20 +157,16 @@ class MeasurementImageLabelAlignmentRequest:
         if isinstance(image, AlignedImageStack):
             projected_image: RuntimeArrayData | AlignedImageStack = image.with_slices(
                 tuple(
-                    (
-                        RuntimeSliceProjection.value_for_slice(
-                            image_slice,
-                            replace(
-                                projection,
-                                source_aliases=image_payload_metadata_projection(
-                                    image_slice
-                                )
-                                .read_value("source_provenance")
-                                .source_image_names,
-                            ),
-                        )
-                        for image_slice in image.slices
+                    RuntimeSliceProjection.value_for_slice(
+                        image_slice,
+                        replace(
+                            projection,
+                            source_aliases=image_payload_metadata(
+                                image_slice
+                            ).source_image_names,
+                        ),
                     )
+                    for image_slice in image.slices
                 )
             )
         else:
@@ -176,12 +174,13 @@ class MeasurementImageLabelAlignmentRequest:
                 image,
                 replace(
                     projection,
-                    source_aliases=image_payload_metadata_projection(image)
-                    .read_value("source_provenance")
-                    .source_image_names,
+                    source_aliases=image_payload_metadata(image).source_image_names,
                 ),
             )
-        return replace(self, source=self.source.with_alignment_image(projected_image))
+        return replace(
+            self,
+            source=self.source.with_alignment_image(projected_image),
+        )
 
     def with_source_projected_labels(self) -> "MeasurementImageLabelAlignmentRequest":
         """Project labels only through their declared axis and runtime context."""
@@ -198,7 +197,9 @@ class MeasurementImageLabelAlignmentRequest:
                 "Plane-scoped object labels require a declared local plane projection."
             )
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
-            self.plane_projector, self.label_payload.plane_axis, self.source_aliases
+            self.plane_projector,
+            self.label_payload.plane_axis,
+            self.source_aliases,
         )
         if runtime_projection is None:
             return self
@@ -210,7 +211,9 @@ class MeasurementImageLabelAlignmentRequest:
             projection = declared_projection.selected_plane(0)
         elif runtime_projection.axis_size != declared_projection.axis_size:
             raise ValueError(
-                f"Object-label runtime plane-axis cardinality conflicts with its declared local payload: {runtime_projection.axis_size} != {declared_projection.axis_size}."
+                "Object-label runtime plane-axis cardinality conflicts with its "
+                "declared local payload: "
+                f"{runtime_projection.axis_size} != {declared_projection.axis_size}."
             )
         else:
             projection = declared_projection.selected_plane(
@@ -223,29 +226,31 @@ class MeasurementImageLabelAlignmentRequest:
                 source_payload = source_payload.with_measurement_labels(self.labels)
         payload_projection = RuntimeSliceProjection.value_for_slice(
             source_payload,
-            replace(projection, source_aliases=source_payload.source_image_names),
+            replace(
+                projection,
+                source_aliases=source_payload.source_image_names,
+            ),
         )
         if not isinstance(payload_projection, ObjectLabelValue):
             raise TypeError(
-                f"Object-label runtime projection must preserve ObjectLabelValue, got {type(payload_projection).__name__}."
+                "Object-label runtime projection must preserve ObjectLabelValue, got "
+                f"{type(payload_projection).__name__}."
             )
         if payload_projection is source_payload:
             return self
         source = self.source
         image = self.image
-        image_metadata = image_payload_metadata_projection(image)
+        image_metadata = image_payload_metadata(image)
         if (
             not isinstance(image, AlignedImageStack)
-            and image_metadata.read_value("plane_axis") is projection.axis
+            and image_metadata.plane_axis is projection.axis
         ):
             source = source.with_alignment_image(
                 RuntimeSliceProjection.value_for_slice(
                     image,
                     replace(
                         projection,
-                        source_aliases=image_metadata.read_value(
-                            "source_provenance"
-                        ).source_image_names,
+                        source_aliases=image_metadata.source_image_names,
                     ),
                 )
             )
@@ -419,7 +424,7 @@ class PreparedMeasurementObjectLabels:
                 source_payload,
                 source_projected_labels,
             )
-        metadata = image_payload_metadata_projection(request.image)
+        metadata = image_payload_metadata(request.image)
         payload_domain = source_payload.object_label_source_spatial_domain()
         source_spatial_domain = (
             metadata.object_label_source_spatial_domain()
@@ -718,7 +723,10 @@ class MeasurementImageLabelAlignmentStrategy:
 
     @staticmethod
     def validate_dense_pair(
-        image: object, labels: object, *, label_payload: ObjectLabelValue | None = None
+        image: object,
+        labels: object,
+        *,
+        label_payload: ObjectLabelValue | None = None,
     ) -> None:
         """Require exact dense shapes after nominal source-domain projection."""
         image_data = image_payload_data(image)
@@ -731,14 +739,22 @@ class MeasurementImageLabelAlignmentStrategy:
             label_data, np.ndarray
         ):
             raise TypeError(
-                f"Measurement image alignment requires dense image and label arrays after nominal projection; got {type(image_data).__name__} and {type(label_data).__name__}."
+                "Measurement image alignment requires dense image and label arrays "
+                "after nominal projection; got "
+                f"{type(image_data).__name__} and {type(label_data).__name__}."
             )
         if tuple(image_data.shape) != tuple(label_data.shape):
             label_domain = (
                 None if label_payload is None else label_payload.object_label_domain()
             )
             raise ValueError(
-                f"Measurement image alignment produced incompatible declared domains: image shape {image_data.shape!r}, label shape {label_data.shape!r}; image plane axis={image_payload_metadata_projection(image).read_value('plane_axis')!r}; label type={(type(label_payload).__name__ if label_payload is not None else type(labels).__name__)}; label scope={(None if label_domain is None else label_domain.scope)!r}; label plane axis={(None if label_payload is None else label_payload.plane_axis)!r}; label source aliases={(None if label_payload is None else label_payload.source_aliases)!r}."
+                "Measurement image alignment produced incompatible declared domains: "
+                f"image shape {image_data.shape!r}, label shape {label_data.shape!r}; "
+                f"image plane axis={image_payload_metadata(image).plane_axis!r}; "
+                f"label type={type(label_payload).__name__ if label_payload is not None else type(labels).__name__}; "
+                f"label scope={None if label_domain is None else label_domain.scope!r}; "
+                f"label plane axis={None if label_payload is None else label_payload.plane_axis!r}; "
+                f"label source aliases={None if label_payload is None else label_payload.source_aliases!r}."
             )
 
 

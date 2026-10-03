@@ -30,11 +30,9 @@ from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
-    ImageMetadataProjection,
     ImagePayloadMetadata,
     image_payload_data,
     image_payload_metadata,
-    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
@@ -184,9 +182,9 @@ class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordRed
         ] = {}
         for record in records:
             payload = output_plan.materialization_payload(record.value)
-            metadata = image_payload_metadata_projection(payload)
+            metadata = image_payload_metadata(payload)
             address = OpenHCSPlaneAddress.from_complete_source_metadata(
-                metadata.source_component_metadata_for_projection()
+                metadata.source_component_metadata
             )
             addressed_records.append((record, address))
             if address is not None:
@@ -480,10 +478,8 @@ class ArtifactStreamSourceMetadataAuthority:
     def payload_source_identity(
         data: MaterializationValue,
     ) -> SourceImageIdentity | None:
-        metadata = image_payload_metadata_projection(data)
-        source_identity = metadata.read_value(
-            "source_provenance"
-        ).scalar_source_identity
+        metadata = image_payload_metadata(data)
+        source_identity = metadata.source_provenance.scalar_source_identity
         if source_identity.addressable:
             return source_identity
         return None
@@ -649,13 +645,11 @@ class AnalysisOutputDescriptorAuthority:
             if record.key.artifact_type.uses_aggregate_materialization_identity(
                 record.value.data
             ):
-                metadata = cls.record_payload_metadata_projection(record)
+                metadata = cls.record_payload_metadata(record)
                 aggregate_provenance = (
                     None
                     if metadata is None
-                    else metadata.read_value(
-                        "source_provenance"
-                    ).with_common_scalar_identity_from_planes()
+                    else metadata.source_provenance.with_common_scalar_identity_from_planes()
                 )
                 source_identity = (
                     None
@@ -741,24 +735,13 @@ class AnalysisOutputDescriptorAuthority:
     def record_payload_metadata(
         record: StoredRuntimeValue | None,
     ) -> ImagePayloadMetadata | None:
-        metadata = (
-            ArtifactStreamSourceMetadataAuthority.record_payload_metadata_projection(
-                record
-            )
-        )
-        return None if metadata is None else metadata.materialize_metadata()
-
-    @staticmethod
-    def record_payload_metadata_projection(
-        record: StoredRuntimeValue | None,
-    ) -> ImageMetadataProjection | None:
         if record is None:
             return None
         if isinstance(record.value.data, SourceImageProvenanceFields):
             return ImagePayloadMetadata(
                 source_provenance=record.value.data.source_provenance,
             )
-        return image_payload_metadata_projection(record.value.data)
+        return image_payload_metadata(record.value.data)
 
     @classmethod
     def record_metadata_with_runtime_scope(
@@ -771,18 +754,18 @@ class AnalysisOutputDescriptorAuthority:
         scope = record.key.scope
         if scope.has_fixed_components:
             component_metadata = scope.fixed_component_metadata(
-                metadata.source_component_metadata_for_projection()
+                metadata.source_component_metadata
             )
         elif scope.component is not None:
             component_metadata = with_source_component_metadata(
-                metadata.source_component_metadata_for_projection() or {},
+                metadata.source_component_metadata or {},
                 scope.component,
                 scope.require_value_text(),
             )
         else:
             return metadata
         return metadata.with_source_provenance(
-            metadata.read_value("source_provenance").with_source_component_metadata(
+            metadata.source_provenance.with_source_component_metadata(
                 component_metadata
             ),
         )
@@ -801,7 +784,7 @@ class AnalysisOutputDescriptorAuthority:
         exact_fixed_scope = record.key.scope.has_fixed_components
         if not materialization_spec.uses_source_identity_filename():
             return None
-        metadata = cls.record_payload_metadata_projection(record)
+        metadata = cls.record_payload_metadata(record)
         if metadata is None:
             return None
         if (
@@ -810,7 +793,7 @@ class AnalysisOutputDescriptorAuthority:
             and output_plan.materialization_source()
             != output_plan.source_context_source()
         ):
-            metadata = output_plan.materialization_metadata_projection(record.value)
+            metadata = output_plan.materialization_metadata(record.value)
         metadata = cls.record_metadata_with_runtime_scope(
             record,
             metadata,
@@ -839,8 +822,7 @@ class AnalysisOutputDescriptorAuthority:
             )
         if identity is not None:
             identity = materialization_spec.filename_identity_for_output(
-                identity,
-                output_plan,
+                identity, output_plan,
             )
             try:
                 filename = Path(
@@ -875,9 +857,7 @@ class AnalysisOutputDescriptorAuthority:
                         identity,
                     ),
                 )
-        source_path = metadata.read_value(
-            "source_provenance"
-        ).scalar_source_identity.path
+        source_path = metadata.source_provenance.scalar_source_identity.path
         if source_path is None:
             return None
         return ArtifactRecordSourceDescriptor(
@@ -895,16 +875,12 @@ class AnalysisOutputDescriptorAuthority:
         identity: FunctionOutputIdentity | None,
     ) -> SourceImageIdentity | None:
         """Return scalar source identity with parser-resolved component metadata."""
-        source_identity = metadata.read_value(
-            "source_provenance"
-        ).scalar_source_identity
+        source_identity = metadata.source_provenance.scalar_source_identity
         if identity is not None:
-            if metadata.source_component_metadata_for_projection() is None:
+            if metadata.source_component_metadata is None:
                 component_metadata = {}
             else:
-                component_metadata = dict(
-                    metadata.source_component_metadata_for_projection()
-                )
+                component_metadata = dict(metadata.source_component_metadata)
             identity_metadata = identity.filename_component_metadata()
             for key, value in identity_metadata.items():
                 component = AllComponents.from_value(str(key))

@@ -352,14 +352,6 @@ class ObjectLabelValue(
         return self.variant_data.small_removed_labels
 
     @property
-    def metadata_projection(self) -> runtime_image_values.ImageMetadataProjection:
-        """Expose one computed metadata namespace without replaying its constructor."""
-
-        return runtime_image_values.ImageMetadataProjection._from_realized_metadata(
-            self.metadata
-        )
-
-    @property
     def metadata(self) -> runtime_image_values.ImagePayloadMetadata:
         """Return image-domain metadata carried by this object-label value."""
 

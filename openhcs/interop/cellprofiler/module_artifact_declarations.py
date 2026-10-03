@@ -65,7 +65,7 @@ if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
         FunctionInvocationKey,
     )
-    from openhcs.core.runtime_image_values import ImageMetadataProjection
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.runtime_tabular_values import ColumnarRows
     from openhcs.core.steps.function_runtime import (
         RuntimeCallableKwargs,
@@ -233,19 +233,19 @@ class ObjectArtifactInputModule(CellProfilerModule):
     """Parent for modules that consume object-label artifacts through declared settings."""
 
     @classmethod
-    def measurement_record_source_metadata_projection(
+    def measurement_record_source_metadata(
         cls,
         request: "CellProfilerOutputRecordRequest",
         rows: "ColumnarRows",
-    ) -> "ImageMetadataProjection":
+    ) -> "ImagePayloadMetadata":
         """Compose image-feature ownership with exact object-input provenance."""
 
         object_inputs = ArtifactSpecCollection(
             request.callable_contract.artifact_inputs.specs
         ).of_artifact_type(ObjectLabelsArtifactType)
         if not object_inputs:
-            return super().measurement_record_source_metadata_projection(request, rows)
-        return request.measurement_source_metadata_projection(object_inputs)
+            return super().measurement_record_source_metadata(request, rows)
+        return request.measurement_source_metadata(object_inputs)
 
 
 class ObjectArtifactOutputModule(
@@ -463,17 +463,17 @@ class ObjectArtifactOutputModule(
         return None
 
     @classmethod
-    def measurement_record_source_metadata_projection(
+    def measurement_record_source_metadata(
         cls,
         request: "CellProfilerOutputRecordRequest",
         rows: "ColumnarRows",
-    ) -> "ImageMetadataProjection":
+    ) -> "ImagePayloadMetadata":
         """Compose inherited ownership with exact object-output provenance."""
 
         object_outputs = cls.measurement_object_output_specs_for_request(request)
         if not object_outputs:
-            return super().measurement_record_source_metadata_projection(request, rows)
-        return request.measurement_source_metadata_projection(object_outputs)
+            return super().measurement_record_source_metadata(request, rows)
+        return request.measurement_source_metadata(object_outputs)
 
 
 class LabelDimensionObjectArtifactOutputModule(ObjectArtifactOutputModule):

@@ -26,7 +26,7 @@ from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
-    image_payload_metadata_projection,
+    image_payload_metadata,
 )
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -123,13 +123,13 @@ def _preloaded_image_payload(
     filemanager: FileManager,
 ) -> RuntimeArrayData:
     """Preserve loader-owned metadata or derive it through the source backend."""
-    metadata = image_payload_metadata_projection(image)
+    metadata = image_payload_metadata(image)
     if not metadata.has_values:
         metadata = ImagePayloadSourceMetadataContext(
             SourceImageIdentity(source_path),
             read_backend=read_backend,
             filemanager=filemanager,
-        ).metadata_projection(image)
+        ).metadata(image)
     return metadata.payload_with(
         image_payload_data(image),
         image_payload_mask(image),

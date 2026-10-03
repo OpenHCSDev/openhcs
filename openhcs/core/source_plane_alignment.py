@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
-from types import MemberDescriptorType
 
 from openhcs.core.runtime_image_values import (
-    ImageMetadataCarrier,
     ImagePayloadMetadata,
-    image_payload_metadata_projection,
+    image_payload_metadata,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenanceIdentity
 from openhcs.core.source_matching import (
@@ -66,12 +64,11 @@ def _store_source_payload_plane_identity_sequence(
 
 
 @dataclass(frozen=True, slots=True)
-class SourcePayloadPlaneIdentity(ImageMetadataCarrier):
+class SourcePayloadPlaneIdentity:
     """Source image-set identities represented by one runtime payload plane."""
 
-    metadata: ImagePayloadMetadata = field()
+    metadata: ImagePayloadMetadata
     policy: SourceImageSetIdentityPolicy
-    _metadata_projection: ClassVar[MemberDescriptorType]
 
     @classmethod
     def from_payload(
@@ -79,18 +76,10 @@ class SourcePayloadPlaneIdentity(ImageMetadataCarrier):
         payload: Any,
         policy: SourceImageSetIdentityPolicy,
     ) -> "SourcePayloadPlaneIdentity":
-        return cls(image_payload_metadata_projection(payload), policy)
+        return cls(image_payload_metadata(payload), policy)
 
     def identities(self) -> frozenset[SourceImageSetIdentity]:
-        return self.metadata_projection.read_value(
-            "source_provenance"
-        ).image_set_identities(self.policy)
-
-
-# Keep the original declared metadata slot and public dataclass schema. The same
-# shared descriptor used by metadata-only manifests exposes its stable namespace.
-SourcePayloadPlaneIdentity._metadata_projection = SourcePayloadPlaneIdentity.metadata
-SourcePayloadPlaneIdentity.metadata = ImageMetadataCarrier.metadata
+        return self.metadata.source_provenance.image_set_identities(self.policy)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,24 +90,23 @@ class SourcePayloadPlaneIdentitySequence:
     policy: SourceImageSetIdentityPolicy
 
     def identities(self) -> SourcePlaneIdentitySequence:
-        metadata = image_payload_metadata_projection(self.payload)
+        metadata = image_payload_metadata(self.payload)
         cache_key = SourcePayloadPlaneIdentitySequenceCacheKey(
-            metadata.read_value("source_provenance").equality_identity, self.policy
+            metadata.source_provenance.equality_identity,
+            self.policy,
         )
         cached = _cached_source_payload_plane_identity_sequence(cache_key)
         if cached is not None:
             return cached
         return _store_source_payload_plane_identity_sequence(
             cache_key,
-            metadata.read_value("source_provenance").image_set_plane_identities(
-                self.policy
-            ),
+            metadata.source_provenance.image_set_plane_identities(self.policy),
         )
 
     def runtime_axis_identities(self) -> SourcePlaneIdentitySequence:
         """Return the image-set identity axis carried by this payload."""
-        metadata = image_payload_metadata_projection(self.payload)
-        return metadata.read_value("source_provenance").image_set_axis(self.policy)
+        metadata = image_payload_metadata(self.payload)
+        return metadata.source_provenance.image_set_axis(self.policy)
 
     @property
     def has_identity(self) -> bool:

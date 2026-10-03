@@ -38,7 +38,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
     image_payload_data,
-    image_payload_metadata_projection,
+    image_payload_metadata,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_slice_projection import (
@@ -843,8 +843,7 @@ class OpenHCSMetadataWriter:
                 is_main=self.is_main,
                 results_dir=(
                     str(Path(self.results_dir).relative_to(self.plate_root))
-                    if self.results_dir is not None
-                    else None
+                    if self.results_dir is not None else None
                 ),
             )
 
@@ -913,8 +912,7 @@ class OpenHCSMetadataWriter:
                         )
                     )
                     produced_projections[Path(destination)] = (
-                        record,
-                        projection_paths[-1][0],
+                        record, projection_paths[-1][0]
                     )
                     continue
                 projection_paths.append(
@@ -931,8 +929,7 @@ class OpenHCSMetadataWriter:
                     )
                 )
                 produced_projections[Path(destination)] = (
-                    record,
-                    projection_paths[-1][0],
+                    record, projection_paths[-1][0]
                 )
             projection_paths.extend(
                 self.runtime_artifact_projection_paths(
@@ -1038,17 +1035,6 @@ class OpenHCSMetadataWriter:
             destination: str,
             payload,
         ) -> ImagePayloadMetadata:
-            return self.persisted_image_metadata_projection(
-                context, destination=destination, payload=payload
-            ).materialize_metadata()
-
-        def persisted_image_metadata_projection(
-            self,
-            context: ProcessingContext,
-            *,
-            destination: str,
-            payload,
-        ):
             """Describe one saved image through its backend or physical format."""
 
             if context.filemanager is None:
@@ -1059,9 +1045,9 @@ class OpenHCSMetadataWriter:
                 base_path=self.output_dir,
             )
             if physical_path is not None:
-                return ImageFileFormat.require_path(
-                    physical_path
-                ).persisted_metadata_projection(Path(physical_path), payload)
+                return ImageFileFormat.require_path(physical_path).persisted_metadata(
+                    Path(physical_path), payload
+                )
             native_dtype = context.filemanager.source_image_dtype(
                 destination,
                 self.backend,
@@ -1070,8 +1056,8 @@ class OpenHCSMetadataWriter:
             return ImageFileSourceMetadata(
                 source_dtype=native_dtype,
                 intensity_scale=image_intensity_scale_for_dtype(native_dtype),
-            ).project_image_metadata_projection(
-                image_payload_metadata_projection(payload),
+            ).project_image_metadata(
+                image_payload_metadata(payload),
                 values_preserved=context.filemanager.image_serialization_preserves_values(
                     self.backend,
                     image_payload_data(payload).dtype,

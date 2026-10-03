@@ -31,10 +31,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_artifact_values import (
         RuntimeValue,
     )
-    from openhcs.core.runtime_image_values import (
-        ImageMetadataProjection,
-        ImagePayloadMetadata,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.runtime_measurements import (
         MeasurementSubject,
         RuntimeMeasurementFeatureOwner,
@@ -454,7 +451,7 @@ class ImageArtifactType(ArtifactType):
         from openhcs.core.runtime_image_values import (
             image_payload_data,
             image_payload_mask,
-            image_payload_metadata_projection,
+            image_payload_metadata,
         )
         from openhcs.core.runtime_slice_alignment import (
             RuntimeSliceAlignedValues,
@@ -462,11 +459,9 @@ class ImageArtifactType(ArtifactType):
         )
 
         def named_payload(payload: object) -> object:
-            metadata = image_payload_metadata_projection(payload)
-            return metadata.derive_fields(
-                source_provenance=metadata.read_value(
-                    "source_provenance"
-                ).with_derived_source_image_names((name,))
+            metadata = image_payload_metadata(payload)
+            return metadata.with_source_provenance(
+                metadata.source_provenance.with_derived_source_image_names((name,))
             ).payload_with(
                 image_payload_data(payload),
                 image_payload_mask(payload),
@@ -1081,11 +1076,7 @@ class ArtifactMaterializationPayload(ABC):
     ) -> FunctionOutputIdentity:
         """Apply a declared role through the shared filename identity algorithm."""
         qualifier = self.filename_qualifier(output_plan)
-        return (
-            identity
-            if qualifier is None
-            else identity.with_filename_qualifier(qualifier)
-        )
+        return identity if qualifier is None else identity.with_filename_qualifier(qualifier)
 
 
 def _coerce_artifact_plan_type(
@@ -2858,26 +2849,17 @@ class ArtifactOutputPlan(ArtifactPlan):
             or materialization_source == self.source_context_source()
         ):
             return payload
-        return self.materialization_metadata_projection(value).attach_to(payload)
+        return self.materialization_metadata(value).attach_to(payload)
 
     def materialization_metadata(
         self,
         value: "RuntimeValue",
     ) -> "ImagePayloadMetadata":
-        """Expose filename source facts as the actual mutable metadata type."""
-        return self.materialization_metadata_projection(value).materialize_metadata()
-
-    def materialization_metadata_projection(
-        self,
-        value: "RuntimeValue",
-    ) -> "ImageMetadataProjection":
         """Return payload metadata with declared materialization-source provenance."""
 
-        from openhcs.core.runtime_image_values import image_payload_metadata_projection
+        from openhcs.core.runtime_image_values import image_payload_metadata
 
-        payload_metadata = image_payload_metadata_projection(
-            value.materialization_payload()
-        )
+        payload_metadata = image_payload_metadata(value.materialization_payload())
         materialization_source = self.materialization_source()
         if (
             materialization_source is not None
@@ -2890,8 +2872,8 @@ class ArtifactOutputPlan(ArtifactPlan):
                     f"materialization source {materialization_source!r}, but its "
                     "runtime value carries no materialization-source metadata."
                 )
-            return payload_metadata.derive_fields(
-                source_provenance=source_metadata.read_value("source_provenance")
+            return payload_metadata.with_source_provenance(
+                source_metadata.source_provenance
             )
         return payload_metadata
 

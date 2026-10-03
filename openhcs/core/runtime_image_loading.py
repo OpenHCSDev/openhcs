@@ -13,11 +13,10 @@ from openhcs.core.image_file_serialization import (
     image_file_source_metadata,
 )
 from openhcs.core.runtime_image_values import (
-    ImageMetadataProjection,
     ImagePayloadMetadata,
     ImagePayloadMetadataCarrier,
     image_payload_data,
-    image_payload_metadata_projection,
+    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
@@ -58,16 +57,8 @@ class ImagePayloadSourceMetadataContext:
         *,
         source_binding: NamedSourceBinding | None = None,
     ) -> ImagePayloadMetadata:
-        """Expose loaded source facts as their actual mutable metadata namespace."""
-        return self.metadata_projection(
-            image, source_binding=source_binding
-        ).materialize_metadata()
-
-    def metadata_projection(
-        self, image: Any, *, source_binding: NamedSourceBinding | None = None
-    ) -> ImageMetadataProjection:
         """Return source-file metadata for pixels loaded through this I/O context."""
-        existing_metadata = image_payload_metadata_projection(image)
+        existing_metadata = image_payload_metadata(image)
         resolved_source_path = self.resolved_source_path()
         source_metadata = image_file_source_metadata(resolved_source_path)
         source_dtype = source_metadata.source_dtype
@@ -78,7 +69,7 @@ class ImagePayloadSourceMetadataContext:
         source_channel_axis = self.source_channel_axis(image, source_metadata)
         if source_binding is not None:
             source_channel_axis = source_binding.source_channel_axis_for_shape(
-                tuple((int(value) for value in np.shape(image_data))),
+                tuple(int(value) for value in np.shape(image_data)),
                 observed_axis=source_channel_axis,
             )
         source_spatial_shape_yx = ImagePayloadMetadata(
@@ -104,13 +95,15 @@ class ImagePayloadSourceMetadataContext:
                 )
         if source_dtype is None:
             array_metadata = ImagePayloadMetadata.for_array(
-                image_payload_data(image), source_path=source_identity_path
+                image_payload_data(image),
+                source_path=source_identity_path,
             )
             metadata = array_metadata.replace_fields(
                 source_component_metadata=source_component_metadata,
                 source_image_provenance_planes=source_image_provenance_planes,
                 source_spatial_domain=SourceSpatialDomain(
-                    origin_yx=spatial_origin_yx, source_shape_yx=source_spatial_shape_yx
+                    origin_yx=spatial_origin_yx,
+                    source_shape_yx=source_spatial_shape_yx,
                 ),
                 source_voxel_spacing=source_voxel_spacing,
                 source_channel_axis=source_channel_axis,
@@ -124,17 +117,16 @@ class ImagePayloadSourceMetadataContext:
                 source_component_metadata=source_component_metadata,
                 source_image_provenance_planes=source_image_provenance_planes,
                 source_spatial_domain=SourceSpatialDomain(
-                    origin_yx=spatial_origin_yx, source_shape_yx=source_spatial_shape_yx
+                    origin_yx=spatial_origin_yx,
+                    source_shape_yx=source_spatial_shape_yx,
                 ),
                 source_voxel_spacing=source_voxel_spacing,
                 source_channel_axis=source_channel_axis,
                 plane_axis=plane_axis,
             )
-        metadata = metadata.derive_fields(
-            source_spatial_domain=existing_metadata.read_value(
-                "source_spatial_domain"
-            ).with_native_image_context(
-                metadata.read_value("source_spatial_domain"),
+        metadata = metadata.replace_fields(
+            source_spatial_domain=existing_metadata.source_spatial_domain.with_native_image_context(
+                metadata.source_spatial_domain,
                 image_shape_yx=source_spatial_shape_yx,
             )
         )
@@ -144,14 +136,15 @@ class ImagePayloadSourceMetadataContext:
 
     @staticmethod
     def source_channel_axis(
-        image: Any, source_metadata: ImageFileSourceMetadata
+        image: Any,
+        source_metadata: ImageFileSourceMetadata,
     ) -> int | None:
         """Return the channel axis declared by the current pixel carrier."""
         if isinstance(image, ImagePayloadMetadataCarrier):
-            metadata = image_payload_metadata_projection(image)
-            if metadata.read_value("source_channel_axis") is not None:
+            metadata = image_payload_metadata(image)
+            if metadata.source_channel_axis is not None:
                 metadata.normalized_source_channel_axis(image)
-                return metadata.read_value("source_channel_axis")
+                return metadata.source_channel_axis
         return source_metadata.pixel_semantics.validated_channel_axis(image)
 
     def resolved_source_path(self) -> Path | None:

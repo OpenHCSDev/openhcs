@@ -26,15 +26,12 @@ from openhcs.core.runtime_artifact_queries import (
     MeasurementTableUnion,
 )
 from openhcs.core.runtime_image_values import (
-    ImageMetadataCarrier,
-    ImageMetadataProjection,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,
     image_payload_data,
     image_payload_geometry,
     image_payload_metadata,
-    image_payload_metadata_projection,
     image_payload_slice_context,
 )
 from openhcs.core.runtime_measurements import (
@@ -325,7 +322,7 @@ class ComponentMetadataRuntimeProjectionSourceIdentityRequirementStrategy(
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeProjectedPayloadItem(ImageMetadataCarrier):
+class RuntimeProjectedPayloadItem:
     """One runtime payload projected into an execution-addressable value."""
 
     value: RuntimeProjectionData
@@ -337,12 +334,12 @@ class RuntimeProjectedPayloadItem(ImageMetadataCarrier):
         return image_payload_data(self.value)
 
     @property
-    def metadata_projection(self) -> ImageMetadataProjection:
-        return image_payload_metadata_projection(self.value)
+    def metadata(self) -> ImagePayloadMetadata:
+        return image_payload_metadata(self.value)
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:
-        return self.metadata_projection.source_component_metadata_for_projection()
+        return self.metadata.source_component_metadata
 
     def require_source_component_metadata(self) -> SourceComponentMetadata:
         metadata = self.source_component_metadata
@@ -362,9 +359,8 @@ def validate_source_plane_component_metadata(
 ) -> None:
     """Require one source component-metadata record per projected slice."""
     plane_metadata = (
-        image_payload_metadata_projection(value)
+        image_payload_metadata(value)
         .with_indexed_source_plane_provenance(slice_count)
-        .read_value("source_provenance")
         .source_image_provenance_planes.component_metadata
     )
     if not plane_metadata or any(item is None for item in plane_metadata):
@@ -474,8 +470,8 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        metadata = image_payload_metadata_projection(value)
-        if metadata.read_value("plane_axis") is not RuntimePlaneAxis.RUNTIME_SLICE:
+        metadata = image_payload_metadata(value)
+        if metadata.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
             return None
         data_geometry = image_payload_geometry(
             value,
@@ -493,7 +489,7 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
         value: RuntimeProjectionData,
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
-        plane_axis = image_payload_metadata_projection(value).read_value("plane_axis")
+        plane_axis = image_payload_metadata(value).plane_axis
         if plane_axis is not context.axis:
             return value
         data = image_payload_data(value)
