@@ -229,3 +229,37 @@ The preceding08 invocation rejected an invalid git revision WORKTREE before
 reading source; it is not an accepted census. This is an implemented source
 checkpoint awaiting bounded original-writer/projection regression verification;
 it is not installed live settlement or native reopening acceptance.
+
+Bounded original-writer/projection controls
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``tests/unit/test_live_fractional_z_point_source.py`` exercises seven controls
+through a real declared PURE_3D tiny producer, the original point/CSV writers,
+disk ZIP save/load, artifact source query, original viewer-backend kwargs and
+unchanged Points geometric guard. Six positive cases cover singletonZ0,
+four-planeZ0..3 andZ10..13, with direct and selected table payloads. A combined
+CSV+point declaration retains one point archive while representing every source
+plane. Exact first path/Z anchor and full unmodified archived provenance pass;
+replacement preserves the nominal point output. Every positive also rejects
+an out-of-domain coordinate through the original guard. Wrong payload type is
+rejected by the original point declaration, used by writer and query alike.
+
+Control11 passed7 in11.16s, terminal0, maxRSS446292KiB, swaps0, scope512MiB,
+noSwap/oneCPU/timeout60s. No native, viewer, catalog, Qt application or connection
+was started. It uses an exported3a11b source snapshot with paired dependencies,
+not a new installed target or environment. The reused native tabular binary is
+from retained installed02; its original C++ source compares identical. The
+snapshot avoids activating the five foreign dirty external checkouts and is
+NOT an installed wheel/native acceptance claim.
+
+Original failed controls remain:08 selected the live checkout via working
+directory and rejected stale-loaded externals;09 lacked pytest's configured
+test-plugin import root;10 used a wrong ``path`` keyword in the test readback.
+The corrected11 uses the original ``file_path`` contract. No production guard
+or input assertion was weakened to pass these harness failures.
+
+Fresh after-inventory10 covers704 OpenHCS and95 paired PolyStore/ZMQ modules,
+667 named owner/consumer sites, zero parse omissions (before09:661 sites).
+The old emitted_source_identities declaration and production/test consumers
+are gone; immutable original defect reproducer and historical receipts retain
+that name as evidence. This named AST census is not a full NRA detector/proof.
