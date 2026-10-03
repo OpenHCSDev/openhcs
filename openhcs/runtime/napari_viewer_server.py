@@ -1163,7 +1163,9 @@ def _build_nd_points(
         Tuple of (all_points_nd, all_properties)
     """
     all_points_nd = []
-    all_properties = {"label": [], "component": []}
+    all_properties = {
+        "label": [], "component": [], NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [],
+    }
     point_metadata: list[Mapping[str, NapariWireValue]] = []
 
     for item in layer_items:
@@ -1175,7 +1177,7 @@ def _build_nd_points(
             )
         )
 
-        for shape_dict in points_data:
+        for member_index, shape_dict in enumerate(points_data):
             shape_payload = ShapePayload(shape_dict)
             if shape_payload.shape_type != "points":
                 continue
@@ -1194,7 +1196,7 @@ def _build_nd_points(
                         "Fractional-Z point ROI requires a projected z_index axis."
                     ) from exc
 
-            for coord in coordinates:
+            for coordinate_index, coord in enumerate(coordinates):
                 point_dims = prepend_dims.copy()
                 if z_axis_index is not None and fractional_z is not None:
                     point_dims[z_axis_index] += fractional_z.value
@@ -1208,12 +1210,16 @@ def _build_nd_points(
                     metadata.value(VisualMetadataField.COMPONENT, 0)
                 )
                 point_metadata.append(metadata.metadata)
+                all_properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE].append(
+                    item.element_identity(member_index, coordinate_index)
+                )
 
     excluded = {
         "label",
         "component",
         ROIFractionalZ.FIELD,
         ROIArchiveSourceMetadata.FIELD,
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE,
     }
     feature_fields = {
         key
@@ -1878,6 +1884,18 @@ class NapariImagePresentationRetention:
         layer.colormap, layer.interpolation2d = colormap, interpolation
 
 
+class NapariSelectablePresentationRetention:
+    """Independent feature-row selection capability, composing through the MRO."""
+
+    @contextmanager
+    def preserve_native_presentation(self, request: NapariLayerDisplayRequest):
+        with request.pipeline.server.result_selection_controller.preserve_selection(
+            request.presentation.route_key,
+        ):
+            with super().preserve_native_presentation(request):
+                yield
+
+
 @dataclass(frozen=True, slots=True)
 class NapariImageLayerDisplayHandler(
     NapariImagePresentationRetention, NapariLayerDisplayHandler,
@@ -2070,7 +2088,9 @@ class NapariShapesLayerDisplayWork(NapariLayerDisplayWork):
 
 
 @dataclass(frozen=True, slots=True)
-class NapariShapesLayerDisplayHandler(NapariLayerDisplayHandler):
+class NapariShapesLayerDisplayHandler(
+    NapariSelectablePresentationRetention, NapariLayerDisplayHandler,
+):
     """Build or update a native N-D Napari Shapes layer from routed ROIs."""
 
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.SHAPES
@@ -2142,7 +2162,9 @@ class NapariShapesLayerDisplayHandler(NapariLayerDisplayHandler):
 
 
 @dataclass(frozen=True, slots=True)
-class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
+class NapariPointsLayerDisplayHandler(
+    NapariSelectablePresentationRetention, NapariLayerDisplayHandler,
+):
     """Build or update a Napari points layer from routed point payloads."""
 
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.POINTS
@@ -3281,6 +3303,69 @@ class NapariResultSelectionController:
         self._synchronizing_group_selection = False
         self.ensure_default_highlight_thickness()
         self.ensure_default_highlight_color()
+
+    @contextmanager
+    def preserve_selection(
+        self,
+        route_key: str,
+    ):
+        """Retain source members across remounts without replaying navigation.
+
+        Selection is translated through native features derived by the original
+        source payload builder. There is no persistent row roster, coordinate
+        matching, or assumption that an old table index still names that member.
+        """
+        layer = self.server.layer_route_state.layer(route_key)
+        state = NapariResultElementSelectionAuthority.state(layer)
+        identities = self._element_identities(layer, state)
+        selected = frozenset(identities[index] for index in state.selected_data_indices)
+        binding = self._group_indices.get(layer)
+        bound = self.is_bound_result_layer(layer)
+        synchronizing = self._synchronizing_group_selection
+        self._synchronizing_group_selection = True
+        self._pending_generation += 1
+        try:
+            yield
+            target = self.server.layer_route_state.layer(route_key)
+            target_state = NapariResultElementSelectionAuthority.state(target)
+            target_identities = self._element_identities(target, target_state)
+            indices = tuple(
+                index for index, identity in enumerate(target_identities)
+                if identity in selected
+            )
+            if bound:
+                if layer is not target:
+                    cast(NapariShapesLayerHandle, layer).events.highlight.disconnect(
+                        self._callbacks.pop(layer)
+                    )
+                    self._observed_indices.pop(layer, None)
+                    self._group_indices.pop(layer, None)
+                self.bind(target, binding.binding if binding is not None else None)
+            cast(NapariShapesLayerHandle, target).selected_data = set(indices)
+            observed = NapariResultElementSelectionAuthority.state(target)
+            if observed.selected_data_indices != indices:
+                raise RuntimeError("Napari did not retain rematerialized member selection.")
+            if bound:
+                self._observed_indices[target] = indices
+        finally:
+            self._synchronizing_group_selection = synchronizing
+        self._notify_selection_observers()
+
+    @staticmethod
+    def _element_identities(
+        layer: NapariLayerHandle,
+        state: NapariResultElementSelectionState,
+    ) -> tuple[object, ...]:
+        if state.feature_row_count == 0:
+            return ()
+        identities = NapariResultSelectionGroupAuthority.feature_values(
+            layer, NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE,
+        )
+        if identities is None or len(identities) != state.feature_row_count:
+            raise ValueError("Selectable stream rows require source element identities.")
+        if len(set(identities)) != len(identities):
+            raise ValueError("Selectable stream source element identities must be unique.")
+        return identities
 
     def select(
         self,

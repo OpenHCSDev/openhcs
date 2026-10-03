@@ -39,17 +39,20 @@ from openhcs.runtime.napari_viewer_server import (
     NapariImageLayerDisplayHandler,
     NapariImagePresentationRetention,
     NapariShapesLayerDisplayHandler,
+    NapariPointsLayerDisplayHandler,
+    NapariSelectablePresentationRetention,
     NapariResultSelectionController,
+    NapariResultSelectionGroupBinding,
     NapariStreamLayerContext,
     NapariViewerServer,
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
+from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
 from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
-from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.mcp.server import build_server
 from openhcs.runtime.viewer_controls import ViewerLayerRetirementControlOptions
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerSettlePhase,
@@ -453,6 +456,8 @@ def test_selected_retirement_uses_registered_queue_and_releases_payloads(receive
 
 def test_real_fastmcp_retirement_decodes_identity_and_reaches_native_queue(receiver):
     from mcp.server.fastmcp.exceptions import ToolError
+    from openhcs.mcp.context import OpenHCSAgentContext
+    from openhcs.mcp.server import build_server
 
     raw = np.ones((2, 2), dtype=np.uint16)
     keep, update = enqueue(receiver, raw, producer='raw')
@@ -613,3 +618,172 @@ def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hook
     assert tuple(receiver.viewer.camera.center) == (0, 1, 1)
     assert receiver.component_values.shared_values_for(["well"]) == {"well": ["A01", "A03"]}
     assert issubclass(NewDeclaredImageHandler, NapariImagePresentationRetention)
+
+
+@pytest.mark.parametrize("data_type", [StreamingDataType.POINTS, StreamingDataType.SHAPES])
+@pytest.mark.parametrize("selected", [False, True])
+@pytest.mark.parametrize("reorder", [False, True])
+def test_retirement_retains_survivor_source_members_without_late_navigation(
+    receiver, data_type, selected, reorder,
+):
+    middle, update = enqueue(receiver, np.ones((2, 2)), well="A02", producer="middle")
+    advance_in_qt(receiver, middle, update)
+    for well, subject_id in [("A01", 7), ("A03", 8)]:
+        members = [
+            {"type": "points" if data_type is StreamingDataType.POINTS else "path",
+             "coordinates": [[i, i], [i + 1, i + 1]],
+             "metadata": {"label": subject_id,
+                          ObjectArtifactSubjectBinding.SUBJECT_FEATURE: "test-object",
+                          ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE: subject_id}}
+            for i in range(2)
+        ]
+        # Points metadata is not a declared cross-layer subject binding; its
+        # source members are retained independently of the Shapes group owner.
+        if data_type is StreamingDataType.POINTS:
+            for member in members:
+                member["metadata"] = {"label": subject_id}
+        route, update = enqueue(receiver, members, well=well, producer="survivor",
+                                data_type=data_type, domain=["A01", "A03"])
+    advance_in_qt(receiver, route, update)
+    old = receiver.layer_route_state.layer(route)
+    receiver.viewer.layers.selection.active = old
+    if selected:
+        old.selected_data = {0, 1}
+    # The public retirement boundary follows earlier accepted selection work.
+    # Its original zero-delay navigation must settle before choosing visibility.
+    QApplication.instance().processEvents()
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    retained = set(old.features.iloc[list(old.selected_data)][feature])
+    source_items = receiver.component_groups.existing_items_for(route)
+    if reorder:
+        source_items.reverse()
+    old.opacity, old.visible = 0.35, False
+    receiver.viewer.camera.center = (0, 2, 3)
+    receiver.viewer.camera.zoom = 19
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, middle)
+    )
+    assert result.applied and not result.errors
+    native = receiver.layer_route_state.layer(route)
+    assert native is not old and old not in receiver.viewer.layers
+    assert set(native.features.iloc[list(native.selected_data)][feature]) == retained
+    if reorder and selected:
+        assert native.selected_data != {0, 1}
+    assert receiver.component_groups.existing_items_for(route) is source_items
+    assert tuple(native.scale[-2:]) == (0.65, 0.65)
+    assert native.opacity == 0.35 and not native.visible
+    assert receiver.viewer.layers.selection.active is native
+    assert receiver.viewer.camera.zoom == 19
+    assert tuple(receiver.viewer.camera.center) == (0, 2, 3)
+    step = receiver.viewer.dims.current_step
+    QApplication.instance().processEvents()
+    assert receiver.viewer.dims.current_step == step
+    assert set(native.features.iloc[list(native.selected_data)][feature]) == retained
+    assert receiver.viewer.layers.selection.active is native
+
+
+def test_new_selectable_capability_executes_cooperative_retention_hooks(receiver, monkeypatch):
+    calls = []
+    monkeypatch.setitem(NapariPointsLayerDisplayHandler.__registry__, StreamingDataType.POINTS,
+                        NapariPointsLayerDisplayHandler)
+
+    class IndependentPresentationCapability:
+        @contextmanager
+        def preserve_native_presentation(self, request):
+            calls.append("enter")
+            with super().preserve_native_presentation(request):
+                yield
+            calls.append("exit")
+
+    class NewDeclaredPointsHandler(IndependentPresentationCapability, NapariPointsLayerDisplayHandler):
+        streaming_data_type = StreamingDataType.POINTS
+
+    middle, update = enqueue(receiver, np.ones((2, 2)), well="A02", producer="middle")
+    advance_in_qt(receiver, middle, update)
+    for well in ("A01", "A03"):
+        route, update = enqueue(receiver, [{"type": "points", "coordinates": [[1, 2]],
+                                           "metadata": {}}], well=well, producer="new-case",
+                                data_type=StreamingDataType.POINTS, domain=["A01", "A03"])
+    advance_in_qt(receiver, route, update)
+    old = receiver.layer_route_state.layer(route)
+    old.selected_data = {1}
+    old.opacity = 0.2
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, middle)
+    )
+    assert result.applied and not result.errors
+    native = receiver.layer_route_state.layer(route)
+    assert calls == ["enter", "exit"]
+    assert native.selected_data == {1} and native.opacity == 0.2
+    assert issubclass(NewDeclaredPointsHandler, NapariSelectablePresentationRetention)
+
+
+def test_controller_remount_retains_linked_subject_members_and_binding(receiver):
+    viewer = receiver.viewer
+    paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    old = viewer.add_shapes(paths, shape_type="path",
+                            features={feature: ["a", "b", "c"], "owner": [8, 8, 9]})
+    linked = viewer.add_shapes(paths[:2], shape_type="path",
+                               features={feature: ["x", "y"], "owner": [8, 9]})
+    controller = receiver.result_selection_controller
+    binding = NapariResultSelectionGroupBinding("independent-subject", "owner")
+    controller.bind(old, binding)
+    controller.bind(linked, binding)
+    old.selected_data = {0}
+    assert old.selected_data == {0, 1} and linked.selected_data == {0}
+    receiver.layer_route_state.set_layer("retained-selection", old)
+    with controller.preserve_selection("retained-selection"):
+        viewer.layers.remove(old)
+        replacement = viewer.add_shapes(paths[::-1], shape_type="path",
+                                        features={feature: ["c", "b", "a"], "owner": [9, 8, 8]})
+        receiver.layer_route_state.set_layer("retained-selection", replacement)
+    QApplication.instance().processEvents()
+    assert replacement.selected_data == {1, 2} and linked.selected_data == {0}
+    assert not controller.is_bound_result_layer(old)
+    old.selected_data = {2}
+    assert linked.selected_data == {0}
+    controller.select(replacement, 0)
+    assert replacement.selected_data == {0} and linked.selected_data == {1}
+
+
+@pytest.mark.parametrize("identities", [None, ["duplicate", "duplicate"]])
+def test_controller_refuses_unidentified_members_before_remount(receiver, identities):
+    features = {} if identities is None else {
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: identities,
+    }
+    old = receiver.viewer.add_points([[1, 2], [3, 4]], features=features)
+    receiver.layer_route_state.set_layer("retained-selection", old)
+    with pytest.raises(ValueError, match="source element identities"):
+        with receiver.result_selection_controller.preserve_selection("retained-selection"):
+            pytest.fail("Invalid member identity must be rejected before mutation.")
+    assert old in receiver.viewer.layers
+
+
+def test_controller_retains_empty_native_geometry_without_invented_identity(receiver):
+    old = receiver.viewer.add_shapes(ndim=2)
+    receiver.layer_route_state.set_layer("retained-selection", old)
+    with receiver.result_selection_controller.preserve_selection("retained-selection"):
+        receiver.viewer.layers.remove(old)
+        replacement = receiver.viewer.add_shapes(ndim=2)
+        receiver.layer_route_state.set_layer("retained-selection", replacement)
+    assert not replacement.selected_data
+
+
+def test_controller_preservation_cancels_queued_navigation_without_unmount(receiver):
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    layer = receiver.viewer.add_shapes([[[0, 0], [1, 1]]], shape_type="path",
+                                        features={feature: ["member"]})
+    controller = receiver.result_selection_controller
+    controller.bind(layer)
+    layer.selected_data = {0}
+    layer.visible = False
+    generation = controller._pending_generation
+    step = receiver.viewer.dims.current_step
+    receiver.layer_route_state.set_layer("retained-selection", layer)
+    with controller.preserve_selection("retained-selection"):
+        pass
+    assert controller._pending_generation > generation
+    QApplication.instance().processEvents()
+    assert not layer.visible and layer.selected_data == {0}
+    assert receiver.viewer.dims.current_step == step

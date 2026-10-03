@@ -5782,18 +5782,20 @@ def test_napari_shape_layer_payload_assigns_distinct_stable_label_colors():
 def test_napari_shape_feature_columns_fill_sparse_late_columns_in_order():
     columns = NapariShapeFeatureColumns()
 
-    columns.append({"area": 4.0}, label=1, path="first")
-    columns.append({"circularity": 0.8}, label=2, path="second")
+    columns.append({"area": 4.0}, label=1, path="first", element_identity="first:0")
+    columns.append({"circularity": 0.8}, label=2, path="second", element_identity="second:0")
     columns.append(
         {"area": 9.0, "circularity": 0.6},
         label=3,
         path="third",
+        element_identity="third:0",
     )
 
     assert columns.values == {
         "area": [4.0, None, 9.0],
         "label": [1, 2, 3],
         "path": ["first", "second", "third"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: ["first:0", "second:0", "third:0"],
         "circularity": [None, 0.8, 0.6],
     }
 
@@ -6175,24 +6177,18 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
         component_values={"channel": [4]},
         axis_offsets=(3,),
     )
+    item = _layer_item(
+        {"channel": 4},
+        [{"type": "points", "coordinates": [[1, 2]],
+          "metadata": {"label": 7, "component": 4}}],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
 
     napari_viewer_server.NapariPointsLayerDisplayHandler().handle(
         napari_viewer_server.NapariLayerDisplayRequest(
             pipeline=pipeline,
             presentation=presentation,
-            items=[
-                _layer_item(
-                    {"channel": 4},
-                    [
-                        {
-                            "type": "points",
-                            "coordinates": [[1, 2]],
-                            "metadata": {"label": 7, "component": 4},
-                        }
-                    ],
-                    stream_layer_data_type=StreamingDataType.POINTS,
-                )
-            ],
+            items=[item],
             display_config=NapariDisplayConfig(),
         )
     )
@@ -6204,7 +6200,10 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert tuple(data[0]) == (0, 1, 2)
     assert layer_kwargs["axis_labels"] == ("channel", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0)
-    assert layer_kwargs["properties"] == {"label": [7], "component": [4]}
+    assert layer_kwargs["properties"] == {
+        "label": [7], "component": [4],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
+    }
 
 
 def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():

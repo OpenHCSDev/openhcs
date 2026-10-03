@@ -4,6 +4,76 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Survivor row-selection source checkpoint (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent assigns Singer the remaining Points/Shapes selected_data defect on522;
+Planck explicitly confirms no competing selection hunk. His point-calibration
+and sole parent TCP95 receiving packet remain disjoint. Root394 checked at
+4c0d62e45c8afb85e34b69d7279cd00710f519b5; no producer/persistence edits.
+Guide526 has separately merged532b13f5; no guide, target06, scientific borrower,
+package, runtime, foreign gitlink or original journal changes in this worker.
+
+Original NapariResultSelectionController now owns one transient
+preserve_selection(route_key) context. It resolves both native layers through
+its original route-state store. NapariStreamLayerItem derives source-member
+identity from its complete producer, component address, path and unchanged
+payload member/coordinate positions. Existing Points and Shapes builders project
+that opaque identity into native features in their existing assembly loops.
+This is not a new object-ID authority, persistent selection roster, transport
+codec, coordinate heuristic or restored old table index. Native feature order
+may change without selecting a different source member. Edited/replaced source
+payloads are not a promise to retain arbitrary native manual edits.
+
+The controller maps only selected source identities onto new native rows,
+preserves original declared linked-subject binding, disconnects replaced native
+callbacks/removes their derived weak lookups, and suppresses navigation during
+restoration through its original synchronization/generation owners. Empty
+selection remains empty; missing/duplicate source identities refuse before
+remount. NapariSelectablePresentationRetention composes that independent
+capability with the existing common-presentation ancestor through cooperative
+super(). Points/Shapes leaves declare it only; generic reconciliation and
+registry consumers are unchanged. No second algorithm or row cache is added.
+
+Latest NRA/current authoritative audit ZIP and applicable IDEN-1/6, BOUND-2/8,
+IMPL-12/13, MEMB-1/2 and TIME-9 catalog entries informed this original-owner
+choice. Existing audit caller selection-family01 parses704 production/669tests/
+401 actual dependencies (including native Points/Shapes/base/events), zero
+parse omissions, selected69/51/42 modules; before-source1df1c98c. Static source
+facts and semantically read consumers are not a global NRA R1 clean claim.
+
+Actual real Qt/ViewerModel selection-controls04:14PASS/21explicitdeselections,
+10.03s/maxRSS507916KiB/cgroup315.5MiB/Swap0, CPU1/512MiB/60s. Tests exercise
+both native families after registered retirement prunes an interior shared
+domain; source-item order reversal changes native row indices while exact
+selected source identities survive, empty/multirow selection, original linked
+groups, active layer/calibration/domain/style/camera, canceled queued navigation
+even without unmount, stale removed callback detachment, and an independent
+declaration's executed cooperative enter/exit hooks without consumer edits.
+Original source bootstrap, dependency env and paired Qt owner reused.
+
+Original selection-controls01 retains33PASS/two Shapes visibility failures:
+an earlier accepted row-selection timer ran before retirement dispatch and
+made the layer visible before capture. The fixture now settles that original
+action before selecting the presentation to retain; a separate original queued
+callback control tests cancellation without unmount. Original01/02/03 logs
+remain byte-exact. All completed within original cgroup512MiB/Swap0, but01
+maxRSS583980KiB and02/03 537564/539012KiB exceeded requested RSS; they are NOT
+qualified bounded receipts. Small04 removes needless eager MCP construction
+imports from model-only tests: those original imports now live only inside
+the unchanged actual-SDK test, which still constructs/dispatches when selected.
+No test assertions or limits were relaxed; discarded fixture-GC experiment is
+not retained in source.
+
+Final changed-builder controls/after-AST/original R0 remain pending at this
+working checkpoint. Parent reports standalone95-live30 actual target06 public
+typed point retirement,9 opened matched XY/XZ/YZ raw/point/combined captures,
+unchanged raw source/payload/calibration/domain/camera and same-native ZIP
+reopen. This is received detached public proof, not independently replayed here,
+not biological acceptance, and NOT selected_data-survivor proof (raw-only
+survivor). New source row fix still needs parent review and separately qualified
+installed/live receiving; current06 stays immutable.
+
 Final target06 semantic checkpoint received
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
