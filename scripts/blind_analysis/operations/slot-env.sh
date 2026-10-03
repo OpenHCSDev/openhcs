@@ -57,32 +57,32 @@ fleet_process_limit_mib() {
 # scope. The unit namespace comes from fleet_unit_for, not caller PIDs/ports.
 fleet_process_growth_bound_bytes() {
   local role=${1:?process performer} limit unit state current observed invocation
-  limit=$(fleet_process_limit_mib "$role")
+  limit=$(fleet_process_limit_mib "$role") || return
   limit=$((limit*1048576))
   unit="$FLEET_UNIT-$role.scope"
-  state=$(systemctl --user show "$unit" -p LoadState --value)
+  state=$(systemctl --user show "$unit" -p LoadState --value) || return
   if [[ "$state" == not-found ]]; then
     printf 'Process %s absent; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$limit" >&2
     printf '%s\n' "$limit"
     return
   fi
-  test "$state" = loaded
-  state=$(systemctl --user show "$unit" -p ActiveState --value)
+  test "$state" = loaded || return
+  state=$(systemctl --user show "$unit" -p ActiveState --value) || return
   if [[ "$state" == inactive || "$state" == failed ]]; then
     printf 'Process %s %s; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$state" "$limit" >&2
     printf '%s\n' "$limit"
     return
   fi
-  test "$state" = active
-  invocation=$(systemctl --user show "$unit" -p InvocationID --value)
-  [[ "$invocation" =~ ^[a-f0-9]{32}$ ]]
-  test "$(systemctl --user show "$unit" -p Slice --value)" = "$FLEET_SLICE"
-  observed=$(systemctl --user show "$unit" -p MemoryMax --value)
-  test "$observed" = "$limit"
-  test "$(systemctl --user show "$unit" -p MemorySwapMax --value)" = 0
-  current=$(systemctl --user show "$unit" -p MemoryCurrent --value)
-  [[ "$current" =~ ^[0-9]+$ ]]
-  test "$current" -le "$limit"
+  test "$state" = active || return
+  invocation=$(systemctl --user show "$unit" -p InvocationID --value) || return
+  [[ "$invocation" =~ ^[a-f0-9]{32}$ ]] || return 1
+  test "$(systemctl --user show "$unit" -p Slice --value)" = "$FLEET_SLICE" || return
+  observed=$(systemctl --user show "$unit" -p MemoryMax --value) || return
+  test "$observed" = "$limit" || return
+  test "$(systemctl --user show "$unit" -p MemorySwapMax --value)" = 0 || return
+  current=$(systemctl --user show "$unit" -p MemoryCurrent --value) || return
+  [[ "$current" =~ ^[0-9]+$ ]] || return 1
+  test "$current" -le "$limit" || return
   printf 'Process %s invocation=%s cap=%s charge=%s residual=%s bytes\n' "$unit" "$invocation" "$limit" "$current" "$((limit-current))" >&2
   printf '%s\n' "$((limit-current))"
 }
