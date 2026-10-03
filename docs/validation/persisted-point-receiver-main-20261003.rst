@@ -62,7 +62,8 @@ contract and assertions remain unchanged. A mistaken test-only migration of
 three such consumers failed3/49 and is retained in installed-control15.log;
 source return declarations determined its correction. No product bytes changed,
 guard was removed or failed assertion weakened.
-Ordinary combined wheel/target qualification is next. Prior59PASS on the full
+Ordinary combined wheel/target qualification is complete (details below).
+Prior59PASS on the full
 Root-dependent source is NOT reported as main-only acceptance. No native or
 viewer is launched. The public receiving plan is a NEW standalone reopen of the
 unchanged989B archive SHA256
@@ -72,3 +73,43 @@ four-plane domain and ZYX2/.65/.65 calibration readback. Parent owns runtime
 admission. The original failed producer9292bfb8 is not replayed; Root435's
 persisted image metadata publication remains a separate unresolved producer
 boundary. No science/biological acceptance or full orthogonal issue closure.
+
+Ordinary combined private target checkpoint
+------------------------------------------
+
+One main-based build b26334ace99512970c81809b29d5ad19c7e07c4c includes this
+receiver plus released511 b1d0b6c3e and522 b2fa84572. The current combined
+review24927b864 only changes test consumers/docs; complete packaged inputs are
+byte-equal. Exactly15 production files, no inherited Root source, dependency
+floor edit or foreign gitlink commit. The separately published494 e6 remains
+Root-dependent, not a main release.
+
+Private target engineering494/target04, whole wheel SHA256
+d3cb03f47c2831a6287a6f510de931efcc861bd7c8c43a8076704eae074b3639.
+815 tracked package files,90 declared assets/all13 skill files and both native
+extensions match source/wheel/target.984 target files accounted through original
+distribution RECORDs and console/gui declarations. Retained qualified ObjectState
+9c31e4/1.1.8 and introspect6f5ac0/.14 pass whole-source/wheel equality and actual
+registered_type_pairs/prepare_dataclass_declaration API calls. Main floors stay
+unchanged; no shared installation, download or environment was created.
+
+Final installed receiver and complete navigation-consumer family:49PASS5.26s,
+296763392B peak,512MiB/noSwap/CPU1/OOM0. Original989B readback preserves all four
+source records/fractionalZ and declared calibration. The original failed15 check,
+prior writer/settlement failure and a verifier-wrapper syntax failure are retained;
+no failed operation is relabelled successful. No native/viewer/MCP was started.
+
+Persistent package/source receipt:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering494/READY-MAIN13.json,
+COMBINED-MAIN13-SOURCE-PACKET.rst, PACKAGE09-QUALIFICATION.json,
+package08.log, installed-control16.log, MAIN13-FROZEN.sha256 (24/24PASS).
+The qualification archive alongside this receipt preserves actual original
+source/control callers, before/after AST records, positive and failed logs,
+unchanged-archive source evidence and whole-package receipts.
+
+Newest parent allocation gives idle95 to the fourth independent P001 author.
+Public receiving is DEFERRED until an exact existing slot is released and the
+parent's full growth/resource guard passes, not replaced by a new X/client/native
+fleet. Parent owns the future standalone unchanged-archive calibrated XY/XZ/YZ,
+typed retirement/reopen and catalog lifecycle journey. Package qualification is
+demonstrated; public native calibration/retirement acceptance is not yet claimed.
