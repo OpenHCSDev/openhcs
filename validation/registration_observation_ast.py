@@ -8,6 +8,16 @@ sys.path.insert(0, "/home/ts/.codex/skills/refactor-audit/scripts")
 from audit.findings import Package
 from audit.repository import Repository
 
+
+class SourceScopeRepository(Repository):
+    """Let the original Package parser accept a single-file bounded scope."""
+
+    def python_files(self, revision, root):
+        if root.endswith('.py'):
+            return (root,)
+        return super().python_files(revision, root)
+
+
 roots = (
     (Path.cwd(), "openhcs"),
     (Path.cwd() / "external/zmqruntime", "src/zmqruntime"),
@@ -21,7 +31,7 @@ terms = (
     "class AgentError", "class FunctionCatalogPreparationHandle",
 )
 for path, root in roots:
-    repo = Repository(path)
+    repo = SourceScopeRepository(path)
     revision = repo.git("rev-parse", "HEAD").strip()
     # Same complete tracked source set, loaded serially through Package's owner.
     scopes = sorted({
