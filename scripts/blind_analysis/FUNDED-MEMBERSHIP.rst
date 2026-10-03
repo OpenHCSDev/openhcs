@@ -37,3 +37,22 @@ shell/JQ owners; no Python structural edit or global AST closure claimed.
 Open PR roster checked on mainf7de9efad, no competing funding owner. Existing
 Python/runtime/dependency owners are not modified. Focused source publication
 controls and actual future parent entrypoint qualification remain to follow.
+
+Publication controls completed
+------------------------------
+
+tests/shell/test_funded_programme_publication.sh exercised the actual original
+JQ/projector/publisher in a new persistent controlled directory
+validation/funded-publication01. Terminal0 in0.083s, no import/build/provider/
+scope/helper/client/SCI. Inert test parent-release/custody files are not real
+operational authority. Checks passed: new independent declaration without
+generic consumer edits; FULL terminal output retained once; missing release,
+stale expected revision and absent/UNKNOWN terminal custody refused without
+changing funding; atomic membership/history transition; continuing run identity
+unchanged; second publication prohibited; unknown retirement and ambiguous
+membership rejected. Initial jq syntax check incorrectly used null input and
+failed; a real programme input passed. Both original outputs remain recorded.
+
+These controls prove publication, not complete reservation consumers or actual
+live SCI admission. Original tracked recorder/client contents are unchanged.
+The borrowed-byte handoff remains required before that final consumer edit.
