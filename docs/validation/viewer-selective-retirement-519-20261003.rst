@@ -79,12 +79,70 @@ The combined snapshot/retirement process also retained a Vispy Qt5/Qt6 import
 refusal. A separate existing snapshot shard exited1 during hidden Vispy setup
 after three passing controls, without a Python traceback; its cause is not proved.
 No backend/environment forcing, installed repair or weaker assertion is used.
-Final source census and original R0 at the corrected production commit follow.
+Final source census and original R0 at corrected production6c49bedd8 are terminal:
+704 production/669 test/258 dependency modules parsed, zero errors;49 production/
+40 test/12 dependency selected projections, plus full detail for all258 dependency
+modules. This adds actual source PolyStore and read-only paired Qt service roots
+to the original census; it does not omit the installed/foreign source contexts.
+Original unchanged Qt/Vispy245-module full projection is reused, not rerun.
+source-family03:16.77s/maxRSS85692KiB/75.7MiB cgroup peak/Swap0; dependency-details02:
+1.29s/maxRSS27244KiB/16.9MiB peak/Swap0. There is no whole-NRA-detector/global-clean
+claim, and AST does not prove dynamic native event behavior.
+
+Original R0 is loaded directly from agent-comms Git pin
+3b03785f45df2ef5dc62ba6aed99294192ecbb01 through the unchanged existing
+validation/run_pinned_r0_419.py. All9 changed production files are included;
+thresholds/detector/input source are not modified. Original c76 R0RED reported
+ViewerWindowService excess+27 and two foreign-absence probes. The copied retirement
+gateway/service/invocation path was deleted; native availability stays with server.
+Corrected6c49bedd8 R0PASS: positive delta mapping empty,29.51s/maxRSS86936KiB/
+74.3MiB cgroup peak/Swap0/terminal0. The first3.12 deferred-annotation import failure
+and a later wrong CLI positional "compare" failure remain original negatives;
+the actual original detector runs through existing3.14, with its unchanged CLI.
+
 No installed/live/RSS-reduction claim is made. There is no new runtime/client/
 viewer launch, package installation or scientific contact. Planck494's Points
 domain, spatial calibration and feature-metadata hunks are explicitly disjoint.
 Unexpected native removal/rematerialization errors are not an atomic rollback;
 their failed operation disposition must not be replayed as if nothing happened.
+
+Receiving packet and production closure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The paired source/native-receiving proposal is
+viewer-selective-retirement-519-native-receiving-20261003.rst. It reuses parent/
+Planck's exact original989B archive, raw/source public inventory and one95 client;
+Copernicus511 catalog controls are independent on that same handle. One ordinary
+whole target includes reviewed494e6c/511cb263946/5226c49 production after parent's
+review/resource release, not three worker builds or hot SCI updates. Actual
+current SCI88/96/94 remaining growth and original common RAM/disk floor determine
+admission. No new launch/resource owner, producer replay, writer or fixture store.
+Production editing is frozen at6c49bedd8; this final delivery adds receipt/archive/
+packet evidence only. Installed public retirement/native visual release remain
+NOT RUN and are required before merge. The isolated hidden-Vispy source setup
+failure remains unresolved; do not call all snapshot source controls green.
+
+Final qualification archive is
+viewer-selective-retirement-519-qualified-20261003.tar.gz:60 members/1063296bytes,
+SHA25692881ab00e7a79fd537efd323e81ab5ce3badc2a191d63833097d6a475ed5f66.
+It includes byte-exact9 production/3 fixture sources, original R0 caller,
+source/pytest callers and command receipt, all original successful/failed raw
+logs and corrected full-family/dependency projections. tar --compare against
+every original member completed0. Historical nine-member source archive is
+unchanged. Raw pytest whitespace stays in archives, not loose versioned logs;
+production/test/docs git diff --check completes0 without rewriting evidence.
+
+Changed production paths (no Root producer/materialization file):
+
+* openhcs/agent/capabilities.py
+* openhcs/agent/dto/__init__.py
+* openhcs/agent/dto/viewer.py
+* openhcs/agent/services/viewer_window_service.py
+* openhcs/mcp/dev_client_commands/viewer.py
+* openhcs/runtime/napari_streaming_handlers.py
+* openhcs/runtime/napari_viewer_server.py
+* openhcs/runtime/viewer_controls.py
+* openhcs/runtime/viewer_protocol.py
 
 Original investigation checkpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
