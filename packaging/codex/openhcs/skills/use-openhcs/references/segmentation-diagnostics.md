@@ -63,6 +63,18 @@ method. Prominence/H-maxima depends on the landscape's numeric units; a toleranc
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
 
+For point-only object counts, maxima are candidate landmarks, not automatically
+distinct bodies. Track all candidates belonging to each sampled raw body
+through Z and orthogonal views, including candidates hidden on other slices;
+check bodies with several candidates and bodies with none. When internal
+texture produces several candidates, test a supported body-association and
+representative rule, not a larger global suppression distance alone; retain
+a genuine close-pair control. Declare the centre convention and boundary
+policy: a strongest-intensity voxel inside a body is not geometric-centre
+validation. Check centre placement against supported body extent and keep
+unresolved identity separate from ordinary detection errors; a connected
+foreground region can still contain touching neighbours.
+
 Distance and watershed operations in anisotropic Z data must respect spacing.
 A distance in voxel indices is not necessarily a distance in micrometres.
 Use the measurement guide before interpreting a 3-D separation or shape value.
