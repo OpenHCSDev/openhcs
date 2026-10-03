@@ -121,7 +121,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
-    SourceBindingRuntimeContextRequest,
+    SourceUniverseRequest,
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_matching import (
@@ -132,7 +132,6 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    SourceBindingRuntimeContext,
     SourceProjectionRole,
 )
 from openhcs.core.runtime_image_values import (
@@ -1385,7 +1384,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
 
     def load_input_stack(
         self, runtime: "PatternGroupRuntime",
-    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
+    ) -> tuple[list[str], RuntimeArrayData]:
         """Admit the filename-selected source cohort."""
         return runtime._load_input_stack()
 
@@ -1440,7 +1439,7 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
 
     def load_input_stack(
         self, runtime: "PatternGroupRuntime",
-    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
+    ) -> tuple[list[str], RuntimeArrayData]:
         edges = self.execution_plan.stored_primary_input_edges_for_group(
             self.compiled_group, self.component_key,
         )
@@ -1476,16 +1475,7 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
         main_data_stack = ImagePayloadConsumption.NATURAL.compose_image_payload(
             self.execution_plan.step_name, tuple(payloads),
         ).payload
-        source_projection = (
-            runtime.source_workspace_projection_authority().projection_if_available()
-        )
-        source_binding_context = SourceBindingRuntimeContextRequest.from_context(
-            context=self.context,
-            plan=self.execution_plan,
-            matching_files=matching_files,
-            source_projection=source_projection,
-        ).runtime_context()
-        return matching_files, main_data_stack, source_binding_context
+        return matching_files, main_data_stack
 
     def loaded_plane_count(
         self, matching_files: Sequence[str], payload: RuntimeArrayData,
@@ -1517,7 +1507,6 @@ class PatternGroupData(PatternGroupExecutionScope):
     """Complete loaded cohort and its original execution coordinates."""
 
     artifacts: ComponentArtifactPlans[ArtifactSpecRef, ArtifactInputPlan]
-    source_binding_context: SourceBindingRuntimeContext
     runtime_plane_index: int
     runtime_plane_count: int
     matching_files: list[str]
@@ -1529,7 +1518,6 @@ class PatternGroupData(PatternGroupExecutionScope):
         request: "PatternGroupExecutionRequest",
         matching_files: list[str],
         main_data_stack: RuntimeArrayData,
-        source_binding_context: SourceBindingRuntimeContext,
     ) -> "PatternGroupData":
         artifacts = ComponentArtifactPlans.from_step_component(
             request.execution_plan,
@@ -1547,7 +1535,6 @@ class PatternGroupData(PatternGroupExecutionScope):
             execution_plan=request.execution_plan,
             compiled_group=request.compiled_group,
             artifacts=artifacts,
-            source_binding_context=source_binding_context,
             runtime_plane_index=request.component_index,
             runtime_plane_count=request.loaded_plane_count(
                 matching_files, main_data_stack,
@@ -1751,7 +1738,6 @@ class FunctionCoreExecutor:
             plane_projection=self.plane_projection,
             source_payload=source_payload,
             source_binding_plan=self.group_data.source_binding_plan,
-            source_binding_context=self.group_data.source_binding_context,
             axis_scope=self.group_data.axis_scope,
             variable_components=tuple(
                 self.group_data.execution_plan.variable_components
@@ -2408,7 +2394,7 @@ class PatternGroupRuntime:
 
         try:
             load_started_at = time.perf_counter()
-            matching_files, main_data_stack, source_binding_context = (
+            matching_files, main_data_stack = (
                 self.request.load_input_stack(self)
             )
         except NoStepOutputManifestMatch:
@@ -2430,7 +2416,7 @@ class PatternGroupRuntime:
             )
             execute_started_at = time.perf_counter()
             loaded = PatternGroupData.from_loaded_group(
-                self.request, matching_files, main_data_stack, source_binding_context,
+                self.request, matching_files, main_data_stack,
             )
             processed_stack = self.execute_chain(loaded)
             RuntimeProfileSink.record(
@@ -2533,7 +2519,7 @@ class PatternGroupRuntime:
 
     def _load_input_stack(
         self,
-    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
+    ) -> tuple[list[str], RuntimeArrayData]:
         context = self.request.context
         plan = self.request.execution_plan
         request = self.request
@@ -2623,12 +2609,6 @@ class PatternGroupRuntime:
             if source_projection is not None
             else ()
         )
-        source_binding_context = SourceBindingRuntimeContextRequest.from_context(
-            context=self.request.context,
-            plan=self.request.execution_plan,
-            matching_files=matching_files,
-            source_projection=source_projection,
-        ).runtime_context()
         if producer_index is not None:
             producer_records = tuple(sorted(
                 producer_records, key=lambda record: record.output_path,
@@ -2661,7 +2641,6 @@ class PatternGroupRuntime:
                     raw_slices,
                     workspace_path_lookups,
                     workspace_source_lookups,
-                    source_binding_context,
                     source_projection,
                 )
 
@@ -2684,7 +2663,7 @@ class PatternGroupRuntime:
         else:
             main_data_stack = cached_stack
 
-        return matching_files, main_data_stack, source_binding_context
+        return matching_files, main_data_stack
 
     def _workspace_source_binding_lookups(
         self,
@@ -2795,7 +2774,7 @@ class PatternGroupRuntime:
         source_projection = (
             self.source_workspace_projection_authority().projection_if_available()
         )
-        request = SourceBindingRuntimeContextRequest.from_context(
+        request = SourceUniverseRequest.from_context(
             context=self.request.context,
             plan=self.request.execution_plan,
             matching_files=(),
@@ -2819,7 +2798,6 @@ class PatternGroupRuntime:
         raw_slices: Sequence[RuntimeArrayData],
         workspace_path_lookups: Sequence[VirtualWorkspacePathLookup],
         workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
-        source_binding_context: SourceBindingRuntimeContext,
         source_projection: VirtualWorkspaceSourceProjection | None,
     ) -> list[RuntimeArrayData]:
         if source_projection is not None:
@@ -2845,10 +2823,22 @@ class PatternGroupRuntime:
                 )
             ]
 
+        universe_state = SourceUniverseRequest.from_context(
+            context=self.request.context,
+            plan=self.request.execution_plan,
+            matching_files=tuple(
+                lookup.virtual_path for lookup in workspace_path_lookups
+            ),
+            source_projection=None,
+        ).runtime_universe_state()
+        cache = self.request.context.runtime_source_binding_context_cache
+        source_metadata = cache.normalized_source_metadata(
+            universe_state.source_metadata_by_path
+        )
         source_context = SourcePatternResolutionContext.from_sources(
             parser=self.request.context.microscope_handler.parser,
-            source_paths_by_virtual_path=source_binding_context.step_input_source_paths,
-            source_metadata_by_path=source_binding_context.source_metadata_by_path,
+            source_paths_by_virtual_path=universe_state.step_input_source_paths,
+            source_metadata_by_path=source_metadata,
             metadata_rules=self.request.source_binding_plan.metadata_rules,
         )
         return [
@@ -2861,7 +2851,7 @@ class PatternGroupRuntime:
                     )
                 ),
                 source_path=source_context.source_path_for(lookup.full_virtual_path),
-                read_backend=source_binding_context.step_input_source_backend,
+                read_backend=self.request.execution_plan.read_backend,
             )
             for payload, lookup in zip(
                 raw_slices,

@@ -794,7 +794,7 @@ def test_runtime_adapter_state_has_one_nominal_owner() -> None:
     }
     request = classes["RuntimeAdapterRequest"]
     adapter = classes["CellProfilerRuntimeAdapter"]
-    source_context = classes["SourceBindingRuntimeContext"]
+    assert "SourceBindingRuntimeContext" not in classes
 
     request_fields = {
         node.target.id
@@ -826,7 +826,7 @@ def test_runtime_adapter_state_has_one_nominal_owner() -> None:
         isinstance(node, ast.AnnAssign)
         and isinstance(node.target, ast.Name)
         and node.target.id == "source_binding_context"
-        for node in source_context.body
+        for node in request.body
     )
     assert "FunctionRuntimeScope" not in classes
     for class_name in ("PatternGroupData",):

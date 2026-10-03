@@ -23,7 +23,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceBindingRuntimeContext,
     SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -189,13 +188,6 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             primary_projection.ref.backend_address,
         ),
     )
-    runtime_context = SourceBindingRuntimeContext(
-        step_input_source_paths={
-            virtual_path: source_ref.backend_address
-            for virtual_path, source_ref in projection.source_refs_by_virtual_path.items()
-        },
-        source_metadata_by_path=projection.source_metadata_by_path,
-    )
 
     def request() -> RuntimeAdapterRequest:
         return RuntimeAdapterRequest(
@@ -208,7 +200,6 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
                     enabled=True,
                 ),
             ),
-            source_binding_context=runtime_context,
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
                 component=None,

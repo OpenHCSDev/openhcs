@@ -66,7 +66,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceBindingRuntimeContext,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -532,6 +531,69 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
     assert metadata.source_dtype == "uint16"
     assert metadata.source_image_names == ("OrigBlue",)
 
+
+
+def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
+    tmp_path: Path,
+) -> None:
+    import tifffile
+    from polystore.base import ensure_storage_registry, storage_registry
+    from polystore.filemanager import FileManager
+
+    from openhcs.constants.constants import Backend
+    from openhcs.core.runtime_image_values import image_payload_mask
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+    source_path = tmp_path / "A01_s002_w1_z003_t004.tif"
+    pixels = np.array([[0, 4095]], dtype=np.uint16)
+    mask = np.array([[True, False]])
+    tifffile.imwrite(source_path, pixels, extratags=((281, "H", 1, 4095, False),))
+    ensure_storage_registry()
+    filemanager = FileManager(dict(storage_registry))
+    bindings = CompiledSourceBindingPlan.empty()
+    plan = CompiledStepPlan(
+        step_index=0, step_name="Physical source", step_type="FunctionStep",
+        axis_id="A01", input_dir=tmp_path, output_dir=tmp_path / "outputs",
+        output_plate_root=tmp_path / "outputs", sub_dir="images",
+        read_backend=Backend.DISK.value, write_backend=Backend.MEMORY.value,
+        pipeline_position=0, variable_components=(), source_binding_plan=bindings,
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+    )
+    context = SimpleNamespace(
+        input_dir=tmp_path, filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SourceSchemaFilenameParser(),
+            get_primary_backend=lambda *_args: Backend.DISK.value,
+        ),
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
+    runtime.request = SimpleNamespace(
+        context=context, execution_plan=plan, source_binding_plan=bindings,
+    )
+    payload = ImagePayloadMetadata().payload_with(pixels, mask)
+    lookup = VirtualWorkspacePathLookup.from_paths(source_path.name, str(source_path))
+
+    (loaded,) = runtime._apply_source_image_loading_semantics(
+        (payload,), (lookup,), (), None,
+    )
+
+    metadata = image_payload_metadata(loaded)
+    assert metadata.intensity_scale == 4095.0
+    assert metadata.source_dtype == "uint16"
+    assert metadata.source_path == str(source_path)
+    assert metadata.source_component_metadata["site"] == 2
+    assert metadata.source_component_metadata["z_index"] == 3
+    assert metadata.source_component_metadata["timepoint"] == 4
+    assert image_payload_data(loaded) is pixels
+    assert image_payload_mask(loaded) is mask
+    np.testing.assert_array_equal(image_payload_data(loaded), [[0, 4095]])
+    pixels[0, 0] = 17
+    mask[0, 0] = False
+    assert image_payload_data(loaded)[0, 0] == 17
+    assert not image_payload_mask(loaded)[0, 0]
 
 def test_virtual_workspace_source_filters_use_persisted_candidate_identity(
     tmp_path: Path,
@@ -2281,7 +2343,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         compiled_group=compiled_pattern.default_group,
         component_value="1",
         artifacts=ComponentArtifactPlans(inputs={}, outputs={}),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=2,
     )
@@ -2301,7 +2362,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
     assert tuple(
         binding.alias for binding in request.source_binding_plan.binding_declarations
     ) == ("OrigStain1",)
-    assert request.source_binding_context is scope.source_binding_context
 
     from openhcs.interop.cellprofiler.runtime.module_execution import (
         cellprofiler_runtime_adapter_factory,
@@ -2408,7 +2468,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         compiled_group=compiled_group,
         component_value="1",
         artifacts=ComponentArtifactPlans.from_step_component(execution_plan, "1"),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
@@ -2587,7 +2646,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         compiled_group=compiled_group,
         component_value="1",
         artifacts=ComponentArtifactPlans.from_step_component(execution_plan, "1"),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
@@ -3202,7 +3260,6 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
                 ),
             ),
         ).payload_with(np.zeros((2, 4, 5), dtype=np.float32)),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
     )
 
     assert scope.runtime_plane_count == 2
@@ -3707,7 +3764,6 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         (payload,),
         (lookup,),
         workspace_source_lookups,
-        SourceBindingRuntimeContext.empty(),
         projection,
     )
 
@@ -3879,15 +3935,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         lambda _context: StepOutputManifestStore(),
     )
     monkeypatch.setattr(
-        function_runtime.SourceBindingRuntimeContextRequest,
-        "from_context",
-        classmethod(
-            lambda cls, **_kwargs: SimpleNamespace(
-                runtime_context=SourceBindingRuntimeContext.empty
-            )
-        ),
-    )
-    monkeypatch.setattr(
         function_runtime.PatternGroupRuntime,
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
@@ -3986,20 +4033,10 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
             assert backend == "memory"
             return [producer_payload]
 
-    source_context = SourceBindingRuntimeContext()
     monkeypatch.setattr(
         function_runtime,
         "step_output_manifest",
         lambda _context: producer_manifest,
-    )
-    monkeypatch.setattr(
-        function_runtime.SourceBindingRuntimeContextRequest,
-        "from_context",
-        classmethod(
-            lambda cls, **_kwargs: SimpleNamespace(
-                runtime_context=lambda: source_context
-            )
-        ),
     )
     monkeypatch.setattr(
         function_runtime.PatternGroupRuntime,
@@ -5617,7 +5654,7 @@ def test_producer_admission_rederives_live_storage_aliases_each_epoch(
     assert current_index.record_for_path(record.output_path) is record
 
 
-def test_producer_loader_validates_ambiguity_after_source_context_before_cache(
+def test_producer_loader_validates_ambiguity_before_cache(
     monkeypatch,
 ):
     from openhcs.core.steps import function_runtime
@@ -5648,12 +5685,6 @@ def test_producer_loader_validates_ambiguity_after_source_context_before_cache(
             ),
         ),
     ))
-    events = []
-
-    def source_context():
-        events.append("source_context")
-        return SourceBindingRuntimeContext.empty()
-
     class RejectImageCache:
         def get(self, *_args, **_kwargs):
             pytest.fail("Ambiguous producer admission must precede cached pixels")
@@ -5673,10 +5704,6 @@ def test_producer_loader_validates_ambiguity_after_source_context_before_cache(
     monkeypatch.setattr(runtime, "source_workspace_projection_authority", lambda: SimpleNamespace(
         projection_if_available=lambda: None,
     ))
-    monkeypatch.setattr(function_runtime.SourceBindingRuntimeContextRequest, "from_context", classmethod(
-        lambda cls, **_kwargs: SimpleNamespace(runtime_context=source_context),
-    ))
 
     with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
         runtime._load_input_stack()
-    assert events == ["source_context"]

@@ -130,7 +130,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.steps.function_runtime import (
@@ -339,7 +338,6 @@ class DebugRuntimeFixture:
         artifact_outputs=None,
         runtime_plane_index: int = 0,
         runtime_plane_count: int = 1,
-        source_binding_context: SourceBindingRuntimeContext | None = None,
     ):
         resolved_artifact_inputs = {} if artifact_inputs is None else artifact_inputs
         resolved_artifact_outputs = {} if artifact_outputs is None else artifact_outputs
@@ -358,11 +356,6 @@ class DebugRuntimeFixture:
             artifacts=ComponentArtifactPlans(
                 inputs=resolved_artifact_inputs,
                 outputs=resolved_artifact_outputs,
-            ),
-            source_binding_context=(
-                SourceBindingRuntimeContext.empty()
-                if source_binding_context is None
-                else source_binding_context
             ),
             runtime_plane_index=runtime_plane_index,
             runtime_plane_count=runtime_plane_count,

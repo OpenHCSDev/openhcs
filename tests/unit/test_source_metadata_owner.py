@@ -19,7 +19,6 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -508,9 +507,6 @@ def test_mapping_and_ordered_record_equality_namespaces_stay_separate():
         lambda metadata: VirtualWorkspaceSourceProjection({}, {"plane.tif": metadata}),
         lambda metadata: SourceImageProvenancePlaneRecord(component_metadata=metadata),
         lambda metadata: SourcePlaneIndexedMetadata(metadata, 0, 1),
-        lambda metadata: SourceBindingRuntimeContext(
-            source_metadata_by_path={"plane.tif": metadata}
-        ),
         lambda metadata: SourcePlaneProjection(
             address=OpenHCSPlaneAddress.from_values(
                 well="A01", site="1", channel="1", z_index="1", timepoint="1"

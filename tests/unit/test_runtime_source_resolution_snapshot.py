@@ -17,7 +17,6 @@ from openhcs.core.source_binding_selection import (
 from openhcs.core.source_bindings import (
     MetadataExtractionRule,
     MetadataSource,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_metadata import (
@@ -284,9 +283,6 @@ def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned)
     source_projection = projection({ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}})
     context = snapshot(cache, source_projection, parser)
     cache.normalized_source_metadata(source_projection.source_metadata_by_path)
-    cache.runtime_context_by_request_identity[(1, (), "disk", None)] = (
-        SourceBindingRuntimeContext()
-    )
     assert cache.source_resolution_snapshots
     assert cache.source_metadata_by_mapping_identity
     restored_owner = pickle.loads(

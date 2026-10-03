@@ -14,7 +14,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data, image_payload_metadata
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, SourceBindingRuntimeContext
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.steps import function_runtime
 from openhcs.core.steps.function_runtime import (
@@ -59,16 +59,15 @@ def _fixture():
             ),
         ),
     ).payload_with(np.arange(24, dtype=np.float32).reshape(2, 3, 4))
-    source_context = SourceBindingRuntimeContext.empty()
-    return request, paths, payload, source_context
+    return request, paths, payload
 
 
-def test_complete_loaded_owner_has_one_frozen_eleven_field_contract_and_pickle():
-    request, paths, payload, source_context = _fixture()
-    loaded = PatternGroupData.from_loaded_group(request, paths, payload, source_context)
+def test_complete_loaded_owner_has_one_frozen_ten_field_contract_and_pickle():
+    request, paths, payload = _fixture()
+    loaded = PatternGroupData.from_loaded_group(request, paths, payload)
     expected = (
         "context", "execution_plan", "compiled_group", "component_value", "fixed_component_values",
-        "artifacts", "source_binding_context", "runtime_plane_index", "runtime_plane_count",
+        "artifacts", "runtime_plane_index", "runtime_plane_count",
         "matching_files", "main_data_stack",
     )
     assert PatternGroupData.__bases__ == (PatternGroupExecutionScope,)
@@ -79,7 +78,6 @@ def test_complete_loaded_owner_has_one_frozen_eleven_field_contract_and_pickle()
     assert loaded.context is request.context
     assert loaded.execution_plan is request.execution_plan
     assert loaded.compiled_group is request.compiled_group
-    assert loaded.source_binding_context is source_context
     assert loaded.matching_files is paths
     assert loaded.main_data_stack is payload
     with pytest.raises(FrozenInstanceError):
@@ -100,8 +98,8 @@ def test_complete_loaded_owner_has_one_frozen_eleven_field_contract_and_pickle()
 
 
 def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation():
-    request, paths, payload, source_context = _fixture()
-    loaded = PatternGroupData.from_loaded_group(request, paths, payload, source_context)
+    request, paths, payload = _fixture()
+    loaded = PatternGroupData.from_loaded_group(request, paths, payload)
     assert loaded.runtime_plane_count == 2
     assert loaded.fixed_component_values == ((AllComponents.Z_INDEX, "3"), (AllComponents.TIMEPOINT, "2"))
     paths.append("later-mutation.tif")
@@ -116,11 +114,11 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
 
 
 def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypatch):
-    request, paths, payload, source_context = _fixture()
+    request, paths, payload = _fixture()
     invocation = request.compiled_group.invocations[0]
     group = replace(request.compiled_group, invocations=(invocation, invocation))
     request = replace(request, compiled_group=group)
-    loaded = PatternGroupData.from_loaded_group(request, paths, payload, source_context)
+    loaded = PatternGroupData.from_loaded_group(request, paths, payload)
     first_output = np.ones((2, 3, 4), dtype=np.float32)
     second_output = np.full((2, 3, 4), 2, dtype=np.float32)
     seen = []
@@ -147,18 +145,17 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
 
 
 def test_scope_admission_follows_load_profile_inside_execution_error_boundary(monkeypatch):
-    request, paths, payload, source_context = _fixture()
+    request, paths, payload = _fixture()
     runtime = PatternGroupRuntime(request)
     events = []
     failure = RuntimeError("cohort admission failed")
-    monkeypatch.setattr(runtime, "_load_input_stack", lambda: (events.append("load") or (paths, payload, source_context)))
+    monkeypatch.setattr(runtime, "_load_input_stack", lambda: (events.append("load") or (paths, payload)))
     monkeypatch.setattr(RuntimeProfileSink, "record", lambda label, *_args, **_kwargs: events.append(label))
 
-    def fail_capture(cls, observed_request, observed_paths, observed_payload, observed_context):
+    def fail_capture(cls, observed_request, observed_paths, observed_payload):
         assert observed_request is request
         assert observed_paths is paths
         assert observed_payload is payload
-        assert observed_context is source_context
         events.append("capture")
         raise failure
 
@@ -171,7 +168,7 @@ def test_scope_admission_follows_load_profile_inside_execution_error_boundary(mo
 
 @pytest.mark.parametrize("failure", [RuntimeError("load failed"), NoStepOutputManifestMatch("stale")])
 def test_load_errors_and_stale_skip_precede_capture_and_execution_wrapping(monkeypatch, failure):
-    request, _paths, _payload, _source_context = _fixture()
+    request, _paths, _payload = _fixture()
     runtime = PatternGroupRuntime(request)
     events = []
 
@@ -191,11 +188,11 @@ def test_load_errors_and_stale_skip_precede_capture_and_execution_wrapping(monke
 
 
 def test_empty_chain_is_rejected_after_full_capture_and_load_profile(monkeypatch):
-    request, paths, payload, source_context = _fixture()
+    request, paths, payload = _fixture()
     request = replace(request, compiled_group=replace(request.compiled_group, invocations=()))
     runtime = PatternGroupRuntime(request)
     labels = []
-    monkeypatch.setattr(runtime, "_load_input_stack", lambda: (paths, payload, source_context))
+    monkeypatch.setattr(runtime, "_load_input_stack", lambda: (paths, payload))
     monkeypatch.setattr(RuntimeProfileSink, "record", lambda label, *_args, **_kwargs: labels.append(label))
     with pytest.raises(ValueError, match="has no invocations") as exc:
         runtime.run()
@@ -204,8 +201,8 @@ def test_empty_chain_is_rejected_after_full_capture_and_load_profile(monkeypatch
 
 
 def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoch():
-    request, paths, initial, source_context = _fixture()
-    loaded = PatternGroupData.from_loaded_group(request, paths, initial, source_context)
+    request, paths, initial = _fixture()
+    loaded = PatternGroupData.from_loaded_group(request, paths, initial)
     current = np.ones((2, 3, 4), dtype=np.float32)
     invocation = loaded.compiled_group.invocations[0]
     executor = FunctionCoreExecutor(
@@ -217,7 +214,6 @@ def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoc
     assert adapter.callable_contract is invocation.contract
     assert adapter.source_payload is current
     assert adapter.source_payload is not loaded.main_data_stack
-    assert adapter.source_binding_context is source_context
     assert adapter.plane_projection is executor.plane_projection
     assert adapter.source_load_plan is request.execution_plan.source_load_plan
     assert adapter.variable_components == (VariableComponents.SITE,)
@@ -227,12 +223,11 @@ def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoc
     updated = executor.runtime_adapter_request(current)
     assert updated.axis_scope.axis_id == "B02"
     assert updated.variable_components == (VariableComponents.Z_INDEX,)
-    assert updated.source_binding_context is source_context
 
 
 def test_adapter_tuple_admission_precedes_output_map_validation():
-    request, paths, initial, source_context = _fixture()
-    loaded = PatternGroupData.from_loaded_group(request, paths, initial, source_context)
+    request, paths, initial = _fixture()
+    loaded = PatternGroupData.from_loaded_group(request, paths, initial)
     invocation = loaded.compiled_group.invocations[0]
     executor = FunctionCoreExecutor(
         loaded, invocation, ComponentArtifactPlans(inputs={}, outputs={"invalid": object()}), "1",
@@ -247,11 +242,11 @@ def test_adapter_tuple_admission_precedes_output_map_validation():
 
 
 def test_component_artifact_admission_precedes_source_provenance_capture(monkeypatch):
-    request, paths, initial, source_context = _fixture()
+    request, paths, initial = _fixture()
     request.execution_plan.artifact_inputs = {"invalid": object()}
     monkeypatch.setattr(function_runtime, "image_payload_metadata", lambda _payload: pytest.fail("source projection must follow artifact-plan admission"))
     with pytest.raises(TypeError, match="Component artifact input"):
-        PatternGroupData.from_loaded_group(request, paths, initial, source_context)
+        PatternGroupData.from_loaded_group(request, paths, initial)
 
 
 def _stored_primary_fixture(*, preserves_main_flow=False):
@@ -268,7 +263,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 
-    request, _, payload, source_context = _fixture()
+    request, _, payload = _fixture()
     source = ArtifactSpec.input("Canonical", ImageArtifactType)
     output = ArtifactSpec.output(
         "Processed", SpecialArtifactType if preserves_main_flow else ImageArtifactType,
@@ -319,7 +314,7 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
     request.context.runtime_value_store.replace(
         value, path=input_plan.path, backend=Backend.MEMORY.value,
     )
-    return request, value, source_context
+    return request, value
 
 
 def test_stored_primary_admission_owns_independent_buffer_and_live_primary_binding(monkeypatch):
@@ -328,22 +323,17 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
     from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 
-    request, canonical, source_context = _stored_primary_fixture()
+    request, canonical = _stored_primary_fixture()
     runtime = PatternGroupRuntime(request)
     monkeypatch.setattr(
         runtime, "source_workspace_projection_authority",
         lambda: SimpleNamespace(projection_if_available=lambda: None),
     )
-    monkeypatch.setattr(
-        function_runtime.SourceBindingRuntimeContextRequest, "from_context",
-        classmethod(lambda cls, **kwargs: SimpleNamespace(runtime_context=lambda: source_context)),
-    )
-    paths, admitted, admitted_context = request.load_input_stack(runtime)
+    paths, admitted = request.load_input_stack(runtime)
     assert paths == ["/memory/canonical"]
-    assert admitted_context is source_context
     assert not np.shares_memory(image_payload_data(admitted), image_payload_data(canonical.data))
     assert not np.shares_memory(image_payload_mask(admitted), image_payload_mask(canonical.data))
-    loaded = PatternGroupData.from_loaded_group(request, paths, admitted, admitted_context)
+    loaded = PatternGroupData.from_loaded_group(request, paths, admitted)
     assert loaded.runtime_plane_count == 2
     assert loaded.runtime_plane_index == 7
     assert loaded.fixed_component_values == ((AllComponents.Z_INDEX, "3"), (AllComponents.TIMEPOINT, "2"))
@@ -366,7 +356,7 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     assert bound is admitted
     np.testing.assert_array_equal(image_payload_data(bound), 17)
     np.testing.assert_array_equal(image_payload_data(replacement.data), 31)
-    _, next_admitted, _ = request.load_input_stack(runtime)
+    _, next_admitted = request.load_input_stack(runtime)
     np.testing.assert_array_equal(image_payload_data(next_admitted), 31)
     assert not np.shares_memory(image_payload_data(next_admitted), image_payload_data(replacement.data))
     assert loaded.runtime_plane_count == 2
@@ -376,9 +366,9 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
     from openhcs.constants.constants import Backend
     from openhcs.core.step_dependencies import StepInputDependency
 
-    request, _, _ = _stored_primary_fixture()
+    request, _ = _stored_primary_fixture()
     source = replace(request.execution_plan, step_index=0, step_scope_id="source", write_backend=Backend.MEMORY.value)
-    preserving_request, _, _ = _stored_primary_fixture(preserves_main_flow=True)
+    preserving_request, _ = _stored_primary_fixture(preserves_main_flow=True)
     preserving_pattern = preserving_request.execution_plan.compiled_function_pattern
     preserving = replace(
         source, step_index=1, step_scope_id="preserving", compiled_function_pattern=preserving_pattern,
@@ -473,7 +463,7 @@ def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
 
 
 def test_artifact_loaded_coordinates_keep_producer_authority_over_original_source():
-    request, canonical, source_context = _stored_primary_fixture()
+    request, canonical = _stored_primary_fixture()
     exact_coordinates = (
         (AllComponents.CHANNEL, "ProducedChannel"),
         (AllComponents.Z_INDEX, "3"),
@@ -482,7 +472,7 @@ def test_artifact_loaded_coordinates_keep_producer_authority_over_original_sourc
     request = replace(request, fixed_component_values=exact_coordinates)
     assert image_payload_metadata(canonical.data).source_provenance.with_common_scalar_identity_from_planes().source_component_metadata["channel"] == "1"
     loaded = PatternGroupData.from_loaded_group(
-        request, ["/memory/canonical"], canonical.data, source_context,
+        request, ["/memory/canonical"], canonical.data,
     )
     assert loaded.fixed_component_values == exact_coordinates
     canonical.data.metadata.source_provenance = canonical.data.metadata.source_provenance.with_source_component_metadata({"channel": "9"})
@@ -496,7 +486,7 @@ def test_conversion_and_sequential_filter_use_the_same_transport_admission():
         InputConversionPlan, SequentialRuntimeFilter, SequentialRuntimeFilterPlan,
     )
 
-    request, _, _ = _stored_primary_fixture()
+    request, _ = _stored_primary_fixture()
     plan = request.execution_plan
     assert plan.stored_primary_input_edges_for_group(request.compiled_group, None)
     plan.input_conversion = InputConversionPlan(
@@ -512,7 +502,7 @@ def test_conversion_and_sequential_filter_use_the_same_transport_admission():
 
 
 def test_same_step_primary_producer_is_not_queried_before_its_callable_runs():
-    request, _, _ = _stored_primary_fixture()
+    request, _ = _stored_primary_fixture()
     plan = request.execution_plan
     assert plan.stored_primary_input_edges_for_group(request.compiled_group, None)
     invocation = request.compiled_group.invocations[0]

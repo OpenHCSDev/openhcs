@@ -38,7 +38,6 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_binding_selection import (
     SourceBindingMatchedImageSet,
@@ -91,9 +90,6 @@ class RuntimeAdapterRequest:
         default_factory=dict
     )
     source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty()
-    source_binding_context: SourceBindingRuntimeContext = field(
-        default_factory=SourceBindingRuntimeContext.empty
-    )
     group_key: str | None = None
     axis_scope: RuntimeExecutionAxisScope
     plane_projection: RuntimePlaneProjection = field(

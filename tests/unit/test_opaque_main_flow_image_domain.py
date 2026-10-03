@@ -23,8 +23,7 @@ from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest, Pa
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, SourceBindingRuntimeContext
-from openhcs.core.steps.function_runtime import SourceBindingRuntimeContextRequest
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -220,7 +219,6 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         pattern_group_info="A01_s001_w1_z{iii}_t001.tif",
     ))
     monkeypatch.setattr(consumer, "source_workspace_projection_authority", lambda: SimpleNamespace(projection_if_available=lambda: None))
-    monkeypatch.setattr(SourceBindingRuntimeContextRequest, "from_context", classmethod(lambda cls, **kwargs: SimpleNamespace(runtime_context=SourceBindingRuntimeContext.empty)))
     loaded = consumer._load_input_stack()[1]
     assert image_payload_data(loaded).shape == pixels.shape
     assert image_payload_metadata(loaded).plane_axis is axis
@@ -364,7 +362,6 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     assert tuple(r.output_path for r in records) == tuple(r.output_path for r in old_records)
     assert [r.main_flow_plane_axis for r in records] == [RuntimePlaneAxis.RUNTIME_SLICE, None]
     assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in records), memory_type=MEMORY_TYPE_NUMPY) is None
-    monkeypatch.setattr(SourceBindingRuntimeContextRequest, "from_context", classmethod(lambda cls, **kwargs: SimpleNamespace(runtime_context=SourceBindingRuntimeContext.empty)))
 
     def consumer_for(compiled):
         consumer_plan = replace(plan, step_index=1, step_scope_id="mixed-consumer", input_dir=tmp_path,

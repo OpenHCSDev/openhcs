@@ -19,7 +19,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, SourceBindingRuntimeContext
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
@@ -72,7 +72,6 @@ def _executor():
         execution_plan=plan,
         compiled_group=replace(pattern.default_group, invocations=(invocation,)),
         artifacts=ComponentArtifactPlans(inputs={}, outputs={}),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )

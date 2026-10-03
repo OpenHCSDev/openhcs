@@ -8,7 +8,6 @@ from types import MappingProxyType
 from typing import Any, Hashable, TYPE_CHECKING
 
 from openhcs.core.source_bindings import (
-    SourceBindingRuntimeContext,
     SourceBindingRuntimeMetadataNormalizer,
     MetadataExtractionRule,
 )
@@ -94,10 +93,6 @@ class RuntimeSourceBindingContextCache:
         int,
         Mapping[str, SourceMetadataMapping],
     ] = field(default_factory=dict)
-    runtime_context_by_request_identity: dict[
-        tuple[int, tuple[str, ...], object, int | None],
-        SourceBindingRuntimeContext,
-    ] = field(default_factory=dict)
     runtime_universe_state_by_request_identity: dict[
         tuple[int, tuple[str, ...], object, int | None],
         "SourceUniverseRuntimeState",
@@ -145,24 +140,6 @@ class RuntimeSourceBindingContextCache:
             self.source_metadata_by_mapping_identity[cache_key] = cached
         return cached
 
-    def runtime_context(
-        self,
-        *,
-        plan: Any,
-        matching_files: tuple[str, ...],
-        source_backend: object,
-        source_projection: object | None,
-    ) -> SourceBindingRuntimeContext | None:
-        """Return a cached runtime context for one immutable request identity."""
-        return self.runtime_context_by_request_identity.get(
-            self.runtime_context_key(
-                plan=plan,
-                matching_files=matching_files,
-                source_backend=source_backend,
-                source_projection=source_projection,
-            )
-        )
-
     def runtime_universe_state(
         self,
         *,
@@ -173,7 +150,7 @@ class RuntimeSourceBindingContextCache:
     ) -> "SourceUniverseRuntimeState | None":
         """Return cached source-universe state for one request identity."""
         return self.runtime_universe_state_by_request_identity.get(
-            self.runtime_context_key(
+            self.runtime_universe_state_key(
                 plan=plan,
                 matching_files=matching_files,
                 source_backend=source_backend,
@@ -192,7 +169,7 @@ class RuntimeSourceBindingContextCache:
     ) -> "SourceUniverseRuntimeState":
         """Cache source-universe state for one request identity."""
         self.runtime_universe_state_by_request_identity[
-            self.runtime_context_key(
+            self.runtime_universe_state_key(
                 plan=plan,
                 matching_files=matching_files,
                 source_backend=source_backend,
@@ -201,35 +178,15 @@ class RuntimeSourceBindingContextCache:
         ] = runtime_state
         return runtime_state
 
-    def store_runtime_context(
-        self,
-        runtime_context: SourceBindingRuntimeContext,
-        *,
-        plan: Any,
-        matching_files: tuple[str, ...],
-        source_backend: object,
-        source_projection: object | None,
-    ) -> SourceBindingRuntimeContext:
-        """Cache a runtime context for one immutable request identity."""
-        self.runtime_context_by_request_identity[
-            self.runtime_context_key(
-                plan=plan,
-                matching_files=matching_files,
-                source_backend=source_backend,
-                source_projection=source_projection,
-            )
-        ] = runtime_context
-        return runtime_context
-
     @staticmethod
-    def runtime_context_key(
+    def runtime_universe_state_key(
         *,
         plan: Any,
         matching_files: tuple[str, ...],
         source_backend: object,
         source_projection: object | None,
     ) -> tuple[int, tuple[str, ...], object, int | None]:
-        """Return the process-local identity for one source runtime context."""
+        """Return the process-local identity for one source-universe request."""
         return (
             id(plan),
             tuple(matching_files),

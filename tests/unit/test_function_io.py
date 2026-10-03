@@ -469,8 +469,8 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
         universe,
     )
 
-    assert state.pipeline_source_candidate_files == universe.files
-    assert not set(state.pipeline_source_candidate_files).intersection(
+    assert state.require_load_universe().files == universe.files
+    assert not set(state.require_load_universe().files).intersection(
         str(source_path) for source_path in source_paths
     )
 

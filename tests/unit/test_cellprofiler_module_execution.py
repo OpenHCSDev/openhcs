@@ -170,7 +170,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
@@ -4008,7 +4007,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
             tuple[ArtifactSpec, ArtifactOutputPlan], ...
         ] = (),
         source_bindings: tuple[NamedSourceBinding, ...] = (),
-        ordered_pipeline_image_paths: tuple[str, ...] = (),
         variable_components: tuple[VariableComponents, ...] = (),
         plane_projection: RuntimePlaneProjection = RuntimePlaneProjection.stack(),
         axis_scope: RuntimeExecutionAxisScope | None = None,
@@ -4023,11 +4021,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 value=None,
             )
         source_binding_plan = CompiledSourceBindingPlan(bindings=source_bindings)
-        source_binding_context = SourceBindingRuntimeContext(
-            step_input_files=ordered_pipeline_image_paths,
-            current_step_input_files=ordered_pipeline_image_paths,
-            pipeline_input_files=ordered_pipeline_image_paths,
-        )
         processing_context = SimpleNamespace(
             microscope_handler=SimpleNamespace(
                 parser=SimpleNamespace(semantic_identity=lambda: ()),
@@ -4050,7 +4043,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 artifact_inputs={edge.key: edge for edge in indexed_input_edges},
                 artifact_output_bindings=artifact_output_bindings,
                 source_binding_plan=source_binding_plan,
-                source_binding_context=source_binding_context,
                 microscope_handler=processing_context.microscope_handler,
                 variable_components=variable_components,
                 plane_projection=plane_projection,
@@ -4091,7 +4083,6 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                         table,
                     )
                 )
-        self.ordered_pipeline_image_paths = ordered_pipeline_image_paths
         self.measurements: list[MeasurementTable] = []
         self.objects: list[tuple[str, np.ndarray, dict[str, object]]] = []
         self.spatial_grids: dict[str, SpatialGrid] = {}

@@ -23,7 +23,6 @@ from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import runtime_context_parameter
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
-from openhcs.core.source_bindings import SourceBindingRuntimeContext
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
@@ -138,7 +137,6 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
         ),
         compiled_group=pattern.default_group,
         artifacts=artifacts,
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )

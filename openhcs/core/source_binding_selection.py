@@ -24,7 +24,6 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceBindingRuntimeContext,
     SourceSetRole,
 )
 from openhcs.core.source_image_provenance import (
@@ -205,23 +204,6 @@ class SourcePatternResolutionContext:
             parser=parser,
             source_paths_by_virtual_path=source_paths_by_virtual_path,
             source_metadata_by_path=metadata_by_path,
-            metadata_rules=metadata_rules,
-        )
-
-    @classmethod
-    def from_runtime_context(
-        cls,
-        *,
-        parser: "FilenameParser",
-        runtime_context: SourceBindingRuntimeContext,
-        metadata_rules: tuple[MetadataExtractionRule, ...] = (),
-    ) -> "SourcePatternResolutionContext":
-        """Build the generic selector context from compiled runtime source state."""
-
-        return cls.from_sources(
-            parser=parser,
-            source_paths_by_virtual_path=runtime_context.step_input_source_paths,
-            source_metadata_by_path=runtime_context.source_metadata_by_path,
             metadata_rules=metadata_rules,
         )
 
@@ -1538,8 +1520,6 @@ class SourceFileUniverse:
 class SourceUniverseRuntimeState:
     """Resolved source universes assembled from the registered request family."""
 
-    step_input_universe: SourceFileUniverse | None = None
-    pipeline_start_universe: SourceFileUniverse | None = None
     load_universe: SourceFileUniverse | None = None
     step_input_source_paths: Mapping[str, str] = field(
         default_factory=lambda: MappingProxyType({})
@@ -1547,7 +1527,6 @@ class SourceUniverseRuntimeState:
     source_metadata_by_path: Mapping[str, SourceMetadataMapping] = field(
         default_factory=lambda: MappingProxyType({})
     )
-    pipeline_source_candidate_files: tuple[str, ...] = ()
 
     def with_source_metadata(
         self,
@@ -1566,49 +1545,10 @@ class SourceUniverseRuntimeState:
         merged.update(source_metadata_by_path)
         return replace(self, source_metadata_by_path=MappingProxyType(merged))
 
-    def require_step_input_universe(self) -> SourceFileUniverse:
-        if self.step_input_universe is None:
-            raise RuntimeError(
-                "Source universe runtime state has no step-input universe."
-            )
-        return self.step_input_universe
-
-    def require_pipeline_start_universe(self) -> SourceFileUniverse:
-        if self.pipeline_start_universe is None:
-            raise RuntimeError(
-                "Source universe runtime state has no pipeline-start universe."
-            )
-        return self.pipeline_start_universe
-
     def require_load_universe(self) -> SourceFileUniverse:
         if self.load_universe is None:
             raise RuntimeError("Source universe runtime state has no load universe.")
         return self.load_universe
-
-    def runtime_context(
-        self,
-        request: "SourceBindingRuntimeContextRequest",
-        source_metadata_by_path: Mapping[str, SourceMetadataMapping],
-    ) -> SourceBindingRuntimeContext:
-        """Build the runtime context from source-universe contributions."""
-        step_input_universe = self.require_step_input_universe()
-        pipeline_source_universe = self.require_pipeline_start_universe()
-        return SourceBindingRuntimeContext(
-            step_input_files=step_input_universe.files,
-            current_step_input_files=request.current_step_input_files(
-                step_input_universe
-            ),
-            current_image_files=request.matching_files,
-            step_input_dir=str(request.plan.input_dir),
-            step_input_source_backend=request.plan.read_backend,
-            step_input_storage_backend=Backend.MEMORY.value,
-            step_input_source_paths=self.step_input_source_paths,
-            source_metadata_by_path=source_metadata_by_path,
-            source_metadata_is_normalized=True,
-            pipeline_input_files=pipeline_source_universe.files,
-            pipeline_source_candidate_files=self.pipeline_source_candidate_files,
-            pipeline_input_backend=pipeline_source_universe.backend.value,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1626,6 +1566,54 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     source_projection: VirtualWorkspaceSourceProjection | None
 
     @classmethod
+    def from_context(
+        cls,
+        *,
+        context: "ProcessingContext",
+        plan: "CompiledStepPlan",
+        matching_files: Sequence[str],
+        source_projection: VirtualWorkspaceSourceProjection | None,
+    ) -> "SourceUniverseRequest":
+        if not isinstance(plan, CompiledStepPlan):
+            raise TypeError(
+                "SourceUniverseRequest requires CompiledStepPlan, got "
+                f"{type(plan).__name__}."
+            )
+        plan.require_function_execution_ready()
+        source_backend = Backend(
+            context.microscope_handler.get_primary_backend(
+                context.input_dir,
+                context.filemanager,
+            )
+        )
+        return cls(
+            context=context,
+            plan=plan,
+            matching_files=tuple(matching_files),
+            source_backend=source_backend,
+            source_projection=source_projection,
+        )
+
+    def runtime_universe_state(self) -> SourceUniverseRuntimeState:
+        """Return cached source-universe state for this request."""
+        cache = self.context.runtime_source_binding_context_cache
+        cached = cache.runtime_universe_state(
+            plan=self.plan,
+            matching_files=self.matching_files,
+            source_backend=self.source_backend,
+            source_projection=self.source_projection,
+        )
+        if cached is not None:
+            return cached
+        return cache.store_runtime_universe_state(
+            SourceUniverseRequest.runtime_state(self),
+            plan=self.plan,
+            matching_files=self.matching_files,
+            source_backend=self.source_backend,
+            source_projection=self.source_projection,
+        )
+
+    @classmethod
     def registered_request_types(cls) -> tuple[type["SourceUniverseRequest"], ...]:
         """Return registered concrete runtime plan request classes."""
         request_types: list[type[SourceUniverseRequest]] = []
@@ -1635,11 +1623,11 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         return tuple(request_types)
 
     @classmethod
-    def from_runtime_context(
+    def from_request(
         cls,
-        request: "SourceBindingRuntimeContextRequest",
+        request: "SourceUniverseRequest",
     ) -> "SourceUniverseRequest":
-        """Build this registered request type from the runtime context request."""
+        """Build a registered source-universe role from its parent request."""
         return cls(
             context=request.context,
             plan=request.plan,
@@ -1651,12 +1639,12 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def runtime_state(
         cls,
-        request: "SourceBindingRuntimeContextRequest",
+        request: "SourceUniverseRequest",
     ) -> SourceUniverseRuntimeState:
         """Resolve every registered source-universe request into runtime state."""
         state = SourceUniverseRuntimeState()
         for request_type in cls.registered_request_types():
-            universe_request = request_type.from_runtime_context(request)
+            universe_request = request_type.from_request(request)
             universe = SourceUniverseStrategy.universe(universe_request)
             state = universe_request.contribute_runtime_state(state, universe)
         return state
@@ -1759,7 +1747,6 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
     ) -> SourceUniverseRuntimeState:
         state = replace(
             state,
-            step_input_universe=universe,
             load_universe=state.load_universe or universe,
             step_input_source_paths=self.step_input_source_paths,
         )
@@ -1780,8 +1767,6 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
         load_universe = self.load_universe()
         state = replace(
             state,
-            pipeline_start_universe=universe,
-            pipeline_source_candidate_files=universe.files,
             load_universe=(
                 state.load_universe if load_universe is None else load_universe
             ),
@@ -2058,96 +2043,3 @@ class PhysicalPipelineStartSourceUniverseStrategy(PipelineStartSourceUniverseStr
             ),
             backend=universe_backend,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class SourceBindingRuntimeContextRequest:
-    """Build the source-binding runtime context from one resolved source universe."""
-
-    context: "ProcessingContext"
-    plan: "CompiledStepPlan"
-    matching_files: tuple[str, ...]
-    source_backend: Backend
-    source_projection: VirtualWorkspaceSourceProjection | None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.plan, CompiledStepPlan):
-            raise TypeError(
-                "SourceBindingRuntimeContextRequest requires CompiledStepPlan, got "
-                f"{type(self.plan).__name__}."
-            )
-        self.plan.require_function_execution_ready()
-
-    @classmethod
-    def from_context(
-        cls,
-        *,
-        context: "ProcessingContext",
-        plan: "CompiledStepPlan",
-        matching_files: Sequence[str],
-        source_projection: VirtualWorkspaceSourceProjection | None,
-    ) -> "SourceBindingRuntimeContextRequest":
-        source_backend = Backend(
-            context.microscope_handler.get_primary_backend(
-                context.input_dir,
-                context.filemanager,
-            )
-        )
-        return cls(
-            context=context,
-            plan=plan,
-            matching_files=tuple(matching_files),
-            source_backend=source_backend,
-            source_projection=source_projection,
-        )
-
-    def runtime_context(self) -> SourceBindingRuntimeContext:
-        cache = self.context.runtime_source_binding_context_cache
-        cached = cache.runtime_context(
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-        if cached is not None:
-            return cached
-        universe_state = self.runtime_universe_state()
-        source_metadata_by_path = cache.normalized_source_metadata(
-            universe_state.source_metadata_by_path
-        )
-        return cache.store_runtime_context(
-            universe_state.runtime_context(
-                self,
-                source_metadata_by_path,
-            ),
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-
-    def runtime_universe_state(self) -> SourceUniverseRuntimeState:
-        """Return cached source-universe state for this request."""
-        cache = self.context.runtime_source_binding_context_cache
-        cached = cache.runtime_universe_state(
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-        if cached is not None:
-            return cached
-        return cache.store_runtime_universe_state(
-            SourceUniverseRequest.runtime_state(self),
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-
-    def current_step_input_files(
-        self,
-        step_input_universe: SourceFileUniverse,
-    ) -> tuple[str, ...]:
-        del step_input_universe
-        return self.matching_files

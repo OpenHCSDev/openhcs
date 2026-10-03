@@ -123,7 +123,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceBindingOrigin,
-    SourceBindingRuntimeContext,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -650,7 +649,6 @@ def _adapter(
     source_bindings=StepSourceBindingsConfig(
         bindings=(NamedSourceBinding(alias=DNA_IMAGE),)
     ),
-    source_binding_context=SourceBindingRuntimeContext.empty(),
     processing_context=None,
     plane_projection=RuntimePlaneProjection.stack(1),
     callable_contract=None,
@@ -661,7 +659,6 @@ def _adapter(
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_output_bindings=output_bindings,
         source_binding_plan=_compiled_source_binding_plan(source_bindings),
-        source_binding_context=source_binding_context,
         plane_projection=plane_projection,
         callable_contract=callable_contract,
         microscope_handler=(
@@ -692,7 +689,6 @@ def _pipeline_start_contains_binding(alias):
 
 def _source_bound_image_adapter(output_bindings, images):
     filemanager = FileManagerStub()
-    paths = tuple(f"/src/{alias}.tif" for alias in images)
     for alias, image in images.items():
         filemanager.saved[("memory", f"/src/{alias}.tif")] = image
     context = ContextStub(filemanager)
@@ -707,12 +703,6 @@ def _source_bound_image_adapter(output_bindings, images):
                     _pipeline_start_contains_binding(alias) for alias in images
                 )
             )
-        ),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=paths,
-            step_input_dir="/src",
-            pipeline_input_files=paths,
-            pipeline_input_backend="memory",
         ),
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
@@ -1215,11 +1205,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
         "/src/A01_s001_w1_z001_t001.tif",
         "/src/A01_s002_w1_z001_t001.tif",
     )
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        step_input_dir="/src",
-        pipeline_input_files=source_paths,
-    )
     filemanager = FileManagerStub()
     processing_context = ContextStub(filemanager)
 
@@ -1231,7 +1216,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
             runtime_value_store=store,
             axis_scope=runtime_axis_scope(AXIS_ID),
             artifact_output_bindings=output_bindings,
-            source_binding_context=source_binding_context,
             group_key=group_key,
             microscope_handler=(
                 processing_context.microscope_handler
@@ -1281,7 +1265,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
             )
         },
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=source_binding_context,
         microscope_handler=(
             processing_context.microscope_handler
             if processing_context is not None
@@ -1563,9 +1546,6 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=("/src/A01_s003_w1.tif",),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -1627,11 +1607,6 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
             ).payload_with(np.full((2, 2), value, dtype=np.float32), None),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        current_step_input_files=source_paths,
-        pipeline_input_files=source_paths,
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -1663,7 +1638,6 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID, "well", AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1760,12 +1734,6 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=source_paths,
-            current_step_input_files=(source_paths[0],),
-            pipeline_input_files=source_paths,
-            source_metadata_by_path=source_metadata_by_path,
-        ),
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1832,11 +1800,6 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
             ).payload_with(np.full((2, 2), value, dtype=np.float32), None),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        current_step_input_files=source_paths,
-        pipeline_input_files=source_paths,
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -1862,7 +1825,6 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         axis_scope=runtime_axis_scope(AXIS_ID),
         group_key="A01_s{iii}_w1_z001_t001.tif",
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1897,7 +1859,6 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
     filemanager = FileManagerStub()
     output_name = "MembMasked"
     source_path = "/plate/Images/3d_monolayer_xy1_ch3.tif"
-    mask_path = "/plate/Images/3d_monolayer_xy1_ch1.tif"
     output_plan = ArtifactOutputPlan(
         name=output_name,
         path=f"/memory/{output_name}.pkl",
@@ -1923,15 +1884,6 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
         group_key="3",
         artifact_output_bindings=(
             _output_binding(output_name, ImageArtifactType, plan=output_plan),
-        ),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=(mask_path,),
-            current_step_input_files=(mask_path,),
-            pipeline_input_files=(
-                "/plate/Images/3d_monolayer_xy1_ch0.tif",
-                mask_path,
-                source_path,
-            ),
         ),
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
@@ -2042,11 +1994,6 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
         group_key="2",
         plane_projection=RuntimePlaneProjection.selected(1, 2),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            source_metadata_by_path=dict(
-                zip(source_paths, source_metadata, strict=True)
-            ),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -2146,11 +2093,6 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
         axis_scope=runtime_axis_scope(AXIS_ID, "site", "2"),
         plane_projection=RuntimePlaneProjection.selected(1, 2),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            source_metadata_by_path=dict(
-                zip(source_paths, source_metadata, strict=True)
-            ),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -2725,9 +2667,6 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=("/src/A01_s{iii}_w1.tif",),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -3414,22 +3353,6 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
             ),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=(
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-        pipeline_input_files=(
-            "/plate/Images/A01_s001_w1_z001_t001.tif",
-            "/plate/Images/A01_s001_w2_z001_t001.tif",
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-        current_step_input_files=(
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -3459,7 +3382,6 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -4382,14 +4304,6 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
             )
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=("/plate/Images/A01_s002_w1_z001_t001.tif",),
-        pipeline_input_files=(
-            "/plate/Images/A01_s001_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-        ),
-        current_step_input_files=("/plate/Images/A01_s002_w1_z001_t001.tif",),
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -4419,7 +4333,6 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),

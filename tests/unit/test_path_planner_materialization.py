@@ -101,7 +101,6 @@ from openhcs.core.source_bindings import (
     SourceBindingOrigin,
     SourceBindingsConfig,
     SourceProjectionRole,
-    SourceBindingRuntimeContext,
     StepSourceBindingsConfig,
 )
 from openhcs.core.step_dependencies import StepInputDependency
@@ -152,7 +151,6 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         compiled_group=compiled.default_group,
         component_value=None,
         artifacts=ComponentArtifactPlans.from_step_component(plan, None),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )

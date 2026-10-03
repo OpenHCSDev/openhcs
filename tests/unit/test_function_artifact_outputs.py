@@ -59,7 +59,6 @@ from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactS
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.source_metadata import (
@@ -278,7 +277,6 @@ def _execute_function_core(request: CoreExecutionRequest):
             execution_plan,
             component_value,
         ),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=request.runtime_plane_count,
     )
@@ -2899,7 +2897,6 @@ def _declared_source_executor(
         group_data=SimpleNamespace(
             context=ContextStub(),
             source_binding_plan=source_binding_plan,
-            source_binding_context=SourceBindingRuntimeContext.empty(),
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
                 component=None,
