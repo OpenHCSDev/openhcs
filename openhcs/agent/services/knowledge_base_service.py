@@ -15,9 +15,11 @@ from typing import ClassVar, cast
 from openhcs.agent.knowledge_manifest import (
     DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
     KnowledgeBaseManifestField,
+    comparison_manifest_type_for_root,
     default_repo_root,
     python_source_root,
 )
+from openhcs.agent.knowledge_manifest_schema import ComparisonManifestSnapshot
 from openhcs.agent.dto.common import (
     AgentError,
     AgentWarning,
@@ -62,123 +64,29 @@ class KnowledgeBaseDocumentSpec:
 
 
 @dataclass(frozen=True, slots=True)
-class _ComparisonManifestPathResolver:
-    """Product-local resolver for portable comparison-manifest paths."""
-
-    roots: Mapping[str, Path]
-
-    @classmethod
-    def from_payload(
-        cls,
-        payload: Mapping[str, JsonValue],
-        *,
-        cellprofiler_examples_root: str | None,
-        dataset_cache_root: str | None,
-    ) -> "_ComparisonManifestPathResolver":
-        raw_roots = payload.get("path_roots")
-        if raw_roots is None:
-            raw_roots = {}
-        if not isinstance(raw_roots, Mapping):
-            raise ValueError("Comparison manifest path_roots must be an object.")
-        return cls(
-            {
-                str(name): _comparison_manifest_root_path(
-                    str(name),
-                    raw_root,
-                    cellprofiler_examples_root=cellprofiler_examples_root,
-                    dataset_cache_root=dataset_cache_root,
-                )
-                for name, raw_root in raw_roots.items()
-            }
-        )
-
-    def resolve(self, raw_case: Mapping[str, JsonValue], path_key: str) -> Path:
-        root_key = raw_case.get(f"{path_key}_root")
-        raw_path = raw_case.get(path_key)
-        if raw_path is None:
-            raise ValueError(f"Comparison manifest case missing path {path_key!r}.")
-        path = Path(os.path.expandvars(str(raw_path))).expanduser()
-        if root_key is None:
-            return path
-        return self.roots[str(root_key)] / path
-
-
-@dataclass(frozen=True, slots=True)
-class _ComparisonManifestSnapshot:
-    """Minimal comparison-manifest surface used by the knowledge base."""
-
-    payload: Mapping[str, JsonValue]
-    path_resolver: _ComparisonManifestPathResolver
-
-    @classmethod
-    def load(
-        cls,
-        path: Path,
-        *,
-        cellprofiler_examples_root: str | None,
-        dataset_cache_root: str | None,
-    ) -> "_ComparisonManifestSnapshot":
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, Mapping):
-            raise ValueError("Comparison manifest must be a JSON object.")
-        return cls(
-            payload=payload,
-            path_resolver=_ComparisonManifestPathResolver.from_payload(
-                payload,
-                cellprofiler_examples_root=cellprofiler_examples_root,
-                dataset_cache_root=dataset_cache_root,
-            ),
-        )
-
-
-def _comparison_manifest_root_path(
-    name: str,
-    raw_root: JsonValue,
-    *,
-    cellprofiler_examples_root: str | None,
-    dataset_cache_root: str | None,
-) -> Path:
-    if isinstance(raw_root, str):
-        return Path(os.path.expandvars(raw_root)).expanduser()
-    if not isinstance(raw_root, Mapping):
-        raise ValueError(f"Comparison manifest path root {name!r} is invalid.")
-
-    raw_env = raw_root.get("env")
-    if isinstance(raw_env, str):
-        env_value = os.environ.get(raw_env)
-        if env_value is not None:
-            return Path(os.path.expandvars(env_value)).expanduser()
-
-    raw_path = raw_root.get("path")
-    if isinstance(raw_path, str):
-        return Path(os.path.expandvars(raw_path)).expanduser()
-
-    raw_default_kind = raw_root.get("default_kind")
-    if raw_default_kind == "cellprofiler_examples":
-        return (
-            Path(cellprofiler_examples_root).expanduser()
-            if cellprofiler_examples_root is not None
-            else Path.home() / ".cache" / "openhcs" / "cellprofiler_examples"
-        )
-    if raw_default_kind == "benchmark_dataset_cache":
-        return (
-            Path(dataset_cache_root).expanduser()
-            if dataset_cache_root is not None
-            else Path.home() / ".cache" / "openhcs" / "benchmark_datasets"
-        )
-
-    raw_default = raw_root.get("default")
-    if isinstance(raw_default, str):
-        return Path(os.path.expandvars(raw_default)).expanduser()
-
-    raise ValueError(f"Comparison manifest path root {name!r} has no path.")
-
-
-@dataclass(frozen=True, slots=True)
 class _Official30CaseModuleInventory:
     case_name: str
     cppipe_path: Path | None
     modules: tuple[str, ...]
+
+    @classmethod
+    @lru_cache(maxsize=64)
+    def from_source(
+        cls, case_name: str, cppipe_path: Path, source_mtime_ns: int
+    ) -> "_Official30CaseModuleInventory":
+        """Parse the declared source; cache identity includes its file revision."""
+        del source_mtime_ns
+        from openhcs.interop.cellprofiler.parser import CPPipeParser
+
+        try:
+            modules = tuple(
+                module.name
+                for module in CPPipeParser(cppipe_path).parse()
+                if module.enabled
+            )
+        except (OSError, ValueError, UnicodeDecodeError):
+            modules = ()
+        return cls(case_name=case_name, cppipe_path=cppipe_path, modules=modules)
 
     @property
     def unique_modules(self) -> tuple[str, ...]:
@@ -320,7 +228,7 @@ class _ParsedDocument:
     lines: tuple[str, ...]
     sections: tuple[KnowledgeBaseSectionSummary, ...]
     official30_source_cases: tuple[tuple[str, Mapping[str, JsonValue]], ...] = ()
-    official30_manifest: Mapping[str, JsonValue] | None = None
+    official30_manifest: ComparisonManifestSnapshot | None = None
 
     def source_projection(
         self, repo_root: Path
@@ -703,75 +611,32 @@ class KnowledgeBaseService:
         return tuple(projected_lines)
 
     @staticmethod
-    def _official30_recipe_manifest(text: str) -> Mapping[str, JsonValue] | None:
-        try:
-            manifest = json.loads(text)
-        except json.JSONDecodeError:
-            return None
-        if not isinstance(manifest, Mapping):
-            return None
-        if not isinstance(manifest.get("cases"), list):
-            return None
-        return cast(Mapping[str, JsonValue], manifest)
-
-    @staticmethod
-    def _official30_cases(
-        manifest: Mapping[str, JsonValue],
-    ) -> tuple[Mapping[str, JsonValue], ...]:
-        raw_cases = manifest.get("cases")
-        if not isinstance(raw_cases, list):
-            raise ValueError("Official30 manifest cases must be a list.")
-        cases: list[Mapping[str, JsonValue]] = []
-        case_names: set[str] = set()
-        for index, raw_case in enumerate(raw_cases):
-            if not isinstance(raw_case, Mapping):
-                raise ValueError(f"Official30 manifest case {index} must be an object.")
-            case_name = KnowledgeBaseService._official30_case_name(raw_case)
-            if case_name in case_names:
-                raise ValueError(
-                    f"Official30 manifest case name {case_name!r} is duplicated."
-                )
-            case_names.add(case_name)
-            cases.append(cast(Mapping[str, JsonValue], raw_case))
-        return tuple(cases)
-
-    @staticmethod
     def _official30_case_name(case: Mapping[str, JsonValue]) -> str:
-        case_name = case.get("name")
-        if (
-            not isinstance(case_name, str)
-            or not case_name
-            or case_name.strip() != case_name
-        ):
-            raise ValueError(
-                "Official30 manifest cases require a nonempty, trimmed string name."
-            )
-        return case_name
+        # Names are validated once by the source manifest boundary.
+        return cast(str, case["name"])
 
     @staticmethod
     def _official30_recipe_projection(
         spec: KnowledgeBaseDocumentSpec,
-        manifest: Mapping[str, JsonValue],
-        *,
-        repo_root: Path,
-        source_path: Path,
+        manifest: ComparisonManifestSnapshot,
     ) -> _Official30RecipeProjection:
-        cases = KnowledgeBaseService._official30_cases(manifest)
+        cases = cast(tuple[Mapping[str, JsonValue], ...], manifest.cases)
+        payload = cast(Mapping[str, JsonValue], manifest.payload)
 
         recipe_lines = [
             "Official30 Benchmark Pipeline Recipes",
             "=" * len("Official30 Benchmark Pipeline Recipes"),
             "",
             f"Source manifest: {spec.document.source_path}",
-            f"Manifest version: {manifest.get('manifest_version', '<unknown>')}",
+            f"Manifest version: {payload.get('manifest_version', '<unknown>')}",
             f"Recipe count: {len(cases)}",
             KnowledgeBaseService._official30_mapping_line(
                 "Default pipeline params",
-                manifest.get("default_pipeline_params"),
+                payload.get("default_pipeline_params"),
             ),
             KnowledgeBaseService._official30_mapping_line(
                 "Path roots",
-                manifest.get("path_roots"),
+                payload.get("path_roots"),
             ),
             "",
             "Use the case section id with ``knowledge-document "
@@ -783,8 +648,7 @@ class KnowledgeBaseService:
             "",
         ]
         inventories = KnowledgeBaseService._official30_module_inventories(
-            source_path=source_path,
-            repo_root=repo_root,
+            manifest=manifest,
             cases=cases,
         )
         for index, case in enumerate(cases, 1):
@@ -883,21 +747,14 @@ class KnowledgeBaseService:
     @staticmethod
     def _official30_source_section_lines(
         *,
-        manifest: Mapping[str, JsonValue],
+        manifest: ComparisonManifestSnapshot,
         case: Mapping[str, JsonValue],
     ) -> tuple[tuple[str, ...], AgentError | None]:
         case_name = KnowledgeBaseService._official30_case_name(case)
         title = KnowledgeBaseService._official30_source_title(case_name)
         try:
-            path_resolver = _ComparisonManifestPathResolver.from_payload(
-                manifest,
-                cellprofiler_examples_root=os.environ.get("CELLPROFILER_EXAMPLES_ROOT"),
-                dataset_cache_root=os.environ.get(
-                    "OPENHCS_BENCHMARK_DATASET_CACHE_ROOT"
-                ),
-            )
-            cppipe_path = path_resolver.resolve(case, "cppipe_path").resolve()
-            dataset_path = path_resolver.resolve(case, "dataset_path").resolve()
+            cppipe_path = manifest.native_source_path(case)
+            dataset_path = manifest.path_resolver.resolve(case, "dataset_path")
         except (KeyError, OSError, TypeError, ValueError) as exc:
             return (), AgentError(
                 code=KnowledgeBaseIssueCode.OFFICIAL30_SOURCE_MISSING.value,
@@ -1047,27 +904,30 @@ class KnowledgeBaseService:
     @staticmethod
     def _official30_module_inventories(
         *,
-        source_path: Path,
-        repo_root: Path,
+        manifest: ComparisonManifestSnapshot,
         cases: tuple[Mapping[str, JsonValue], ...],
     ) -> tuple[_Official30CaseModuleInventory, ...]:
-        try:
-            return _official30_module_inventories_cached(
-                str(source_path),
-                source_path.stat().st_mtime_ns,
-                str(repo_root),
-                os.environ.get("CELLPROFILER_EXAMPLES_ROOT"),
-                os.environ.get("OPENHCS_BENCHMARK_DATASET_CACHE_ROOT"),
-            )
-        except (ImportError, OSError, TypeError, ValueError, UnicodeDecodeError):
-            return tuple(
-                _Official30CaseModuleInventory(
-                    case_name=KnowledgeBaseService._official30_case_name(case),
-                    cppipe_path=None,
-                    modules=(),
+        inventories = []
+        for case in cases:
+            case_name = KnowledgeBaseService._official30_case_name(case)
+            try:
+                path = manifest.native_source_path(case)
+                inventory = _Official30CaseModuleInventory.from_source(
+                    case_name, path, path.stat().st_mtime_ns
                 )
-                for case in cases
-            )
+            except (
+                ImportError,
+                KeyError,
+                OSError,
+                TypeError,
+                ValueError,
+                UnicodeDecodeError,
+            ):
+                inventory = _Official30CaseModuleInventory(
+                    case_name=case_name, cppipe_path=None, modules=()
+                )
+            inventories.append(inventory)
+        return tuple(inventories)
 
     def search(self, request: KnowledgeBaseSearchRequest) -> KnowledgeBaseSearchResult:
         query = KnowledgeBaseSearchQuery.from_text(request.query)
@@ -1127,12 +987,13 @@ class KnowledgeBaseService:
                 title_score, title_terms = query.score_text(section.title)
                 text_score, text_terms = query.score_text(section_text)
                 score = title_score + text_score
-                if self._official30_recipe_manifest(
-                    parsed.text
-                ) is not None and not self._official30_query_is_specific_to_case(
-                    query,
-                    section,
-                    section_text,
+                if (
+                    parsed.official30_manifest is not None
+                    and not self._official30_query_is_specific_to_case(
+                        query,
+                        section,
+                        section_text,
+                    )
                 ):
                     score = max(0, score - 50)
                 if (
@@ -1247,7 +1108,9 @@ class KnowledgeBaseService:
         text = source_path.read_text(encoding="utf-8")
         source_lines = tuple(text.splitlines())
         official30_projection: _Official30RecipeProjection | None = None
-        official30_manifest = self._official30_recipe_manifest(text)
+        official30_manifest = comparison_manifest_type_for_root(
+            self._repo_root
+        ).from_text(text, path=source_path, source_root=self._repo_root)
         if official30_manifest is None:
             lines = self._display_lines(
                 spec,
@@ -1258,8 +1121,6 @@ class KnowledgeBaseService:
             official30_projection = self._official30_recipe_projection(
                 spec,
                 official30_manifest,
-                repo_root=self._repo_root,
-                source_path=source_path,
             )
             lines = official30_projection.lines
         sections = _parse_sections(lines)
@@ -1392,99 +1253,6 @@ def _official30_public_source(
             pipeline_steps=pipeline_steps,
         )
     )
-
-
-@lru_cache(maxsize=8)
-def _official30_module_inventories_cached(
-    manifest_path: str,
-    manifest_mtime_ns: int,
-    repo_root: str,
-    cellprofiler_examples_root: str | None,
-    dataset_cache_root: str | None,
-) -> tuple[_Official30CaseModuleInventory, ...]:
-    del manifest_mtime_ns
-
-    from openhcs.interop.cellprofiler.parser import CPPipeParser
-
-    manifest = _ComparisonManifestSnapshot.load(
-        Path(manifest_path),
-        cellprofiler_examples_root=cellprofiler_examples_root,
-        dataset_cache_root=dataset_cache_root,
-    )
-    raw_cases = manifest.payload.get("cases")
-    if not isinstance(raw_cases, list):
-        return ()
-
-    inventories: list[_Official30CaseModuleInventory] = []
-    for raw_case in raw_cases:
-        if not isinstance(raw_case, Mapping):
-            raise ValueError("Official30 manifest cases must be objects.")
-        case_name = KnowledgeBaseService._official30_case_name(raw_case)
-        cppipe_path = _official30_existing_cppipe_path(
-            repo_root=Path(repo_root),
-            manifest=manifest,
-            raw_case=raw_case,
-            case_name=case_name,
-        )
-        modules: tuple[str, ...] = ()
-        if cppipe_path is not None:
-            try:
-                modules = tuple(
-                    module.name
-                    for module in CPPipeParser(cppipe_path).parse()
-                    if module.enabled
-                )
-            except (OSError, ValueError, UnicodeDecodeError):
-                modules = ()
-        inventories.append(
-            _Official30CaseModuleInventory(
-                case_name=case_name,
-                cppipe_path=cppipe_path,
-                modules=modules,
-            )
-        )
-    return tuple(inventories)
-
-
-def _official30_existing_cppipe_path(
-    *,
-    repo_root: Path,
-    manifest: _ComparisonManifestSnapshot,
-    raw_case: Mapping[str, JsonValue],
-    case_name: str,
-) -> Path | None:
-    try:
-        resolved_path = manifest.path_resolver.resolve(raw_case, "cppipe_path")
-    except (KeyError, TypeError, ValueError):
-        resolved_path = None
-    if isinstance(resolved_path, Path) and resolved_path.is_file():
-        return resolved_path
-
-    raw_cppipe_path = raw_case.get("cppipe_path")
-    if raw_cppipe_path is None:
-        return None
-    return _official30_native_ref_cppipe_path(
-        repo_root,
-        case_name,
-        Path(str(raw_cppipe_path)).name,
-    )
-
-
-def _official30_native_ref_cppipe_path(
-    repo_root: Path,
-    case_name: str,
-    cppipe_name: str,
-) -> Path | None:
-    native_refs_root = repo_root / "benchmark/native_refs/official30_scoped_rows"
-    candidates = tuple(
-        sorted(native_refs_root.glob(f"*/native_cellprofiler_headless/{cppipe_name}"))
-    )
-    for candidate in candidates:
-        if case_name in candidate.parent.parent.name:
-            return candidate
-    if len(candidates) == 1:
-        return candidates[0]
-    return None
 
 
 def _native_example_source_files(
