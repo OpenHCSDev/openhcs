@@ -30,6 +30,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
+    runtime_context_parameter,
     special_inputs,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -978,6 +979,7 @@ def _recorded_save_images_rows(
 
 @numpy(contract=ProcessingContract.PURE_3D)
 @special_inputs("image_to_save")
+@runtime_context_parameter(None)
 def save_images(
     image: RuntimeArrayData,
     *,
@@ -1033,6 +1035,7 @@ def save_images(
 @numpy(contract=ProcessingContract.PURE_3D)
 @special_inputs("image_to_save")
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
+@runtime_context_parameter("context")
 def save_images_with_measurements(
     image: RuntimeArrayData,
     *,

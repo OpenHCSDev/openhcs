@@ -618,7 +618,7 @@ class CallableMetadata:
                 FunctionContractAttribute.allowed_group_by,
             ),
             runtime_adapter=runtime_adapter,
-            runtime_context_parameter=_runtime_context_parameter(projection, reader, signature),
+            runtime_context_parameter=_runtime_context_parameter(reader, signature),
             execution_scope=reader.optional_execution_scope(
                 FunctionContractAttribute.execution_scope,
             ),
@@ -719,10 +719,9 @@ class CallableMetadata:
             )
         if self.runtime_adapter is not None:
             namespace[FunctionContractAttribute.runtime_adapter] = self.runtime_adapter
-        if self.runtime_context_parameter is not None:
-            namespace[FunctionContractAttribute.runtime_context_parameter] = (
-                self.runtime_context_parameter
-            )
+        namespace[FunctionContractAttribute.runtime_context_parameter] = (
+            self.runtime_context_parameter
+        )
         namespace[FunctionContractAttribute.execution_scope] = self.execution_scope
         if self.processing_contract is not None:
             namespace[FunctionContractAttribute.processing_contract] = (
@@ -2049,14 +2048,12 @@ class CallableProjection:
 
 
 def _runtime_context_parameter(
-    projection: CallableProjection,
     reader: "CallableMetadataReader",
     signature: inspect.Signature | None,
 ) -> str | None:
-    declared = reader.optional_string(
-        FunctionContractAttribute.runtime_context_parameter
-    )
-    if declared is not None:
+    field_name = FunctionContractAttribute.runtime_context_parameter
+    declared = reader.optional_string(field_name)
+    if field_name in reader.namespace:
         return declared
     from openhcs.core.context.processing_context import ProcessingContext
 
