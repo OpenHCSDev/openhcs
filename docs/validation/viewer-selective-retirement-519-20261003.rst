@@ -62,6 +62,68 @@ Actual public selected Points/Shapes rematerialization and fractional X/Y
 navigation remain parent receiving work after a fresh qualified target and
 resource release. Target07 is immutable; no claimed installed fix or new lane.
 
+Terminal spatial-point source qualification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Productiona2762b832/e4db2163b is unchanged between the two heads; e4db only
+corrects the new fixture's mistaken trailing-axis assumption. Original
+fractional-controls01 retains27PASS/4FAIL/62deselected,12.217s/maxRSS467852KiB,
+cgroup339.9MiB/Swap0/OOM0. The failing comparison included WELL, whose index
+correctly changes during pruning; the registered axis order is not trailingZYX.
+No scientific coordinate, source guard or expected geometry was relaxed.
+The fixture now obtains spatial columns from the original presentation owner.
+
+fractional-controls02 is terminal31PASS/62deselected,10.261s/
+maxRSS465352KiB/cgroup280825856B/Swap0/OOM0. It uses the original source
+bootstrap/run_source_controls.py, real Qt scheduling and ViewerModel, plugin/
+conftest/provider-free, CPU1/512MiB/60s in openhcs-blindsol3phase03.slice.
+The original mixed-Qt snapshot owner remains borrowed read-only. No MCP,
+native server, GL canvas or scientific input was launched.
+
+The three orthogonal cases select the same source member before/after actual
+typed retirement, interior well-domain pruning3to2 and native rematerialization.
+Source items are reordered; the same source member moves row1to0. Stored Z/Y/X,
+source payload, native selection and0.65 calibration remain exact. Both explicit
+display pair and implicit actual native displayed dimensions agree. The new
+registered point declaration composes independent coordinate-admission recording
+with the point owner through cooperative super, and all three spatial hooks
+execute through the unchanged generic navigation consumer. Existing Points/
+Shapes survivor, linked-selection, empty-selection and no-late-navigation
+controls are included, alongside strict acquisition and hidden-Shape guards.
+
+fractional-family-after01 names e4db2163b and pinned Root61ab83842;
+704production/675tests/401dependencies,71/53/42 selected, zero parse omissions,
+23.734s/maxRSS84032KiB/cgroup76.6MiB/Swap0. Declaration/read/write/import/base
+closure confirms one shared coordinate algorithm, handler-owned leaf selection,
+and no remaining production import/use of the old Z-only authority or concrete
+Points switch in result_element_axis_indices. Dynamic registration is exercised
+by the new-case control; AST alone is not executed proof.
+
+Original Git-pinned R0 fractional-r0-01 names main0332a696f/e4db2163b, ALL THREE
+actual production delta paths: napari_streaming_handlers.py,
+napari_viewer_server.py and viewer_controls.py. TerminalPASS24.412s/
+maxRSS87008KiB/cgroup76MiB/Swap0; positive deltas are empty. Detector3b03785f
+and run_pinned_r0_419.py are unchanged, with no omitted path, raised threshold
+or full NRA/R1 claim. Production/tests/docs diff-check is clean; original raw
+failure-log whitespace is archived byte-exact rather than rewritten.
+
+Root advanced to74693f589 during qualification. Exact61abto74693 source diff
+is EMPTY for all three viewer owners and the two protected source-metadata/
+graph-unit files. Other Root changes remain its qualification responsibility;
+this receipt does not relabel the AST's pinned Root revision or receive394.
+PR541's shared release is still absent in current comments. All source units
+are terminal; no runtime/client/UNKNOWN source operation remains active.
+
+Byte-exact new source archive:
+viewer-selective-retirement-522-fractional-spatial-20261003.tar.gz,
+1124614bytes/19members, SHA256
+22d65ada8008f1237f7ec8a333ebcdb1ad172d5218980c9aeddf6cd9b4f6030e.
+It contains all three actual production delta files, three current fixture
+files, the three original callers, both original control outcomes, before/after
+AST and original R0 raw stdout/stderr. GNU tar diff against each original is
+quiet/terminal0. Prior source archives and loose untracked originals are
+unchanged. New raw evidence plus this archive remains within the10MiB allowance.
+
 New95 source packet and migrated consumer family
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
