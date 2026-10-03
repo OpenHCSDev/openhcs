@@ -28,7 +28,6 @@ if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
 fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
-total_cap=$(jq -er '.proposed_resource_envelope.total_output_and_scratch_mib*1048576' <<< "$FLEET_PROGRAM")
 
 # Canonicalize membership once and reject overlaps before counting any bytes.
 outputs=()
@@ -59,6 +58,7 @@ for ((i=0;i<old_count;i++)); do
 done
 total=0
 reserved=0
+remaining=0
 for ((i=old_count;i<${#outputs[@]};i++)); do
   limits=$(fleet_limits_for "${authors[i-old_count]}")
   scratch_cap=$(jq -er '.scratch_per_author_mib*1048576' <<< "$limits")
@@ -69,15 +69,23 @@ for ((i=old_count;i<${#outputs[@]};i++)); do
   if [[ -d "$output" ]]; then bytes=$(du -s -B1 "$output" | cut -f1); fi
   if [[ -d "$output/runtime/scratch" ]]; then scratch=$(du -s -B1 "$output/runtime/scratch" | cut -f1); fi
   printf 'Current %s total=%s scratch=%s retained=%s limits=%s/%s\n' "$output" "$bytes" "$scratch" "$((bytes-scratch))" "$output_cap" "$scratch_cap" | tee -a "$receipt.output"
-  test "$scratch" -le "$scratch_cap"
-  test "$((bytes-scratch))" -le "$output_cap"
+  if [[ "${authors[i-old_count]}" == "$FLEET_SLOT" ]]; then
+    test "$scratch" -le "$scratch_cap"
+    test "$((bytes-scratch))" -le "$output_cap"
+  fi
+  # A sibling's actual bytes consume HOME, not this member's permission.
+  # Exhausted components have no unused growth; never subtract their overage
+  # from another member's still-funded reservation.
+  retained_growth=$((output_cap-bytes+scratch))
+  scratch_growth=$((scratch_cap-scratch))
+  if [[ "$retained_growth" -lt 0 ]]; then retained_growth=0; fi
+  if [[ "$scratch_growth" -lt 0 ]]; then scratch_growth=0; fi
+  remaining=$((remaining+retained_growth+scratch_growth))
   total=$((total+bytes))
 done
-printf 'Programme old=%s current=%s reservedCurrent=%s totalLimit=%s\n' "$old" "$total" "$reserved" "$total_cap" | tee -a "$receipt.output"
-test "$((old+reserved))" -le "$total_cap"
-test "$((old+total))" -le "$total_cap"
-remaining=$((reserved-total))
-test "$remaining" -ge 0
+printf 'Programme old=%s current=%s reservedCurrent=%s\n' "$old" "$total" "$reserved" | tee -a "$receipt.output"
+# Historical allocations are observations, already reflected in df free space.
+# Only still-funded output/scratch growth is reserved against actual HOME.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
 df --output=avail -B1 /home/ts | awk -v floor="$((home_floor+remaining))" 'NR==2 {printf "HomeAvailable %.3f GiB; required %.3f GiB\n",$1/1073741824,floor/1073741824; if($1<floor) exit 78}' | tee "$receipt.disk"
 if [[ "$mode" == ledger ]]; then printf 'Ledger-only PASS; not SCI admission\n'; exit; fi

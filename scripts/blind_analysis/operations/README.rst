@@ -26,7 +26,7 @@ The original successor JQ produces only NEXT's own physical author declarations
 and a funded_members proposal of references. The parent freezes NEXT, including
 all operation dependencies, source/skill/config/input identities and the actual
 release. Funding is deliberately mutable and is never listed as an immutable
-file in the run freeze. Parent alone publishes against its reviewed revision::
+file in the run freeze. The authorized publisher uses its reviewed revision::
 
   FLEET_PARENT_RELEASED=1 bash operations/project-program.sh publish FUNDING NEXT EXPECTED_SHA256
 
@@ -35,7 +35,13 @@ commits membership and FULL retired output roots together using atomic rename;
 admission reads one shared-locked revision. Missing custody, stale revision,
 unknown or ambiguous members, missing original owners and overlapping ledger
 roots are rejected. No failed/UNKNOWN client or PID absence implies retirement.
-The original custody files and explicit parent release authorize retirement.
+The original custody files authorize completed-member retirement under standing
+authority. A retirement-only declaration (no replacements, additions or policy
+change) does not require another parent release file or release flag. The
+publisher reuses the original projector to verify the sealed proposal against
+current funding before its atomic transition. Missing terminal proof, stale
+revision or changed permissions still reject. Creating/replacing permissions
+and policy changes retain their explicit release requirement.
 
 The current funding document has only references and joint-budget fields. It
 stores no source, configuration, per-run permission or physical helper catalog.
@@ -67,7 +73,15 @@ environment, path masks, first-start clock and10s request idle remain unchanged.
 
 Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
 current membership and sums each run's own output/scratch limits. FULL closed
-outputs remain once; contained scratch is not charged twice. Helpers use the
+outputs remain once and are measured, not compared to a cumulative historical
+ceiling. They already consume actual HOME space. Admission requires physical
+free HOME for all remaining funded growth plus its reserve. Only the selected
+member's own output/scratch permission can reject its operation; sibling
+overages remain measured physical usage, not a veto on another member's
+status/read-only work. Remaining growth is derived independently for retained
+and scratch components, clamped to zero once each is exhausted; an overage
+cannot subtract from a sibling's unused reservation. Contained scratch is not
+charged twice. Helpers use the
 original lifecycle performers and declared InvocationID custody; scientific
 writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
