@@ -1,0 +1,22 @@
+{
+  "normalized_submissions_equal": true,
+  "only_pipeline_difference": "Fresh output directory baseline-v1 versus candidate-v1; original global config bytes identical.",
+  "files": {
+    "baseline-submitted_pipeline.py": {
+      "sha256": "722a76ce2eecbfbe409df3599d4b44841862d33dc3a24b828e8ad2d1e381f47e",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-baseline-v1/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791017734852071625/submitted_pipeline.py"
+    },
+    "candidate-submitted_pipeline.py": {
+      "sha256": "1db8114e4c171af265fb58b76268c8576d00a974c0eea7b17bb5ba80ca5f4ad3",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-candidate-v1/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791017860408836180/submitted_pipeline.py"
+    },
+    "baseline-submitted_global_config.py": {
+      "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-baseline-v1/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791017734852071625/submitted_global_config.py"
+    },
+    "candidate-submitted_global_config.py": {
+      "sha256": "2e2cf95d87a9465d20ecbb8c88629ce615b64de6e5843319f9b51599f343c1c3",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-candidate-v1/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791017860408836180/submitted_global_config.py"
+    }
+  }
+}
