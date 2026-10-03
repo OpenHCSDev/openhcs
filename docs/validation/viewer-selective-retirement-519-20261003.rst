@@ -47,6 +47,65 @@ Public selected Points/Shapes remount remains the sole native receiving gate,
 with Root's producer prerequisite and parent funding/custody. New three-author
 launches do not wait on522/541. No scientific author was contacted.
 
+Terminal shared-selection qualification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Productione31eda7f0 is unchanged at fixture-corrected3ba4da613. Original
+projection-controls01 is retained43PASS/2FAIL/26deselected. One received fixture
+attached a group binding without its declared owner feature; another old
+cooperative-hook fixture selected an off-slice native Points row before its
+source frame. The corrected fixtures declare the feature and use the original
+navigation prepare/viewer_step, respectively. Assertions, native admission and
+stored geometry are unchanged; production was not revised in response.
+
+projection-controls02 is terminal45PASS/26deselected in5.89s; whole scope12.363s,
+cgroup347475968B/Swap0/OOM0, CPU1/512MiB/60s in the existing common slice.
+It exercises genuine Shapes empty-interaction-box failure and its projected
+linked selection, mixed Points/Shapes logical versus displayed membership,
+queued navigation before expansion, exact assignments, both geometry-family
+remount rejection before an off-slice selection write, valid empty selection,
+source row reordering, real typed retirement/domain pruning, fractionalXYZ,
+strict Shapes/acquisition laws and independent cooperative presentation hooks.
+No consumer edit is needed for the new registered presentation capability.
+
+The existing source-control caller receives Planck's explicit source04 peer
+bootstrap mode. Read-only target08 supplies unchanged peer dependencies; all
+THREE changed production modules are loaded by their exact source paths and
+hashes printed in the raw reply. Original paired Qt snapshot binding remains
+read-only. This is source + real Qt + ViewerModel, not an installed MCP/server
+or detached native rendering acceptance. Both fixture files are collected by
+the existing pytest owner; no second runner or product bootstrap is added.
+
+projection-family-after01 pins3ba4da613/Rootc50a947f4:704production/675tests/
+401dependencies, selected71/53/43, zero parse omissions; terminal0/20.692s/
+91.8MiB/Swap0. The shared audit AST facts include declaration/import/base,
+write/read/call/check closure, with original native Points/Shapes consumers.
+One selected_data assignment remains in NapariResultElementSelectionAuthority;
+both controller copies are gone. Projection, source identities and logical
+subject membership remain distinct authorities, not duplicated stores.
+
+Original pinned R0 projection-r0-01 is terminalPASS26.113s/78.8MiB/Swap0,
+detector3b03785f unchanged, base maineda0121a8/head3ba4da613. All THREE actual
+production deltas are included: napari_viewer_server.py,
+napari_streaming_handlers.py and viewer_controls.py. Positive deltas are empty;
+no omission/waiver/cap increase or full NRA/R1 claim. Full global NRA's earlier
+OOM remains retained. Production/fixture/receipt diff-check is clean; raw logs
+are not rewritten to remove authentic whitespace.
+
+Byte-exact18-member archive,1126237bytes, tar compare terminal0:
+viewer-selective-retirement-522-shared-selection-20261003.tar.gz, SHA256
+04cbde5af7c74ad751b090562905d056fa1aee62ae17474547cf04b8c4e1b5b0.
+It includes current three production files, both fixtures, all original callers
+and the complete before/after/R0/failed-and-passing raw logs. Older archives,
+untracked ledgers and all seven foreign gitlinks remain preserved. All four
+source scopes are terminal; no owned runtime/client or UNKNOWN source handle.
+
+Remaining acceptance is unchanged: ONE parent-reviewed ordinary installed
+Points AND Shapes selected-member remount/fractional navigation journey after
+Root's published grouped-producer checkpoint and fresh measured native release.
+No slot is reserved and no client is launched. Separate541 still needs Root's
+named unit/frame release; it is not an excuse to hold the independent new fleet.
+
 Resumed spatial-point selection owner (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
