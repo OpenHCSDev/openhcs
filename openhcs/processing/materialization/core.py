@@ -83,10 +83,6 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.steps.function_output_identity import (
-    FunctionOutputIdentityAuthority,
-    FunctionOutputPathAuthority,
-)
 from openhcs.processing.materialization.constants import (
     MaterializationFormat,
     WriteMode,
