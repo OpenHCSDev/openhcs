@@ -4,6 +4,61 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Final target06 semantic checkpoint received
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Planck completed and published original engineering494/MCP-SEMANTICS28.rst,
+READY-MCP28.json and PACKAGE28-QUALIFICATION.json; Singer read those complete
+receipts plus actual construction27/health27/installed26 logs. Source d92fd0b8c
+and this branch's4414159b6 have byte-identical retirement production/fixture
+files. No additional source change, build, install or runtime in this worker.
+
+NEW ordinary immutable target06/wheels05 (not04/05 overlay) SHA256
+46070edad4363d406b47ea771d07e795bff5eb268c4fa58d564881b5ec48ca04 qualifies
+815 tracked source inputs/90 assets/13 skill members/two native extensions,
+original RECORD/scripts/dependency APIs and347 original-source-compiled caches:
+1331 actual files accounted, none ignored. Original shared dependency/source
+absence and earlier qualification failures remain preserved. This is received
+owner whole-package proof, not an independently repeated audit.
+
+Actual104-tool build_server constructs the original nine-field identity schema;
+fresh non-resident stdio health27 returns status=ok/errors=[]/resources-ready at
+exact target06 source. Owner child exited, no native/viewer/catalog/science run.
+Installed26 is30PASS/11.67s/377876480B peak, CPU1/1GiB/Swap0/60s: actual SDK
+admission matches original from_payload semantics for bool/int/string coercion,
+unknown identity keys, optional-empty normalization and required/null/invalid
+integer rejection; top-level unknown tool keys remain forbidden. Original
+SDK-to-serialized-Qt-queue action and surviving raw object/backing array controls
+also pass. This is not external detached TCP or process-RSS release evidence.
+SCHEMA-FAMILY27-FINAL.json expands the received original AST context to704
+production+162 actual introspect/PolyStore/Pydantic/FastMCP modules, zero parse
+omissions; dynamic relationships are read semantically, not global equivalence.
+
+Parent's latest release permits healthy corrected06 scientific startup and
+ordinary baseline analysis after its original resource guard and source/packet
+freeze. Detached public retirement/shared-domain survivor/reopen qualification
+remains a separate FEATURE-MERGE gap, not a universal fresh-SCI gate. Singer
+does not release or contact scientists; frozen04/05 and original failures stay
+intact. Untargeted geometry row-selection limitation remains recorded below.
+
+One final ORIGINAL pinned R0 on frozen af293bb9ed32ab4fc311b141d1f2e1b429029a73
+production (including final4414 annotations) passes: ALL9 changed production
+files, positive delta mapping empty, terminal0/28.76s/maxRSS87008KiB/
+cgroup75.7M/Swap0. Unchanged run_pinned_r0_419.py and original detector Git
+3b03785f45df2ef5dc62ba6aed99294192ecbb01, existing3.14 -I -B, base mainf7de,
+CPU1/512MiB/60s; no copied detector, omitted changed path, waived delta or widened
+bound. Only newly changed source was guarded; installed/Qt/package suites were
+not repeated. Original critical disk/swap advisory remains (home4.5GiB,
+root7.5GiB,swap14.6GiB,availableRAM19.2GiB); no native admission inferred.
+
+Final additional byte-exact archive
+viewer-selective-retirement-519-semantic-qualified-20261003.tar.gz contains13
+members: two final production/two fixture files, two original R0 logs and seven
+original owner target06 receipts/AST/construction/health/control files.186986bytes,
+SHA2563277a792721e1819e721fbaae8a45843a7794a6f377a03418b370bc6a6bfeca8.
+Tar comparison passed all original members, including the owning issue-batch
+paths. Earlier archives/raw failures/SCI UNKNOWN dispositions remain intact.
+
 Decoder-parity correction received: qualification pending
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
