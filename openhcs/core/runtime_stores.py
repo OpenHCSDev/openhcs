@@ -115,20 +115,29 @@ class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
-    """Runtime-artifact query target for all discovered keys of one component."""
+    """Match discovered groups at their compiled producer-owned locations."""
 
-    component: AllComponents
+    input_plan: ArtifactInputPlan = dataclass_field(hash=False)
+    backend: str
 
     def __post_init__(self) -> None:
-        if not isinstance(self.component, AllComponents):
-            raise TypeError(
-                "RuntimeArtifactDynamicComponentTarget.component must be an "
-                "AllComponents value."
+        if not self.backend:
+            raise ValueError(
+                "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
             )
+        object.__setattr__(
+            self, "input_plan", self.input_plan.runtime_query_snapshot()
+        )
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
         scope = record.key.scope
-        return scope.component is self.component and scope.value_text is not None
+        producer_scope = self.input_plan.producer_group_scope()
+        if scope.component is not producer_scope.component or scope.value_text is None:
+            return False
+        return record.location == RuntimeArtifactLocation(
+            path=self.input_plan.path_for_runtime_query(scope.value_text),
+            backend=self.backend,
+        )
 
 
 def replace_runtime_artifact_payload(
@@ -171,9 +180,7 @@ class RuntimeArtifactQuery:
                 name=input_plan.name,
                 artifact_type=input_plan.artifact_type,
                 axis_id=axis_id,
-                target=RuntimeArtifactDynamicComponentTarget(
-                    input_scope.component,
-                ),
+                target=RuntimeArtifactDynamicComponentTarget(input_plan, backend),
             )
         return cls(
             name=input_plan.name,
@@ -297,6 +304,10 @@ class RuntimeArtifactInput:
         if producer_scope.is_ungrouped:
             return self._records(store, producer_scope, None)
         selection_scope = projection.producer_selection_scope
+        if projection.selects_declared_complete_producer(
+            self.edge_plan.spec, storage_plan
+        ):
+            return self.all_records(store)
         if storage_plan.composes_producer_groups(
             ComponentSet.coerce(projection.consumer_variable_components)
         ):
@@ -332,12 +343,12 @@ class RuntimeArtifactInput:
             )
         records = tuple(
             record
-            for record in store.find(
-                name=storage_plan.name,
-                artifact_type=storage_plan.artifact_type,
-                axis_id=self.axis_scope.axis_id,
-                group_component=producer_scope.component,
-                match_component=True,
+            for record in store.find_matching(
+                RuntimeArtifactQuery.from_input_plan(
+                    storage_plan,
+                    axis_id=self.axis_scope.axis_id,
+                    backend=self.backend,
+                )
             )
             if self._matches_execution_scope(record)
         )
@@ -830,23 +841,6 @@ class RuntimeValueStore:
             type[BoundedCache[Any, Any]],
             BoundedCache[Any, Any],
         ] = {}
-        self._find_cache: dict[
-            tuple[
-                int,
-                str | None,
-                ArtifactType | None,
-                str | None,
-                AllComponents | None,
-                str | None,
-                bool,
-                bool,
-            ],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
-        self._find_matching_cache: dict[
-            tuple[int, RuntimeArtifactQuery],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
 
     def query_cache(self, cache_type: type[StoreQueryCacheT]) -> StoreQueryCacheT:
         """Return a bounded derived-value cache owned by this store's lifetime.
@@ -986,7 +980,8 @@ class RuntimeValueStore:
     ) -> tuple[StoredRuntimeValue, ...]:
         """Return stored records matched by a typed runtime artifact query."""
         cache_key = (self._revision, query)
-        cached = self._find_matching_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         result = tuple(
@@ -994,7 +989,7 @@ class RuntimeValueStore:
             for record in self._records_by_location.values()
             if query.matches(record)
         )
-        self._find_matching_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def get(self, key: ArtifactKey) -> StoredRuntimeValue:
@@ -1026,7 +1021,8 @@ class RuntimeValueStore:
             match_component,
             match_group,
         )
-        cached = self._find_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         records: list[StoredRuntimeValue] = []
@@ -1044,7 +1040,7 @@ class RuntimeValueStore:
                 continue
             records.append(record)
         result = tuple(records)
-        self._find_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def find_by_location(
@@ -1129,8 +1125,6 @@ class RuntimeValueStore:
         self._revision += 1
         for cache in self._query_caches.values():
             cache.clear()
-        self._find_cache.clear()
-        self._find_matching_cache.clear()
 
 
 def _validate_overwrite(

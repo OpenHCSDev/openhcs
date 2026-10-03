@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from arraybridge import MemoryType
 
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.xdg_paths import get_data_file_path
 from openhcs.processing.custom_functions.events import custom_function_changed
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -61,14 +61,24 @@ class CustomFunctionInfo:
     Attributes:
         name: Function name
         file_path: Path to source .py file
-        memory_type: Memory type (numpy, cupy, etc.)
-        doc: Function docstring
+        contract: Original callable contract, also owning scope and memory type
     """
 
     name: str
     file_path: Path
-    memory_type: str
-    doc: str
+    contract: CallableContract
+
+    @property
+    def memory_type(self) -> str | None:
+        return self.contract.input_memory_type
+
+    @property
+    def doc(self) -> str:
+        return self.contract.func.__doc__ or ""
+
+    @property
+    def backend_label(self) -> str:
+        return self.memory_type or self.contract.execution_scope.value
 
 
 class CustomFunctionManager:
@@ -359,17 +369,11 @@ class CustomFunctionManager:
             try:
                 metadata = self._prepare_source(py_file.read_text(encoding="utf-8"))
                 contract = CallableContract.from_callable(metadata.func)
-                if contract.input_memory_type is None:
-                    raise ValidationError(
-                        f"Custom function '{metadata.original_name}' does not "
-                        "declare an input memory type."
-                    )
                 functions.append(
                     CustomFunctionInfo(
                         name=metadata.original_name,
                         file_path=py_file,
-                        memory_type=contract.input_memory_type,
-                        doc=metadata.func.__doc__ or "",
+                        contract=contract,
                     )
                 )
 
@@ -486,6 +490,8 @@ class CustomFunctionManager:
     ) -> "FunctionMetadata":
         """Validate and project one source without mutating runtime or disk state."""
 
+        from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
+
         validation_result = validate_code(code)
         if not validation_result.is_valid:
             raise ValidationError(
@@ -500,21 +506,14 @@ class CustomFunctionManager:
 
         declared_names = set(validation_result.function_names)
         declarations = [
-            (obj, CallableMetadata.from_callable(obj))
+            obj
             for name, obj in namespace.items()
             if name in declared_names and not name.startswith("_") and callable(obj)
         ]
         declarations = [
-            (declaration, metadata)
-            for declaration, metadata in declarations
-            if any(
-                memory_type is not None
-                for memory_type in (
-                    metadata.input_memory_type,
-                    metadata.output_memory_type,
-                    metadata.execution_memory_type,
-                )
-            )
+            declaration
+            for declaration in declarations
+            if OpenHCSRegistry.declared_callable_contract(declaration) is not None
         ]
         if len(declarations) != 1:
             raise ValidationError(
@@ -522,7 +521,7 @@ class CustomFunctionManager:
                 f"processing function; found {len(declarations)}."
             )
 
-        declaration, _metadata = declarations[0]
+        declaration = declarations[0]
         self._check_name_collision(declaration.__name__)
         function_validation = validate_function(declaration)
         if not function_validation.is_valid:

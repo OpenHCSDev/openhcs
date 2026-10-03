@@ -13,6 +13,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRelation,
     InputGroupLineageSourceRelation,
+    InputObjectMeasurementSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
@@ -571,16 +572,12 @@ class RelateObjectsModule(
         enabled = optional_setting_value(module, cls.per_parent_means_setting)
         if enabled is None or not parse_cellprofiler_bool(enabled):
             return ()
-        child_ref = child_input.ref()
+        subject = InputObjectMeasurementSourceRelation(child_input.ref())
         return tuple(
             dict.fromkeys(
-                producer.spec.for_plan_type(ArtifactInputPlan)
+                subject.input_spec_for_output(producer.spec)
                 for producer in step_context.available_artifact_producers
-                if producer.spec.plan_type is ArtifactOutputPlan
-                and producer.spec.artifact_type is MeasurementsArtifactType
-                and any(
-                    relation.source == child_ref for relation in producer.spec.relations
-                )
+                if subject.matches_output(producer.spec)
             )
         )
 

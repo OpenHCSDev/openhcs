@@ -151,7 +151,7 @@ class CustomFunctionManagerDialog(BaseFormDialog):
         for func_info in functions:
             if func_info.name == func_name:
                 self.name_label.setText(f"Name: {func_info.name}")
-                self.backend_label.setText(f"Backend: {func_info.memory_type}")
+                self.backend_label.setText(f"Backend: {func_info.backend_label}")
                 self.file_label.setText(f"File: {func_info.file_path.name}")
                 break
 

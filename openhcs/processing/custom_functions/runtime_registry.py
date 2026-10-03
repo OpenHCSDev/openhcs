@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from openhcs.constants import MemoryType
-from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 from openhcs.processing.custom_functions.source_namespace import (
@@ -516,49 +514,16 @@ def project_custom_function(
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
-    from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-
-    callable_contract = CallableContract.from_callable(func)
-    for role, memory_type in (
-        ("input", callable_contract.input_memory_type),
-        ("output", callable_contract.output_memory_type),
-        ("execution", callable_contract.execution_memory_type),
-    ):
-        if memory_type is None:
-            continue
-        try:
-            MemoryType(memory_type)
-        except ValueError as exc:
-            raise ValueError(
-                f"Invalid custom-function {role} memory type: {memory_type!r}"
-            ) from exc
-
-    processing_contract = callable_contract.processing_contract
-    if not isinstance(processing_contract, ProcessingContract):
-        processing_contract = ProcessingContract.FLEXIBLE
-        vars(func)[FunctionContractAttribute.processing_contract] = processing_contract
-
     registry = OpenHCSRegistry()
     if declaration_revision is not None:
         vars(func)[FunctionContractAttribute.declaration_revision] = (
             declaration_revision
         )
-    wrapped = registry.apply_contract_wrapper(func, processing_contract)
-    if declaration_revision is not None:
-        vars(wrapped)[FunctionContractAttribute.declaration_revision] = (
-            declaration_revision
-        )
-    metadata = CustomFunctionMetadata(
-        name=func.__name__,
-        func=wrapped,
-        contract=processing_contract,
-        registry=registry,
-        module=func.__module__ or "",
-        doc=func.__doc__ or "",
-        tags=["openhcs", "custom"],
-        original_name=func.__name__,
-        memory_type=callable_contract.input_memory_type,
+    metadata = registry._metadata_for_function(
+        func.__name__, func, "custom", metadata_type=CustomFunctionMetadata,
     )
+    if metadata is None:
+        raise ValueError(f"Function {func.__name__!r} is not an admitted OpenHCS declaration.")
     return metadata
 
 
