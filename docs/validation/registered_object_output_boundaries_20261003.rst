@@ -1,6 +1,67 @@
 Registered object-output boundary investigation
 ==============================================
 
+Whole ordinary private installed checkpoint, 2026-10-03
+-----------------------------------------------------
+
+Complete whole-package qualification PASS in the SAME released505 checkout,
+not a selective installed-file patch. Packaged source is reviewed c0314a171;
+actual product/test f9a15dcbd remains unchanged. Original505/494 setup,
+build/install, RECORD and declaration-resource owners were reused. Full local
+receiving receipt: ``engineering503/QUALIFICATION02.rst`` under the original
+issue-batch root. The first incomplete wheel/target, negative verifier attempts
+and all earlier source/scientific failures remain intact.
+
+The inherited sparse checkout initially omitted89 declared benchmark Python
+files, including its MCP extension; whole-package verification correctly stayed
+RED despite21 target01 owner controls passing. Parent's continuation authorized
+the ordinary correction: materialize only committed package Python derived
+from ORIGINAL pyproject includes/excludes, no result/native-reference/heldout
+data, then corrective full build and NEW unused target02. No product/source
+semantics changed or package surgery. All89 original Git blobs match exactly;
+four foreign dirty gitlinks and all previous untracked evidence are preserved.
+
+Whole wheel: ``engineering503/wheels02/openhcs-0.8.7-cp311-abi3-linux_x86_64.whl``,
+4353627bytes, SHA256
+``498367681f9dbd831c05f7e216d012495fce13c12322be1f6e3c119bd9cfc4f5``.
+Private ordinary pip --no-deps/--no-index/--no-compile target02 has exact wheel
+payload/metadata and original installed RECORD/entrypoint checks.815 tracked
+payload source matches, all793 declared package Python files (704 OpenHCS/89
+benchmark), no missing/unexpected Python;90 canonical declared resources and
+all13 managed skill files match source/wheel/target. Both C++ sources match;
+both actual ABI3 binaries match wheel/target.915 wheel RECORD members/914
+non-RECORD matches/927 installed RECORD files. Shared dependencies stayed
+read-only; original native object hashes remained unchanged after builds.
+
+Original21 tiny controls repeated against ASSERTED target02 leaf, ancestor,
+protected validator/matcher and BOTH native-binary origins PASS:10 new plus11
+existing. No new inputs/thresholds/assertion weakening. Genuine cooperative
+new-case hooks and original ordinal projection pass. CPU1/512MiB/Swap0/60s
+build/install/verifier/controls, all terminal0 and inactive, OOM0. Build6.76s/
+213610496B peak; install.96s/83496960B; verifier.63s/20.1M; controls6.79s/
+227659776B and5.26s/189100032B. MaxRSS378456KiB. These are whole private installed
+owner controls, not actual public MCP/native job or biological acceptance.
+
+Exact raw52-file receiving archive (scripts, byte results, original negatives,
+public packet and tiny SYNTHETIC input):
+``docs/validation/registered-object-output-installed-20261003.tar.gz``,119648bytes,
+SHA256 ``2f76da3cf82a7f431a73bfdd73b5c13a5751677ff9c6515e61f83bf77f3c8cbc``.
+Every archived file was checked byte-exact against its original retained file.
+Earlier source archives and raw logs are unchanged. No repeated source shards,
+R0 rerun or hosted-CI wait for this documentation/archive-only publication.
+
+The tiny public registered2D qualification packet is prepared through ORIGINAL
+CellProfiler importer/ConvertImageToObjects/MeasureObjectSizeShape/FilterObjects
+default and removed-enabled, with explicit pixel-ID/area-table/lineage joins.
+Packet path: ``engineering503/PUBLIC503_94/PREPARED.rst``. The directory's94 name
+is HISTORICAL, not a display/port reservation: parent now owns94 for a fresh
+scientific author. NO503 engineering lane has been released, and no native,
+MCP, viewer or scientific process was launched or contacted. Parent assigns
+an existing free engineering lane only after scientific closure/admission.
+Remaining acceptance is the actual public inventory/native categorical join;
+unbounded additional502 ABI stays Root-owned and does NOT hold the501 repair.
+Current fetched Root4eaacf17 has no production change from bb9c49c2.
+
 Working source checkpoint, 2026-10-03
 ------------------------------------
 
@@ -95,7 +156,8 @@ metric deltas are zero; the positive-delta set is empty, with no bound increase
 or waiver. Runtime18.76s, peak86988KiB, cgroup78.8M, swap0, exit0 under the same
 one CPU/512M/60s limits. This is the original scoped R0 gate, not a global NRA
 cleanliness claim or a waiver of Root394's independent whole-branch R0/R1 RED.
-PR503 stays draft for the remaining repeated-output ABI and installed acceptance.
+PR503 stays draft for parent public installed-join acceptance. Unbounded
+additional502 ABI remains tracked with Root, not a gate on the501 working fix.
 
 Byte-exact current evidence archive:
 ``docs/validation/registered-object-output-working-20261003.tar.gz``.
