@@ -50,3 +50,50 @@ The host helper returned diagnostic2: HOME7.9GiB/root7.3GiB/history swap12.2GiB;
 RAM15.7GiB. Common charge5400596480/cap16642998272, Swap0. A bounded256MiB
 source-access check used the unchanged common slice and left no new future
 archive permission or restored bytes. No threshold was raised or bypassed.
+
+Review correction: wired future consumer, not an unconfigured copy
+----------------------------------------------------------------
+
+The first published129-line Batch39 copy was dormant and had stale defaults
+and an absent sibling dependency. Parent review rejected that readiness
+claim. It is deleted from the current PR, not merged as an end-to-end path.
+The original frozen39/36/56 sources still remain byte-identical.
+
+Future batch56-admin-proof.py now consumes those original definitions through
+its existing parameter/receipt transformation and selects restore_creator.py.
+Source/archive/restore/receipts/funding receipt/member/phase/target/ceiling/
+qualified operations route are all explicit required arguments. No past
+destructive case defaults survive the selected code. The proof dependency
+is the actual existing original36 absolute path, not a missing sibling.
+Original exact-target checker projection preserves all surfaces and FD checks;
+original tar flags, run/paths/remove_exact owners remain unchanged. Original
+released process scope owns CPU placement instead of stale source CPU0.
+
+Actual consumer --prepare command exited0 twice into exclusive selected-source
+artifacts BATCH62-SELECTED-SOURCE01.py and02.py in resource-owner receipts.
+It bound proposed old BBBC007/results, a new BATCH62 archive name and explicit
+next receipt/restore paths, selecting the corrected creator. It dispatched
+NO archive/borrower scan/resource check/restore/retirement and created no
+restoration directory or future permission. 01 precedes completion of the
+existing exact-target projection;02 is the current selected-source receipt.
+These are preparation artifacts, not released administrative cases or claimed
+cleanup bytes. Existing future --execute consumes that same configured AST;
+archive remains pending a separately published original member permission.
+
+Current actual qualification04 command used the same256MiB/CPU1/Swap0 common
+scope and original root/ts path, terminal0 in0.095s; Invocation
+a7ed08df8e7a482ab830895b27b4912b, now absent/inactive/empty. It invoked the
+future consumer as a real subprocess --prepare, proved every case binding,
+selected the new creator, and proved original guard route/member and target
+projection. The resulting actual root mkdir0755 and ts du both passed;
+inner0700 metadata/bytes unchanged, all tiny fixture temps removed.
+
+Qualification02 also passed. Qualification03 ACTUALexit1 is preserved:
+its newly added assertion indexed the emitted command's FUND operand as the
+script operand. Selected source inspection showed the route itself correct;
+the assertion now decodes arguments after the declared bash operand rather
+than relying on a fragile AST-list index. No guard/archive/retirement or du
+was dispatched by that failed qualification. Its TemporaryDirectory closed
+normally, retaining no temporary bytes. A rejected apply_patch operation with
+duplicate delete/add targets also failed validation before any writes; its
+error is in the original tool history. No UNKNOWN execution was replayed.

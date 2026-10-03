@@ -1,41 +1,49 @@
-Future cold-retirement creator: readable outer restore container
-===============================================================
+Future Batch56 consumer: explicit case and readable restore creator
+==================================================================
 
-This is the future version of the original Batch39 performer used by the
-Batch56 parameter adapter. It is not a new archive algorithm or a standalone
-CLI. The only executable difference from the recorded Batch39 source is
-RESTORE.mkdir(mode=0o755), replacing mode0700 for the disposable OUTER wrapper.
-The root-run performer still preserves every archived owner, permission,
-ACL, xattr and byte through the original tar and complete ext4 proof.
+Use batch56-admin-proof.py, not an unconfigured archived case script.
+Every destructive path, receipt, funding route, member, phase and target is
+required at this boundary. The consumer loads the immutable recorded39
+archive algorithm and original56 admission declaration; it binds the exact
+new case and selects restore_creator.py for the outer mkdir0755 statement.
+The original36 proof definitions are an explicit existing absolute dependency,
+not an absent sibling in this checkout. No archive algorithm is copied here.
 
-The historical recorded source remains immutable at:
+The former unconfigured129-line published Batch39 copy was removed after
+review found its stale destructive defaults and missing dependency. The fix
+is now selected by the actual future Batch56 parameter/receipt consumer.
+
+--prepare PATH writes the fully selected source exclusively and compiles it
+without dispatching any guard, borrower scan, archive, restore or retirement.
+That is the qualified concrete invocation before separate resource release.
+The identical argument list with --execute delegates actual execution to the
+same selected owner after original permission is published. Nothing defaults
+to a past destructive SOURCE/ARCHIVE/FUNDING case. There is no automatic retry.
+
+Required arguments: --source --archive --restore --receipts --fund
+--operations --funding-receipt --slot --case --phase-prefix --restore-mib
+and one or more --target source-relative approved directories.
+--fund points at the original programme's FUND directory; --operations points
+at its original qualified operations owner. No new ledger or resource gate.
+Archive/restore admission still calls original resource-check.sh as ts.
+The original process scope owns CPU placement; the old creator's CPU0 literal
+cannot override that scope. Tar flags, proofs and exact retirement remain
+owned by the recorded sources, with the existing case parameter bindings.
+References/FD scans use the original checker on the exact approved targets
+and archive/restore paths, as in the accepted Batch60/61 target projection.
+No process surfaces or environment keys are excluded. The original source
+root and full history remain local; whole-source byte/metadata proof remains.
+
+Recorded dependencies kept byte-identical and local:
 /home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/resource-owner-20261002/batch39-cold-proof.py
-SHA256 e36daaa49eb76ae9dac4f2cf0713a7502f6638f6eae05f17e3ea70de21bb25d3.
-The original Batch36 proof definitions and Batch56 adapter also remain there,
-unchanged. Frozen past attempts continue to cite those originals.
+/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/resource-owner-20261002/batch36-xz02-proof.py
+/home/ts/wt/openhcs-issue-batch-20260929/neurite-development-skill383-20261001/output/resource-owner-20261002/batch56-admin-proof02.py
 
-For the next separately released batch, the existing parameter adapter must
-select this reviewed creator as its owner, retaining its original __file__
-receipt context and original proof-definition dependency. Source, archive,
-restore, funding, targets and receipt parameters still come from that exact
-approved batch. No old job, admission or archive is replayed. Do not execute
-the unconfigured historical case defaults as a new task.
+Privileged outer0755 creation permits original ts du traversal. Inner archived
+owners/permissions/ACL/xattrs/bytes remain unchanged; inaccessible inner
+entries must fail honestly. No recursive chmod/chown, sourcefile mutation,
+checker exclusion, new guard, new helper or alternate archive implementation.
 
-Ownership failure corrected here: a privileged performer made its temporary
-wrapper root0700 under a ledger traversed by ts. Outer root0755 permits the
-existing ts du consumer to traverse; the inner original ts0700/0755 archive
-entries are left exactly as recorded. No recursive chmod/chown, reader
-exception, accounting duplicate or new ledger is introduced. A future archive
-whose INNER permissions are inaccessible must fail honestly, not be relaxed.
-
-Checkout reused: openhcs-custom-function-admission-20260929, previously
-finished295e0, clean tracked files and references/FD0 before switching.
-Its untracked registration evidence and initialized dependency worktrees
-remain untouched. Updating the branch gitlinks does not update those
-dependencies; their resulting status differences are not included in this PR.
-
-Qualification scope: execute the actual changed mkdir statement as root;
-traverse its populated outer wrapper as ts using the existing du form;
-confirm an inner ts0700 entry is unchanged. Compare complete creator ASTs
-after restoring only this mode literal to prove all other code unchanged.
-This qualifies the access fix, not a new full archive/retirement or biology.
+Checkout reuse preserves old untracked evidence and initialized dependencies.
+The access qualification is not full archival or biology. Next archive stays
+pending its separately published resource permission, not acknowledgement/CI.
