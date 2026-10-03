@@ -828,7 +828,8 @@ def test_runtime_adapter_state_has_one_nominal_owner() -> None:
         and node.target.id == "source_binding_context"
         for node in source_context.body
     )
-    for class_name in ("FunctionRuntimeScope", "PatternGroupData"):
+    assert "FunctionRuntimeScope" not in classes
+    for class_name in ("PatternGroupData",):
         assert all(
             ast.unparse(base) != "SourceBindingRuntimeContext"
             for base in classes[class_name].bases

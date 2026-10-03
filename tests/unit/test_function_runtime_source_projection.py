@@ -2082,7 +2082,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     )
     loaded = PatternGroupRuntime(request)._load_input_stack()
 
-    assert loaded.matching_files == ["A01_s001_w1_z001_t001.tif"]
+    assert loaded[0] == ["A01_s001_w1_z001_t001.tif"]
 
 
 def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
@@ -2228,13 +2228,13 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
 
 def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -> None:
     from openhcs.core.runtime_adapters import (
-        RuntimeAdapterRequest,
         RuntimePlaneProjection,
     )
     from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps.function_runtime import (
         ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
+        FunctionCoreExecutor,
     )
 
     source_binding_plan = CompiledSourceBindingPlan(
@@ -2265,7 +2265,9 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         variable_components=(VariableComponents.SITE,),
         source_load_plan=SourceLoadPlan(),
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["first.tif", "second.tif"],
+        main_data_stack=np.zeros((2, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_pattern.default_group,
@@ -2276,14 +2278,14 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         runtime_plane_count=2,
     )
 
-    request = RuntimeAdapterRequest.from_runtime_scope(
-        runtime_scope=scope,
-        artifact_inputs={},
-        artifact_outputs={},
-        group_key="1",
-        plane_projection=RuntimePlaneProjection.stack(),
-        source_payload=np.zeros((2, 3, 4), dtype=np.uint16),
+    executor = FunctionCoreExecutor(
+        group_data=scope,
+        invocation=compiled_pattern.default_group.invocations[0],
+        artifacts=ComponentArtifactPlans(inputs={}, outputs={}),
+        group_key="1", plane_projection=RuntimePlaneProjection.stack(),
+        main_data_arg=scope.main_data_stack, source_memory_type="numpy",
     )
+    request = executor.runtime_adapter_request(scope.main_data_stack)
 
     assert tuple(
         binding.alias for binding in scope.source_binding_plan.binding_declarations
@@ -2310,7 +2312,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
     )
 
     source_binding_plan = CompiledSourceBindingPlan(
@@ -2390,7 +2392,9 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         artifact_inputs={},
         artifact_outputs=output_plans,
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_group,
@@ -2420,7 +2424,8 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     active_payload = ImagePayloadMetadata(
         source_image_names=("OrigStain1",),
     ).payload_with(np.zeros((1, 3, 4), dtype=np.uint16))
-    result = scope.execute_chain(active_payload)
+    scope = replace(scope, main_data_stack=active_payload)
+    result = function_runtime.PatternGroupRuntime.execute_chain(scope)
 
     assert isinstance(result, NoMainFlowOutput)
     assert tuple(
@@ -2451,7 +2456,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
     )
 
     first_spec = ArtifactSpec.output("FirstLabels", ObjectLabelsArtifactType)
@@ -2529,7 +2534,9 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         artifact_inputs={},
         artifact_outputs=output_plans,
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_group,
@@ -2560,7 +2567,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         lambda context: SimpleNamespace(captures_invocation_events=lambda: False),
     )
 
-    scope.execute_chain(np.zeros((1, 3, 4), dtype=np.uint16))
+    function_runtime.PatternGroupRuntime.execute_chain(scope)
 
     assert executed == ["record_first_labels"]
 
@@ -3093,7 +3100,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
 
 def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> None:
     from openhcs.core.steps.function_runtime import (
-        FunctionRuntimeScope,
         PatternGroupData,
         PatternGroupExecutionRequest,
     )
@@ -3119,7 +3125,8 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
         component_index=0,
         component_count=1,
     )
-    loaded = PatternGroupData(
+    scope = PatternGroupData.from_loaded_group(
+        request,
         matching_files=[
             "A01_s001_w1_z001_t001.tif",
             "A01_s002_w1_z001_t001.tif",
@@ -3150,9 +3157,8 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
                 ),
             ),
         ).payload_with(np.zeros((2, 4, 5), dtype=np.float32)),
+        source_binding_context=SourceBindingRuntimeContext.empty(),
     )
-
-    scope = FunctionRuntimeScope.from_pattern_group(request, loaded)
 
     assert scope.runtime_plane_count == 2
     assert scope.axis_scope.fixed_component_values == (
@@ -3897,8 +3903,8 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
 
     loaded = runtime._load_input_stack()
 
-    data = image_payload_data(loaded.main_data_stack)
-    metadata = image_payload_metadata(loaded.main_data_stack)
+    data = image_payload_data(loaded[1])
+    metadata = image_payload_metadata(loaded[1])
     assert data.shape == (2, 4, 5, 3)
     np.testing.assert_array_equal(data[1], np.full((4, 5, 3), 7, dtype=np.float32))
     assert metadata.source_image_names == aliases
@@ -4012,7 +4018,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
     loaded = runtime._load_input_stack()
 
     provenance_planes = image_payload_metadata(
-        loaded.main_data_stack
+        loaded[1]
     ).source_image_provenance_planes
     assert provenance_planes.count == 2
     assert provenance_planes.contributor_count == 0

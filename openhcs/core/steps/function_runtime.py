@@ -9,7 +9,7 @@ from functools import singledispatch
 import logging
 import os
 import time
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from threading import Lock
 from pathlib import Path
 from types import MappingProxyType
@@ -1384,20 +1384,33 @@ class PatternGroupExecutionScope:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class FunctionRuntimeScope(PatternGroupExecutionScope):
-    """Generic runtime scope shared by chain, invocation, adapter, and debug code."""
+class PatternGroupExecutionRequest(PatternGroupExecutionScope):
+    """All runtime data needed to process one pattern group."""
+
+    pattern_group_info: JsonValue
+    component_index: int
+    component_count: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PatternGroupData(PatternGroupExecutionScope):
+    """Complete loaded cohort and its original execution coordinates."""
 
     artifacts: ComponentArtifactPlans[ArtifactSpecRef, ArtifactInputPlan]
     source_binding_context: SourceBindingRuntimeContext
     runtime_plane_index: int
     runtime_plane_count: int
+    matching_files: list[str]
+    main_data_stack: RuntimeArrayData
 
     @classmethod
-    def from_pattern_group(
+    def from_loaded_group(
         cls,
         request: "PatternGroupExecutionRequest",
-        loaded: "PatternGroupData",
-    ) -> "FunctionRuntimeScope":
+        matching_files: list[str],
+        main_data_stack: RuntimeArrayData,
+        source_binding_context: SourceBindingRuntimeContext,
+    ) -> "PatternGroupData":
         artifacts = ComponentArtifactPlans.from_step_component(
             request.execution_plan,
             request.component_key,
@@ -1408,7 +1421,7 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
             artifacts.outputs,
         )
         source_provenance = image_payload_metadata(
-            loaded.main_data_stack
+            main_data_stack
         ).source_provenance.with_common_scalar_identity_from_planes()
         common_source_metadata = source_provenance.source_component_metadata or {}
         variable_components = ComponentSet.coerce(
@@ -1430,13 +1443,15 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
             is not None
         )
         return cls(
+            matching_files=matching_files,
+            main_data_stack=main_data_stack,
             context=request.context,
             execution_plan=request.execution_plan,
             compiled_group=request.compiled_group,
             artifacts=artifacts,
-            source_binding_context=loaded.source_binding_context,
+            source_binding_context=source_binding_context,
             runtime_plane_index=request.component_index,
-            runtime_plane_count=len(loaded.matching_files),
+            runtime_plane_count=len(matching_files),
             component_value=request.component_value,
             fixed_component_values=source_provenance.require_common_component_values(
                 fixed_components
@@ -1448,171 +1463,6 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
             return
         raise ValueError(
             f"Compiled function group {self.compiled_group.group_key} has no invocations."
-        )
-
-    def execute_chain(
-        self, initial_data_stack: RuntimeArrayData
-    ) -> RuntimeArrayData | NoMainFlowOutput:
-        self.require_invocations()
-        current_stack: RuntimeArrayData | NoMainFlowOutput = initial_data_stack
-        current_memory_type = self.execution_plan.input_memory_type
-        debug_sink = debug_event_sink_from_context(self.context)
-        declared_source_bindings = self.execution_plan.source_binding_plan
-        active_main_flow_bindings = self.active_main_flow_source_binding_plan(
-            initial_data_stack
-        )
-        for invocation in self.compiled_group.invocations:
-            group_key = invocation.key.runtime_group_key(self.component_value)
-            artifacts = self.artifacts.select_for_invocation(
-                invocation,
-                execution_scope=self.execution_plan.execution_group_scope,
-                component_key=self.component_key,
-            )
-            if artifacts is None:
-                continue
-            artifacts = artifacts.select_source_bound_inputs(
-                declared_source_bindings=declared_source_bindings,
-                active_source_bindings=active_main_flow_bindings,
-            )
-            runtime_invocation = invocation.for_runtime_outputs(
-                output_plans=tuple(artifacts.outputs.values()),
-            )
-            executor = FunctionCoreExecutor(
-                main_data_arg=current_stack,
-                source_memory_type=current_memory_type,
-                runtime_scope=self,
-                invocation=runtime_invocation,
-                artifacts=artifacts,
-                group_key=group_key,
-                plane_projection=RuntimePlaneProjection.stack(self.runtime_plane_count),
-            )
-            captures_debug = debug_sink.captures_invocation_events()
-            if captures_debug and debug_sink.should_skip_invocation(
-                executor.debug_cursor()
-            ):
-                continue
-
-            invocation_started_at = time.perf_counter()
-            try:
-                current_stack = executor.execute(
-                    debug_sink=debug_sink if captures_debug else None,
-                )
-            except Exception as exc:
-                if captures_debug:
-                    debug_sink.record(
-                        executor.debug_event(
-                            DebugEventType.EXCEPTION,
-                            exception=exc,
-                        )
-                    )
-                raise
-            invocation_seconds = time.perf_counter() - invocation_started_at
-            if captures_debug:
-                after_event = executor.debug_event(
-                    DebugEventType.AFTER_INVOCATION,
-                    timing_seconds=invocation_seconds,
-                )
-                debug_sink.record(after_event)
-                if debug_sink.should_stop_after_invocation(after_event):
-                    break
-            RuntimeProfileSink.record(
-                "invocation_total",
-                invocation_seconds,
-                function=invocation.key.function_name,
-                group=invocation.key.group_key,
-                position=invocation.key.position,
-            )
-            if isinstance(current_stack, NoMainFlowOutput):
-                return current_stack
-            current_memory_type = executor.memory_types().output_type
-        if self.compiled_group.preserves_input_main_flow() and all(
-            invocation.contract.artifact_output_policy.records_outputs
-            for invocation in self.compiled_group.invocations
-        ):
-            return NoMainFlowOutput()
-        return current_stack
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class PatternGroupExecutionRequest(PatternGroupExecutionScope):
-    """All runtime data needed to process one pattern group."""
-
-    pattern_group_info: JsonValue
-    component_index: int
-    component_count: int
-
-
-@dataclass(frozen=True, kw_only=True)
-class PatternGroupData:
-    """Loaded image data for one pattern group."""
-
-    matching_files: list[str]
-    main_data_stack: RuntimeArrayData
-    source_binding_context: SourceBindingRuntimeContext = field(
-        default_factory=SourceBindingRuntimeContext.empty
-    )
-
-
-    @staticmethod
-    def validate_main_flow_cohort(
-        producer_records: Sequence[ProducedOutputSemantics] | None,
-    ) -> None:
-        """One input cohort has one declared whole-image composition domain."""
-        if producer_records and len({record.main_flow_plane_axis for record in producer_records}) != 1:
-            raise ValueError("One main-flow cohort cannot combine different declared image axes.")
-
-    @classmethod
-    def from_loaded_images(
-        cls,
-        matching_files: list[str],
-        payloads: Sequence[RuntimeArrayData],
-        *,
-        producer_records: Sequence[ProducedOutputSemantics] | None,
-        source_binding_context: SourceBindingRuntimeContext,
-        execution_plan: CompiledStepPlan,
-        source_projection: VirtualWorkspaceSourceProjection | None,
-        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
-    ) -> "PatternGroupData":
-        """Compose a selected admissible input cohort in its declared image domain."""
-        if (
-            producer_records
-            and len(producer_records) == 1
-            and producer_records[0].main_flow_plane_axis is image_payload_metadata(payloads[0]).plane_axis
-        ):
-            main_data_stack = ImagePayloadStackComposition.copy_whole_image(
-                payloads[0], memory_type=execution_plan.input_memory_type,
-                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
-            )
-        else:
-            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
-            if producer_records:
-                declared_axis = producer_records[0].main_flow_plane_axis
-                metadata_mode = (
-                    ImagePayloadMetadataCompositionMode.BUNDLE
-                    if declared_axis is None
-                    else ImagePayloadMetadataCompositionMode.for_plane_axis(declared_axis)
-                )
-            if source_projection is not None and workspace_source_lookups:
-                metadata_mode = source_projection.payload_composition_mode(
-                    workspace_source_lookups
-                )
-            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
-                main_data_stack = stack_runtime_slices(
-                    tuple(image_payload_data(payload) for payload in payloads),
-                    execution_plan.input_memory_type,
-                    execution_plan.device_id_for(execution_plan.input_memory_type),
-                )
-                main_data_stack = stack_image_payload_context(
-                    payloads, main_data_stack, metadata_mode=metadata_mode,
-                )
-            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
-                main_data_stack = ImagePayloadBundleContext.from_payloads(
-                    tuple(payloads), metadata_mode=metadata_mode,
-                ).compose()
-        return cls(
-            matching_files=matching_files,
-            main_data_stack=main_data_stack,
-            source_binding_context=source_binding_context,
         )
 
 
@@ -1714,20 +1564,6 @@ def _save_artifact_value(
     return runtime_value.data
 
 
-def _load_artifact_input_values(
-    runtime_scope: FunctionRuntimeScope,
-    input_plan: InvocationArtifactInputEdgePlan,
-) -> tuple[RuntimeValue, ...]:
-    """Project producer-owned runtime records into one consumer invocation."""
-    context = runtime_scope.context
-    return RuntimeArtifactInput(
-        edge_plan=input_plan,
-        axis_scope=runtime_scope.axis_scope,
-        backend=Backend.MEMORY.value,
-        source_binding_plan=runtime_scope.source_binding_plan,
-    ).projected_values(context.runtime_value_store)
-
-
 def prepare_compiled_function_group(group: CompiledFunctionGroup) -> None:
     """Run optional preparation hooks for each callable in a compiled group."""
     for invocation in group.invocations:
@@ -1783,7 +1619,7 @@ def prepare_compiled_context_callables(
 class FunctionCoreExecutor:
     """Execute one scoped callable invocation and route declared artifact I/O."""
 
-    runtime_scope: FunctionRuntimeScope
+    group_data: PatternGroupData
     invocation: CompiledFunctionInvocation
     artifacts: ComponentArtifactPlans[
         InvocationArtifactInputProjectionKey,
@@ -1806,8 +1642,8 @@ class FunctionCoreExecutor:
         self,
         source_payload: RuntimePayload,
     ) -> RuntimeAdapterRequest:
-        return RuntimeAdapterRequest.from_runtime_scope(
-            runtime_scope=self.runtime_scope,
+        return RuntimeAdapterRequest(
+            context=self.group_data.context,
             callable_contract=self.invocation.contract,
             artifact_inputs={
                 edge.key: edge for edge in self.selected_artifact_input_edges
@@ -1816,6 +1652,13 @@ class FunctionCoreExecutor:
             group_key=self.group_key,
             plane_projection=self.plane_projection,
             source_payload=source_payload,
+            source_binding_plan=self.group_data.source_binding_plan,
+            source_binding_context=self.group_data.source_binding_context,
+            axis_scope=self.group_data.axis_scope,
+            variable_components=tuple(
+                self.group_data.execution_plan.variable_components
+            ),
+            source_load_plan=self.group_data.execution_plan.source_load_plan,
         )
 
     @property
@@ -1837,7 +1680,7 @@ class FunctionCoreExecutor:
             )
         stored_payload = loaded_artifact_payloads.get(source_ref)
         source_binding = (
-            self.runtime_scope.source_binding_plan.binding_for_artifact_ref(source_ref)
+            self.group_data.source_binding_plan.binding_for_artifact_ref(source_ref)
         )
         main_flow_edges = tuple(
             edge
@@ -1914,7 +1757,7 @@ class FunctionCoreExecutor:
                     RuntimeValue.from_spec(
                         input_plan.spec,
                         input_plan.resolve_unstored_payload(self, source_payload),
-                        execution_scope=self.runtime_scope.axis_scope,
+                        execution_scope=self.group_data.axis_scope,
                     ),
                 )
             )
@@ -1948,10 +1791,12 @@ class FunctionCoreExecutor:
         )
         load_started_at = time.perf_counter()
         try:
-            loaded_values = _load_artifact_input_values(
-                self.runtime_scope,
-                edge_plan,
-            )
+            loaded_values = RuntimeArtifactInput(
+                edge_plan=edge_plan,
+                axis_scope=self.group_data.axis_scope,
+                backend=Backend.MEMORY.value,
+                source_binding_plan=self.group_data.source_binding_plan,
+            ).projected_values(self.group_data.context.runtime_value_store)
         except Exception as exc:
             logger.error(
                 f"Failed to load artifact input '{arg_name}' from "
@@ -1971,10 +1816,10 @@ class FunctionCoreExecutor:
 
     def debug_cursor(self) -> DebugCursor:
         return DebugCursor.from_invocation(
-            step_index=self.runtime_scope.execution_plan.step_index,
-            step_scope_id=self.runtime_scope.execution_plan.step_scope_id,
+            step_index=self.group_data.execution_plan.step_index,
+            step_scope_id=self.group_data.execution_plan.step_scope_id,
             invocation=self.invocation,
-            pattern_group_identity=str(self.runtime_scope.runtime_plane_index),
+            pattern_group_identity=str(self.group_data.runtime_plane_index),
         )
 
     def debug_artifacts(
@@ -2000,9 +1845,9 @@ class FunctionCoreExecutor:
         return DebugEvent.for_invocation(
             event_type=event_type,
             cursor=self.debug_cursor(),
-            step_name=self.runtime_scope.execution_plan.step_name,
+            step_name=self.group_data.execution_plan.step_name,
             callable_name=self.invocation.key.function_name,
-            axis_id=self.runtime_scope.execution_plan.axis_id,
+            axis_id=self.group_data.execution_plan.axis_id,
             input_artifacts=self.debug_artifacts(
                 {
                     edge.storage_plan.ref(): edge.storage_plan
@@ -2045,7 +1890,7 @@ class FunctionCoreExecutor:
             payload=self.main_data_arg,
             source_type=self.source_memory_type,
             target_type=memory_types.input_type,
-            target_device_id=self.runtime_scope.execution_plan.device_id_for(
+            target_device_id=self.group_data.execution_plan.device_id_for(
                 memory_types.input_type
             ),
         ).converted_payload()
@@ -2103,7 +1948,7 @@ class FunctionCoreExecutor:
         source_payload: RuntimePayload,
     ) -> RuntimePayload:
         """Return source payload metadata carrying the current grouped identity."""
-        component = self.runtime_scope.execution_plan.execution_group_scope.component
+        component = self.group_data.execution_plan.execution_group_scope.component
         if component is None or self.group_key is None:
             return source_payload
         metadata = image_payload_metadata(source_payload)
@@ -2123,7 +1968,7 @@ class FunctionCoreExecutor:
     ) -> None:
         context_parameter_name = self.invocation.contract.runtime_context_parameter
         if context_parameter_name is not None:
-            final_kwargs[context_parameter_name] = self.runtime_scope.context
+            final_kwargs[context_parameter_name] = self.group_data.context
 
     def bind_compiled_runtime_parameters(
         self,
@@ -2192,7 +2037,7 @@ class FunctionCoreExecutor:
             )
         call_started_at = time.perf_counter()
         try:
-            with self.runtime_scope.execution_plan.memory_device_scope(
+            with self.group_data.execution_plan.memory_device_scope(
                 contract.execution_memory_type
             ):
                 raw_output = func_callable(
@@ -2215,7 +2060,7 @@ class FunctionCoreExecutor:
             )
             raise type(exc)(
                 f"{exc} Invocation boundary: step_index={cursor.step_index}; "
-                f"step_name={self.runtime_scope.execution_plan.step_name!r}; "
+                f"step_name={self.group_data.execution_plan.step_name!r}; "
                 f"function_invocation_key={self.invocation.key!r}; "
                 f"module={contract.module_name!r}; "
                 f"callable={contract.function_name!r}; "
@@ -2351,11 +2196,11 @@ class FunctionCoreExecutor:
                 materialization_source_payload
             )
         saved_value = _save_artifact_value(
-            self.runtime_scope.context,
+            self.group_data.context,
             output_plan,
             value,
             output_source_payload,
-            execution_scope=self.runtime_scope.axis_scope,
+            execution_scope=self.group_data.axis_scope,
             group_key=self.group_key,
             materialization_source_metadata=materialization_source_metadata,
             plane_projector=self.plane_projection,
@@ -2495,7 +2340,9 @@ class PatternGroupRuntime:
 
         try:
             load_started_at = time.perf_counter()
-            loaded = self._load_input_stack()
+            matching_files, main_data_stack, source_binding_context = (
+                self._load_input_stack()
+            )
         except NoStepOutputManifestMatch:
             logger.debug(
                 "Skipping stale pattern group %s for step %s (%s); no files "
@@ -2514,7 +2361,10 @@ class PatternGroupRuntime:
                 pattern=self.pattern_repr,
             )
             execute_started_at = time.perf_counter()
-            processed_stack = self._execute_pattern(loaded)
+            loaded = PatternGroupData.from_loaded_group(
+                self.request, matching_files, main_data_stack, source_binding_context,
+            )
+            processed_stack = self.execute_chain(loaded)
             RuntimeProfileSink.record(
                 "pattern_execute_chain",
                 time.perf_counter() - execute_started_at,
@@ -2611,7 +2461,9 @@ class PatternGroupRuntime:
             self.request.context.microscope_handler.parser,
         )
 
-    def _load_input_stack(self) -> PatternGroupData:
+    def _load_input_stack(
+        self,
+    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
         context = self.request.context
         plan = self.request.execution_plan
         request = self.request
@@ -2702,7 +2554,7 @@ class PatternGroupRuntime:
             if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
             else None
         )
-        PatternGroupData.validate_main_flow_cohort(producer_records)
+        ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
             memory_type=plan.input_memory_type,
@@ -2739,11 +2591,9 @@ class PatternGroupRuntime:
                     f"Check file integrity and format compatibility."
                 )
 
-            return PatternGroupData.from_loaded_images(
-                matching_files,
+            main_data_stack = ImagePayloadStackComposition.from_loaded_images(
                 raw_slices,
                 producer_records=producer_records,
-                source_binding_context=source_binding_context,
                 execution_plan=plan,
                 source_projection=source_projection,
                 workspace_source_lookups=workspace_source_lookups,
@@ -2751,11 +2601,7 @@ class PatternGroupRuntime:
         else:
             main_data_stack = cached_stack
 
-        return PatternGroupData(
-            matching_files=matching_files,
-            main_data_stack=main_data_stack,
-            source_binding_context=source_binding_context,
-        )
+        return matching_files, main_data_stack, source_binding_context
 
     def _workspace_source_binding_lookups(
         self,
@@ -3030,13 +2876,91 @@ class PatternGroupRuntime:
             )
         return apply_source_binding_payload(payload, binding, source_context)
 
-    def _execute_pattern(
-        self,
-        loaded: PatternGroupData,
+    @staticmethod
+    def execute_chain(
+        group_data: PatternGroupData
     ) -> RuntimeArrayData | NoMainFlowOutput:
-        request = self.request
-        runtime_scope = FunctionRuntimeScope.from_pattern_group(request, loaded)
-        return runtime_scope.execute_chain(loaded.main_data_stack)
+        group_data.require_invocations()
+        current_stack: RuntimeArrayData | NoMainFlowOutput = group_data.main_data_stack
+        current_memory_type = group_data.execution_plan.input_memory_type
+        debug_sink = debug_event_sink_from_context(group_data.context)
+        declared_source_bindings = group_data.execution_plan.source_binding_plan
+        active_main_flow_bindings = group_data.active_main_flow_source_binding_plan(
+            group_data.main_data_stack
+        )
+        for invocation in group_data.compiled_group.invocations:
+            group_key = invocation.key.runtime_group_key(group_data.component_value)
+            artifacts = group_data.artifacts.select_for_invocation(
+                invocation,
+                execution_scope=group_data.execution_plan.execution_group_scope,
+                component_key=group_data.component_key,
+            )
+            if artifacts is None:
+                continue
+            artifacts = artifacts.select_source_bound_inputs(
+                declared_source_bindings=declared_source_bindings,
+                active_source_bindings=active_main_flow_bindings,
+            )
+            runtime_invocation = invocation.for_runtime_outputs(
+                output_plans=tuple(artifacts.outputs.values()),
+            )
+            executor = FunctionCoreExecutor(
+                main_data_arg=current_stack,
+                source_memory_type=current_memory_type,
+                group_data=group_data,
+                invocation=runtime_invocation,
+                artifacts=artifacts,
+                group_key=group_key,
+                plane_projection=RuntimePlaneProjection.stack(
+                    group_data.runtime_plane_count
+                ),
+            )
+            captures_debug = debug_sink.captures_invocation_events()
+            if captures_debug and debug_sink.should_skip_invocation(
+                executor.debug_cursor()
+            ):
+                continue
+
+            invocation_started_at = time.perf_counter()
+            try:
+                current_stack = executor.execute(
+                    debug_sink=debug_sink if captures_debug else None,
+                )
+            except Exception as exc:
+                if captures_debug:
+                    debug_sink.record(
+                        executor.debug_event(
+                            DebugEventType.EXCEPTION,
+                            exception=exc,
+                        )
+                    )
+                raise
+            invocation_seconds = time.perf_counter() - invocation_started_at
+            if captures_debug:
+                after_event = executor.debug_event(
+                    DebugEventType.AFTER_INVOCATION,
+                    timing_seconds=invocation_seconds,
+                )
+                debug_sink.record(after_event)
+                if debug_sink.should_stop_after_invocation(after_event):
+                    break
+            RuntimeProfileSink.record(
+                "invocation_total",
+                invocation_seconds,
+                function=invocation.key.function_name,
+                group=invocation.key.group_key,
+                position=invocation.key.position,
+            )
+            if isinstance(current_stack, NoMainFlowOutput):
+                return current_stack
+            current_memory_type = executor.memory_types().output_type
+        if group_data.compiled_group.preserves_input_main_flow() and all(
+            invocation.contract.artifact_output_policy.records_outputs
+            for invocation in group_data.compiled_group.invocations
+        ):
+            return NoMainFlowOutput()
+        return current_stack
+
 
     def _project_output_slices(
         self,

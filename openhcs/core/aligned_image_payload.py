@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Mapping, TYPE_CHECKING
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
@@ -56,6 +56,15 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
 )
+
+
+if TYPE_CHECKING:
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+        VirtualWorkspacePathLookup,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,6 +431,69 @@ class ImagePayloadStackComposition(ABC):
     @property
     @abstractmethod
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode: ...
+
+    @staticmethod
+    def validate_main_flow_cohort(
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+    ) -> None:
+        """One input cohort has one declared whole-image composition domain."""
+        if producer_records and len(
+            {record.main_flow_plane_axis for record in producer_records}
+        ) != 1:
+            raise ValueError(
+                "One main-flow cohort cannot combine different declared image axes."
+            )
+
+    @staticmethod
+    def from_loaded_images(
+        payloads: Sequence[RuntimeArrayData],
+        *,
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+        execution_plan: CompiledStepPlan,
+        source_projection: VirtualWorkspaceSourceProjection | None,
+        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
+    ) -> RuntimeArrayData:
+        """Compose a selected admissible input cohort in its declared image domain."""
+        if (
+            producer_records
+            and len(producer_records) == 1
+            and producer_records[0].main_flow_plane_axis
+            is image_payload_metadata(payloads[0]).plane_axis
+        ):
+            main_data_stack = ImagePayloadStackComposition.copy_whole_image(
+                payloads[0],
+                memory_type=execution_plan.input_memory_type,
+                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+            )
+        else:
+            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
+            if producer_records:
+                declared_axis = producer_records[0].main_flow_plane_axis
+                metadata_mode = (
+                    ImagePayloadMetadataCompositionMode.BUNDLE
+                    if declared_axis is None
+                    else ImagePayloadMetadataCompositionMode.for_plane_axis(
+                        declared_axis
+                    )
+                )
+            if source_projection is not None and workspace_source_lookups:
+                metadata_mode = source_projection.payload_composition_mode(
+                    workspace_source_lookups
+                )
+            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
+                main_data_stack = stack_runtime_slices(
+                    tuple(image_payload_data(payload) for payload in payloads),
+                    execution_plan.input_memory_type,
+                    execution_plan.device_id_for(execution_plan.input_memory_type),
+                )
+                main_data_stack = stack_image_payload_context(
+                    payloads, main_data_stack, metadata_mode=metadata_mode,
+                )
+            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+                main_data_stack = ImagePayloadBundleContext.from_payloads(
+                    tuple(payloads), metadata_mode=metadata_mode,
+                ).compose()
+        return main_data_stack
 
     @staticmethod
     def copy_whole_image(

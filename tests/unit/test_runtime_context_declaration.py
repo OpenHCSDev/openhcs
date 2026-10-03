@@ -27,7 +27,7 @@ from openhcs.core.source_bindings import SourceBindingRuntimeContext
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
-    FunctionRuntimeScope,
+    PatternGroupData,
 )
 from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
@@ -129,7 +129,9 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
     pattern = compile_function_pattern(func, {}, {})
     context = ProcessingContext(axis_id="A01")
     artifacts = ComponentArtifactPlans(inputs={}, outputs={})
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=context,
         execution_plan=CompiledStepPlan(
             step_index=0, step_name="Context", step_type="FunctionStep", axis_id="A01"
@@ -141,7 +143,7 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
         runtime_plane_count=1,
     )
     executor = FunctionCoreExecutor(
-        runtime_scope=scope,
+        group_data=scope,
         invocation=next(pattern.iter_invocations()),
         artifacts=artifacts,
         group_key=None,

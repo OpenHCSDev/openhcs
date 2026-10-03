@@ -19,7 +19,7 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_runtime import PatternGroupData, PatternGroupRuntime
+from openhcs.core.steps.function_runtime import PatternGroupRuntime
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
@@ -221,7 +221,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     ))
     monkeypatch.setattr(consumer, "source_workspace_projection_authority", lambda: SimpleNamespace(projection_if_available=lambda: None))
     monkeypatch.setattr(SourceBindingRuntimeContextRequest, "from_context", classmethod(lambda cls, **kwargs: SimpleNamespace(runtime_context=SourceBindingRuntimeContext.empty)))
-    loaded = consumer._load_input_stack().main_data_stack
+    loaded = consumer._load_input_stack()[1]
     assert image_payload_data(loaded).shape == pixels.shape
     assert image_payload_metadata(loaded).plane_axis is axis
     np.testing.assert_array_equal(image_payload_data(loaded), pixels)
@@ -351,7 +351,6 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
     producer.request.context = context
     producer.pattern_repr = "mixed"
-    loaded = PatternGroupData(matching_files=[source, source], main_data_stack=planes)
 
     # A prior homogeneous producer caches the same physical paths. Mixed replacement
     # must invalidate that cache rather than leave a false joint runtime domain.
@@ -381,7 +380,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
         consumer_for(pattern)._load_input_stack()
     for name, expected, axis in (("Planes", image_payload_data(planes), RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels, None)):
         selected = consumer_for(_selected_pattern(name))
-        actual = selected._load_input_stack().main_data_stack
+        actual = selected._load_input_stack()[1]
         np.testing.assert_array_equal(image_payload_data(actual), expected)
         assert image_payload_metadata(actual).plane_axis is axis
         if not cache_hit:
@@ -389,7 +388,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
         else:
             selected_path = next(r.output_path for r in records if r.producer_identity.output_key == name)
             context.runtime_image_stack_cache.store((selected_path,), memory_type=MEMORY_TYPE_NUMPY, stack=actual)
-        repeated = selected._load_input_stack().main_data_stack
+        repeated = selected._load_input_stack()[1]
         np.testing.assert_array_equal(image_payload_data(repeated), expected)
         assert image_payload_metadata(repeated).plane_axis is axis
 
@@ -436,10 +435,10 @@ def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, 
         raise AssertionError("BUNDLE composition must retain its own memory allocation authority")
 
     monkeypatch.setattr(CompiledStepPlan, "device_id_for", unexpected_device_resolution)
-    output = PatternGroupData.from_loaded_images(
-        [r.output_path for r in records], payloads,
-        producer_records=records, source_binding_context=SourceBindingRuntimeContext.empty(),
+    output = ImagePayloadStackComposition.from_loaded_images(
+        payloads,
+        producer_records=records,
         execution_plan=plan, source_projection=None, workspace_source_lookups=(),
     )
-    assert image_payload_metadata(output.main_data_stack).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    np.testing.assert_array_equal(image_payload_data(output.main_data_stack), np.stack([image_payload_data(p) for p in payloads]))
+    assert image_payload_metadata(output).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(image_payload_data(output), np.stack([image_payload_data(p) for p in payloads]))

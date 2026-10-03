@@ -74,6 +74,21 @@ merging latest main ``8ab4a0df7``, its clean candidate ``a23978e3c`` passes
 all 470 tests in the seven-file CP gate. No pipeline timing gain is claimed
 for this lane.
 
+``PatternGroupData`` now specializes ``PatternGroupExecutionScope`` and owns
+one complete loaded cohort. ``FunctionRuntimeScope`` and its execution bridge
+are deleted. ``FunctionCoreExecutor`` consumes the cohort directly; the two
+adapter factories and the artifact-input forwarding helper are removed.
+Image composition moves to the existing ``ImagePayloadStackComposition`` owner.
+Initial source coordinates and plane count remain captured at their original
+load boundary; mutable plan selectors remain live, and later image/memory
+progression remains separate from that initial cohort. Frozen slots, transport
+serialization, first errors, debug events and alias/mutation controls pass.
+The exact migration has 844 wholly passing tests. An additional consumer shard
+has 167 passes and three dynamic producer-record failures reproduced unchanged
+with the three original production modules. Those failures remain open consumer
+work, not waived tests. The bounded NRA census changes from 164 to 163 classes.
+No pipeline timing gain is claimed; this is part of a larger semantic batch.
+
 Publication reader consolidation uses the existing document handler and source
 projection builder. Required projection-only viewer consumers remain. Its 94
 reader controls pass; four saved-operand replays remove 151ms median locally

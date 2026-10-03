@@ -179,7 +179,6 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import (
     FunctionOutputContextStrategy,
-    PatternGroupData,
     PatternGroupRuntime,
 )
 from openhcs.core.steps.stream_component_semantics import (
@@ -9418,13 +9417,10 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
         source_image_names=("OrigRNA",),
     ).payload_with(np.full((4, 5), 2, dtype=np.float32), None)
     aligned = AlignedImageStack(slices=(dna_payload, rna_payload))
-    loaded = PatternGroupData(
-        matching_files=["dna.tif", "rna.tif"],
-        main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-    )
+    matching_files = ["dna.tif", "rna.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    output = runtime._project_output_slices(aligned, matching_files)
     stack_payload = aligned.copy_projected_output_stack(
         output, memory_type="numpy", device_id=None,
     )
@@ -9476,13 +9472,10 @@ def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
         None,
     )
     aligned = AlignedImageStack(slices=(first_site, second_site))
-    loaded = PatternGroupData(
-        matching_files=["A01_s001_w2_z001_t001.tif"],
-        main_data_stack=np.zeros((4, 5), dtype=np.float32),
-    )
+    matching_files = ["A01_s001_w2_z001_t001.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    projected = runtime._project_output_slices(aligned, loaded.matching_files)
+    projected = runtime._project_output_slices(aligned, matching_files)
     output_slices = tuple(payload for payload, _context in projected)
 
     assert len(output_slices) == 2
@@ -9503,13 +9496,10 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
     first = np.ones((4, 5), dtype=np.float32)
     second = np.ones((3, 4), dtype=np.float32)
     aligned = AlignedImageStack(slices=(first, second))
-    loaded = PatternGroupData(
-        matching_files=["first.tif", "second.tif"],
-        main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-    )
+    matching_files = ["first.tif", "second.tif"]
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    output = runtime._project_output_slices(aligned, matching_files)
     assert [payload for payload, _context in output] == [first, second]
     assert aligned.copy_projected_output_stack(
         output, memory_type="numpy", device_id=None,

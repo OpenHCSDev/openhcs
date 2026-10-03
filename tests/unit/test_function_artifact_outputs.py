@@ -79,9 +79,8 @@ from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
     FunctionOutputContextStrategy,
-    FunctionRuntimeScope,
-    ImageFunctionOutputContextStrategy,
     PatternGroupData,
+    ImageFunctionOutputContextStrategy,
     PatternGroupRuntime,
     UnchangedFunctionOutputContextStrategy,
 )
@@ -265,7 +264,9 @@ def _execute_function_core(request: CoreExecutionRequest):
     component_value = (
         None if request.execution_group_scope.is_ungrouped else request.group_key
     )
-    runtime_scope = FunctionRuntimeScope(
+    runtime_scope = PatternGroupData(
+        matching_files=[f"input-{index}.tif" for index in range(request.runtime_plane_count)],
+        main_data_stack=request.main_data_arg,
         context=request.context,
         execution_plan=execution_plan,
         compiled_group=CompiledFunctionGroup(
@@ -285,7 +286,7 @@ def _execute_function_core(request: CoreExecutionRequest):
     return FunctionCoreExecutor(
         main_data_arg=request.main_data_arg,
         source_memory_type=MEMORY_TYPE_NUMPY,
-        runtime_scope=runtime_scope,
+        group_data=runtime_scope,
         invocation=invocation,
         artifacts=runtime_scope.artifacts.select_for_invocation(
             invocation,
@@ -2895,7 +2896,7 @@ def _declared_source_executor(
     )
     invocation = invocation.with_artifact_input_edges((edge,))
     return FunctionCoreExecutor(
-        runtime_scope=SimpleNamespace(
+        group_data=SimpleNamespace(
             context=ContextStub(),
             source_binding_plan=source_binding_plan,
             source_binding_context=SourceBindingRuntimeContext.empty(),

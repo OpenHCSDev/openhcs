@@ -62,7 +62,6 @@ from openhcs.core.source_workspace_projection import (
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.steps.function_runtime import FunctionRuntimeScope
     from openhcs.core.runtime_stores import RuntimeArtifactInput
 
 
@@ -361,84 +360,6 @@ class RuntimeAdapterRequest:
             ),
         )
 
-    @classmethod
-    def from_source_context(
-        cls,
-        *,
-        context: "ProcessingContext",
-        source_payload: object | None,
-        artifact_inputs: Mapping[
-            "InvocationArtifactInputProjectionKey",
-            "InvocationArtifactInputEdgePlan",
-        ],
-        artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        source_binding_plan: CompiledSourceBindingPlan,
-        source_binding_context: SourceBindingRuntimeContext,
-        group_key: str | None = None,
-        axis_scope: RuntimeExecutionAxisScope | None = None,
-        plane_projection: RuntimePlaneProjection | None = None,
-        variable_components: tuple[VariableComponents, ...] | None = None,
-        source_load_plan: SourceLoadPlan | None = None,
-        callable_contract: "CallableContract | None" = None,
-    ) -> "RuntimeAdapterRequest":
-        """Project a source-binding runtime context into an adapter request."""
-        return cls(
-            context=context,
-            callable_contract=callable_contract,
-            source_payload=source_payload,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-            source_binding_plan=source_binding_plan,
-            source_binding_context=source_binding_context,
-            group_key=group_key,
-            axis_scope=(
-                axis_scope
-                if axis_scope is not None
-                else RuntimeExecutionAxisScope.from_context(context)
-            ),
-            plane_projection=(
-                plane_projection
-                if plane_projection is not None
-                else RuntimePlaneProjection.stack()
-            ),
-            variable_components=(
-                tuple(variable_components) if variable_components is not None else ()
-            ),
-            source_load_plan=(
-                source_load_plan if source_load_plan is not None else SourceLoadPlan()
-            ),
-        )
-
-    @classmethod
-    def from_runtime_scope(
-        cls,
-        *,
-        runtime_scope: "FunctionRuntimeScope",
-        artifact_inputs: Mapping[
-            "InvocationArtifactInputProjectionKey",
-            "InvocationArtifactInputEdgePlan",
-        ],
-        artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        group_key: str | None,
-        plane_projection: RuntimePlaneProjection,
-        source_payload: object,
-        callable_contract: "CallableContract | None" = None,
-    ) -> "RuntimeAdapterRequest":
-        """Project an invocation runtime scope into an adapter request."""
-        return cls.from_source_context(
-            context=runtime_scope.context,
-            callable_contract=callable_contract,
-            source_payload=source_payload,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-            source_binding_plan=runtime_scope.source_binding_plan,
-            source_binding_context=runtime_scope.source_binding_context,
-            group_key=group_key,
-            axis_scope=runtime_scope.axis_scope,
-            plane_projection=plane_projection,
-            variable_components=tuple(runtime_scope.execution_plan.variable_components),
-            source_load_plan=runtime_scope.execution_plan.source_load_plan,
-        )
 
 
 RuntimeAdapterFactory = Callable[[RuntimeAdapterRequest], object]

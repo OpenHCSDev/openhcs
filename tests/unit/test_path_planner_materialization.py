@@ -111,7 +111,7 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
-    FunctionRuntimeScope,
+    PatternGroupData,
 )
 from openhcs.microscopes.microscope_interfaces import MetadataArtifactProvider
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
@@ -144,7 +144,9 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
             ),
             path=producer.path, backend="memory",
         )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=context,
         execution_plan=plan,
         compiled_group=compiled.default_group,
@@ -159,7 +161,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
     result = FunctionCoreExecutor(
         main_data_arg=ImagePayloadMetadata().payload_with(source),
         source_memory_type=MEMORY_TYPE_NUMPY,
-        runtime_scope=scope,
+        group_data=scope,
         invocation=invocation,
         artifacts=scope.artifacts.select_for_invocation(
             invocation, execution_scope=plan.execution_group_scope, component_key=None

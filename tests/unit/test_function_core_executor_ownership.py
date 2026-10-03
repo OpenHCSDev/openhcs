@@ -23,7 +23,7 @@ from openhcs.core.source_bindings import CompiledSourceBindingPlan, SourceBindin
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
-    FunctionRuntimeScope,
+    PatternGroupData,
 )
 
 
@@ -64,7 +64,10 @@ def _executor():
         source_binding_plan=CompiledSourceBindingPlan.empty(),
     )
     artifacts = ComponentArtifactPlans(inputs={edge.key: edge for edge in edges}, outputs={})
-    scope = FunctionRuntimeScope(
+    initial_image = np.arange(6, dtype=np.float32).reshape(1, 2, 3)
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=initial_image,
         context=SimpleNamespace(axis_id="A01"),
         execution_plan=plan,
         compiled_group=replace(pattern.default_group, invocations=(invocation,)),
@@ -75,13 +78,13 @@ def _executor():
     )
     return FunctionCoreExecutor(
         scope, invocation, artifacts, None, RuntimePlaneProjection.stack(),
-        np.arange(6, dtype=np.float32).reshape(1, 2, 3), "numpy",
+        initial_image, "numpy",
     )
 
 
-def test_executor_retains_original_positional_constructor_and_frozen_slots():
+def test_executor_retains_positional_layout_with_loaded_group_owner_and_frozen_slots():
     expected = (
-        "runtime_scope", "invocation", "artifacts", "group_key", "plane_projection",
+        "group_data", "invocation", "artifacts", "group_key", "plane_projection",
         "main_data_arg", "source_memory_type",
     )
     declaration = fields(FunctionCoreExecutor)
@@ -95,7 +98,7 @@ def test_executor_retains_original_positional_constructor_and_frozen_slots():
         executor.source_memory_type = "other"
     replaced = replace(executor, group_key="changed")
     assert replaced.group_key == "changed"
-    assert replaced.runtime_scope is executor.runtime_scope
+    assert replaced.group_data is executor.group_data
     assert replaced.artifacts is executor.artifacts
 
 
@@ -103,11 +106,11 @@ def test_executor_pickle_retains_real_scope_edges_and_ordered_field_state():
     executor = _executor()
     original_state = executor.__getstate__()
     assert len(original_state) == len(fields(FunctionCoreExecutor))
-    assert original_state[0] is executor.runtime_scope
+    assert original_state[0] is executor.group_data
     assert original_state[-1] == "numpy"
     restored = pickle.loads(pickle.dumps(executor))
     assert type(restored) is FunctionCoreExecutor
-    assert restored.runtime_scope.execution_plan.step_scope_id == "metadata-binding"
+    assert restored.group_data.execution_plan.step_scope_id == "metadata-binding"
     assert tuple(edge.spec.ref() for edge in restored.selected_artifact_input_edges) == (_FIRST.ref(), _SECOND.ref())
     assert all(isinstance(edge, CompiledMetadataArtifactInputEdgePlan) for edge in restored.selected_artifact_input_edges)
     assert restored.invocation.kwargs_dict == executor.invocation.kwargs_dict
