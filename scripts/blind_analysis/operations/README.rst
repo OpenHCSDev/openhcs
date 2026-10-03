@@ -76,20 +76,28 @@ parent-owned acceptance after this source checkpoint.
 Operation-scoped pressure and disabled endpoints
 ------------------------------------------------
 
-The original resource-check.sh owns pressure-window selection. ``ongoing``
-is a bounded continuation within existing enforced process/slice caps: it
-checks the kernel's full-stall ``avg10`` against the funding declaration's
-``full_memory_psi_max_percent``. ``full``, ``replacement`` and ``bootstrap``
-admit future growth and check ``avg10``, ``avg60`` and ``avg300`` against that
-SAME limit. No threshold is raised. The ``full`` in the field name refers to
-the kernel pressure category, not a second numeric limit for an operation.
+The original resource-check.sh owns operation admission. ``ongoing`` is a
+bounded continuation inside existing process/slice caps, not future fleet
+admission. Its RAM floor is desktop reserve plus the selected immutable run's
+declared SCI and CLI budgets, bounded by the actual remaining common-slice
+capacity. Existing charged processes are not counted as three future fleets.
+The declaration must contain valid positive budgets within the aggregate cap;
+the common slice must be active, match its cap and Swap0, and not be overcharged.
+
+For that bounded action, full-stall PSI is retained as warning telemetry rather
+than a universal stop. ``full``, ``replacement`` and ``bootstrap`` admit future
+growth and reject ``avg10``, ``avg60`` or ``avg300`` above the SAME existing
+``full_memory_psi_max_percent``. No threshold is raised or clipped; no pressure
+sample is rewritten. The field describes a growth qualifier in the kernel's
+full-stall pressure category, not a second numeric limit for ongoing work.
 
 Every observation preserves all kernel pressure windows plus a separate
-selected-window policy receipt. Missing, repeated or malformed selected
+operation-policy receipt. Missing, repeated or malformed pressure
 measurements reject. Low available RAM, exhausted disk reservations, inactive
 or mismatched aggregate caps, expired clocks and missing custody still reject
-through their original owners. High current pressure is not declared safe
-merely because the operation is small. ``ledger`` remains ledger-only, never
+through their original owners. High pressure alone is not declared safe:
+insufficient actual RAM for the bounded budget still stops ongoing work.
+``ledger`` remains ledger-only, never
 scientific admission. New clients still require replacement admission; do not
 use an ongoing observation as permission to launch unreserved growth.
 

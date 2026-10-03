@@ -8,13 +8,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "$1" "${2:?slot}"
 phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:-ongoing}
-# A bounded continuation checks current stalls inside existing enforced caps.
-# Admission of future growth also checks the sustained pressure history.
-# Keep the window policy with this original operation-mode owner, not callers.
+# Growth qualification is not a universal stop for a bounded continuation.
+# The same owner requires actual RAM for the operation budget below; PSI is
+# telemetry for ongoing work, and fatal when admitting future fleet growth.
 case "$mode" in
-  ongoing) psi_windows='avg10' ;;
-  full|replacement|bootstrap) psi_windows='avg10 avg60 avg300' ;;
-  ledger) psi_windows='' ;;
+  ongoing) pressure_policy=warning ;;
+  full|replacement|bootstrap) pressure_policy=reject ;;
+  ledger) pressure_policy=ledger ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
@@ -96,33 +96,51 @@ if [[ "$mode" == full ]]; then floor=$((floor+FLEET_COMBINED_MIB)); fi
 
 # The existing common slice is the aggregate RAM owner. Its current charge
 # already includes continuing runs and inherited helpers, so do not sum them again.
+maximum=$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)
+current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
+[[ "$current" =~ ^[0-9]+$ ]]
+test "$current" -le "$maximum"
+growth=$((maximum-current))
+printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
+if [[ "$mode" == ongoing ]]; then
+  # One selected member's original declared process budgets bound this action.
+  # This is conservative even when its processes are already charged. The
+  # common slice can grow by no more than its remaining enforced capacity.
+  budget=$(fleet_limits_for "$FLEET_SLOT" | jq -er '
+    [.per_author_science_mib, .per_author_cli_mib] |
+    if all(.[]; type=="number" and .>0 and .==floor) then add
+    else error("missing or invalid bounded operation process budget") end')
+  test "$budget" -le "$FLEET_COMBINED_MIB"
+  budget_bytes=$((budget*1048576))
+  if [[ "$growth" -lt "$budget_bytes" ]]; then budget_bytes=$growth; fi
+  floor=$((floor+(budget_bytes+1048575)/1048576))
+  printf 'Bounded ongoing member=%s declared=%s MiB furtherGrowthBound=%s bytes\n' "$FLEET_SLOT" "$budget" "$budget_bytes" | tee "$receipt.operation-budget"
+fi
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
-  maximum=$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)
-  current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
-  [[ "$current" =~ ^[0-9]+$ ]]
-  test "$current" -le "$maximum"
-  growth=$((maximum-current))
-  printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
   floor=$((floor+(growth+1048575)/1048576))
 fi
-psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent' <<< "$FLEET_PROGRAM")
+psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent | select(type=="number" and .>=0 and .<=100)' <<< "$FLEET_PROGRAM")
 awk -v floor="$floor" '/MemAvailable:/ {printf "MemAvailable %.3f GiB; required %d MiB\n",$2/1048576,floor; if($2<floor*1024) exit 76}' /proc/meminfo | tee "$receipt.ram"
-printf 'Pressure admission mode=%s selected=%s limit=%s%%; all windows retained below\n' "$mode" "$psi_windows" "$psi_max" | tee "$receipt.psi-policy"
-awk -v limit="$psi_max" -v windows="$psi_windows" '
-  BEGIN {count=split(windows, required, " ")}
+printf 'Pressure admission mode=%s policy=%s limit=%s%%; enforced RAM budget and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
+awk -v limit="$psi_max" -v policy="$pressure_policy" '
+  BEGIN {count=split("avg10 avg60 avg300", required, " ")}
   /^full / {
     print
     for(i=2;i<=NF;i++) {
       split($i, field, "=")
       for(j=1;j<=count;j++) if(field[1]==required[j]) {
-        if(seen[field[1]]++ || field[2] !~ /^[0-9]+([.][0-9]+)?$/ || field[2]+0>limit) invalid=1
+        if(seen[field[1]]++ || field[2] !~ /^[0-9]+([.][0-9]+)?$/) invalid=1
+        else if(field[2]+0>limit) {
+          printf "Pressure %s: full %s=%s exceeds declared %s%%\n", policy, field[1], field[2], limit
+          exceeded=1
+        }
       }
     }
   }
   END {
     for(j=1;j<=count;j++) if(seen[required[j]]!=1) invalid=1
-    if(invalid) exit 77
+    if(invalid || (exceeded && policy=="reject")) exit 77
   }
 ' /proc/pressure/memory | tee "$receipt.psi"
 printf 'Admission PASS\n'
