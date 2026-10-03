@@ -995,8 +995,11 @@ class OpenHCSMetadataWriter:
                         if record.owns_persisted_artifact(
                             materialization.output_plan, destination, self.output_dir
                         ):
+                            # A collapsed image retains filename coordinates while
+                            # its semantic source address can be absent. Validate
+                            # the occurrence against its producer's filename view.
                             if (
-                                projection.address != address
+                                projection.address != record.filename_address
                                 or projection.image_metadata != metadata
                             ):
                                 raise ValueError(
