@@ -642,12 +642,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
 
         return functions
 
-    def _metadata_for_function(
-        self,
-        name: str,
-        func,
-        module_name: str,
-    ) -> FunctionMetadata | None:
+    @classmethod
+    def declared_callable_contract(cls, func: Callable) -> CallableContract | None:
+        """Select array or plate declarations through the catalog's one admission."""
         declared = inspect.unwrap(func)
         if not inspect.isfunction(declared):
             return None
@@ -656,25 +653,18 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
         )
 
-        # Look for functions with memory type attributes (added by @numpy, @cupy, etc.)
-        if (
+        if not plate_scoped and (
             callable_contract.input_memory_type is None
             or callable_contract.output_memory_type is None
         ):
-            if not plate_scoped:
-                return None
-            input_type = None
-            output_type = None
-        else:
-            input_type = callable_contract.input_memory_type
-            output_type = callable_contract.output_memory_type
+            return None
 
         if not plate_scoped and (
-            input_type not in VALID_MEMORY_TYPES
-            or output_type not in VALID_MEMORY_TYPES
+            callable_contract.input_memory_type not in VALID_MEMORY_TYPES
+            or callable_contract.output_memory_type not in VALID_MEMORY_TYPES
         ):
             logger.debug(
-                f"Skipping {name} - invalid memory types: {input_type} -> {output_type}"
+                "Skipping %s - invalid input/output memory declarations", declared.__name__
             )
             return None
 
@@ -683,9 +673,24 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             logger.debug(
                 "Skipping %s - declared framework roles are invalid, unavailable, "
                 "or excluded by current catalog policy",
-                name,
+                declared.__name__,
             )
             return None
+        return callable_contract
+
+    def _metadata_for_function(
+        self,
+        name: str,
+        func: Callable,
+        module_name: str,
+        *,
+        metadata_type: type[FunctionMetadata] = FunctionMetadata,
+    ) -> FunctionMetadata | None:
+        callable_contract = self.declared_callable_contract(func)
+        if callable_contract is None:
+            return None
+        declared = inspect.unwrap(func)
+        plate_scoped = callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
 
         contract = self._processing_contract_for_function(
             callable_contract,
@@ -710,7 +715,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         # Extract full docstring, not just first line
         doc = self._extract_function_docstring(func)
 
-        return FunctionMetadata(
+        return metadata_type(
             name=unique_name,
             func=wrapped_func,
             contract=contract,
@@ -719,7 +724,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             doc=doc,
             tags=self._generate_tags(module_name),
             original_name=declared.__name__,
-            memory_type=input_type,
+            memory_type=callable_contract.input_memory_type,
         )
 
     def _catalog_metadata_for_function(
