@@ -112,9 +112,10 @@ def test_canonical_reference_is_unique_searchable_and_fully_readable():
         )
     )
     assert not document.truncated
-    for line in _reference_block("callable-artifact-reference").splitlines():
-        if line.strip():
-            assert line in document.content
+    for block in ("callable-artifact-reference", "callable-artifact-input-reference"):
+        for line in _reference_block(block).splitlines():
+            if line.strip():
+                assert line in document.content
     assert "from openhcs.core.memory import numpy" in document.content
 
 
@@ -234,6 +235,24 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
         {"slice_index": 1, "object_label": 1, "pixel_count": 16},
     )
     assert list(manager.storage_dir.iterdir()) == []
+
+
+def test_input_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    metadata = manager._prepare_source(_reference_block("callable-artifact-input-reference"))
+    contract = CallableContract.from_callable(metadata.func)
+    contract.validate_artifact_input_parameter_bindings()
+    assert contract.artifact_inputs.specs[0].parameter_name == "objects"
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.asarray([[0, 7]], dtype=np.int32)),
+    )
+    image = np.asarray([[3, 5]], dtype=np.uint16)
+    np.testing.assert_array_equal(metadata.func(image, objects=labels), [[0, 5]])
+    assert not manager.storage_dir.exists()
 
 
 @pytest.mark.parametrize("plane_count", (None, 1, 2))
