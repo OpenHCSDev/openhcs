@@ -79,5 +79,40 @@ will be contacted/replayed. Inner reflection cost remains unmeasured. A registry
 inventory lock held by a separate concurrent registry worker is an excluded Root
 seam if encountered; it is not silently fixed with another lock or timeout here.
 
-Initial source checkpoint: verification pending; no build, installation or native
-launch performed. Saved diagnosis and all scientific records remain immutable.
+Source checkpoint and actual controls
+------------------------------------
+
+Draft PR511 was published at 3e1e336089ccf2d3d3e20a849a885193daff1bba before
+longer verification. The postchange selected-family AST receipt has 28 production
+modules, 5262 sites, 8 dependency modules and zero parse errors. Runtime claims
+remain separate from this evidence. ``git diff --check`` passed.
+
+All four bounded collection attempts are retained in the original engineering
+receipt root as catalog511-source01..04.log/time; each used CPU1/512MiB/Swap0/60s.
+They executed no scientific functions, native servers, sockets or viewers:
+
+1. systemd working directory omitted: pytest rejected relative confcutdir.
+2. corrected directory: dependency import preceded source bootstrap; corrected
+   the test import ordering through the original source owner.
+3. collection then reached missing compiled openhcs.core._tabular_native.
+4. reused the accepted505 real extension directly, without copying/building it;
+   its C++ source matches this checkout, SHA256 of the ABI3 extension is
+   7de8f671e79263518e56219b30085b2c39c9518db63739298c4ffc9265196aae.
+   Collection then failed because the protected old external/zmqruntime checkout
+   lacks ViewerReuseAdmissionABC required by current-main viewer_protocol.
+
+No assertions ran: this is a precise dependency-collection blocker, not a passing
+regression suite. Attempt04 peaked at 179752KiB RSS (unit peak123.3MiB), zero swap,
+3.015s. The last run reused an explicit actual compiled dependency for source
+controls only; it is not ordinary installed/public/native acceptance. No substitute
+registry/factory/backend, native extension stub, path fallback or protocol was
+introduced into production. All foreign external trees remain unchanged. They
+will not be updated, patched or bypassed to hide this source-import boundary.
+
+The authored controls cover warm full/compact public projection, current-source
+revision, add/update/delete/body-only invalidation, refresh coalescing, retained
+failure/cancellation, incarnation rejection and original main-thread startup.
+Run them using current qualified dependencies after an explicit receiving release;
+then perform the separately authorized ordinary installed native public journey.
+No build, installation or native launch was performed. Saved diagnosis and all
+scientific records remain immutable.

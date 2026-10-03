@@ -637,7 +637,9 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             status_callback=status_callback,
             cancellation=cancellation,
         )
-        self.prepare_projections(status_callback=status_callback, cancellation=cancellation)
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
+        )
 
     def projections_current(self) -> bool:
         """Derive readiness from the original registry and cached public views."""
@@ -653,7 +655,9 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         if self._projection_metadata != RegistryService.cached_metadata_snapshot():
             return False
         manager = custom_function_manager.CustomFunctionManager(create_storage=False)
-        return manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
+        return (
+            manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
+        )
 
     def prepare_projections(
         self,
