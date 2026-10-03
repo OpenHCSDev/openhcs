@@ -1,6 +1,36 @@
 Registered object-output boundary investigation
 ==============================================
 
+Actual03 physical-rank negative; scalar-source receiving04
+---------------------------------------------------------
+
+Parent original83658 default03 selected SOURCE_BINDINGS correctly then failed
+before source sessions/compile/execution: scalar12x15 TIFF cannot expose1 declared
+source stack axis. Original message at mcp.stdout4886,03 documents/error/archive
+preserved. SourceBindingWorkspaceProjector._expanded_binding_candidates treats
+source_stack_components as leading physical axes and correctly enforces rank;
+03 incorrectly declared a leading Z dimension. This is a config error, not503.
+
+New complete pipeline-default04.py/pipeline-removed04.py and corresponding04
+CPPipe files correct only that semantic declaration to source_stack_components=().
+Metadata processing variable Z_INDEX/channel grouping remains unchanged; no
+synthetic reshape/group/label remap. Same primary Labels/categorical Objects,
+original metadata matching/explicit source owner, source hash2/7, shape areas6/20,
+exact retained7/removed2 masks/directed lineage and strict4/6 ABI. Distinct04
+results/export paths; original03 unchanged. Parent sole83658/native6014 owns
+actual public receiving. Exact new files/commands/source proof/hashes:
+``engineering503/PUBLIC95-SCALAR04-RECEIVING.rst``.
+
+Only AST syntax/CPPipe byte equality/original hashes checked; no import/test/
+build/install/native/viewer/science or product/shared source edit. Existing
+qualifiedc031/target02 bytes and all foreign ledgers retained. NRA/audit IDEN-1
+and BOUND-2 keep physical axes and metadata processing coordinates distinct at
+their existing typed owners. Earlier complete family/controls/R0 not rerun.
+
+Byte-exact5-member04 receiving archive:
+``registered-object-output-scalar04-20261003.tar.gz``,3909bytes, SHA256
+``0406ce8ccd7ce3ef7b72793d0aa0424c8297705c2348cd213310fc07ffd142d2``.
+
 Actual02 scope negative and source-owner receiving03
 ---------------------------------------------------
 
