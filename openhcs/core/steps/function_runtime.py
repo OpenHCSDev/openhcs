@@ -108,7 +108,6 @@ from openhcs.core.runtime_slice_projection import (
     RuntimeSliceProjection,
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
@@ -2542,10 +2541,16 @@ class PatternGroupRuntime:
             raise RuntimeError("MicroscopeHandler not available in context.")
 
         output_manifest = step_output_manifest(context)
-        producer_matching_files = output_manifest.producer_paths_matching_pattern(
-            plan,
-            str(request.pattern_group_info),
-            context.microscope_handler.parser,
+        producer_index = output_manifest.producer_record_index_for(
+            plan, context.microscope_handler.parser,
+        )
+        producer_records = (
+            None if producer_index is None
+            else producer_index.matching_records(str(request.pattern_group_info))
+        )
+        producer_matching_files = (
+            () if producer_records is None
+            else tuple(record.output_path for record in producer_records)
         )
         matching_files = list(producer_matching_files)
         source_projection = (
@@ -2563,11 +2568,13 @@ class PatternGroupRuntime:
                     else None
                 ),
             )
-        matching_files = output_manifest.filter_to_producer_paths(
-            plan,
-            matching_files,
-            context.microscope_handler.parser,
-        )
+        if producer_index is not None and not producer_matching_files:
+            selected_paths = [
+                path for path in matching_files if producer_index.contains(path)
+            ]
+            if matching_files and not selected_paths:
+                raise NoStepOutputManifestMatch
+            matching_files = selected_paths
 
         if not matching_files:
             raise ValueError(
@@ -2622,13 +2629,14 @@ class PatternGroupRuntime:
             matching_files=matching_files,
             source_projection=source_projection,
         ).runtime_context()
-        producer_records = (
-            output_manifest.producer_output_records_for_paths(
-                plan, matching_files, context.microscope_handler.parser,
-            )
-            if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
-            else None
-        )
+        if producer_index is not None:
+            producer_records = tuple(sorted(
+                producer_records, key=lambda record: record.output_path,
+            ))
+            if matching_files != [record.output_path for record in producer_records]:
+                producer_records = producer_index.records_for_paths(matching_files)
+            else:
+                producer_index.validate_input_records(producer_records)
         ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
@@ -2949,7 +2957,7 @@ class PatternGroupRuntime:
                 f"Source-bound payload {source_path!r} declares unknown alias "
                 f"{alias!r}."
             )
-        return apply_source_binding_payload(payload, binding, source_context)
+        return binding.apply_loaded_payload(payload, source_context)
 
     @staticmethod
     def execute_chain(

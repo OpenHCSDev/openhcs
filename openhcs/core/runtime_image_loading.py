@@ -130,9 +130,14 @@ class ImagePayloadSourceMetadataContext:
                 image_shape_yx=source_spatial_shape_yx,
             )
         )
-        return metadata.with_source_context_from(
+        metadata = metadata.with_source_context_from(
             existing_metadata
         ).with_missing_intensity_from(existing_metadata)
+        if source_binding is not None:
+            # A declared absent channel axis must not be refilled from the
+            # previous carrier while merging missing source context.
+            metadata.source_channel_axis = source_channel_axis
+        return metadata
 
     @staticmethod
     def source_channel_axis(

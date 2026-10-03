@@ -52,6 +52,9 @@ from openhcs.core.xdg_paths import get_openhcs_cache_dir
 
 if TYPE_CHECKING:
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.runtime_array_values import RuntimeArrayData
+    from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
 SourceMetadataIdentity = tuple[tuple[str, SourceMetadataIdentityItems], ...]
 SOURCE_ALIAS_PART_SEPARATOR = "__"
@@ -1037,6 +1040,92 @@ class NamedSourceBinding(SourceAssignmentBase):
             self.artifact_kind,
             required=self.required,
         )
+
+    def apply_loaded_payload(
+        self,
+        payload: RuntimeArrayData,
+        source_context: ImagePayloadSourceMetadataContext | None,
+    ) -> RuntimeArrayData:
+        """Apply this declaration to one freshly loaded source payload."""
+        import numpy as np
+
+        from openhcs.core.runtime_image_values import (
+            ImagePayloadMetadata,
+            ImageUnitIntervalIntensityMetadata,
+            image_payload_data,
+            image_payload_mask,
+            image_payload_metadata,
+        )
+
+        if source_context is None:
+            existing = image_payload_metadata(payload)
+            metadata = (
+                existing
+                if existing.has_values
+                else ImagePayloadMetadata.for_array_payload(payload)
+            )
+        else:
+            # The physical context needs the declared channel axis before it
+            # admits source geometry. It resolves this binding's axis once.
+            metadata = source_context.metadata(payload, source_binding=self)
+        metadata = metadata.replace_fields(
+            source_provenance=metadata.source_provenance.with_source_image_names(
+                (self.alias,)
+            )
+        )
+        if source_context is None:
+            metadata = metadata.replace_fields(
+                source_channel_axis=self.source_channel_axis_for_shape(
+                    np.shape(image_payload_data(payload)),
+                    observed_axis=metadata.source_channel_axis,
+                ),
+            )
+        metadata.normalized_source_channel_axis(payload)
+
+        data, source_channel_axis = self.artifact_kind.normalize_source_payload(
+            image_payload_data(payload),
+            metadata.source_channel_axis,
+        )
+        if self.load_as_monochrome and source_channel_axis is not None:
+            data = self._monochrome_source_data(data, source_channel_axis, metadata)
+            source_channel_axis = None
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=ImageUnitIntervalIntensityMetadata(),
+                intensity_scale=ImagePayloadMetadata.for_array(data).intensity_scale,
+            )
+        if self.load_as_mask:
+            data = np.asarray(data, dtype=bool)
+
+        metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
+        return metadata.payload_with(data, image_payload_mask(payload))
+
+    @staticmethod
+    def _monochrome_source_data(
+        data: RuntimeArrayData,
+        channel_axis: int,
+        metadata: ImagePayloadMetadata,
+    ) -> RuntimeArrayData:
+        """Convert declared RGB channels using the source intensity domain."""
+        import numpy as np
+
+        from openhcs.core.runtime_image_values import (
+            image_payload_data,
+            normalize_image_payload_intensity,
+        )
+
+        normalized = normalize_image_payload_intensity(
+            metadata.payload_with(data),
+            dtype=np.float32,
+        )
+        rgb = np.moveaxis(
+            np.asarray(image_payload_data(normalized)), channel_axis, -1
+        )[..., :3]
+        if np.all(rgb == rgb[..., :1]):
+            return np.ascontiguousarray(rgb[..., 0])
+
+        from skimage.color import rgb2gray
+
+        return rgb2gray(rgb)
 
     def component_values(
         self,

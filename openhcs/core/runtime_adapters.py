@@ -47,7 +47,6 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
 )
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -339,9 +338,8 @@ class RuntimeAdapterRequest:
                 )
             projected = projection.project_payload(lookup, payload)
             projected_payloads.append(
-                apply_source_binding_payload(
+                binding.apply_loaded_payload(
                     projected,
-                    binding,
                     ImagePayloadSourceMetadataContext(
                         SourceImageIdentity(
                             member,

@@ -21,9 +21,10 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
+    ImageMetadataPayload,
+    ImagePayloadMetadata,
     image_payload_data,
     image_payload_metadata,
 )
@@ -843,9 +844,8 @@ def test_names_and_types_contributes_payload_loading_semantics(
     multiband_data = np.zeros((5, 6, 2), dtype=np.float32)
     multiband_path = tmp_path / "multiband.tiff"
     tifffile.imwrite(multiband_path, multiband_data)
-    multiband = apply_source_binding_payload(
+    multiband = color.apply_loaded_payload(
         tifffile.imread(multiband_path),
-        color,
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(str(multiband_path)),
         ),
@@ -853,12 +853,20 @@ def test_names_and_types_contributes_payload_loading_semantics(
     multiband_metadata = image_payload_metadata(multiband)
     assert multiband_metadata.source_channel_axis == -1
     assert multiband_metadata.source_spatial_shape_yx == (5, 6)
-    grayscale = apply_source_binding_payload(
+    grayscale = color.apply_loaded_payload(
         np.zeros((512, 512), dtype=np.uint8),
-        color,
         None,
     )
     assert image_payload_metadata(grayscale).source_channel_axis is None
+    grayscale = color.apply_loaded_payload(
+        ImageMetadataPayload(
+            np.zeros((512, 512), dtype=np.uint8),
+            ImagePayloadMetadata(source_channel_axis=-1),
+        ),
+        ImagePayloadSourceMetadataContext(SourceImageIdentity("grayscale.tif")),
+    )
+    assert image_payload_metadata(grayscale).source_channel_axis is None
+    assert image_payload_metadata(grayscale).source_spatial_shape_yx == (512, 512)
     assert mask.artifact_kind is ImageArtifactType
     assert mask.load_as_mask is True
     assert objects.artifact_kind is ObjectLabelsArtifactType
@@ -882,7 +890,7 @@ def test_monochrome_source_normalizes_before_collapsing_rgb_channels() -> None:
         source_channel_counts=frozenset((3, 4)),
     )
 
-    observed = apply_source_binding_payload(rgb, binding, None)
+    observed = binding.apply_loaded_payload(rgb, None)
     expected = codes.astype(np.float32) / np.float32(255)
 
     np.testing.assert_array_equal(image_payload_data(observed), expected)
@@ -909,7 +917,7 @@ def test_monochrome_source_uses_rgb_luminance_for_distinct_channels() -> None:
         source_channel_counts=frozenset((3, 4)),
     )
 
-    observed = apply_source_binding_payload(rgb, binding, None)
+    observed = binding.apply_loaded_payload(rgb, None)
     expected = rgb2gray(rgb.astype(np.float32) / np.float32(255))
 
     np.testing.assert_array_equal(image_payload_data(observed), expected)

@@ -33,7 +33,6 @@ from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
@@ -178,9 +177,8 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             Backend.VIRTUAL_WORKSPACE.value,
         ),
     )
-    primary_payload = apply_source_binding_payload(
+    primary_payload = primary_binding.apply_loaded_payload(
         primary_payload,
-        primary_binding,
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(
                 primary_virtual_path,

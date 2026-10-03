@@ -906,11 +906,10 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
         ),
     )
 
-    assert store.producer_paths_matching_pattern(
-        consumer,
-        "A14_s{iii}_w3_z001_t001.tif",
-        SourceSchemaFilenameParser(),
-    ) == [
+    index = store.producer_record_index_for(consumer, SourceSchemaFilenameParser())
+    assert [record.output_path for record in index.matching_records(
+        "A14_s{iii}_w3_z001_t001.tif"
+    )] == [
         str(output_dir / "A14_s001_w3_z001_t001.tif"),
         str(output_dir / "A14_s002_w3_z001_t001.tif"),
     ]
@@ -1014,14 +1013,8 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
             ),
         )
 
-    assert (
-        store.producer_paths_matching_pattern(
-            consumer,
-            "A14_s{iii}_w1_z001_t001.tif",
-            SourceSchemaFilenameParser(),
-        )
-        == []
-    )
+    index = store.producer_record_index_for(consumer, SourceSchemaFilenameParser())
+    assert index is None
 
 
 def test_step_output_manifest_uses_declared_artifact_producer_scope(
@@ -3862,15 +3855,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         )
     )
 
-    class SourceManifest:
-        @staticmethod
-        def producer_paths_matching_pattern(*_args):
-            return list(virtual_paths)
-
-        @staticmethod
-        def filter_to_producer_paths(_plan, paths, _parser):
-            return list(paths)
-
     class SourceFileManager:
         @staticmethod
         def load_batch(paths, backend):
@@ -3892,7 +3876,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     monkeypatch.setattr(
         function_runtime,
         "step_output_manifest",
-        lambda _context: SourceManifest(),
+        lambda _context: StepOutputManifestStore(),
     )
     monkeypatch.setattr(
         function_runtime.SourceBindingRuntimeContextRequest,
@@ -3996,13 +3980,6 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    class ProducerManifest:
-        def producer_paths_matching_pattern(self, *_args):
-            return [str(output_path)]
-
-        def filter_to_producer_paths(self, _plan, paths, _parser):
-            return list(paths)
-
     class MemoryFileManager:
         def load_batch(self, paths, backend):
             assert paths == [str(output_path)]
@@ -4013,7 +3990,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
     monkeypatch.setattr(
         function_runtime,
         "step_output_manifest",
-        lambda _context: ProducerManifest(),
+        lambda _context: producer_manifest,
     )
     monkeypatch.setattr(
         function_runtime.SourceBindingRuntimeContextRequest,
@@ -4049,7 +4026,26 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         input_dir=tmp_path,
         input_memory_type="numpy",
         variable_components=(VariableComponents.Z_INDEX,),
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0, source_step_scope_id="producer",
+        ),
     )
+    producer = CompiledStepPlan(
+        step_index=0, step_name="producer", step_type="FunctionStep",
+        step_scope_id="producer", axis_id="A01", output_dir=tmp_path,
+    )
+    producer_manifest = StepOutputManifestStore()
+    producer_manifest.begin_step(producer)
+    producer_manifest.record_outputs(producer, (
+        ProducedOutputSemantics.from_output(
+            producer, output_path,
+            FunctionOutputIdentity(
+                component_values={"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1"},
+                extension=".tif", source="test",
+            ),
+        ).with_filename_qualifier("RescaledDNA"),
+    ))
     context = SimpleNamespace(
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         filemanager=MemoryFileManager(),
@@ -5602,3 +5598,85 @@ def test_step_output_manifest_batch_lookup_rejects_shared_basename(
     assert store.producer_output_contexts_for_paths(
         consumer, (records[0].output_path, other.output_path), parser
     ) == (records[0].output_context, other.output_context)
+
+
+def test_producer_admission_rederives_live_storage_aliases_each_epoch(
+    qualified_producer_manifest,
+):
+    store, producer, consumer, records, parser = qualified_producer_manifest
+    storage_components = dict(records[0].filename_values)
+    record = replace(records[0], filename_component_values=storage_components)
+    store.record_outputs(producer, (record,))
+    old_index = store.producer_record_index_for(consumer, parser)
+    storage_components["channel"] = 9
+    new_alias = record.without_filename_qualifier().filename(parser)
+
+    assert old_index.matching_records(new_alias) == ()
+    current_index = store.producer_record_index_for(consumer, parser)
+    assert current_index.matching_records(new_alias) == (record,)
+    assert current_index.record_for_path(record.output_path) is record
+
+
+def test_producer_loader_validates_ambiguity_after_source_context_before_cache(
+    monkeypatch,
+):
+    from openhcs.core.steps import function_runtime
+
+    producer = CompiledStepPlan(
+        step_index=0, step_name="producer", step_type="FunctionStep",
+        step_scope_id="producer", axis_id="A01", output_dir=Path("/memory"),
+    )
+    plan = CompiledStepPlan(
+        step_index=1, step_name="consumer", step_type="FunctionStep",
+        axis_id="A01", input_dir=Path("/memory"), input_memory_type="numpy",
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0, source_step_scope_id="producer",
+        ),
+    )
+    manifest = StepOutputManifestStore()
+    manifest.begin_step(producer)
+    manifest.record_outputs(producer, (
+        ProducedOutputSemantics.from_existing_main_flow_path(
+            producer, "A01_s001_w1_z001_t001.tif", SourceSchemaFilenameParser(),
+        ),
+        ProducedOutputSemantics.from_output(
+            producer, "/memory/other/A01_s001_w1_z001_t001.tif",
+            FunctionOutputIdentity(
+                component_values={"well": "A01", "site": 2, "channel": 1, "z_index": 1, "timepoint": 1},
+                extension=".tif", source="test",
+            ),
+        ),
+    ))
+    events = []
+
+    def source_context():
+        events.append("source_context")
+        return SourceBindingRuntimeContext.empty()
+
+    class RejectImageCache:
+        def get(self, *_args, **_kwargs):
+            pytest.fail("Ambiguous producer admission must precede cached pixels")
+
+    context = SimpleNamespace(
+        microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
+        runtime_image_stack_cache=RejectImageCache(),
+    )
+    runtime = function_runtime.PatternGroupRuntime(
+        function_runtime.PatternGroupExecutionRequest(
+            context=context, execution_plan=plan,
+            compiled_group=plan.compiled_function_pattern.default_group,
+            pattern_group_info="A01_s001_w1_z001_t001.tif", component_index=0, component_count=1,
+        )
+    )
+    monkeypatch.setattr(function_runtime, "step_output_manifest", lambda _context: manifest)
+    monkeypatch.setattr(runtime, "source_workspace_projection_authority", lambda: SimpleNamespace(
+        projection_if_available=lambda: None,
+    ))
+    monkeypatch.setattr(function_runtime.SourceBindingRuntimeContextRequest, "from_context", classmethod(
+        lambda cls, **_kwargs: SimpleNamespace(runtime_context=source_context),
+    ))
+
+    with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
+        runtime._load_input_stack()
+    assert events == ["source_context"]

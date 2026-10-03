@@ -112,7 +112,6 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
@@ -2142,9 +2141,8 @@ def test_source_aligned_object_labels_replace_stale_plane_provenance() -> None:
 def test_source_image_loading_semantics_attaches_component_metadata() -> None:
     image = np.zeros((4, 5), dtype=np.uint16)
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(alias="DNA").apply_loaded_payload(
         image,
-        NamedSourceBinding(alias="DNA"),
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(
                 "01_POS002_D.TIF",
@@ -2301,13 +2299,12 @@ def test_declared_source_pixel_channel_axis_owns_source_spatial_domain() -> None
         ),
     )
 
-    bound = apply_source_binding_payload(
+    bound = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         payload,
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity("color.tif")),
     )
 
@@ -2325,15 +2322,14 @@ def test_object_label_source_image_semantics_treats_rgb_image_as_label_plane() -
         ImagePayloadMetadata(source_channel_axis=-1),
     )
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Objects",
+        artifact_kind=ObjectLabelsArtifactType,
+        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         source,
-        NamedSourceBinding(
-            alias="Objects",
-            artifact_kind=ObjectLabelsArtifactType,
-            projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity("objects.png")),
     )
 
@@ -2353,13 +2349,12 @@ def test_source_file_pixel_semantics_declare_ingestion_channel_axis(
     image = np.zeros((4, 5, 3), dtype=np.uint8)
     iio.imwrite(path, image)
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         iio.imread(path),
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 
@@ -2394,13 +2389,12 @@ def test_source_file_pixel_semantics_allow_monochrome_without_declared_channel_a
     path = tmp_path / "source.png"
     iio.imwrite(path, np.zeros((4, 5), dtype=np.uint8))
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         iio.imread(path),
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 

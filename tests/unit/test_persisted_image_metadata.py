@@ -481,11 +481,11 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {}))
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     current = image_payload_metadata(
-        apply_source_binding_payload(
-            reloaded, NamedSourceBinding(alias="neurite"), context
+        NamedSourceBinding(alias="neurite").apply_loaded_payload(
+            reloaded,
+            context,
         )
     )
     assert current.source_dtype == "float32"
@@ -503,7 +503,6 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
 ):
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     metadata = metadata_fixture().replace_fields(
         source_spatial_domain=SourceSpatialDomain((0, 0), (4, 6))
@@ -516,9 +515,8 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
         image_format.read(path), image_format.persisted_metadata(path, payload)
     )
     current = image_payload_metadata(
-        apply_source_binding_payload(
+        NamedSourceBinding(alias="neurite").apply_loaded_payload(
             reloaded,
-            NamedSourceBinding(alias="neurite"),
             ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {})),
         )
     )
@@ -616,7 +614,6 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
 
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
     metadata = metadata_fixture().replace_fields(
@@ -652,9 +649,8 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
         json.loads(json.dumps(to_jsonable(restored)))
     )
     assert restored.source_channel_axis == -1
-    bound = apply_source_binding_payload(
+    bound = NamedSourceBinding(alias="neurite").apply_loaded_payload(
         ImageMetadataPayload(loaded, restored),
-        NamedSourceBinding(alias="neurite"),
         context,
     )
     current = image_payload_metadata(bound)

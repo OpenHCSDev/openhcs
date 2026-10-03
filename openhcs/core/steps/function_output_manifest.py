@@ -56,6 +56,20 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     image_metadata: ImagePayloadMetadata | None = None
     main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE
 
+    def path_tokens(self, parser: FilenameParser) -> frozenset[str]:
+        """Expose this occurrence's exact storage and unqualified address aliases."""
+        tokens = {
+            token
+            for value in (self.relative_output_path, self.output_path)
+            for token in (
+                source_path_identity(value).as_posix(),
+                source_path_identity(value).name,
+            )
+        }
+        if self.filename_qualifier is not None:
+            tokens.add(self.without_filename_qualifier().filename(parser))
+        return frozenset(tokens)
+
     def passed_through(self, plan: CompiledStepPlan) -> "ProducedOutputSemantics":
         """Retain the image domain and physical identity under the next producer."""
         return replace(
@@ -229,10 +243,6 @@ class StepOutputManifestStore:
         tuple[int, int],
         tuple[ProducedOutputSemantics, ...] | None,
     ] = field(default_factory=dict)
-    producer_paths_by_pattern: dict[
-        tuple[int, int, str, int],
-        tuple[str, ...],
-    ] = field(default_factory=dict)
     filtered_paths_by_plan: dict[
         tuple[int, int, tuple[str, ...], int],
         tuple[str, ...],
@@ -292,7 +302,6 @@ class StepOutputManifestStore:
     def _invalidate_record_selection_caches(self) -> None:
         self.records_revision += 1
         self.selected_records_by_plan.clear()
-        self.producer_paths_by_pattern.clear()
         self.filtered_paths_by_plan.clear()
 
     def producer_records_for(
@@ -346,18 +355,14 @@ class StepOutputManifestStore:
             key = plan.execution_group_scope.normalize_key(value)
             if plan.execution_group_scope.contains_runtime_key(key):
                 records_by_group.setdefault(key, []).append(record)
-        selectors = tuple(
-            (pattern, ProducedPathPatternSelector.from_pattern(pattern))
-            for pattern in dict.fromkeys(patterns)
-        )
-        return {
-            key: tuple(
-                pattern
-                for pattern, selector in selectors
-                if selector.matches(ProducedPathSet.from_records(group_records, parser))
+        patterns = tuple(dict.fromkeys(patterns))
+        groups = {}
+        for key, group_records in records_by_group.items():
+            index = ProducedPathRecordIndex.from_records(group_records, parser)
+            groups[key] = tuple(
+                pattern for pattern in patterns if index.contains(pattern)
             )
-            for key, group_records in records_by_group.items()
-        }
+        return groups
 
     def produced_records_for(
         self,
@@ -408,21 +413,18 @@ class StepOutputManifestStore:
     ) -> tuple[ProducedOutputSemantics, ...] | None:
         """Resolve exact producer declarations in the requested physical path order."""
 
-        producer_records = self._selected_unique_producer_records_for(plan)
-        if producer_records is None:
-            return None
+        index = self.producer_record_index_for(plan, parser)
+        return None if index is None else index.records_for_paths(paths)
 
-        path_index = ProducedPathRecordIndex.from_records(producer_records, parser)
-        records: list[ProducedOutputSemantics] = []
-        for path in paths:
-            matching_records = path_index.matching_records(path)
-            if len(matching_records) != 1:
-                raise NoStepOutputManifestMatch(
-                    "Expected one producer output context for input path "
-                    f"{path!r}, found {len(matching_records)}."
-                )
-            records.append(matching_records[0])
-        return tuple(records)
+    def producer_record_index_for(
+        self, plan: CompiledStepPlan, parser: FilenameParser,
+    ) -> ProducedPathRecordIndex | None:
+        """Admit one current producer cohort with its correlated address aliases."""
+        records = self._selected_unique_producer_records_for(plan)
+        return (
+            None if records is None
+            else ProducedPathRecordIndex.from_records(records, parser)
+        )
 
     def filter_to_producer_paths(
         self,
@@ -440,11 +442,10 @@ class StepOutputManifestStore:
         if cached is not None:
             return list(cached)
 
-        producer_records = self._selected_unique_producer_records_for(plan)
-        if producer_records is None:
+        index = self.producer_record_index_for(plan, parser)
+        if index is None:
             return list(paths)
-        allowed = ProducedPathSet.from_records(producer_records, parser)
-        selected = [path for path in paths if allowed.contains(path)]
+        selected = [path for path in paths if index.contains(path)]
         if selected:
             self.filtered_paths_by_plan[cache_key] = tuple(selected)
             return selected
@@ -452,30 +453,6 @@ class StepOutputManifestStore:
             raise NoStepOutputManifestMatch
         self.filtered_paths_by_plan[cache_key] = ()
         return []
-
-    def producer_paths_matching_pattern(
-        self,
-        plan: CompiledStepPlan,
-        pattern: str,
-        parser: FilenameParser,
-    ) -> list[str]:
-        """Return requested producer paths addressed by a detected pattern."""
-        cache_key = (self.records_revision, id(plan), str(pattern), id(parser))
-        cached = self.producer_paths_by_pattern.get(cache_key)
-        if cached is not None:
-            return list(cached)
-
-        producer_records = self._selected_unique_producer_records_for(plan)
-        if producer_records is None:
-            return []
-        selector = ProducedPathPatternSelector.from_pattern(pattern)
-        selected = tuple(
-            record.output_path
-            for record in producer_records
-            if selector.matches(ProducedPathSet.from_records((record,), parser))
-        )
-        self.producer_paths_by_pattern[cache_key] = selected
-        return list(selected)
 
     def _selected_unique_producer_records_for(
         self,
@@ -581,13 +558,6 @@ class StepOutputManifestStore:
         return self.records_by_key[key]
 
     @staticmethod
-    def allowed_path_tokens(
-        records: Sequence[ProducedOutputSemantics],
-        parser: FilenameParser,
-    ) -> set[str]:
-        return ProducedPathSet.from_records(records, parser).tokens
-
-    @staticmethod
     def key_for_producer(
         plan: CompiledStepPlan,
     ) -> StepOutputManifestKey | None:
@@ -616,35 +586,8 @@ def step_output_manifest(context: ProcessingContext) -> StepOutputManifestStore:
 
 
 @dataclass(frozen=True, slots=True)
-class ProducedPathSet:
-    """Path membership authority for concrete and template producer anchors."""
-
-    tokens: frozenset[str]
-
-    @classmethod
-    def from_records(
-        cls,
-        records: Sequence[ProducedOutputSemantics],
-        parser: FilenameParser,
-    ) -> "ProducedPathSet":
-        tokens: set[str] = set()
-        for record in records:
-            for value in (record.relative_output_path, record.output_path):
-                tokens.add(source_path_identity(value).as_posix())
-                tokens.add(source_path_identity(value).name)
-            if record.filename_qualifier is not None:
-                tokens.add(
-                    record.without_filename_qualifier().filename(parser)
-                )
-        return cls(frozenset(tokens))
-
-    def contains(self, path: str) -> bool:
-        return ProducedPathPatternSelector.from_pattern(path).matches(self)
-
-
-@dataclass(frozen=True, slots=True)
-class ProducedPathRecordIndex(ProducedPathSet):
-    """Batch lookup of original producer records through their owned path tokens."""
+class ProducedPathRecordIndex:
+    """Correlated producer occurrences and their concrete/template address aliases."""
 
     records: tuple[ProducedOutputSemantics, ...]
     record_indices_by_token: dict[str, tuple[int, ...]]
@@ -654,52 +597,59 @@ class ProducedPathRecordIndex(ProducedPathSet):
         cls,
         records: Sequence[ProducedOutputSemantics],
         parser: FilenameParser,
-    ) -> "ProducedPathRecordIndex":
+    ) -> ProducedPathRecordIndex:
         indices_by_token: dict[str, list[int]] = {}
         for index, record in enumerate(records):
-            for token in ProducedPathSet.from_records((record,), parser).tokens:
+            for token in record.path_tokens(parser):
                 indices_by_token.setdefault(token, []).append(index)
         return cls(
-            tokens=frozenset(indices_by_token),
             records=tuple(records),
             record_indices_by_token={
                 token: tuple(indices) for token, indices in indices_by_token.items()
             },
         )
 
+    def matching_tokens(self, path: str) -> Iterator[str]:
+        """Resolve exact and template address aliases through the existing matcher."""
+        path = source_path_identity(path).as_posix()
+        tokens = self.record_indices_by_token
+        matcher = PathPatternTemplateMatcher.from_pattern(path)
+        if path in tokens:
+            yield path
+        if matcher is not None:
+            for token in tokens:
+                if token != path and matcher.matches(token):
+                    yield token
+
+    def contains(self, path: str) -> bool:
+        return next(self.matching_tokens(path), None) is not None
+
     def matching_records(self, path: str) -> tuple[ProducedOutputSemantics, ...]:
-        selector = ProducedPathPatternSelector.from_pattern(path)
-        indices = sorted(
-            {
-                index
-                for token in selector.matching_tokens(self)
-                for index in self.record_indices_by_token[token]
-            }
-        )
+        indices = sorted({
+            index
+            for token in self.matching_tokens(path)
+            for index in self.record_indices_by_token[token]
+        })
         return tuple(self.records[index] for index in indices)
 
+    def record_for_path(self, path: str) -> ProducedOutputSemantics:
+        """Require one original occurrence for one admitted physical address."""
+        records = self.matching_records(path)
+        if len(records) != 1:
+            raise NoStepOutputManifestMatch(
+                "Expected one producer output context for input path "
+                f"{path!r}, found {len(records)}."
+            )
+        return records[0]
 
-@dataclass(frozen=True, slots=True)
-class ProducedPathPatternSelector:
-    """Prepared matcher for concrete and template producer path membership."""
+    def records_for_paths(
+        self, paths: Sequence[str],
+    ) -> tuple[ProducedOutputSemantics, ...]:
+        return tuple(self.record_for_path(path) for path in paths)
 
-    path: str
-    matcher: PathPatternTemplateMatcher | None
-
-    @classmethod
-    def from_pattern(cls, path: str) -> "ProducedPathPatternSelector":
-        path_text = source_path_identity(path).as_posix()
-        return cls(path_text, PathPatternTemplateMatcher.from_pattern(path_text))
-
-    def matches(self, path_set: ProducedPathSet) -> bool:
-        return next(self.matching_tokens(path_set), None) is not None
-
-    def matching_tokens(self, path_set: ProducedPathSet) -> Iterator[str]:
-        """Yield exact and template aliases through one matching policy."""
-        tokens = path_set.tokens
-        if self.path in tokens:
-            yield self.path
-        if self.matcher is not None:
-            for token in tokens:
-                if token != self.path and self.matcher.matches(token):
-                    yield token
+    def validate_input_records(
+        self, records: Sequence[ProducedOutputSemantics],
+    ) -> None:
+        """Validate address cardinality while retaining the already-selected cohort."""
+        for record in records:
+            self.record_for_path(record.output_path)
