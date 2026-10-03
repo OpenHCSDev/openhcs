@@ -144,7 +144,7 @@ class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
             raise ValueError("Registration observation requires an admitted server identity.")
         return cls(
             connection=request.connection, server_identity=request.server_identity,
-            content_sha256=hashlib.sha256(request.source_code.encode("utf-8")).hexdigest(),
+            content_sha256=CustomFunctionSource.content_digest(request.source_code.encode("utf-8")),
             function_name=request.function_name, persist=request.persist,
             storage_dir=request.storage_dir,
         )

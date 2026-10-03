@@ -544,6 +544,116 @@ def test_real_generated_mcp_boundary_excludes_authority_and_denies_before_client
     catalog.close()
 
 
+def test_generated_mcp_retains_native_cause_and_observes_without_replay(tmp_path, monkeypatch):
+    from openhcs.mcp.server import build_server
+    from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationControlResponse,
+        CustomFunctionRegistrationObservationControlResponse,
+        CustomFunctionRegistrationObservationRequest,
+        FunctionCatalogControlPayload,
+    )
+    from openhcs.runtime.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
+
+    native = FunctionCatalogService(path_policy=policy(tmp_path))
+    dispatched = []
+
+    def fail_after_dispatch(admitted):
+        dispatched.append(admitted)
+        raise ValueError("original-native-validation-cause")
+
+    monkeypatch.setattr(native, "register_custom_function", fail_after_dispatch)
+    from openhcs.processing.custom_functions import manager as manager_module
+    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name, *, create: tmp_path)
+    context = ZMQControlRequestContext(
+        compiled_artifacts={}, function_catalog=native,
+        function_catalog_preparation=SimpleNamespace(observe=lambda handle: preparation_state(handle)),
+    )
+
+    class Client:
+        def custom_function_registration_destination(self, _probe, **_kwargs):
+            return CustomFunctionRegistrationDestination(str(tmp_path), str(tmp_path / "boundary_probe.py"))
+
+        def function_catalog_preparation(self, read_request, **_kwargs):
+            return preparation_state(read_request.handle)
+
+        def register_custom_function(self, admitted, **_kwargs):
+            response = ZMQControlMessageRouter.handle(FunctionCatalogControlPayload.from_request(admitted).to_dict(), context)
+            return CustomFunctionRegistrationControlResponse.from_control_response(response).result
+
+        def observe_custom_function_registration(self, handle):
+            response = ZMQControlMessageRouter.handle(FunctionCatalogControlPayload.from_request(CustomFunctionRegistrationObservationRequest(handle)).to_dict(), context)
+            return CustomFunctionRegistrationObservationControlResponse.from_control_response(response).value
+
+        def disconnect(self):
+            pass
+
+    catalog = ZMQFunctionCatalogService(lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _endpoint: Client(), path_policy=policy(tmp_path))
+
+    async def invoke():
+        server = build_server(SimpleNamespace(function_catalog=catalog))
+        first = await server.call_tool("openhcs_register_custom_function", {
+            "source_code": request(tmp_path).source_code,
+            "function_name": "boundary_probe", "storage_dir": str(tmp_path),
+            "port": 15993, "transport_mode": "tcp",
+        })
+        content = first[0] if isinstance(first, tuple) else first.content
+        result = json.loads(content[0].text)
+        assert result["errors"][0]["exception_type"] == "ValueError"
+        assert result["errors"][0]["message"] == "original-native-validation-cause"
+        handle = result["observation_handle"]
+        second = await server.call_tool("openhcs_get_custom_function_registration_status", handle)
+        content = second[0] if isinstance(second, tuple) else second.content
+        observed = json.loads(content[0].text)
+        assert observed["handle"] == handle
+        assert observed["outcome"] == "not_observed"
+        assert observed["published_sources"] == []
+        assert len(dispatched) == 1
+
+    try:
+        asyncio.run(invoke())
+    finally:
+        catalog.close()
+
+
+def test_confirmed_native_receipt_survives_local_projection_failure(tmp_path, monkeypatch):
+    mutations = []
+
+    class Client:
+        def custom_function_registration_destination(self, _probe, **_kwargs):
+            return CustomFunctionRegistrationDestination(str(tmp_path), None)
+
+        def function_catalog_preparation(self, read_request, **_kwargs):
+            return preparation_state(read_request.handle)
+
+        def register_custom_function(self, admitted, **_kwargs):
+            mutations.append(admitted)
+            return CustomFunctionRegistrationResult(
+                schema_version=SCHEMA_VERSION, registered_count=1, persisted=False,
+                connection=admitted.connection, server_identity=admitted.server_identity,
+            )
+
+        def disconnect(self):
+            pass
+
+    def local_failure(*_args, **_kwargs):
+        raise LookupError("local-projection-witness")
+
+    monkeypatch.setattr(CustomFunctionManager, "register_from_code", local_failure)
+    catalog = ZMQFunctionCatalogService(lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _endpoint: Client(), path_policy=policy(tmp_path))
+    try:
+        result = catalog.register_custom_function(request(tmp_path, persist=False))
+        assert result.registered_count == 1
+        assert result.server_identity == ProcessIdentity.current()
+        assert result.errors[0].code == "custom_function_local_projection_failed"
+        assert result.errors[0].exception_type == "LookupError"
+        assert result.errors[0].message == "local-projection-witness"
+        assert len(mutations) == 1
+    finally:
+        catalog.close()
+
+
 def test_generated_mcp_preparation_tools_use_reflected_connection_and_handle():
     from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
     from openhcs.mcp.server import build_server
