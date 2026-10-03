@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 import re
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from concurrent.futures import CancelledError
@@ -551,6 +552,9 @@ PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()
 class FunctionCatalogServiceABC(ABC):
     """Callable-catalog authority consumed by agent authoring services."""
 
+    def __init__(self) -> None:
+        self._state_lock = threading.RLock()
+
     def prepare(
         self,
         *,
@@ -559,11 +563,34 @@ class FunctionCatalogServiceABC(ABC):
     ) -> None:
         """Prepare the authoritative catalog through this service's transport."""
 
-        self.catalog(
-            compact_signatures=True,
-            status_callback=status_callback,
-            cancellation=cancellation,
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
         )
+
+    @abstractmethod
+    def projections_current(self) -> bool:
+        """Whether the owned public projections match their current authority."""
+
+    def prepare_projections(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare both public views against the implementation's authority."""
+        while True:
+            for signature_view in SignatureView:
+                if cancellation is not None and cancellation.requested():
+                    raise CancelledError
+                self.catalog(
+                    compact_signatures=signature_view.compact,
+                    status_callback=status_callback,
+                    cancellation=cancellation,
+                )
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
+            if self.projections_current():
+                return
 
     @abstractmethod
     def register_custom_function(
@@ -647,38 +674,22 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             CustomFunctionRuntimeRegistry,
         )
 
-        if self._projection_metadata is None or any(
-            (signature_view, SummaryView[signature_view.name]) not in self._projections
-            for signature_view in SignatureView
-        ):
-            return False
-        if self._projection_metadata != RegistryService.cached_metadata_snapshot():
+        with self._state_lock:
+            metadata = self._projection_metadata
+            if metadata is None or any(
+                (signature_view, SummaryView[signature_view.name]) not in self._projections
+                for signature_view in SignatureView
+            ):
+                return False
+        if metadata != RegistryService.cached_metadata_snapshot():
             return False
         manager = custom_function_manager.CustomFunctionManager(create_storage=False)
         return (
             manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
         )
 
-    def prepare_projections(
-        self,
-        *,
-        status_callback: Callable[[str], None] | None = None,
-        cancellation: OperationCancellation | None = None,
-    ) -> None:
-        """Prepare both public views, without repeating native kernel warmup."""
-        while True:
-            for signature_view in SignatureView:
-                if cancellation is not None and cancellation.requested():
-                    raise CancelledError
-                self.catalog(
-                    compact_signatures=signature_view.compact,
-                    status_callback=status_callback,
-                    cancellation=cancellation,
-                )
-            if self.projections_current():
-                return
-
     def __init__(self, path_policy: AgentPathPolicy | None = None) -> None:
+        super().__init__()
         self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
         self._projections: dict[
@@ -875,13 +886,14 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
     ) -> tuple[CatalogSearchProjection, ...]:
         """Project a registry revision once and reuse it across text queries."""
 
-        if metadata_by_id is not self._projection_metadata:
-            self._projection_metadata = metadata_by_id
-            self._projections.clear()
         cache_key = (signature_view, summary_view)
-        cached = self._projections.get(cache_key)
-        if cached is not None:
-            return cached
+        with self._state_lock:
+            if metadata_by_id is not self._projection_metadata:
+                self._projection_metadata = metadata_by_id
+                self._projections.clear()
+            cached = self._projections.get(cache_key)
+            if cached is not None:
+                return cached
         if status_callback is not None:
             status_callback("Projecting function metadata for the execution endpoint")
         projections = []
@@ -905,8 +917,12 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     ),
                 )
             )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError
         projected = tuple(projections)
-        self._projections[cache_key] = projected
+        with self._state_lock:
+            if metadata_by_id is self._projection_metadata:
+                self._projections[cache_key] = projected
         return projected
 
     def get(

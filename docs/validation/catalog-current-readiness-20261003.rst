@@ -31,14 +31,26 @@ Change
 * Coalesce pending work; preserve failed/cancelled futures without automatic
   retry. A completed historical future is not current READY after invalidation.
 * Apply the existing OperationCancellation to per-callable projection work.
+  Check cancellation after the last entry and before successful publication.
+* Keep FunctionCatalogPreparation on the original FunctionCatalogServiceABC
+  boundary. That ABC owns the shared two-view refresh recipe; local and endpoint
+  implementations own their respective current-readiness decisions. The endpoint
+  implementation asks the original bound native preparation-status owner.
+* Move the endpoint implementation's existing state lock to the ABC owner;
+  reuse it for short cache adoption/publication sections in both implementations.
+  Reflection and source-revision polling remain outside it. An old view cannot
+  enter a cache that another caller has already switched to new metadata.
 * Leave registration admission, receipt and original invalidation untouched.
   The next public catalog request uses the same existing preparation gate.
 
-Production scope is only agent/services/function_catalog_service.py and
+Production scope is agent/services/function_catalog_service.py,
+agent/services/endpoint_function_catalog_service.py and
 runtime/function_catalog_preparation.py. RegistryService, CallableProjection,
 custom-source decoding, compiler, native/MCP protocol and deadlines are excluded.
 Root394 was notified before production edits in comments 5965485052/5965541595;
-its current 4eaacf17 head does not change these files.
+the additional ABC/endpoint hunk was declared in comment 5965707429. Its checked
+8e06a382 head does not change these files. No competing catalog authority,
+generation store, protocol, timeout or fallback was introduced.
 
 Source and custody
 ------------------
@@ -46,7 +58,10 @@ Source and custody
 Parent explicitly released the former programme source claim on the existing
 /home/ts/wt/openhcs-input-preparation-20260929 checkout, originally e0dd14ed.
 The exact full path matches Dalton's direct ownership response. Parent reports
-privileged whole-borrower count 0 and access omissions 0. No source reuse of the
+privileged whole-borrower count 0 and access omissions 0. The complete Dalton
+receipt was personally read at neurite-development-skill383-20261001/output/
+resource-owner-20261002/COPERNICUS-CATALOG-SOURCE-REUSE-INPUT-PREPARATION.rst
+under the existing issue-batch root. No source reuse of the
 borrowed Singer505 or live436 checkouts was made. The branch was switched
 nonrecursively from current main87d9a99; foreign submodule directories and .git
 files were not updated/reset/cleaned. Their changed status against current-main
@@ -101,18 +116,55 @@ They executed no scientific functions, native servers, sockets or viewers:
    Collection then failed because the protected old external/zmqruntime checkout
    lacks ViewerReuseAdmissionABC required by current-main viewer_protocol.
 
-No assertions ran: this is a precise dependency-collection blocker, not a passing
+No assertions ran in those four attempts: this was a precise dependency-collection blocker, not a passing
 regression suite. Attempt04 peaked at 179752KiB RSS (unit peak123.3MiB), zero swap,
 3.015s. The last run reused an explicit actual compiled dependency for source
 controls only; it is not ordinary installed/public/native acceptance. No substitute
 registry/factory/backend, native extension stub, path fallback or protocol was
 introduced into production. All foreign external trees remain unchanged. They
-will not be updated, patched or bypassed to hide this source-import boundary.
+were not updated or patched. Parent then explicitly authorized binding existing
+qualified dependency origins read-only for source controls; no installed file or
+environment was changed.
 
 The authored controls cover warm full/compact public projection, current-source
 revision, add/update/delete/body-only invalidation, refresh coalescing, retained
 failure/cancellation, incarnation rejection and original main-thread startup.
-Run them using current qualified dependencies after an explicit receiving release;
-then perform the separately authorized ordinary installed native public journey.
-No build, installation or native launch was performed. Saved diagnosis and all
-scientific records remain immutable.
+Receiving controls and nominal family correction
+-----------------------------------------------
+
+The existing shared interpreter is
+/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python.
+The explicitly asserted dependency origins are that environment's
+lib/python3.12/site-packages for zmqruntime, PolyStore, arraybridge,
+metaclass-registry and pyqt-reactive, and
+/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages
+for python-introspect (the shared interpreter's original declared dependency).
+The real accepted505 ABI3 extension remains at the existing engineering receipt
+root's scratch/installed505/openhcs/core/_tabular_native.abi3.so. It was not copied,
+built or substituted. Source module paths and dependency origins/hashes are
+asserted and recorded by catalog511-shared-dependency-controls.py on each run.
+Determining zmqruntime, PolyStore and python-introspect files were compared against
+the current recorded Git objects through the canonical repository; this is not
+a claim of whole-package identity or installed/native acceptance.
+
+All receiving attempts remain in the same receipt root:
+
+* source05: 18 passed, one test-fixture binding failure.
+* source06: 71 passed, six fixture failures (router-only fixtures did not declare
+  current catalog readiness; one cleanup cancelled work before expecting success).
+* source07: 77 passed after coherent fixture corrections. Real invalidation,
+  cancellation and failed-future negatives were retained.
+* source08: 78 passed, including the overlapping-reader obsolete-cache-commit
+  control, midpoint metadata/source invalidation, all nominal ABC implementations
+  and the final-entry cancellation checks. Test time 9.57s, wall12.94s,
+  cgroup peak214.2MiB, Swap0, CPU1/512MiB/60s, exit0. Two pytest configuration
+  warnings result from deliberately disabled plugin autoload, not failing tests.
+
+The production ABC owns the only shared refresh recipe and family state-lock
+declaration. Both implementations retain their original catalog projections;
+all preparation/strategy consumers take the existing nominal boundary. No
+reflection or source-poll performance claim follows from these controls.
+No build, installation, scientific execution, server or viewer launch was
+performed. Saved diagnosis, UNKNOWN requests and scientific records remain
+immutable. Actual ordinary installed public/native acceptance still awaits an
+explicitly released engineering slot; :95 is not yet released.

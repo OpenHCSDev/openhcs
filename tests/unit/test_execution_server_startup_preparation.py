@@ -27,6 +27,12 @@ class PreparedCatalog:
     def catalog(self, **kwargs):
         self.events.append("catalog")
 
+    def prepare_projections(self, **kwargs):
+        self.catalog(**kwargs)
+
+    def projections_current(self):
+        return "catalog" in self.events
+
 
 def test_direct_server_start_warms_main_thread_before_bind_and_reuses_future(
     monkeypatch,

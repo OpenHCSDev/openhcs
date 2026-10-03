@@ -21,7 +21,7 @@ if TYPE_CHECKING:
         FunctionCatalogPreparationState,
     )
     from openhcs.agent.services.function_catalog_service import (
-        FunctionCatalogService,
+        FunctionCatalogServiceABC,
     )
 
 
@@ -49,7 +49,7 @@ class FunctionCatalogPreparation:
 
     def __init__(
         self,
-        function_catalog: "FunctionCatalogService",
+        function_catalog: "FunctionCatalogServiceABC",
     ) -> None:
         self._lock = threading.RLock()
         self._future: Future[None] | None = None
@@ -269,6 +269,8 @@ class FunctionCatalogPreparation:
                 status_callback=report,
                 cancellation=self._cancellation,
             )
+            if self._cancellation.requested():
+                raise CancelledError
         except CancelledError:
             self._set_message(
                 "Function catalog preparation cancelled",
