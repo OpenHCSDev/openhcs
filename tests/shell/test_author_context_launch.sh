@@ -4,13 +4,15 @@ set -euo pipefail
 scratch=${1:?new persistent controlled fixture directory}
 operations=${2:?exact original operations source artifact}
 test ! -e "$scratch"
-mkdir -p "$scratch/fund" "$scratch/run"
+mkdir -p "$scratch/fund" "$scratch/run" "$scratch/closed/OLD/author-workspace/output/native-sessions/2026/10/03"
+printf 'Inert controlled fixture, never consumed by native Codex.\n' > "$scratch/closed/OLD/author-workspace/output/native-sessions/2026/10/03/rollout-controlled.jsonl"
 jq -n --arg root "$scratch" --arg operations "$operations" '{
   phase:"controlled-context", funding_root:($root+"/fund"),
   authors:[{slot:"A",run_owner_root:($root+"/run"),display:96,cpu:1,
     input_root:"/controlled/input",native_port:6016,native_ack_port:7016,
     viewer_port:6017,viewer_ack_port:7017,vnc_port:6007,
     fresh_history:true,native_thread_id:null,
+    writer_handoff:[{program_root:($root+"/closed"),slot:"OLD"}],
     helper_custody:{program_root:($root+"/run"),slot:"A"}}],
   scope_slice:"controlled-unstarted.slice", source_install:"/controlled/never-imported",
   python:"/controlled/python",operation_owner_root:$operations,
@@ -34,6 +36,8 @@ set_context() {
 set_context false '"01a10338-3c5f-7bf0-8090-02663cdea84b"'
 invoke > "$scratch/resume.log"
 rg -F 'history_args=["resume","01a10338-3c5f-7bf0-8090-02663cdea84b"]' "$scratch/resume.log"
+rg -F -- '--ro-bind' "$scratch/resume.log"
+rg -F '/home/ts/.codex/sessions/2026/10/03/rollout-controlled.jsonl' "$scratch/resume.log"
 reject() {
   local label=$1 status
   shift
