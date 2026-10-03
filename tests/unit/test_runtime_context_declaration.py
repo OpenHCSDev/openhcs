@@ -182,6 +182,26 @@ def test_measurement_variant_keeps_real_axis_scoped_filename_context():
     assert values["URL_Saved"] == "file:A01/DNA.tiff"
 
 
+def test_named_context_declaration_does_not_resolve_unrelated_forward_references():
+    namespace = {"runtime_context_parameter": runtime_context_parameter}
+    exec(
+        "@runtime_context_parameter('context')\n"
+        "def process(image: 'DefinedAfterDeclaration', *, context=None):\n"
+        "    return image, context\n"
+        "class DefinedAfterDeclaration:\n"
+        "    pass\n",
+        namespace,
+    )
+    process = namespace["process"]
+    assert inspect.signature(process).parameters["image"].annotation == (
+        "DefinedAfterDeclaration"
+    )
+    assert vars(process)[FunctionContractAttribute.runtime_context_parameter] == "context"
+    assert CallableMetadata.from_callable(process).runtime_context_parameter == "context"
+    marker = namespace["DefinedAfterDeclaration"]()
+    assert process(marker, context=marker) == (marker, marker)
+
+
 def test_declaration_rejects_unknown_parameter_without_mutating_callable():
     before = dict(vars(_inferred_context))
     with pytest.raises(ValueError, match="does not declare parameter"):

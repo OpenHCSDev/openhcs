@@ -51,8 +51,14 @@ def runtime_context_parameter(parameter_name: str | None) -> Callable[[F], F]:
         raise TypeError("runtime_context_parameter must be a parameter name or None.")
 
     def decorator(func: F) -> F:
-        if parameter_name is not None:
-            resolved_callable_parameter(func, parameter_name)
+        if (
+            parameter_name is not None
+            and parameter_name not in inspect.signature(func).parameters
+        ):
+            raise ValueError(
+                f"Callable {func.__name__!r} does not declare parameter "
+                f"{parameter_name!r}."
+            )
         namespace = vars(func)
         namespace.pop(FunctionContractAttribute.canonical_signature, None)
         namespace.pop(FunctionContractAttribute.raw_runtime_signature, None)
