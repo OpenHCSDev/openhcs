@@ -13,6 +13,7 @@ from typing import ClassVar, Generic, TypeVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable_contract import CallableMetadata, KeywordRuntimeParameter
+from openhcs.core.function_reference import FunctionReference
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -251,25 +252,37 @@ class RuntimeBatchExecutor(ABC, metaclass=AutoRegisterMeta):
 class RuntimeBatchCallableFamily:
     """Callable plus its raw processing ancestor for inherited batch contracts."""
 
-    func: Callable
-    raw_processing_function: Callable | None = None
+    func: Callable | FunctionReference
+    raw_processing_function: Callable | FunctionReference | None = None
 
     def __post_init__(self) -> None:
-        if self.raw_processing_function is not None and not callable(
-            self.raw_processing_function
+        if self.raw_processing_function is not None and not (
+            callable(self.raw_processing_function)
+            or isinstance(self.raw_processing_function, FunctionReference)
         ):
             raise TypeError(
-                "raw_processing_function must be callable when inheriting runtime "
+                "raw_processing_function must be callable or FunctionReference "
+                "when inheriting runtime "
                 "batch executors, got "
                 f"{type(self.raw_processing_function).__name__}."
             )
 
     def executors(self) -> Mapping[RuntimeBatchExecutionDomain, Callable]:
         """Return batch executors declared by the wrapper family."""
-        batch_executors = dict(runtime_batch_executors_from_callable(self.func))
+        declared_callable = (
+            self.func.resolve()
+            if isinstance(self.func, FunctionReference)
+            else self.func
+        )
+        batch_executors = dict(runtime_batch_executors_from_callable(declared_callable))
         if self.raw_processing_function is not None:
+            raw_callable = (
+                self.raw_processing_function.resolve()
+                if isinstance(self.raw_processing_function, FunctionReference)
+                else self.raw_processing_function
+            )
             inherited = runtime_batch_executors_from_callable(
-                self.raw_processing_function
+                raw_callable
             )
             for domain, executor in inherited.items():
                 if domain not in batch_executors:

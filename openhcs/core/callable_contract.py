@@ -815,11 +815,6 @@ class CallableContract(ArtifactPlanKeySelector):
                     stack_requirement.bind_to_callable(projection.func)
                 ),
             )
-        batch_raw_processing_function = (
-            metadata.raw_processing_function
-            if callable(metadata.raw_processing_function)
-            else None
-        )
         return cls(
             func=func,
             function_name=projection.name,
@@ -827,7 +822,7 @@ class CallableContract(ArtifactPlanKeySelector):
             metadata=metadata,
             runtime_batch_executors=RuntimeBatchCallableFamily(
                 func=func,
-                raw_processing_function=batch_raw_processing_function,
+                raw_processing_function=metadata.raw_processing_function,
             ).executors(),
         )
 
