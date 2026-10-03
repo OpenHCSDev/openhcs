@@ -5,8 +5,10 @@ from __future__ import annotations
 import colorsys
 import logging
 import threading
+import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence, Sized
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
@@ -254,7 +256,7 @@ class NapariTimerHandle(ABC):
         """Stop the pending layer update."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, weakref_slot=True)
 class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
     """Queued debounced layer update with flush-local runtime residue."""
 
@@ -286,6 +288,19 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         """Stop the Qt timer that would otherwise execute this update later."""
 
         self.timer.stop()
+
+    def retained_callback(
+        self, callback: Callable[["NapariPendingLayerUpdate"], None],
+    ) -> Callable[[], None]:
+        """Qt continuations borrow the update; route/settlement state owns it."""
+        update_ref = weakref.ref(self)
+
+        def advance() -> None:
+            update = update_ref()
+            if update is not None:
+                callback(update)
+
+        return advance
 
 
 @dataclass(slots=True)
@@ -408,6 +423,26 @@ class NapariLayerSettlementState:
                     "Napari settlement has an active route; use fail_active()."
                 )
             self.failed = True
+
+    def require_terminal(self) -> None:
+        """Failed is terminal too; an executing or claimed callback is not."""
+        with self._lock:
+            if self.phase is ViewerSettlePhase.RUNNING or self.active_route is not None:
+                raise RuntimeError("Cannot retire layers during active settlement.")
+            if self.active_route_work_unit_active:
+                raise RuntimeError("Cannot retire a native mutation in flight.")
+
+    def purge_route(self, route_key: str) -> None:
+        """Release only the retired payload references, including failed work."""
+        with self._lock:
+            self.require_terminal()
+            self.completed_update_count = sum(
+                key != route_key
+                for key, _ in self.updates[:self.completed_update_count]
+            )
+            self.updates = tuple(
+                (key, update) for key, update in self.updates if key != route_key
+            )
 
     def progress(self) -> ViewerSettleProgress:
         """Project current settlement state onto the shared wire contract."""
@@ -1567,12 +1602,15 @@ class NapariLayerRouteStateStore:
         )
 
     def purge_route(self, layer_key: str) -> None:
+        with self._settlement_lock:
+            if self.layer_settlement is not None:
+                self.layer_settlement.purge_route(layer_key)
+            self.layer_update_errors.pop(layer_key, None)
+        self.cancel_pending_update(layer_key)
         self.layers.pop(layer_key, None)
         self.layer_titles.pop(layer_key, None)
         self.layer_dimension_states.pop(layer_key, None)
         self.layer_pending_updates.pop(layer_key, None)
-        with self._settlement_lock:
-            self.layer_update_errors.pop(layer_key, None)
         if self.active_dimension_label_route == layer_key:
             self.active_dimension_label_route = None
 
@@ -1699,6 +1737,20 @@ class NapariLayerRouteStateStore:
                 self.layer_update_errors.pop(None, None)
             self.layer_settlement = None
 
+    @contextmanager
+    def mutation_boundary(self):
+        """Serialize accepted intake and Qt retirement on the original lock."""
+        with self._settlement_lock:
+            yield
+
+    def require_retirement_boundary(self) -> None:
+        """Reject unresolved pending work, not known terminal failures."""
+        with self._settlement_lock:
+            if self.layer_pending_updates:
+                raise RuntimeError("Cannot retire layers with pending updates; settle first.")
+            if self.layer_settlement is not None:
+                self.layer_settlement.require_terminal()
+
     def record_update_error(self, layer_key: str | None, error: Exception) -> None:
         """Retain a display failure, including intake without a resolved route."""
 
@@ -1758,6 +1810,11 @@ class NapariComponentGroupStore:
     """Own accumulated stream items by Napari layer route."""
 
     groups: dict[str, list["NapariStreamLayerItem"]] = field(default_factory=dict)
+
+    def producer_identities_for(self, layer_key: str) -> frozenset[StreamProducerIdentity]:
+        return frozenset(
+            item.producer for item in self.existing_items_for(layer_key) or ()
+        )
 
     def items_for(self, layer_key: str) -> list["NapariStreamLayerItem"]:
         if layer_key not in self.groups:
@@ -1821,6 +1878,10 @@ class NapariBatchProcessorStore:
     )
     processors: dict[str, "NapariBatchProcessor"] = field(default_factory=dict)
     lock: threading.Lock = field(default_factory=threading.Lock)
+
+    def purge(self, layer_key: str) -> None:
+        with self.lock:
+            self.processors.pop(layer_key, None)
 
     def get_or_create(
         self,
