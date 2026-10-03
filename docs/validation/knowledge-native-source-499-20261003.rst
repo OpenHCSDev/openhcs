@@ -81,3 +81,51 @@ receipt. No wheel build, installed retrieval, native/GUI or provider attempt
 has occurred. Actual ordinary installed public retrieval awaits parent-owned
 free slot/resources. Use a NEW named acceptance attempt, never the original
 UNKNOWN request. Preserve normal10second observations and parity evidence tier.
+
+Bounded verification continuation
+--------------------------------
+
+Ordinary wheel built through the original setup.py BuildPyWithMcpKnowledge
+and bdist_wheel using the existing basicpy candidate interpreter. Separate
+owned egg-info/build/bdist destinations preserve pre-existing checkout output.
+No dependency rebuild, installation, environment creation or download.
+Build01: success,5.067s,175.1MiB peak,Swap0,CPU1; cap512MiB,60seconds.
+Verbose returned stdout was tool-truncated; that limitation is retained.
+
+Wheel: openhcs-0.8.7-cp311-abi3-linux_x86_64.whl,4071191bytes,826members.
+SHA256:0588d0f98a958f3d2d4b1009fb99c7171d87a988af4da9a2a30c618d022de8e0.
+Actual archive inspection:86 declared knowledge-closure members agree
+byte-for-byte with canonical sources; exactly30 native .cppipe members are
+derived from the original recipe owner. Both original manifests and all three
+affected runtime-owner modules are byte equal. No raw TIFF/BMP, expected CSV,
+label array or reference-export answer manifest entered this closure.
+Per-native-member SHA256s and command are in external wheel-proof.json.
+
+Focused source family:13 passed in2.08s;6.243s process tree,224.7MiB peak,
+Swap0,CPU1,512MiB cap. One/two newly declared synthetic native recipes prove
+canonical/resource roots, projector, immutable membership, section retrieval
+and inventories agree with no consumer edits; controlled conversion output
+does NOT claim actual importer/parity execution. Missing/traversing/absolute/
+non-cppipe sources fail before existing projection deletion.
+
+Complete engineering check denominator, with original command/output retained:
+
+* check01: wrong service working directory, exit4, no test bodies,205.7MiB.
+* check02: collection blocked by preserved foreign pyqt-reactive checkout
+  missing WindowSnapshotFrameCondition.RENDER_COMPLETE, exit2,252.8MiB.
+* check03: missing owned fixture-parent directory, exit1, no test bodies,
+  190.9MiB. Created only the named owned scratch parent afterward.
+* check04:12 passed/1 failed; sparse checkout excluded the tracked original
+  recipe manifest,223.4MiB. This was NOT an upstream/generated-file absence.
+* check05:13 passed after materializing only the tracked recipe manifest and
+  its declared public .cppipe exports through Git's existing sparse owner.
+* wheel01: terminal success; actual wheel byte/membership proof above.
+
+No foreign submodule checkout, dependency backing, installed science498,
+scientific result or UNKNOWN disposition changed. Wider source-service suite
+remains collection-blocked by the foreign dependency; no shim or bootstrap
+bypass was introduced. Ordinary installed MCP retrieval has NOT been run.
+The retained parent fresh CLI/MCP baseline was548.24MiB, beyond the current
+512MiB aggregate authorization; do not induce an OOM or raise that cap here.
+Parent can verify this exact wheel in a separately qualified no-native slot.
+This package/source acceptance is not installed, parity or biological success.

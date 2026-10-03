@@ -50,12 +50,18 @@ def project_knowledge_assets(
     plugin_manifest = root / AGENT_PLUGIN_MANIFEST_PATH
     if plugin_manifest.is_file():
         skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
-        projections.update({source.relative_to(root): source for source in skill_sources})
+        projections.update(
+            {source.relative_to(root): source for source in skill_sources}
+        )
     missing = tuple(source for source in projections.values() if not source.is_file())
     if missing:
         raise FileNotFoundError(f"MCP knowledge sources are missing: {missing}")
-    if any(source.resolve().is_relative_to(destination) for source in projections.values()):
-        raise ValueError("MCP knowledge destination must not contain canonical sources.")
+    if any(
+        source.resolve().is_relative_to(destination) for source in projections.values()
+    ):
+        raise ValueError(
+            "MCP knowledge destination must not contain canonical sources."
+        )
     if destination.exists():
         shutil.rmtree(destination)
     projected_paths: list[Path] = []

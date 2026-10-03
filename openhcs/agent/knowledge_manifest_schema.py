@@ -105,7 +105,9 @@ class ComparisonManifestSnapshot:
             payload = json.loads(text)
         except json.JSONDecodeError:
             return None
-        if not isinstance(payload, Mapping) or not isinstance(payload.get("cases"), list):
+        if not isinstance(payload, Mapping) or not isinstance(
+            payload.get("cases"), list
+        ):
             return None
         cases = []
         names = set()
@@ -118,7 +120,9 @@ class ComparisonManifestSnapshot:
                     "Official30 manifest cases require a nonempty, trimmed string name."
                 )
             if name in names:
-                raise ValueError(f"Official30 manifest case name {name!r} is duplicated.")
+                raise ValueError(
+                    f"Official30 manifest case name {name!r} is duplicated."
+                )
             names.add(name)
             cases.append(case)
         return cls(
@@ -152,7 +156,11 @@ class ComparisonManifestSnapshot:
             or path.suffix != ".cppipe"
         ):
             raise ValueError("Native knowledge source must be a relative .cppipe path.")
-        return self.path.relative_to(self.source_root).with_suffix(".sources") / root / path
+        return (
+            self.path.relative_to(self.source_root).with_suffix(".sources")
+            / root
+            / path
+        )
 
     def native_source_path(self, case: Mapping[str, object]) -> Path:
         return self.path_resolver.resolve(case, "cppipe_path")
@@ -194,9 +202,13 @@ def knowledge_source_projections(
             raise ValueError("MCP knowledge document source_path must be a string.")
         path = Path(raw_path)
         if path.is_absolute() or ".." in path.parts:
-            raise ValueError(f"MCP knowledge source path must stay within the project: {raw_path}")
+            raise ValueError(
+                f"MCP knowledge source path must stay within the project: {raw_path}"
+            )
         if path in relative_paths:
-            raise ValueError(f"MCP knowledge source path is declared more than once: {raw_path}")
+            raise ValueError(
+                f"MCP knowledge source path is declared more than once: {raw_path}"
+            )
         relative_paths.append(path)
     projections = {path: source_root / path for path in relative_paths}
     for path in tuple(projections.values()):
@@ -208,6 +220,8 @@ def knowledge_source_projections(
         if recipe is not None:
             for relative, source in recipe.native_source_projections().items():
                 if relative in projections and projections[relative] != source:
-                    raise ValueError(f"Conflicting knowledge resource placement: {relative}")
+                    raise ValueError(
+                        f"Conflicting knowledge resource placement: {relative}"
+                    )
                 projections[relative] = source
     return projections

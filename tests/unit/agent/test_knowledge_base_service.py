@@ -893,7 +893,8 @@ def test_context_knowledge_resources_do_not_expand_scientific_file_permissions(
     assert len(catalog.documents) == len(specs)
     assert catalog.warnings == ()
     source_paths = knowledge_manifest.knowledge_base_source_paths_from_manifest()
-    assert len(source_paths) == len(catalog.documents) + 1
+    assert len(source_paths) > len(catalog.documents) + 1
+    assert any(path.suffix == ".cppipe" for path in source_paths)
     assert all(path.is_file() for path in source_paths)
     for document_id in ("openhcs_source_model", "openhcs_artifact_contract_system"):
         result = context.knowledge_base_service.get_document(

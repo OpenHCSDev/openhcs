@@ -63,9 +63,6 @@ class KnowledgeBaseDocumentSpec:
     document: KnowledgeBaseDocumentSummary
 
 
-
-
-
 @dataclass(frozen=True, slots=True)
 class _Official30CaseModuleInventory:
     case_name: str
@@ -613,8 +610,6 @@ class KnowledgeBaseService:
             )
         return tuple(projected_lines)
 
-
-
     @staticmethod
     def _official30_case_name(case: Mapping[str, JsonValue]) -> str:
         # Names are validated once by the source manifest boundary.
@@ -920,7 +915,14 @@ class KnowledgeBaseService:
                 inventory = _Official30CaseModuleInventory.from_source(
                     case_name, path, path.stat().st_mtime_ns
                 )
-            except (ImportError, KeyError, OSError, TypeError, ValueError, UnicodeDecodeError):
+            except (
+                ImportError,
+                KeyError,
+                OSError,
+                TypeError,
+                ValueError,
+                UnicodeDecodeError,
+            ):
                 inventory = _Official30CaseModuleInventory(
                     case_name=case_name, cppipe_path=None, modules=()
                 )
@@ -985,10 +987,13 @@ class KnowledgeBaseService:
                 title_score, title_terms = query.score_text(section.title)
                 text_score, text_terms = query.score_text(section_text)
                 score = title_score + text_score
-                if parsed.official30_manifest is not None and not self._official30_query_is_specific_to_case(
-                    query,
-                    section,
-                    section_text,
+                if (
+                    parsed.official30_manifest is not None
+                    and not self._official30_query_is_specific_to_case(
+                        query,
+                        section,
+                        section_text,
+                    )
                 ):
                     score = max(0, score - 50)
                 if (
@@ -1103,9 +1108,9 @@ class KnowledgeBaseService:
         text = source_path.read_text(encoding="utf-8")
         source_lines = tuple(text.splitlines())
         official30_projection: _Official30RecipeProjection | None = None
-        official30_manifest = comparison_manifest_type_for_root(self._repo_root).from_text(
-            text, path=source_path, source_root=self._repo_root
-        )
+        official30_manifest = comparison_manifest_type_for_root(
+            self._repo_root
+        ).from_text(text, path=source_path, source_root=self._repo_root)
         if official30_manifest is None:
             lines = self._display_lines(
                 spec,
@@ -1248,9 +1253,6 @@ def _official30_public_source(
             pipeline_steps=pipeline_steps,
         )
     )
-
-
-
 
 
 def _native_example_source_files(
