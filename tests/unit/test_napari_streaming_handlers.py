@@ -6252,6 +6252,25 @@ def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
     assert tuple(server.viewer.calls[-1][1][0]) == (2.375, 1.25, 3.5)
 
 
+def test_shape_features_exclude_source_transport_without_mutating_payload():
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
+    full_metadata = {"label": 7, "response": 0.25,
+                     ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"}}
+    features = NapariShapeFeatureColumns()
+    item = _layer_item({}, stream_layer_data_type=StreamingDataType.SHAPES)
+    features.append(
+        full_metadata, label=7, path=item.address.path,
+        element_identity=item.element_identity(0),
+    )
+    assert ROIArchiveSourceMetadata.FIELD in full_metadata
+    assert ROIArchiveSourceMetadata.FIELD not in features.values
+    assert features.values["response"] == [0.25]
+    assert features.values[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
+
+
 def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     server = _FakeNapariServer()
