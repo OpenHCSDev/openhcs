@@ -4,6 +4,33 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Exact selection-retention integration release to Planck551
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Actual main78f2f0b31 contains merged549's current-slice selection authority,
+but not522's selectable presentation/source-member retention family. Singer
+releases that complete family at4245a9f73 to Planck's existing551 shared-axis/
+footer integration: NapariStreamLayerItem.element_identity/feature declaration,
+original Shapes feature-column writer/caller, Points member/coordinate stamps,
+NapariSelectablePresentationRetention and both registered geometry handler MROs,
+NapariResultSelectionController.preserve_selection/_element_identities, and
+their direct builder/remount/cooperative fixture consumers. No branch ancestry,
+foreign gitlink or Root shared producer/unit file is released or reapplied.
+
+Planck must reuse main549's displayed_indices/select_indices, not restore the
+old selection writes. Rank-changing remount must establish the existing semantic
+viewer frame before native displayed-membership admission, preserving exact
+source-member selection or reporting the original owner error. It must not drop
+selection or bypass eligibility. The existing original handler rematerialize
+and cooperative presentation capabilities carry the work. Singer will not
+compete on551's layout/footer or copied selection mechanism.
+
+This is an affirmative integration release, not a claim that551 is implemented,
+installed or live-qualified. Singer's separate fractionalXYZ declaration hooks
+and remaining public receiving stay on522;541 remains Root-unit/frame dependent.
+Source, current archives and frozen targets are unchanged. This checkpoint
+requires no test/build/install or new lane; independent authors remain unblocked.
+
 Shared native selection projection received (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
