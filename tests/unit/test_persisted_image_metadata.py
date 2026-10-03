@@ -362,10 +362,7 @@ def test_typed_projection_update_admits_only_retained_wire_records(
     else:
         writer.merge_source_projection_metadata(path, "images", updates)
     assert admitted_paths == ["images/retained.tif"]
-    assert serialized_paths == (
-        ["images/retained.tif", "images/replaced.tif"]
-        if publish else ["images/replaced.tif"]
-    )
+    assert serialized_paths == ["images/replaced.tif"]
     subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
     restored = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdir)
     assert (
@@ -395,7 +392,10 @@ def test_invalid_unreplaced_projection_aborts_typed_transaction(tmp_path, publis
     assert path.read_bytes() == before
 
 
-def test_typed_merge_retains_opaque_fields_and_orphan_mappings(tmp_path):
+@pytest.mark.parametrize("publish", (False, True))
+def test_typed_transaction_retains_wire_fields_and_derives_workspace_views(
+    tmp_path, publish
+):
     path = tmp_path / "openhcs_metadata.json"
     writer = AtomicMetadataWriter()
     original = calibrated_projection("A01", "images/original.tif", 0.5)
@@ -403,20 +403,45 @@ def test_typed_merge_retains_opaque_fields_and_orphan_mappings(tmp_path):
         ((original, "images/original.tif"),)
     )
     fields[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] = {"version": 7}
+    fields[FIELDS.SOURCE_METADATA]["images/original.tif"] = {
+        "manual_override": "obsolete"
+    }
     fields[FIELDS.WORKSPACE_MAPPING]["legacy.tif"] = {"opaque": "mapping"}
     fields[FIELDS.SOURCE_METADATA]["legacy.tif"] = {"opaque": "metadata"}
     writer.replace_subdirectory_metadata(path, "images", fields)
     new = calibrated_projection("A02", "images/new.tif", 0.5)
-    writer.merge_source_projection_metadata(
-        path, "images",
-        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
-            ((new, "images/new.tif"),)
-        ),
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((new, "images/new.tif"),)
     )
+    if publish:
+        publish_projection_inventory(
+            writer, path, updates, ("images/original.tif", "images/new.tif")
+        )
+    else:
+        writer.merge_source_projection_metadata(path, "images", updates)
     subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
     assert subdir[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] == {"version": 7}
-    assert subdir[FIELDS.WORKSPACE_MAPPING]["legacy.tif"] == {"opaque": "mapping"}
-    assert subdir[FIELDS.SOURCE_METADATA]["legacy.tif"] == {"opaque": "metadata"}
+    if publish:
+        assert "legacy.tif" not in subdir[FIELDS.WORKSPACE_MAPPING]
+        assert "legacy.tif" not in subdir[FIELDS.SOURCE_METADATA]
+        assert subdir[FIELDS.SOURCE_METADATA]["images/original.tif"]["well"] == "A01"
+        assert "manual_override" not in subdir[FIELDS.SOURCE_METADATA][
+            "images/original.tif"
+        ]
+        assert "well" not in subdir[FIELDS.SOURCE_PROJECTION][0]["source_metadata"]
+        publish_projection_inventory(
+            writer, path, None, ("images/original.tif", "images/new.tif")
+        )
+        reconciled = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+        assert reconciled[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] == {
+            "version": 7
+        }
+    else:
+        assert subdir[FIELDS.WORKSPACE_MAPPING]["legacy.tif"] == {"opaque": "mapping"}
+        assert subdir[FIELDS.SOURCE_METADATA]["legacy.tif"] == {"opaque": "metadata"}
+        assert subdir[FIELDS.SOURCE_METADATA]["images/original.tif"] == {
+            "manual_override": "obsolete"
+        }
 
 
 def test_typed_transaction_normalizes_legacy_paths_and_rejects_collisions():

@@ -1187,6 +1187,28 @@ class SourceProjectionMetadataSerializer:
         """Serialize the coherent path-keyed projection fields as one unit."""
 
         return {
+            **cls.workspace_fields(projection_paths),
+            cls.SOURCE_PROJECTION_FIELD: cls.projection_records(projection_paths),
+        }
+
+    @classmethod
+    def projection_records(
+        cls,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> list[dict[str, Any]]:
+        """Encode producer records independently of normalized workspace views."""
+        return [
+            cls._source_projection_payload(projection, path)
+            for projection, path in projection_paths
+        ]
+
+    @classmethod
+    def workspace_fields(
+        cls,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> dict[str, Any]:
+        """Derive normalized workspace views without encoding image records."""
+        return {
             cls.WORKSPACE_MAPPING_FIELD: {
                 path: projection.ref.to_workspace_mapping()
                 for projection, path in projection_paths
@@ -1195,10 +1217,6 @@ class SourceProjectionMetadataSerializer:
                 path: cls._source_metadata(projection)
                 for projection, path in projection_paths
             },
-            cls.SOURCE_PROJECTION_FIELD: [
-                cls._source_projection_payload(projection, path)
-                for projection, path in projection_paths
-            ],
         }
 
     def projection_paths(

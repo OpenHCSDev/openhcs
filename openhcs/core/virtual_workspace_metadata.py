@@ -174,7 +174,6 @@ class AtomicMetadataWriter:
         inventing coordinates from filenames or the input label cache.
         """
         saved_paths = tuple(saved_image_paths)
-        saved_set = frozenset(saved_paths)
 
         def update(data):
             data = self._ensure_subdirectories_structure(data)
@@ -184,28 +183,17 @@ class AtomicMetadataWriter:
             entries = (
                 VirtualWorkspaceSourceProjectionEntries(MappingProxyType({}))
                 if projection_entries is None else projection_entries
-            ).merged_with_subdirectory(subdirectory).entries
-            missing = saved_set.difference(entries)
-            if missing and projection_entries is None:
-                raise MetadataWriteError(
-                    f"Saved images lack typed produced addresses: {sorted(missing)!r}."
-                )
+            ).publish_into_subdirectory(
+                subdirectory,
+                saved_image_paths=saved_paths,
+                reconcile_directory=(
+                    subdirectory_name if projection_entries is None else None
+                ),
+            ).entries
             # Concurrent axes may persist their pixels before publishing their
             # own producer records. A step publishes known saved addresses only;
             # completed-plate reconciliation requires the entire saved inventory.
             published_paths = tuple(path for path in saved_paths if path in entries)
-            # Only final reconciliation can prune deleted images: a step's file
-            # snapshot may precede another axis's concurrent publication.
-            retained_paths = tuple(
-                (projection, path)
-                for path, projection in entries.items()
-                if (
-                    projection_entries is not None
-                    or path in saved_set
-                    or Path(path).parent != Path(subdirectory_name)
-                )
-            )
-            subdirectory.update(serializer.projection_fields(retained_paths))
             if published_paths:
                 projections = SourceProjectionSet(
                     tuple(entries[path] for path in published_paths)
@@ -228,7 +216,7 @@ class AtomicMetadataWriter:
                 subdirectory[serializer.RESULTS_DIR_FIELD] = results_dir
             self._update_projection_geometry(
                 subdirectory,
-                (projection for projection, _path in retained_paths),
+                entries.values(),
             )
             return data
 
@@ -514,6 +502,70 @@ class VirtualWorkspaceSourceProjectionEntries:
         )
         subdirectory[FIELDS.SOURCE_PROJECTION] = list(records.values())
         return admitted
+
+    def publish_into_subdirectory(
+        self,
+        subdirectory: dict[str, Any],
+        *,
+        saved_image_paths: Sequence[str],
+        reconcile_directory: str | None,
+    ) -> "VirtualWorkspaceSourceProjectionEntries":
+        """Publish current path views while retaining admitted durable records.
+
+        Step snapshots cannot prune another axis's publication. Only completed
+        directory reconciliation requires complete inventory and removes deleted
+        paths. Retained records keep their original wire annotations; the two
+        workspace maps are independently derived normalized views.
+        """
+        records = self._records_by_path(subdirectory)
+        admitted = self._admit_retained_records(records)
+        saved_set = frozenset(saved_image_paths)
+        missing = saved_set.difference(admitted.entries)
+        if missing and reconcile_directory is not None:
+            raise MetadataWriteError(
+                f"Saved images lack typed produced addresses: {sorted(missing)!r}."
+            )
+        retained = type(self)(
+            MappingProxyType(
+                {
+                    path: projection
+                    for path, projection in admitted.entries.items()
+                    if (
+                        reconcile_directory is None
+                        or path in saved_set
+                        or Path(path).parent != Path(reconcile_directory)
+                    )
+                }
+            )
+        )
+        workspace_fields = SourceProjectionMetadataSerializer.workspace_fields(
+            retained.projection_paths
+        )
+        retained_records = {}
+        for path, record in records.items():
+            if path in self.entries:
+                continue  # Replacements can repair an invalid durable record.
+            canonical_path = self._required_text(record, "virtual_path")
+            if canonical_path in retained.entries:
+                retained_records[canonical_path] = (
+                    record if path == canonical_path
+                    else {**record, "virtual_path": canonical_path}
+                )
+        retained_records.update(
+            (record["virtual_path"], record)
+            for record in SourceProjectionMetadataSerializer.projection_records(
+                tuple(
+                    (projection, path)
+                    for path, projection in self.entries.items()
+                    if path in retained.entries
+                )
+            )
+        )
+        subdirectory.update(workspace_fields)
+        subdirectory[FIELDS.SOURCE_PROJECTION] = [
+            retained_records[path] for path in retained.entries
+        ]
+        return retained
 
     @classmethod
     def from_subdirectory(

@@ -397,6 +397,81 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
     assert source.requires_main_flow_checkpoint(plans)
 
 
+@pytest.mark.parametrize("pattern_kind", ("unknown", "missing", "malformed"))
+def test_checkpoint_demand_preserves_dependent_group_admission(pattern_kind):
+    from openhcs.constants.constants import Backend
+    from openhcs.core.step_dependencies import StepInputDependency
+
+    request, _, _ = _stored_primary_fixture()
+    source = replace(request.execution_plan, step_index=0, step_scope_id="source", write_backend=Backend.MEMORY.value)
+    consumer = replace(
+        source, step_index=1, step_scope_id="consumer",
+        compiled_function_pattern=(
+            None if pattern_kind == "unknown" else replace(
+                source.compiled_function_pattern, groups=(),
+                is_grouped=pattern_kind == "missing",
+            )
+        ),
+        main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id="source"),
+    )
+    plans = {0: source, 1: consumer}
+    if pattern_kind == "malformed":
+        with pytest.raises(ValueError, match="no 'default' group"):
+            source.requires_main_flow_checkpoint(plans)
+    else:
+        assert source.requires_main_flow_checkpoint(plans)
+    consumer.main_input_dependency = StepInputDependency.step_output(source_step_index=99, source_step_scope_id="absent")
+    assert not source.requires_main_flow_checkpoint(plans)
+    assert source.requires_main_flow_checkpoint({})
+    assert source.requires_main_flow_checkpoint({1: consumer})
+
+
+def test_checkpoint_demand_propagates_only_through_preserved_outputs():
+    from openhcs.constants.constants import Backend
+    from openhcs.core.step_dependencies import StepInputDependency
+
+    request, _, _ = _stored_primary_fixture()
+    source = replace(request.execution_plan, step_index=0, step_scope_id="source", write_backend=Backend.MEMORY.value)
+    consumer = replace(
+        source, step_index=1, step_scope_id="consumer", visualize=True,
+        main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id="source"),
+    )
+    plans = {0: source, 1: consumer}
+    assert consumer.requires_main_flow_checkpoint(plans)
+    assert not source.requires_main_flow_checkpoint(plans)
+    preserving, _, _ = _stored_primary_fixture(preserves_main_flow=True)
+    consumer.compiled_function_pattern = preserving.execution_plan.compiled_function_pattern
+    assert source.requires_main_flow_checkpoint(plans)
+
+
+def test_checkpoint_demand_terminates_on_preserving_cycles_and_self_producers():
+    from openhcs.constants.constants import Backend
+    from openhcs.core.step_dependencies import StepInputDependency
+
+    request, _, _ = _stored_primary_fixture(preserves_main_flow=True)
+    first = replace(
+        request.execution_plan, step_index=1, step_scope_id="first", write_backend=Backend.MEMORY.value,
+        main_input_dependency=StepInputDependency.step_output(source_step_index=2, source_step_scope_id="second"),
+    )
+    second = replace(
+        first, step_index=2, step_scope_id="second",
+        main_input_dependency=StepInputDependency.step_output(source_step_index=1, source_step_scope_id="first"),
+    )
+    plans = {1: first, 2: second}
+    assert not first.requires_main_flow_checkpoint(plans)
+    assert not second.requires_main_flow_checkpoint(plans)
+    second.streaming_configs = {"viewer": object()}
+    assert first.requires_main_flow_checkpoint(plans)
+    assert second.requires_main_flow_checkpoint(plans)
+    first.main_input_dependency = StepInputDependency.step_output(source_step_index=1, source_step_scope_id="first")
+    assert not first.requires_main_flow_checkpoint({1: first})
+    self_producer = replace(
+        first, step_index=0, step_scope_id="self",
+        main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id="self"),
+    )
+    assert self_producer.requires_main_flow_checkpoint({0: self_producer})
+
+
 def test_artifact_loaded_coordinates_keep_producer_authority_over_original_source():
     request, canonical, source_context = _stored_primary_fixture()
     exact_coordinates = (

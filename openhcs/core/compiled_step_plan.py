@@ -348,42 +348,44 @@ class CompiledStepPlan:
     def requires_main_flow_checkpoint(
         self, plans: Mapping[int, "CompiledStepPlan"],
     ) -> bool:
-        """Derive pixel transport demand, including preserved input lifetimes."""
+        """Follow this value's consumers through preserved input lifetimes."""
         if not plans or self.step_index not in plans:
             return True
-        demanded: set[int] = set()
+        consumers: dict[int, list[CompiledStepPlan]] = {}
         for plan in plans.values():
+            predecessor = plan.main_input_dependency.predecessor_step_index()
+            if predecessor is not None:
+                consumers.setdefault(predecessor, []).append(plan)
+        pending = [self.step_index]
+        visited: set[int] = set()
+        while pending:
+            step_index = pending.pop()
+            if step_index in visited:
+                continue
+            visited.add(step_index)
+            plan = plans.get(step_index)
+            if plan is None:
+                continue
             if (
                 plan.write_backend != Backend.MEMORY.value
                 or plan.materialized_output is not None
                 or plan.streaming_configs
                 or plan.visualize
             ):
-                demanded.add(plan.step_index)
-            pattern = plan.compiled_function_pattern
-            if pattern is None or any(
-                (group := pattern.group_for_component(component_key)) is None
-                or plan.stored_primary_input_edges_for_group(
-                    group, component_key,
-                ) is None
-                for component_key in plan.execution_group_scope.keys
-            ):
-                predecessor = plan.main_input_dependency.predecessor_step_index()
-                if predecessor is not None:
-                    demanded.add(predecessor)
-        pending = list(demanded)
-        while pending:
-            current = plans.get(pending.pop())
-            if current is None:
-                continue
-            pattern = current.compiled_function_pattern
-            if pattern is None or not pattern.preserves_input_main_flow():
-                continue
-            predecessor = current.main_input_dependency.predecessor_step_index()
-            if predecessor is not None and predecessor not in demanded:
-                demanded.add(predecessor)
-                pending.append(predecessor)
-        return self.step_index in demanded
+                return True
+            for consumer in consumers.get(step_index, ()):
+                pattern = consumer.compiled_function_pattern
+                if pattern is None or any(
+                    (group := pattern.group_for_component(component_key)) is None
+                    or consumer.stored_primary_input_edges_for_group(
+                        group, component_key,
+                    ) is None
+                    for component_key in consumer.execution_group_scope.keys
+                ):
+                    return True
+                if pattern.preserves_input_main_flow():
+                    pending.append(consumer.step_index)
+        return False
 
     def producer_identity(
         self,
