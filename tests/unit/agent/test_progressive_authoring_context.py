@@ -165,6 +165,36 @@ def test_actual_source_backed_guides_fit_the_public_default_bound() -> None:
         assert bounded.content == complete.content
 
 
+def test_task_authorization_routes_to_the_existing_canonical_knowledge_owner() -> None:
+    from openhcs.agent.dto.knowledge import (
+        KnowledgeBaseDocumentRequest,
+        KnowledgeBaseSearchRequest,
+    )
+
+    root = Path(__file__).resolve().parents[3]
+    knowledge = KnowledgeBaseService(repo_root=root)
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog(), knowledge_base=knowledge
+    )
+    target = KnowledgeBaseDocumentTarget(
+        "openhcs_architecture_quick_start", section_id="task-authorization"
+    )
+    hits = knowledge.search(
+        KnowledgeBaseSearchRequest(query="routine authorized workflow", limit=10)
+    )
+    assert not hits.errors
+    assert target.document_id in {hit.document.document_id for hit in hits.hits}
+    document = knowledge.get_document(KnowledgeBaseDocumentRequest(target=target))
+    assert not document.errors and not document.truncated
+    assert document.selected_section_id == target.section_id
+    assert document.document.source_path == "docs/source/architecture/quick_start.rst"
+    for kind in ("first_use", "ui_visible_workflow"):
+        context = service.get_bounded_authoring_context(AuthoringContextRequest(kind=kind))
+        assert context == service.get_authoring_context(kind)
+        assert target.document_id in context.content
+        assert agent_capabilities.get_knowledge_document.name in context.content
+
+
 def test_default_image_analysis_context_preserves_the_entire_typed_qa_policy() -> None:
     service = AgentAuthoringContextService(
         function_catalog=_UnexpectedFunctionCatalog()
