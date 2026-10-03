@@ -16,10 +16,13 @@ measurements, not ground truth or an automatically validated parameter choice.
    canvas pixels are not source pixels. World coordinates must be converted
    through the layer transform before becoming index-space sample coordinates.
 2. Choose clear isolated objects, a genuine close pair and faint/small examples
-   across preselected bright/dim, sparse/dense and centre/edge regions. Retain
-   extremes and ambiguity rather than measuring only objects the current
-   detector finds. For 3-D, inspect multiple Z planes and orthogonal views when
-   exposed; a projected width does not establish Z extent.
+   across preselected bright/dim, sparse/dense and centre/edge regions, at context
+   and native feature scales. Measure an envelope of supported widths, sizes
+   and local signal/background values, including narrow and broad structures,
+   clear positives and faint controls. One early feature is not the assay's
+   scale range. Retain extremes and ambiguity rather than measuring only objects
+   the current detector finds. For 3-D, inspect multiple Z planes and orthogonal
+   views when exposed; a projected width does not establish Z extent.
 3. Use exposed native measurement capabilities where available and retain their
    receipts. For bounded raw evidence, `openhcs_sample_viewer_window_image`
    takes `route_key`, route-local `axis_indices`, native `y`, `x`, `height`,
@@ -40,7 +43,7 @@ measurements, not ground truth or an automatically validated parameter choice.
    | --- | --- | --- |
    | Object-size range | Long/short raw boundary spans across isolated and touching examples; per-axis extent for 3-D | Calling a current mask's size independent evidence, or confusing radius with diameter |
    | Seed separation | Centre-to-centre distance of genuine neighbours and multiple maxima within one textured object | Using diameter as minimum separation and suppressing real close pairs |
-   | Smoothing/spot/ridge scale | Narrowest supported feature width, noise texture and nearby close-pair/path control | Equating diameter with Gaussian sigma or erasing a faint neurite |
+   | Smoothing/spot/ridge scale | Supported narrow-to-broad width envelope, noise texture, positive/faint-path and close-pair controls | Equating diameter with Gaussian sigma or assuming one scale preserves every supported width |
    | Background-removal scale | Target width plus extent and variation of nearby background in multiple regions | A universal kernel radius or subtracting cell signal as background |
    | Threshold/prominence | Raw object-versus-local-background values, weak positives, noise and saturation on the consumed channel | Deriving analytical thresholds from contrast limits, gamma or label colours |
    | Roundness/shape prior | Isolated raw contours, elongated/lobed examples and an unsupported-shape control | Forcing every cell to be round or treating a round-looking mask as validation |
@@ -61,12 +64,21 @@ measurements, not ground truth or an automatically validated parameter choice.
    differ between algorithms. Keep unsupported precision as an interval or
    limitation. Label mask-derived estimates provisional and check against raw,
    including missed objects; do not tune a detector solely from its own output.
+   A single-scale filter can favour one width class while suppressing another.
+   Inspect its response across the measured envelope before changing downstream
+   thresholds. If discovery returns a compatible multiscale callable, describe
+   its actual scale units, supported arguments and response-combination contract;
+   do not invent a scale-list parameter or assume a single-scale argument accepts
+   one. Estimate intermediate/response memory before a bounded comparison.
 6. Compile one bounded candidate, inspect its earliest changed intermediate,
    then compare matched raw/result/combined at the measured failures and
    regression controls. Revisit distributed regions after every change; a
    local repair can fail elsewhere under uneven illumination. Freeze measurement
    receipts and rationale with the complete candidate before held-out access.
    Expected counts or reference masks must not choose measurements in a blind run.
+   Link the measured envelope and remaining exclusions to the affected phenotype
+   claims through [the analysis strategy](analysis-strategy.md), which owns
+   claim-scoped conclusions rather than blanket abstention.
 
 ### Native ruler, profile and independently specified region operations
 
