@@ -74,7 +74,6 @@ class MeasureObjectSizeShapeModule(
     function_name = "measure_object_size_shape"
     validated = True
     confidence = 1.0
-    row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
     ignored_settings = ("Select objects to measure", "Select object sets to measure")
     measurement_category_prefixes = (("area", "shape"), ("location",))
 
@@ -437,6 +436,7 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
+    dense_object_label_measurement_row_domain,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -496,43 +496,8 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
 
     table_label = "shape"
 
-    def rows(self) -> list[dict[str, float | int]]:
-        """Project shape vectors directly onto their declared row-ordinal domain."""
-        declared_features = frozenset(
-            MeasureObjectSizeShapeModule.measurement_all_field_names()
-        )
-        rows: list[dict[str, float | int]] = [
-            {
-                self.slice_index_field: self.slice_index,
-                self.object_id_field: object_id,
-            }
-            for object_id in self.object_domain
-        ]
-        row_count = len(rows)
-        for feature_name, raw_values in self.feature_values.items():
-            values = np.asarray(raw_values)
-            python_values = self.python_feature_values(values)
-            if values.ndim == 0:
-                for row in rows:
-                    row[feature_name] = python_values
-                continue
-            if feature_name not in declared_features:
-                self.feature_array_domain(feature_name)
-            value_count = int(values.shape[0])
-            if value_count > row_count:
-                self.validate_feature_value_domain(feature_name, values)
-            for row, value in zip(rows, python_values):
-                row[feature_name] = value
-            if value_count < row_count:
-                missing_value = self.feature_missing_value(feature_name).scalar
-                for row_index in range(value_count, row_count):
-                    rows[row_index][feature_name] = missing_value
-        for row in rows:
-            self.complete_row(row)
-        return rows
-
     def feature_array_domain(self, feature_name: str) -> ObjectFeatureArrayDomain:
-        """Project CellProfiler AreaShape vectors by emitted row sequence."""
+        """Validate the shape vocabulary; the ancestor indexes measured IDs."""
         if (
             feature_name
             not in MeasureObjectSizeShapeModule.measurement_all_field_names()
@@ -541,7 +506,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
                 f"{type(self).__name__} feature {feature_name!r} has no declared "
                 "feature-array domain."
             )
-        return ObjectFeatureArrayDomain.ROW_ORDINAL
+        return super().feature_array_domain(feature_name)
 
     def feature_missing_value(self, feature_name: str) -> ObjectFeatureMissingValue:
         """Return the missing value declared by the owning shape feature."""
@@ -559,7 +524,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
 class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
     """Dense AreaShape rows that already span their declared object domain."""
 
-    object_row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
+    object_row_identity = MeasurementObjectRowIdentity.LABEL_ID
     __slots__ = ("_columns", "_fields", "_rows")
 
     def __init__(
@@ -810,16 +775,9 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
         perimeter = np.asarray(props["perimeter"], dtype=float)
         area = np.asarray(props["area"], dtype=float)
         phase_started_at = time.perf_counter()
-        measured_max_radius, measured_mean_radius, measured_median_radius = (
+        max_radius, mean_radius, median_radius = (
             shape_backend.radius_features_from_labels(labels, measured_labels)
         )
-        max_radius = np.zeros(nobjects, dtype=np.float64)
-        mean_radius = np.zeros(nobjects, dtype=np.float64)
-        median_radius = np.zeros(nobjects, dtype=np.float64)
-        measured_count = len(measured_labels)
-        max_radius[:measured_count] = measured_max_radius
-        mean_radius[:measured_count] = measured_mean_radius
-        median_radius[:measured_count] = measured_median_radius
         runtime_profiler.log(
             "moss_radius_features",
             time.perf_counter() - phase_started_at,
@@ -832,7 +790,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             compactness = 1.0 / form_factor
         phase_started_at = time.perf_counter()
         min_feret_diameter, max_feret_diameter = shape_backend.feret_diameters(
-            labels, object_indices
+            labels, measured_labels
         )
         runtime_profiler.log(
             "moss_feret_diameters",
@@ -931,7 +889,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             features.update(
                 _zernike_features(
                     labels,
-                    object_indices,
+                    measured_labels,
                     backend_provider=self.zernike_backend_provider,
                 )
             )
@@ -1288,7 +1246,8 @@ class DenseObjectSizeShapeMeasurement(
         if not np.any(labels_nd > 0):
             return []
         feature_values, measured_labels, object_domain = self.feature_arrays_for_labels(
-            labels_nd
+            labels_nd,
+            object_domain=dense_object_label_measurement_row_domain(labels, labels_nd),
         )
         rows = ShapeObjectFeatureValueTable.from_feature_arrays(
             feature_values,
