@@ -1,6 +1,64 @@
 Registered object-output boundary investigation
 ==============================================
 
+Public50395 original journey preparation, 2026-10-03
+---------------------------------------------------
+
+Singer now owns direct50395 preparation; Dewey handles independent WM94,
+Dalton helper/resource custody, parent runtime release. Exact packet and normal
+public command sequence: ``engineering503/PUBLIC50395-READY.rst``. Qualified
+target02/c031 and accepted whole815/793/resource/native/RECORD/21 controls stay
+unchanged; independent guide512 merge does not require a rebuild/hot SCI update.
+
+Original P001 successor-program.jq adds ONLY LABELS503_95; exact comparison
+confirms all three live SCI rows, run owners, resource envelope and retained
+history unchanged. Existing original recorded-mcp/mcp-client/slot-env/resource-
+check owners are referenced, not copied. No new harness, schema, registry,
+per-row cap map, guard, environment, source install or helper/native launch.
+Own synthetic12x15 input byte-equals the accepted original. Native6014/ACK7014,
+reserved viewer6015/ACK7015, DISPLAY95/VNC5999/CPU1, not sibling6012/6020/6016.
+
+ONE fresh prospective4 original replacement-mode guard, preparation95-01,
+terminal0/Admission PASS: history2301865984B+full4 reservations5100273664B
+=7402139648B below7516192768B by114053120B; home9.217GiB vs all4 remaining
+growth+2GiB floor5.691GiB. Common14372208640/max18522046464B/Swap0; FULL
+remaining4149837824B+desktop2048MiB=>6006MiB required vs8.877GiB available;
+PSIfull60=.16/300=.27. Original host-helper warning2 remains preserved.
+All95 X/WM/VNC exact original InvIDs match with caps64/32/32MiB/Swap0.
+
+Actual NEW WM94 Invocationc9f2b42c5e3b43f4a990e15b4fe4011e/128MiB gives
+future94 helper224MiB; this successor charge is already included in the common
+pool. Neither frozen historical SCI32/128 declaration nor95 helper custody
+was changed. Read original H004 terminal/closed receipts and Dalton's complete
+WM94-SUCCESSOR-LIVE-CUSTODY-20261003-0457 receipt; no scientific pixels/journals,
+reference answers, author contact or live scientist control were used.
+
+``engineering503/READY95-FREEZE.sha256`` pins packet/qualified wheel/target
+leaves, original operation/projector owners, predecessor programme and custody
+receipts. This is a hashed preparation snapshot for parent review, NOT parent
+runtime release or native acceptance. Exact launch after release ONLY:
+
+  FLEET_PARENT_RELEASED=1 bash /home/ts/wt/openhcs-issue-batch-20260929/engineering503/launch-programme95.sh public95-startup01
+
+Original recorder rechecks fresh admission and refuses existing journals/epoch.
+No such journal/epoch exists now. Public commands follow returned bootstrap,
+catalog-preparation, session/compile/execution handles without uncertain replay.
+The remaining gate is actual original public inventory/sample/table/lineage:
+source IDs2/7 -> categorical areas6/20; retained7->target1 and complementary
+removed2->target1, exact domains/directed relationship endpoints, not equal
+counts. Unbounded additional502 ABI remains Root-owned, not a501 merge gate.
+Shell/AST syntax and declaration equality are preparation only; no completed
+source/installed suite or R0 was repeated, no hosted-CI wait.
+
+Byte-exact19-file packet/raw-guard archive:
+``registered-object-output-public95-20261003.tar.gz``,12782bytes, SHA256
+``562e6d03beb246732d197fce156a2656b044f4495c997b85edff655af2b62e39``.
+Every extracted member compares byte-exact to its retained original. Snapshot
+``READY95-FREEZE.sha256`` SHA256
+``00115717c898f9f074e0c12b5e028dd192bbe8a864cb81d3d6a26fdb9c252b77``.
+All earlier qualification archives, failed builds/targets and foreign/untracked
+evidence remain untouched. No duplicate wheel/environment or disposable cleanup.
+
 Whole ordinary private installed checkpoint, 2026-10-03
 -----------------------------------------------------
 
