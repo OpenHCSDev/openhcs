@@ -9,6 +9,8 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.streaming.identity import StreamProducerIdentity
+from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
@@ -25,7 +27,10 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariComponentGroupStore,
     NapariDimensionLayerState,
     NapariLayerRouteStateStore,
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
 )
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerIsolationControlMessageAction,
     NapariNavigationControlMessageAction,
@@ -36,7 +41,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_controls import (
-    ViewerFractionalZPointCoordinateAuthority,
+    ViewerPointCoordinateAuthority,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinateAuthority,
@@ -45,6 +50,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
+    ViewerComponentValueDomainPayload,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
@@ -155,6 +161,26 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
     )
     server.result_selection_controller = NapariResultSelectionController(server)
     if NapariResultElementSelectionAuthority.state(layer).supported:
+        from napari.layers import Points
+
+        server.component_groups.items_for(route_key).append(
+            NapariStreamLayerItem(
+                data=layer.data,
+                producer=StreamProducerIdentity(
+                    origin="manual", output_kind="fixture", output_key=route_key,
+                    projection_key=route_key,
+                ),
+                address=NapariStreamLayerAddress(
+                    components={}, path=f"fixture/{route_key}",
+                    stream_layer_data_type=(
+                        StreamingDataType.POINTS if isinstance(layer, Points)
+                        else StreamingDataType.SHAPES
+                    ),
+                ),
+                image_metadata=ImagePayloadMetadata(),
+                plane_component_domain=ViewerComponentValueDomainPayload(()),
+            )
+        )
         server.result_selection_controller.bind(layer, group_binding=group_binding)
     return server, overlay, result_selection_dock, qt_window
 
@@ -533,12 +559,14 @@ def test_result_element_coordinate_authority_derives_native_slice_indices() -> N
         coordinates=coordinates,
         axis_labels=("channel", "z", "y", "x"),
         displayed_axis_indices=(2, 3),
+        spatial_axis_labels=("y", "x"),
     ) == {"channel": 2, "z": 3}
     assert (
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=(4, 5),
             axis_labels=("y", "x"),
             displayed_axis_indices=(0, 1),
+            spatial_axis_labels=("y", "x"),
         )
         == {}
     )
@@ -550,22 +578,45 @@ def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> N
             coordinates=((2, 3, 4, 4), (2, 4, 4, 6), (2, 3, 6, 6)),
             axis_labels=("channel", "z", "y", "x"),
             displayed_axis_indices=(2, 3),
+            spatial_axis_labels=("y", "x"),
         )
 
 
 def test_fractional_z_point_navigation_chooses_slice_without_rounding_geometry() -> (
     None
 ):
-    assert ViewerFractionalZPointCoordinateAuthority.axis_indices(
+    assert ViewerPointCoordinateAuthority.axis_indices(
         coordinates=(2.375, 1.25, 3.5),
         axis_labels=("z_index", "y", "x"),
         displayed_axis_indices=(1, 2),
+        spatial_axis_labels=("z_index", "y", "x"),
     ) == {"z_index": 2}
     with pytest.raises(ValueError, match="integral slice"):
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=(2.375, 1.25, 3.5),
             axis_labels=("z_index", "y", "x"),
             displayed_axis_indices=(1, 2),
+            spatial_axis_labels=("z_index", "y", "x"),
+        )
+
+
+@pytest.mark.parametrize("coordinate", [1.5, float("nan"), float("inf")])
+def test_point_coordinate_owner_preserves_strict_acquisition_admission(coordinate):
+    with pytest.raises(ValueError):
+        ViewerPointCoordinateAuthority.axis_indices(
+            coordinates=(coordinate, 1.5, 2.5, 3.5),
+            axis_labels=("channel", "z_index", "y", "x"),
+            displayed_axis_indices=(2, 3),
+            spatial_axis_labels=("z_index", "y", "x"),
+        )
+
+
+@pytest.mark.parametrize("displayed", [(1, 2), (0, 2), (0, 1)])
+def test_shapes_coordinate_owner_stays_strict_for_hidden_spatial_axes(displayed):
+    with pytest.raises(ValueError, match="integral slice"):
+        ViewerResultElementCoordinateAuthority.axis_indices(
+            coordinates=((1.5, 2.5, 3.5),), axis_labels=("z_index", "y", "x"),
+            displayed_axis_indices=displayed, spatial_axis_labels=("z_index", "y", "x"),
         )
 
 

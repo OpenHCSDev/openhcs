@@ -4,6 +4,64 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Resumed spatial-point selection owner (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Singer resumed after the recorded CLI pause. PR5222ce107dad, PR541ba8aa341e,
+main0332a696f and Root39461ab83842 were read before editing. Planck confirmed
+successor08 is source/package preparation only and claims no navigation hunk.
+Root's source-frame, point-producer, graph, persistence and materialization
+owners remain protected. PR541 still requires the narrow shared-unit release
+requested in394 comment5970482598; no unit/calibration bypass is implemented.
+Normal merge5f8d153ed receives0332 without changing any foreign worktree or
+the seven recorded external gitlinks. Original failures and retained untracked
+ledgers remain in place. No build, install, provider, native or viewer operation.
+
+The independent determining witness is the frozen target07 public point-row
+selection failure in original H002_THIRD95 output/runtime/mcp.stdout at70625,
+70672 and72365: XY accepts the same row; XZ/YZ reject its fractional hidden
+X/Y coordinate. Planck's394 comment5969244906 records this consumer defect
+separately from producer152/494. No scientific input or reference answer was
+read, changed, replayed or sent to an author.
+
+The existing ViewerResultElementCoordinateAuthority still owns coordinate-row
+admission and slice derivation. Its numeric admission is shared by the strict
+parent and the renamed ViewerPointCoordinateAuthority leaf. That leaf rounds
+only axes supplied by the original NapariAxisPresentation.spatial_axis_labels;
+acquisition indices delegate through cooperative super and remain integral.
+It does not round stored geometry, infer axes from rank, or relax Shapes.
+NapariLayerDisplayHandler declares the strict owner; the Points member declares
+its spatial coordinate owner. The existing handler registry resolves the routed
+source item's type. Navigation no longer switches on a concrete Points class.
+The old Z-only class, direct ancestor call and duplicated finite/numeric checks
+are deleted, with both original direct fixture consumers migrated.
+
+Applicable catalog patterns: IMPL-3/4 concrete dispatch outside an existing
+family; IMPL-12 copied numeric admission; BOUND-2 bypassing original route/axis
+contracts; IDEN-1 distinguishing a navigation slice from stored geometry.
+Existing selectable/common presentation capabilities and their cooperative MRO
+remain unchanged. A new source case needs only its registered handler declaration
+and coordinate hook; the fixture adds an independent admission-recording
+capability and exercises cooperative super through the unchanged consumer.
+
+Existing complete AST caller extended its selected symbols, not its scanner:
+before01 parses704 production/675tests/401dependencies, selected71/53/42,
+zero parse omissions; source5f8d153ed/Root61ab83842,23.952s/maxRSS84084KiB,
+cgroup86.8MiB/Swap0. Original audit ParsedModule/FunctionFacts/Repository
+provide declarations, imports, reads/writes, checks and bases; this is not
+global NRA proof. The earlier full NRA/R1 OOM remains preserved, not repeated.
+
+Dalton's persistent SINGER522-ONE-SERIAL-SOURCE-CAPACITY-READONLY-20261003-1714.rst
+confirms one serial CPU1/512MiB/Swap0/60s source check fits the original common
+slice, physical headroom and conservative remaining disk reservations. It is
+not admission for a build/native fleet. New raw before01 and controls01 logs
+are retained under validation/viewer-retirement-519; final controls and changed
+source R0/after-AST outcomes will be appended at their actual terminal strength.
+
+Actual public selected Points/Shapes rematerialization and fractional X/Y
+navigation remain parent receiving work after a fresh qualified target and
+resource release. Target07 is immutable; no claimed installed fix or new lane.
+
 New95 source packet and migrated consumer family
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

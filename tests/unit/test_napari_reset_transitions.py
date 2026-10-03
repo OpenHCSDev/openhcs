@@ -41,6 +41,7 @@ from openhcs.runtime.napari_viewer_server import (
     NapariShapesLayerDisplayHandler,
     NapariPointsLayerDisplayHandler,
     NapariSelectablePresentationRetention,
+    NapariNavigationControlMessageAction,
     NapariResultSelectionController,
     NapariResultSelectionGroupBinding,
     NapariStreamLayerContext,
@@ -53,7 +54,11 @@ from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
-from openhcs.runtime.viewer_controls import ViewerLayerRetirementControlOptions
+from openhcs.runtime.viewer_controls import (
+    ViewerLayerRetirementControlOptions, ViewerNavigationControlOptions,
+    ViewerPointCoordinateAuthority,
+)
+from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerSettlePhase,
 )
@@ -101,12 +106,14 @@ def enqueue(
     data_type=StreamingDataType.IMAGE,
     spacing=0.65,
     domain=None,
+    z_domain=None,
+    z_index=1,
 ):
     config = NapariDisplayConfig(
         well_mode=NapariDimensionMode.STACK,
         site_mode=NapariDimensionMode.LAYER,
         channel_mode=NapariDimensionMode.LAYER,
-        z_index_mode=NapariDimensionMode.LAYER,
+        z_index_mode=(NapariDimensionMode.STACK if z_domain else NapariDimensionMode.LAYER),
         timepoint_mode=NapariDimensionMode.LAYER,
         variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
     )
@@ -118,7 +125,8 @@ def enqueue(
             }
         ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"well": domain or [well]}, context="synthetic transition"
+            {"well": domain or [well], **({"z_index": z_domain} if z_domain else {})},
+            context="synthetic transition"
         ),
     )
     context = NapariStreamLayerContext(
@@ -132,7 +140,7 @@ def enqueue(
             pipeline_position=0,
         ),
         address=NapariStreamLayerAddress(
-            {"well": well, "site": 1, "channel": 1, "z_index": 1, "timepoint": 1},
+            {"well": well, "site": 1, "channel": 1, "z_index": z_index, "timepoint": 1},
             f"{well}.tif",
             data_type,
         ),
@@ -787,3 +795,108 @@ def test_controller_preservation_cancels_queued_navigation_without_unmount(recei
     QApplication.instance().processEvents()
     assert not layer.visible and layer.selected_data == {0}
     assert receiver.viewer.dims.current_step == step
+
+
+@pytest.mark.parametrize("pair", [("y", "x"), ("z_index", "x"), ("z_index", "y")])
+def test_fractional_spatial_selection_survives_real_qt_rematerialization(receiver, pair):
+    middle, update = enqueue(receiver, np.ones((5, 6)), well="A02", producer="middle")
+    advance_in_qt(receiver, middle, update)
+    receiver.layer_route_state.layer(middle).visible = False
+    for well in ("A01", "A03"):
+        for z_index in (1, 2, 3, 4):
+            raw, update = enqueue(
+                receiver, np.ones((5, 6)), well=well, producer="raw-frames",
+                domain=["A01", "A03"], z_domain=[1, 2, 3, 4], z_index=z_index,
+            )
+    advance_in_qt(receiver, raw, update)
+    payloads = []
+    for well in ("A01", "A03"):
+        payload = [{"type": "points", "coordinates": [[1.5, 2.5]],
+                    "metadata": {ROIFractionalZ.FIELD: 1.5, "label": 7}}]
+        payloads.append(payload)
+        route, update = enqueue(
+            receiver, payload, well=well, producer="fractional-survivor",
+            data_type=StreamingDataType.POINTS, domain=["A01", "A03"],
+            z_domain=[1, 2, 3, 4],
+        )
+    advance_in_qt(receiver, route, update)
+    receiver.raise_result_selection_surface = lambda: None  # No dock/socket shell in this fixture.
+    old = receiver.layer_route_state.layer(route)
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    identity = old.features.iloc[1][feature]
+    original_coordinates = old.data[1, -3:].copy()
+    sources = receiver.component_groups.existing_items_for(route)
+    navigation = NapariNavigationControlMessageAction()
+
+    def select_and_check(layer):
+        member = tuple(layer.features[feature]).index(identity)
+        prepared = navigation.prepare(receiver, ViewerNavigationControlOptions(
+            route_key=route, data_index=member, visible=True, selected=True,
+            display_axes=pair,
+        ))
+        presentation = receiver.layer_route_state.dimension_state_for(route).presentation
+        hidden_spatial = next(axis for axis in presentation.spatial_axis_labels if axis not in pair)
+        assert prepared.request.axis_indices[hidden_spatial] == (
+            3 if hidden_spatial == "x" else 2
+        )
+        navigation.apply_prepared(receiver, prepared)
+        QApplication.instance().processEvents()  # Exercise the original selection callback too.
+        assert tuple(receiver.viewer.dims.displayed) == tuple(
+            presentation.axis_labels.index(axis) for axis in pair
+        )
+        assert set(layer.features.iloc[list(layer.selected_data)][feature]) == {identity}
+        np.testing.assert_array_equal(layer.data[member, -3:], original_coordinates)
+        # Implicit displayed dimensions and explicit pair overrides have the same contract.
+        assert navigation.result_element_axis_indices(receiver, layer, route, member) == (
+            prepared.request.axis_indices
+        )
+        assert tuple(layer.scale[-2:]) == (0.65, 0.65)
+
+    select_and_check(old)
+    sources.reverse()  # Same source identity, deliberately different native row position.
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, middle)
+    )
+    assert result.applied and not result.errors
+    native = receiver.layer_route_state.layer(route)
+    assert native is not old and native.selected_data == {0}
+    assert receiver.component_groups.existing_items_for(route) is sources
+    select_and_check(native)
+    assert payloads == [[{"type": "points", "coordinates": [[1.5, 2.5]],
+                         "metadata": {ROIFractionalZ.FIELD: 1.5, "label": 7}}]] * 2
+
+
+def test_declared_point_coordinate_capability_executes_cooperative_hooks(receiver, monkeypatch):
+    admitted = []
+    monkeypatch.setitem(NapariPointsLayerDisplayHandler.__registry__, StreamingDataType.POINTS,
+                        NapariPointsLayerDisplayHandler)
+
+    class CoordinateAdmissionRecording:
+        @classmethod
+        def _coordinate_value(cls, value, *, axis_label):
+            admitted.append(axis_label)
+            return super()._coordinate_value(value, axis_label=axis_label)
+
+    class RecordedPointCoordinates(CoordinateAdmissionRecording, ViewerPointCoordinateAuthority):
+        pass
+
+    class RecordedPointsHandler(NapariPointsLayerDisplayHandler):
+        streaming_data_type = StreamingDataType.POINTS
+        result_coordinate_authority = RecordedPointCoordinates
+
+    route, update = enqueue(receiver, [{"type": "points", "coordinates": [[1.5, 2.5]],
+                                       "metadata": {ROIFractionalZ.FIELD: 1.5}}],
+                            producer="new-coordinate-case", data_type=StreamingDataType.POINTS,
+                            z_domain=[1, 2, 3, 4])
+    advance_in_qt(receiver, route, update)
+    layer = receiver.layer_route_state.layer(route)
+    presentation = receiver.layer_route_state.dimension_state_for(route).presentation
+    action = NapariNavigationControlMessageAction()
+    for pair in (("y", "x"), ("z_index", "x"), ("z_index", "y")):
+        action.result_element_axis_indices(
+            receiver, layer, route, 0,
+            displayed_axis_indices=tuple(presentation.axis_labels.index(axis) for axis in pair),
+        )
+    assert admitted.count("z_index") == admitted.count("y") == admitted.count("x") == 1
+    np.testing.assert_array_equal(layer.data[0, -3:], (1.5, 1.5, 2.5))
+    assert RecordedPointsHandler.result_coordinate_authority is RecordedPointCoordinates

@@ -25,8 +25,6 @@ if TYPE_CHECKING:
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.constants import AllComponents
-
 ViewerScalar: TypeAlias = str | int | float | bool | None
 VerticesYX: TypeAlias = tuple[tuple[float, float], ...]
 ViewerPayloadAxisIndices: TypeAlias = tuple[int, ...] | dict[str, int]
@@ -77,6 +75,7 @@ class ViewerResultElementCoordinateAuthority:
         coordinates: Iterable[object],
         axis_labels: Sequence[str],
         displayed_axis_indices: Sequence[int],
+        spatial_axis_labels: Sequence[str],
     ) -> dict[str, int]:
         """Return exact route-local indices for every non-displayed axis."""
 
@@ -95,6 +94,9 @@ class ViewerResultElementCoordinateAuthority:
             raise ValueError("Viewer axis_labels must contain non-empty strings.")
         if len(set(labels)) != len(labels):
             raise ValueError("Viewer axis_labels must be unique.")
+        spatial = tuple(spatial_axis_labels)
+        if len(set(spatial)) != len(spatial) or any(axis not in labels for axis in spatial):
+            raise ValueError("Viewer spatial axes must be unique declared route axes.")
 
         rows = cls._coordinate_rows(coordinates)
         coordinate_width = len(rows[0])
@@ -117,6 +119,7 @@ class ViewerResultElementCoordinateAuthority:
                 rows,
                 axis_position=axis_position,
                 axis_label=labels[axis_position],
+                spatial_axis_labels=spatial,
             )
             for axis_position in range(coordinate_width)
             if axis_position not in displayed
@@ -163,11 +166,13 @@ class ViewerResultElementCoordinateAuthority:
         *,
         axis_position: int,
         axis_label: str,
+        spatial_axis_labels: Sequence[str],
     ) -> int:
         coordinates = tuple(
             cls._slice_coordinate(
                 row[axis_position],
                 axis_label=axis_label,
+                spatial_axis_labels=spatial_axis_labels,
             )
             for row in rows
         )
@@ -178,37 +183,46 @@ class ViewerResultElementCoordinateAuthority:
             )
         return coordinates[0]
 
-    @staticmethod
-    def _slice_coordinate(value: object, *, axis_label: str) -> int:
-        if isinstance(value, bool) or not isinstance(value, Real):
-            raise TypeError(
-                f"Viewer result element coordinate for axis {axis_label!r} "
-                "must be numeric."
-            )
-        numeric_value = float(value)
-        if not isfinite(numeric_value) or not numeric_value.is_integer():
+    @classmethod
+    def _slice_coordinate(
+        cls, value: object, *, axis_label: str, spatial_axis_labels: Sequence[str],
+    ) -> int:
+        numeric_value = cls._coordinate_value(value, axis_label=axis_label)
+        if not numeric_value.is_integer():
             raise ValueError(
                 f"Viewer result element coordinate for axis {axis_label!r} "
                 f"must identify one integral slice, got {value!r}."
             )
         return int(numeric_value)
 
-
-class ViewerFractionalZPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
-    """Navigate to the nearest Z slice without rounding stored point geometry."""
-
     @staticmethod
-    def _slice_coordinate(value: object, *, axis_label: str) -> int:
-        if axis_label != AllComponents.Z_INDEX.value:
-            return ViewerResultElementCoordinateAuthority._slice_coordinate(
-                value, axis_label=axis_label
-            )
+    def _coordinate_value(value: object, *, axis_label: str) -> float:
         if isinstance(value, bool) or not isinstance(value, Real):
-            raise TypeError("Viewer point Z coordinate must be numeric.")
+            raise TypeError(
+                f"Viewer result element coordinate for axis {axis_label!r} "
+                "must be numeric."
+            )
         numeric_value = float(value)
         if not isfinite(numeric_value):
-            raise ValueError("Viewer point Z coordinate must be finite.")
-        return floor(numeric_value + 0.5)
+            raise ValueError(
+                f"Viewer result element coordinate for axis {axis_label!r} "
+                f"must be finite, got {value!r}."
+            )
+        return numeric_value
+
+
+class ViewerPointCoordinateAuthority(ViewerResultElementCoordinateAuthority):
+    """Navigate to the nearest spatial slice without rounding stored geometry."""
+
+    @classmethod
+    def _slice_coordinate(
+        cls, value: object, *, axis_label: str, spatial_axis_labels: Sequence[str],
+    ) -> int:
+        if axis_label not in spatial_axis_labels:
+            return super()._slice_coordinate(
+                value, axis_label=axis_label, spatial_axis_labels=spatial_axis_labels,
+            )
+        return floor(cls._coordinate_value(value, axis_label=axis_label) + 0.5)
 
 
 @dataclass(frozen=True, slots=True)
