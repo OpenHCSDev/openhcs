@@ -17,7 +17,7 @@ Start ONE retained recorded MCP shell through the existing owner. This is an
 INTERACTIVE process: invoke tools.exec_command with tty=true and retain its
 returned session_id for tools.write_stdin. Use the exact tool arguments::
 
-  {"cmd":"FLEET_PARENT_RELEASED=1 bash \"$FLEET_OPERATIONS/recorded-mcp.sh\" \"$FLEET_ROOT\" \"$FLEET_SLOT\" startup01","tty":true,"yield_time_ms":1000}
+  {"cmd":"bash \"$FLEET_OPERATIONS/recorded-mcp.sh\" \"$FLEET_ROOT\" \"$FLEET_SLOT\" startup01","tty":true,"yield_time_ms":1000}
 
 Inspect the returned handle and keep that SAME session for every command.
 startup01 is a caller-owned unique resource observation. Before any MCP journal

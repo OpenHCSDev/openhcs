@@ -19,8 +19,7 @@ jq -n --arg root "$scratch" --arg operations "$operations" '{
     output_per_author_mib:1,scratch_per_author_mib:1,per_author_science_mib:4096,
     per_author_cli_mib:512,helper_caps_mib:{},desktop_growth_reserve_mib:2048,full_memory_psi_max_percent:1}
 }' > "$scratch/run/program.json"
-printf 'Controlled initialization only; no scientific release.\n' > "$scratch/run/PARENT-RELEASE.rst"
-(cd "$scratch/run"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/run"; sha256sum program.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" initialize "$scratch/funding" "$scratch/run" absent
 export CONTROLLED_HOST="$scratch/host" CONTROLLED_HOME_BYTES=8353711390
 export CONTROLLED_COMMON_MAX=8589934592 CONTROLLED_COMMON_CURRENT=1610612736 CONTROLLED_COMMON_SWAP=0
@@ -108,8 +107,7 @@ jq -n --arg root "$scratch" '{phase:"headless-control",
 }' > "$scratch/admin-run/successor-declaration.json"
 printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
 bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
-printf 'Controlled admin publication only; no SCI launch.\n' > "$scratch/admin-run/PARENT-RELEASE.rst"
-(cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
 run 0 ongoing continuing_original_scope_owner

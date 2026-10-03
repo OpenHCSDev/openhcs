@@ -43,9 +43,8 @@ jq -e --arg root "$scratch" '(.funded_members|map(.slot))==["A","INDEPENDENT_C"]
   .retained_output_roots==[($root+"/old-b/B/author-workspace/output")]' "$scratch/next/program.json" >/dev/null
 printf 'PASS original projection: independent declaration replaces retired membership and retains FULL output once\n'
 
-# These are inert test fixtures, not production parent releases or custody.
-printf 'Controlled parent-release fixture; no actual client/native launch.\n' > "$scratch/next/PARENT-RELEASE.rst"
-(cd "$scratch/next"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+# No parent file: the explicit original publisher invocation owns the grant.
+(cd "$scratch/next"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 refuse() {
   local proposal=${1:?proposal} status
   shift
@@ -64,6 +63,7 @@ printf 'PASS no release, stale current revision, and absent/UNKNOWN terminal cus
 
 printf 'Controlled exact terminal/borrower custody fixture.\n' > "$scratch/terminal-b.rst"
 FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
+test ! -e "$scratch/next/PARENT-RELEASE.rst"
 jq -e 'all(.authors[]; keys==["run_owner_root","slot"]) and
   (has("source_install")|not) and (has("author_config")|not) and
   (.proposed_resource_envelope|has("output_per_author_mib")|not) and
@@ -241,12 +241,11 @@ mkdir -p "$scratch/controlled-install/openhcs/mcp"
 touch "$scratch/controlled-install/openhcs/mcp/server.py"
 jq --arg install "$scratch/controlled-install" '.source_install=$install' "$scratch/old-a/program.json" > "$scratch/old-a/fixture-complete.json"
 mv "$scratch/old-a/fixture-complete.json" "$scratch/old-a/program.json"
-printf 'Controlled immutable run release.\n' > "$scratch/old-a/PARENT-RELEASE.rst"
-(cd "$scratch/old-a"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
-FLEET_PARENT_RELEASED=1 bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-after.log"
+(cd "$scratch/old-a"; sha256sum program.json > READY-FREEZE.sha256)
+env -u FLEET_PARENT_RELEASED bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-after.log"
 export BASH_ENV="$repo/tests/shell/fixtures/funded_run/bash-env.sh"
 set +e
-FLEET_PARENT_RELEASED=1 bash "$operations/recorded-mcp.sh" "$scratch/funding" A startup01
+env -u FLEET_PARENT_RELEASED bash "$operations/recorded-mcp.sh" "$scratch/funding" A startup01
 status=$?
 set -e
 test "$status" = 42
@@ -257,7 +256,7 @@ test ! -e "$scratch/funding/A"
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum "$runtime"/mcp.* "$runtime/first-mcp-started.epoch" > "$scratch/retained-startup.sha256"
 set +e
-FLEET_PARENT_RELEASED=1 bash "$operations/recorded-mcp.sh" "$scratch/funding" A forbidden02
+env -u FLEET_PARENT_RELEASED bash "$operations/recorded-mcp.sh" "$scratch/funding" A forbidden02
 status=$?
 set -e
 test "$status" = 1
@@ -270,9 +269,9 @@ mkdir "$scratch/initial-run"
 jq --arg root "$scratch" '.funding_root=($root+"/initial-funding") |
   .authors |= map(.run_owner_root=($root+"/initial-run")) |
   .funded_members=[.authors[]|{slot,run_owner_root}]' "$scratch/old-a/program.json" > "$scratch/initial-run/program.json"
-printf 'Controlled initial parent release.\n' > "$scratch/initial-run/PARENT-RELEASE.rst"
-(cd "$scratch/initial-run"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/initial-run"; sha256sum program.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$owner" initialize "$scratch/initial-funding" "$scratch/initial-run" absent
+test ! -e "$scratch/initial-run/PARENT-RELEASE.rst"
 jq -e '(.authors|length)==1 and (has("python")|not) and
   (.proposed_resource_envelope|has("per_author_science_mib")|not)' "$scratch/initial-funding/program.json" >/dev/null
 before=$(sha256sum "$scratch/initial-funding/program.json")
