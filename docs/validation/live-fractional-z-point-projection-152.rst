@@ -263,3 +263,36 @@ Fresh after-inventory10 covers704 OpenHCS and95 paired PolyStore/ZMQ modules,
 The old emitted_source_identities declaration and production/test consumers
 are gone; immutable original defect reproducer and historical receipts retain
 that name as evidence. This named AST census is not a full NRA detector/proof.
+
+Regression and current integration disposition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Regression12 passed25 selected existing controls in9.37s, terminal0,
+maxRSS452120KiB, swaps0, same512MiB/noSwap/oneCPU/60s scope. These cover original
+point ZIP reopening and rejection, generic source-identity image files, file
+bundles, TIFF stream/projection, singleton ROI metadata and filename identity.
+47 unrelated cases were deselected; two pre-existing pytest async-configuration
+warnings remain. This plus7 new controls is32 passes, not a full test suite or
+installed native settlement acceptance. All owned scopes are terminal/inactive.
+
+After the fresh H002 stop was reported, determining remote heads were checked:
+main9531d594,494 at91a374edd and Root394 still396379b. No new production change
+or install is needed merely because the unchanged scientific498 fleet exhibits
+the known failure. No scientist source, image, table or endpoint was inspected
+or modified and no author was contacted.
+
+One targeted receiving diff of Root394 confirms that its MaterializationBatch
+retains original typed Output objects through the same replace-based source
+fallback/variable-component hooks and successful-save records. The narrow point
+options, writer, source-identity property and artifact source-query seams remain
+as previously released; Root's additional publication machinery does not yet
+repair them. No generic provenance/compiler/load/stack patch is required here.
+This receiving review is source evidence only, not execution against Root394.
+
+Remaining owner boundaries: Planck owns494 source closure/review and future
+engineering point-producer acceptance. Parent owns integration/release of an
+eligible ordinary target and a resource-admitted engineering endpoint, plus152's
+continuous live/reopened native journey. Root retains134 broader persisted
+publication. Scientific498 remains immutable. A later engineering journey must
+exercise actual live point settlement and persisted reopening separately; these
+are not inferred from source controls or an author's manual reopening.
