@@ -4,6 +4,22 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+New95 source packet and migrated consumer family
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See viewer-retirement-519-selection95/CHECKPOINT.rst and RECEIVING.rst for the
+direct published packet, not a secondhand ready claim. Planck7cfcf1713/945b959
+fixture-only changes are received on522; normal merge130ef9d36 integrates
+parent-reviewed mainb1e9/524 without combined-package ancestry. Both original
+native builders byte-match qualified07/8168; all three migrated tests match
+Planck945b959. No tests/build/install/runtime or original R0 repeated.
+Original current07 READY42 records104 tools/fresh health/1816files/832caches/
+88+24+3 installed PASS, original40 failures retained, target immutable.
+The new public geometry-survivor remount remains NOT RUN. The precise packet
+dependency is grouped endpoint publication: manual archive singleton routes
+only translate, and Root435 publication is not part of main07. No fabricated
+receipt/group or competing Root implementation removes that limitation.
+
 Current-head selection qualification and received live proof
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
