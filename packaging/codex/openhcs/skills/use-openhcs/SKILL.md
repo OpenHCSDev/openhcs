@@ -47,7 +47,7 @@ and record how each observation supports the chosen callable parameter.
 When an image defect motivates analytical preprocessing, read
 [the preprocessing decision guide](references/image-preprocessing.md), also
 retrievable as `openhcs_image_preprocessing`, before changing the pipeline.
-For point-only counts, false splits, merged neighbours, zero-growth cytoplasm
+For extended-object point counts, false splits, merged neighbours, zero-growth cytoplasm
 or disconnected neurites, use [stage-specific segmentation diagnostics](references/segmentation-diagnostics.md)
 (`openhcs_segmentation_diagnostics`) to choose one discriminating trial rather
 than retuning the entire chain. Preserve raw and processed routes for comparison.
