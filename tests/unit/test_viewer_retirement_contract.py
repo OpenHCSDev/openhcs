@@ -43,7 +43,7 @@ def test_generated_mcp_binding_discovers_and_executes_new_declaration_without_co
     captured = []
     received = []
     class Service:
-        def retire_layers(self, value):
+        def presentation(self, value):
             received.append(value)
             return ViewerWindowLayerRetirementResult(
                 schema_version=SCHEMA_VERSION, connection=value.connection,
@@ -90,7 +90,7 @@ def test_service_rejects_failed_or_mismatched_retirement_receipt(native):
         def _send_control_message(self, value, message):
             assert value.operation_deadline is not None
             return native
-    result = ViewerWindowService(NativeReplyGateway()).retire_layers(request())
+    result = ViewerWindowService(NativeReplyGateway()).presentation(request())
     assert not result.applied and not result.observed and result.errors
     assert not result.retired_route_keys
 

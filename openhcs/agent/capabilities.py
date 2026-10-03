@@ -3379,10 +3379,9 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
     )
 
 
-class RetireViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
+class RetireViewerWindowLayersCapability(ViewerNativePresentationCapability):
     name = "openhcs_retire_viewer_window_layers"
     cli_command = "retire-viewer"
-    kind = CapabilityKind.TOOL
     title = "Retire explicit viewer layers"
     description = (
         "After viewer settlement, removes only explicitly selected mounted routes "
@@ -3394,17 +3393,10 @@ class RetireViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
         "can be retired. Untargeted routes and persisted source/results remain "
         "intact. Hiding layers is not retirement."
     )
-    service = "viewer_window"
-    mutating = True
     side_effects = ("retires_explicit_viewer_layers",)
-    runtime_requirements = ("running_openhcs_viewer_server",)
     data_exposure = ("viewer_layer_retirement",)
     input_contract = ViewerWindowLayerRetirementRequest
     output_contract = ViewerWindowLayerRetirementResult
-    request_invocation = AgentViewerWindowRequestServiceInvocation(
-        service=lambda context: context.viewer_window_service,
-        method=lambda service, request: service.retire_layers(request),
-    )
 
 
 class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):

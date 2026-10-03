@@ -1060,6 +1060,7 @@ class NapariComponentAwareDisplayCoordinator:
     ) -> tuple[str, ...]:
         """Validate the whole observed set before any ordinary native removal."""
         with server.layer_route_state.mutation_boundary():
+            viewer = server.require_viewer()
             request.control_deadline().remaining_seconds()
             server.layer_route_state.require_retirement_boundary()
             server.display_pipeline.require_retirement_boundary()
@@ -1070,16 +1071,16 @@ class NapariComponentAwareDisplayCoordinator:
                 if not server.layer_route_state.has_layer(route):
                     raise ValueError(f"Retirement route {route!r} is not mounted.")
                 layer = server.layer_route_state.layer(route)
-                if layer not in server.viewer.layers:
+                if layer not in viewer.layers:
                     raise ValueError(f"Retirement route {route!r} is already deleted.")
                 actual = server.component_groups.producer_identities_for(route)
                 if actual != frozenset(expected):
                     raise ValueError(f"Retirement producer incarnation changed for {route!r}.")
-            viewport = NapariNativeViewportPresentation.for_viewer(server.viewer)
+            viewport = NapariNativeViewportPresentation.for_viewer(viewer)
             presentation = viewport.snapshot() if viewport is not None else None
             request.control_deadline().remaining_seconds()
             for route in routes:
-                server.viewer.layers.remove(server.layer_route_state.layer(route))
+                viewer.layers.remove(server.layer_route_state.layer(route))
                 self.purge_route(server, route)
             server.display_pipeline.reconcile_mounted_axis_projections(rematerialize=True)
             if viewport is not None:
@@ -5111,8 +5112,6 @@ class NapariImageIntensityControlMessageAction(NapariMountedRouteControlMessageA
         request = message.get(ViewerControlResponseField.PAYLOAD.value)
         acknowledgement = ViewerControlMessageType.IMAGE_INTENSITY.acknowledgement_type
         try:
-            if server.viewer is None:
-                raise RuntimeError("Napari viewer is not available.")
             if not isinstance(request, ViewerImageIntensityControlOptions):
                 raise TypeError(
                     "Image intensity payload must be ViewerImageIntensityControlOptions."
@@ -6340,6 +6339,12 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         """Retain a terminal intake failure for control-plane diagnostics."""
 
         self.transport_failure = error
+
+    def require_viewer(self):
+        """Resolve native availability at its original lifecycle owner."""
+        if self.viewer is None:
+            raise RuntimeError("Napari viewer is not available.")
+        return self.viewer
 
     def request_shutdown(self) -> None:
         """Stop accepting display work and cancel every deferred layer update."""

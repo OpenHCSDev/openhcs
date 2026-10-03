@@ -516,7 +516,7 @@ class ViewerLayerIsolationField(str, Enum):
     MISSING_ROUTE_KEYS = "missing_route_keys"
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ViewerLayerRetirementReceipt(ViewerProjectionRecord):
     """One native retirement observation, projected into the agent envelope."""
 

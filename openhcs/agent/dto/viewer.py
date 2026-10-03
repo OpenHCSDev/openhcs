@@ -17,7 +17,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
     WindowVisualObservation,
 )
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, project_dataclass
 from pydantic import StrictFloat, StrictInt
 from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
@@ -603,8 +603,17 @@ class ViewerWindowLayerIsolationRequest(ViewerWindowControlRequest):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerWindowLayerRetirementRequest(ViewerWindowControlRequest):
+class ViewerWindowLayerRetirementRequest(ViewerWindowPresentationRequest):
     retirement: ViewerLayerRetirementControlOptions
+    message_type = OpenHCSViewerControlMessageType.RETIRE_LAYERS.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowLayerRetirementResult
+
+    @property
+    def control_payload(self):
+        return self
 
     @classmethod
     def from_fields(
@@ -1332,8 +1341,16 @@ class ViewerWindowPresentationResult(
         if not isinstance(payload, Mapping):
             raise TypeError("Native presentation readback must be a mapping.")
         snapshot = cls.snapshot_type.from_wire_mapping(payload)
+        return cls.from_snapshot(connection, snapshot)
+
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
         return cls(schema_version=SCHEMA_VERSION, connection=connection,
                    observed=True, applied=True, **{cls.response_field.value: snapshot})
+
+    def admit_request(self, request: ViewerWindowPresentationRequest) -> Self:
+        """Operation-specific reply custody; concrete declarations supply hooks."""
+        return self
 
 
 @dataclass(frozen=True, slots=True)
@@ -1407,14 +1424,30 @@ class ViewerWindowLayerVisibilityRecord:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowLayerRetirementResult(
-    ViewerWindowObservedErrorResultMixin,
-    AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ViewerWindowPresentationResult,
     ViewerLayerRetirementReceipt,
 ):
     registry_key: ClassVar[str] = "layer_retirement"
+    response_field = ViewerControlField.RETIREMENT
+    snapshot_type = ViewerLayerRetirementReceipt
 
-    observed: bool
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
+        return project_dataclass(
+            cls, snapshot, schema_version=SCHEMA_VERSION,
+            connection=connection, observed=True,
+        )
+
+    def admit_request(self, request: ViewerWindowLayerRetirementRequest) -> Self:
+        super().admit_request(request)
+        if not self.applied:
+            raise ValueError("Native retirement did not apply the requested set.")
+        requested = frozenset(request.retirement.expected_producers)
+        if frozenset(self.retired_route_keys) != requested:
+            raise ValueError("Native retirement acknowledgement has a different route set.")
+        if requested.intersection(self.remaining_route_keys):
+            raise ValueError("Retired routes remain mounted in the acknowledgement.")
+        return self
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

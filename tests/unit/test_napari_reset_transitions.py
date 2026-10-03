@@ -428,7 +428,7 @@ def test_selected_retirement_uses_registered_queue_and_releases_payloads(receive
     keep_native = receiver.layer_route_state.layer(keep)
     original_items = receiver.component_groups.existing_items_for(keep)
     del update, doomed, native
-    result = ViewerWindowService(QueuedRetirementGateway(receiver)).retire_layers(request)
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(request)
     assert result.applied and not result.errors and result.observed
     assert result.retired_route_keys == (route,)
     assert result.remaining_route_keys == (keep,)
@@ -500,7 +500,7 @@ def test_terminal_failed_candidate_is_retirable_without_erasing_other_failure(re
     settlement.fail_active(claimed)
     receiver.layer_route_state.record_update_error(route, ValueError("retained original failure"))
     receiver.layer_route_state.record_update_error(keep, ValueError("other original failure"))
-    result = ViewerWindowService(QueuedRetirementGateway(receiver)).retire_layers(retirement_request(receiver, route))
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, route))
     assert result.applied and not result.errors
     assert settlement.phase is ViewerSettlePhase.FAILED
     assert not settlement.updates
@@ -535,7 +535,7 @@ def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hook
         originals[route] = receiver.component_groups.existing_items_for(route)
     receiver.viewer.camera.center = (0, 1, 1)
     receiver.viewer.camera.zoom = 31
-    result = ViewerWindowService(QueuedRetirementGateway(receiver)).retire_layers(retirement_request(receiver, middle))
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, middle))
     assert result.applied and not result.errors
     assert len(calls) == 4
     for route, items in originals.items():
