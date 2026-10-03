@@ -9,6 +9,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
+from openhcs.agent.image_analysis_qa import ImageAnalysisQaPolicy
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,7 +264,7 @@ class ImageAnalysisWorkflowAuthoringContext(
             "mosaic quality control, segmentation review, or image-result provenance"
         ),
         knowledge_targets=(
-            KnowledgeBaseDocumentTarget("openhcs_autonomous_analysis_strategy"),
+            ImageAnalysisQaPolicy.claim_scope_target,
             KnowledgeBaseDocumentTarget("openhcs_example_corpus_map"),
             KnowledgeBaseDocumentTarget("openhcs_data_dimensions"),
             KnowledgeBaseDocumentTarget("openhcs_function_patterns"),
@@ -350,6 +351,7 @@ class ViewerReviewAuthoringContext(
             KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
             KnowledgeBaseDocumentTarget("openhcs_biological_image_analysis_evidence"),
             KnowledgeBaseDocumentTarget("openhcs_viewer_qa"),
+            ImageAnalysisQaPolicy.claim_scope_target,
         ),
     )
 

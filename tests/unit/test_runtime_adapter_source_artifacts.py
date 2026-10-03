@@ -39,7 +39,6 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactInputRequest,
     RuntimeArtifactTypeStrategy,
 )
 from openhcs.microscopes import create_microscope_handler
@@ -238,10 +237,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     label_set = RuntimeArtifactTypeStrategy.for_artifact_type(
         ObjectLabelsArtifactType
     ).raw_runtime_input_value(
-        RuntimeArtifactInputRequest(
-            spec=labels_spec,
-            value=labels_payload,
-        )
+        spec=labels_spec, value=labels_payload
     )
     assert isinstance(label_set, ObjectLabelSet)
     np.testing.assert_array_equal(label_set.labels, labels[np.newaxis, ...])

@@ -17,7 +17,6 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
-from openhcs.core.runtime_adapters import RuntimeFunctionInvocationRequest
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -93,9 +92,9 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
         }
     )
     image = np.zeros((2, 2), dtype=np.float32)
-    invocation = RuntimeFunctionInvocationRequest(
+    invocation = CellProfilerImageRequest(
         image_count=1,
-        image=image,
+        payload=image,
         kwargs={},
         source_image_name=None,
         execution_mode=ImagePayloadExecutionMode.NATURAL,
@@ -111,7 +110,6 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
             (source_plan, source, "source"),
         ),
         invocation=invocation,
-        image_request=_image_request(image),
         current_image=image,
     )
 
@@ -154,7 +152,7 @@ def test_relationship_recording_uses_exact_artifact_relation() -> None:
             target_ids=(2,),
         ),
         source=source,
-        call_kwargs={},
+        kwargs={},
         current_image=source.payload,
     )
 
@@ -235,7 +233,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
                 execution_mode=ImagePayloadExecutionMode.NATURAL,
                 plane_projection=plane_projection,
             ),
-            call_kwargs={},
+            kwargs={},
             current_image=source_slice,
         )
     )
@@ -257,10 +255,6 @@ def test_output_recording_carries_exact_invocation_plane_projection(
     adapter = Mock(spec=CellProfilerRuntimeAdapter)
     adapter.request = SimpleNamespace(artifact_outputs={output_plan.ref(): output_plan})
     image = np.zeros((2, 2), dtype=np.float32)
-    stale_projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        axis_size=1,
-    )
     invocation_projection = RuntimePlaneAxisValueProjection.preserve(
         axis=RuntimePlaneAxis.RUNTIME_SLICE,
         axis_size=2,
@@ -272,30 +266,31 @@ def test_output_recording_carries_exact_invocation_plane_projection(
         classmethod(lambda cls, artifact_type: recorder),
     )
 
+    call_kwargs = {"mutable_value": []}
+    invocation = CellProfilerImageRequest(
+        image_count=2,
+        payload=image,
+        kwargs=call_kwargs,
+        source_image_name=None,
+        source_aliases=("OriginalCarrier",),
+        execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+        plane_projection=invocation_projection,
+    )
     CellProfilerOutputRecorder.record_module_outputs(
         callable_contract=_contract(outputs=(output,)),
         active_input_edges=(),
         adapter=adapter,
         returned_values={output.ref(): "grid"},
         matched_outputs=((output_plan, output, "grid"),),
-        invocation=RuntimeFunctionInvocationRequest(
-            image_count=2,
-            image=image,
-            kwargs={},
-            source_image_name=None,
-            execution_mode=ImagePayloadExecutionMode.FULL_STACK,
-            plane_projection=invocation_projection,
-        ),
-        image_request=CellProfilerImageRequest(
-            image_count=1,
-            payload=ImagePayloadMetadata().payload_with(image),
-            source_image_name=None,
-            source_aliases=(),
-            execution_mode=ImagePayloadExecutionMode.NATURAL,
-            plane_projection=stale_projection,
-        ),
+        invocation=invocation,
         current_image=image,
     )
 
     request = recorder.record.call_args.args[0]
+    assert request.source is invocation
+    assert request.kwargs is call_kwargs
+    assert request.source.payload is image
+    assert request.source.source_aliases == ("OriginalCarrier",)
+    assert request.source.image_count == 2
+    assert request.source.execution_mode is ImagePayloadExecutionMode.FULL_STACK
     assert request.source.plane_projection is invocation_projection

@@ -1431,13 +1431,13 @@ class MeasureObjectNeighborsMeasurementRecordRowsMixin(
         @classmethod
         def for_request(cls, module_type, request):
             planner = NeighborDistancePlanner.for_method(
-                request.call_kwargs["distance_method"]
+                request.kwargs["distance_method"]
             )
             return cls(
                 request.output_value,
                 module_type=module_type,
                 measurement_scale=planner.measurement_scale(
-                    int(request.call_kwargs["neighbor_distance"])
+                    int(request.kwargs["neighbor_distance"])
                 ),
             )
 

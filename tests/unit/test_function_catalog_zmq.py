@@ -284,6 +284,10 @@ def _context(
     if preparation_future is None:
         ready.set_result(None)
     catalog = FunctionCatalogService()
+    # Router-only fixture: the catalog is explicitly current as well as the
+    # injected future being complete. Actual invalidation/readiness is covered
+    # by test_catalog_current_readiness, not by these mocked payload handlers.
+    catalog.projections_current = lambda: True
     preparation = FunctionCatalogPreparation(catalog)
     preparation._future = ready
     return ZMQControlRequestContext(
@@ -840,7 +844,7 @@ def test_native_registration_destination_bypasses_catalog_preparation(
 def test_native_preparation_start_status_cancel_are_responsive_and_incarnation_owned():
     entered = threading.Event()
 
-    class ControlledCatalog:
+    class ControlledCatalog(FunctionCatalogService):
         def prepare(self, *, status_callback, cancellation):
             status_callback("Controlled preparation remains pending")
             entered.set()
@@ -1022,7 +1026,7 @@ def test_function_catalog_preparation_cancellation_reaches_catalog_owner() -> No
 
     started = threading.Event()
 
-    class CancellableCatalog:
+    class CancellableCatalog(FunctionCatalogService):
         def prepare(
             self,
             *,
@@ -1086,13 +1090,12 @@ def test_catalog_readiness_waits_for_kernel_preparation_with_cached_metadata(
         started.set()
         assert release.wait(timeout=5)
 
-    def catalog(self, *, compact_signatures, status_callback, cancellation):
-        assert compact_signatures is True
+    def projections(self, *, status_callback, cancellation):
         events.append("catalog")
         return _catalog()
 
     monkeypatch.setattr(RegistryService, "prepare_persistent_catalog", prepare)
-    monkeypatch.setattr(FunctionCatalogService, "catalog", catalog)
+    monkeypatch.setattr(FunctionCatalogService, "prepare_projections", projections)
     preparation = FunctionCatalogPreparation(FunctionCatalogService())
     future = preparation.ensure_started()
     try:
@@ -1100,10 +1103,11 @@ def test_catalog_readiness_waits_for_kernel_preparation_with_cached_metadata(
         assert preparation.ensure_started() is future
         assert not future.done()
         assert preparation.snapshot().message == "Preparing declared kernels"
+        release.set()
+        assert future.result(timeout=2) is None
     finally:
         release.set()
         preparation.cancel_and_join()
-    assert future.result() is None
     assert events == ["kernels", "catalog"]
 
 

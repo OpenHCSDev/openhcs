@@ -229,18 +229,22 @@ Compare foreground and markers before changing watershed. For secondary objects,
 inspect body-channel support and growth beyond each object's own primary seed;
 matching counts or retained seed IDs do not prove cell bodies. For neurites,
 inspect faint supported soma-to-process continuity, endpoints, crossings,
-branches and background bridges. Reject the candidate for clear supported
-misses, erased paths or induced background bridges/artifacts; saturation of
+branches and background bridges. Assess supported misses, erased paths and
+induced bridges/artifacts by their distributed extent and effect on the claim,
+using the linked claim-scoped criteria rather than a zero-error rule; saturation of
 bright somas alone is not a diagnostic or segmentation rejection gate. Triage
 ambiguous debris separately so it does not prevent review of clear supported
-misses.
+misses. Apply [claim-scoped conclusions](analysis-strategy.md#scope-conclusions-to-the-evidence)
+to retain supported findings and identify which objects or relationships remain
+uncertain, rather than converting every result into a blanket abstention.
 
 Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
 Change one semantic operation or parameter group, then recheck failure and
 regression-control crops against raw. Also revisit the preselected distributed
-bright/dim and centre/edge witnesses: a local repair cannot pass if it adds
-misses, merges or background elsewhere. For uneven illumination or denoising,
+bright/dim and centre/edge witnesses: assess whether a local repair introduces
+material misses, merges or background elsewhere, not just whether it changes
+one object. For uneven illumination or denoising,
 inspect the correction field or residual and processed pixels before downstream
 labels; an independently auto-stretched display can conceal the regression.
 Reconcile persisted labels/ROIs,

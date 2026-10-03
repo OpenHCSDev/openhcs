@@ -46,7 +46,8 @@ if [[ "${3:-}" != --inside-scope ]]; then
   test "$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)" = "$((FLEET_COMBINED_MIB*1048576))"
   test "$(systemctl --user show "$FLEET_SLICE" -p MemorySwapMax --value)" = 0
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" author_launch ongoing
-  cap=$(jq -er '.proposed_resource_envelope.per_author_cli_mib' "$FLEET_RUN_ROOT/program.json")
+  cap=$(fleet_process_limit_mib author)
+  test "$cap" -gt 0
   cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' "$FLEET_RUN_ROOT/program.json")
   exec /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-author" -p MemoryMax="${cap}M" -p MemorySwapMax=0 -p CPUQuota="${cpu}%" /usr/bin/taskset -c "$FLEET_CPU" /bin/bash "$FLEET_OPERATIONS/launch-author.sh" "$FLEET_ROOT" "$FLEET_SLOT" --inside-scope
 fi

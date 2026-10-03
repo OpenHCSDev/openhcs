@@ -127,6 +127,41 @@ done
 cp "$scratch/funding-before-overlap.json" "$scratch/funding/program.json"
 printf 'PASS unknown retirement and ambiguous family membership rejected; failed attempts retained\n'
 
+# Headless administrative permissions disable endpoints with0, not fake ports.
+mkdir "$scratch/headless"
+jq --arg root "$scratch" '.members=[] | .retired_members=[] |
+  .additional_authors=[{slot:"ADMIN",run_owner_root:($root+"/headless"),
+  display:0,cpu:0,input_root:"/controlled/no-science",native_port:0,native_ack_port:0,
+  viewer_port:0,viewer_ack_port:0,vnc_port:0,
+  helper_custody:{program_root:($root+"/headless"),slot:"ADMIN"}}]' \
+  "$scratch/next/successor-declaration.json" > "$scratch/headless/successor-declaration.json"
+bash "$owner" prepare "$scratch/funding" "$scratch/headless" "$scratch/qualification.json"
+jq -e '.authors | map(select(.slot=="ADMIN")) | length==1 and
+  all(.[0] | .native_port,.native_ack_port,.viewer_port,.viewer_ack_port,.vnc_port; .==0)' \
+  "$scratch/headless/program.json" >/dev/null
+printf 'PASS original prepare admits one headless row with five declared disabled endpoints\n'
+for endpoint_case in foreign_alias own_alias missing negative fractional oversized string; do
+  mkdir "$scratch/endpoint-$endpoint_case"
+  case "$endpoint_case" in
+    foreign_alias) change='.additional_authors[-1].native_port=6012' ;;
+    own_alias) change='.additional_authors[-1] |= (.native_port=6111 | .viewer_port=6111)' ;;
+    missing) change='del(.additional_authors[-1].native_port)' ;;
+    negative) change='.additional_authors[-1].native_port=-1' ;;
+    fractional) change='.additional_authors[-1].native_port=6111.5' ;;
+    oversized) change='.additional_authors[-1].native_port=65536' ;;
+    string) change='.additional_authors[-1].native_port="0"' ;;
+  esac
+  jq "$change" "$scratch/headless/successor-declaration.json" \
+    > "$scratch/endpoint-$endpoint_case/successor-declaration.json"
+  set +e
+  bash "$owner" prepare "$scratch/funding" "$scratch/endpoint-$endpoint_case" "$scratch/qualification.json" \
+    > "$scratch/endpoint-$endpoint_case.log" 2>&1
+  status=$?
+  set -e
+  test "$status" != 0
+done
+printf 'PASS positive aliases across members/roles and invalid endpoint declarations still reject\n'
+
 # Retirement-only transition in the SAME owner releases C's entire unused
 # future reservation. A's run, operations, clock and source remain untouched.
 mkdir "$scratch/retirement"

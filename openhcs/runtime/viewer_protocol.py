@@ -491,6 +491,7 @@ class ViewerControlField(str, Enum):
     NATIVE_IMAGE_COLOR = "native_image_color"
     NATIVE_WINDOW = "native_window"
     NATIVE_DIMENSIONS = "native_dimensions"
+    RETIREMENT = "retirement"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
     PROCESS_LAUNCH = "process_launch"
@@ -504,6 +505,7 @@ class OpenHCSViewerControlMessageType(str, Enum):
     MEASURE_REGION = "measure_region"
     IMAGE_COLOR = "image_color"
     WINDOW_PRESENTATION = "window_presentation"
+    RETIRE_LAYERS = "retire_layers"
 
 
 class ViewerLayerIsolationField(str, Enum):
@@ -512,6 +514,15 @@ class ViewerLayerIsolationField(str, Enum):
     APPLIED = "applied"
     CHANGED_ROUTE_COUNT = "changed_route_count"
     MISSING_ROUTE_KEYS = "missing_route_keys"
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerLayerRetirementReceipt(ViewerProjectionRecord):
+    """One native retirement observation, projected into the agent envelope."""
+
+    applied: bool = False
+    retired_route_keys: tuple[str, ...] = ()
+    remaining_route_keys: tuple[str, ...] = ()
 
 
 class ViewerIntensityWindowField(str, Enum):

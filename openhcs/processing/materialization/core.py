@@ -72,6 +72,7 @@ from openhcs.core.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
 )
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentityAuthority,
@@ -3330,6 +3331,8 @@ def _write_spatial_graph_roi_zip(
 
     from polystore.roi import ROI, PolylineShape
 
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
     materialization_input = MaterializationInput.from_value(data, options)
     graph = materialization_input.data
     if not isinstance(graph, SpatialGraph):
@@ -3338,6 +3341,10 @@ def _write_spatial_graph_roi_zip(
             f"got {type(graph).__name__}."
         )
 
+    source_metadata = ImagePayloadMetadata(
+        source_provenance=graph.source_provenance,
+        source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
+    )
     rois = []
     for edge in graph.edges:
         coordinates = np.asarray(edge.coordinates, dtype=float)
@@ -3379,7 +3386,8 @@ def _write_spatial_graph_roi_zip(
     return [
         Output(
             path=ctx.paths(options).primary_output_path(options),
-            content=rois,
+            content=ROIArchiveSourceMetadata.bind(rois, source_metadata),
+            metadata=source_metadata,
         )
     ]
 

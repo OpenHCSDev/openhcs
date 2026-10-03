@@ -16,6 +16,18 @@ backend, outputs and empty-input behaviour before writing source.
 For centre detection, specify what defines a centre, coordinate order/origin,
 label identity and whether a count covers one plane or the whole volume.
 
+Before writing source, verify the intended imports, decorators, helper types
+and enum members against the actual public declarations for the installed
+version. Use the exposed reflected schemas and source-backed knowledge; inspect
+curated architecture symbols only when that capability is exposed. A symbol's
+signature or source location alone does not prove an enum member or helper API.
+Retain the declaration/source identity and retrieve untruncated relevant content.
+If the required declaration is not available through the authorised routes,
+use a verified contract-compatible alternative if available; otherwise record
+that exact contract gap. Do not invent a member or submit source as a discovery
+probe. Keep definitions with their existing owners, not a copied enum catalogue
+in the callable or this guide.
+
 Implement only that operation. Keep channel selection, filename interpretation,
 grouping and output destinations in the pipeline declarations. Do not read
 scientific files or close over live GUI/viewer state inside the callable.
