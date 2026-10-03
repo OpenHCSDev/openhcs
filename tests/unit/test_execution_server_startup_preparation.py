@@ -10,6 +10,7 @@ from zmqruntime.execution import ExecutionServer
 
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import FunctionCatalogPreparationOutcome
+from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.processing_preparation import PreparationCacheBatch, PreparationOperation
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -17,8 +18,9 @@ from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparat
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
 
-class PreparedCatalog:
+class PreparedCatalog(FunctionCatalogService):
     def __init__(self, events):
+        super().__init__()
         self.events = events
 
     def prepare(self, **kwargs):
@@ -26,9 +28,6 @@ class PreparedCatalog:
 
     def catalog(self, **kwargs):
         self.events.append("catalog")
-
-    def prepare_projections(self, **kwargs):
-        self.catalog(**kwargs)
 
     def projections_current(self):
         return "catalog" in self.events
@@ -57,12 +56,12 @@ def test_direct_server_start_warms_main_thread_before_bind_and_reuses_future(
     future = preparation.ensure_started()
     assert future.done() and future.exception() is None
     assert preparation._thread is None
-    assert events == ["warm", "catalog", "bind"]
+    assert events == ["warm", "catalog", "catalog", "bind"]
     state = preparation.start(ExecutionConnectionSpec(port=22319))
     assert state.outcome is FunctionCatalogPreparationOutcome.READY
     assert preparation.ensure_started() is future
     server.prepare_runtime_capabilities()
-    assert events == ["warm", "catalog", "bind"]
+    assert events == ["warm", "catalog", "catalog", "bind"]
 
 
 def test_startup_warm_failure_cannot_bind_or_report_catalogue_ready(monkeypatch):
@@ -179,7 +178,9 @@ def test_real_registry_readiness_waits_for_unselected_parent_hooks(monkeypatch, 
         else:
             server.start()
             server.prepare_runtime_capabilities()
-            assert events == ["cache work", "unselected parent hook", "catalog", "bind"]
+            assert events == [
+                "cache work", "unselected parent hook", "catalog", "catalog", "bind"
+            ]
             assert preparation._future.done() and preparation._future.exception() is None
     finally:
         PreparationOperation.reset()

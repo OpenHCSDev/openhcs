@@ -168,3 +168,37 @@ No build, installation, scientific execution, server or viewer launch was
 performed. Saved diagnosis, UNKNOWN requests and scientific records remain
 immutable. Actual ordinary installed public/native acceptance still awaits an
 explicitly released engineering slot; :95 is not yet released.
+
+Current-main receiving boundary
+-------------------------------
+
+Working checkpoint 593eecfcb was normally merged with current main236644e43 at
+3cccbb0f1, including guide512/d11032292 and disjoint registered-source warmup514.
+No dependency working tree was changed by this nonrecursive merge. The main
+change records ObjectState9c31e4b07b5537c0ed2307c5a63034c708b86bbb and
+python-introspect6f5ac0b79d6cef163df6a8389e72a889a91ed548.
+
+Merged-source attempt09 is retained: 77 passed, one failed in 8.87s,
+unit12.161s/peak203.3MiB/Swap0/exit1. The original real-registry startup control
+reaches main514's new LazyDataclassFactory.registered_type_pairs call, absent in
+the previously qualified dependency. This is an exact receiving-dependency
+boundary, not passing current-main acceptance; the negative was not weakened.
+The two current dependency Git objects are not present in the canonical local
+dependency stores, whose working heads differ and include foreign dirty edits.
+They were neither imported nor fetched/updated. Parent was asked for existing
+qualified origins for those exact main514 dependencies. No fallback, stub,
+monkeypatch or installation substitutes for this missing behavior.
+
+The complete selected family includes production implementations and test
+subclasses/fakes/consumers. The existing startup PreparedCatalog fake now inherits
+the nominal service and shared ABC recipe rather than copying a one-view recipe;
+startup expectations observe both views. The first expanded AST attempt03
+also matched a historical pytest .txt transcript: its non-Python parse error is
+retained, not erased. Subsequent source enumeration explicitly selects .py files;
+the transcript is evidence, not a source module.
+
+Owned receiving-control scratch is recorded under the original receipt root's
+scratch/catalog511-controls06, 07, 08 and 09 (pytest/data/cache), with the earlier
+attempt scratch retained alongside it. No uncertain request or science evidence
+is disposable. All bounded source-control processes have known terminal exits;
+there is no retained engineering native/server/viewer handle.
