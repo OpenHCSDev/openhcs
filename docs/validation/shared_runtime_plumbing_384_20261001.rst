@@ -2124,3 +2124,55 @@ that merge changes documentation/evidence only relative to5ed production.
 Whole394 scalar-classifier R0 and479 validator-relocation R1 remain RED.
 Installed419/433/435/450, outstanding native image differences, full30/scaling
 reruns and fresh figures remain open. The unlimited optimization goal is ACTIVE.
+
+Profiler-free exclusive ledger and plate export correction
+---------------------------------------------------------
+
+The source-pinned5d50a0bb46ab4ccdd17bb9924ce698893f5ed85b diagnostic completes
+with BOTH cProfile/runtime profiler disabled,24 coarse nominal boundaries and
+14 meaningful prelaunch controls. Source/environment/native/input and explicit
+website-only sparse witnesses remain fixed before/after. It retains32,223bytes
+of JSON, no profile/capture artifacts and no diagnostic errors. All nine
+scientific output bytes and the complete11-file inventory are identical to the
+strict-both-native-qualified5ed ordinary result. Managed metadata differences
+are recorded separately. No new native execution or tolerance waiver is used.
+
+Public execution4.703251600s/compilation1.568818331s/total7.089778207s are
+diagnostic, not a causal gain or an estimate of wrapper overhead. The execution
+region4.692535908s partitions into23 nonzero owner groups:133 hooked callable
+invocations1.923475937s and2.769059971s outside that boundary. The invocation
+boundary includes metadata/filtering and does NOT cover all registered calls.
+In particular, execute_plate_scoped_steps directly resolves/calls PLATE exports.
+Actual ExportToSpreadsheet progress is0.707153320s; it lies inside the
+server-exclusive0.734300637s bucket. These intervals overlap and cannot be
+added or subtracted as exact disjoint method costs. Server reconstruction is
+therefore not established as the dominant0.734s term. Source/config decoding
+also precedes this region. Compiler-exclusive1.009028861s includes genuine
+fresh compilation, not a second artifact-reuse compile.
+
+Current measured exclusive query cost is0.481040613s/438calls. Nonquery module
+recording is0.405474477s (inclusive0.886515090s), object recording0.156714182s,
+stack loading0.184871211s, CP contract execution0.212007483s, worker remainder
+0.140013289s, CP module remainder0.130000117s and image request0.086237226s.
+Saving/publication/unstacking individually are smaller. Recording remainder
+contains actual table creation, parent means and other required processing; it
+is not isolated provenance. All-query/all-module/all-object recording has an
+impossible elimination ceiling1.043229273s before retaining mandatory work.
+
+This invalidates the single-query route as the main multi-second fix. Its
+18-control compact numeric-oracle capture preparation is retained but will not
+be frozen/launched/polished without a necessary broader dependency. Existing
+V6 and original limits remain unchanged. The new investigation maps common
+columnar table/schema derivation across queries, recorders and the actual
+spreadsheet publication path, retaining opaque scalar/callback semantics.
+The exporter needs its own authority/phase analysis before a payoff claim.
+
+Ledger /var/tmp/openhcs-current-generic-runtime-ledger-v2-20261002/observations.json.
+Corrected analysis /var/tmp/openhcs-current-generic-runtime-ledger-v2-analysis-plate-corrected-20261002.json
+SHA2568b74fb088fae2527563fb42d38f3dedf5ab5ed936c5de805cd394343e3d0529c.
+Byte gate /var/tmp/openhcs-current-generic-runtime-ledger-v2-scientific-byte-gate-20261002.json.
+Original first-classification and correction receipts are both retained.
+PR394's current description is rewritten around the remaining implementation;
+merged fixes are described as dependencies and closed issue clauses removed.
+Open persisted-publication134 now has an explicit closing link to draft394,
+alongside384/419/433/435/450/479/176/496. None is claimed complete merely linked.
