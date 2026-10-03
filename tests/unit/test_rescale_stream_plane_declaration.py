@@ -17,6 +17,7 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import NamedSourceBinding
@@ -165,13 +166,20 @@ def test_declared_source_plane_has_area_not_volume(retained_site):
     objects = SourceImageObjectLabelBuildRequest(
         image=payload,
         labels=labels,
+        domain_scope=ObjectLabelDomainScope.PLANE if retained_site else None,
         plane_projection=(
-            RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+            RuntimePlaneAxisValueProjection.from_source_declaration(
+                metadata.plane_axis, metadata.source_provenance,
             )
             if retained_site else None
         ),
     ).payload()
+    assert objects.plane_axis is (
+        RuntimePlaneAxis.RUNTIME_SLICE if retained_site else None
+    )
+    assert objects.object_label_domain().scope is (
+        ObjectLabelDomainScope.PLANE if retained_site else ObjectLabelDomainScope.PAYLOAD
+    )
     _, rows = measure_object_size_shape.__wrapped__(
         payload, objects, calculate_advanced=False, calculate_zernikes=False,
     )
