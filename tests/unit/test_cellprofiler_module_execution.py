@@ -10,6 +10,10 @@ import skimage.morphology
 
 import openhcs.processing.backends.cellprofiler.secondary as iso
 import openhcs.processing.backends.cellprofiler.secondary as ito
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureDeclaration,
+    DirectParentReferenceMeasurementFeature,
+)
 from openhcs.constants.constants import (
     AllComponents,
     Backend,
@@ -249,8 +253,6 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureDeclaration,
-    DirectParentReferenceMeasurementFeature,
     RelationshipMeasurementRows,
 )
 from openhcs.processing.backends.cellprofiler.alignment import (
