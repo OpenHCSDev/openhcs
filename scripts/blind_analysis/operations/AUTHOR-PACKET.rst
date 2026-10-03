@@ -1,11 +1,15 @@
-Fresh independent public analysis
-=================================
+Released analysis context
+=========================
 
 Read YOUR TASK, exact public brief and its named raw acquisitions. Read the
 complete canonical installed /home/ts/.codex/skills/use-openhcs/SKILL.md.
 Choose and review your analysis from your own raw evidence. No parent/sibling
 scientific history, method, parameters, pipeline, result or count is supplied.
-Do not inspect other studies, management receipts or previous workspaces.
+Your immutable TASK and context declaration identify either a fresh independent
+analysis or a retained same-author development continuation. Only the latter
+may read its OWN sealed predecessor outputs and native history, read-only;
+it is not another fresh benchmark. Do not inspect other studies, management
+receipts or sibling workspaces.
 
 Use ONLY exported FLEET_SLOT/DISPLAY/NATIVE/VIEWER/VNC resources. Helpers and
 Remmina are harness-owned; do not replace them or adopt another scene.
