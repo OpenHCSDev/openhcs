@@ -391,6 +391,93 @@ def test_module_objects_are_rejected_as_function_specs() -> None:
         FunctionStepTransportAuthority.normalize_function_spec(crop_module)
 
 
+def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None:
+    from polystore.filemanager import FileManager
+    from polystore.memory import MemoryStorageBackend
+    from openhcs.constants.constants import Backend
+    from openhcs.core.compiled_execution import (
+        CompiledExecutionBundle,
+        CompiledRuntimeEnvironmentPlan,
+    )
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.orchestrator.execution_result import (
+        RuntimeExecutionTransportSerialization,
+    )
+    from openhcs.core.steps.function_runtime import (
+        FunctionInvocationCallableCache,
+        FunctionInvocationCallableResolver,
+    )
+
+    reference = FunctionReferenceTransportAuthority.function_reference(
+        cellprofiler_backend.crop
+    )
+    reference = replace(
+        reference, metadata=replace(reference.metadata, prepare=lambda: None)
+    )
+    pattern = compile_function_pattern(reference, {}, {})
+    (invocation,) = tuple(pattern.iter_invocations())
+    invocation = replace(
+        invocation,
+        contract=replace(
+            invocation.contract,
+            metadata=replace(invocation.contract.metadata, prepare=lambda: None),
+        ),
+    )
+    pattern = replace(
+        pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
+    )
+    prepared_callable = FunctionInvocationCallableResolver.resolve(invocation)
+    plan = CompiledStepPlan(
+        step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
+        func=reference, compiled_function_pattern=pattern,
+    )
+    context = ProcessingContext(
+        axis_id="A01", step_plans={0: plan},
+        filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
+    )
+    context.freeze()
+    bundle = CompiledExecutionBundle.from_runtime_contexts(
+        pipeline_definition=(), runtime_contexts={"A01": context},
+        worker_assignments={"worker_0": ["A01"]},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            GlobalPipelineConfig(), compiled_contexts={"A01": context}, server_mode=False,
+        ),
+    )
+    transport_context = bundle.transport_contexts["A01"]
+    transport_plan = transport_context.step_plans[0]
+    assert transport_context is not context
+    assert transport_plan is not plan
+    assert transport_plan.func.metadata.prepare is None
+    (transport_invocation,) = tuple(transport_plan.compiled_function_pattern.iter_invocations())
+    assert transport_invocation.contract.metadata.prepare is None
+    assert invocation.contract.metadata.prepare is not None
+    assert plan.func is reference and reference.metadata.prepare is not None
+    assert plan.compiled_function_pattern is pattern
+    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    assert transport_context.runtime_value_store is context.runtime_value_store
+    assert transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
+    assert transport_context.filemanager is context.filemanager
+    transport_plan.step_name = "Transport-only name"
+    assert plan.step_name == "Crop"
+
+    serialized_bundle = bundle.for_transport_serialization()
+    assert serialized_bundle.transport_contexts is bundle.transport_contexts
+    assert serialized_bundle.runtime_contexts is bundle.transport_contexts
+    assert context.step_plans[0] is plan
+    assert (
+        FunctionInvocationCallableCache.process_cache().get_bound(invocation.contract)
+        is prepared_callable
+    )
+    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    RuntimeExecutionTransportSerialization.register()
+    restored = pickle.loads(pickle.dumps(serialized_bundle))
+    restored_plan = restored.runtime_contexts["A01"].step_plans[0]
+    assert restored_plan.func.metadata.prepare is None
+    assert restored_plan.func.resolve() is reference.resolve()
+
+
 def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None:
     source = FunctionStepTransportAuthority.source_from_pipeline(
         [FunctionStep(func=cellprofiler_backend.crop, name="Crop")]

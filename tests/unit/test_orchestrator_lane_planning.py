@@ -49,6 +49,7 @@ from openhcs.core.orchestrator.worker_execution import (
     ForkInheritedWorkerLaneRunner,
     InlineWorkerExecutorResources,
     PooledWorkerExecutorResources,
+    ThreadedWorkerExecutorResources,
     PooledWorkerLaneRunner,
     WorkerExecutorFactory,
 )
@@ -388,6 +389,41 @@ def test_executor_factory_uses_inline_lane_for_single_threaded_worker(monkeypatc
     assert resources.use_multiprocessing is False
 
 
+def test_resource_modes_select_prepared_runtime_or_serial_transport_contexts():
+    runtime_context = _compiled_context("A01")
+    transport_context = _compiled_context("A01")
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=(), runtime_contexts={"A01": runtime_context},
+        transport_contexts={"A01": transport_context}, worker_assignments={},
+        runtime_environment=_runtime_environment(
+            use_threading=False, start_method=MultiprocessingStartMethod.SPAWN,
+        ),
+    )
+    cancellation = ExecutionCancellationSignal()
+    resources = (
+        InlineWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=False,
+            cancellation=cancellation,
+        ),
+        ForkInheritedWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=True,
+        ),
+        ThreadedWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=False,
+            _executor=None, cancellation=cancellation,
+        ),
+    )
+    for resource in resources:
+        contexts = resource.contexts_snapshot(bundle)
+        assert contexts is not bundle.runtime_contexts
+        assert contexts["A01"] is runtime_context
+    serial = PooledWorkerExecutorResources(
+        multiprocessing_context=None, use_multiprocessing=True,
+        _executor=None, cancellation=None,
+    )
+    assert serial.contexts_snapshot(bundle)["A01"] is transport_context
+
+
 def test_executor_factory_uses_inline_lane_for_single_fork_worker(monkeypatch):
     context = object()
     monkeypatch.setattr(
@@ -450,7 +486,7 @@ def test_executor_factory_creates_thread_pool_for_multi_worker_threading(monkeyp
 
     assert isinstance(resources.executor, FakeThreadPoolExecutor)
     assert created == {"max_workers": 3}
-    assert isinstance(resources, PooledWorkerExecutorResources)
+    assert isinstance(resources, ThreadedWorkerExecutorResources)
     assert resources.uses_fork_inherited_contexts is False
     assert resources.use_multiprocessing is False
 

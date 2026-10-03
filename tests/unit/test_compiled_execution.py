@@ -62,13 +62,13 @@ def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
 
 
 def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch):
-    runtime_context = object()
-    transport_context = object()
+    runtime_context = ProcessingContext(axis_id="A01")
+    resolved_context = ProcessingContext(axis_id="A01")
     resolver_calls = []
 
     def resolve_for_transport(contexts):
         resolver_calls.append(contexts)
-        return {"A01": transport_context}
+        return {"A01": resolved_context}
 
     monkeypatch.setattr(
         "openhcs.core.compiled_execution.resolve_lazy_configurations_for_serialization",
@@ -84,7 +84,10 @@ def test_compiled_execution_bundle_owns_transport_context_resolution(monkeypatch
 
     assert resolver_calls == [{"A01": runtime_context}]
     assert bundle.runtime_contexts == {"A01": runtime_context}
-    assert bundle.transport_contexts == {"A01": transport_context}
+    transport_context = bundle.transport_contexts["A01"]
+    assert transport_context is not resolved_context
+    assert transport_context.runtime_value_store is resolved_context.runtime_value_store
+    assert transport_context.step_plans is not resolved_context.step_plans
     assert bundle.worker_assignments == {"worker_0": ["A01"]}
 
 

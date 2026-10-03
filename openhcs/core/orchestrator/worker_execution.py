@@ -121,23 +121,16 @@ class WorkerExecutorResources(ABC):
             fork_inherited_execution=self.uses_fork_inherited_contexts,
         ).plan(contexts_snapshot, worker_assignments)
 
-    def contexts_snapshot(
-        self,
-        execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
-        raw_contexts = self.raw_contexts_snapshot(execution_bundle)
-        return FunctionStepTransportAuthority.normalize_contexts(dict(raw_contexts))
-
     @property
     @abstractmethod
     def uses_fork_inherited_contexts(self) -> bool:
         """Whether lane planning receives fork-inherited runtime context keys."""
 
     @abstractmethod
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
+    ) -> Dict[str, ProcessingContext]:
         """Return the context map consumed by lane planning for this mode."""
 
     @abstractmethod
@@ -170,11 +163,11 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
     def uses_fork_inherited_contexts(self) -> bool:
         return False
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.transport_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
 
     def run_worker_lanes(
         self,
@@ -201,11 +194,11 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     def uses_fork_inherited_contexts(self) -> bool:
         return True
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.runtime_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
 
     def install_execution_bundle(
         self, execution_bundle: CompiledExecutionBundle
@@ -245,11 +238,11 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
     def execution_context(self):
         return self._executor
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.transport_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.transport_contexts)
 
     def run_worker_lanes(
         self,
@@ -291,6 +284,17 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
             )
         except Exception as exc:
             logger.warning(f"ORCHESTRATOR: Executor shutdown failed: {exc}")
+
+
+@dataclass(frozen=True, slots=True)
+class ThreadedWorkerExecutorResources(PooledWorkerExecutorResources):
+    """Thread workers share the prepared in-process execution graph."""
+
+    def contexts_snapshot(
+        self,
+        execution_bundle: CompiledExecutionBundle,
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
 
 
 class WorkerExecutorFactory:
@@ -338,18 +342,21 @@ class WorkerExecutorFactory:
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=actual_max_workers
             )
-        else:
-            executor = self._process_pool_executor(
-                multiprocessing_context,
-                actual_max_workers,
+            return ThreadedWorkerExecutorResources(
+                multiprocessing_context=multiprocessing_context,
+                use_multiprocessing=False,
+                _executor=executor,
+                cancellation=self._cancellation,
             )
+        executor = self._process_pool_executor(
+            multiprocessing_context,
+            actual_max_workers,
+        )
         return PooledWorkerExecutorResources(
             multiprocessing_context=multiprocessing_context,
-            use_multiprocessing=not runtime_environment.use_threading,
+            use_multiprocessing=True,
             _executor=executor,
-            cancellation=(
-                self._cancellation if runtime_environment.use_threading else None
-            ),
+            cancellation=None,
         )
 
     def _process_pool_executor(
