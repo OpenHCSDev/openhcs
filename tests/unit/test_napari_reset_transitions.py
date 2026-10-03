@@ -241,6 +241,9 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
     else:
         raw()
         assert {receiver.layer_route_state.layer(route).ndim for route in raw_routes.values()} == {5}
+        focused_route = raw_routes["D06", 2]
+        receiver.viewer.layers.selection.active = receiver.layer_route_state.layer(focused_route)
+        assert receiver.display_pipeline.dimension_label_overlay.route_resolver.resolve().route_key == focused_route
         result_route = result()
         # The previously active D06/channel2 source remains the native frame.
         assert receiver.viewer.dims.current_step[1] == 1
