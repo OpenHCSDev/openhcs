@@ -100,6 +100,14 @@ units, misaligned geometry or catastrophic failures still reject the affected
 claim. Do not invent a universal error tolerance or relax the task's declared
 criteria to fit a result.
 
+Useful algorithm-defined assay or morphology estimates can include counts and
+per-object summaries with stated inclusion rules, observed errors and uncertainty.
+They are not biological ground truth. Do not require proof of every body's cell
+identity or resolution of every overlap/crossing before reporting any supported
+estimate; withhold the particular ownership-dependent metric if its assumptions
+fail. Conversely, biased favourable crops cannot establish global accuracy or
+excuse material omissions in the distributed review.
+
 Report reviewed coverage, inclusion rules, exclusions with their denominator,
 and unresolved cases alongside the supported result. When ambiguity affects a
 total, retain a justified lower/upper bound or sensitivity analysis if the evidence permits;

@@ -26,8 +26,21 @@ correction, not a reference schema or an automatic scoring gate. NRA/catalog
 IDEN-1 and BOUND-2 inform one policy owner and derived knowledge/package views,
 not a new authority beside the existing source manifest.
 
-Qualification pending: existing knowledge search/retrieval, package projection,
-byte-exact isolated skill sync and validator, within oneCPU512MiB/noSwap60s.
+Existing knowledge search/retrieval, package projection, byte-exact isolated
+skill sync and declaration/context routing:5PASS,19explicitly deselected,
+7.40s,maxRSS261876KiB,cgroup175538176B,Swap0,zeroOOM. Original guides01 collection
+failure is retained: reused dependency supplied WindowSnapshotFrameCondition
+without RENDER_COMPLETE. guides02 uses original522 paired-source bootstrap and
+read-only snapshot owner; no dependency patch, install or protocol shim.
+Skill-creator validator PASS0.06s/14752KiB. Resource check WARNING,13.8GiB RAM
+available with existing swap use; enforced serial oneCPU512MiB/noSwap60s scope.
 These prove future guide availability, not biological or autonomous gain.
+The later plain-language clarification of algorithm-defined estimates does not
+change the already qualified manifest, package/sync mechanisms or routes; no
+unchanged test rerun is requested.
+
+Byte-exact raw logs are archived in graded-analysis-accuracy-20261003.tar.gz.
+Persistent originals and isolated sync fixtures remain under
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-graded-accuracy-20261003.
 No package build/install, live MCP/viewer/native operation, author contact,
 held-out access, frozen outcome change or current skill/harness sync.
