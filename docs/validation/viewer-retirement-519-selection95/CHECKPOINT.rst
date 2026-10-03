@@ -82,3 +82,34 @@ Four files28099 apparent bytes/36KiB allocated, before this text receipt:
 
 Foreign dirty gitlinks/untracked validation traces and frozen source/archives
 are unchanged. No cleanup, package/skill hot update or scientific author contact.
+
+Root435 current source repair verified; receiving deferred
+--------------------------------------------------------
+
+After parent deferred95 to Dewey's full-volume SCI launch, Singer read current
+PR394 head5af63decedc018a905c33057b47758bf84dc6520 and actual repair
+e8587bd7eb0c4aa283bc300c5eb9f2294f24890f. The production writer compares the
+persisted occurrence against record.filename_address, not the optional scalar
+artifact address, while retaining complete image-metadata equality. This is
+already implemented by Root, not an unowned patch for Singer to recreate.
+
+Current GitHub source blobs byte-identify the original repair:
+function_outputs.py7297a44416dbead154e7950fddfe2fe2737001ad and
+test_collapsed_persisted_occurrence_435.py564af6fce342a9cec9b650285e2fd7afa7cc464e.
+The full383-line fixture covers collapsed SITE, scalar, genuine metadata/address
+conflicts and original real TIFF publication/reopening. Root reports243 local
+controls, not installed original494 acceptance. It does not declare this packet's
+four-plane aggregateZ/two-endpoint Points-and-Shapes journey. No new test run.
+
+Existing Root integration request updated with that actual source progress:
+https://github.com/OpenHCSDev/openhcs/pull/394#issuecomment-5968788140
+Root retains the writer/shared fixture; request is a link to an existing exact
+aggregate control or a narrow extension through that owner. No competing edit,
+new writer, installed patch or claim that whole394 must meet its optimization
+target before an independently qualified usage repair can ship.
+
+Package07 still excludes Root435; all packet/current target bytes unchanged.
+No95 reservation/process exists here. Parent must provide a fresh custody and
+funding handoff after the SCI lane releases before any native receiving. No
+source or runtime operation is waiting on an UNKNOWN retry, and no old failure
+or untracked/foreign source is overwritten.
