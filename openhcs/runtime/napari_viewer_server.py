@@ -3241,8 +3241,6 @@ class NapariResultElementSelectionAuthority:
         """Select one exact, validated set of native feature rows."""
 
         indices = tuple(sorted(set(data_indices)))
-        if not indices:
-            raise ValueError("Napari result selection must contain at least one row.")
         for data_index in indices:
             if isinstance(data_index, bool) or not isinstance(data_index, Integral):
                 raise TypeError("Napari result selection indices must be integers.")
@@ -3255,6 +3253,25 @@ class NapariResultElementSelectionAuthority:
                 "Napari did not retain the requested native data selection."
             )
         return observed
+
+    @classmethod
+    def displayed_indices(
+        cls,
+        layer: NapariLayerHandle,
+        data_indices: Iterable[int],
+    ) -> tuple[int, ...]:
+        """Project a logical subject onto Napari's actual current slice.
+
+        Subject membership does not imply native displayed geometry. In
+        particular, Shapes cannot construct a multi-member interaction box
+        when none of its selected members has displayed vertices.
+        """
+        indices = tuple(sorted(set(data_indices)))
+        for data_index in indices:
+            cls.require_data_index(layer, data_index)
+        native_layer = cast(napari.layers.Shapes | napari.layers.Points, layer)
+        displayed = set(native_layer._indices_view)
+        return tuple(index for index in indices if index in displayed)
 
 
 class NapariResultSelectionController:
@@ -3537,7 +3554,6 @@ class NapariResultSelectionController:
         data_index = (
             newly_selected[-1] if newly_selected else state.selected_data_indices[-1]
         )
-        self._synchronize_linked_group(layer, data_index)
         layer_reference = weakref.ref(layer)
         QTimer.singleShot(
             0,
@@ -3571,14 +3587,23 @@ class NapariResultSelectionController:
         layer: NapariLayerHandle,
         data_index: int,
     ) -> tuple[tuple[NapariLayerHandle, tuple[int, ...]], ...]:
-        linked = self._linked_group_members(layer, data_index)
+        linked = tuple(
+            (candidate, NapariResultElementSelectionAuthority.displayed_indices(
+                candidate, member_indices,
+            ))
+            for candidate, member_indices in self._linked_group_members(layer, data_index)
+        )
+        if not any(candidate is layer and data_index in indices for candidate, indices in linked):
+            raise ValueError(
+                f"Viewer data_index {data_index} has no displayed geometry on the current slice."
+            )
         self._synchronizing_group_selection = True
         try:
             for candidate, member_indices in linked:
-                cast(NapariShapesLayerHandle, candidate).selected_data = set(
-                    member_indices
+                observed = NapariResultElementSelectionAuthority.select_indices(
+                    candidate, member_indices,
                 )
-                self._observed_indices[candidate] = member_indices
+                self._observed_indices[candidate] = observed.selected_data_indices
         finally:
             self._synchronizing_group_selection = False
         self._notify_selection_observers()
@@ -3645,15 +3670,11 @@ class NapariResultSelectionController:
                         ),
                     )
                     self.server.viewer.dims.current_step = viewer_step
+                # Slice first, then derive the visible members of each linked
+                # subject. Never expand an off-slice singleton before navigation.
+                self._synchronize_linked_group(native_layer, data_index)
             finally:
-                # Napari clears Shapes.selected_data when a dims change slices the
-                # selected geometry out of view. Re-assert the same authoritative
-                # member even if navigation fails so a UI interaction cannot erase
-                # an otherwise valid native selection.
-                try:
-                    self._synchronize_linked_group(native_layer, data_index)
-                finally:
-                    self._refreshing_highlights = False
+                self._refreshing_highlights = False
         except Exception:
             logger.exception(
                 "Failed to navigate to selected Napari result element %d on %s",
