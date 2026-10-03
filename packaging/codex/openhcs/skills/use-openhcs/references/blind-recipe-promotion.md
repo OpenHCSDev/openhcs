@@ -54,7 +54,10 @@ existing frozen records unchanged and the validation reserve sealed.
    misses, splits/merges, and an explicit accept/reject/ambiguous judgement
    against stated biological criteria. Escalate ambiguous objects to a domain
    reviewer. Counts, overlap scores, and visually attractive preprocessing
-   alone cannot pass this gate.
+   alone cannot pass this gate. Apply the
+   [graded, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
+   including reference disagreement; acceptance does not require perfect
+   annotation agreement.
 5. Freeze the accepted pipeline, parameters, source layout contract, and
    acceptance criteria in a dated receipt before releasing the validation
    reserve. Run the frozen candidate on the reserve once, without tuning on

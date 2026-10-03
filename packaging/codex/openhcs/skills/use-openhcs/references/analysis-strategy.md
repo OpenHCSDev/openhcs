@@ -88,6 +88,18 @@ path geometry; those findings do not establish complete bodies or correct
 body-to-path associations either. Technical completion remains separate from
 these biological judgements.
 
+Autonomous success means materially useful quality for that scope, not perfect
+accuracy or exact agreement with human annotations. Grade false positives,
+false negatives, splits, merges and coverage across the distributed sample;
+record their frequency, spatial distribution, effect on the claim and uncertainty.
+Human annotations and algorithms can both be incomplete or mistaken: retain
+reference disagreement rather than treating either as exhaustive biological truth.
+An isolated plausible error does not automatically reject the whole analysis.
+Systematic or material missed paths, false bridges, wrong channels, invalid
+units, misaligned geometry or catastrophic failures still reject the affected
+claim. Do not invent a universal error tolerance or relax the task's declared
+criteria to fit a result.
+
 Report reviewed coverage, inclusion rules, exclusions with their denominator,
 and unresolved cases alongside the supported result. When ambiguity affects a
 total, retain a justified lower/upper bound or sensitivity analysis if the evidence permits;
@@ -101,8 +113,9 @@ Partial support is not a stopping rule for a clear failure. Follow the existing
 repair while the authorised budget permits, and revisit distributed regression
 controls. Improved downstream paths cannot repair an unchanged failed body
 stage; diagnose that stage rather than repeatedly tuning faint-signal thresholds.
-Preserve frozen evaluations unchanged; this reporting rule applies to newly
-authorised development, not retroactive acceptance of an earlier attempt.
+Preserve frozen evaluations unchanged. Record a later evaluation-policy change
+separately, not as a retroactive author pass; apply new guidance only to future
+authorised runs, never as feedback to live blind authors.
 
 ## Development corrections and autonomous evaluation
 
