@@ -870,7 +870,7 @@ class _FakeViewer:
         )
 
     def _add_layer(self, layer_type, data, name, kwargs):
-        layer_attributes = {"name": name, "data": data, "kwargs": kwargs}
+        layer_attributes = {"name": name, "data": data, "kwargs": kwargs, "visible": True}
         if layer_type == "shapes":
             layer_attributes.update(
                 {
@@ -1980,8 +1980,10 @@ class _RegionDisplayConfig(NapariDisplayConfig):
         (_RegionDisplayConfig.REGION_COMPONENT, "region_mode", _RegionDisplayConfig),
     ],
 )
+@pytest.mark.parametrize("stack_origin", ["raw", "pipeline"])
+@pytest.mark.parametrize("raw_first", [True, False])
 def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates(
-    component, mode_field, config_type
+    component, mode_field, config_type, stack_origin, raw_first
 ):
     from napari.components import ViewerModel
     from openhcs.core.config import NapariDimensionMode
@@ -1992,16 +1994,14 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.viewer = ViewerModel()
     pipeline = NapariLayerDisplayPipeline(server)
-    for origin, config, producer in (
-        (
-            "raw", config_type(),
-            StreamProducerIdentity("manual", "image", "raw", "raw"),
-        ),
-        (
-            "pipeline", config_type(**{mode_field: NapariDimensionMode.LAYER}),
-            None,
-        ),
-    ):
+    for origin in (("raw", "pipeline") if raw_first else ("pipeline", "raw")):
+        config = config_type(**{
+            mode_field: (
+                NapariDimensionMode.STACK if origin == stack_origin
+                else NapariDimensionMode.LAYER
+            )
+        })
+        producer = StreamProducerIdentity("manual", "image", "raw", "raw") if origin == "raw" else None
         for channel in (1, 2):
             route = f"{origin}-{channel}"
             item = _layer_item(
@@ -2735,8 +2735,8 @@ def test_napari_display_pipeline_includes_collapsed_component_labels_in_overlay(
 def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mismatches():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    updated_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    updated_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2804,8 +2804,8 @@ def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mis
 def test_napari_display_pipeline_applies_updated_derived_route_overlay():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    derived_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    derived_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2880,7 +2880,7 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
     server.viewer.dims.current_step = (0, 0, 0)
     server.viewer.text_overlay.text = "stale OpenHCS overlay"
     server.viewer.layers.selection.active = object()
-    derived_layer = object()
+    derived_layer = SimpleNamespace(visible=True)
     server.layer_route_state.set_layer("derived", derived_layer)
     server.layer_route_state.set_dimension_state(
         "derived",
@@ -2906,8 +2906,8 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
 def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_step_labels():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    fallback_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    fallback_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2989,8 +2989,8 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
 def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    source_layer = object()
-    selected_neurite_layer = object()
+    source_layer = SimpleNamespace(visible=True)
+    selected_neurite_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_neurite_layer
@@ -3051,8 +3051,8 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
 def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    map2_layer = object()
-    smi312_layer = object()
+    map2_layer = SimpleNamespace(visible=True)
+    smi312_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = map2_layer
@@ -5782,18 +5782,20 @@ def test_napari_shape_layer_payload_assigns_distinct_stable_label_colors():
 def test_napari_shape_feature_columns_fill_sparse_late_columns_in_order():
     columns = NapariShapeFeatureColumns()
 
-    columns.append({"area": 4.0}, label=1, path="first")
-    columns.append({"circularity": 0.8}, label=2, path="second")
+    columns.append({"area": 4.0}, label=1, path="first", element_identity="first:0")
+    columns.append({"circularity": 0.8}, label=2, path="second", element_identity="second:0")
     columns.append(
         {"area": 9.0, "circularity": 0.6},
         label=3,
         path="third",
+        element_identity="third:0",
     )
 
     assert columns.values == {
         "area": [4.0, None, 9.0],
         "label": [1, 2, 3],
         "path": ["first", "second", "third"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: ["first:0", "second:0", "third:0"],
         "circularity": [None, 0.8, 0.6],
     }
 
@@ -6175,24 +6177,18 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
         component_values={"channel": [4]},
         axis_offsets=(3,),
     )
+    item = _layer_item(
+        {"channel": 4},
+        [{"type": "points", "coordinates": [[1, 2]],
+          "metadata": {"label": 7, "component": 4}}],
+        stream_layer_data_type=StreamingDataType.POINTS,
+    )
 
     napari_viewer_server.NapariPointsLayerDisplayHandler().handle(
         napari_viewer_server.NapariLayerDisplayRequest(
             pipeline=pipeline,
             presentation=presentation,
-            items=[
-                _layer_item(
-                    {"channel": 4},
-                    [
-                        {
-                            "type": "points",
-                            "coordinates": [[1, 2]],
-                            "metadata": {"label": 7, "component": 4},
-                        }
-                    ],
-                    stream_layer_data_type=StreamingDataType.POINTS,
-                )
-            ],
+            items=[item],
             display_config=NapariDisplayConfig(),
         )
     )
@@ -6204,7 +6200,10 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert tuple(data[0]) == (0, 1, 2)
     assert layer_kwargs["axis_labels"] == ("channel", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0)
-    assert layer_kwargs["properties"] == {"label": [7], "component": [4]}
+    assert layer_kwargs["properties"] == {
+        "label": [7], "component": [4],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
+    }
 
 
 def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
@@ -6333,10 +6332,17 @@ def test_shape_features_exclude_source_transport_without_mutating_payload():
     full_metadata = {"label": 7, "response": 0.25,
                      ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"}}
     features = NapariShapeFeatureColumns()
-    features.append(full_metadata, label=7, path="/own/synthetic.roi.zip")
+    item = _layer_item({}, stream_layer_data_type=StreamingDataType.SHAPES)
+    features.append(
+        full_metadata, label=7, path=item.address.path,
+        element_identity=item.element_identity(0),
+    )
     assert ROIArchiveSourceMetadata.FIELD in full_metadata
     assert ROIArchiveSourceMetadata.FIELD not in features.values
     assert features.values["response"] == [0.25]
+    assert features.values[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
 
 
 def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():

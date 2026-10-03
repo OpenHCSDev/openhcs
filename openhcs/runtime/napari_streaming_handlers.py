@@ -1415,27 +1415,47 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         return tuple(range(offset, viewer_ndim))
 
     @contextmanager
-    def preserve_native_axes(self, viewer, replacement: "NapariAxisPresentation"):
+    def preserve_native_axes(
+        self, dims, replacement: "NapariAxisPresentation",
+        items: Sequence[NapariStreamLayerItem],
+    ):
         """Carry actual native world positions/order through semantic slot insertion.
 
         This is a transient presentation snapshot, not a second component domain.
         Values come from native Dims and names from the original presentations.
         Restore before selectable handlers check geometry on the current slice.
         """
-        dimensions = self.viewer_dimension_indices(viewer.dims.ndim)
+        dimensions = self.viewer_dimension_indices(dims.ndim)
         names = dict(zip(dimensions, self.axis_labels, strict=True))
-        points = {name: viewer.dims.point[axis] for axis, name in names.items()}
-        order = tuple(names[axis] for axis in viewer.dims.order if axis in names)
+        points = {name: dims.point[axis] for axis, name in names.items()}
+        order = tuple(names[axis] for axis in dims.order if axis in names)
         yield
-        target_dimensions = replacement.viewer_dimension_indices(viewer.dims.ndim)
+        target_dimensions = replacement.viewer_dimension_indices(dims.ndim)
         target_axes = dict(zip(replacement.axis_labels, target_dimensions, strict=True))
-        point = list(viewer.dims.point)
+        point = list(dims.point)
         for name, value in points.items():
             point[target_axes[name]] = value
-        viewer.dims.point = tuple(point)
+        transform = replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels)
+        for name in replacement.display_axis_components:
+            if name in points:
+                continue
+            routed_values = replacement.projection.routed_component_values[name]
+            if len(routed_values) != 1:
+                raise ValueError(
+                    f"New native slot {name!r} requires an unambiguous original route value."
+                )
+            local_index = (
+                replacement.projection.component_values[name].index(routed_values[0])
+                if name in replacement.projection.component_values else 0
+            )
+            axis = replacement.axis_labels.index(name)
+            point[target_axes[name]] = (
+                transform["translate"][axis] + local_index * transform["scale"][axis]
+            )
+        dims.point = tuple(point)
         retained_order = tuple(target_axes[name] for name in order)
-        viewer.dims.order = tuple(
-            axis for axis in viewer.dims.order if axis not in retained_order
+        dims.order = tuple(
+            axis for axis in dims.order if axis not in retained_order
         ) + retained_order
 
     def display_order(

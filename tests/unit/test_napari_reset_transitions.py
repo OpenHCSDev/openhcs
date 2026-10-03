@@ -39,10 +39,13 @@ from openhcs.runtime.napari_viewer_server import (
     NapariImageLayerDisplayHandler,
     NapariImagePresentationRetention,
     NapariShapesLayerDisplayHandler,
+    NapariPointsLayerDisplayHandler,
+    NapariSelectablePresentationRetention,
     NapariResultSelectionController,
     NapariStreamLayerContext,
     NapariViewerServer,
 )
+from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
@@ -98,8 +101,10 @@ def enqueue(
     data_type=StreamingDataType.IMAGE,
     spacing=0.65,
     domain=None,
+    display_config=None,
+    channel=1,
 ):
-    config = NapariDisplayConfig(
+    config = display_config or NapariDisplayConfig(
         well_mode=NapariDimensionMode.STACK,
         site_mode=NapariDimensionMode.LAYER,
         channel_mode=NapariDimensionMode.LAYER,
@@ -115,7 +120,7 @@ def enqueue(
             }
         ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"well": domain or [well]}, context="synthetic transition"
+            {"well": domain or [well], "channel": [channel]}, context="synthetic transition"
         ),
     )
     context = NapariStreamLayerContext(
@@ -129,7 +134,7 @@ def enqueue(
             pipeline_position=0,
         ),
         address=NapariStreamLayerAddress(
-            {"well": well, "site": 1, "channel": 1, "z_index": 1, "timepoint": 1},
+            {"well": well, "site": 1, "channel": channel, "z_index": 1, "timepoint": 1},
             f"{well}.tif",
             data_type,
         ),
@@ -171,6 +176,99 @@ def advance_in_qt(server, route, update, after=lambda: None):
     loop.exec()
     if errors:
         raise errors[0]
+
+
+@pytest.mark.parametrize("replace_layers", [False, True])
+@pytest.mark.parametrize("result_first", [False, True])
+@pytest.mark.parametrize("data_type", [StreamingDataType.SHAPES, StreamingDataType.POINTS])
+def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
+    receiver, result_first, data_type, replace_layers,
+):
+    """Four earlier 5D raw routes promote as one nonrecursive native batch."""
+    from openhcs.runtime.napari_viewer_server import NapariNavigationControlMessageAction
+    from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+
+    receiver.replace_layers = replace_layers
+    wells = [f"{row}{column:02}" for row in "ABCDEFGH" for column in range(1, 13)]
+    raw_config = NapariDisplayConfig(
+        channel_mode=NapariDimensionMode.LAYER, well_mode=NapariDimensionMode.LAYER,
+    )
+    result_config = NapariDisplayConfig()
+    raw_routes = {}
+
+    def raw():
+        for well in ("A01", "D06"):
+            for channel in (1, 2):
+                value = 10 * wells.index(well) + channel
+                route, update = enqueue(
+                    receiver, np.full((4, 4), value, dtype=np.uint16), well=well,
+                    channel=channel, producer="raw", domain=wells, display_config=raw_config,
+                )
+                advance_in_qt(receiver, route, update)
+                layer = receiver.layer_route_state.layer(route)
+                layer.contrast_limits, layer.gamma, layer.opacity = (0, 500), 0.8, 0.4
+                raw_routes[well, channel] = route
+
+    def result():
+        for well in ("A01", "D06"):
+            for channel in (1, 2):
+                coordinates = [[1, 1]] if data_type is StreamingDataType.POINTS else [[1, 1], [2, 2]]
+                route, update = enqueue(
+                    receiver, [{"type": "points" if data_type is StreamingDataType.POINTS else "path",
+                                "coordinates": coordinates, "metadata": {"label": 10 * wells.index(well) + channel}}],
+                    well=well, channel=channel, producer="result", data_type=data_type,
+                    domain=wells, display_config=result_config,
+                )
+        advance_in_qt(receiver, route, update)
+        return route
+
+    if result_first:
+        result_route = result()
+        native = receiver.layer_route_state.layer(result_route)
+        prepared = NapariNavigationControlMessageAction().prepare(
+            receiver, ViewerNavigationControlOptions(route_key=result_route, data_index=0),
+        )
+        NapariNavigationControlMessageAction().apply_prepared(receiver, prepared)
+        identities = set(native.features.iloc[list(native.selected_data)][NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE])
+        raw()
+        current = receiver.layer_route_state.layer(result_route)
+        assert set(current.features.iloc[list(current.selected_data)][NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE]) == identities
+    else:
+        raw()
+        assert {receiver.layer_route_state.layer(route).ndim for route in raw_routes.values()} == {5}
+        result_route = result()
+
+    assert receiver.viewer.dims.ndim == 7
+    result_layer = receiver.layer_route_state.layer(result_route)
+    for (well, channel), route in raw_routes.items():
+        layer = receiver.layer_route_state.layer(route)
+        state = receiver.layer_route_state.dimension_state_for(route)
+        assert state.axis_labels == ("site", "channel", "z_index", "timepoint", "well", "y", "x")
+        assert tuple(layer.contrast_limits) == (0, 500) and layer.gamma == 0.8 and layer.opacity == 0.4
+        target = NapariNavigationControlMessageAction().prepare(
+            receiver, ViewerNavigationControlOptions(
+                route_key=route, axis_indices=state.presentation.route_local_component_indices(
+                    state.presentation.projection.coordinate_index(
+                        receiver.component_groups.existing_items_for(route)[0].address.components,
+                        context="synthetic raw source",
+                    ), context="synthetic raw navigation",
+                ),
+                visible=True, selected=True,
+            ),
+        )
+        result_layer.visible = False
+        NapariNavigationControlMessageAction().apply_prepared(receiver, target)
+        assert receiver.viewer.dims.current_step[1] == channel - 1
+        assert receiver.viewer.dims.current_step[4] == wells.index(well)
+        assert np.max(layer._data_view) == 10 * wells.index(well) + channel
+        assert well in receiver.viewer.text_overlay.text
+        assert f"Ch{channel}" in receiver.viewer.text_overlay.text
+        for other_route in raw_routes.values():
+            receiver.layer_route_state.layer(other_route).visible = other_route == route
+        result_layer.visible = True
+        receiver.display_pipeline.dimension_label_overlay._update_overlay()
+        assert well in receiver.viewer.text_overlay.text and f"Ch{channel}" in receiver.viewer.text_overlay.text
+        assert np.max(layer._data_view) == 10 * wells.index(well) + channel
 
 
 @pytest.mark.parametrize("replace_layers", [False, True])
