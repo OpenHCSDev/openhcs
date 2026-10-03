@@ -113,3 +113,62 @@ No95 reservation/process exists here. Parent must provide a fresh custody and
 funding handoff after the SCI lane releases before any native receiving. No
 source or runtime operation is waiting on an UNKNOWN retry, and no old failure
 or untracked/foreign source is overwritten.
+
+Existing152 automatic Point-ROI producer: new installed witness
+--------------------------------------------------------------
+
+Parent requested read-only diagnosis of the original third-H002 v2 execution;
+no scientist contact, live call, replay, image/table/ROI decode or source edit.
+The retained original reply is under
+/home/ts/wt/openhcs-issue-batch-20260929/next-h002-distinct95-20261003/third-h00207/
+H002_THIRD95/author-workspace/output/candidates/v2/execution-failed-viewer.json,
+SHA256a6cc3d758e8101bfd8935d9a3fbb0917a1ee5c238ddcfdebed762f5cf1e32600.
+Job5/fa9c98c9-81d3-4338-96c3-88ee8ac2a3f7 axis completed, but execution FAILED.
+Computational output persistence is not successful viewer settlement.
+
+Original output/runtime/scratch/data/openhcs/logs/napari_detached_port_6015.log
+lines73..124 records the first route error: NapariPointsLayerDisplayHandler.
+geometric_component_values rejects "Fractional-Z point ROI requires a projected
+z_index axis" at installed target07 line2191. The native execution log later
+records the settlement progress request's Resource temporarily unavailable and
+the generic execution failure. Original ManagedViewerLifecycleMixin settlement
+and compiled_plate_execution failure propagation were read; no timeout change.
+The v1 trailing-return ABI error is an independent original author failure.
+
+Saved viewer-state-complete.json has the automatic centre route unmounted with
+empty axes. Saved viewer-state-reopened.json retains that unmounted route while
+the separate manual archive route is mounted with STACK Z1..60. This is a saved
+public-state comparison, not a new reopen, point-coordinate read or biology QA.
+The actual failing automatic request's complete incoming wire operands were not
+retained; do not claim those operands were directly observed.
+
+This is SAME tracked152 witness5962961567, not a new issue or viewer fallback:
+https://github.com/OpenHCSDev/openhcs/issues/152#issuecomment-5962961567
+Planck already released the coherent494 producer family to Root394:
+https://github.com/OpenHCSDev/openhcs/pull/394#issuecomment-5969244906
+Planck has appended this fresh witness to that existing request; no duplicate
+request or competing patch here. Current source checks pin Root5570b7a458ab035c
+and mainba7b26b82717a7bc4de5c9701b413aa64ba13e35. AST queries of both original
+core/options modules show their point writer matches target07 exactly; neither
+contains PointROIOutput or PointROIOptions.stream_source_identities. Both retain
+merged523 ViewerStreamBackendCallKwargs.projected_outputs. Merged531's CP output
+policy changes do not add that point producer family. These targeted AST facts
+are not a new whole-family census or a structural refactor qualification.
+
+The ownership distinction is emitted scalar planes versus the source planes
+represented by one archive (IDEN-1/BOUND-2). Existing MaterializationSpec.
+emitted_source_identities only returns variable-plane writer identities;
+ArtifactStreamSourceMetadataAuthority consumes that result, while the scoped
+component layout removes missing declared axes. Original494 already provides
+PointROIOutput's exact source-plane anchor, PointROIOptions.measurement_payload/
+stream_source_identities, shared FileOutputOptions behavior, and the existing
+MaterializationSpec/ArtifactStreamSourceMetadataAuthority consumer migration.
+
+Shortest coherent closure is Root integrating that released family, preserving
+full archive provenance/calibration, all original source guards and merged523
+projected-output accounting. Do not bulk-copy old494 core, guess Z in the viewer,
+force a display mode, suppress settlement failure, add a pending store or widen
+timeouts. Root owns its tiny new automatic producer/wire/strict-receiver control
+and genuine malformed-domain negatives; parent owns fresh installed/public
+acceptance after an explicit safe handoff. Original job remains FAILED and all
+scientific outputs/journals/negative inputs remain untouched. No native test now.
