@@ -257,8 +257,8 @@ class ReferenceEvidenceRule(Enum):
     """How external references constrain, but do not replace, spatial QA."""
 
     COUNT_INFORMS_ADMISSION = (
-        "compare detected/reference counts before changing admission; investigate "
-        "discrepancies without demanding exact agreement with imperfect annotations"
+        "use reference counts to investigate admission, not as an exact-match "
+        "requirement for imperfect annotations"
     )
     COUNT_DOES_NOT_PROVE_IDENTITY = (
         "treat count agreement as diagnostic evidence, not proof that the same "

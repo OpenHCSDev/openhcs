@@ -351,7 +351,7 @@ class ImageAnalysisWorkflowSection(
 - Freeze a blinded, spatially distributed representative set across dim/bright, sparse/dense, joins and controls. Tune only on the declared development subset; perturb one parameter with sources/coordinates/preprocessing/display fixed. Report sensitivity of counts, coverage, length, branches, endpoints and control ordering against the claim, not absolute invariance. Score held-out fields once after freezing.
 - Record failure, one explicit hypothesis, one semantic change, pipeline identity, compile result, time/peak memory and same-coordinate evidence; multiple simultaneous changes make repair quality unscoreable. Retain rejected attempts.
 - Do not preprocess scientific inputs in an external script, use X11/desktop automation, or manipulate viewers behind the MCP surface.
-- Apply the targeted claim-scope knowledge section below, not blanket rejection for any miss or reference disagreement. Recheck identical coordinates after repair. Ask the domain expert only when unresolved identity materially changes the claim.
+- Apply the targeted claim-scope section below, not blanket rejection for any miss. Recheck identical coordinates after repair. Ask the domain expert if unresolved identity changes the claim.
 - Reconcile ROI/measurement identities and reproducible counts/coordinates; completion, aggregate plausibility and layer existence are not scientific acceptance."""
 
 
