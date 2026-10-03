@@ -9,7 +9,10 @@ from math import floor, isfinite
 from numbers import Real
 from typing import TYPE_CHECKING, ClassVar, Self, TypeAlias, TypeVar
 
-from polystore.streaming.identity import StreamProducerIdentity
+from polystore.streaming.identity import (
+    StreamProducerIdentity,
+    StreamProducerPayloadMapping,
+)
 from zmqruntime.viewer_protocol import (
     ViewerNativeLayerTransform,
     ViewerSourceSpatialDomainPayload,
@@ -888,7 +891,9 @@ class ViewerLayerRetirementControlOptions:
 
     @classmethod
     def from_overrides(
-        cls, *, expected_producers: Mapping[str, Sequence[Mapping[str, object]]],
+        cls, *, expected_producers: Mapping[
+            str, Sequence[StreamProducerIdentity | StreamProducerPayloadMapping]
+        ],
     ) -> Self:
         return cls(expected_producers={
             route: tuple(StreamProducerIdentity.from_payload(value) for value in values)

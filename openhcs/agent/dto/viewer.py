@@ -618,7 +618,7 @@ class ViewerWindowLayerRetirementRequest(ViewerWindowPresentationRequest):
     @classmethod
     def from_fields(
         cls, *, connection: ExecutionConnectionSpec,
-        expected_producers: dict[str, list[dict[str, JsonValue]]],
+        expected_producers: dict[str, list[StreamProducerIdentity]],
         timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
     ) -> Self:
         return cls(

@@ -1,5 +1,6 @@
 """Declaration-owned MCP/CLI request, receipt and error projection; no server launch."""
 import argparse
+import asyncio
 import json
 from types import SimpleNamespace
 
@@ -17,7 +18,8 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
 from openhcs.mcp.server import (
-    GeneratedMcpViewerRequestToolBinding, generated_viewer_request_capability_declarations,
+    GeneratedMcpViewerRequestToolBinding, build_server,
+    generated_viewer_request_capability_declarations,
 )
 from openhcs.mcp.dev_client_commands.viewer import RetireViewerCommandSpec
 from openhcs.runtime.viewer_protocol import ViewerLayerRetirementReceipt
@@ -78,6 +80,33 @@ def test_cli_leaf_projects_same_typed_request_and_connection():
         "5584", "--transport-mode", "tcp", "--expected-producers", json.dumps(producers()),
     ]))
     assert arguments == request().as_tool_arguments()
+
+
+def test_real_fastmcp_constructs_and_decodes_original_producer_identity():
+    # A fake registration decorator cannot exercise FastMCP's schema generation.
+    server = build_server()
+    capability = RetireViewerWindowLayersCapability.to_spec()
+    registered = server._tool_manager.get_tool(capability.name)
+    model = registered.fn_metadata.arg_model
+    payload = request().as_tool_arguments()
+    arguments = model.model_validate(payload)
+    identity = arguments.expected_producers['exact-route'][0]
+    assert isinstance(identity, StreamProducerIdentity)
+    assert identity == request().retirement.expected_producers['exact-route'][0]
+    projected = ViewerWindowLayerRetirementRequest.from_fields(
+        connection=request().connection,
+        expected_producers=arguments.expected_producers,
+    )
+    assert projected.as_tool_arguments() == payload
+    tools = asyncio.run(server.list_tools())
+    advertised = next(tool for tool in tools if tool.name == capability.name)
+    producer_schema = advertised.inputSchema['$defs']['StreamProducerIdentity']
+    assert set(producer_schema['properties']) == set(identity.to_payload())
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        model.model_validate({**payload, 'expected_producers': {'exact-route': [{}]}})
+    with pytest.raises(ValidationError):
+        model.model_validate({**payload, 'undeclared': 'must not dispatch'})
 
 
 @pytest.mark.parametrize("native", [
