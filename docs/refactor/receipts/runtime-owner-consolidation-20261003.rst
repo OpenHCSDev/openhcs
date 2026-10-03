@@ -244,6 +244,39 @@ Physical publication loads original memory addresses and writes manifest-owned
 destinations under the current output root; preserved outputs no longer write
 back into the input plate.
 
+Current runtime and transport boundaries
+----------------------------------------
+
+Commit ``9d79c4289`` repairs the declared runtime/transport ownership boundary
+(#558). Objectstate serialization resolution returns ordinary processing
+contexts unchanged; the two bundle maps therefore previously shared plans,
+and transport normalization rewrote the prepared runtime graph. The existing
+bundle now derives separate transport context/plan snapshots. Inline, fork and
+thread resources consume rich contexts directly; queued process workers and
+public serialization consume transport snapshots. Stores, pixels, configuration
+and service lifetimes retain their existing sharing. This is not a claim that
+all compiled plans have been sealed. Actual warmed callable identity and pickle
+roundtrip controls pass. Commit ``65a76d7e9`` also strips process-local hooks
+from the compiled contract metadata on its transport view, preserving the
+rich contract identity; both callable-reference and contract fields are
+covered by the same real pickle control.
+
+Commit ``ad4670f20`` folds producer path admission into
+``ProducedPathRecordIndex``. ``ProducedPathSet``, ``ProducedPathPatternSelector``
+and the detached producer-pattern path cache are removed. A loader resolves one
+current record cohort and derives its paths, retaining cardinality admission
+after source-context construction and before cache/pixel access. Source-only
+and pipeline-start requests do not acquire producer records.
+
+The same batch puts source transformations on ``NamedSourceBinding`` and deletes
+``source_image_semantics.py``. The physical metadata context retains header,
+calibration and crop geometry; a binding's already-resolved channel axis remains
+authoritative after missing-context merge, including declared grayscale absence.
+Mutable scalar provenance remains independent. One coupled source, producer,
+calibration and original measurement journey gate passes 236 controls. This
+later source is not included in the paired performance evidence below; no
+additional speedup is claimed before its scientific comparison.
+
 Evidence scope
 --------------
 
@@ -300,7 +333,7 @@ Means of two independent ordinary and two fresh native observations are:
 These observations do not establish a causal gain or full30/scaling behavior.
 Speckles still loses on total. The existing benchmark figure owner produces
 fresh PNG/SVG runtime and speedup figures in the campaign's ``figures-v2``
-directory. Native invocation includes its pre-first-module work; startup,
+directory (corrected target labels in ``figures-v3``). Native invocation includes its pre-first-module work; startup,
 imports/JVM setup and the excluded warmup observation are outside this clock.
 Ordinary total includes compilation and normal OUTCOMES/RSS completion.
 The ``v4`` namespace is explicitly aborted before measurement, after independent
