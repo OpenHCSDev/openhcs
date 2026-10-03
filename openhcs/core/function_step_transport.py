@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import replace
 from types import ModuleType
 from collections.abc import Mapping, Sequence
@@ -87,13 +88,19 @@ class FunctionStepTransportAuthority:
 
     @classmethod
     def normalize_context(cls, context: Any) -> Any:
-        step_plans = context.step_plans
-        for step_plan in step_plans.values():
-            step_plan.func = cls.normalize_function_spec(step_plan.func)
-            step_plan.compiled_function_pattern = cls.normalize_compiled_pattern(
-                step_plan.compiled_function_pattern
+        """Derive transport plans without replacing prepared runtime contracts."""
+        transport_context = copy(context)
+        transport_context.step_plans = {
+            step_id: replace(
+                step_plan,
+                func=cls.normalize_function_spec(step_plan.func),
+                compiled_function_pattern=cls.normalize_compiled_pattern(
+                    step_plan.compiled_function_pattern
+                ),
             )
-        return context
+            for step_id, step_plan in context.step_plans.items()
+        }
+        return transport_context
 
     @classmethod
     def normalize_step(cls, step: Any) -> Any:
