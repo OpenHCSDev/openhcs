@@ -55,6 +55,10 @@ rejections, fractional bounds, original ROI/source disk roundtrip, reopening,
 native Image/Points transform and semantic navigation without a Qt application,
 and Shapes feature separation. Root-only producer/graph/nestedidentity controls
 are not imported or claimed. Existing fractional-axis/anchor guards remain.
+Final consumer sweep also migrates the three original presentation tests and
+the shared-axis navigation family to the mandatory owner-derived scale. The
+separate ViewerLayerAxisProjection.translate contract is unchanged. These are
+test consumers, not a new production repair or dependency/guard relaxation.
 Ordinary combined wheel/target qualification is next. Prior59PASS on the full
 Root-dependent source is NOT reported as main-only acceptance. No native or
 viewer is launched. The public receiving plan is a NEW standalone reopen of the
