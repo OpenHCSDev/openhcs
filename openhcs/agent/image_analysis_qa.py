@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Self
 
+from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
+
 
 class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
@@ -200,9 +202,10 @@ class ImageQaEvidenceRule(Enum):
         "requires a nuisance-model check, not a threshold fitted to one crop: "
         "distinguish additive background, multiplicative shading and real biology. "
         "Review raw, correction field or denoising residual, processed image and "
-        "downstream result at the same coordinates across those regions. Reject "
-        "local gains accompanied by remote misses, merges, erased faint structures "
-        "or unsupported background; a prettier or more uniform image is not acceptance"
+        "downstream result at the same coordinates across those regions. Assess "
+        "local gains alongside remote misses, merges, erased faint structures "
+        "and unsupported background against the declared claim criteria; a prettier "
+        "or more uniform image is not acceptance"
     )
     DEVELOPMENT_REPAIR_CONTINUATION = (
         "a rejected development candidate is a preserved comparison checkpoint, not "
@@ -256,12 +259,14 @@ class ImageQaEvidenceRule(Enum):
 class ReferenceEvidenceRule(Enum):
     """How external references constrain, but do not replace, spatial QA."""
 
-    COUNT_CONSTRAINS_ADMISSION = (
-        "compare detected and reference object counts before changing object admission"
+    COUNT_INFORMS_ADMISSION = (
+        "compare detected and reference object counts as diagnostic evidence before "
+        "changing object admission; investigate discrepancies rather than requiring "
+        "exact agreement with imperfect annotations"
     )
     COUNT_DOES_NOT_PROVE_IDENTITY = (
-        "treat count agreement as an admission constraint, not proof that the same "
-        "objects were detected"
+        "treat count agreement as diagnostic evidence, not proof that the same "
+        "objects were detected; count disagreement alone does not reject the analysis"
     )
     IDENTITY_REQUIRES_SPATIAL_CORRESPONDENCE = (
         "require coordinates, labels, or annotations before claiming object identity"
@@ -323,7 +328,8 @@ class SignalTransformConstraint(Enum):
     )
     ROOTED_RECOVERY = "require recovered signal-supported rooted continuity rather than aggregate growth"
     FRAGMENTATION_CONTROL = (
-        "reject gains accompanied by unsupported background or topology fragmentation"
+        "assess gains alongside unsupported background or topology fragmentation "
+        "against the declared claim criteria"
     )
 
 
@@ -517,6 +523,10 @@ class ResidualStructureObservation:
 
 class ImageAnalysisQaPolicy:
     """Canonical text projection of typed diagnostic-gate declarations."""
+
+    claim_scope_target = KnowledgeBaseDocumentTarget(
+        "openhcs_autonomous_analysis_strategy", "scope-conclusions-to-the-evidence"
+    )
 
     @classmethod
     def repair_guidance(cls) -> str:

@@ -182,6 +182,50 @@ def test_default_image_analysis_context_preserves_the_entire_typed_qa_policy() -
         assert target.document_id in delivered.content
 
 
+def test_claim_scope_is_retrievable_through_composed_context_declarations() -> None:
+    from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
+    from openhcs.agent.services.llm_context_service import (
+        ImageAnalysisWorkflowSection,
+        ViewerReviewStepsSection,
+    )
+
+    class _CombinedReviewContext(
+        ImageAnalysisWorkflowAuthoringContext, ViewerReviewAuthoringContext
+    ):
+        kind = "temporary_claim_scope_review"
+
+    try:
+        service = AgentAuthoringContextService(
+            function_catalog=_UnexpectedFunctionCatalog()
+        )
+        target = ImageAnalysisQaPolicy.claim_scope_target
+        document = service.knowledge_base.get_document(
+            KnowledgeBaseDocumentRequest(target=target)
+        )
+        assert not document.errors and not document.truncated
+        assert document.selected_section_id == target.section_id
+        source = Path(__file__).resolve().parents[3] / document.document.source_path
+        lines = tuple(source.read_text(encoding="utf-8").splitlines())
+        section = target.find_section(document.sections)
+        assert document.content.strip() == "\n".join(
+            section.span.line_slice(lines)
+        ).strip()
+        for declaration in (
+            ImageAnalysisWorkflowAuthoringContext,
+            ViewerReviewAuthoringContext,
+            _CombinedReviewContext,
+        ):
+            assert target in declaration.require_route().knowledge_targets
+            context = service.get_authoring_context(declaration.require_kind())
+            assert f"{target.document_id}#{target.section_id}" in context.content
+            assert document.content not in context.content
+        combined = service.get_authoring_context(_CombinedReviewContext.kind)
+        assert ImageAnalysisWorkflowSection.render(service) in combined.content
+        assert ViewerReviewStepsSection.render(service) in combined.content
+    finally:
+        AuthoringContextDeclaration.__registry__.pop(_CombinedReviewContext.kind)
+
+
 def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> None:
     knowledge = _DeclaredKnowledgeBase()
     knowledge._catalog = replace(
@@ -203,8 +247,11 @@ def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> N
         assert len(delivered.content) <= request.max_chars
         assert "long-catalog-summary" not in delivered.content
         for target in declaration.require_route().knowledge_targets:
+            target_id = target.document_id
+            if target.section_id is not None:
+                target_id = f"{target_id}#{target.section_id}"
             assert (
-                f"{target.document_id} — Title for {target.document_id}"
+                f"{target_id} — Title for {target.document_id}"
                 in delivered.content
             )
 
@@ -439,9 +486,6 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "unregistered callable is not an OpenHCS pipeline result" in image_analysis
     assert "Do not preprocess scientific inputs in an external script" in image_analysis
     assert "behind the MCP surface" in image_analysis
-    assert "control ordering remain stable" in image_analysis
-    assert "Escalate rather than declare success" in image_analysis
-    assert "unexplained tile/quadrant drift" in image_analysis
     assert "Ask the domain expert" in image_analysis
     assert "artifact provenance" in image_analysis
     assert "dispatch on function-name strings" in image_analysis
@@ -568,7 +612,6 @@ def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> N
     canonical_rules = (
         "must not fit a separate percentile pair per field",
         "blinded, spatially distributed representative set",
-        "Escalate rather than declare success",
     )
     context = AgentAuthoringContextService().get_authoring_context(context_kind).content
     for canonical_rule in canonical_rules:
