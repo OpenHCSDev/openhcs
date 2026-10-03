@@ -40,7 +40,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
-    RuntimeFunctionInvocationRequest,
 )
 from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
@@ -396,7 +395,7 @@ class CellProfilerModuleExecutor:
         raw_output = _CELLPROFILER_FUNCTION_CONTRACT_EXECUTOR.execute(
             self.callable_contract,
             self.raw_func,
-            invocation.image,
+            invocation.payload,
             invocation.kwargs,
             execution_mode=invocation.execution_mode,
             plane_projection=invocation.plane_projection,
@@ -407,7 +406,7 @@ class CellProfilerModuleExecutor:
             lambda: {
                 "module": module_name,
                 "function": self.callable_contract.function_name,
-                **cellprofiler_profile_payload_fields("input", invocation.image),
+                **cellprofiler_profile_payload_fields("input", invocation.payload),
                 **cellprofiler_profile_payload_fields("output", raw_output),
             },
         )
@@ -430,7 +429,6 @@ class CellProfilerModuleExecutor:
             returned_values=returned_values,
             matched_outputs=matched_outputs,
             invocation=invocation,
-            image_request=image_request,
             current_image=image,
         )
         CellProfilerRuntimeProfileLogger.log_module_profile(
@@ -445,7 +443,7 @@ class CellProfilerModuleExecutor:
             declared_only_outputs=declared_only_outputs,
             adapter=adapter,
             current_image=image,
-            invocation_image=invocation.image,
+            invocation_image=invocation.payload,
             plane_projection=invocation.plane_projection,
         )
         CellProfilerRuntimeProfileLogger.log_module_profile(
@@ -712,15 +710,15 @@ class CellProfilerModuleExecutor:
         *,
         reference_domain: CellProfilerMeasurementImageDomain,
     ) -> CellProfilerMeasurementImage:
-        request = RuntimeInputBindingRequest(
+        value = RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
         payload = normalize_cellprofiler_image_payload(
             RuntimeArtifactTypeStrategy.for_artifact_type(
                 ImageArtifactType,
-            ).raw_runtime_input_value(request)
+            ).raw_runtime_input_value(spec, value)
         )
         metadata = image_payload_metadata(payload)
         plane_axis = metadata.plane_axis
@@ -1157,7 +1155,7 @@ class CellProfilerModuleExecutor:
                 output_plan=matched_plan,
                 output_value=matched_value,
                 source=measurement_image,
-                call_kwargs=invocation_kwargs,
+                kwargs=invocation_kwargs,
                 current_image=measurement_image.payload,
                 declared_only_outputs=CellProfilerOutputRecorder.transient_output_values(
                     callable_contract=self.callable_contract,
@@ -1330,9 +1328,9 @@ class CellProfilerModuleExecutor:
         )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
         for spec in image_inputs:
-            request = input_binding.artifact_request_for_spec(spec)
-            payloads.append(image_strategy.runtime_input_value(request))
-            source_names.append(image_strategy.source_image_name(request))
+            value = input_binding.artifact_value_for_spec(spec)
+            payloads.append(image_strategy.runtime_input_value(spec, value))
+            source_names.append(image_strategy.source_image_name(spec, value))
         parameter_image_inputs = input_binding.image_inputs
         broadcast_sources = tuple(
             sources[0]
@@ -1394,7 +1392,7 @@ class CellProfilerModuleExecutor:
                 continue
             source_name = RuntimeArtifactTypeStrategy.for_artifact_type(
                 spec.artifact_type
-            ).source_image_name(input_binding.artifact_request_for_spec(spec))
+            ).source_image_name(spec, input_binding.artifact_value_for_spec(spec))
             if source_name is not None:
                 source_names.append(source_name)
         return single_source_name(tuple(source_names))
@@ -1451,7 +1449,7 @@ class CellProfilerModuleExecutor:
         current_image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         module_type: type[CellProfilerModule],
-    ) -> "RuntimeFunctionInvocationRequest":
+    ) -> "CellProfilerImageRequest":
         profile_enabled = CellProfilerRuntimeProfileLogger.enabled()
         if profile_enabled:
             phase_started_at = time.perf_counter()
@@ -1509,6 +1507,7 @@ class CellProfilerModuleExecutor:
                 module=module_name,
             )
             phase_started_at = time.perf_counter()
+        source_aliases = image_request.source_aliases
         image_request = module_type.project_invocation_image_request(
             image_request=image_request,
             runtime_kwargs=runtime_kwargs,
@@ -1537,13 +1536,13 @@ class CellProfilerModuleExecutor:
                 execution_mode,
             ),
         )
-        return RuntimeFunctionInvocationRequest(
-            image=image_request.payload,
+        # Source aliases name the original input surfaces even when an object
+        # input supplies the callable's projected image domain.
+        return replace(
+            image_request,
             kwargs=invocation_kwargs,
-            source_image_name=image_request.source_image_name,
-            image_count=image_request.image_count,
+            source_aliases=source_aliases,
             execution_mode=execution_mode,
-            plane_projection=image_request.plane_projection,
         )
 
 

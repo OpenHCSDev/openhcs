@@ -56,7 +56,7 @@ def _bind(case):
 def _execute(case, invocation):
     raw, contract, *_ = case
     return CellProfilerFunctionContractExecutor().execute(
-        contract, raw, invocation.image, invocation.kwargs,
+        contract, raw, invocation.payload, invocation.kwargs,
         execution_mode=invocation.execution_mode, plane_projection=invocation.plane_projection,
     )
 
@@ -70,7 +70,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     selected = invocation.kwargs['object_labels'][0]
     assert invocation.execution_mode is ImagePayloadExecutionMode.NATURAL
     assert invocation.plane_projection is None
-    assert invocation.image.metadata.source_channel_axis == 2
+    assert invocation.payload.metadata.source_channel_axis == 2
     assert selected.plane_axis is None
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)

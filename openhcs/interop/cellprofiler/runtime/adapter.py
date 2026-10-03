@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -68,11 +68,19 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
 
+if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
+
 RelationshipIdVector = np.ndarray | Sequence[int]
 
 
 class CellProfilerRecordedArtifactOutputPolicy(AdapterRecordedArtifactOutputPolicy):
     """CP recorders supply per-row subjects for heterogeneous measurement tables."""
+
+    @classmethod
+    def preserves_input_main_flow(cls, contract: CallableContract) -> bool:
+        """CP publishes the input when no canonical return output is selected."""
+        return not contract.canonical_return_output_specs
 
     @classmethod
     def validate_measurement_subject(cls, spec: ArtifactSpec) -> None:

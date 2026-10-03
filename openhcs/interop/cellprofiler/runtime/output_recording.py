@@ -5,7 +5,6 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from dataclasses import replace
 from functools import lru_cache
 from graphlib import TopologicalSorter
 from types import MappingProxyType
@@ -27,7 +26,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_adapters import RuntimeFunctionInvocationRequest
 from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -111,8 +109,7 @@ class CellProfilerOutputRecorder(
         adapter: CellProfilerRuntimeAdapter,
         returned_values: Mapping[ArtifactSpecRef, RuntimeCallableArgument],
         matched_outputs: tuple[RuntimeMatchedOutput, ...],
-        invocation: RuntimeFunctionInvocationRequest,
-        image_request: CellProfilerImageRequest,
+        invocation: CellProfilerImageRequest,
         current_image: RuntimeCallableArgument,
     ) -> Mapping[ArtifactSpecRef, RuntimeCallableArgument]:
         """Record one module invocation's returned artifacts."""
@@ -149,14 +146,6 @@ class CellProfilerOutputRecorder(
         ):
             return declared_only_outputs
 
-        output_source = replace(
-            image_request,
-            payload=invocation.image,
-            source_image_name=invocation.source_image_name,
-            image_count=invocation.image_count,
-            execution_mode=invocation.execution_mode,
-            plane_projection=invocation.plane_projection,
-        )
         for output_plan, spec, output_value in recording_order:
             if profile_enabled:
                 record_started_at = time.perf_counter()
@@ -168,8 +157,8 @@ class CellProfilerOutputRecorder(
                     spec=spec,
                     output_plan=output_plan,
                     output_value=output_value,
-                    source=output_source,
-                    call_kwargs=invocation.kwargs,
+                    source=invocation,
+                    kwargs=invocation.kwargs,
                     current_image=current_image,
                     declared_only_outputs=declared_only_outputs,
                 )

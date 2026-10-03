@@ -562,10 +562,9 @@ class CallableMetadata:
             )
         if self.runtime_adapter is not None:
             namespace[FunctionContractAttribute.runtime_adapter] = self.runtime_adapter
-        if self.runtime_context_parameter is not None:
-            namespace[FunctionContractAttribute.runtime_context_parameter] = (
-                self.runtime_context_parameter
-            )
+        namespace[FunctionContractAttribute.runtime_context_parameter] = (
+            self.runtime_context_parameter
+        )
         namespace[FunctionContractAttribute.execution_scope] = self.execution_scope
         if self.processing_contract is not None:
             namespace[FunctionContractAttribute.processing_contract] = (
@@ -788,7 +787,7 @@ class CallableContract(ArtifactPlanKeySelector):
     def preserves_input_main_flow(self) -> bool:
         """Return whether declared artifact outputs leave main flow unchanged."""
 
-        return bool(self.artifact_outputs) and not self.main_flow_outputs
+        return self.artifact_output_policy.preserves_input_main_flow(self)
 
     @property
     def runtime_adapter(self) -> RuntimeAdapterSpec | None:
@@ -1878,10 +1877,9 @@ def _runtime_context_parameter(
     projection: CallableProjection,
     reader: "CallableMetadataReader",
 ) -> str | None:
-    declared = reader.optional_string(
-        FunctionContractAttribute.runtime_context_parameter
-    )
-    if declared is not None:
+    field_name = FunctionContractAttribute.runtime_context_parameter
+    declared = reader.optional_string(field_name)
+    if field_name in reader.namespace:
         return declared
     from openhcs.core.context.processing_context import ProcessingContext
 

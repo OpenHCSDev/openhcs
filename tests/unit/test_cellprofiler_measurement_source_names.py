@@ -63,14 +63,15 @@ def test_input_source_name_resolves_only_declared_context_carriers(
     requested_specs: list[ArtifactSpec] = []
 
     class BindingRequest:
-        def artifact_request_for_spec(self, spec: ArtifactSpec) -> SimpleNamespace:
+        def artifact_value_for_spec(self, spec: ArtifactSpec) -> SimpleNamespace:
             requested_specs.append(spec)
             return SimpleNamespace(spec=spec)
 
     class ArtifactStrategy:
         @staticmethod
-        def source_image_name(request: SimpleNamespace) -> str:
-            return request.spec.name
+        def source_image_name(spec: ArtifactSpec, value: SimpleNamespace) -> str:
+            assert value.spec is spec
+            return spec.name
 
     monkeypatch.setattr(
         module_execution,

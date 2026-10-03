@@ -23,6 +23,7 @@ from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
 ROOT = Path(__file__).resolve().parents[3]
 TASKS = (
     ("autonomous analysis strategy", "openhcs_autonomous_analysis_strategy"),
+    ("graded segmentation quality", "openhcs_autonomous_analysis_strategy"),
     ("channel identity RGB composite", "openhcs_image_interpretation"),
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),

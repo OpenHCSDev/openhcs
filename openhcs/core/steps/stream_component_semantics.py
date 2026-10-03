@@ -29,8 +29,16 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
+from openhcs.core.config import FijiDimensionMode, NapariDimensionMode
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_slice_projection import (
+    RuntimeProjectionData,
+    RuntimeProjectedPayloadItem,
+    RuntimeProjectionSourceIdentityRequest,
+    RuntimeProjectionSourceIdentityRequirement,
+)
 
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
@@ -61,6 +69,47 @@ StreamComponentDomainMetadataItems: TypeAlias = tuple[dict[str, ComponentValue],
 
 class StreamImagePayloadMetadataProjector:
     """Project image-axis declarations into viewer batch-item fields."""
+
+    @classmethod
+    def payload_items_for_display(
+        cls,
+        payload: RuntimeProjectionData,
+        *,
+        metadata: ImagePayloadMetadata,
+        plane_components: tuple[AllComponents, ...],
+        component_modes: Mapping[str, str],
+        source_description: str,
+    ) -> tuple[RuntimeProjectedPayloadItem, ...]:
+        """Project declared planes when their display requires scalar identities."""
+        item_fields = cls.item_fields_for_plane_components(metadata, plane_components)
+        component_values = item_fields.get(
+            ViewerWireField.PLANE_COMPONENT_VALUES.value, {}
+        )
+        scalar_modes = (
+            NapariDimensionMode.LAYER.value,
+            FijiDimensionMode.WINDOW.value,
+        )
+        if not any(
+            mode in scalar_modes
+            for component, mode in component_modes.items()
+            if component in component_values
+        ):
+            return (RuntimeProjectedPayloadItem(payload, source_description),)
+        projection = RuntimePlaneAxisValueProjection.preserve(
+            axis=metadata.plane_axis,
+            axis_size=metadata.source_provenance.source_plane_count,
+        )
+        source_identity = (
+            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+        )
+        return source_identity.project_payload_items(
+            RuntimeProjectionSourceIdentityRequest(
+                value=metadata.attach_to(payload),
+                source_description=source_description,
+                variable_components=plane_components,
+                plane_projection=projection,
+            )
+        )
 
     @classmethod
     def partition_indices(

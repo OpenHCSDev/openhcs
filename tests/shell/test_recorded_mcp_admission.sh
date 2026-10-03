@@ -6,7 +6,7 @@ scratch=${1:?new persistent validation directory}
 test ! -e "$scratch"
 mkdir -p "$scratch/operations"
 fixtures="$repo/tests/shell/fixtures/recorded_mcp"
-ln -s "$repo/scripts/blind_analysis/recorded-mcp.sh" "$scratch/operations/recorded-mcp.sh"
+ln -s "$repo/scripts/blind_analysis/operations/recorded-mcp.sh" "$scratch/operations/recorded-mcp.sh"
 for file in slot-env.sh resource-check.sh mcp-client.sh; do
   ln -s "$fixtures/$file" "$scratch/operations/$file"
 done

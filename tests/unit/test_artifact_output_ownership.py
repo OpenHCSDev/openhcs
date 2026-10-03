@@ -43,6 +43,35 @@ def test_adapter_declaration_requires_a_concrete_output_policy(invalid_policy):
         )
 
 
+@pytest.mark.parametrize(
+    "output_policy",
+    [NativeReturnArtifactOutputPolicy, AdapterRecordedArtifactOutputPolicy],
+)
+@pytest.mark.parametrize("has_trailing_labels", [False, True])
+def test_arbitrary_return_owner_does_not_inherit_cellprofiler_passthrough(
+    output_policy, has_trailing_labels,
+):
+    outputs = (
+        (
+            ArtifactSpec.output("Measurements", MeasurementsArtifactType),
+            ArtifactSpec.output("Labels", ObjectLabelsArtifactType),
+        )
+        if has_trailing_labels
+        else ()
+    )
+
+    @runtime_adapter(
+        "runtime", lambda request: object(), artifact_output_policy=output_policy
+    )
+    @artifact_outputs(*outputs)
+    def replace_image(image, *, runtime):
+        return image + 1
+
+    contract = CallableContract.from_callable(replace_image)
+    assert not contract.canonical_return_output_specs
+    assert not contract.preserves_input_main_flow()
+
+
 @pytest.fixture
 def materialized_output_kind(monkeypatch):
     # Isolate the declaration, not the compiler or its registration mechanism.
