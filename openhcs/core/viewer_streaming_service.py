@@ -846,7 +846,7 @@ class StreamingService:
                 point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
                 if point_domain is not None:
                     point_domains[filename] = point_domain
-            data_list.append(ROIArchiveSourceMetadata.geometry(rois))
+            data_list.append(rois)
             paths.append(filename)
             loaded_indices.append(i - 1)
 

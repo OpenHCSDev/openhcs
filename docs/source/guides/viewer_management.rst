@@ -26,6 +26,13 @@ stopped through its typed viewer-control endpoint or by the live manager that
 retains its exact process handle. Non-persistent viewers belong to the execution
 session's exact process group and are stopped when that session is cleaned up.
 
+For resource-bound candidate review, retrieve the ``openhcs_viewer_qa`` knowledge
+document, also bundled in the ``use-openhcs`` skill. Its conditional selective-
+retirement procedure follows the installed typed capability and distinguishes
+scene/payload custody from visibility, durable evidence and measured memory.
+That is the operating procedure; this lifecycle overview does not maintain a
+second retirement recipe or assume that every installed viewer supports it.
+
 Display-axis ownership
 ----------------------
 
