@@ -20,6 +20,7 @@ from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -1440,10 +1441,12 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
     def translate(
         self,
         payload_axis_labels: tuple[str, ...] = (),
+        *,
+        scale: Sequence[float] | None = None,
     ) -> tuple[float, ...]:
-        """Return translation in the same declaration-owned slots as layer data."""
+        """Place route offsets in the same native world units as layer scale."""
 
-        return (
+        offsets = (
             *(
                 float(self.axis_offset(index))
                 for index in range(len(self.display_axis_components))
@@ -1452,16 +1455,21 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             0.0,
             0.0,
         )
+        if scale is None:
+            return offsets
+        return tuple(
+            offset * spacing for offset, spacing in zip(offsets, scale, strict=True)
+        )
 
     def spatial_layer_kwargs(
         self,
         items: Sequence[NapariStreamLayerItem],
         payload_axis_labels: tuple[str, ...] = (),
     ) -> dict[str, LayerKwargValue]:
-        """Project calibrated XY onto aligned native axes for every layer kind.
+        """Project declared spatial calibration onto every aligned layer kind.
 
-        Component and internal payload axes remain dimensionless. Two-dimensional
-        acquisition calibration never invents physical Z or a color-band axis.
+        Only a real three-axis source declaration calibrates projected Z.
+        Acquisition selectors and internal payload bands remain dimensionless.
         """
         spacing = CommonRuntimeValue.from_values(
             item.image_metadata.source_voxel_spacing for item in items
@@ -1470,11 +1478,27 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             raise ValueError(
                 "A native viewer route requires consistent source voxel spacing."
             )
-        prefix = len(self.display_axis_components) + len(payload_axis_labels)
+        component_scales = [1.0] * len(self.display_axis_components)
+        component_units = ["dimensionless"] * len(self.display_axis_components)
+        z_component = AllComponents.Z_INDEX.value
+        if (
+            len(spacing.values_zyx) == 3
+            and z_component in self.display_axis_components
+        ):
+            z_axis = self.display_axis_components.index(z_component)
+            component_scales[z_axis] = spacing.spacing_for_ndim(3)[0]
+            component_units[z_axis] = spacing.native_coordinate_unit
+        scale = (
+            *component_scales,
+            *(1.0 for _ in payload_axis_labels),
+            *spacing.spacing_for_ndim(2),
+        )
         return {
-            "scale": (*(1.0 for _ in range(prefix)), *spacing.spacing_for_ndim(2)),
+            "scale": scale,
+            "translate": self.translate(payload_axis_labels, scale=scale),
             "units": (
-                *("dimensionless" for _ in range(prefix)),
+                *component_units,
+                *("dimensionless" for _ in payload_axis_labels),
                 *(spacing.native_coordinate_unit for _ in range(2)),
             ),
         }
@@ -1901,7 +1925,7 @@ class NapariShapeFeatureColumns:
 
         for column_values in self.values.values():
             column_values.append(None)
-        for name, value in metadata.items():
+        for name, value in ROIArchiveSourceMetadata.feature_metadata(metadata).items():
             if name in (
                 ObjectArtifactSubjectBinding.SUBJECT_FEATURE,
                 ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE,

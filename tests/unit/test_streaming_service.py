@@ -954,9 +954,10 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
             stream.source.metadata.metadata_by_path[batch_paths[0]]
             == expected.source_component_metadata
         )
-        assert data[0][0].metadata == {
+        assert ROIArchiveSourceMetadata.feature_metadata(data[0][0].metadata) == {
             "label": expected.source_component_metadata["channel"]
         }
+        assert ROIArchiveSourceMetadata.decode(data[0]) == expected
         assert data[0][0].shapes == [PointShape(32.25, 40.5)]
 
 
@@ -1047,6 +1048,9 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     assert paths == [archive]
     assert data[0][0].metadata["response"] == 4.75
     assert data[0][0].metadata["openhcs_fractional_z"] == 2.375
+    reopened_source = ROIArchiveSourceMetadata.decode(data[0])
+    assert reopened_source is not None
+    assert reopened_source.source_provenance == table.source_provenance
     assert stream.source.metadata.metadata_by_path[archive]["z_index"] == 0
     assert stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value][
         "z_index"

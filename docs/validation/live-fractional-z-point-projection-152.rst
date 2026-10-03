@@ -6,6 +6,48 @@ No competing production claim found:468 changes tracking.py;404 carries saved
 writer proposals/evidence;394 does not change Napari/viewer sources. Shared
 materialization source ownership must be coordinated before editing that seam.
 
+Newest public95 checkpoint: FAILED, not accepted
+-----------------------------------------------
+
+The actual public tiny producer compiled, but execution
+9292bfb8-4d2e-4e54-9bcc-5af998083fe5 failed at persisted-image metadata
+publication after the point archive was written/streamed. Root435/394 owns
+that publication join; neither actual conflicting metadata pair is logged.
+The original failure, partial live/reopen journals and targets remain immutable.
+
+Original PolyStore readback of the actual989B ZIP proves all four source planes,
+fractional Z1.5, object7 and explicit2/.65/.65 micrometer calibration intact.
+Archive SHA256fd0a372f3100c73da9533b308d44c2f85fa7a86b733e2608ae986135cb4e401a.
+Persisted reopening transported geometry without its full source record;
+the native point handler narrowed represented Z0..3 to occupied0..2;
+native presentation calibrated XY but discarded explicit Z spacing. All9
+original XY/XZ/YZ PNGs were personally opened: rendered transport works,
+but automatic completion, full source preservation and calibrated acceptance do
+not. No scientist input, installed target or native endpoint was changed here.
+
+This source checkpoint repairs those disjoint receiving owners. StreamingService
+keeps the original source-bound ROI payload. ROIArchiveSourceMetadata owns the
+single source-only feature exclusion used by native Points and Shapes; it does
+not strip transport source facts. Points keeps the full represented source span
+from its original anchor while preserving missing-axis/anchor/fractional guards.
+NapariAxisPresentation derives scale, units and world translation together for
+Image/Shapes/Points and shared-axis reprojection. Explicit3D spacing calibrates Z;
+2D/unspecified calibration does not invent it, and selectors/bands stay unscaled.
+No mirrored source domain, codec, registry, publication guard relaxation or
+shared Root producer/compiler change. Singer522 retirement methods are untouched.
+
+Before-edit named AST family:704 production+95 original paired dependency modules,
+zero parse omissions; source relationships read semantically, not a global NRA
+proof. Original source controls incorrectly asserted occupied0..2; the actual
+receiving failure demonstrated their insufficient extent assertion. New source
+controls require the complete represented extent and actual reopened metadata.
+Calibration controls cover2D/3D/relative/unspecified coordinates, scaled offsets,
+native Image/Points world alignment and semantic navigation without a Qt app.
+Qualification is pending; no installed or new native acceptance is claimed.
+The initial direct-source pytest attempt failed before collection because
+vendored dirty ZMQ lacks AckReturnRoute. That failure is retained, not fixed by
+editing dependency checkouts.
+
 Reported technical failure
 --------------------------
 

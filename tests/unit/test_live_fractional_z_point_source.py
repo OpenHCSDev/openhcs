@@ -166,7 +166,7 @@ def test_original_point_writer_live_domain_anchor_and_reopen(tmp_path, planes, o
     )
     handler = NapariPointsLayerDisplayHandler()
     occupied = handler.geometric_component_values([item], authority.component_axis_semantics)
-    assert occupied == {'z_index': list(range(origin, origin + (3 if planes == 4 else 1)))}
+    assert occupied == {'z_index': list(range(origin, origin + planes))}
     with pytest.raises(ValueError, match='exceeds the declared Z domain'):
         handler.geometric_component_values(
             [replace(item, data=NapariROIConverter.rois_to_shapes([
