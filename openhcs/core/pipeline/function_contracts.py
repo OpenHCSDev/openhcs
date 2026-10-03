@@ -45,6 +45,28 @@ from openhcs.processing.materialization import MaterializationSpec
 F = TypeVar("F", bound=Callable)
 
 
+def runtime_context_parameter(parameter_name: str | None) -> Callable[[F], F]:
+    """Declare context injection, or disable it while retaining the public ABI."""
+
+    if parameter_name is not None and not isinstance(parameter_name, str):
+        raise TypeError("runtime_context_parameter must be a parameter name or None.")
+
+    def decorator(func: F) -> F:
+        if (
+            parameter_name is not None
+            and parameter_name not in inspect.signature(func).parameters
+        ):
+            raise ValueError(
+                f"Callable {func.__name__!r} does not declare parameter "
+                f"{parameter_name!r}."
+            )
+        namespace = vars(func)
+        namespace[FunctionContractAttribute.runtime_context_parameter] = parameter_name
+        return func
+
+    return decorator
+
+
 @lru_cache(maxsize=256)
 def resolved_callable_type_hints(func: Callable) -> dict[str, Any]:
     """Return the callable's resolved type contract or propagate its error."""
