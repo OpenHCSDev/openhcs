@@ -40,7 +40,7 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
@@ -240,9 +240,9 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         self, request: RuntimeArtifactInputRequest
     ) -> RuntimeCallableArgument:
         payload = request.value
-        metadata = image_payload_metadata(payload)
+        metadata = image_payload_metadata_projection(payload)
         metadata = metadata.with_source_provenance(
-            metadata.source_provenance.with_derived_source_image_names(
+            metadata.read_value("source_provenance").with_derived_source_image_names(
                 (request.spec.name,)
             )
         )
@@ -269,7 +269,9 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         value: RuntimeCallableArgument,
     ) -> str | None:
         return single_source_name(
-            image_payload_metadata(value).source_provenance.represented_source_image_names
+            image_payload_metadata_projection(value)
+            .read_value("source_provenance")
+            .represented_source_image_names
         )
 
     def source_image_payload(
@@ -318,12 +320,13 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         value = request.value
         if isinstance(value, ObjectLabelSet):
             return value
-        metadata = image_payload_metadata(value)
+        metadata = image_payload_metadata_projection(value)
         return SourceImageObjectLabelBuildRequest(
             image=value,
             labels=image_payload_data(value),
             plane_projection=RuntimePlaneAxisValueProjection.from_source_declaration(
-                metadata.plane_axis, metadata.source_provenance,
+                metadata.read_value("plane_axis"),
+                metadata.read_value("source_provenance"),
             ),
         ).label_set(
             name=request.spec.name,
@@ -589,11 +592,11 @@ class RuntimeInputBindingRequest:
                     f"{current_image.slice_contexts!r}."
                 )
             return payload
-        metadata = image_payload_metadata(current_image)
+        metadata = image_payload_metadata_projection(current_image)
         if (
             len(self.primary_image_inputs) == 1
             and self.primary_image_inputs[0] == spec
-            and metadata.source_provenance.source_plane_count == 0
+            and metadata.read_value("source_provenance").source_plane_count == 0
         ):
             return current_image
         return metadata.project_declared_source_image(current_image, spec.name)
@@ -628,7 +631,9 @@ class RuntimeInputBindingRequest:
                     f"stack-broadcast source {source_ref!r}."
                 )
             return payload
-        return image_payload_metadata(current_image).project_declared_source_image(
+        return image_payload_metadata_projection(
+            current_image
+        ).project_declared_source_image(
             current_image,
             source_ref.name,
         )

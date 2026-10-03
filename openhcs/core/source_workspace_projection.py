@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING, TypeVar
 from openhcs.core.source_path_identity import source_path_identity, source_path_join
 from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
@@ -538,13 +539,34 @@ class VirtualWorkspaceImagePayloadProjection:
     persisted_metadata: ImagePayloadMetadata | None = None
 
     def metadata(self, loaded: ImagePayloadMetadata) -> ImagePayloadMetadata:
+        """Preserve the public mutable namespace and nominal subtype lifecycle."""
+        return self._metadata_from_persisted(
+            self.persisted_metadata, loaded
+        ).materialize_metadata()
+
+    def metadata_projection(
+        self, loaded: ImageMetadataProjection
+    ) -> ImageMetadataProjection:
+        """Join facts without snapshotting or normalizing merely to enter a view."""
+        persisted = self.persisted_metadata
+        if persisted is not None:
+            # This existing projection state reads the same authoritative live
+            # dataclass. The first semantic transform creates flat owned facts.
+            persisted = ImageMetadataProjection._from_realized_metadata(persisted)
+        return self._metadata_from_persisted(persisted, loaded)
+
+    def _metadata_from_persisted(
+        self,
+        persisted: ImageMetadataProjection | None,
+        loaded: ImageMetadataProjection,
+    ) -> ImageMetadataProjection:
         """Preserve semantic omissions, but not an empty header's lost identity."""
-        if self.persisted_metadata is None:
+        if persisted is None:
             return loaded
-        metadata = self.persisted_metadata.with_source_spatial_context_from(
+        metadata = persisted.with_source_spatial_context_from(
             loaded
         ).with_missing_intensity_from(loaded)
-        provenance = metadata.source_provenance
+        provenance = metadata.read_value("source_provenance")
         if not (
             provenance.source_identity.addressable
             or provenance.source_image_provenance_planes.has_values
@@ -559,11 +581,13 @@ class VirtualWorkspaceImagePayloadProjection:
             source_metadata = SourceMetadataFields.with_fields(
                 source_metadata, {}, without=(SOURCE_BINDING_ALIAS_METADATA_FIELD,)
             )
-        current_metadata = image_payload_metadata(payload)
-        metadata = self.metadata(current_metadata)
-        metadata = metadata.replace_fields(
-            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
-                current_metadata.source_spatial_domain,
+        current_metadata = image_payload_metadata_projection(payload)
+        metadata = self.metadata_projection(current_metadata)
+        metadata = metadata.derive_fields(
+            source_spatial_domain=metadata.read_value(
+                "source_spatial_domain"
+            ).with_native_image_context(
+                current_metadata.read_value("source_spatial_domain"),
                 image_shape_yx=current_metadata.spatial_shape_yx(
                     image_payload_data(payload)
                 ),
@@ -573,11 +597,12 @@ class VirtualWorkspaceImagePayloadProjection:
             metadata = metadata.with_source_component_metadata(source_metadata)
         if self.source_alias is not None:
             metadata = metadata.with_source_provenance(
-                metadata.source_provenance.with_source_image_names((self.source_alias,))
+                metadata.read_value("source_provenance").with_source_image_names(
+                    (self.source_alias,)
+                )
             )
         return metadata.payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
+            image_payload_data(payload), image_payload_mask(payload)
         )
 
 

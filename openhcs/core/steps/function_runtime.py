@@ -140,12 +140,14 @@ from openhcs.core.source_bindings import (
     SourceProjectionRole,
 )
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
     ImagePayloadMetadataCarrier,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
+    image_payload_metadata_projection,
     image_payload_slice_context,
     preserve_declared_image_payload_axis,
     with_image_payload_data,
@@ -469,7 +471,9 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
         """Return whether an image result already carries complete source identity."""
 
         if not isinstance(output_value, AlignedImageStack) and not (
-            image_payload_metadata(output_value).has_complete_source_identity(
+            image_payload_metadata_projection(
+                output_value
+            ).has_complete_source_identity(
                 output_value,
                 plane_projection,
             )
@@ -477,9 +481,9 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
             return False
         output_surfaces = flatten_aligned_image_payload_slices(output_value)
         if not all(
-            image_payload_metadata(output_surface).has_complete_source_identity(
+            image_payload_metadata_projection(
                 output_surface
-            )
+            ).has_complete_source_identity(output_surface)
             for output_surface in output_surfaces
         ):
             return False
@@ -487,12 +491,12 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
             return True
         source_surfaces = flatten_aligned_image_payload_slices(source_payload)
         return len(output_surfaces) == len(source_surfaces) and all(
-            image_payload_metadata(
-                output_surface
-            ).source_provenance.represented_source_identities
-            == image_payload_metadata(
-                source_surface
-            ).source_provenance.represented_source_identities
+            image_payload_metadata_projection(output_surface)
+            .read_value("source_provenance")
+            .represented_source_identities
+            == image_payload_metadata_projection(source_surface)
+            .read_value("source_provenance")
+            .represented_source_identities
             for source_surface, output_surface in zip(
                 source_surfaces,
                 output_surfaces,
@@ -552,27 +556,33 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
             and plane_projection is not None
             and plane_projection.plane_index is None
         ):
-            output_metadata = image_payload_metadata(output_value)
+            output_metadata = image_payload_metadata_projection(output_value)
             if (
-                output_metadata.plane_axis is None
-                and output_metadata.source_provenance.source_plane_count
+                output_metadata.read_value("plane_axis") is None
+                and output_metadata.read_value("source_provenance").source_plane_count
                 == plane_projection.axis_size
                 and plane_projection.dense_shape_carries_axis(
                     np.shape(image_payload_data(output_value))
                 )
             ):
-                output_value = output_metadata.replace_fields(
+                output_value = output_metadata.derive_fields(
                     plane_axis=plane_projection.axis,
                 ).attach_to(output_value)
         if output_plan is not None and not output_plan.variable_components:
-            output_metadata = image_payload_metadata(output_value)
-            if output_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            output_metadata = image_payload_metadata_projection(output_value)
+            if (
+                output_metadata.read_value("plane_axis")
+                is RuntimePlaneAxis.RUNTIME_SLICE
+            ):
                 output_value = RuntimeSliceProjection.value_for_singleton_slice(
                     output_value,
                     source_description=f"Image output {output_plan.ref()!r}",
                 )
-            source_metadata = image_payload_metadata(source_payload)
-            if source_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            source_metadata = image_payload_metadata_projection(source_payload)
+            if (
+                source_metadata.read_value("plane_axis")
+                is RuntimePlaneAxis.RUNTIME_SLICE
+            ):
                 if source_ref is None:
                     raise ValueError(
                         f"Image output {output_plan.ref()!r} consumes a runtime "
@@ -580,9 +590,9 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
                     )
                 collapsed_metadata = source_metadata.collapse_leading_plane_axis()
                 source_payload = collapsed_metadata.with_source_provenance(
-                    collapsed_metadata.source_provenance.with_source_image_names(
-                        (source_ref.name,)
-                    )
+                    collapsed_metadata.read_value(
+                        "source_provenance"
+                    ).with_source_image_names((source_ref.name,))
                 ).attach_source_context_to(output_value)
             plane_projection = None
         source_context_strategy = ImageOutputSourceContextStrategy.for_source_payload(
@@ -600,14 +610,17 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
         ):
             if isinstance(output_value, AlignedImageStack):
                 return output_value
-            output_metadata = image_payload_metadata(output_value)
-            source_metadata = image_payload_metadata(source_payload)
+            output_metadata = image_payload_metadata_projection(output_value)
+            source_metadata = image_payload_metadata_projection(source_payload)
             contextualized_output = output_metadata.with_source_context_from(
                 source_metadata
             ).attach_source_context_to(
                 output_value,
             )
-            if image_payload_metadata(contextualized_output) == output_metadata:
+            if (
+                image_payload_metadata(contextualized_output)
+                == output_metadata.materialize_metadata()
+            ):
                 return output_value
             return contextualized_output
         return source_context_strategy.contextualize(
@@ -692,7 +705,9 @@ class MeasurementsFunctionOutputContextStrategy(ProjectedFunctionOutputContextSt
         del plane_projection
         subject = self._declared_subject(output_plan)
         assert output_plan is not None
-        source_provenance = image_payload_metadata(source_payload).source_provenance
+        source_provenance = image_payload_metadata_projection(
+            source_payload
+        ).read_value("source_provenance")
         if isinstance(output_value, MeasurementTable):
             self._validate_nominal_table(output_value, output_plan, subject)
             contextualized_provenance = (
@@ -745,7 +760,9 @@ class SpatialGraphFunctionOutputContextStrategy(ProjectedFunctionOutputContextSt
         if output_plan is not None:
             output_value.validate_artifact_name(output_plan.name)
         source_provenance = output_value.contextualized_source_provenance(
-            image_payload_metadata(source_payload).source_provenance
+            image_payload_metadata_projection(source_payload).read_value(
+                "source_provenance"
+            )
         )
         contextualized_provenance = output_value.source_provenance.with_missing_from(
             source_provenance
@@ -762,7 +779,7 @@ def project_declared_source_identity(
 ) -> RuntimePayload:
     """Project an image payload to one exact declared source identity."""
 
-    metadata = image_payload_metadata(source_payload)
+    metadata = image_payload_metadata_projection(source_payload)
     return metadata.project_declared_source_image(source_payload, source_ref.name)
 
 
@@ -854,7 +871,7 @@ class DefaultImageOutputSourceContextStrategy(ImageOutputSourceContextStrategy):
     ) -> RuntimePayload:
         if isinstance(output_value, AlignedImageStack):
             return output_value
-        return image_payload_metadata(source_payload).derive_payload(
+        return image_payload_metadata_projection(source_payload).derive_payload(
             source_payload,
             output_value,
             plane_projection=plane_projection,
@@ -924,7 +941,10 @@ class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrate
         return (
             plane_projection is not None
             and plane_projection.plane_index is None
-            and image_payload_metadata(source_payload).plane_axis is None
+            and image_payload_metadata_projection(source_payload).read_value(
+                "plane_axis"
+            )
+            is None
             and np.ndim(object_label_dense_array(source_payload)) >= 3
         )
 
@@ -939,14 +959,14 @@ class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrate
                 "Object-label image output context requires ObjectLabelValue, got "
                 f"{type(source_payload).__name__}."
             )
-        source_metadata = image_payload_metadata(source_payload)
+        source_metadata = image_payload_metadata_projection(source_payload)
         if plane_projection is None or plane_projection.plane_index is not None:
             return source_metadata.derive_payload(
                 source_payload,
                 output_value,
                 plane_projection=plane_projection,
             )
-        plane_count = source_metadata.source_provenance.source_plane_count
+        plane_count = source_metadata.read_value("source_provenance").source_plane_count
         if plane_count != plane_projection.axis_size:
             raise ValueError(
                 "Object-label image output source-plane provenance must match the "
@@ -957,8 +977,8 @@ class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrate
             np.shape(image_payload_data(output_value)),
             value_name="Object-label image output payload",
         )
-        output_metadata = image_payload_metadata(output_value)
-        contextualized_output = output_metadata.replace_fields(
+        output_metadata = image_payload_metadata_projection(output_value)
+        contextualized_output = output_metadata.derive_fields(
             plane_axis=plane_projection.axis,
         ).attach_to(output_value)
         return source_metadata.derive_payload(
@@ -985,7 +1005,7 @@ class RuntimeSliceAlignedImageOutputContext:
                     "but no declared runtime plane projection."
                 )
             source_value = self.source_values.value_for_aligned_slice(0, 1)
-            return image_payload_metadata(source_value).derive_payload(
+            return image_payload_metadata_projection(source_value).derive_payload(
                 source_value,
                 self.output_value,
             )
@@ -997,7 +1017,7 @@ class RuntimeSliceAlignedImageOutputContext:
                 len(output_slices),
             )
             contextualized_slices.append(
-                image_payload_metadata(source_value).derive_payload(
+                image_payload_metadata_projection(source_value).derive_payload(
                     source_value,
                     output_slice,
                 )
@@ -1346,9 +1366,9 @@ class PatternGroupExecutionScope:
 
         plan = self.unscoped_main_flow_source_binding_plan
         represented_names = frozenset(
-            image_payload_metadata(
-                payload
-            ).source_provenance.represented_source_image_names
+            image_payload_metadata_projection(payload)
+            .read_value("source_provenance")
+            .represented_source_image_names
         )
         if represented_names:
             variable_components = ComponentSet.coerce(
@@ -1431,9 +1451,11 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
             request.component_key,
             artifacts.outputs,
         )
-        source_provenance = image_payload_metadata(
-            loaded.main_data_stack
-        ).source_provenance.with_common_scalar_identity_from_planes()
+        source_provenance = (
+            image_payload_metadata_projection(loaded.main_data_stack)
+            .read_value("source_provenance")
+            .with_common_scalar_identity_from_planes()
+        )
         common_source_metadata = source_provenance.source_component_metadata or {}
         variable_components = ComponentSet.coerce(
             request.execution_plan.variable_components or ()
@@ -1576,14 +1598,18 @@ class PatternGroupData:
         default_factory=SourceBindingRuntimeContext.empty
     )
 
-
     @staticmethod
     def validate_main_flow_cohort(
         producer_records: Sequence[ProducedOutputSemantics] | None,
     ) -> None:
         """One input cohort has one declared whole-image composition domain."""
-        if producer_records and len({record.main_flow_plane_axis for record in producer_records}) != 1:
-            raise ValueError("One main-flow cohort cannot combine different declared image axes.")
+        if (
+            producer_records
+            and len({record.main_flow_plane_axis for record in producer_records}) != 1
+        ):
+            raise ValueError(
+                "One main-flow cohort cannot combine different declared image axes."
+            )
 
     @classmethod
     def from_loaded_images(
@@ -1601,11 +1627,15 @@ class PatternGroupData:
         if (
             producer_records
             and len(producer_records) == 1
-            and producer_records[0].main_flow_plane_axis is image_payload_metadata(payloads[0]).plane_axis
+            and producer_records[0].main_flow_plane_axis
+            is image_payload_metadata_projection(payloads[0]).read_value("plane_axis")
         ):
             main_data_stack = ImagePayloadStackComposition.copy_whole_image(
-                payloads[0], memory_type=execution_plan.input_memory_type,
-                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+                payloads[0],
+                memory_type=execution_plan.input_memory_type,
+                device_id=execution_plan.device_id_for(
+                    execution_plan.input_memory_type
+                ),
             )
         else:
             metadata_mode = ImagePayloadMetadataCompositionMode.STACK
@@ -1614,7 +1644,9 @@ class PatternGroupData:
                 metadata_mode = (
                     ImagePayloadMetadataCompositionMode.BUNDLE
                     if declared_axis is None
-                    else ImagePayloadMetadataCompositionMode.for_plane_axis(declared_axis)
+                    else ImagePayloadMetadataCompositionMode.for_plane_axis(
+                        declared_axis
+                    )
                 )
             if source_projection is not None and workspace_source_lookups:
                 metadata_mode = source_projection.payload_composition_mode(
@@ -1627,11 +1659,14 @@ class PatternGroupData:
                     execution_plan.device_id_for(execution_plan.input_memory_type),
                 )
                 main_data_stack = stack_image_payload_context(
-                    payloads, main_data_stack, metadata_mode=metadata_mode,
+                    payloads,
+                    main_data_stack,
+                    metadata_mode=metadata_mode,
                 )
             elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
                 main_data_stack = ImagePayloadBundleContext.from_payloads(
-                    tuple(payloads), metadata_mode=metadata_mode,
+                    tuple(payloads),
+                    metadata_mode=metadata_mode,
                 ).compose()
         return cls(
             matching_files=matching_files,
@@ -1760,7 +1795,8 @@ def prepare_compiled_function_group(group: CompiledFunctionGroup) -> None:
 
 def prepare_compiled_context_callables(
     compiled_contexts: Mapping[str, ProcessingContext],
-    *, max_workers: int = 1,
+    *,
+    max_workers: int = 1,
 ) -> None:
     """Prepare every compiled callable visible in the compiled contexts."""
     prepared_group_keys: set[tuple[str, int, str]] = set()
@@ -2143,8 +2179,8 @@ class FunctionCoreExecutor(FunctionInvocationArtifactScope):
         component = self.runtime_scope.execution_plan.execution_group_scope.component
         if component is None or self.group_key is None:
             return source_payload
-        metadata = image_payload_metadata(source_payload)
-        component_metadata = metadata.source_component_metadata or {}
+        metadata = image_payload_metadata_projection(source_payload)
+        component_metadata = metadata.source_component_metadata_for_projection() or {}
         component_metadata = with_source_component_metadata(
             component_metadata,
             component,
@@ -2512,25 +2548,30 @@ class PatternGroupOutputData:
             slices=(value,),
             slice_contexts=slice_contexts,
             stack_payload=ImagePayloadStackComposition.copy_whole_image(
-                value, memory_type=memory_type, device_id=device_id,
+                value,
+                memory_type=memory_type,
+                device_id=device_id,
             ),
             main_flow_source=value,
         )
 
     def plane_axis_for_output_context(
-        self, context: AlignedImageSliceContext,
+        self,
+        context: AlignedImageSliceContext,
     ) -> RuntimePlaneAxis | None:
         """Derive each persisted member's domain from its original nominal producer."""
         if isinstance(self.main_flow_source, AlignedImageStack):
             return self.main_flow_source.plane_axis_for_output_context(context)
         if isinstance(self.main_flow_source, ImagePayloadMetadataCarrier):
-            return image_payload_metadata(self.main_flow_source).plane_axis
+            return image_payload_metadata_projection(self.main_flow_source).read_value(
+                "plane_axis"
+            )
         return RuntimePlaneAxis.RUNTIME_SLICE
 
     def cache_payload_for_outputs(
         self,
         payloads: Sequence[RuntimeArrayData],
-        metadata: Sequence[ImagePayloadMetadata],
+        metadata: Sequence[ImageMetadataProjection],
     ) -> RuntimeArrayData | None:
         """Keep the original whole-image domain while applying saved output context."""
         if self.stack_payload is None:
@@ -2538,11 +2579,17 @@ class PatternGroupOutputData:
         data = image_payload_data(self.stack_payload)
         if (
             len(payloads) == 1
-            and self.plane_axis_for_output_context(self.slice_contexts[0]) is metadata[0].plane_axis
+            and self.plane_axis_for_output_context(self.slice_contexts[0])
+            is metadata[0].read_value("plane_axis")
             and np.shape(data) == np.shape(image_payload_data(payloads[0]))
         ):
-            return metadata[0].replace_fields().payload_with(
-                data, image_payload_mask(self.stack_payload),
+            return (
+                metadata[0]
+                .derive_fields()
+                .payload_with(
+                    data,
+                    image_payload_mask(self.stack_payload),
+                )
             )
         if np.shape(data)[:1] != (len(payloads),):
             raise ValueError(
@@ -2551,10 +2598,14 @@ class PatternGroupOutputData:
                 f"slice count {len(payloads)}."
             )
         return stack_image_payload_context_from_metadata(
-            payloads, data, metadata,
+            payloads,
+            data,
+            metadata,
             metadata_mode=(
                 ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    image_payload_metadata(self.stack_payload).plane_axis,
+                    image_payload_metadata_projection(self.stack_payload).read_value(
+                        "plane_axis"
+                    ),
                 )
                 if isinstance(self.stack_payload, ImagePayloadMetadataCarrier)
                 else ImagePayloadMetadataCompositionMode.STACK
@@ -2576,7 +2627,9 @@ class PatternGroupOutputData:
         if metadata_mode is None:
             result = cls.from_single_image(
                 payloads[0],
-                slice_contexts=tuple(context for _payload, context in projected_outputs),
+                slice_contexts=tuple(
+                    context for _payload, context in projected_outputs
+                ),
                 memory_type=memory_type,
                 device_id=device_id,
             )
@@ -2588,15 +2641,21 @@ class PatternGroupOutputData:
             value.plane_axis_for_output_context(context)
             for _payload, context in projected_outputs
         }
-        if len(declared_axes) == 1 and len({tuple(np.shape(item)) for item in data}) == 1:
+        if (
+            len(declared_axes) == 1
+            and len({tuple(np.shape(item)) for item in data}) == 1
+        ):
             if metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
                 stack_payload = ImagePayloadBundleContext.from_payloads(
-                    tuple(payloads), metadata_mode=metadata_mode,
+                    tuple(payloads),
+                    metadata_mode=metadata_mode,
                 ).compose()
             else:
                 stacked = stack_runtime_slices(data, memory_type, device_id)
                 stack_payload = stack_image_payload_context(
-                    payloads, stacked, metadata_mode=metadata_mode,
+                    payloads,
+                    stacked,
+                    metadata_mode=metadata_mode,
                 )
         return cls(
             slices=payloads,
@@ -2790,7 +2849,9 @@ class PatternGroupRuntime:
         plan = self.request.execution_plan
         parser = self.request.context.microscope_handler.parser
         manifest = step_output_manifest(self.request.context)
-        producer_records = manifest.producer_output_records_for_paths(plan, matching_files, parser)
+        producer_records = manifest.producer_output_records_for_paths(
+            plan, matching_files, parser
+        )
         if producer_records is None:
             records = tuple(
                 ProducedOutputSemantics.from_existing_main_flow_path(
@@ -2904,7 +2965,9 @@ class PatternGroupRuntime:
         ).runtime_context()
         producer_records = (
             output_manifest.producer_output_records_for_paths(
-                plan, matching_files, context.microscope_handler.parser,
+                plan,
+                matching_files,
+                context.microscope_handler.parser,
             )
             if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
             else None
@@ -3252,7 +3315,10 @@ class PatternGroupRuntime:
     ) -> PatternGroupOutputData:
         if (
             isinstance(processed_stack, ImagePayloadMetadataCarrier)
-            and processed_stack.metadata.plane_axis is None
+            and image_payload_metadata_projection(processed_stack).read_value(
+                "plane_axis"
+            )
+            is None
         ):
             output_context = self._unwrapped_main_flow_output_context()
             return PatternGroupOutputData.from_single_image(
@@ -3451,11 +3517,14 @@ class PatternGroupRuntime:
                 )
             )
             img_slice = output_context.contextualize_image_payload(img_slice)
-            output_metadata = image_payload_metadata(img_slice)
+            output_metadata = image_payload_metadata_projection(img_slice)
             output_component_metadata = output_identity.component_metadata(
-                output_metadata.source_component_metadata,
+                output_metadata.source_component_metadata_for_projection(),
             )
-            if output_metadata.source_component_metadata != output_component_metadata:
+            if (
+                output_metadata.source_component_metadata_for_projection()
+                != output_component_metadata
+            ):
                 output_metadata = output_metadata.with_source_component_metadata(
                     output_component_metadata
                 )
@@ -3466,7 +3535,9 @@ class PatternGroupRuntime:
                 output_identity,
                 output_context=output_context,
                 image_metadata=output_metadata,
-                main_flow_plane_axis=output_data.plane_axis_for_output_context(output_context),
+                main_flow_plane_axis=output_data.plane_axis_for_output_context(
+                    output_context
+                ),
             )
 
             if output_directory_exists and context.filemanager.exists(
@@ -3505,7 +3576,8 @@ class PatternGroupRuntime:
             Backend.MEMORY.value,
         )
         stack_payload = output_data.cache_payload_for_outputs(
-            output_payloads, output_payload_metadata,
+            output_payloads,
+            output_payload_metadata,
         )
         if stack_payload is not None:
             context.runtime_image_stack_cache.store(

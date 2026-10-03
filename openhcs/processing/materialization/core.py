@@ -42,10 +42,13 @@ from openhcs.core.registry_strategies import (
 )
 from openhcs.core.runtime_array_values import runtime_array_operand
 from openhcs.core.runtime_image_values import (
+    ImageMetadataCarrier,
+    ImageMetadataProjection,
+    SourcePlaneImageMetadataProjection,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -274,7 +277,7 @@ CandidatePathSelector = Callable[[FileOutputOptions, str], tuple[str, ...]]
 
 
 @dataclass(frozen=True)
-class Output:
+class Output(ImageMetadataCarrier):
     path: str
     content: MaterializationValue
     metadata: ImagePayloadMetadata | None = None
@@ -296,9 +299,11 @@ class Output:
 
     @property
     def source_identity(self) -> SourceImageIdentity | None:
-        if self.metadata is None:
+        if self.metadata_projection is None:
             return None
-        return self.metadata.source_provenance.scalar_source_identity
+        return self.metadata_projection.read_value(
+            "source_provenance"
+        ).scalar_source_identity
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:
@@ -330,8 +335,8 @@ class Output:
         )
         metadata = (
             fallback_metadata
-            if self.metadata is None
-            else self.metadata.with_source_context_from(fallback_metadata)
+            if self.metadata_projection is None
+            else self.metadata_projection.with_source_context_from(fallback_metadata)
         )
         return replace(
             self,
@@ -346,8 +351,12 @@ class Output:
 
         return replace(
             self,
+            metadata=self.metadata_projection,
             variable_components=ComponentSet.coerce(variable_components).as_tuple(),
         )
+
+
+Output.metadata = ImageMetadataCarrier.metadata
 
 
 @dataclass(frozen=True)
@@ -542,12 +551,14 @@ class ROIMaterializationSourceSpatialDomain:
     """Resolve the source-spatial domain used by ROI extraction."""
 
     def domain_for_item(self, item: MaterializationInputItem) -> SourceSpatialDomain:
-        metadata_domain = item.metadata.source_spatial_domain.with_value_name(
+        metadata_domain = item.metadata_projection.read_value(
+            "source_spatial_domain"
+        ).with_value_name(
             "ROI materialization source image",
         )
         if metadata_domain.source_shape_yx is not None:
             return metadata_domain
-        local_shape_yx = item.metadata.spatial_shape_yx(item.data)
+        local_shape_yx = item.metadata_projection.spatial_shape_yx(item.data)
         if local_shape_yx is None:
             return metadata_domain
         return SourceSpatialDomain(
@@ -595,9 +606,9 @@ class SourcePlaneProjectionContract:
                 plane_count_source
                 for payload in payloads
                 for plane_count_source in (
-                    image_payload_metadata(
-                        payload
-                    ).source_provenance.plane_count_sources
+                    image_payload_metadata_projection(payload)
+                    .read_value("source_provenance")
+                    .plane_count_sources
                 )
             )
         )
@@ -702,7 +713,7 @@ class SourceStemAuthority(
 
     def required_source_stem(
         self,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         filename_identity: SourceImageIdentity | None = None,
     ) -> str:
         source_stem = SourceStemResolutionPolicy.for_context(
@@ -719,9 +730,9 @@ class SourceStemAuthority(
     def source_replacement_suffix(
         self,
         path_name: str,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         reference_source_stem: str | None,
-        reference_metadata: ImagePayloadMetadata | None,
+        reference_metadata: ImageMetadataProjection | None,
     ) -> str | None:
         for source_stem in self.source_replacement_stems(
             path_name,
@@ -736,9 +747,9 @@ class SourceStemAuthority(
     def source_replacement_stems(
         self,
         path_name: str,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         reference_source_stem: str | None,
-        reference_metadata: ImagePayloadMetadata | None,
+        reference_metadata: ImageMetadataProjection | None,
     ) -> tuple[str, ...]:
         del path_name, metadata, reference_metadata
         if reference_source_stem is None:
@@ -755,7 +766,7 @@ class SourceStemAuthority(
 
 
 class SourceStemResolutionPolicy(
-    MostDerivedContextStrategyMixin[ImagePayloadMetadata],
+    MostDerivedContextStrategyMixin[ImageMetadataProjection],
     ABC,
 ):
     """Resolve source-stem inputs through MRO precedence over payload metadata."""
@@ -764,14 +775,14 @@ class SourceStemResolutionPolicy(
     def source_stem(
         self,
         authority: SourceStemAuthority,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         filename_identity: SourceImageIdentity | None,
     ) -> str | None:
         """Return this source-stem case's projection."""
 
 
 class MissingSourceStemResolutionPolicy(
-    AlwaysMatchesContextMixin[ImagePayloadMetadata],
+    AlwaysMatchesContextMixin[ImageMetadataProjection],
     SourceStemResolutionPolicy,
 ):
     """No addressable source identity is present."""
@@ -781,7 +792,7 @@ class MissingSourceStemResolutionPolicy(
     def source_stem(
         self,
         authority: SourceStemAuthority,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         filename_identity: SourceImageIdentity | None,
     ) -> str | None:
         del authority, metadata, filename_identity
@@ -793,21 +804,23 @@ class ComponentMetadataSourceStemResolutionPolicy(MissingSourceStemResolutionPol
 
     strategy_key = "component_metadata"
 
-    def matches(self, context: ImagePayloadMetadata) -> bool:
+    def matches(self, context: ImageMetadataProjection) -> bool:
         return (
-            context.source_provenance.scalar_source_identity.component_metadata
+            context.read_value(
+                "source_provenance"
+            ).scalar_source_identity.component_metadata
             is not None
         )
 
     def source_stem(
         self,
         authority: SourceStemAuthority,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         filename_identity: SourceImageIdentity | None,
     ) -> str:
-        component_metadata = (
-            metadata.source_provenance.scalar_source_identity.component_metadata
-        )
+        component_metadata = metadata.read_value(
+            "source_provenance"
+        ).scalar_source_identity.component_metadata
         if component_metadata is None:
             raise ValueError(
                 "Component metadata source-stem policy requires scalar "
@@ -824,18 +837,18 @@ class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolution
 
     strategy_key = "source_path"
 
-    def matches(self, context: ImagePayloadMetadata) -> bool:
-        return bool(context.source_provenance.scalar_source_identity.path)
+    def matches(self, context: ImageMetadataProjection) -> bool:
+        return bool(context.read_value("source_provenance").scalar_source_identity.path)
 
     def source_stem(
         self,
         authority: SourceStemAuthority,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         filename_identity: SourceImageIdentity | None,
     ) -> str:
         del authority, filename_identity
         return source_path_identity(
-            metadata.source_provenance.scalar_source_identity.path
+            metadata.read_value("source_provenance").scalar_source_identity.path
         ).stem
 
 
@@ -907,9 +920,9 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
         path_name: str,
         metadata: ImagePayloadMetadata,
     ) -> tuple[str, ...]:
-        component_metadata = (
-            metadata.source_provenance.scalar_source_identity.component_metadata
-        )
+        component_metadata = metadata.read_value(
+            "source_provenance"
+        ).scalar_source_identity.component_metadata
         if component_metadata is None:
             return ()
 
@@ -924,7 +937,9 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
         )
 
     def path_parse_extensions(self, metadata: ImagePayloadMetadata) -> tuple[str, ...]:
-        source_identity = metadata.source_provenance.scalar_source_identity
+        source_identity = metadata.read_value(
+            "source_provenance"
+        ).scalar_source_identity
         extension = source_identity.filename_extension
         if extension is None:
             extension = source_identity.with_parsed_path_components(
@@ -994,7 +1009,7 @@ class ROIMaterializationArchiveIdentity:
             source_identity=(
                 None
                 if metadata is None
-                else metadata.source_provenance.scalar_source_identity
+                else metadata.read_value("source_provenance").scalar_source_identity
             ),
         )
 
@@ -1628,11 +1643,13 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             for item in items:
                 identity = FunctionOutputIdentityAuthority.identity_from_metadata(
                     parser,
-                    item.metadata,
+                    item.metadata_projection,
                     fallback_identity_path=output.path,
                 )
                 if identity is None:
-                    raise ValueError("Projected viewer output requires a filename identity.")
+                    raise ValueError(
+                        "Projected viewer output requires a filename identity."
+                    )
                 identity = replace(identity, extension=output_path.suffix)
                 filename = FunctionOutputPathAuthority.filename_for_identity(
                     parser,
@@ -1643,7 +1660,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                         output,
                         path=str(output_path.parent / filename),
                         content=item.data,
-                        metadata=item.metadata,
+                        metadata=item.metadata_projection,
                     )
                 )
         return tuple(result)
@@ -1784,7 +1801,9 @@ class MaterializationContext:
     materialization_spec: MaterializationSpec | None = None
 
     def named_source_filename(
-        self, metadata: ImagePayloadMetadata, extension: str,
+        self,
+        metadata: ImagePayloadMetadata,
+        extension: str,
     ) -> str | None:
         """Name a retained image from the actual rendering purpose and role."""
         if self.materialization_spec is None:
@@ -1792,12 +1811,19 @@ class MaterializationContext:
         qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
         if qualifier is None:
             return None
-        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
-        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(parser, metadata)
+        parser = SourceStemAuthoritySelection.from_processing_context(
+            self.context
+        ).required_parser()
+        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+            parser, metadata
+        )
         if identity is None:
-            raise ValueError("Retained image output has no addressable source filename identity.")
+            raise ValueError(
+                "Retained image output has no addressable source filename identity."
+            )
         identity = self.materialization_spec.filename_identity_for_output(
-            replace(identity, extension=extension), self.output_plan,
+            replace(identity, extension=extension),
+            self.output_plan,
         )
         return FunctionOutputPathAuthority.filename_for_identity(parser, identity)
 
@@ -2482,8 +2508,8 @@ def _image_relative_output_path(
     if options.relative_path_template is None:
         return context.paths(options).primary_output_path(options)
 
-    metadata = image_payload_metadata(data)
-    source_identity = metadata.source_provenance.scalar_source_identity
+    metadata = image_payload_metadata_projection(data)
+    source_identity = metadata.read_value("source_provenance").scalar_source_identity
     component_metadata = source_identity.component_metadata
 
     def replace_backreference(match: re.Match[str]) -> str:
@@ -2583,15 +2609,20 @@ def write_image_file(
     for sequence_index, item in enumerate(projected_items, start=1):
         if options.relative_path_template is not None:
             path = _image_relative_output_path(
-                item.value, options, context, sequence_index=sequence_index,
+                item.value,
+                options,
+                context,
+                sequence_index=sequence_index,
             )
         elif preserves_planned_path:
             path = paths.primary_output_path(options)
         else:
-            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
+            filename = context.named_source_filename(
+                item.metadata_projection, options.primary_output_suffix
+            )
             if filename is None:
                 filename = (
-                    source_stem_authority.required_source_stem(item.metadata)
+                    source_stem_authority.required_source_stem(item.metadata_projection)
                     + options.primary_output_suffix
                 )
             path = str(paths.parent / filename)
@@ -2606,7 +2637,7 @@ def write_image_file(
         Output.from_metadata(
             path=path,
             content=ImageFileFormat.require_path(path).prepare(item.value),
-            metadata=item.metadata,
+            metadata=item.metadata_projection,
         )
         for path, item in outputs
     ]
@@ -2694,7 +2725,9 @@ class ROIPlaneSourceIdentitySet:
     @property
     def identities(self) -> tuple:
         return tuple(
-            item.metadata.source_provenance.scalar_source_identity.identity
+            item.metadata_projection.read_value(
+                "source_provenance"
+            ).scalar_source_identity.identity
             for item in self.items
         )
 
@@ -2715,9 +2748,9 @@ class ROIPlaneSourceIdentitySet:
         if len(self.items) != 1:
             return False
         return (
-            self.items[
-                0
-            ].metadata.source_provenance.scalar_source_identity.component_metadata
+            self.items[0]
+            .metadata.read_value("source_provenance")
+            .scalar_source_identity.component_metadata
             is not None
         )
 
@@ -2801,7 +2834,7 @@ class ComponentAddressedCombinedROIMaterializationTargetPolicy(
             ROIMaterializationTarget(
                 archive=ROIMaterializationArchiveIdentity.from_metadata(
                     path=request.paths.primary_output_path(request.options),
-                    metadata=item.metadata,
+                    metadata=item.metadata_projection,
                 ),
                 items=(item,),
             ),
@@ -2825,22 +2858,22 @@ class ProjectedROIMaterializationTargetPolicy(CombinedROIMaterializationTargetPo
         path_context = ROIMaterializationPathContext(
             source_stems=tuple(
                 request.source_stem_authority.required_source_stem(
-                    item.metadata,
+                    item.metadata_projection,
                     request.artifact_filename_identity,
                 )
                 for item in items
             ),
-            metadata_items=tuple(item.metadata for item in items),
+            metadata_items=tuple(item.metadata_projection for item in items),
         )
         return tuple(
             ROIMaterializationTarget(
                 archive=ROIMaterializationArchiveIdentity.from_metadata(
                     path=request.projected_path(
-                        metadata=item.metadata,
+                        metadata=item.metadata_projection,
                         reference_source_stem=path_context.reference_source_stem,
                         reference_metadata=path_context.reference_metadata,
                     ),
-                    metadata=item.metadata,
+                    metadata=item.metadata_projection,
                 ),
                 items=(item,),
             )
@@ -2959,7 +2992,7 @@ class ROIMaterializationPlaneMetadataAuthority:
         local_plane_count = 1
         for extent in local_plane_shape:
             local_plane_count *= extent
-        source_plane_count = metadata.source_provenance.source_plane_count
+        source_plane_count = metadata.read_value("source_provenance").source_plane_count
         if source_plane_count not in (0, local_plane_count):
             raise ValueError(
                 "ROI output source-plane provenance does not match its materialized "
@@ -3066,9 +3099,11 @@ def _write_roi_zip(
         total_roi_count += len(target_rois)
         if target_rois:
             roi_paths.append(target.archive.path)
-            item_metadata = target.items[0].metadata
+            item_metadata = target.items[0].metadata_projection
             item_metadata = item_metadata.with_source_provenance(
-                item_metadata.source_provenance.with_common_scalar_identity_from_planes()
+                item_metadata.read_value(
+                    "source_provenance"
+                ).with_common_scalar_identity_from_planes()
             )
             item_metadata = (
                 ROIMaterializationPlaneMetadataAuthority.metadata_for_target(
@@ -3083,9 +3118,9 @@ def _write_roi_zip(
                     SourceImageProvenance(
                         source_path=source_identity.path,
                         source_component_metadata=source_identity.component_metadata,
-                    ).with_missing_from(item_metadata.source_provenance)
+                    ).with_missing_from(item_metadata.read_value("source_provenance"))
                 )
-            item_metadata = item_metadata.replace_fields(
+            item_metadata = item_metadata.derive_fields(
                 source_spatial_domain=source_domain_authority.domain_for_target(target)
             )
             outs.append(
@@ -3423,7 +3458,7 @@ class TiffStackSlicePayloadAuthority:
                 "explicit payload sequence."
             )
         item = materialization_input.items[0]
-        if item.metadata.plane_axis is None:
+        if item.metadata_projection.read_value("plane_axis") is None:
             return (item.data,)
         data = np.asarray(item.data)
         if data.ndim < 3 or data.shape[0] <= 0:
@@ -3638,7 +3673,7 @@ class RuntimePlaneStackAxisMetadataProjection:
         self,
         item: MaterializationInputItem,
     ) -> ImagePayloadMetadata:
-        metadata = self.metadata_with_artifact_source_identity(item.metadata)
+        metadata = self.metadata_with_artifact_source_identity(item.metadata_projection)
         runtime_plane = item.runtime_plane
         if runtime_plane is None or not self.variable_components:
             return metadata
@@ -3653,7 +3688,7 @@ class RuntimePlaneStackAxisMetadataProjection:
                 f"{len(runtime_plane.plane_indices)} coordinate(s)."
             )
 
-        component_metadata = metadata.source_component_metadata
+        component_metadata = metadata.source_component_metadata_for_projection()
         if component_metadata is None:
             raise ValueError(
                 "TIFF stack output uses variable components "
@@ -3669,7 +3704,7 @@ class RuntimePlaneStackAxisMetadataProjection:
         )
 
         return metadata.with_source_provenance(
-            metadata.source_provenance.with_source_component_metadata(
+            metadata.read_value("source_provenance").with_source_component_metadata(
                 projected_metadata,
             )
         )
@@ -3685,7 +3720,9 @@ class RuntimePlaneStackAxisMetadataProjection:
             source_component_metadata=self.artifact_source_identity.component_metadata,
         )
         return metadata.with_source_provenance(
-            metadata.source_provenance.with_missing_from(artifact_provenance)
+            metadata.read_value("source_provenance").with_missing_from(
+                artifact_provenance
+            )
         )
 
     def ordered_axes(self) -> tuple[str, ...]:
@@ -3815,7 +3852,9 @@ class RuntimePlaneStackAxesProjectionSelection:
 
     def item_component_metadata(self) -> tuple[SourceComponentMetadata, ...]:
         metadata_values = tuple(
-            self.effective_item_metadata(item).source_component_metadata
+            self.effective_item_metadata(
+                item
+            ).source_component_metadata_for_projection()
             for item in self.items
         )
         if any(metadata is None for metadata in metadata_values):
@@ -3829,7 +3868,7 @@ class RuntimePlaneStackAxesProjectionSelection:
         return RuntimePlaneStackAxisMetadataProjection(
             frozenset(),
             self.artifact_source_identity,
-        ).metadata_with_artifact_source_identity(item.metadata)
+        ).metadata_with_artifact_source_identity(item.metadata_projection)
 
 
 @dataclass(frozen=True, slots=True)
@@ -3934,9 +3973,10 @@ class SinglePayloadTiffStackSliceMetadataPolicy(UnknownTiffStackSliceMetadataPol
         self,
         request: TiffStackSliceMetadataRequest,
     ) -> tuple[ImagePayloadMetadata, ...]:
-        metadata = request.materialization_input.items[0].metadata
+        metadata = request.materialization_input.items[0].metadata_projection
         return tuple(
-            metadata.for_source_plane(index) for index in range(request.slice_count)
+            SourcePlaneImageMetadataProjection(metadata, index).capture()
+            for index in range(request.slice_count)
         )
 
 
@@ -4124,14 +4164,18 @@ class MaterializationSpec(ArtifactMaterializationPayload):
                 )
             )
             if len(materialization_input.items) == 1:
-                provenance = materialization_input.items[0].metadata.source_provenance
+                provenance = materialization_input.items[
+                    0
+                ].metadata_projection.read_value("source_provenance")
                 if provenance.source_plane_count > 1:
                     return tuple(
                         provenance.for_source_plane(index).scalar_source_identity
                         for index in range(provenance.source_plane_count)
                     )
             return tuple(
-                item.metadata.source_provenance.scalar_source_identity
+                item.metadata_projection.read_value(
+                    "source_provenance"
+                ).scalar_source_identity
                 for item in materialization_input.items
             )
         return ()

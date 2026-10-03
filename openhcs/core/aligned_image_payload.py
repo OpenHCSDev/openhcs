@@ -29,13 +29,14 @@ from openhcs.core.registry_strategies import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
+    ImageMetadataProjection,
     ImagePayloadSliceProjector,
     ImagePayloadMetadataCarrier,
     ImagePayloadMetadataCompositionMode,
     ImageMaskDomain,
     image_payload_data,
     image_payload_mask,
-    image_payload_metadata,
+    image_payload_metadata_projection,
     preserved_image_plane_projection,
     with_image_payload_data,
 )
@@ -84,7 +85,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         return cls(
             value,
             cls.domain_from_metadata(
-                image_payload_metadata(value),
+                image_payload_metadata_projection(value),
                 value_name="Image payload",
             ),
         )
@@ -92,13 +93,13 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     @classmethod
     def domain_from_metadata(
         cls,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         *,
         fill_value: Any = 0,
         source_domain: SourceSpatialDomain | None = None,
         value_name: str,
     ) -> SourceSpatialDomain:
-        domain = metadata.source_spatial_domain
+        domain = metadata.read_value("source_spatial_domain")
         if source_domain is not None:
             domain = domain.with_missing_from(source_domain)
         return (
@@ -109,7 +110,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
 
     @property
     def spatial_axes_yx(self) -> tuple[int, int]:
-        axes = image_payload_metadata(self.value).spatial_axes_yx(self.value)
+        axes = image_payload_metadata_projection(self.value).spatial_axes_yx(self.value)
         if axes is None:
             raise ValueError(
                 "Source-spatial image payload metadata does not declare two "
@@ -119,7 +120,9 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
 
     @property
     def spatial_shape_yx(self) -> tuple[int, int]:
-        shape = image_payload_metadata(self.value).spatial_shape_yx(self.value)
+        shape = image_payload_metadata_projection(self.value).spatial_shape_yx(
+            self.value
+        )
         if shape is None:
             raise ValueError(
                 "Source-spatial image payloads require at least two dimensions, "
@@ -167,7 +170,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         payload: RuntimeArrayData,
         source_domain: SourceSpatialDomain,
     ) -> RuntimeArrayData:
-        metadata = image_payload_metadata(payload)
+        metadata = image_payload_metadata_projection(payload)
         source_extent = source_domain.with_origin_yx(None)
         source_metadata = metadata.with_materialized_source_domain(source_extent)
         data = cls(
@@ -187,7 +190,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     def mask_in_source_domain(
         cls,
         payload: RuntimeArrayData,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
         source_domain: SourceSpatialDomain,
     ) -> RuntimeArrayData | None:
         mask = image_payload_mask(payload)
@@ -215,8 +218,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
             fill_value=self.domain.fill_value,
             value_name=self.domain.value_name,
         )
-        metadata = replace(
-            image_payload_metadata(materialized),
+        metadata = image_payload_metadata_projection(materialized).derive_fields(
             source_spatial_domain=target_domain,
             physical_border_edges_yx=target_domain.physical_border_edges_for_shape(
                 target.payload_domain.spatial_shape_yx
@@ -383,8 +385,8 @@ class AlignedImageStackKwargResolver:
         """Project a nominal value into the declared reference payload domain."""
         if self.reference_payload is None:
             return value
-        metadata = image_payload_metadata(self.reference_payload)
-        source_shape = metadata.source_spatial_domain.source_shape_yx
+        metadata = image_payload_metadata_projection(self.reference_payload)
+        source_shape = metadata.read_value("source_spatial_domain").source_shape_yx
         if source_shape is None:
             return value
         adapter = SourceSpatialDomainAdapter.for_value(
@@ -432,26 +434,36 @@ class ImagePayloadStackComposition(ABC):
     ) -> RuntimeArrayData:
         """Copy pixels, mask and metadata without adding a composition axis."""
         copied_data = stack_runtime_slices(
-            (image_payload_data(value),), memory_type, device_id,
+            (image_payload_data(value),),
+            memory_type,
+            device_id,
         )[0]
         mask = image_payload_mask(value)
         copied_mask = (
-            None if mask is None
+            None
+            if mask is None
             else stack_runtime_slices((mask,), memory_type, device_id)[0]
         )
-        return image_payload_metadata(value).replace_fields().payload_with(
-            copied_data, copied_mask,
+        return (
+            image_payload_metadata_projection(value)
+            .derive_fields()
+            .payload_with(
+                copied_data,
+                copied_mask,
+            )
         )
 
-    def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
+    def composition_source_metadata(self) -> tuple[ImageMetadataProjection, ...]:
         return tuple(
-            self.composition_payload_metadata(image_payload_metadata(payload))
+            self.composition_payload_metadata(
+                image_payload_metadata_projection(payload)
+            )
             for payload in self.composition_payloads
         )
 
     def composition_payload_metadata(
-        self, metadata: ImagePayloadMetadata
-    ) -> ImagePayloadMetadata:
+        self, metadata: ImageMetadataProjection
+    ) -> ImageMetadataProjection:
         """Preserve each input's declared provenance unless the axis owner projects it."""
         return metadata
 
@@ -475,7 +487,9 @@ class ImagePayloadStackComposition(ABC):
             payloads, memory_type, MemoryType(memory_type).device_id_of(payloads[0])
         )
 
-    def compose_mask(self, composed: Any, metadata: ImagePayloadMetadata) -> Any | None:
+    def compose_mask(
+        self, composed: Any, metadata: ImageMetadataProjection
+    ) -> Any | None:
         return _stack_image_payload_mask(
             self.composition_payloads,
             composed,
@@ -517,7 +531,7 @@ def stack_image_payloads(
 def stack_image_payload_context_from_metadata(
     image_payloads: Sequence[Any],
     stack: RuntimeArrayData,
-    metadata_by_payload: Sequence[ImagePayloadMetadata],
+    metadata_by_payload: Sequence[ImageMetadataProjection],
     *,
     metadata_mode: ImagePayloadMetadataCompositionMode,
 ) -> Any:
@@ -564,7 +578,7 @@ def _stack_image_payload_mask(
         stacked_mask_shape
     ):
         resolved_masks = tuple(
-            image_payload_metadata(payload)
+            image_payload_metadata_projection(payload)
             .mask_domain(slice_domain)
             .broadcast_to_data(mask)
             for payload, slice_domain, mask in zip(
@@ -583,7 +597,7 @@ def _complete_image_payload_mask(
     payload_data: RuntimeArrayData,
     mask: RuntimeArrayData | None,
 ) -> RuntimeArrayData:
-    mask_domain = image_payload_metadata(payload).mask_domain(payload_data)
+    mask_domain = image_payload_metadata_projection(payload).mask_domain(payload_data)
     if mask is not None:
         if not mask_domain.accepts(tuple(np.shape(mask))):
             raise ValueError(
@@ -603,11 +617,11 @@ def unstack_image_payload_context(
 ) -> list[Any]:
     """Attach one source plane of payload context to each unstacked image slice."""
     mask = image_payload_mask(payload)
-    metadata = image_payload_metadata(payload)
+    metadata = image_payload_metadata_projection(payload)
     if mask is None and not metadata.has_values:
         return list(slices)
-    if metadata.plane_axis is None and default_plane_axis is not None:
-        metadata = replace(metadata, plane_axis=default_plane_axis)
+    if metadata.read_value("plane_axis") is None and default_plane_axis is not None:
+        metadata = metadata.derive_fields(plane_axis=default_plane_axis)
     projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
     return projector.payloads_for_slices(slices)
 
@@ -767,7 +781,7 @@ class ImagePayloadComposition:
         """Return the axis declared by the composed payload owner."""
         if isinstance(self.payload, AlignedImageStack):
             return RuntimePlaneAxis.RUNTIME_SLICE
-        return image_payload_metadata(self.payload).plane_axis
+        return image_payload_metadata_projection(self.payload).read_value("plane_axis")
 
     def preserved_plane_projection(
         self,
@@ -800,14 +814,14 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         declared_axes = tuple(
             (
                 index,
-                metadata.plane_axis,
-                metadata.source_image_names,
+                metadata.read_value("plane_axis"),
+                metadata.read_value("source_provenance").source_image_names,
                 tuple(np.shape(image_payload_data(payload))),
             )
             for index, (payload, metadata) in enumerate(
                 zip(self.payloads, self.source_metadata, strict=True)
             )
-            if metadata.plane_axis is not None
+            if metadata.read_value("plane_axis") is not None
         )
         if declared_axes:
             raise ValueError(
@@ -816,7 +830,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             )
 
     @property
-    def source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
+    def source_metadata(self) -> tuple[ImageMetadataProjection, ...]:
         return self.composition_source_metadata()
 
     @property
@@ -850,7 +864,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
     def compose_mask(
         self,
         composed: Any,
-        metadata: ImagePayloadMetadata,
+        metadata: ImageMetadataProjection,
     ) -> Any | None:
         masks = self.present_masks
         if not masks:
@@ -1117,11 +1131,11 @@ class AlignedImageSliceContext:
 
         if self.is_anonymous_main_flow:
             return payload
-        metadata = image_payload_metadata(payload)
-        return metadata.with_source_provenance(
-            metadata.source_provenance.with_derived_source_image_names(
-                (self.output_key,)
-            )
+        metadata = image_payload_metadata_projection(payload)
+        return metadata.derive_fields(
+            source_provenance=metadata.read_value(
+                "source_provenance"
+            ).with_derived_source_image_names((self.output_key,))
         ).payload_with(
             image_payload_data(payload),
             image_payload_mask(payload),
@@ -1166,23 +1180,28 @@ class AlignedImageStack(ImagePayloadStackComposition):
         return ImagePayloadMetadataCompositionMode.STACK
 
     @property
-    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+    def projected_output_composition_mode(
+        self,
+    ) -> ImagePayloadMetadataCompositionMode | None:
         """Declare the outer runtime axis retained by projected output members."""
         return self.composition_metadata_mode
 
     def plane_axis_for_output_context(
-        self, context: AlignedImageSliceContext,
+        self,
+        context: AlignedImageSliceContext,
     ) -> RuntimePlaneAxis | None:
         """An explicitly aligned stack declares its outer runtime-slice domain."""
         return RuntimePlaneAxis.RUNTIME_SLICE
 
     def composition_payload_metadata(
-        self, metadata: ImagePayloadMetadata
-    ) -> ImagePayloadMetadata:
+        self, metadata: ImageMetadataProjection
+    ) -> ImageMetadataProjection:
         """Inner image bundles contribute provenance, not an outer slice axis."""
         metadata = super(AlignedImageStack, self).composition_payload_metadata(metadata)
-        return metadata.with_source_provenance(
-            metadata.source_provenance.with_runtime_planes_as_contributors()
+        return metadata.derive_fields(
+            source_provenance=metadata.read_value(
+                "source_provenance"
+            ).with_runtime_planes_as_contributors()
         )
 
     def __post_init__(self) -> None:
@@ -1323,10 +1342,13 @@ class ImageOutputBundle(AlignedImageStack):
         return ImagePayloadMetadataCompositionMode.BUNDLE
 
     @property
-    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+    def projected_output_composition_mode(
+        self,
+    ) -> ImagePayloadMetadataCompositionMode | None:
         """Flatten declared inner runtime planes, retaining other named image domains."""
         if any(
-            image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            image_payload_metadata_projection(payload).read_value("plane_axis")
+            is RuntimePlaneAxis.RUNTIME_SLICE
             for payload in self.slices
         ):
             return ImagePayloadMetadataCompositionMode.STACK
@@ -1335,11 +1357,15 @@ class ImageOutputBundle(AlignedImageStack):
         return self.composition_metadata_mode
 
     def plane_axis_for_output_context(
-        self, context: AlignedImageSliceContext,
+        self,
+        context: AlignedImageSliceContext,
     ) -> RuntimePlaneAxis | None:
         """Resolve a named output's original inner domain before leaf projection."""
         payloads = tuple(
-            payload for payload, declared_context in zip(self.slices, self.slice_contexts, strict=True)
+            payload
+            for payload, declared_context in zip(
+                self.slices, self.slice_contexts, strict=True
+            )
             if declared_context == context
         )
         if len(payloads) != 1:
@@ -1347,11 +1373,11 @@ class ImageOutputBundle(AlignedImageStack):
                 "Named image output context requires exactly one original payload: "
                 f"{context!r}; found {len(payloads)}."
             )
-        return image_payload_metadata(payloads[0]).plane_axis
+        return image_payload_metadata_projection(payloads[0]).read_value("plane_axis")
 
     def composition_payload_metadata(
-        self, metadata: ImagePayloadMetadata
-    ) -> ImagePayloadMetadata:
+        self, metadata: ImageMetadataProjection
+    ) -> ImageMetadataProjection:
         """Named output surfaces remain source-binding planes, not runtime slices."""
         return metadata
 

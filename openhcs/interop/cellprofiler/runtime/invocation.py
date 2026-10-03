@@ -24,10 +24,11 @@ from openhcs.core.runtime_adapters import (
     RuntimeImageRequest,
 )
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_geometry,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelMeasurementSource,
@@ -116,7 +117,9 @@ class CellProfilerSourceIdentityMixin:
         if not sources:
             return None
         provenances = tuple(
-            image_payload_metadata(source.payload).source_provenance.equality_identity
+            image_payload_metadata_projection(source.payload)
+            .read_value("source_provenance")
+            .equality_identity
             for source in sources
         )
         if CommonRuntimeValue.from_values(provenances).single is None:
@@ -130,6 +133,18 @@ class CellProfilerSourceIdentityMixin:
         *,
         mode: ImagePayloadMetadataCompositionMode | None = None,
     ) -> ImagePayloadMetadata | None:
+        """Expose the actual public namespace of the ordered source composition."""
+
+        owner = cls.composed_source_metadata_projection(sources, mode=mode)
+        return None if owner is None else owner.materialize_metadata()
+
+    @classmethod
+    def composed_source_metadata_projection(
+        cls,
+        sources: tuple["CellProfilerSourceIdentityMixin", ...],
+        *,
+        mode: ImagePayloadMetadataCompositionMode | None = None,
+    ) -> ImageMetadataProjection | None:
         """Return source metadata composed in runtime source order."""
         if not sources:
             return None
@@ -143,14 +158,18 @@ class CellProfilerSourceIdentityMixin:
         source_metadata = tuple(
             ImagePayloadMetadata(
                 source_provenance=(
-                    ImagePayloadMetadata.compose(
-                        payload_slices_for_alignment(payload),
-                        mode=ImagePayloadMetadataCompositionMode.BUNDLE,
+                    ImageMetadataProjection._from_realized_metadata(
+                        ImagePayloadMetadata.compose(
+                            payload_slices_for_alignment(payload),
+                            mode=ImagePayloadMetadataCompositionMode.BUNDLE,
+                        )
                     )
                     .collapse_leading_plane_axis()
-                    .source_provenance
+                    .read_value("source_provenance")
                     if isinstance(payload, AlignedImageStack)
-                    else image_payload_metadata(payload).source_provenance
+                    else image_payload_metadata_projection(payload).read_value(
+                        "source_provenance"
+                    )
                 )
             )
             for payload in source_payloads
@@ -162,7 +181,7 @@ class CellProfilerSourceIdentityMixin:
         )
         if not metadata.has_values:
             return None
-        return metadata
+        return ImageMetadataProjection._from_realized_metadata(metadata)
 
     @classmethod
     def source_metadata_composition_mode(
@@ -355,7 +374,9 @@ class CellProfilerMeasurementImage(
                         f"{plane_projection!r}."
                     )
             else:
-                image_plane_axis = image_payload_metadata(image).plane_axis
+                image_plane_axis = image_payload_metadata_projection(image).read_value(
+                    "plane_axis"
+                )
                 if image_plane_axis is None:
                     plane_projection = None
                 elif image_plane_axis is not plane_projection.axis:

@@ -39,8 +39,9 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -137,7 +138,7 @@ class CellProfilerMeasurementTableModule(ABC):
         rows: ColumnarRows,
         object_name: str | None,
         source_image_name: str | None,
-        source_metadata: ImagePayloadMetadata,
+        source_metadata: ImageMetadataProjection,
     ) -> MeasurementTable:
         """Build one canonical module-owned native measurement table."""
         rows, source_provenance = cls.measurement_rows_and_source_provenance(
@@ -263,10 +264,23 @@ class CellProfilerMeasurementTableModule(ABC):
     def measurement_record_source_metadata(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
+        """Expose actual metadata through the public module callback protocol."""
+
+        return cls.measurement_record_source_metadata_projection(
+            request, rows
+        ).materialize_metadata()
+
+    @classmethod
+    def measurement_record_source_metadata_projection(
+        cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
+    ) -> ImageMetadataProjection:
         del cls, rows
-        return request.source.composed_source_metadata(
-            (request.source,)
-        ) or image_payload_metadata(request.source.payload)
+        metadata = request.source.composed_source_metadata((request.source,))
+        return (
+            ImageMetadataProjection._from_realized_metadata(metadata)
+            if metadata
+            else image_payload_metadata_projection(request.source.payload)
+        )
 
     @staticmethod
     def rows_only_declare_object_name(rows: ColumnarRows) -> bool:
@@ -280,18 +294,20 @@ class CellProfilerMeasurementTableModule(ABC):
     @staticmethod
     def measurement_rows_and_source_provenance(
         rows: ColumnarRows,
-        source_metadata: ImagePayloadMetadata,
+        source_metadata: ImageMetadataProjection,
     ) -> tuple[ColumnarRows, SourceImageProvenance]:
         """Keep row slice indexes local to the table's source-plane axis."""
-        source_plane_count = source_metadata.source_provenance.source_plane_count
+        source_plane_count = source_metadata.read_value(
+            "source_provenance"
+        ).source_plane_count
         if source_plane_count <= 1:
-            return rows, source_metadata.source_provenance
+            return rows, source_metadata.read_value("source_provenance")
         row_projection = MeasurementRowsAxisProjection.from_rows(rows)
         slice_indices = row_projection.present_axis_values(
             MeasurementRowAxisField.SLICE_INDEX.value
         )
         if len(slice_indices) != 1:
-            return rows, source_metadata.source_provenance
+            return rows, source_metadata.read_value("source_provenance")
         slice_index = slice_indices[0]
         if slice_index >= source_plane_count:
             raise ValueError(
@@ -305,7 +321,9 @@ class CellProfilerMeasurementTableModule(ABC):
             )
         return (
             projected_rows,
-            source_metadata.for_source_plane(slice_index).source_provenance,
+            source_metadata.for_source_plane(slice_index).read_value(
+                "source_provenance"
+            ),
         )
 
     @classmethod
@@ -652,11 +670,11 @@ class CurrentPayloadMeasurementRecordMixin(PayloadOnlyMeasurementRecordMixin):
     """Uses the current runtime payload without an image-source name."""
 
     @classmethod
-    def measurement_record_source_metadata(
+    def measurement_record_source_metadata_projection(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
-    ) -> ImagePayloadMetadata:
+    ) -> ImageMetadataProjection:
         del cls, rows
-        return image_payload_metadata(request.source.payload)
+        return image_payload_metadata_projection(request.source.payload)
 
     @classmethod
     def clear_source_when_rows_declare_object_name(cls) -> bool:
@@ -707,12 +725,12 @@ class ProducedImageMeasurementRecordMixin(CellProfilerMeasurementTableModule):
         return None if source_spec is None else source_spec.name
 
     @classmethod
-    def measurement_record_source_metadata(
+    def measurement_record_source_metadata_projection(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
-    ) -> ImagePayloadMetadata:
+    ) -> ImageMetadataProjection:
         del rows
         source_spec = cls.primary_image_output_spec(request)
-        return image_payload_metadata(
+        return image_payload_metadata_projection(
             request.source.payload
             if source_spec is None
             else request.artifact_output_value(source_spec)
@@ -732,13 +750,13 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
     """Uses exact declared image-output provenance as measurement context."""
 
     @classmethod
-    def measurement_record_source_metadata(
+    def measurement_record_source_metadata_projection(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
-    ) -> ImagePayloadMetadata:
+    ) -> ImageMetadataProjection:
         from openhcs.core.artifacts import ImageArtifactType
         from openhcs.core.runtime_image_values import (
             ImagePayloadMetadata,
-            image_payload_metadata,
+            image_payload_metadata_projection,
         )
         from openhcs.core.source_matching import SourceImageSetIdentityPolicy
         from openhcs.core.source_plane_alignment import (
@@ -791,11 +809,14 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
                 f"reference={image_output_specs[0].ref()!r}; "
                 f"unaligned={tuple(image_output_specs[index].ref() for index in unaligned_indexes)!r}."
             )
-        source_metadata = ImagePayloadMetadata.compose(
-            source_payloads,
-            source_metadata=tuple(
-                image_payload_metadata(payload) for payload in source_payloads
-            ),
+        source_metadata = ImageMetadataProjection._from_realized_metadata(
+            ImagePayloadMetadata.compose(
+                source_payloads,
+                source_metadata=tuple(
+                    image_payload_metadata_projection(payload)
+                    for payload in source_payloads
+                ),
+            )
         ).collapse_leading_plane_axis()
         return source_metadata
 
@@ -825,16 +846,16 @@ class SourceQualifiedInputPayloadMeasurementRecordMixin(
         )
 
     @classmethod
-    def measurement_record_source_metadata(
+    def measurement_record_source_metadata_projection(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
-    ) -> ImagePayloadMetadata:
+    ) -> ImageMetadataProjection:
         from openhcs.core.artifacts import (
             ArtifactSpecCollection,
         )
 
         source_names = cls.measurement_record_source_names(rows)
         if not source_names:
-            return super().measurement_record_source_metadata(request, rows)
+            return super().measurement_record_source_metadata_projection(request, rows)
 
         declared_inputs = ArtifactSpecCollection(
             request.callable_contract.artifact_inputs.specs
@@ -849,7 +870,7 @@ class SourceQualifiedInputPayloadMeasurementRecordMixin(
                 )
             source_specs.append(spec)
 
-        return request.measurement_source_metadata(tuple(source_specs))
+        return request.measurement_source_metadata_projection(tuple(source_specs))
 
     @classmethod
     def clear_source_when_rows_declare_object_name(cls) -> bool:

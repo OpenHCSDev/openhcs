@@ -22,8 +22,9 @@ from openhcs.core.source_plane_alignment import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
@@ -190,12 +191,22 @@ class CellProfilerOutputRecordRequest:
         self,
         specs: tuple[ArtifactSpec, ...],
     ) -> ImagePayloadMetadata:
+        """Expose the actual public metadata namespace for exact artifacts."""
+
+        return self.measurement_source_metadata_projection(specs).materialize_metadata()
+
+    def measurement_source_metadata_projection(
+        self,
+        specs: tuple[ArtifactSpec, ...],
+    ) -> ImageMetadataProjection:
         """Return the contract-ordered image-set axis of exact artifacts."""
 
         if not specs:
             raise ValueError("Measurement source context requires declared artifacts.")
         artifact_values = tuple(self.artifact_value(spec) for spec in specs)
-        metadata = tuple(image_payload_metadata(value) for value in artifact_values)
+        metadata = tuple(
+            image_payload_metadata_projection(value) for value in artifact_values
+        )
         source_group_component = self.output_plan.group_component
         identity_policy = SourceImageSetIdentityPolicy(
             frozenset(
@@ -271,12 +282,20 @@ class CellProfilerOutputRecordRequest:
         )
 
     def materialization_source_metadata(self) -> ImagePayloadMetadata | None:
+        """Expose the public filename-source metadata declared by this output."""
+
+        owner = self.materialization_source_metadata_projection()
+        return None if owner is None else owner.materialize_metadata()
+
+    def materialization_source_metadata_projection(
+        self,
+    ) -> ImageMetadataProjection | None:
         """Return independent filename-source metadata declared by this output."""
 
         source_ref = self.output_plan.materialization_source()
         if source_ref is None or source_ref == self.output_plan.source_context_source():
             return None
-        return image_payload_metadata(
+        return image_payload_metadata_projection(
             self.artifact_source_payload(
                 self.adapter.request.require_artifact_input_edge(source_ref)
             )

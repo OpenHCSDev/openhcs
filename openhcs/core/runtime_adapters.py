@@ -33,7 +33,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadataCompositionMode,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -277,33 +277,28 @@ class RuntimeAdapterRequest:
 
     def source_artifact_payload(self, ref: ArtifactSpecRef) -> object:
         """Resolve one source-bound artifact through workspace matching and VFS."""
-
         binding = self.source_binding_for_artifact_ref(ref)
         source_payload = self.source_payload
         source_provenance = (
             None
             if source_payload is None
-            else image_payload_metadata(source_payload).source_provenance
+            else image_payload_metadata_projection(source_payload).read_value(
+                "source_provenance"
+            )
         )
-        if source_provenance is not None and not source_provenance.has_values:
+        if source_provenance is not None and (not source_provenance.has_values):
             raise ValueError(
                 f"Source-bound artifact {ref!r} requires main-flow source provenance."
             )
-
         cache = self.context.runtime_source_workspace_projection_cache
         projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=cache,
+            self.context, cache=cache
         ).projection_if_available()
         if projection is None:
             raise ValueError(
-                f"Source-bound artifact {ref!r} requires a virtual-workspace "
-                "source projection."
+                f"Source-bound artifact {ref!r} requires a virtual-workspace source projection."
             )
-        projection = cache.filtered_by_axis(
-            projection,
-            axis_id=self.axis_scope.axis_id,
-        )
+        projection = cache.filtered_by_axis(projection, axis_id=self.axis_scope.axis_id)
         source_context = (
             self.context.runtime_source_binding_context_cache.source_pattern_context(
                 parser=self.context.microscope_handler.parser,
@@ -319,11 +314,13 @@ class RuntimeAdapterRequest:
         )
         source_universe = tuple(
             dict.fromkeys(
-                source_path
-                for declared_binding in self.source_binding_plan.binding_declarations
-                for source_path in projection.files_for_projection_role(
-                    declared_binding.projection_role,
-                    axis_id=self.axis_scope.axis_id,
+                (
+                    source_path
+                    for declared_binding in self.source_binding_plan.binding_declarations
+                    for source_path in projection.files_for_projection_role(
+                        declared_binding.projection_role,
+                        axis_id=self.axis_scope.axis_id,
+                    )
                 )
             )
         )
@@ -340,15 +337,12 @@ class RuntimeAdapterRequest:
             raise ValueError(
                 f"Source-bound artifact {ref!r} resolved no workspace members."
             )
-
         payloads = self.context.filemanager.load_batch(
-            list(members),
-            Backend.VIRTUAL_WORKSPACE.value,
+            list(members), Backend.VIRTUAL_WORKSPACE.value
         )
         if len(payloads) != len(members):
             raise ValueError(
-                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads "
-                f"for {len(members)} workspace members."
+                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads for {len(members)} workspace members."
             )
         projected_payloads = []
         for member, payload in zip(members, payloads, strict=True):
@@ -356,8 +350,7 @@ class RuntimeAdapterRequest:
             source_projection = projection.require_source_projection_for(lookup)
             if not source_projection.matches_binding(binding):
                 raise ValueError(
-                    f"Workspace projection for {member!r} does not match compiled "
-                    f"source artifact {ref!r}."
+                    f"Workspace projection for {member!r} does not match compiled source artifact {ref!r}."
                 )
             projected = projection.project_payload(lookup, payload)
             projected_payloads.append(
@@ -366,8 +359,7 @@ class RuntimeAdapterRequest:
                     binding,
                     ImagePayloadSourceMetadataContext(
                         SourceImageIdentity(
-                            member,
-                            projection.source_metadata_for(lookup),
+                            member, projection.source_metadata_for(lookup)
                         ),
                         source_projection.ref.backend,
                         self.context.filemanager,

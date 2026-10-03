@@ -25,7 +25,7 @@ from openhcs.core.runtime_batch_contracts import (
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.runtime_plane_projection import (
@@ -312,7 +312,9 @@ class CellProfilerFunctionContractExecutor:
             )
         if callable_contract.processing_contract is ProcessingContract.PURE_3D:
             slice_plane_axes = tuple(
-                image_payload_metadata(slice_payload).plane_axis
+                image_payload_metadata_projection(slice_payload).read_value(
+                    "plane_axis"
+                )
                 for slice_payload in image.slices
             )
             if any(
@@ -487,7 +489,9 @@ class CellProfilerFunctionContractExecutor:
                 image,
                 kwargs,
             ).call()
-        declared_plane_axis = image_payload_metadata(image).plane_axis
+        declared_plane_axis = image_payload_metadata_projection(image).read_value(
+            "plane_axis"
+        )
         if declared_plane_axis is not self.plane_projection.axis:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{invocation_context} with ProcessingContract.PURE_2D has an image "
@@ -594,7 +598,7 @@ class CellProfilerFunctionContractExecutor:
         ).call()
         result_data = image_payload_data(result_2d)
         result_mask = image_payload_mask(result_2d)
-        result_metadata = image_payload_metadata(result_2d)
+        result_metadata = image_payload_metadata_projection(result_2d)
         memory_type = detect_memory_type(result_data)
         stacked = stack_slices([result_data], memory_type, 0)
         return result_metadata.payload_with(stacked, mask=result_mask)

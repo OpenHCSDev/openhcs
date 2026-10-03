@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+from types import MemberDescriptorType
 from typing import ClassVar, Iterator, Sequence
 from weakref import WeakKeyDictionary
 
@@ -20,8 +21,10 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
+    ImageMetadataCarrier,
+    ImageMetadataProjection,
     ImagePayloadMetadata,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
@@ -107,7 +110,7 @@ class FunctionStepOutputProducerIdentityAuthority:
 
 
 @dataclass(frozen=True, slots=True)
-class ProducedOutputSemantics(FunctionOutputIdentity):
+class ProducedOutputSemantics(FunctionOutputIdentity, ImageMetadataCarrier):
     """Semantic record for one output file produced by a FunctionStep."""
 
     producer_identity: StreamProducerIdentity
@@ -115,6 +118,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     relative_output_path: str
     image_metadata: ImagePayloadMetadata | None = None
     main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE
+    _metadata_projection: ClassVar[MemberDescriptorType]
 
     def passed_through(self, plan: CompiledStepPlan) -> "ProducedOutputSemantics":
         """Retain the image domain and physical identity under the next producer."""
@@ -122,10 +126,12 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             self,
             producer_identity=FunctionStepOutputProducerIdentityAuthority.build(
                 FunctionStepOutputProducerIdentityRequest.from_main_flow(
-                    plan, self.output_context,
+                    plan,
+                    self.output_context,
                 )
             ),
             relative_output_path=source_path_identity(self.output_path).name,
+            image_metadata=self.metadata_projection,
         )
 
     def contextualize_image_payload(
@@ -134,9 +140,13 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     ) -> RuntimeArrayData:
         """Attach this exact produced-output identity to a reloaded payload."""
 
-        metadata = self.image_metadata or image_payload_metadata(payload)
+        metadata = self.metadata_projection or image_payload_metadata_projection(
+            payload
+        )
         return metadata.with_source_component_metadata(
-            self.component_metadata(metadata.source_component_metadata)
+            self.component_metadata(
+                metadata.read_value("source_provenance").source_component_metadata
+            )
         ).attach_to(payload)
 
     def path_under(self, output_dir: str | Path) -> str:
@@ -208,7 +218,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         output_path: str | Path,
         output_identity: FunctionOutputIdentity,
         output_context: AlignedImageSliceContext | None = None,
-        image_metadata: ImagePayloadMetadata | None = None,
+        image_metadata: ImageMetadataProjection | None = None,
         main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE,
     ) -> "ProducedOutputSemantics":
         output_path_text = str(output_path)
@@ -274,6 +284,11 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             output_path=source_path_identity(str(path)).as_posix(),
             relative_output_path=source_path_identity(str(path)).name,
         )
+
+
+# Keep the declared field and its original slot; public access realizes its owner.
+ProducedOutputSemantics._metadata_projection = ProducedOutputSemantics.image_metadata
+ProducedOutputSemantics.image_metadata = ImageMetadataCarrier.metadata
 
 
 @dataclass(slots=True)
@@ -551,7 +566,10 @@ class StepOutputManifestStore:
         records_by_path: dict[str, ProducedOutputSemantics] = {}
         for record in records:
             existing = records_by_path.get(record.output_path)
-            if existing is not None and existing.main_flow_plane_axis is not record.main_flow_plane_axis:
+            if (
+                existing is not None
+                and existing.main_flow_plane_axis is not record.main_flow_plane_axis
+            ):
                 raise ValueError(
                     "One produced output path cannot declare conflicting main-flow image axes: "
                     f"{record.output_path!r}."

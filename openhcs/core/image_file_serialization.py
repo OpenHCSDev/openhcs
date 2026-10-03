@@ -15,10 +15,11 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import FileFormat
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
+    ImageMetadataProjection,
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
     image_payload_data,
-    image_payload_metadata,
+    image_payload_metadata_projection,
 )
 
 logger = logging.getLogger(__name__)
@@ -142,44 +143,53 @@ class ImageFileSourceMetadata:
         """Require complete format-declared dtype and physical image dimensions."""
 
         if self.image_shape_yx is None or self.source_dtype is None:
-            raise ValueError("Image-file header does not declare image dtype and YX geometry.")
+            raise ValueError(
+                "Image-file header does not declare image dtype and YX geometry."
+            )
         height, width = self.image_shape_yx
         return self.source_dtype, height, width
 
     def project_image_metadata(
         self, metadata: ImagePayloadMetadata, *, values_preserved: bool
     ) -> ImagePayloadMetadata:
+        """Expose format-projected facts as their actual mutable namespace."""
+        return self.project_image_metadata_projection(
+            metadata, values_preserved=values_preserved
+        ).materialize_metadata()
+
+    def project_image_metadata_projection(
+        self, metadata: ImageMetadataProjection, *, values_preserved: bool
+    ) -> ImageMetadataProjection:
         """Combine current native pixels with retained typed acquisition facts."""
         if self.source_dtype is None:
             raise ValueError("Saved image metadata requires an actual native dtype.")
         native_scale_governs = self.intensity_scale is not None or not values_preserved
         if not values_preserved:
-            metadata = metadata.without_unit_interval_intensity_scale().replace_fields(
-                physical_border_edges_yx=None,
-                mask_defines_border=None,
+            metadata = metadata.without_unit_interval_intensity_scale().derive_fields(
+                physical_border_edges_yx=None, mask_defines_border=None
             )
-        return metadata.replace_fields(
+        return metadata.derive_fields(
             source_dtype=str(self.source_dtype),
-            intensity_scale=(
-                self.intensity_scale
-                if native_scale_governs
-                else metadata.intensity_scale
-            ),
+            intensity_scale=self.intensity_scale
+            if native_scale_governs
+            else metadata.read_value("intensity_scale"),
             source_plane_dtypes=tuple(
-                str(self.source_dtype) for _ in metadata.source_plane_dtypes
-            ),
-            source_plane_intensity_scales=(
-                tuple(
-                    self.intensity_scale for _ in metadata.source_plane_intensity_scales
+                (
+                    str(self.source_dtype)
+                    for _ in metadata.read_value("source_plane_dtypes")
                 )
-                if native_scale_governs
-                else metadata.source_plane_intensity_scales
             ),
-            source_channel_axis=(
-                metadata.source_channel_axis
-                if values_preserved and self.pixel_semantics.channel_axis is None
-                else self.pixel_semantics.channel_axis
-            ),
+            source_plane_intensity_scales=tuple(
+                (
+                    self.intensity_scale
+                    for _ in metadata.read_value("source_plane_intensity_scales")
+                )
+            )
+            if native_scale_governs
+            else metadata.read_value("source_plane_intensity_scales"),
+            source_channel_axis=metadata.read_value("source_channel_axis")
+            if values_preserved and self.pixel_semantics.channel_axis is None
+            else self.pixel_semantics.channel_axis,
         )
 
 
@@ -317,12 +327,18 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
         return False
 
     def persisted_metadata(self, path: Path, payload: Any) -> ImagePayloadMetadata:
+        """Expose saved native facts as their actual mutable metadata namespace."""
+        return self.persisted_metadata_projection(path, payload).materialize_metadata()
+
+    def persisted_metadata_projection(
+        self, path: Path, payload: Any
+    ) -> ImageMetadataProjection:
         """Describe saved native pixels while retaining their semantic lineage."""
         header = self.source_metadata(path)
         if header.source_dtype is None:
             raise ValueError(f"Cannot establish saved image metadata for {path}.")
-        return header.project_image_metadata(
-            image_payload_metadata(payload),
+        return header.project_image_metadata_projection(
+            image_payload_metadata_projection(payload),
             values_preserved=self.preserves_pixel_values(
                 image_payload_data(payload).dtype
             ),
@@ -623,7 +639,7 @@ def image_payload_as_uint8(payload: Any) -> np.ndarray:
 
 def require_single_image_payload(payload: Any) -> np.ndarray:
     """Return pixels only when no runtime plane axis remains to project."""
-    plane_axis = image_payload_metadata(payload).plane_axis
+    plane_axis = image_payload_metadata_projection(payload).read_value("plane_axis")
     if plane_axis is not None:
         raise ValueError(
             "Single-image raster serialization requires a payload projected off "
