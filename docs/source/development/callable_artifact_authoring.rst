@@ -333,6 +333,106 @@ alone does not bind an artifact. Retain the failed source and validate/compile
 the corrected complete document through the ordinary route. This establishes
 technical input compatibility, not object identity or biological accuracy.
 
+Summarize declared measurements once per plate
+---------------------------------------------
+
+A terminal ``PLATE`` callable receives ``RuntimeArtifactBatch``, not an image
+or a directory of CSVs. The parent executes it once after the compiled axes
+complete, selecting records through its exact artifact input declarations.
+The existing ``ExportToSpreadsheet`` implementation uses this same ABI.
+Do not add ``@numpy`` or a ``ProcessingContract``: these declare axis-local
+image processing and are rejected for plate scope.
+
+This complete custom-function source summarizes the preceding example's
+``fixture_object_rows``. It reports record and measurement-row counts per
+runtime axis, not biological object counts or an inferred well identity:
+
+.. code-block:: python
+   :name: callable-artifact-plate-reference
+
+   from dataclasses import dataclass
+
+   from openhcs.core.artifacts import (
+       ArtifactMeasurementSubjectRelation, ArtifactSpec, MeasurementsArtifactType,
+   )
+   from openhcs.core.callable_contract import FunctionStepExecutionScope
+   from openhcs.core.measurement_row_materialization import (
+       DataclassMeasurementColumnarRows,
+   )
+   from openhcs.core.pipeline.function_contracts import (
+       artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
+   )
+   from openhcs.core.runtime_measurements import (
+       RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
+   )
+   from openhcs.core.runtime_stores import RuntimeArtifactBatch
+   from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+
+   class PlateSummaryFeature(RuntimeMeasurementFeature):
+       RECORD_COUNT = "record_count"
+       MEASUREMENT_ROW_COUNT = "measurement_row_count"
+
+   class PlateSummaryFeatureOwner(RuntimeMeasurementFeatureOwner):
+       @classmethod
+       def owns_measurement_feature_name(cls, feature_name: str) -> bool:
+           return any(feature.feature_name == feature_name
+                      for feature in PlateSummaryFeature)
+
+       @classmethod
+       def owns_primary_measurement_feature_name(cls, feature_name: str) -> bool:
+           return cls.owns_measurement_feature_name(feature_name)
+
+   @dataclass(frozen=True)
+   class PlateSummaryRow:
+       axis_id: str
+       record_count: int
+       measurement_row_count: int
+
+   PLATE_ROWS = ArtifactSpec.input("fixture_object_rows", MeasurementsArtifactType)
+   PLATE_SUMMARY = ArtifactSpec.output(
+       "fixture_plate_summary", MeasurementsArtifactType,
+       measurement_feature_owner=PlateSummaryFeatureOwner,
+       relations=(ArtifactMeasurementSubjectRelation(),),
+       materialization=MaterializationSpec(CsvOptions()),
+   )
+
+   @execution_scope(FunctionStepExecutionScope.PLATE)
+   @runtime_bound_parameters(RuntimeArtifactBatch)
+   @artifact_inputs(PLATE_ROWS)
+   @artifact_outputs(PLATE_SUMMARY)
+   def summarize_fixture_plate(
+       *, artifact_batch: RuntimeArtifactBatch,
+   ) -> DataclassMeasurementColumnarRows:
+       """Summarize only the declared measurement records from this execution."""
+       rows = tuple(
+           PlateSummaryRow(
+               axis_id, len(records),
+               sum(record.value.data.rows.row_count() for record in records),
+           )
+           for axis_id, records in artifact_batch.records(PLATE_ROWS.ref()).items()
+       )
+       return DataclassMeasurementColumnarRows(rows, row_type=PlateSummaryRow)
+
+Submit this block as its own source through the existing custom registration
+route, or import it from a module. Describe the returned registry ID to verify
+``PLATE`` scope, then append ``FunctionStep(func=summarize_fixture_plate)`` to
+the complete pipeline after the compatible measurement producer. Retain its
+configuration/source bindings; no axis-scoped step may follow a plate step.
+``artifact_batch`` is required, keyword-only and runtime-owned: do not supply
+it in authored kwargs. Its ``records(spec.ref())`` exposes typed
+``StoredRuntimeValue`` records by axis; each selected measurement payload is a
+``MeasurementTable`` whose rows retain their schema. No file loading, guessed
+paths, bare dictionary return or ``Any`` annotation is needed.
+
+The artifact-scoped subject belongs to this summary itself, not to an invented
+object-label domain. The declared CSV materializer writes the schema-bearing
+result. An empty table contributes zero rows without losing its schema;
+unavailable required inputs are a binding error, not a reason to scan files.
+Repair the earliest validation/compile error against these exact decorators,
+batch annotation and producer reference. A successful summary covers the
+compiled execution's records; it does not establish whole-task coverage from
+partially persisted files or prove biological validity.
+
 Verification
 ------------
 

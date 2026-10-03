@@ -13,6 +13,9 @@ plus object measurements, or a custom consumer of an existing artifact, retrieve
 `openhcs_callable_artifact_authoring`. Its **Consume a nominal artifact input**
 section shows the input annotation/binding and earliest compile-error repair;
 its executable synthetic examples demonstrate the ABI, not an assay algorithm.
+For a plate-wide summary, use its **Summarize declared measurements once per
+plate** example: exact `PLATE` decorators, keyword-only `RuntimeArtifactBatch`,
+nominal record traversal, typed output and ordinary registration/pipeline use.
 Record the missing operation and expected input axes, dtype, units, memory
 backend, outputs and empty-input behaviour before writing source.
 For centre detection, specify what defines a centre, coordinate order/origin,
