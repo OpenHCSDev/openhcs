@@ -112,7 +112,9 @@ from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
 def _source_manifest(plan, paths_and_components):
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=plan.main_input_dependency.source_step_index,
+        step_type="FunctionStep",
         step_scope_id=plan.main_input_dependency.source_step_scope_id,
         step_name="producer",
         pipeline_position=plan.main_input_dependency.source_step_index,
@@ -758,7 +760,9 @@ def test_payload_slices_do_not_infer_alignment_from_source_provenance() -> None:
 
 def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="enhance",
         step_name="Enhance",
         pipeline_position=1,
@@ -845,7 +849,9 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=4,
+        step_type="FunctionStep",
         step_scope_id="mask_image",
         step_name="MaskImage",
         pipeline_position=4,
@@ -915,14 +921,18 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    cells_producer = SimpleNamespace(
+    cells_producer = CompiledStepPlan(
+        step_index=6,
+        step_type="FunctionStep",
         step_scope_id="identify_cells",
         step_name="IdentifySecondaryObjects",
         pipeline_position=6,
         axis_id="A14",
         output_dir=output_dir,
     )
-    nuclei_producer = SimpleNamespace(
+    nuclei_producer = CompiledStepPlan(
+        step_index=5,
+        step_type="FunctionStep",
         step_scope_id="identify_nuclei",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=5,
@@ -1019,14 +1029,18 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    requested_producer = SimpleNamespace(
+    requested_producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="crop_blue",
         step_name="CropBlue",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
     )
-    previous_producer = SimpleNamespace(
+    previous_producer = CompiledStepPlan(
+        step_index=3,
+        step_type="FunctionStep",
         step_scope_id="crop_red",
         step_name="CropRed",
         pipeline_position=3,
@@ -1121,7 +1135,9 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="image_set",
         step_name="ImageSet",
         pipeline_position=2,
@@ -4093,7 +4109,9 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="correct_illumination",
         step_name="CorrectIlluminationApply",
         pipeline_position=1,
@@ -4180,7 +4198,9 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="align",
         step_name="Align",
         pipeline_position=2,
@@ -4274,14 +4294,18 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    update = SimpleNamespace(
+    update = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="update",
         step_name="Update",
         pipeline_position=2,
@@ -4367,14 +4391,18 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
     collapsed_input_domain: bool,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    collapse = SimpleNamespace(
+    collapse = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="collapse",
         step_name="Collapse",
         pipeline_position=2,
@@ -4436,14 +4464,18 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    replacement = SimpleNamespace(
+    replacement = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="replacement",
         step_name="Replacement",
         pipeline_position=2,
@@ -4518,14 +4550,18 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    subset = SimpleNamespace(
+    subset = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="subset",
         step_name="Subset",
         pipeline_position=2,
@@ -4589,7 +4625,9 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="identify_primary",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=2,
@@ -4649,7 +4687,9 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=4,
+        step_type="FunctionStep",
         step_scope_id="correct_illumination_apply",
         step_name="CorrectIlluminationApply",
         pipeline_position=4,
@@ -5389,7 +5429,9 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
 @pytest.fixture
 def qualified_producer_manifest(tmp_path):
     parser = SourceSchemaFilenameParser()
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=0,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=0,

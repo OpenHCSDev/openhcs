@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Any, ClassVar, Mapping, TYPE_CHECKING
 
 import numpy as np
-from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.image_payload_execution_mode import (
     ImagePayloadExecutionMode,
@@ -23,9 +22,6 @@ from openhcs.core.memory import (
     convert_memory,
     detect_memory_type,
     stack_runtime_slices,
-)
-from openhcs.core.registry_strategies import (
-    NominalTypeKeyedStrategyMixin,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -49,7 +45,6 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
-    RuntimeSliceProjectableValue,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.source_spatial_domain import (
@@ -382,11 +377,9 @@ class AlignedImageStackKwargResolver:
     reference_payload: Any | None = None
 
     def resolve(self, value: Any) -> Any:
-        strategy = AlignedImageStackKwargResolutionStrategy.require_nominal_value(
-            value,
-            context="Aligned image-stack kwarg resolution",
-        )
-        return strategy.resolve(value, self)
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionStrategy
+
+        return RuntimeSliceProjectionStrategy.aligned_kwarg_value(value, self)
 
     def resolve_source_spatial_value(self, value: Any) -> Any:
         """Project a nominal value into the declared reference payload domain."""
@@ -702,149 +695,6 @@ def unstack_image_payload_context(
         metadata = replace(metadata, plane_axis=default_plane_axis)
     projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
     return projector.payloads_for_slices(slices)
-
-
-class AlignedImageStackKwargResolutionStrategy(
-    NominalTypeKeyedStrategyMixin,
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Nominal strategy for resolving one slice-aligned runtime kwarg."""
-
-    __registry_key__ = "value_type_label"
-    __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[str, type["AlignedImageStackKwargResolutionStrategy"]]
-    ] = {}
-    value_type: ClassVar[type[Any] | None] = None
-    value_type_label: ClassVar[str | None] = None
-
-    @abstractmethod
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        """Return the value in the current aligned slice context."""
-
-
-class TupleAlignedKwargResolutionStrategy(AlignedImageStackKwargResolutionStrategy):
-    """Resolve tuple-valued kwargs elementwise while preserving tuple structure."""
-
-    value_type = tuple
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        return tuple(resolver.resolve(item) for item in value)
-
-
-class ImagePayloadAlignedKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy
-):
-    """Resolve image payloads without discarding metadata or masks."""
-
-    value_type = ImagePayloadMetadataCarrier
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        return resolver.resolve_source_spatial_value(value)
-
-
-class ObjectLabelAlignedKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy
-):
-    """Resolve object labels by runtime-slice and source-spatial contracts."""
-
-    value_type = ObjectLabelValue
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        if not isinstance(value, ObjectLabelValue):
-            raise TypeError(
-                "Object-label aligned kwarg resolution requires ObjectLabelValue."
-            )
-        slice_count = value.runtime_slice_plane_count()
-        if slice_count is not None:
-            if slice_count != resolver.projection_axis.axis_size:
-                raise ValueError(
-                    "Runtime-slice object-label cardinality must exactly match the "
-                    f"declared projection axis: {slice_count} != "
-                    f"{resolver.projection_axis.axis_size}."
-                )
-            from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-            projected = RuntimeSliceProjection.value_for_slice(
-                value,
-                resolver.projection_axis,
-            )
-        else:
-            projected = value
-        return resolver.resolve_source_spatial_value(projected)
-
-
-class RuntimeSliceAlignedValueKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy
-):
-    """Select non-image values that explicitly declare runtime-slice alignment."""
-
-    value_type = RuntimeSliceAlignedValueSet
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        if not isinstance(value, RuntimeSliceAlignedValueSet):
-            raise TypeError(
-                "RuntimeSliceAlignedValueKwargResolutionStrategy requires "
-                "RuntimeSliceAlignedValueSet."
-            )
-        return resolver.projection_axis.aligned_value(value)
-
-
-class RuntimeSliceProjectableAlignedKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy
-):
-    """Project values through their declared runtime-slice hook."""
-
-    value_type = RuntimeSliceProjectableValue
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-        return RuntimeSliceProjection.value_for_slice(
-            value,
-            resolver.projection_axis,
-        )
-
-
-class PassThroughAlignedKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy,
-):
-    """Leave non-slice-aligned kwargs in their native runtime domain."""
-
-    value_type = object
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        del resolver
-        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -1513,26 +1363,6 @@ def pack_aligned_image_outputs(
     if contexts:
         return ImageOutputBundle(packed, contexts)
     return AlignedImageStack(packed)
-
-
-class NestedAlignedImageStackKwargResolutionStrategy(
-    AlignedImageStackKwargResolutionStrategy
-):
-    """Select matching slices from kwargs that are already aligned stacks."""
-
-    value_type = AlignedImageStack
-
-    def resolve(
-        self,
-        value: Any,
-        resolver: AlignedImageStackKwargResolver,
-    ) -> Any:
-        return resolver.resolve(
-            value.aligned_slice(
-                resolver.projection_axis.require_plane_index(),
-                resolver.projection_axis.axis_size,
-            )
-        )
 
 
 def compose_aligned_image_payload(

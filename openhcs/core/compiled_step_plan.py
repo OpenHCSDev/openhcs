@@ -6,7 +6,9 @@ from collections import OrderedDict
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
+
+from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import (
     GPU_MEMORY_TYPES,
@@ -30,6 +32,7 @@ from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.step_dependencies import StepInputDependency
 
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.config import StreamingConfig
 else:
     StreamingConfig = Any
@@ -254,6 +257,8 @@ class CompiledStepPlan:
     mutate fields on this dataclass rather than writing string-keyed dicts.
     """
 
+    ARTIFACT_OUTPUT_KIND: ClassVar[str] = "artifact"
+
     step_index: int
     step_name: str
     step_type: str
@@ -314,6 +319,47 @@ class CompiledStepPlan:
     create_openhcs_metadata: bool = False
     chainbreaker: bool = False
     error: str | None = None
+
+    def producer_identity(
+        self,
+        *,
+        output_kind: str,
+        output_key: str,
+        projection_key: str,
+        artifact_kind: str | None = None,
+    ) -> StreamProducerIdentity:
+        """Project this step's identity onto one declared output surface."""
+        return StreamProducerIdentity.pipeline_output(
+            output_kind=output_kind,
+            output_key=output_key,
+            projection_key=projection_key,
+            step_name=self.step_name,
+            pipeline_position=self.pipeline_position,
+            step_scope_id=self.step_scope_id,
+            artifact_kind=artifact_kind,
+        )
+
+    def producer_identity_for_main_flow(
+        self, output_context: AlignedImageSliceContext
+    ) -> StreamProducerIdentity:
+        """Retain the main-flow surface's declared kind, key and projection."""
+        return self.producer_identity(
+            output_kind=output_context.output_kind,
+            output_key=output_context.output_key,
+            projection_key=output_context.projection_key,
+            artifact_kind=output_context.artifact_kind,
+        )
+
+    def producer_identity_for_artifact(
+        self, output_plan: ArtifactOutputPlan
+    ) -> StreamProducerIdentity:
+        """Derive a named artifact producer from its original compiled plan."""
+        return self.producer_identity(
+            output_kind=self.ARTIFACT_OUTPUT_KIND,
+            output_key=output_plan.name,
+            projection_key=output_plan.name,
+            artifact_kind=output_plan.artifact_type.value,
+        )
 
     @property
     def requires_terminal_source_projection(self) -> bool:

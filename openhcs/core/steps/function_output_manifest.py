@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import ClassVar, Iterator, Sequence
+from typing import Iterator, Sequence
 from weakref import WeakKeyDictionary
 
 from polystore.streaming.identity import StreamProducerIdentity
@@ -24,6 +24,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source_metadata import SourceMetadataValue
 
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_identity import (
@@ -48,65 +49,6 @@ class NoStepOutputManifestMatch(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionStepOutputProducerIdentityRequest:
-    """Declared producer identity facts for a FunctionStep output surface."""
-
-    ARTIFACT_OUTPUT_KIND: ClassVar[str] = "artifact"
-
-    plan: CompiledStepPlan
-    output_kind: str
-    output_key: str
-    projection_key: str
-    artifact_kind: str | None = None
-
-    @classmethod
-    def from_main_flow(
-        cls,
-        plan: CompiledStepPlan,
-        output_context: AlignedImageSliceContext,
-    ) -> "FunctionStepOutputProducerIdentityRequest":
-        return cls(
-            plan=plan,
-            output_kind=output_context.output_kind,
-            output_key=output_context.output_key,
-            projection_key=output_context.projection_key,
-            artifact_kind=output_context.artifact_kind,
-        )
-
-    @classmethod
-    def from_artifact(
-        cls,
-        plan: CompiledStepPlan,
-        output_plan: ArtifactOutputPlan,
-    ) -> "FunctionStepOutputProducerIdentityRequest":
-        return cls(
-            plan=plan,
-            output_kind=cls.ARTIFACT_OUTPUT_KIND,
-            output_key=output_plan.name,
-            projection_key=output_plan.name,
-            artifact_kind=output_plan.artifact_type.value,
-        )
-
-
-class FunctionStepOutputProducerIdentityAuthority:
-    """Build stable producer identities for all FunctionStep output surfaces."""
-
-    @staticmethod
-    def build(
-        request: FunctionStepOutputProducerIdentityRequest,
-    ) -> StreamProducerIdentity:
-        return StreamProducerIdentity.pipeline_output(
-            output_kind=request.output_kind,
-            output_key=request.output_key,
-            projection_key=request.projection_key,
-            step_name=request.plan.step_name,
-            pipeline_position=request.plan.pipeline_position,
-            step_scope_id=request.plan.step_scope_id,
-            artifact_kind=request.artifact_kind,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class ProducedOutputSemantics(FunctionOutputIdentity):
     """Semantic record for one output file produced by a FunctionStep."""
 
@@ -120,11 +62,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         """Retain the image domain and physical identity under the next producer."""
         return replace(
             self,
-            producer_identity=FunctionStepOutputProducerIdentityAuthority.build(
-                FunctionStepOutputProducerIdentityRequest.from_main_flow(
-                    plan, self.output_context,
-                )
-            ),
+            producer_identity=plan.producer_identity_for_main_flow(self.output_context),
             relative_output_path=source_path_identity(self.output_path).name,
         )
 
@@ -143,6 +81,21 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         """Project this output's manifest-owned relative path under a new root."""
 
         return str(Path(output_dir) / self.relative_output_path)
+
+    def memory_path(self, plan: CompiledStepPlan) -> str:
+        """Resolve this original saved occurrence in its step's memory namespace."""
+        path = Path(self.output_path)
+        return str(path) if path.is_absolute() else self.path_under(plan.output_dir)
+
+    def source_metadata_for_projection(
+        self, metadata: ImagePayloadMetadata, destination: str
+    ) -> dict[str, SourceMetadataValue]:
+        """Combine this occurrence's coordinates with current persisted image facts."""
+        source_metadata = dict(
+            self.component_metadata(metadata.source_component_metadata)
+        )
+        metadata.source_voxel_spacing.merge_into(source_metadata, path=destination)
+        return source_metadata
 
     def owns_persisted_artifact(
         self,
@@ -215,12 +168,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         if output_context is None:
             output_context = AlignedImageSliceContext.anonymous_main_flow()
         return cls(
-            producer_identity=FunctionStepOutputProducerIdentityAuthority.build(
-                FunctionStepOutputProducerIdentityRequest.from_main_flow(
-                    plan,
-                    output_context,
-                )
-            ),
+            producer_identity=plan.producer_identity_for_main_flow(output_context),
             component_values=output_identity.component_values,
             extension=output_identity.extension,
             source=output_identity.source,
@@ -260,12 +208,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             source="existing main-flow path",
         )
         return cls(
-            producer_identity=FunctionStepOutputProducerIdentityAuthority.build(
-                FunctionStepOutputProducerIdentityRequest.from_main_flow(
-                    plan,
-                    output_context,
-                )
-            ),
+            producer_identity=plan.producer_identity_for_main_flow(output_context),
             component_values=identity.component_values,
             extension=identity.extension,
             source=identity.source,
@@ -433,6 +376,15 @@ class StepOutputManifestStore:
     ) -> tuple[str, ...]:
         return tuple(
             record.relative_output_path for record in self.produced_records_for(plan)
+        )
+
+    def image_records_for(
+        self, plan: CompiledStepPlan
+    ) -> tuple[ProducedOutputSemantics, ...]:
+        """Select image occurrences directly from this step's current producer cohort."""
+        return tuple(
+            record for record in self.produced_records_for(plan)
+            if record.is_image_payload
         )
 
     def producer_output_contexts_for_paths(

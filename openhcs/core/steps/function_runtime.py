@@ -71,7 +71,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageSliceContext,
-    ImagePayloadBundleContext,
     ImagePayloadStackComposition,
     ImageOutputBundle,
     flatten_aligned_image_payload_slices,
@@ -81,7 +80,6 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.memory import (
     MemoryType,
     convert_memory,
-    stack_runtime_slices,
     unstack_runtime_slices,
 )
 from openhcs.core.measurement_row_materialization import (

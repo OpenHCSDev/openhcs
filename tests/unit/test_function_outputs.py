@@ -77,11 +77,11 @@ from openhcs.core.steps.function_outputs import (
     MaterializedImageOutputWriter,
     MemoryOutputWriter,
     OpenHCSMetadataWriter,
-    ProducedMemoryPathsAuthority,
     RuntimeArtifactMaterializationAuthority,
     MaterializedImageMetadataTarget,
     RuntimeArtifactMetadataTarget,
     StreamOutputsAuthority,
+    StreamOutputBatch,
     finalize_function_step_outputs,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -94,6 +94,7 @@ from openhcs.core.virtual_workspace_metadata import (
     MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
 )
+from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
@@ -1378,7 +1379,7 @@ def test_image_persistence_skips_object_label_main_flow_payloads():
         ),
     )
 
-    assert ProducedMemoryPathsAuthority.paths(context, plan) == []
+    assert step_output_manifest(context).image_records_for(plan) == ()
 
 
 def test_metadata_target_family_discovers_new_declaration_without_consumer_edits(
@@ -2521,3 +2522,104 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
         raster.image_metadata.source_voxel_spacing.native_coordinate_unit
         == "micrometer"
     )
+
+
+def _stream_batch_sources(projections):
+    plan = function_step_plan("StreamOwned")
+    arrays = [np.full((2, 3), index, dtype=np.float32) for index in range(len(projections))]
+    paths = [str(plan.output_dir / f"A01_s1_w{index}.tif") for index in range(len(projections))]
+    records = tuple(
+        ProducedOutputSemantics.from_output(
+            plan,
+            path,
+            FunctionOutputIdentity(
+                component_values={"well": "A01", "site": "1", "channel": str(index)},
+                extension=".tif",
+                source="stream source",
+            ),
+            output_context=AlignedImageSliceContext.main_flow(
+                output_key=f"image-{index}", projection_key=projection,
+                artifact_kind=ImageArtifactType.value,
+            ),
+        )
+        for index, (path, projection) in enumerate(zip(paths, projections, strict=True))
+    )
+    return arrays, paths, records
+
+
+def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("second", "first", "second", "first"))
+    expected_arrays, expected_paths = tuple(arrays), tuple(paths)
+    observed = []
+    original_project = StreamOutputBatch.project_item
+
+    def project(request):
+        observed.append(request.source_description)
+        arrays.clear()
+        paths.clear()
+        return original_project(request)
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
+    batches = StreamOutputBatch.from_projection_groups(
+        parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+        produced_outputs=records,
+    )
+    assert observed == [expected_paths[index] for index in (0, 2, 1, 3)]
+    assert len(batches) == 2
+    assert [item.output_path for batch in batches for item in batch.items] == observed
+    assert [item.producer_identity for batch in batches for item in batch.items] == [
+        records[index].producer_identity for index in (0, 2, 1, 3)
+    ]
+    for item, index in zip(
+        (item for batch in batches for item in batch.items), (0, 2, 1, 3), strict=True,
+    ):
+        assert item.data is expected_arrays[index]
+        assert item.source_component_metadata["channel"] == str(index)
+
+
+def test_stream_batch_keeps_first_projection_error_and_prior_callback_effects(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("first", "second", "first", "second"))
+    observed = []
+    failure = ValueError("actual projector failure")
+    original_project = StreamOutputBatch.project_item
+
+    def project(request):
+        observed.append(request.source_description)
+        if request.source_description == paths[1]:
+            raise failure
+        return original_project(request)
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
+    with pytest.raises(ValueError) as raised:
+        StreamOutputBatch.from_projection_groups(
+            parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+            produced_outputs=records,
+        )
+    assert raised.value is failure
+    assert observed == [paths[index] for index in (0, 2, 1)]
+
+
+def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeypatch):
+    arrays, paths, records = _stream_batch_sources(("first", "second"))
+
+    def forbidden_project(request):
+        raise AssertionError("invalid inputs reached projection")
+
+    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(forbidden_project))
+    parser = ImageXpressFilenameParser()
+    with pytest.raises(ValueError, match="payload/path cardinality mismatch"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=arrays, paths=paths[:1], produced_outputs=(),
+        )
+    with pytest.raises(ValueError, match="payload/output-record cardinality mismatch"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=arrays, paths=paths, produced_outputs=records[:1],
+        )
+    with pytest.raises(ValueError, match="at least one produced output record"):
+        StreamOutputBatch.from_projection_groups(
+            parser=parser, payloads=(), paths=(), produced_outputs=(),
+        )
+    with pytest.raises(ValueError, match="cannot mix producer projections"):
+        StreamOutputBatch.from_projection(
+            parser=parser, payloads=arrays, paths=paths, produced_outputs=records,
+        )

@@ -59,10 +59,6 @@ from openhcs.core.steps.function_output_identity import (
     FunctionOutputPathAuthority,
     IncompleteFunctionOutputFilenameIdentityError,
 )
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityAuthority,
-    FunctionStepOutputProducerIdentityRequest,
-)
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamSourceComponentMetadataItems,
@@ -1440,12 +1436,7 @@ def materialize_artifact_outputs(
                 data=data,
                 fallback_source_identity=materialization.source_identity,
                 producer_identity=(
-                    FunctionStepOutputProducerIdentityAuthority.build(
-                        FunctionStepOutputProducerIdentityRequest.from_artifact(
-                            plan,
-                            materialization.output_plan,
-                        )
-                    )
+                    plan.producer_identity_for_artifact(materialization.output_plan)
                 ),
                 context=context,
                 filemanager=filemanager,

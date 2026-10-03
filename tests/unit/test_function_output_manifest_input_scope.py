@@ -7,11 +7,18 @@ import pytest
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
+    ArtifactOutputPlan,
     ArtifactInputProjectionPlan,
     ArtifactSpec,
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.source_metadata import (
+    SOURCE_VOXEL_SPACING_FIELD,
+    SourceVoxelSpacing,
 )
 from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
@@ -22,22 +29,98 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
     ProducedOutputSemantics,
     StepOutputManifestStore,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
-def test_artifact_output_kind_is_declared_by_producer_identity_request() -> None:
-    request = FunctionStepOutputProducerIdentityRequest.from_artifact(
-        SimpleNamespace(),
-        SimpleNamespace(name="cells", artifact_type=ObjectLabelsArtifactType),
+def test_artifact_output_kind_is_owned_by_original_compiled_plan() -> None:
+    plan = CompiledStepPlan(
+        step_index=3,
+        step_type="FunctionStep",
+        step_name="IdentifyCells",
+        step_scope_id="identify-cells",
+        pipeline_position=3,
+        axis_id="A01",
     )
+    output = ArtifactOutputPlan(
+        name="cells", path="cells.pkl", artifact_type=ObjectLabelsArtifactType,
+    )
+    identity = plan.producer_identity_for_artifact(output)
 
-    assert request.output_kind == (
-        FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND
+    assert identity.output_kind == CompiledStepPlan.ARTIFACT_OUTPUT_KIND
+    assert identity.output_key == identity.projection_key == "cells"
+    assert identity.artifact_kind == ObjectLabelsArtifactType.value
+    assert identity.step_name == "IdentifyCells"
+    assert identity.step_scope_id == "identify-cells"
+    assert identity.pipeline_position == 3
+
+
+def test_producer_identity_reads_current_plan_and_original_surface() -> None:
+    plan = CompiledStepPlan(
+        step_index=1, step_type="FunctionStep", step_name="Original",
+        step_scope_id="original", pipeline_position=1, axis_id="A01",
     )
+    surface = AlignedImageSliceContext.main_flow("corrected")
+    original = plan.producer_identity_for_main_flow(surface)
+    plan.step_name = "Replacement"
+    plan.step_scope_id = "replacement"
+    plan.pipeline_position = 2
+    replacement = plan.producer_identity_for_main_flow(surface)
+
+    assert original.step_name == "Original"
+    assert original.step_scope_id == "original"
+    assert original.pipeline_position == 1
+    assert replacement.step_name == "Replacement"
+    assert replacement.step_scope_id == "replacement"
+    assert replacement.pipeline_position == 2
+    assert replacement.output_kind == surface.output_kind
+    assert replacement.output_key == surface.output_key
+    assert replacement.projection_key == surface.projection_key
+    assert replacement.artifact_kind == surface.artifact_kind
+
+
+@pytest.mark.parametrize("saved_path", ("/saved/image.tif", "image.tif"))
+def test_produced_occurrence_owns_memory_path_and_current_source_projection(
+    saved_path: str,
+) -> None:
+    plan = CompiledStepPlan(
+        step_index=1, step_type="FunctionStep", step_name="Producer", axis_id="A01",
+        step_scope_id="producer", pipeline_position=1, output_dir=Path("/memory"),
+    )
+    components = {"well": "A01", "channel": 2}
+    record = ProducedOutputSemantics(
+        producer_identity=plan.producer_identity_for_main_flow(
+            AlignedImageSliceContext.anonymous_main_flow()
+        ),
+        component_values=components,
+        filename_component_values={"well": "A01", "channel": 9},
+        extension=".tif", source="test", output_path=saved_path,
+        relative_output_path="nested/image.tif",
+    )
+    assert record.memory_path(plan) == (
+        saved_path if saved_path.startswith("/") else "/memory/nested/image.tif"
+    )
+    metadata = ImagePayloadMetadata(
+        source_component_metadata={"acquisition": "first", "channel": 1},
+        source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+    )
+    original = record.source_metadata_for_projection(metadata, "/disk/output.tif")
+    assert original["channel"] == "2"
+    assert original["acquisition"] == "first"
+    assert original[SOURCE_VOXEL_SPACING_FIELD] == "0.5,0.5"
+    components["channel"] = 3
+    metadata.source_component_metadata = {"acquisition": "second", "channel": 1}
+    current = record.source_metadata_for_projection(metadata, "/disk/output.tif")
+    assert current["channel"] == "3"
+    assert current["acquisition"] == "second"
+    assert original["channel"] == "2"
+    assert record.filename_values["channel"] == 9
+
+    metadata.source_component_metadata = {SOURCE_VOXEL_SPACING_FIELD: "1,1"}
+    with pytest.raises(RuntimeError, match="Conflicting source voxel spacing.*output.tif"):
+        record.source_metadata_for_projection(metadata, "/disk/output.tif")
 
 
 def _compiled_pattern_with_input_edges(
@@ -124,7 +207,9 @@ def test_foreign_artifact_inputs_do_not_filter_lifecycle_producer(
     foreign_inputs: tuple[tuple[ArtifactSpec, str], ...],
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id=dependency_scope,
         step_name="LifecycleProducer",
         pipeline_position=1,
@@ -183,7 +268,9 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="align",
         step_name="Align",
         pipeline_position=1,
@@ -264,7 +351,9 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="color_to_gray",
         step_name="ColorToGray",
         pipeline_position=1,
@@ -361,7 +450,9 @@ def test_storage_backed_input_does_not_reclassify_lifecycle_output(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="artifact_producer",
         step_name="ArtifactProducer",
         pipeline_position=1,
@@ -436,7 +527,9 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
     parameter_name: str,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="artifact_producer",
         step_name="ArtifactProducer",
         pipeline_position=1,

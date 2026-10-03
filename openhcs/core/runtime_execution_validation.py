@@ -26,10 +26,6 @@ from openhcs.core.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityAuthority,
-    FunctionStepOutputProducerIdentityRequest,
-)
 from openhcs.processing.materialization import Output
 
 RuntimeArtifactViewerComponentIdentity = tuple[tuple[str, str], ...]
@@ -253,12 +249,7 @@ def runtime_artifact_viewer_expectations(
                 viewer_outputs = materialization.viewer_outputs(plan, context)
                 if not viewer_outputs:
                     continue
-                producer = FunctionStepOutputProducerIdentityAuthority.build(
-                    FunctionStepOutputProducerIdentityRequest.from_artifact(
-                        plan,
-                        output_plan,
-                    )
-                )
+                producer = plan.producer_identity_for_artifact(output_plan)
                 payloads = expected_by_producer.setdefault(producer, [])
                 payloads.extend(
                     _runtime_artifact_viewer_output_payloads(

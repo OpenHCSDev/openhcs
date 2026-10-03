@@ -3140,6 +3140,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.CHANNEL,
+                    paths_by_group={"1": realized_path},
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
@@ -3170,6 +3171,22 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
     np.testing.assert_array_equal(objects.labels, realized_labels[None, ...])
     assert objects.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert objects.domain.declared_object_id_domains == ((1,),)
+
+
+    # A dynamic component never grants access to another compiled producer path.
+    (edge,) = _compiled_artifact_inputs.values()
+    for undeclared_paths in (None, {"1": "/other/Nuclei_s1.pkl"}):
+        mismatched_edge = replace(
+            edge, storage_plan=replace(edge.storage_plan, paths_by_group=undeclared_paths)
+        )
+        mismatched_consumer = CellProfilerRuntimeAdapter(
+            request=replace(
+                consumer.request, artifact_inputs={edge.key: mismatched_edge}
+            ),
+            backend=consumer.backend,
+        )
+        with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
+            mismatched_consumer.get_objects(NUCLEI)
 
 
 def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs():
@@ -3225,6 +3242,7 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.CHANNEL,
+                    paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
@@ -3549,6 +3567,10 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
 def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
     filemanager = FileManagerStub()
     store = RuntimeValueStore()
+    group_paths = {
+        "1": "/memory/DNA_s1.pkl",
+        "2": "/memory/DNA_s2.pkl",
+    }
     first = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
@@ -3559,11 +3581,11 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                 ImageArtifactType,
                 plan=ArtifactOutputPlan(
                     name=DNA_IMAGE,
-                    path="/memory/DNA_s1.pkl",
+                    path=group_paths["1"],
                     artifact_type=ImageArtifactType,
                     group_keys=("1",),
                     group_component=AllComponents.SITE,
-                    paths_by_group={"1": "/memory/DNA_s1.pkl"},
+                    paths_by_group={"1": group_paths["1"]},
                 ),
             ),
         ),
@@ -3579,11 +3601,11 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                 ImageArtifactType,
                 plan=ArtifactOutputPlan(
                     name=DNA_IMAGE,
-                    path="/memory/DNA_s2.pkl",
+                    path=group_paths["2"],
                     artifact_type=ImageArtifactType,
                     group_keys=("2",),
                     group_component=AllComponents.SITE,
-                    paths_by_group={"2": "/memory/DNA_s2.pkl"},
+                    paths_by_group={"2": group_paths["2"]},
                 ),
             ),
         ),
@@ -3601,6 +3623,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.SITE,
+                    paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(

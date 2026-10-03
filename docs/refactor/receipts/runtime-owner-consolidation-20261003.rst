@@ -89,6 +89,49 @@ with the three original production modules. Those failures remain open consumer
 work, not waived tests. The bounded NRA census changes from 164 to 163 classes.
 No pipeline timing gain is claimed; this is part of a larger semantic batch.
 
+The next coherent batch removes four producer/stream representations:
+``FunctionStepOutputProducerIdentityRequest``,
+``FunctionStepOutputProducerIdentityAuthority``, ``ProducedMemoryPathsAuthority``
+and ``StreamOutputProjectionRequest``. ``CompiledStepPlan`` derives producer
+identity from the original main-flow/artifact declaration; ``ProducedOutputSemantics``
+derives memory paths and current source metadata; ``StepOutputManifestStore``
+selects current image cohorts. Save, materialization, viewer validation,
+publication and all three preset consumers migrate together. ``StreamOutputBatch``
+owns admission and projection. Correlated one-pass grouping replaces a complete
+record scan for each producer projection, preserving first-seen group order,
+within-group order, frozen input-list structure and original projector errors.
+Actual writer reloads and persisted-format decisions retain their original epochs.
+The producer/source gate passes 112 tests, stream/output gate 70 and
+artifact/viewer gate 79. Three stale CP fixtures now declare their producer-owned
+locations; all 248 related tests pass, including missing/wrong-location rejection.
+The production input-selection law is unchanged.
+
+The same batch removes ``AlignedImageStackKwargResolutionStrategy`` and its
+seven concrete leaves. Their operation now belongs to the existing
+``RuntimeSliceProjectionStrategy`` family. Ordinary projection and argument
+alignment remain distinct operations: tuple recursion versus list passthrough,
+whole image spatial alignment, label projection before spatial alignment, and
+nested outer-stack selection keep their original laws. Operation participation
+and nominal members derive from existing declarations and method ownership,
+with one shared MRO ordering algorithm and cached type selection. Narrower child
+declarations and dynamic extensions are covered by the 517-test family/CP gate.
+External extensions must use the existing projection family; equal-distance
+virtual-ABC ties follow its stable registration order. The separate registry's
+independent tie order and removed APIs have no compatibility aliases.
+A genuine old aligned-value bug also closes: the removed strategy called a
+nonexistent ``projection_axis.aligned_value``. The merged leaf invokes the
+existing value owner's ``value_for_aligned_slice`` capability, with exact outer
+count/index controls. Original ``AttributeError`` evidence is retained.
+
+The final combined 22-file execution, projection, image topology, save,
+publication, artifact, debug, framework, path and CP gate passes all 1,247 tests
+in 18.97 seconds. This validates the structural batch together. No new ordinary
+pipeline timing has yet been measured for this revision. An isolated main
+cherry-pick of the loaded-cohort change was rejected because it depends on the
+earlier executor/output consolidation; that temporary operation was aborted,
+its conflict evidence retained, and the empty branch removed. The coherent
+implementation remains in the formally linked draft PR #394.
+
 Publication reader consolidation uses the existing document handler and source
 projection builder. Required projection-only viewer consumers remain. Its 94
 reader controls pass; four saved-operand replays remove 151ms median locally

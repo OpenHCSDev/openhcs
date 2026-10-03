@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
@@ -109,32 +109,6 @@ def stream_payload_summary(payload: StreamPayload) -> str:
     return f"{summary} min={data.min()} max={data.max()}"
 
 
-class ProducedMemoryPathsAuthority:
-    """Resolve absolute memory paths produced by the current step execution."""
-
-    @classmethod
-    def paths(
-        cls,
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> list[str]:
-        return [
-            cls.memory_path(record, plan)
-            for record in step_output_manifest(context).produced_records_for(plan)
-            if record.is_image_payload
-        ]
-
-    @staticmethod
-    def memory_path(
-        record: ProducedOutputSemantics,
-        plan: CompiledStepPlan,
-    ) -> str:
-        path = Path(record.output_path)
-        if path.is_absolute():
-            return str(path)
-        return str(plan.output_dir / record.relative_output_path)
-
-
 def finalize_function_step_outputs(
     context: ProcessingContext,
     plan: CompiledStepPlan,
@@ -216,15 +190,11 @@ class MemoryOutputWriter:
         if plan.write_backend == Backend.MEMORY.value:
             return
 
-        produced_outputs = tuple(
-            record
-            for record in step_output_manifest(context).produced_records_for(plan)
-            if record.is_image_payload
-        )
+        produced_outputs = step_output_manifest(context).image_records_for(plan)
         if not produced_outputs:
             return
         memory_paths = [
-            ProducedMemoryPathsAuthority.memory_path(record, plan)
+            record.memory_path(plan)
             for record in produced_outputs
         ]
         memory_data = context.filemanager.load_batch(
@@ -275,13 +245,9 @@ class MaterializedImageOutputWriter:
         if materialized_output is None:
             return
 
-        produced_outputs = tuple(
-            record
-            for record in step_output_manifest(context).produced_records_for(plan)
-            if record.is_image_payload
-        )
+        produced_outputs = step_output_manifest(context).image_records_for(plan)
         memory_paths = [
-            ProducedMemoryPathsAuthority.memory_path(record, plan)
+            record.memory_path(plan)
             for record in produced_outputs
         ]
         if not produced_outputs:
@@ -317,91 +283,6 @@ class MaterializedImageOutputWriter:
 
 
 @dataclass(frozen=True, slots=True)
-class StreamOutputProjectionRequest:
-    """Nominal source of truth for projecting produced outputs into viewer streams."""
-
-    parser: FilenameParser
-    payloads: tuple[StreamPayload, ...]
-    paths: tuple[str, ...]
-    produced_outputs: tuple[ProducedOutputSemantics, ...]
-
-    @classmethod
-    def from_sequences(
-        cls,
-        *,
-        parser: FilenameParser,
-        payloads: list[StreamPayload],
-        paths: list[str],
-        produced_outputs: tuple[ProducedOutputSemantics, ...],
-    ) -> StreamOutputProjectionRequest:
-        return cls(
-            parser=parser,
-            payloads=tuple(payloads),
-            paths=tuple(paths),
-            produced_outputs=produced_outputs,
-        )
-
-    def __post_init__(self) -> None:
-        if len(self.payloads) != len(self.paths):
-            raise ValueError(
-                "Streaming payload/path cardinality mismatch: "
-                f"{len(self.payloads)} payloads for {len(self.paths)} paths."
-            )
-        if len(self.payloads) != len(self.produced_outputs):
-            raise ValueError(
-                "Streaming payload/output-record cardinality mismatch: "
-                f"{len(self.payloads)} payloads for "
-                f"{len(self.produced_outputs)} output records."
-            )
-        if not self.produced_outputs:
-            raise ValueError("Streaming requires at least one produced output record.")
-
-    def require_single_projection(self) -> tuple[str, ...]:
-        projection = self.produced_outputs[0].producer_identity.route_parts()
-        for produced_output in self.produced_outputs[1:]:
-            if produced_output.producer_identity.route_parts() != projection:
-                raise ValueError(
-                    "A viewer stream batch cannot mix producer projections."
-                )
-        return projection
-
-    def runtime_projection_request(
-        self,
-        payload: StreamPayload,
-        path: str,
-        produced_output: ProducedOutputSemantics,
-    ) -> RuntimeProjectionSourceIdentityRequest:
-        return RuntimeProjectionSourceIdentityRequest(
-            value=produced_output.contextualize_image_payload(payload),
-            source_description=path,
-        )
-
-    def for_projection(
-        self,
-        projection: tuple[str, ...],
-    ) -> StreamOutputProjectionRequest:
-        payloads: list[StreamPayload] = []
-        paths: list[str] = []
-        produced_outputs: list[ProducedOutputSemantics] = []
-        for payload, path, produced_output in zip(
-            self.payloads,
-            self.paths,
-            self.produced_outputs,
-            strict=True,
-        ):
-            if produced_output.producer_identity.route_parts() == projection:
-                payloads.append(payload)
-                paths.append(path)
-                produced_outputs.append(produced_output)
-        return StreamOutputProjectionRequest.from_sequences(
-            parser=self.parser,
-            payloads=payloads,
-            paths=paths,
-            produced_outputs=tuple(produced_outputs),
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class StreamOutputItem:
     """One projected image payload and its stream-visible output path."""
 
@@ -429,23 +310,55 @@ class StreamOutputBatch:
     items: tuple[StreamOutputItem, ...]
     producer: ViewerStreamProducer
 
+    @staticmethod
+    def _validate_inputs(
+        payloads: Sequence[StreamPayload],
+        paths: Sequence[str],
+        produced_outputs: tuple[ProducedOutputSemantics, ...],
+    ) -> None:
+        if len(payloads) != len(paths):
+            raise ValueError(
+                "Streaming payload/path cardinality mismatch: "
+                f"{len(payloads)} payloads for {len(paths)} paths."
+            )
+        if len(payloads) != len(produced_outputs):
+            raise ValueError(
+                "Streaming payload/output-record cardinality mismatch: "
+                f"{len(payloads)} payloads for "
+                f"{len(produced_outputs)} output records."
+            )
+        if not produced_outputs:
+            raise ValueError("Streaming requires at least one produced output record.")
+
     @classmethod
     def from_projection(
         cls,
-        request: StreamOutputProjectionRequest,
+        *,
+        parser: FilenameParser,
+        payloads: Sequence[StreamPayload],
+        paths: Sequence[str],
+        produced_outputs: tuple[ProducedOutputSemantics, ...],
     ) -> StreamOutputBatch:
-        request.require_single_projection()
+        payloads = tuple(payloads)
+        paths = tuple(paths)
+        cls._validate_inputs(payloads, paths, produced_outputs)
+        projection = produced_outputs[0].producer_identity.route_parts()
+        for produced_output in produced_outputs[1:]:
+            if produced_output.producer_identity.route_parts() != projection:
+                raise ValueError(
+                    "A viewer stream batch cannot mix producer projections."
+                )
 
         items: list[StreamOutputItem] = []
         for payload, path, produced_output in zip(
-            request.payloads,
-            request.paths,
-            request.produced_outputs,
-            strict=True,
+            payloads, paths, produced_outputs, strict=True,
         ):
             projected_items = tuple(
                 cls.project_item(
-                    request.runtime_projection_request(payload, path, produced_output)
+                    RuntimeProjectionSourceIdentityRequest(
+                        value=produced_output.contextualize_image_payload(payload),
+                        source_description=path,
+                    )
                 )
             )
             for projected_item in projected_items:
@@ -453,7 +366,7 @@ class StreamOutputBatch:
                     projected_item,
                     produced_path=path,
                     produced_output=produced_output,
-                    parser=request.parser,
+                    parser=parser,
                     projected_item_count=len(projected_items),
                 )
                 source_metadata = projected_item.require_source_component_metadata()
@@ -481,18 +394,33 @@ class StreamOutputBatch:
     @classmethod
     def from_projection_groups(
         cls,
-        request: StreamOutputProjectionRequest,
+        *,
+        parser: FilenameParser,
+        payloads: Sequence[StreamPayload],
+        paths: Sequence[str],
+        produced_outputs: tuple[ProducedOutputSemantics, ...],
     ) -> tuple[StreamOutputBatch, ...]:
-        projections = tuple(
-            dict.fromkeys(
-                produced_output.producer_identity.route_parts()
-                for produced_output in request.produced_outputs
+        payloads = tuple(payloads)
+        paths = tuple(paths)
+        cls._validate_inputs(payloads, paths, produced_outputs)
+        projections: dict[
+            tuple[str, ...], list[tuple[StreamPayload, str, ProducedOutputSemantics]]
+        ] = {}
+        for payload, path, produced_output in zip(
+            payloads, paths, produced_outputs, strict=True,
+        ):
+            projection = produced_output.producer_identity.route_parts()
+            projections.setdefault(projection, []).append(
+                (payload, path, produced_output)
             )
-        )
-
         return tuple(
-            cls.from_projection(request.for_projection(projection))
-            for projection in projections
+            cls.from_projection(
+                parser=parser,
+                payloads=tuple(payload for payload, _path, _record in members),
+                paths=tuple(path for _payload, path, _record in members),
+                produced_outputs=tuple(record for _payload, _path, record in members),
+            )
+            for members in projections.values()
         )
 
     @property
@@ -607,13 +535,9 @@ class StreamOutputsAuthority:
                     context.axis_id,
                 )
                 continue
-            produced_outputs = tuple(
-                record
-                for record in step_output_manifest(context).produced_records_for(plan)
-                if record.is_image_payload
-            )
+            produced_outputs = step_output_manifest(context).image_records_for(plan)
             memory_paths = [
-                ProducedMemoryPathsAuthority.memory_path(record, plan)
+                record.memory_path(plan)
                 for record in produced_outputs
             ]
             if not memory_paths:
@@ -637,12 +561,10 @@ class StreamOutputsAuthority:
                 )
             )
             stream_batches = StreamOutputBatch.from_projection_groups(
-                StreamOutputProjectionRequest.from_sequences(
-                    parser=context.microscope_handler.parser,
-                    payloads=streaming_payloads,
-                    paths=list(streaming_paths),
-                    produced_outputs=produced_outputs,
-                )
+                parser=context.microscope_handler.parser,
+                payloads=streaming_payloads,
+                paths=streaming_paths,
+                produced_outputs=produced_outputs,
             )
             stream_batches = tuple(
                 stream_batch
@@ -866,7 +788,7 @@ class OpenHCSMetadataWriter:
             payloads = (
                 context.filemanager.load_batch(
                     [
-                        ProducedMemoryPathsAuthority.memory_path(record, plan)
+                        record.memory_path(plan)
                         for record in records
                     ],
                     Backend.MEMORY.value,
@@ -888,11 +810,8 @@ class OpenHCSMetadataWriter:
                     destination=destination,
                     payload=payload,
                 )
-                source_metadata = dict(
-                    record.component_metadata(metadata.source_component_metadata)
-                )
-                metadata.source_voxel_spacing.merge_into(
-                    source_metadata, path=destination
+                source_metadata = record.source_metadata_for_projection(
+                    metadata, destination
                 )
                 address = record.filename_address
                 if address not in declared_addresses:
@@ -1115,11 +1034,7 @@ class ProducedImageMetadataCapability:
     def produced_records(
         self, context: ProcessingContext, plan: CompiledStepPlan
     ) -> tuple[ProducedOutputSemantics, ...]:
-        return tuple(
-            record
-            for record in step_output_manifest(context).produced_records_for(plan)
-            if record.is_image_payload
-        )
+        return step_output_manifest(context).image_records_for(plan)
 
 
 class PrimaryImageMetadataTarget(
@@ -1133,7 +1048,7 @@ class PrimaryImageMetadataTarget(
     def from_execution(
         cls, context: ProcessingContext, plan: CompiledStepPlan
     ) -> PrimaryImageMetadataTarget | None:
-        if not ProducedMemoryPathsAuthority.paths(context, plan):
+        if not step_output_manifest(context).image_records_for(plan):
             return None
         return cls.from_plan(plan)
 
