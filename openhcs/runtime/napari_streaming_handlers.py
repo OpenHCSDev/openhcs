@@ -1442,7 +1442,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         self,
         payload_axis_labels: tuple[str, ...] = (),
         *,
-        scale: Sequence[float] | None = None,
+        scale: Sequence[float],
     ) -> tuple[float, ...]:
         """Place route offsets in the same native world units as layer scale."""
 
@@ -1455,8 +1455,6 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             0.0,
             0.0,
         )
-        if scale is None:
-            return offsets
         return tuple(
             offset * spacing for offset, spacing in zip(offsets, scale, strict=True)
         )
