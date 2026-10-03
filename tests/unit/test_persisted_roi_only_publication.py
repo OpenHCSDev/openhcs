@@ -244,6 +244,82 @@ def test_shared_writer_accepts_result_only_but_not_unaddressed_images(
     assert metadata_path.read_bytes() == before
 
 
+def test_reconciliation_keeps_artifact_destination_without_results_field(
+    tmp_path, publication_context
+):
+    from polystore.virtual_workspace import SourcePixelRef
+
+    from openhcs.core.source_projection import (
+        OpenHCSPlaneAddress,
+        SourceArtifactProjection,
+        SourceProjectionMetadataSerializer,
+    )
+    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    projection = SourceArtifactProjection(
+        address=OpenHCSPlaneAddress.from_values(
+            well="A01", site="1", channel="2", z_index="1", timepoint="1"
+        ),
+        ref=SourcePixelRef(Backend.DISK.value, "physical/acquisition-source.tif"),
+        source_alias="Declared",
+        artifact_kind=MetadataArtifactType,
+    )
+    fields = SourceProjectionMetadataSerializer(
+        SourceSchemaFilenameParser()
+    ).projection_fields(((projection, "nested/declared-result.tif"),))
+    metadata_path = METADATA_CONFIG.metadata_path(plate)
+    metadata_path.write_text(json.dumps({"subdirectories": {"nested": fields}}))
+    before = metadata_path.read_bytes()
+    handler = OpenHCSMetadataHandler(publication_context.filemanager)
+    assert handler.analysis_result_directories(plate) == ()
+    owner = RuntimeArtifactMetadataTarget.from_plan(plan_for(plate))
+    assert plate / "nested" in tuple(
+        target.output_dir for target in owner.reconciliation_targets(publication_context)
+    )
+    assert metadata_path.read_bytes() == before
+
+
+@pytest.mark.parametrize("later_subdirectory", [False, True])
+def test_reconciliation_admits_all_projection_rows_before_workspace_fields(
+    tmp_path, publication_context, later_subdirectory
+):
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    invalid_row = {
+        "virtual_path": "images/unregistered.tif",
+        "projection_role": "unknown",
+    }
+    subdirectories = {"images": {"workspace_mapping": "invalid"}}
+    destination = "later" if later_subdirectory else "images"
+    subdirectories.setdefault(destination, {})["source_projection"] = [invalid_row]
+    metadata_path = METADATA_CONFIG.metadata_path(plate)
+    metadata_path.write_text(json.dumps({"subdirectories": subdirectories}))
+    before = metadata_path.read_bytes()
+    owner = RuntimeArtifactMetadataTarget.from_plan(plan_for(plate))
+    with pytest.raises(RuntimeError, match="unknown projection_role"):
+        owner.reconciliation_targets(publication_context)
+    assert metadata_path.read_bytes() == before
+
+
+def test_reconciliation_preserves_raw_json_error_and_missing_document_error(
+    tmp_path, publication_context
+):
+    from polystore.exceptions import MetadataNotFoundError
+
+    plate = tmp_path / "plate"
+    plate.mkdir()
+    metadata_path = METADATA_CONFIG.metadata_path(plate)
+    owner = RuntimeArtifactMetadataTarget.from_plan(plan_for(plate))
+    with pytest.raises(MetadataNotFoundError):
+        owner.reconciliation_targets(publication_context)
+    metadata_path.write_text("{")
+    with pytest.raises(json.JSONDecodeError):
+        owner.reconciliation_targets(publication_context)
+    assert metadata_path.read_text() == "{"
+
+
 def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edits(
     tmp_path,
     publication_context,

@@ -86,8 +86,6 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
-    OpenHCSMetadataSubdirectories,
-    VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -1220,28 +1218,15 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
         """Use durable typed projections, without reloading cleaned artifact values."""
         from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
-        subdirectories = OpenHCSMetadataSubdirectories.from_path(
-            METADATA_CONFIG.metadata_path(self.plate_root)
-        )
-        directories = tuple(
-            Path(self.plate_root) / Path(path).parent
-            for _name, subdirectory in subdirectories.items()
-            for path, projection in VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                subdirectory
-            ).entries.items()
-            if isinstance(projection, SourceArtifactProjection)
-            and projection.ref.backend == self.backend
-        )
-        result_directories = OpenHCSMetadataHandler(
+        directories = OpenHCSMetadataHandler(
             context.filemanager
-        ).analysis_result_directories(self.plate_root)
+        ).reconciliation_directories(self.plate_root, self.backend)
         return tuple(
             self.for_directory(directory)
             for directory in dict.fromkeys(
                 (
                     self.output_dir,
                     *directories,
-                    *(directory.path for directory in result_directories),
                 )
             )
         )

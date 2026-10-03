@@ -779,11 +779,9 @@ class VirtualWorkspaceSourceProjectionBuilder:
     def ingest_subdirectory(self, subdirectory: OpenHCSSubdirectoryPayload) -> None:
         workspace_mapping = VirtualWorkspaceMapping.from_subdirectory(subdirectory)
         self.ingest_workspace_mapping(workspace_mapping)
-        self.ingest_source_projections(
-            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
-        )
-        self.ingest_source_metadata(
-            VirtualWorkspaceSourceMetadataEntries.from_subdirectory(subdirectory),
+        self.ingest_admitted_subdirectory(
+            subdirectory,
+            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
         )
 
     def ingest_workspace_mapping(
@@ -805,10 +803,27 @@ class VirtualWorkspaceSourceProjectionBuilder:
         self.workspace_source_refs[virtual_path] = source_ref
         self.workspace_source_refs[loadable_path] = source_ref
 
+    def ingest_admitted_subdirectory(
+        self,
+        subdirectory: OpenHCSSubdirectoryPayload,
+        source_projections: VirtualWorkspaceSourceProjectionEntries,
+    ) -> None:
+        """Ingest admitted projections, then their correlated source fields.
+
+        Workspace mappings must already be ingested. Raw readers admit each
+        projection after its mapping; reconciliation admits the whole document's
+        projection records before any workspace fields. Both share this tail.
+        """
+        self.ingest_source_projections(source_projections)
+        self.ingest_source_metadata(
+            VirtualWorkspaceSourceMetadataEntries.from_subdirectory(subdirectory)
+        )
+
     def ingest_source_projections(
         self,
         source_projections: VirtualWorkspaceSourceProjectionEntries,
     ) -> None:
+        """Ingest a projection-only source authority after its workspace mapping."""
         for virtual_path, projection in source_projections.entries.items():
             mapped_ref = self.workspace_source_refs.get(virtual_path)
             if mapped_ref is None:

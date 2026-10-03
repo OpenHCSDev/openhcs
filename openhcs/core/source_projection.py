@@ -632,6 +632,12 @@ class SourceProjection:
     image_metadata: ClassVar[ImagePayloadMetadata | None] = None
     execution_scope: ClassVar[RuntimeExecutionAxisScope | None] = None
 
+    def artifact_result_directory(
+        self, virtual_path: str, backend: str
+    ) -> Path | None:
+        """Return a declared artifact destination, if this role owns one."""
+        return None
+
     @property
     def identity_key(self) -> tuple[object, ...]:
         """Return the projection identity enforced within one source set."""
@@ -801,6 +807,14 @@ class SourceArtifactProjection(SourceProjection):
     )
     image_metadata: ImagePayloadMetadata | None = None
     execution_scope: RuntimeExecutionAxisScope | None = None
+
+    def artifact_result_directory(
+        self, virtual_path: str, backend: str
+    ) -> Path | None:
+        """Use the persisted virtual path, not the source pixel reference address."""
+        if self.ref.backend != backend:
+            return None
+        return Path(virtual_path).parent
 
     def __post_init__(self) -> None:
         normalized_alias = str(self.source_alias).strip()
