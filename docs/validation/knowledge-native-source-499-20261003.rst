@@ -129,3 +129,65 @@ The retained parent fresh CLI/MCP baseline was548.24MiB, beyond the current
 512MiB aggregate authorization; do not induce an OOM or raise that cap here.
 Parent can verify this exact wheel in a separately qualified no-native slot.
 This package/source acceptance is not installed, parity or biological success.
+
+Merged-main and installed public acceptance
+------------------------------------------
+
+Normally merged main9531d5946181b2c22610fc13de2733e95f889cbf (PR504) into
+this branch without reset/rebase or submodule changes; source checkpoint
+4d3ef0ce6be472b75879dc9a179cab61c7eb9780. Source family check06:13 passed,
+2.14s,223.7MiB peak,Swap0. Retained before/after AST via the existing
+refactor-audit substrate:815 modules including setup.py, zero parse omissions,
+52 before/73 after family sites; all9 superseded declarations removed.
+Leaf-name/dynamic resolution limits remain as above; no global NRA claim.
+
+Merged-source ordinary wheel02:5.019s,172.8MiB peak,Swap0,CPU1.
+SHA256:816b16f08a24ff92738083b31a440abda36b943ecba1a496976ce28a10b064aa.
+Actual archive proof matches all704 tracked OpenHCS Python sources and all86
+declared knowledge-closure resources byte-for-byte, including all30 native
+.cppipes and unchanged manifests. No raw/expected-data closure members.
+This is the exact wheel used by the installed check, not the earlier wheel.
+
+Parent explicitly authorized ONE engineering public MCP check at1GiB/CPU1/
+Swap0; actual host had14.3GiB available RAM and5.7GiB home free (critical
+disk/swap advisory). Ordinary pip --no-deps --no-index --no-compile to a NEW
+owned private target reused the existing paired interpreter; no environment,
+dependency install/build or download and no science498 mutation.
+
+Actual public route: installed original dev-client -> original MCP stdio
+server -> KnowledgeBaseService -> canonical public importer -> original
+PipelineDocumentAuthority renderer. No substitute service/factory, source
+shim, foreign server, native catalogue preparation, native/viewer, model or
+scientific execution. No endpoint/port was needed by this public contract.
+
+Four complete error-free calls, normal10second tool observations: health,
+first_use context, bounded capability discovery, exact common start-section
+retrieval. Installed0.8.7 health reports86 ready resources, no stale paths,
+no reconnect, exact private installed server source. Selected section returned
+8011characters, truncated=false, errors=[], warnings=[]; recording shows
+1.954seconds request-to-complete-response. Generated source parses and declares
+BOTH pipeline_config and pipeline_steps; it was NOT executed or compiled.
+Content SHA256:509c516501086b9202bd1c34ee71c388ffabb3cbce4f74b0839315b915f8d942.
+This is an installed technical retrieval acceptance, NOT selected-value parity
+or biological evidence. No methods/parameters are sent to scientific authors.
+
+Original final-section UNKNOWN remains unchanged and was never replayed.
+Further complete engineering denominator: check07 failed before collection
+because the external pytest plugin could not resolve tests; check08 collected
+against pytest-prepended checkout source and hit the preserved foreign
+pyqt-reactive enum mismatch again. No source-test bootstrap bypass or dependency
+edit. These failures remain; broader source service suite is not claimed green.
+
+Teardown exception retained: the120second OUTER idle-session deadline expired
+42.494seconds AFTER the complete final response and before explicit exit could
+be sent. Outer exit124, recorded script child exit0; all4 complete responses
+are retained, so no uncertain tool call/replay is introduced. Exact CLI1605361,
+MCP1605531, script1605357 and timeout1605356 were personally checked absent;
+own unit inactive/dead. Peak433.4MiB,Swap0; no2GiB/native dependency was needed.
+A late read-only process-identity probe failed after expiry and was recorded.
+
+Durable external receipt root:next-h004-preparation-20261002/
+official30-package-implementation-20261003. Own runtime505 holds original
+stdin/stdout/timing, ACCEPTANCE.json, PROCESS-DISPOSITION.json and timing
+decision. Both original and merged wheels, all8 check results and both wheel
+results remain; ordinary private target retained for parent review. No CI wait.
