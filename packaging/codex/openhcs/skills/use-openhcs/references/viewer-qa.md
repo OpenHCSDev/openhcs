@@ -154,6 +154,40 @@ when that association belongs to the intended measurement; there is no
 universal requirement that every centroid lie inside a mask. Record geometry,
 row or alignment disagreements instead of treating a visible point as a pass.
 
+## Keep iterative review within its resource budget
+
+Treat durable candidate evidence and the active viewer scene separately.
+After a candidate's execution and captures are settled, retain its source,
+result/intermediate paths, matched PNGs, state and decision on disk. Keep the
+current matched raw/result routes and any raw references or regression routes
+still needed for the next comparison; previous candidates need not all remain
+mounted to preserve their evidence.
+
+Before adding another candidate, read the unfiltered viewer state through
+`openhcs_get_viewer_window_state` and check mounted routes, component groups and
+the trial's actual memory/output headroom. A route-filtered layer count is not
+the whole scene. Hiding a route with `openhcs_navigate_viewer_window` or showing
+only chosen routes with `openhcs_isolate_viewer_window_layers` changes visibility,
+not buffer lifetime. A new execution's stream reset is not selective retirement
+of earlier mounted results. Do not budget hidden layers as released memory.
+
+Discover a supported selective layer-retirement capability before attempting
+it. If exposed, retire only explicitly identified superseded candidate routes
+at a settled boundary, then read back surviving payload/source identities,
+axes and camera and verify the current matched comparison still works. Keep
+the needed raw source mounted, including its domain for point-only review.
+Do not use blanket scene clearing, history deletion or viewer restarts as an
+iteration policy.
+
+If no compatible retirement operation is exposed, record that contract gap
+and request its original runtime owner; do not invent a remove-layer command,
+invoke private control messages or manipulate the viewer outside MCP. Continue
+only the work that fits the remaining authorised resources, rather than adding
+candidate buffers without accounting for them. Keep frozen witnesses and
+UNKNOWN operations intact. Scope OOM, layer counts and retained output bytes
+are different observations: none alone identifies a memory leak or the
+responsible process. Record actual memory attribution or its absence.
+
 ## Diagnose one failure and preserve a regression control
 
 Log a clear positive, a plausible miss/ambiguity and an explicit
