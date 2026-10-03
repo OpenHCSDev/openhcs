@@ -129,7 +129,8 @@ printf 'PASS unknown retirement and ambiguous family membership rejected; failed
 
 # Headless administrative permissions disable endpoints with0, not fake ports.
 mkdir "$scratch/headless"
-jq --arg root "$scratch" '.additional_authors += [{slot:"ADMIN",run_owner_root:($root+"/headless"),
+jq --arg root "$scratch" '.members=[] | .retired_members=[] |
+  .additional_authors=[{slot:"ADMIN",run_owner_root:($root+"/headless"),
   display:0,cpu:0,input_root:"/controlled/no-science",native_port:0,native_ack_port:0,
   viewer_port:0,viewer_ack_port:0,vnc_port:0,
   helper_custody:{program_root:($root+"/headless"),slot:"ADMIN"}}]' \
