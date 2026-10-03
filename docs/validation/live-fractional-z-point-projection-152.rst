@@ -430,3 +430,24 @@ unchanged. Root394 bb9c has no release for comment5965364042; shared source is
 not patched. Original failed public journey, logs, source and scratch preserved.
 Evidence: engineering494/domain-rejection-control06.py and matching log,
 DOMAIN06-GUIDE06-QUALIFICATION.rst. No build or service launched.
+
+Receiving Root owner integration07
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The next determining owner check found Root394 advanced to4eaacf17e5de before
+any helper/import edit. Normal merge337a31c9b receives its existing
+SourceMetadataFields owner unchanged. No competing production hunk authored.
+Its provenance_identity_items still explicitly preserves nested insertion-order
+repr; adjacent identity_items owns nested key canonicalization. Exact remaining
+owner method hunk posted394 comment5965533217 for Root implementation/release.
+
+Named-family AST update704 OpenHCS+95 paired modules, zero parse omissions.
+Actual source07 batch:27PASS/7FAIL in4.85s, terminal1, peak298295296B/512MiB,
+Swap0/CPU1/60s/OOM0. Original31 remains25PASS/6FAIL unchanged; three additional
+identity controls give2PASS/1FAIL: changed nested values and plane order remain
+distinct, equivalent reordered mappings fail. This is NOT repaired identity,
+full31PASS, wheel/native settlement or biological acceptance. All original six
+failures and public journals preserved. No assertion weakening/fixture sorting,
+live target changes, new runtime, build or environment. Five foreign gitlinks
+untouched. Evidence engineering494/ROOT07-QUALIFICATION.rst,
+IDENTITY-FAMILY07.json, source-control07.py/.log and ROOT-IDENTITY-HUNK07.rst.

@@ -5,9 +5,9 @@ from openhcs.core.source_image_provenance import SourceImageIdentity, SourceImag
 from openhcs.core.source_metadata import OriginalSourceMetadata, SourceFilterPathMetadata
 
 
-def source_records():
+def source_records(*, literal_site="001"):
     metadata = {"well": "A01", "site": "1", "channel": "1", "z_index": "0"}
-    OriginalSourceMetadata.from_mapping({"well": "A01", "site": "001", "z_index": "000"}).merge_into(
+    OriginalSourceMetadata.from_mapping({"well": "A01", "site": literal_site, "z_index": "000"}).merge_into(
         metadata, path="/input/A01_z000.tif",
     )
     SourceFilterPathMetadata.from_paths(("A01_z000.tif", "/input/A01_z000.tif")).merge_into(
@@ -35,10 +35,7 @@ def test_source_identity_nested_mapping_reorder_is_equivalent():
 
 def test_source_identity_changed_nested_value_is_distinct():
     original = source_records()
-    changed = source_records()
-    OriginalSourceMetadata.from_mapping({"well": "A01", "site": "002", "z_index": "000"}).merge_into(
-        changed, path="/input/A01_z000.tif",
-    )
+    changed = source_records(literal_site="002")
     assert SourceImageIdentity("/input/A01_z000.tif", original).identity != SourceImageIdentity(
         "/input/A01_z000.tif", changed,
     ).identity
