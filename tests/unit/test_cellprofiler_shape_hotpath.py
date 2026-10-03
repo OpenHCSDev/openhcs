@@ -64,7 +64,7 @@ def _generic_shape_rows(
     table = ShapeObjectFeatureValueTable.from_feature_arrays(
         feature_values,
         measured_labels,
-        object_domain=range(1, int(labels.max(initial=0)) + 1),
+        object_domain=tuple(int(value) for value in np.unique(labels[labels > 0])),
     )
     return ObjectFeatureValueTable.rows(table)
 
@@ -97,7 +97,7 @@ def test_all_enabled_2d_shape_vectors_match_generic_row_projection() -> None:
     )
 
     assert tuple(field.name for field in actual_rows.fields) == field_names
-    assert actual_rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert actual_rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert tuple(field.dtype for field in actual_rows.fields[:2]) == (int, int)
     assert all(field.dtype is float for field in actual_rows.fields[2:])
     _assert_rows_strict(actual_rows, expected_rows, field_names)
@@ -209,7 +209,7 @@ def test_empty_stacked_shape_preserves_declared_metadata_and_dtypes() -> None:
     )
 
     assert len(rows) == 0
-    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert tuple(field.name for field in rows.fields) == field_names
     assert tuple(field.dtype for field in rows.fields[:2]) == (int, int)
     assert all(field.dtype is float for field in rows.fields[2:])
@@ -243,7 +243,7 @@ def test_sparse_high_id_shape_preserves_label_domain_and_row_identity() -> None:
     )
 
     assert len(rows) == 1
-    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert rows[0][MeasurementRowAxisField.OBJECT_LABEL.value] == 892
     assert rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 4.0
     assert (

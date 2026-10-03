@@ -2093,7 +2093,15 @@ def filter_objects(
     | tuple[
         np.ndarray,
         DataclassMeasurementColumnarRows,
-        np.ndarray | DirectedObjectRelationshipPayload,
+        ObjectLabelValue,
+        ObjectLabelValue,
+        DirectedObjectRelationshipPayload,
+        DirectedObjectRelationshipPayload,
+    ]
+    | tuple[
+        np.ndarray,
+        DataclassMeasurementColumnarRows,
+        ObjectLabelValue | DirectedObjectRelationshipPayload,
         ...,
     ]
 ):
