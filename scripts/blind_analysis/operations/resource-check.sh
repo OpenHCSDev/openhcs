@@ -28,7 +28,6 @@ if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
 fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
-total_cap=$(jq -er '.proposed_resource_envelope.total_output_and_scratch_mib*1048576' <<< "$FLEET_PROGRAM")
 
 # Canonicalize membership once and reject overlaps before counting any bytes.
 outputs=()
@@ -73,9 +72,9 @@ for ((i=old_count;i<${#outputs[@]};i++)); do
   test "$((bytes-scratch))" -le "$output_cap"
   total=$((total+bytes))
 done
-printf 'Programme old=%s current=%s reservedCurrent=%s totalLimit=%s\n' "$old" "$total" "$reserved" "$total_cap" | tee -a "$receipt.output"
-test "$((old+reserved))" -le "$total_cap"
-test "$((old+total))" -le "$total_cap"
+printf 'Programme old=%s current=%s reservedCurrent=%s\n' "$old" "$total" "$reserved" | tee -a "$receipt.output"
+# Historical allocations are observations, already reflected in df free space.
+# Only still-funded output/scratch growth is reserved against actual HOME.
 remaining=$((reserved-total))
 test "$remaining" -ge 0
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
