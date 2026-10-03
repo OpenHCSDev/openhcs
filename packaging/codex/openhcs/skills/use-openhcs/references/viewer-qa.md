@@ -230,10 +230,13 @@ inspect body-channel support and growth beyond each object's own primary seed;
 matching counts or retained seed IDs do not prove cell bodies. For neurites,
 inspect faint supported soma-to-process continuity, endpoints, crossings,
 branches and background bridges. Reject the candidate for clear supported
-misses, erased paths or induced background bridges/artifacts; saturation of
+misses, erased paths or induced background bridges/artifacts that violate the
+requested claim's acceptance criteria; saturation of
 bright somas alone is not a diagnostic or segmentation rejection gate. Triage
 ambiguous debris separately so it does not prevent review of clear supported
-misses.
+misses. Apply [claim-scoped conclusions](analysis-strategy.md#scope-conclusions-to-the-evidence)
+to retain supported findings and identify which objects or relationships remain
+uncertain, rather than converting every result into a blanket abstention.
 
 Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
