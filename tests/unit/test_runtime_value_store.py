@@ -1703,6 +1703,165 @@ def test_declared_paired_channel_label_input_matches_image_set_context():
     assert runtime_input.resolve_value(store).name == "Nuclei"
 
 
+def _grouped_label_input_with_distinct_consumer_channel():
+    path = "/memory/Cells_channel_0.pkl"
+    storage_plan = ArtifactInputPlan(
+        name="Cells",
+        path=path,
+        artifact_type=ObjectLabelsArtifactType,
+        group_component=AllComponents.CHANNEL,
+        group_keys=("0",),
+        paths_by_group={"0": path},
+        source_step_id=20,
+    )
+    output_plan = ArtifactOutputPlan(
+        name=storage_plan.name,
+        path=path,
+        artifact_type=storage_plan.artifact_type,
+        group_component=storage_plan.group_component,
+        group_keys=storage_plan.group_keys,
+        paths_by_group=storage_plan.paths_by_group,
+    ).for_group("0")
+    value = RuntimeValue.normalize_for_execution_scope(
+        output_plan,
+        ObjectLabelSet(
+            name="Cells",
+            variant_data=ObjectLabelVariantData(labels=np.ones((2, 2), dtype=np.uint16)),
+        ),
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "W001", component=AllComponents.CHANNEL, value="0",
+            fixed_component_values=(
+                (AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "1"),
+            ),
+        ),
+    )
+    store = RuntimeValueStore()
+    record = store.record(value, path=path, backend="memory")
+    runtime_input = RuntimeArtifactInput(
+        edge_plan=_runtime_input_edge(
+            storage_plan,
+            invocation_scope=ComponentGroupScope.ungrouped(),
+            producer_selection_scope=storage_plan.producer_group_scope(),
+            component_scopes=(),
+            consumer_variable_components=(AllComponents.Z_INDEX,),
+        ),
+        axis_scope=RuntimeExecutionAxisScope.from_raw(
+            "W001", component=None, value=None,
+            fixed_component_values=(
+                (AllComponents.SITE, "1"), (AllComponents.CHANNEL, "2"),
+                (AllComponents.TIMEPOINT, "1"),
+            ),
+        ),
+        backend="memory",
+    )
+    return store, record, runtime_input
+
+
+def test_exact_producer_group_does_not_constrain_consumer_source_channel():
+    store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
+
+    assert runtime_input.records(store) == (record,)
+    assert runtime_input.resolve_value(store) is record.value.data
+    candidates = runtime_input.candidate_execution_scopes(
+        store, ComponentGroupScope.ungrouped(),
+        variable_components=ComponentSet((AllComponents.Z_INDEX,)),
+    )
+    (scope,) = candidates
+    # Discovery still owns the producer's semantic channel, rather than adopting
+    # a later consumer's independently selected source-image channel.
+    assert dict(scope.fixed_component_values) == {
+        AllComponents.SITE: "1", AllComponents.CHANNEL: "0",
+        AllComponents.TIMEPOINT: "1",
+    }
+
+
+@pytest.mark.parametrize("component", [AllComponents.SITE, AllComponents.TIMEPOINT])
+def test_exact_producer_group_preserves_shared_fixed_context_constraints(component):
+    store, _record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
+    fixed_values = dict(runtime_input.axis_scope.fixed_component_values)
+    fixed_values[component] = "2"
+    wrong_context = replace(
+        runtime_input,
+        axis_scope=replace(
+            runtime_input.axis_scope, fixed_component_values=tuple(fixed_values.items()),
+        ),
+    )
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        wrong_context.records(store)
+
+
+@pytest.mark.parametrize("mismatch", ["group", "well", "path", "fixed-z"])
+def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
+    _store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
+    scope = record.key.scope
+    path = record.path
+    if mismatch == "group":
+        scope = replace(scope, value="1")
+    elif mismatch == "well":
+        scope = replace(scope, axis_id="W002")
+    elif mismatch == "path":
+        path = "/memory/other/Cells_channel_0.pkl"
+    else:
+        scope = RuntimeExecutionAxisScope.from_raw(
+            scope.axis_id, component=scope.component, value=scope.value,
+            fixed_component_values=(*scope.fixed_component_values, (AllComponents.Z_INDEX, "2")),
+        )
+        runtime_input = replace(
+            runtime_input,
+            axis_scope=RuntimeExecutionAxisScope.from_raw(
+                runtime_input.axis_scope.axis_id,
+                component=runtime_input.axis_scope.component,
+                value=runtime_input.axis_scope.value,
+                fixed_component_values=(
+                    *runtime_input.axis_scope.fixed_component_values,
+                    (AllComponents.Z_INDEX, "1"),
+                ),
+            ),
+        )
+    store = RuntimeValueStore()
+    store.record(
+        replace(record.value, key=replace(record.key, scope=scope)),
+        path=path, backend=record.backend,
+    )
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        runtime_input.records(store)
+
+
+def test_different_producer_group_axis_preserves_fixed_source_channel_constraint():
+    _store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
+    # SITE is now the selected producer group. CHANNEL remains a genuine fixed
+    # image context and cannot use the selected-group exemption.
+    scope = RuntimeExecutionAxisScope.from_raw(
+        "W001", component=AllComponents.SITE, value="1",
+        fixed_component_values=(
+            (AllComponents.CHANNEL, "0"), (AllComponents.TIMEPOINT, "1"),
+        ),
+    )
+    storage_plan = replace(
+        runtime_input.edge_plan.storage_plan,
+        group_component=AllComponents.SITE, group_keys=("1",),
+        paths_by_group={"1": record.path},
+    )
+    runtime_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            runtime_input.edge_plan,
+            storage_plan=storage_plan,
+            projection=replace(
+                runtime_input.edge_plan.projection,
+                producer_selection_scope=storage_plan.producer_group_scope(),
+            ),
+        ),
+    )
+    store = RuntimeValueStore()
+    store.record(
+        replace(record.value, key=replace(record.key, scope=scope)),
+        path=record.path, backend=record.backend,
+    )
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        runtime_input.records(store)
+
+
 def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     store, record, runtime_input = _paired_channel_label_input()
     edge = runtime_input.edge_plan

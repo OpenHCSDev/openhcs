@@ -703,7 +703,12 @@ class RuntimeArtifactInput:
         context_components = ComponentSet.collect(
             (component for component, _value in self.axis_scope.fixed_component_values),
             (component for component, _value in record_scope.fixed_component_values),
-        ).excluding(projected_components)
+        ).excluding(
+            ComponentSet.collect(
+                projected_components,
+                (self.edge_plan.storage_plan.producer_group_scope().component,),
+            )
+        )
         identity_policy = self._source_context_identity_policy()
         context_components = (
             context_components
