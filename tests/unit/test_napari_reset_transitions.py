@@ -85,6 +85,8 @@ def receiver():
     # Exercise native selection event binding, without mounting an unrelated Qt dock.
     server.result_selection_controller = NapariResultSelectionController(server)
     server.bind_result_selection_layer = server.result_selection_controller.bind
+    # ViewerModel exercises native layer/dims selection, not window prominence.
+    server.raise_result_selection_surface = lambda: None
     yield server
     server.layer_route_state.drain_pending_updates()
     server.display_pipeline.clear_display_work()
@@ -103,6 +105,7 @@ def enqueue(
     domain=None,
     display_config=None,
     channel=1,
+    channels=None,
 ):
     config = display_config or NapariDisplayConfig(
         well_mode=NapariDimensionMode.STACK,
@@ -120,7 +123,7 @@ def enqueue(
             }
         ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"well": domain or [well], "channel": [channel],
+            {"well": domain or [well], "channel": channels or [channel],
              "site": [1], "z_index": [1], "timepoint": [1]},
             context="synthetic transition"
         ),
@@ -219,7 +222,7 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
                     receiver, [{"type": "points" if data_type is StreamingDataType.POINTS else "path",
                                 "coordinates": coordinates, "metadata": {"label": 10 * wells.index(well) + channel}}],
                     well=well, channel=channel, producer="result", data_type=data_type,
-                    domain=wells, display_config=result_config,
+                    domain=wells, channels=[1, 2], display_config=result_config,
                 )
         advance_in_qt(receiver, route, update)
         return route
@@ -264,12 +267,12 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
         assert receiver.viewer.dims.current_step[4] == wells.index(well)
         assert np.max(layer._data_view) == 10 * wells.index(well) + channel
         assert well in receiver.viewer.text_overlay.text
-        assert f"Ch{channel}" in receiver.viewer.text_overlay.text
+        assert f"Ch {channel}" in receiver.viewer.text_overlay.text
         for other_route in raw_routes.values():
             receiver.layer_route_state.layer(other_route).visible = other_route == route
         result_layer.visible = True
         receiver.display_pipeline.dimension_label_overlay._update_overlay()
-        assert well in receiver.viewer.text_overlay.text and f"Ch{channel}" in receiver.viewer.text_overlay.text
+        assert well in receiver.viewer.text_overlay.text and f"Ch {channel}" in receiver.viewer.text_overlay.text
         assert np.max(layer._data_view) == 10 * wells.index(well) + channel
 
 
