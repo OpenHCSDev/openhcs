@@ -49,7 +49,11 @@ from polystore.streaming.receivers.napari.layer_key import build_route_key, norm
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 from polystore.streaming.viewer_transport import ViewerStreamBackendKwargs
 from polystore.streaming_constants import StreamingDataType
-from openhcs.processing.materialization.core import Output, ViewerStreamBackendCallKwargs
+from openhcs.processing.materialization.core import (
+    BackendSaver,
+    Output,
+    ViewerStreamBackendCallKwargs,
+)
 from polystore.streaming.identity import StreamProducerIdentity
 
 from tests.unit.test_function_artifact_materialization import (
@@ -111,7 +115,16 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
     stream_saves = []
+    disk_outputs = []
     original_save_batch = filemanager.save_batch
+    original_save_all = BackendSaver.save_all
+
+    def save_all(saver, outputs):
+        if "disk" in saver.backends:
+            disk_outputs.extend(
+                output for output in outputs if output.path.endswith(".labels.tif")
+            )
+        return original_save_all(saver, outputs)
 
     def save_batch(contents, paths, backend, **kwargs):
         if backend == "napari_stream":
@@ -123,6 +136,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
         return original_save_batch(contents, paths, backend, **kwargs)
 
     monkeypatch.setattr(filemanager, "save_batch", save_batch)
+    monkeypatch.setattr(BackendSaver, "save_all", save_all)
     context = _context(filemanager)
     context.runtime_value_store.record(
         RuntimeValue.normalize(output_plan, labels, axis_id="A01"),
@@ -133,12 +147,9 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
         streaming_configs={"napari_stream": ComponentDisplayConfig(component, mode)},
         variable_components=(VariableComponents(component.value),),
     ), analysis_results_dir=str(tmp_path / "analysis"), output_dir=tmp_path / "images")
-    materialized = materialize_artifact_outputs(
+    materialize_artifact_outputs(
         filemanager, plan, PersistentArtifactMaterializationTargetPlan("disk"), context,
     )
-    disk_outputs = [output for result in materialized
-                    for output in result.outputs_by_backend["disk"]
-                    if output.path.endswith(".labels.tif")]
     assert len(disk_outputs) == 1
     import tifffile
 

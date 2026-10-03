@@ -75,6 +75,10 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.function_output_identity import (
+    FunctionOutputIdentityAuthority,
+    FunctionOutputPathAuthority,
+)
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamViewerComponentMetadataProjector,

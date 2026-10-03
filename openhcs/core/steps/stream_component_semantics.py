@@ -90,8 +90,9 @@ class StreamImagePayloadMetadataProjector:
             FijiDimensionMode.WINDOW.value,
         )
         if not any(
-            component_modes[component] in scalar_modes
-            for component in component_values
+            mode in scalar_modes
+            for component, mode in component_modes.items()
+            if component in component_values
         ):
             return (RuntimeProjectedPayloadItem(payload, source_description),)
         projection = RuntimePlaneAxisValueProjection.preserve(
