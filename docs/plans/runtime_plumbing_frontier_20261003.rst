@@ -351,3 +351,37 @@ outputs/freeze remain under the corresponding maintenance ABBA directory.
 Runtime plumbing, full-catalog/scaling measurements, fresh native repetitions
 and figures remain outstanding. Original whole-branch R0/R1 failures remain
 explicit and unwaived.
+
+Canonical provenance identity integration
+------------------------------------------
+
+Main readiness #514 is merged into this branch. The overlapping readiness
+regression was removed from the callable ABI suite; the dedicated main test
+remains authoritative. Callable canonical-signature preparation still precedes
+registered declaration preparation and kernel readiness.
+
+The existing ``SourceMetadataFields.provenance_identity_items`` now derives its
+representation from ``identity_items``. Equal nested field mappings have equal
+provenance fingerprints independent of insertion order. Raw wire order, real
+value differences, ordered planes and lifetime-selected views remain intact.
+Existing birth fingerprints are preserved by pickle/cloudpickle; they are not
+recomputed from subsequently mutated public fields. Historical nested-mapping
+fingerprints can therefore differ from newly canonical fingerprints. A fresh
+same-source capture is required before candidate fingerprint replay.
+
+The integrated metadata/transport/readiness controls pass 86 tests in 2.40s.
+The separate exact PR #494 source qualification passes its unchanged 31 writer
+controls plus seven identity controls. Those writer controls cannot collect on
+this branch because its independent ``PointROIOutput`` producer is absent; no
+installed, native or live viewer acceptance is inferred. The integrated receipt
+is ``~/.local/state/openhcs-maintenance/20261003/pr494-identity-owner-scratch/
+integrated-owned-qualification-v1.json``.
+
+V8's original producer and downstream loader replay now pass complete value,
+metadata, manifest and array-alias gates, and the full six-CSV/120-TIFF science
+gate passes. Serialization still drops nested metadata views and source-context
+derived caches. These scoped clocks are not complete production-warm performance
+evidence. The saved downstream cache hit constructs no new provenance objects;
+it does not establish the payoff of a broader loading/recording/publication fix.
+The next capture must retain actual nested caches in the same graph, under the
+existing admission bounds, without rewarming or inventing state.

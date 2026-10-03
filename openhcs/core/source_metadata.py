@@ -205,11 +205,11 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     def provenance_identity_items(
         cls, metadata: SourceMetadataMapping
     ) -> tuple[tuple[str, str], ...]:
-        """Preserve the exact stored repr, including nested mapping insertion order."""
+        """Derive stable provenance identity from the owner's canonical field view."""
         return cls._view(
             metadata,
             "provenance_identity_items",
-            lambda: tuple(sorted((str(k), repr(v)) for k, v in metadata.items())),
+            lambda: tuple((key, repr(value)) for key, value in cls.identity_items(metadata)),
         )
 
     @classmethod
