@@ -27,7 +27,6 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImageOutputBundle,
 )
-from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     MainFlowInputProjection,
@@ -100,28 +99,6 @@ RuntimeMainFlowArtifactOutput: TypeAlias = tuple[
 ]
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class RuntimeArtifactInputRequest:
-    """One resolved artifact value dispatched through its nominal type strategy."""
-
-    spec: ArtifactSpec
-    value: RuntimeCallableArgument
-    image_payload_consumption: ImagePayloadConsumption = ImagePayloadConsumption.NATURAL
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.spec, ArtifactSpec):
-            raise TypeError(
-                "RuntimeArtifactInputRequest.spec must be ArtifactSpec, got "
-                f"{type(self.spec).__name__}."
-            )
-        if not isinstance(self.image_payload_consumption, ImagePayloadConsumption):
-            raise TypeError(
-                "RuntimeArtifactInputRequest.image_payload_consumption must be "
-                "ImagePayloadConsumption, got "
-                f"{type(self.image_payload_consumption).__name__}."
-            )
-
-
 class RuntimeArtifactTypeStrategy(
     ArtifactTypeStrategyMatchMixin,
     MostDerivedContextStrategyMixin[type[ArtifactType]],
@@ -161,29 +138,31 @@ class RuntimeArtifactTypeStrategy(
         return cls.for_artifact_type(artifact_type)
 
     def runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
         """Return the runtime payload bound into absorbed function kwargs."""
 
-        return request.value
+        return value
 
     def raw_runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
         """Return the runtime payload before CellProfiler intensity coercion."""
-        return self.runtime_input_value(request)
+        return self.runtime_input_value(spec, value)
 
     def source_image_name(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> str | None:
         """Return the transitive source image name for one artifact input."""
-        del request
+        del spec, value
         return None
 
     def source_image_payload(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
         """Return an image payload that carries this artifact's source paths."""
         return None
@@ -229,13 +208,13 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
     artifact_type = ImageArtifactType
 
     def raw_runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        payload = request.value
+        payload = value
         metadata = image_payload_metadata(payload)
         metadata = metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(
-                (request.spec.name,)
+                (spec.name,)
             )
         )
         return metadata.payload_with(
@@ -244,27 +223,29 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         )
 
     def runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
         return normalize_cellprofiler_image_payload(
-            self.raw_runtime_input_value(request)
+            self.raw_runtime_input_value(spec, value)
         )
 
     def source_image_name(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> str | None:
         return single_source_name(
             image_payload_metadata(
-                self.raw_runtime_input_value(request)
+                self.raw_runtime_input_value(spec, value)
             ).source_provenance.represented_source_image_names
         )
 
     def source_image_payload(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
-        return self.raw_runtime_input_value(request)
+        return self.raw_runtime_input_value(spec, value)
 
     def published_main_flow_output(
         self,
@@ -299,11 +280,11 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
 
     def object_labels(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> ObjectLabelSet:
         """Return the native object value carrying its source-image provenance."""
 
-        value = request.value
         if isinstance(value, ObjectLabelSet):
             return value
         metadata = image_payload_metadata(value)
@@ -314,34 +295,37 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
                 metadata.plane_axis, metadata.source_provenance,
             ),
         ).label_set(
-            name=request.spec.name,
-            source_image_name=request.spec.name,
+            name=spec.name,
+            source_image_name=spec.name,
         )
 
     def runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        return self.object_labels(request)
+        return self.object_labels(spec, value)
 
     def raw_runtime_input_value(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument:
         """Return the nominal label set in the invocation's component scope."""
 
-        return self.object_labels(request)
+        return self.object_labels(spec, value)
 
     def source_image_name(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> str | None:
-        return self.object_labels(request).source_image_name
+        return self.object_labels(spec, value).source_image_name
 
     def source_image_payload(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument | None:
-        return self.object_labels(request)
+        return self.object_labels(spec, value)
 
 
 class MeasurementsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
@@ -350,24 +334,23 @@ class MeasurementsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
     artifact_type = MeasurementsArtifactType
 
     def runtime_input_value(
-        self, request: RuntimeArtifactInputRequest
+        self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        value = request.value
         if not isinstance(value, MeasurementTable):
             raise TypeError(
-                f"Measurement artifact {request.spec.name!r} requires a "
+                f"Measurement artifact {spec.name!r} requires a "
                 f"MeasurementTable, got {type(value).__name__}."
             )
         return value.rows
 
     def source_image_name(
         self,
-        request: RuntimeArtifactInputRequest,
+        spec: ArtifactSpec,
+        value: RuntimeCallableArgument,
     ) -> str | None:
-        value = request.value
         if not isinstance(value, MeasurementTable):
             raise TypeError(
-                f"Measurement artifact {request.spec.name!r} requires a "
+                f"Measurement artifact {spec.name!r} requires a "
                 f"MeasurementTable, got {type(value).__name__}."
             )
         return value.source_image_name
@@ -596,7 +579,7 @@ class RuntimeInputBindingRequest:
             source_edge = self.input_edge_for_spec(source_spec)
             return RuntimeArtifactTypeStrategy.for_artifact_type(
                 ImageArtifactType
-            ).runtime_input_value(self.artifact_request(source_edge))
+            ).runtime_input_value(source_edge.spec, self.artifact_value(source_edge))
 
         current_image = self.current_image
         if (
@@ -615,10 +598,10 @@ class RuntimeInputBindingRequest:
             source_ref.name,
         )
 
-    def artifact_request(
+    def artifact_value(
         self,
         edge: InvocationArtifactInputEdgePlan,
-    ) -> RuntimeArtifactInputRequest:
+    ) -> RuntimeCallableArgument:
         """Resolve one declaration from exactly one compiled runtime authority."""
 
         spec = edge.spec
@@ -680,25 +663,19 @@ class RuntimeInputBindingRequest:
                 spec,
                 projection=main_flow_projection,
             )
-        return RuntimeArtifactInputRequest(
-            spec=spec,
-            value=value,
-            image_payload_consumption=(
-                self.adapter.request.require_callable_contract().image_payload_consumption
-            ),
-        )
+        return value
 
-    def artifact_request_for_spec(
+    def artifact_value_for_spec(
         self,
         spec: ArtifactSpec,
-    ) -> RuntimeArtifactInputRequest:
+    ) -> RuntimeCallableArgument:
         """Resolve a declaration whose occurrences share one runtime authority."""
 
-        return self.artifact_request(self.input_edge_for_spec(spec))
+        return self.artifact_value(self.input_edge_for_spec(spec))
 
     def label_payload_for(self, spec: ArtifactSpec) -> ObjectLabelValue:
         return ObjectLabelsArtifactTypeStrategy().object_labels(
-            self.artifact_request_for_spec(spec)
+            spec, self.artifact_value_for_spec(spec)
         )
 
     def current_plane_label_payload(
@@ -830,14 +807,14 @@ class RuntimeInputBindingRequest:
         spec = edge.spec
         if spec.artifact_type is ObjectLabelsArtifactType:
             payload = ObjectLabelsArtifactTypeStrategy().object_labels(
-                self.artifact_request(edge)
+                spec, self.artifact_value(edge)
             )
             if parameter_name is not None:
                 return self.project_label_argument(payload)
             return payload
         value = RuntimeArtifactTypeStrategy.for_artifact_type(
             spec.artifact_type
-        ).runtime_input_value(self.artifact_request(edge))
+        ).runtime_input_value(spec, self.artifact_value(edge))
         if spec.artifact_type is not ImageArtifactType:
             return value
         if not spec.stack_broadcast_sources():
