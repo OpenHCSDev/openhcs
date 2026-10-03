@@ -2703,7 +2703,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         channel: tuple(
             invocation.key.function_name
             for invocation in compiled.default_group.invocations
-            if invocation.for_component_execution(execution_scope, channel) is not None
+            if invocation.output_plans_for_component(execution_scope, channel) is not None
         )
         for channel in execution_scope.keys
     } == {

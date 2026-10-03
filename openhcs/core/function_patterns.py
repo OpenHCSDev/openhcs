@@ -480,24 +480,12 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         """Return user-authored callable kwargs as a runtime dict."""
         return dict(self.kwargs)
 
-    def for_runtime_outputs(
-        self,
-        *,
-        output_plans: Sequence[ArtifactOutputPlan],
-    ) -> "CompiledFunctionInvocation":
-        """Select component-scoped storage plans without changing the callable ABI."""
-
-        return replace(
-            self,
-            artifact_output_plans=tuple(output_plans),
-        )
-
-    def for_component_execution(
+    def output_plans_for_component(
         self,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
-    ) -> ComponentFunctionInvocationProjection | None:
-        """Project this invocation and its exact edges through output lineage."""
+    ) -> tuple[ArtifactOutputPlan, ...] | None:
+        """Select output lineage, or reject an inactive adapter invocation."""
 
         active_outputs = []
         for output_plan in self.artifact_output_plans:
@@ -519,6 +507,13 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                 active_outputs.append(projected)
         if self.adapter_records_artifact_outputs and not active_outputs:
             return None
+        return tuple(active_outputs)
+
+    def input_edges_for_outputs(
+        self,
+        active_outputs: Sequence[ArtifactOutputPlan],
+    ) -> tuple[InvocationArtifactInputEdgePlan, ...]:
+        """Derive sparse occurrences while retaining their original ABI indices."""
         compiled_group_scope_sources = frozenset(
             source_ref
             for output_plan in self.artifact_output_plans
@@ -548,17 +543,15 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                 )
             )
         )
-        return ComponentFunctionInvocationProjection(
-            invocation=self,
-            artifact_output_plans=tuple(active_outputs),
-            artifact_input_edges=active_edges,
-        )
+        return active_edges
 
     def select_inputs(
         self,
         input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
+        *,
+        active_output_plans: Sequence[ArtifactOutputPlan] | None = None,
     ) -> dict[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan]:
-        """Return exact compiled input occurrences after storage validation."""
+        """Validate the complete input owner before selecting active occurrences."""
         ArtifactInputPlan.require_exact_map(
             input_plans,
             boundary=f"Compiled invocation {self.key!r} received input plan",
@@ -571,7 +564,12 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                     f"Compiled invocation {self.key!r} input plan "
                     f"{edge.storage_plan.ref()!r} is unavailable in this step."
                 )
-        return {edge.key: edge for edge in self.artifact_input_edges}
+        active_edges = (
+            self.artifact_input_edges
+            if active_output_plans is None
+            else self.input_edges_for_outputs(active_output_plans)
+        )
+        return {edge.key: edge for edge in active_edges}
 
     def with_artifact_input_edges(
         self,
@@ -584,14 +582,23 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def select_outputs(
         self,
         output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+        *,
+        compiled_output_plans: Sequence[ArtifactOutputPlan] | None = None,
     ) -> dict[ArtifactSpecRef, ArtifactOutputPlan]:
-        """Select exact runtime projections of this invocation's output plans."""
+        """Select runtime storage against this invocation's active output owner."""
         ArtifactOutputPlan.require_exact_map(
             output_plans,
             boundary=f"Compiled invocation {self.key!r} received output plan",
         )
+        active_outputs = (
+            self.artifact_output_plans
+            if compiled_output_plans is None
+            else compiled_output_plans
+        )
+        if any(not isinstance(plan, ArtifactOutputPlan) for plan in active_outputs):
+            raise TypeError("Compiled artifact outputs must be ArtifactOutputPlan values.")
         selected: dict[ArtifactSpecRef, ArtifactOutputPlan] = {}
-        for compiled_plan in self.artifact_output_plans:
+        for compiled_plan in active_outputs:
             runtime_plan = output_plans.get(compiled_plan.ref())
             if runtime_plan is None:
                 raise ValueError(
@@ -657,36 +664,6 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
 
 
 @dataclass(frozen=True, slots=True)
-class ComponentFunctionInvocationProjection:
-    """Sparse component view preserving the compiled invocation's ABI positions."""
-
-    invocation: CompiledFunctionInvocation
-    artifact_output_plans: tuple[ArtifactOutputPlan, ...]
-    artifact_input_edges: tuple[InvocationArtifactInputEdgePlan, ...]
-
-    def select_inputs(
-        self,
-        input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
-    ) -> dict[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan]:
-        """Select sparse active occurrences from the complete compiled mapping."""
-
-        compiled_inputs = self.invocation.select_inputs(input_plans)
-        return {
-            edge.key: compiled_inputs[edge.key] for edge in self.artifact_input_edges
-        }
-
-    def select_outputs(
-        self,
-        output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-    ) -> dict[ArtifactSpecRef, ArtifactOutputPlan]:
-        """Select outputs through the complete invocation's compiled owner."""
-
-        return self.invocation.for_runtime_outputs(
-            output_plans=self.artifact_output_plans,
-        ).select_outputs(output_plans)
-
-
-@dataclass(frozen=True, slots=True)
 class CompiledFunctionGroup:
     """Compiled callable chain for one function-pattern group."""
 
@@ -717,10 +694,10 @@ class CompiledFunctionGroup:
         """Return main-flow refs active for one compiled component execution."""
 
         invocations_and_edges = tuple(
-            (projected.invocation, projected.artifact_input_edges)
+            (invocation, invocation.input_edges_for_outputs(active_outputs))
             for invocation in self.invocations
             if (
-                projected := invocation.for_component_execution(
+                active_outputs := invocation.output_plans_for_component(
                     execution_scope,
                     component_key,
                 )
