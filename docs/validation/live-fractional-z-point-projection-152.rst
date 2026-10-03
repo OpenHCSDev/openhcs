@@ -416,3 +416,17 @@ comment5965364042, not patched across its protected source owner. Named remainin
 dependency is that precise seam release/owner implementation. Full receipt:
 engineering494/SOURCE04-QUALIFICATION.rst. No fresh wheel/runtime or installed
 native acceptance is claimed; original03 stays FAILED/frozen.
+
+Separate domain/rejection qualification06
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Distinct retained-source check selects only point_source_admission and
+point_domain_preserves:19 PASS/12 DESELECTED in4.24s, terminal0. Actual guard
+origin is source04/openhcs/core/roi_point_metadata.py. MemoryMax512MiB,
+peak307187712B/noSwap/CPU1/60s/OOM0; scope terminal/inactive. This proves those
+admission/domain rejections only, NOT full31PASS or installed native acceptance.
+Original25PASS/6FAIL and all enriched writer/ZIP identity failures remain
+unchanged. Root394 bb9c has no release for comment5965364042; shared source is
+not patched. Original failed public journey, logs, source and scratch preserved.
+Evidence: engineering494/domain-rejection-control06.py and matching log,
+DOMAIN06-GUIDE06-QUALIFICATION.rst. No build or service launched.
