@@ -1437,6 +1437,31 @@ class InputGroupLineageSourceRelation(ArtifactGroupScopeSourceRelation):
     relation_key: ClassVar[str] = "input_group_lineage_source"
 
 
+class InputImageSetContextSourceRelation(ArtifactSourceContextSourceRelation):
+    """Consume an artifact in the image-set context of a declared input image."""
+
+    relation_key: ClassVar[str] = "input_image_set_context_source"
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if (
+            self.source.plan_type is not ArtifactInputPlan
+            or self.source.artifact_type is not ImageArtifactType
+        ):
+            raise ValueError(
+                f"{type(self).__name__} requires an input image source, got "
+                f"{self.source!r}."
+            )
+
+    def require_target_spec(self, spec: "ArtifactSpec") -> None:
+        super().require_target_spec(spec)
+        if not spec.artifact_type.carries_source_image_context:
+            raise ValueError(
+                f"{type(self).__name__} requires a target carrying source-image "
+                f"context, got {spec.artifact_type.value!r}."
+            )
+
+
 class InputStackBroadcastSourceRelation(ArtifactSourceContextSourceRelation):
     """Input artifact may broadcast across one declared source input stack."""
 
@@ -3355,6 +3380,7 @@ class ArtifactInputProjectionPlan:
 
 ArtifactSpecRelation.target_plan_type = ArtifactOutputPlan
 InputGroupLineageSourceRelation.target_plan_type = ArtifactInputPlan
+InputImageSetContextSourceRelation.target_plan_type = ArtifactInputPlan
 InputStackBroadcastSourceRelation.target_plan_type = ArtifactInputPlan
 InputStackBroadcastSourceRelation.target_artifact_type = ImageArtifactType
 InputObjectMeasurementSourceRelation.target_plan_type = ArtifactInputPlan

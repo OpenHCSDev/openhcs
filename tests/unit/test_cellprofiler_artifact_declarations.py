@@ -21,6 +21,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputImageSetContextSourceRelation,
     InputGroupLineageSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -442,6 +443,59 @@ def test_measurement_output_separates_provenance_from_invocation_group_scope() -
     )
     assert output.group_scope_sources() == (artifact_inputs.specs[0].ref(),)
     assert output.source_stack_scope_sources() == ()
+
+
+def test_object_measurement_context_uses_only_selected_image_inputs() -> None:
+    available = ArtifactSpecCollection(
+        (
+            ArtifactSpec.output("DNA", ImageArtifactType),
+            ArtifactSpec.output("Actin", ImageArtifactType),
+            ArtifactSpec.output("Unselected", ImageArtifactType),
+            ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType),
+            ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+        )
+    )
+    contract = _callable_contract(
+        _module(
+            3,
+            "MeasureObjectIntensity",
+            {
+                "Select images to measure": "DNA,Actin",
+                "Select objects to measure": "Nuclei,Cells",
+            },
+        ),
+        step_index=2,
+        available_artifacts=available,
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    images = contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+    objects = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert tuple(spec.name for spec in images) == ("DNA", "Actin")
+    assert tuple(spec.name for spec in objects) == ("Nuclei", "Cells")
+    for spec in objects:
+        assert spec.source_context_sources() == tuple(image.ref() for image in images)
+        assert spec.relations == tuple(
+            InputImageSetContextSourceRelation(image.ref()) for image in images
+        )
+        assert spec.group_scope_sources() == ()
+        assert spec.source_stack_scope_sources() == ()
+        assert spec.stack_broadcast_sources() == ()
+
+
+def test_object_only_measurement_does_not_inherit_visible_image_context() -> None:
+    contract = _callable_contract(
+        _module(3, "MeasureObjectSizeShape", {"Select objects to measure": "Cells"}),
+        step_index=2,
+        available_artifacts=ArtifactSpecCollection(
+            (
+                ArtifactSpec.input("DNA", ImageArtifactType),
+                ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+            )
+        ),
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    (objects,) = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert objects.source_context_sources() == ()
 
 
 def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:

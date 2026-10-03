@@ -355,13 +355,18 @@ def test_omitted_secondary_selector_still_fails_closed(tmp_path):
         )
 
 
-def test_explicit_measurement_rosters_survive_one_matched_source_anchor(tmp_path):
+@pytest.mark.parametrize("producer_group_by", [GroupBy.NONE, GroupBy.CHANNEL])
+def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
+    tmp_path, producer_group_by,
+):
     from openhcs.core.steps.function_execution import FunctionStepExecutor
 
     _write_plate(tmp_path)
     original = _document()
     for producer in original.pipeline_steps[:-1]:
-        producer.processing_config = replace(producer.processing_config, group_by=GroupBy.CHANNEL)
+        producer.processing_config = replace(
+            producer.processing_config, group_by=producer_group_by,
+        )
     original.pipeline_steps[-1] = _step(
         measure_object_intensity,
         "Measure both source images and object sets",
@@ -399,15 +404,22 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(tmp_path
     for object_name in ("Nuclei", "Cells"):
         (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
         area = np.count_nonzero(object_label_dense_array(labels.value.data))
-        for image_name, expected in (("DNA", 4.0), ("Actin", float(area))):
-            values = measurement_values_for_feature(
-                (measurement.value.data,),
-                f"Intensity_IntegratedIntensity_{image_name}",
-                object_count=1,
-                object_name=object_name,
-                dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
-            )
-            assert tuple(values) == (expected,)
+        for image_name, integrated in (("DNA", 4.0), ("Actin", float(area))):
+            expected_features = {
+                "IntegratedIntensity": integrated,
+                "MeanIntensity": integrated / area,
+                "MinIntensity": 1.0 if integrated == area else 0.0,
+                "MaxIntensity": 1.0,
+            }
+            for feature, expected in expected_features.items():
+                values = measurement_values_for_feature(
+                    (measurement.value.data,),
+                    f"Intensity_{feature}_{image_name}",
+                    object_count=1,
+                    object_name=object_name,
+                    dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                )
+                assert tuple(values) == pytest.approx((expected,))
 
 
 def test_omitted_selector_remains_valid_for_one_label_producer(tmp_path):

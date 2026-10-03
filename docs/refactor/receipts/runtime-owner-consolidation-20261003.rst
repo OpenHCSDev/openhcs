@@ -227,6 +227,23 @@ batch kernels. NATURAL object measurements resolve that roster once, without
 building an unused composed image request; COMPOSED and selected-plane source
 identity retain their declared behavior.
 
+Explicit roster compilation belongs to the adapter and declaration owners,
+while raw scalar argument multiplicity remains on the raw binder. Omitted
+object selection still fails when more than one subject is available. Recorded
+measurement payload owners validate named subject multiplicity after the common
+row scope/id-field checks.
+
+Invocation selection now also owns the source-origin view: represented inputs
+retain the current payload epoch, and unrepresented explicit original images
+resolve through their exact matched source binding. The separate source-input
+selection pass is removed. An absent stored primary cannot be replaced by its
+producer's older value. Exact producer-group selection is distinct from
+additional image-set fixed coordinates; discovery retains actual produced
+coordinates, while site, time, Z and genuinely fixed-channel constraints remain.
+Physical publication loads original memory addresses and writes manifest-owned
+destinations under the current output root; preserved outputs no longer write
+back into the input plate.
+
 Evidence scope
 --------------
 
@@ -254,6 +271,15 @@ to 2x native remains 1.227s. Local timing and qualification records are retained
 under ``owner-consolidation-746-paired-v1`` and its preparation sibling in the
 20261003 maintenance evidence root. The typed publication, input binding and
 identity changes described above follow this measurement and remain unmeasured.
+
+The original-pipeline campaigns under ``canonical-producer-transport-paired-v1``
+and ``v2`` failed at compilation and runtime respectively; their clocks are not
+qualified performance evidence. The ``v3`` campaign at ``c50a947f4`` completed
+both ordinary sweeps and fresh native runs but failed strict comparison with
+42 missing origMemb intensity features. Its faster timings are also unqualified.
+The missing explicit source-roster edge is repaired by the invocation selector;
+fresh complete scientific comparison remains required. All failed campaigns
+are retained, and no output exclusion or tolerance change is admitted.
 
 PR #394 remains draft. Its original whole-branch R0/R1 obligations, installed
 consumer acceptance, full-catalog parity and fresh full30/scaling figures

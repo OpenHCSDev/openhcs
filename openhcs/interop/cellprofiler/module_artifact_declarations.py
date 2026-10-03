@@ -24,6 +24,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
+    InputImageSetContextSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
@@ -1189,6 +1190,35 @@ class ImageMeasurementInputModule(
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
         image_measurement_binding,
     )
+
+    @classmethod
+    def finalize_artifact_contract_inputs(
+        cls,
+        module: "ModuleBlock",
+        *,
+        invocation_key: "FunctionInvocationKey",
+        step_context: "ArtifactDeclarationStepContext",
+        artifact_inputs: ArtifactSpecCollection,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Bind measured object sets to exactly the selected input image contexts."""
+        inputs = ArtifactSpecCollection(
+            super().finalize_artifact_contract_inputs(
+                module,
+                invocation_key=invocation_key,
+                step_context=step_context,
+                artifact_inputs=artifact_inputs,
+            )
+        )
+        image_contexts = tuple(
+            InputImageSetContextSourceRelation(spec.ref())
+            for spec in inputs.of_artifact_type(ImageArtifactType)
+        )
+        return tuple(
+            replace(spec, relations=(*spec.relations, *image_contexts))
+            if spec.artifact_type is ObjectLabelsArtifactType and image_contexts
+            else spec
+            for spec in inputs
+        )
 
     @classmethod
     def input_source_for_contract(
