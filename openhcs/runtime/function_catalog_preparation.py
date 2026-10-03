@@ -8,6 +8,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import CancelledError, Future
 from concurrent.futures import TimeoutError as FutureTimeoutError
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from zmqruntime import OperationCancellation
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
         FunctionCatalogPreparationState,
     )
     from openhcs.agent.services.function_catalog_service import (
-        FunctionCatalogServiceABC,
+        FunctionCatalogService,
     )
 
 
@@ -48,7 +49,7 @@ class FunctionCatalogPreparation:
 
     def __init__(
         self,
-        function_catalog: "FunctionCatalogServiceABC",
+        function_catalog: "FunctionCatalogService",
     ) -> None:
         self._lock = threading.RLock()
         self._future: Future[None] | None = None
@@ -63,17 +64,25 @@ class FunctionCatalogPreparation:
         )
 
     def ensure_started(self) -> Future[None]:
-        """Return the one preparation future, starting it when first requested."""
+        """Coalesce preparation of the current projections, not historical READY."""
 
         with self._lock:
+            prepare = self._function_catalog.prepare
             if self._future is not None:
-                return self._future
+                if (
+                    not self._future.done()
+                    or self._future.cancelled()
+                    or self._future.exception() is not None
+                    or self._function_catalog.projections_current()
+                ):
+                    return self._future
+                prepare = self._function_catalog.prepare_projections
             future = self._new_preparation_future()
             if future.cancelled():
                 return future
             thread = threading.Thread(
                 target=self._prepare,
-                args=(future, self._function_catalog.prepare),
+                args=(future, prepare),
                 name="openhcs-function-catalog-preparation",
                 daemon=True,
             )
@@ -112,8 +121,7 @@ class FunctionCatalogPreparation:
         self.prepare_persistent_catalog(status_callback=status_callback)
         if cancellation.requested():
             raise CancelledError
-        self._function_catalog.catalog(
-            compact_signatures=True,
+        self._function_catalog.prepare_projections(
             status_callback=status_callback,
             cancellation=cancellation,
         )
@@ -204,7 +212,15 @@ class FunctionCatalogPreparation:
                     ),
                 )
             else:
-                outcome = Outcome.READY
+                if self._function_catalog.projections_current():
+                    outcome = Outcome.READY
+                else:
+                    outcome = Outcome.NOT_STARTED
+                    snapshot = replace(
+                        snapshot,
+                        phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
+                        message="Current function catalog projections require preparation",
+                    )
         return FunctionCatalogPreparationState(
             schema_version=SCHEMA_VERSION,
             handle=handle,

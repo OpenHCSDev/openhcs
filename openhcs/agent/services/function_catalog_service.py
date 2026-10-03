@@ -6,6 +6,7 @@ import inspect
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from concurrent.futures import CancelledError
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -636,7 +637,42 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             status_callback=status_callback,
             cancellation=cancellation,
         )
-        super().prepare(status_callback=status_callback, cancellation=cancellation)
+        self.prepare_projections(status_callback=status_callback, cancellation=cancellation)
+
+    def projections_current(self) -> bool:
+        """Derive readiness from the original registry and cached public views."""
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        if self._projection_metadata is None or any(
+            (signature_view, SummaryView[signature_view.name]) not in self._projections
+            for signature_view in SignatureView
+        ):
+            return False
+        if self._projection_metadata != RegistryService.cached_metadata_snapshot():
+            return False
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        return manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
+
+    def prepare_projections(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare both public views, without repeating native kernel warmup."""
+        while True:
+            for signature_view in SignatureView:
+                if cancellation is not None and cancellation.requested():
+                    raise CancelledError
+                self.catalog(
+                    compact_signatures=signature_view.compact,
+                    status_callback=status_callback,
+                    cancellation=cancellation,
+                )
+            if self.projections_current():
+                return
 
     def __init__(self, path_policy: AgentPathPolicy | None = None) -> None:
         self._path_policy = path_policy or AgentPathPolicy.from_environment()
@@ -796,6 +832,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             signature_view=signature_view,
             summary_view=summary_view,
             status_callback=status_callback,
+            cancellation=cancellation,
         )
         candidates = []
         for projection in projections:
@@ -830,6 +867,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         signature_view: SignatureView,
         summary_view: SummaryView,
         status_callback: Callable[[str], None] | None,
+        cancellation: OperationCancellation | None = None,
     ) -> tuple[CatalogSearchProjection, ...]:
         """Project a registry revision once and reuse it across text queries."""
 
@@ -844,6 +882,8 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             status_callback("Projecting function metadata for the execution endpoint")
         projections = []
         for function_id, metadata in sorted(metadata_by_id.items()):
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
             contract = CallableContract.from_callable(metadata.func)
             projections.append(
                 CatalogSearchProjection(
