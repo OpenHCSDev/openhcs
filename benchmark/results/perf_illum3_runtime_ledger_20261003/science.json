@@ -1,0 +1,237 @@
+{
+  "status": "PASS",
+  "comparisons": [
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "8157ccac4f4940243f4ad96970eaad64e43a38c9b339887a3ef7c8aa7f6a0b44",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267"
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "8157ccac4f4940243f4ad96970eaad64e43a38c9b339887a3ef7c8aa7f6a0b44",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/public/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267"
+      }
+    }
+  ],
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "scope": "One current41-hook diagnostic versus both retained qualified native repetitions. Original image/table/correlation/inventory authorities and existing declared ReferenceExportPlan; 2NPY positive pixel nonvacuity. Native not rerun; no causal timing or current-native ratio claim. Only input receipt namespace/outer cardinality/current freeze custody adapted. Reader import environment effects retained; original full controller guard runs before/after in fresh interpreters with exact original raw launch environment. First in-reader final environment RED preserved separately; no full-driver guard bypass or environment rewrites.",
+  "reader_environment_effects": {
+    "KMP_DUPLICATE_LIB_OK": {
+      "before": null,
+      "after": "3cbc87c7681f34db4617feaa2c8801931bc5e42d8d0f560e756dd4cd92885f18"
+    },
+    "SPARSE_AUTO_DENSIFY": {
+      "before": null,
+      "after": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+    },
+    "TF_FORCE_GPU_ALLOW_GROWTH": {
+      "before": null,
+      "after": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    "XLA_PYTHON_CLIENT_PREALLOCATE": {
+      "before": null,
+      "after": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    }
+  },
+  "reader_isolation_checkpoints": [
+    {
+      "index": 1,
+      "log": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3-controller-checkpoint-1.log",
+      "sha256": "04a54993c97b3c3f46659e451ec5e2f8cd944fae12ab9f35abf49ffef1707c00",
+      "source_freeze_sha256": "86646806122c73d38de2e9d42efa0bffd471ad0a1db36d7d33ea83dfcbfeb0fc",
+      "scope": "Original unchanged full controller source/env/native/input/sparse guard in fresh interpreter using exact original raw launch environment held only in memory; no values filtered or rewritten."
+    },
+    {
+      "index": 2,
+      "log": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3-controller-checkpoint-2.log",
+      "sha256": "04a54993c97b3c3f46659e451ec5e2f8cd944fae12ab9f35abf49ffef1707c00",
+      "source_freeze_sha256": "86646806122c73d38de2e9d42efa0bffd471ad0a1db36d7d33ea83dfcbfeb0fc",
+      "scope": "Original unchanged full controller source/env/native/input/sparse guard in fresh interpreter using exact original raw launch environment held only in memory; no values filtered or rewritten."
+    }
+  ],
+  "validator_sha256": "e71981fd54cc6a3f6e3d03c797badff250cc5c7e3fdddf1401fb3378e17b8aa4",
+  "diagnostic_admission": true,
+  "native_witness": {
+    "files": {
+      "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+      "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+      "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+      "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    "strict_science_sha256": "3d89dc4daaceb34535ceaab05100b80b88487e32e67180a99595035b66c67236",
+    "source_freeze_sha256": "7719484a567283a9427cd9a3742b8ca4f25b26c0678f2d8858073d5666adb284",
+    "native_report_sha256": "437f3943b29f3335831f934c0c308f51134df18096016431276f7c976fb8b458",
+    "native_request_sha256": "a2ab2cf68ad3afaf8af31652ced4c8d23ea398dc91cc915132b5562b1dbd386e"
+  },
+  "original_comparator_sha256": "0b7abed65ecc3d61761533a3a9a69e9b9a8acb220049175ff46fb5f004ade4aa",
+  "diagnostic_source_freeze_sha256": "86646806122c73d38de2e9d42efa0bffd471ad0a1db36d7d33ea83dfcbfeb0fc"
+}

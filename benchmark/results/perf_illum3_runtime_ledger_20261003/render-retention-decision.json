@@ -1,0 +1,72 @@
+{
+  "status": "STOP_AS_DOMINANT_PERFORMANCE_ROUTE",
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "source_unchanged": true,
+  "actual_import_root": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/__init__.py",
+  "repetitions": 6,
+  "alternating_observation_order": true,
+  "mandatory_submit_builder_medians_seconds": {
+    "submit_compile_total": 0.04574766173027456,
+    "submit_execution_total": 0.04563480010256171
+  },
+  "optional_completion_render_medians_seconds": {
+    "completion_pipeline": 0.04025681456550956,
+    "completion_config": 0.005451454082503915,
+    "returned_pipeline": 0.04034627298824489
+  },
+  "optional_combined_removal_ceiling_seconds": {
+    "median_all6": 0.08608636120334268,
+    "minimum_all6": 0.08512948034331203,
+    "maximum_all6": 0.08700018096715212,
+    "median_steady5": 0.08606792613863945
+  },
+  "actual_payload_read_median_seconds": 1.0470394045114517e-06,
+  "current_Illum3_total_2x_gap_seconds": 1.22610824,
+  "local_ceiling_fraction_of_total_gap": 0.07021106162971605,
+  "execution_gain_claim": null,
+  "NRA_census": {
+    "modules": 11,
+    "original_classes": 74,
+    "canonical_classes": 74,
+    "NRA_head": "0844525ecaba93e090a064a4ae4914466b2dae60"
+  },
+  "controls": [
+    {
+      "name": "actual_FunctionStep_constructor_callbacks_at_both_submit_epochs",
+      "status": "PASS"
+    },
+    {
+      "name": "original_first_constructor_error_order",
+      "status": "PASS"
+    },
+    {
+      "name": "nested_kwargs_mutation_changes_real_compilation_signature",
+      "status": "PASS"
+    },
+    {
+      "name": "lawful_submission_config_replacement_changes_real_compilation_signature",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_execution_payload_snapshot_survives_later_authoring_mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "reviewed_source_public_contract",
+      "status": "PASS"
+    }
+  ],
+  "original_invocation_failure": {
+    "path": "/tmp/openhcs-render-retention-4c0d62/failure-v1.json",
+    "reason": "Controller attempted direct mutation of the genuinely frozen GlobalPipelineConfig. Preserved failure; corrected control uses lawful config replacement on mutable submission and explicitly retains frozen-assignment rejection."
+  },
+  "production_plan_if_correctness_repair_authorized": "Carry actual execution request payload from existing ZMQExecutionRequestBuilder through existing ZMQCompiledPipelineRun and use its sent pipeline/config strings for retain_measured_openhcs_completion and final return. Keep independently rebuilt compile and execution submissions and mismatch rejection. No new wrapper, mutable-object render cache, or compile-to-execution source reuse. Root owns implementation.",
+  "evidence_hashes": {
+    "replay.py": "ae8d5785adb7caa44efd753dc338ed7cee4ef2de276dc638b714ed1642eaa3f0",
+    "census.py": "5ebc7845157055e6859a58e4f444dd1ad7536b7b2b7e35bea2d291ccc385cc2f",
+    "census.json": "16f23b40d587e3d9e2005fd6e66d47e4d3264ed90e655b676c425095dfbd02d5",
+    "result-v3.json": "28c79034129b4ea13aa7236c842b7b43bb0d6a5e67d84c22c6aca720d6bbed08",
+    "failure-v1.json": "efd6c37a49510503990f6127494207141d2f26ee36246a43c535cba3569395bd"
+  },
+  "boundaries": "Public retained-source loaders reconstruct authored typed objects outside timers; real 10-step Illum3 source/config bytes match exactly. Source-only replay; no network, pipeline/server execution, evidence IO or scientific artifact recapture. All source hashes and clean HEAD unchanged. Pure declaration preparation retains original constructor/default-factory epochs; first reflection analysis labeled separately."
+}
