@@ -63,9 +63,59 @@ uncertain registration remains UNKNOWN; no replay or coaching occurred.
 Acceptance
 ----------
 
-Working source checkpoint is published before bounded final verification.
-Required checks: independent memory-free one-Special PLATE registration,
-unchanged source persistence, canonical lookup, original ABI validation after
-projection, reload/update/lifetime guards, listing, rejected invalid ABI without
-publication, and unchanged AXIS lifecycle. Installed entrypoint/native readiness
-is separate from source checks. Results are added here after actual execution.
+Production checkpoint 29d3902de912bbfb2750a5c7258956b7702e4764 is published in
+draft #504. No hosted CI wait. Ordinary no-isolation wheel and no-dependency
+private install are under engineering500/wheels02 and installed02 in the
+existing issue-batch root; no new environment or dependency download.
+
+The independent installed journey passes registration, exact unchanged source
+persistence, canonical lookup, original PLATE ABI validation after projection,
+listing, reload, update and changed-source lifetime rejection. Three invalid
+batch signatures reject without file or registry publication. Its engineering
+callable returns a tiny file bundle over an empty typed RuntimeArtifactBatch;
+no scientific image, pipeline, compile or native execution is submitted.
+Actual package path is asserted inside the installed target. Terminal0,
+2.70s, maximum RSS166596KiB, no swap, 1GiB/CPU1/noSwap scope.
+
+The final installed regression batch passes96 checks in15.16s: custom
+PLATE/AXIS lifecycle, destination/source admission, canonical projection,
+knowledge lookup and inherited declaration help. Maximum RSS484576KiB,
+terminal0, 1GiB/CPU1/noSwap scope. Two pytest asyncio configuration warnings
+are retained; no async plugin or broad/full-suite claim. The initial test
+launcher failed before collection because the existing tests plugin lacked
+its import root; original log retained. The next batch caught a real admission
+regression (81 pass/1 fail): custom GPU declarations must remain valid while
+CPU-only catalog import policy excludes them. Moving availability back to the
+original catalog consumers fixed it; no assertion was removed or weakened.
+
+Actual installed stdio MCP child1553281 initialized, passed health, exposed84
+tools including register/search/describe, and rejected a distinct non-dispatched
+registration missing its explicit port. Full original SDK requests/responses
+are in engineering500/mcp-boundary01.jsonl. Strace contains ZERO connect calls.
+Terminal0,9.22s, max RSS299748KiB; normal SDK stdio EOF closed the child, exact
+PID absent and all engineering500 scopes inactive. No owned verification
+process remains. This proves installed MCP ingress/admission, NOT successful
+MCP registration or native catalog readiness.
+
+Remaining installed transport acceptance: successful registration/list/lookup
+through ordinary LOCAL_STDIO requires the selected native catalog owner's
+destination handshake and READY handle. That route is not self-contained in
+MCP; the hosted catalog factory does not expose registration. No native is
+started for this check and no alternate backend/context is substituted.
+Parent retains the next bounded engineering endpoint slot; registration at
+the real installed manager and all its source/lifetime consumers already pass.
+
+Original wheel/source/target verifier confirms every OpenHCS package payload
+matches the installed wheel, with726 tracked payload members byte-equal source.
+All60 declaration-owned knowledge/plugin assets match source/wheel/target,
+including all13 skill-tree members (14 plugin-bundle members includes the plugin
+manifest). The first provenance receipt mislabeled bundle count14 as skill
+count; provenance02 preserves/corrects that label using AgentSkillBundle roots.
+Wheel SHA256e5288facdbe06988bce8c28567c3ea1b9593e5e11362a0c447a11b402e3d7cb7.
+The source target is29d3902 production, not an assertion of future main equality.
+Prospective science target498 and all earlier frozen targets remain untouched.
+
+Original logs, failed attempts, before/after AST receipts and fixtures are
+retained. Only terminal generated wheel-build package copies/egg-info are
+disposable; wheels, installed targets, build compiler cache, foreign gitlinks,
+#494 probes and all scientific evidence are preserved.
