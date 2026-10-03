@@ -492,6 +492,23 @@ class NapariStreamLayerItem:
     image_metadata: ImagePayloadMetadata
     plane_component_domain: ViewerComponentValueDomainPayload
 
+    ELEMENT_IDENTITY_FEATURE: ClassVar[str] = "openhcs_source_element"
+
+    def element_identity(self, member_index: int, coordinate_index: int = 0) -> str:
+        """Identify a source member independently of projected axes or table order.
+
+        Native features carry this derived, opaque key; the source item remains
+        its owner. Member positions refer to this unchanged streamed payload,
+        not to rows in a subsequently assembled native layer.
+        """
+        return repr((
+            self.producer,
+            tuple(sorted(self.address.components.items())),
+            self.address.path,
+            member_index,
+            coordinate_index,
+        ))
+
 
 class NapariImagePayloadAxisLabelPolicy:
     """Labels payload-local image stack axes before the spatial y/x axes."""
@@ -1979,6 +1996,7 @@ class NapariShapeFeatureColumns:
         *,
         label: int,
         path: str,
+        element_identity: str,
     ) -> None:
         """Append one metadata row while preserving first-seen column order."""
 
@@ -1993,6 +2011,7 @@ class NapariShapeFeatureColumns:
             self._set_last(str(name), NapariShapeLayerPayload._feature_value(value))
         self._set_last(VisualMetadataField.LABEL.value, label)
         self._set_last(ViewerWireField.PATH.value, path)
+        self._set_last(NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE, element_identity)
         self.row_count += 1
 
     def _set_last(self, name: str, value: object) -> None:
@@ -2145,7 +2164,7 @@ class NapariShapeLayerPayload:
                 raise TypeError(
                     "Napari SHAPES payload data must be a sequence of shape mappings."
                 )
-            for shape_dict in item.data:
+            for member_index, shape_dict in enumerate(item.data):
                 if not isinstance(shape_dict, Mapping):
                     raise TypeError(
                         "Napari SHAPES payload entries must be shape mappings."
@@ -2198,6 +2217,7 @@ class NapariShapeLayerPayload:
                     metadata,
                     label=label_allocator.label_for(shape_dict),
                     path=item.address.path,
+                    element_identity=item.element_identity(member_index),
                 )
 
                 shape_data.append(coordinates)
