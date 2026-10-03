@@ -6007,9 +6007,10 @@ def test_measure_object_size_shape_consumes_runtime_projected_label_plane() -> N
         calculate_zernikes=False,
     )
 
-    assert [row["object_label"] for row in rows] == [1, 2]
-    assert rows[0]["Area"] == 4.0
-    assert np.isnan(rows[1]["Area"])
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [(row["slice_index"], row["object_label"], row["Area"]) for row in rows] == [
+        (0, 2, 4.0),
+    ]
 
 
 def test_pure_2d_slice_execution_injects_slice_index_for_declared_callables() -> None:
@@ -6428,7 +6429,7 @@ def test_measure_object_intensity_columnar_rows_use_declared_axis_domain() -> No
     assert [row["integrated_intensity"] for row in rows] == [10.0, 20.0]
 
 
-def test_measure_object_size_shape_rows_project_measured_sequence_to_cp_ordinals() -> (
+def test_measure_object_size_shape_rows_project_declared_label_domain_to_cp_ordinals() -> (
     None
 ):
     payload = ObjectLabelPayload(
@@ -6460,10 +6461,15 @@ def test_measure_object_size_shape_rows_project_measured_sequence_to_cp_ordinals
 
     assert [row["object_label"] for row in rows] == [1, 2, 3, 4, 5]
     assert rows[0]["Area"] == 10.0
-    assert rows[1]["Area"] == 30.0
-    assert rows[2]["Area"] == 50.0
-    assert np.isnan(rows[3].get("Area", np.nan))
-    assert np.isnan(rows[4].get("Area", np.nan))
+    assert np.isnan(rows[1]["Area"])
+    assert rows[2]["Area"] == 30.0
+    assert np.isnan(rows[3]["Area"])
+    assert rows[4]["Area"] == 50.0
+    np.testing.assert_array_equal(
+        [row["Center_X"] for row in rows],
+        [10.0, np.nan, 30.0, np.nan, 50.0],
+    )
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.ROW_ORDINAL
 
 
 def test_measure_object_size_shape_preserves_zero_valued_label_rows() -> None:
@@ -6566,7 +6572,7 @@ def test_measure_object_size_shape_preserves_complete_dense_label_domain_rows() 
 def test_object_measurement_modules_declare_their_cp_row_identity_policies() -> None:
     assert (
         MeasureObjectSizeShapeModule.runtime_object_measurement_row_policy().object_identity()
-        is MeasurementObjectRowIdentity.ROW_SEQUENCE
+        is MeasurementObjectRowIdentity.ROW_ORDINAL
     )
     assert (
         MeasureObjectIntensityDistributionModule.runtime_object_measurement_row_policy().object_identity()
@@ -7203,7 +7209,7 @@ def test_measure_object_size_shape_orientation_uses_positive_inertia_tie() -> No
     assert rows[0]["Orientation"] == 45.0
 
 
-def test_measure_object_size_shape_zernikes_use_declared_row_ordinal_domain() -> None:
+def test_measure_object_size_shape_zernikes_use_declared_label_id_domain() -> None:
     image = np.ones((12, 12), dtype=np.float32)
     labels = np.zeros(image.shape, dtype=np.int32)
     labels[1:4, 1:4] = 1
@@ -7225,10 +7231,11 @@ def test_measure_object_size_shape_zernikes_use_declared_row_ordinal_domain() ->
     assert np.isfinite(rows[0]["Zernike_0_0"])
     assert np.isnan(rows[1]["Zernike_0_0"])
     assert np.isfinite(rows[2]["Zernike_0_0"])
-    assert rows[1]["Area"] == 16.0
-    assert np.isnan(rows[2]["Area"])
-    assert rows[1]["MaximumRadius"] > 0.0
-    assert rows[2]["MaximumRadius"] == 0.0
+    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, np.nan, 16.0])
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [row["slice_index"] for row in rows] == [0, 0, 0]
+    assert rows[1]["MaximumRadius"] == 0.0
+    assert rows[2]["MaximumRadius"] > 0.0
     assert rows[1]["MinFeretDiameter"] == 0.0
     assert rows[2]["MinFeretDiameter"] > 0.0
 
@@ -7250,10 +7257,12 @@ def test_measure_object_size_shape_backend_emits_concrete_cp_index_domain() -> N
         dtype_config=DtypeConfig(),
     )
 
-    assert [row["object_label"] for row in rows] == [1, 2, 3]
-    assert rows[0]["Area"] == 9.0
-    assert rows[1]["Area"] == 16.0
-    assert np.isnan(rows[2]["Area"])
+    assert [row["object_label"] for row in rows] == [1, 2, 3, 4, 5]
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert [row["slice_index"] for row in rows] == [0] * 5
+    np.testing.assert_array_equal(
+        [row["Area"] for row in rows], [9.0, np.nan, 16.0, np.nan, np.nan]
+    )
 
 
 def test_measure_object_size_shape_uses_explicit_sparse_object_domain() -> None:
