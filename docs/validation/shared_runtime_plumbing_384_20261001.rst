@@ -1985,7 +1985,7 @@ qualification calls within those queries. Whole-worker structural checks are
 1187866. Qualification precedes feature/source/row/object selection. Issue496
 tracks an operation-local schema/index fold on the existing nominal owners.
 Opaque callback order, errors and mutation must remain observable; explicit
-NaN propagation differs from default finite-value qualification. No new cache,
+NaN propagation differs from default measurement-presence qualification. No new cache,
 callback-identity dispatch or per-Relate numerical optimization is admitted.
 
 Strict replay of this diagnostic retains exactly63 missing parent means in both
@@ -2029,3 +2029,98 @@ canonical ROOT, source code, benchmark inputs/outputs, dependencies and shared
 caches were untouched. Earlier b015 source freezes completed before this
 projection change; future freezes must explicitly record the sparse website.
 All remaining acceptance and full-catalog/scaling/figure obligations stay open.
+
+Corrected producer domain, native parity and residual measurement frontier
+------------------------------------------------------------------------
+
+PR497 merges on main49f2fd3639363b7cc5e716eb3ba3a7358aa85429 and formally
+closes492 and495. Its independently qualified production commit iseeed09233;
+final6da19179 adds tracked qualification only. Original unchanged R0/R1 pass
+against normally merged main6ce527a29 with no increased finding and unchanged
+R1 budget.211 related controls pass;212 integrated controls pass11.78s with
+two unrelated plugin configuration warnings. Global supplemental ownership
+census covers704 modules/5228 original classes with no AST errors.
+
+InputObjectMeasurementSourceRelation derives complete measurement-producer
+consumption through the existing input projection owner. The old planner and
+RelateObjects selection algorithms are removed. Ordinary input and PLATE
+selection remain intact. Dynamic queries resolve the actual compiled producer
+path/backend and snapshot mutable group-address maps at query birth. The
+meaningful old store-pickle control passed before planned lookup but failed
+after caching a mapping-proxy address. Both lookup domains now use the existing
+bounded store-owned cache lifetime; obsolete flat cache fields, initialization,
+invalidation and transport paths are deleted. Ordered records, empty results,
+replacement revision, eviction, primary/current/observation state and aliases
+are covered. Arbitrary external plan/mapping callbacks and query-target callback
+counts under bounded eviction remain outside the concrete production audit.
+
+Root integrates production at5ed0d13978db1cda92a490614d326525ad552af7. A fresh
+uninstrumented ordinary Beginner1w1t completes with execution4.650205374s,
+compilation1.603918076s and total7.070084621s. Mandatory READY, registry/kernel
+warmup, process startup and shutdown are excluded. Execution is inline with one
+thread; no measured fork/spawn startup. Default OUTCOMES and ordinary memory
+observation are retained. The tracked75-file website-only sparse projection is
+explicitly inventoried; no production source/input/dependency is omitted.
+Source, Python, installed dependencies, native binaries and exact image/CPPipe
+hashes are fixed before and after. This single correctness observation is not
+causal optimization or statistical evidence.
+
+The unchanged strict reader consumes all seven CSVs and two TIFFs against BOTH
+retained native repetitions: ZERO numeric/measurement differences, ZERO image
+differences, complete physical inventory, and five correlation keys/2093pairs
+on both sides. The63 missing parent means are restored. Only MyExpt_Nuclei.csv
+changes scientifically versus the previous ordinary result. Reader/source and
+output hashes remain unchanged through comparison. This execution uses the
+integrated394/479 reader: it qualifies the producer repair's outputs, not a
+standalone main-only execution or whole394 architecture gate.
+Receipt /var/tmp/openhcs-child-measurements-492-integrated-strict-native-science-v1-20261002/receipt.json
+SHA25637930ee4622c5fc1e067fc853bef1ae627ebe74546c27c3cc65d9fb476343ba0.
+Tracked independent qualification:
+docs/validation/child-measurement-producer-selection-492-495-20261002/QUALIFICATION.rst.
+
+The retained native warm-process invocations are15.270141648s and14.634740414s,
+mean14.952441031s. A descriptive comparison to this single corrected execution
+is3.215x execution and2.115x including OpenHCS compilation/client completion;
+these are different sample counts, not a causal change or statistical claim.
+Native invocation includes prepare/modules/post-run/close, with import/JVM,
+CPPipe load and its warmup excluded. Startup is not added to either pipeline.
+Other cases and full-catalog/scaling figures are not qualified by this case.
+
+The next actual logical-query capture executes438 queries over seven tables,
+not four times the previous312. Its processor succeeds and all nine scientific
+files are byte-identical to the qualified5ed ordinary output; complete physical
+inventories match. Diagnostic admission correctly fails before writing any
+logical graph: unchanged V6 refuses the150000-node unique-instance inventory.
+No partial graph, increased limit, saved-CSV substitution or performance claim
+is admitted. The profiled/captured14.1409s execution is diagnostic overhead,
+not an ordinary regression. Preserve the original failure and source freeze.
+Artifact /var/tmp/openhcs-measurement-query-logical-capture-v1-20261002/observations.json.
+Scientific-byte receipt:
+/var/tmp/openhcs-measurement-query-logical-capture-v1-scientific-byte-comparison-20261002.json.
+
+A revised diagnostic representation may pack numeric answer-oracle leaves while
+preserving every actual query and the complete determining input/schema/alias
+graph. Node/category counts and original replay must establish admission before
+any matched candidate timing or production change. Existing150000-node,
+32MiB graph,4MiB ledger and512MiB free-space limits remain unchanged. Pure
+callback declarations alone do not license skipping arbitrary scalar equality
+or string effects; original opaque callback/error/mutation order remains a
+separate production wiring gate.
+
+The output-recording ownership audit also rejects a misleading second frontier:
+coarse recorder-exclusive4.9186s contains the query496 subtree. In cProfile,
+record_module_outputs self time is0.000638s, and measurement-table construction
+contains Relate augmentation4.1412s/upstream query3.3457s. Those diagnostic
+times cannot be added. Independent100-call object recording is dominated by
+split_scoped_rows0.5620s diagnostic. Its18735-row domain has80 colocalization,
+16 concatenated and4 shape batches. Existing row owners could remove dictionary
+expansion, but no credible multi-second ordinary payoff is established; the
+standalone route is rejected pending a necessary shared-query dependency.
+Audit /var/tmp/openhcs-b015-output-recording-ownership-audit-20261002.json
+SHA256b0bf2c90f50c1da5022f6aa2a657779f0bdd9390c0adfb022a86b5db21b10779.
+
+Root normally merges current main after all5ed jobs complete, at899aaddce;
+that merge changes documentation/evidence only relative to5ed production.
+Whole394 scalar-classifier R0 and479 validator-relocation R1 remain RED.
+Installed419/433/435/450, outstanding native image differences, full30/scaling
+reruns and fresh figures remain open. The unlimited optimization goal is ACTIVE.
