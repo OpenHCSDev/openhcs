@@ -437,3 +437,42 @@ graph-owned warm occurrences, not process-global LRU state or a whole-pipeline
 heap. Diagnostic durations are not ordinary performance gains. V7/V8/V9 failures
 remain immutable, and the broad branch's architecture gates, fresh native runs,
 full-catalog scaling and figures remain outstanding.
+
+Fresh current native comparison after main and dependency sync
+-------------------------------------------------------------
+
+Clean source ``60b2ac9b4`` includes main ``f7de9efad`` and actual merged
+ObjectState/python-introspect source heads at versions 1.1.9/0.1.15. The
+shared environment qualification passes 35 primary controls and the supplementary
+40/13 historical-selector controls; all eight imported source roots are recorded.
+Protected canonical-first imports still select older canonical vendored sources.
+This qualification applies to the owned benchmark checkout, not canonical startup.
+
+Two fresh ordinary sweeps and two fresh native measured repetitions per case pass
+all eight full scientific comparisons. Startup/READY warmup/shutdown remain
+excluded; native invocation includes preparation/modules/post-run/closure. Both
+ordinary observations are retained with default OUTCOMES/RSS and inline 1w_1t:
+
+* 3D: compile mean 1.212512s; execute 9.127215s; total 11.153507s;
+  native 14.422177s. Execution speedup 1.58013x; total 1.29306x.
+* Speckles: compile mean 0.663492s; execute 1.231350s; total 2.246087s;
+  native 1.954230s. Execution speedup 1.58706x; total 0.87006x.
+
+The remaining 2x execution gaps are now 1.916127s and 0.254235s; earlier
+1.338s/0.222s targets refer only to their historical source-qualified samples.
+These two observations are descriptive; source/environment synchronization and
+run-to-run spread do not establish a causal improvement or regression. No new
+callable/plumbing attribution is inferred from these uninstrumented clocks.
+
+All selected source occurrences and physical hashes match: 180 refs/one 3D
+volumetric image set and two refs/one Speckles image set. Full 3D six-CSV/120-TIFF
+and Speckles three-CSV controls, exact 3D labels, existing float tolerances,
+relationship correlations and complete physical inventories pass. Root verified
+all 11 linked receipt artifacts and all 290 unique compared output paths.
+
+Current receipts, raw rows, fresh native reports and two-case figure previews are
+in ``benchmark/results/perf_current_native_paired_20261003``. Shared environment
+qualification is in ``benchmark/results/perf_dependency_source_readiness_20261003``.
+The unchanged original R0/R1 failures, full30/scaling work and other workloads'
+unresolved native image differences remain open. No whole-goal completion is
+claimed.
