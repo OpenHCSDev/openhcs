@@ -433,6 +433,50 @@ def record_output_path(
     )
 
 
+def test_memory_output_writer_materializes_preserved_source_at_current_destination(
+    tmp_path,
+):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    source_path = source_dir / "A01_s1_w1.tif"
+    original_pixels = np.full((4, 5), 7, dtype=np.uint16)
+    tifffile.imwrite(source_path, original_pixels)
+    memory_pixels = np.full((4, 5), 3, dtype=np.uint16)
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    filemanager.ensure_directory(source_dir, Backend.MEMORY.value)
+    filemanager.save(memory_pixels, str(source_path), Backend.MEMORY.value)
+    context = context_stub(filemanager)
+    source_plan = function_step_plan("Source", pipeline_position=0)
+    source_plan.output_dir = source_dir
+    record_output_path(context, source_plan, source_path)
+
+    plan = function_step_plan("Preserve image", pipeline_position=1)
+    plan.output_plate_root = str(tmp_path / "output_plate")
+    plan.output_dir = Path(plan.output_plate_root) / "images"
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(Path(plan.output_plate_root) / "results")
+    plan.write_backend = Backend.DISK.value
+    manifest = step_output_manifest(context)
+    (source_record,) = manifest.image_records_for(source_plan)
+    manifest.record_outputs(plan, (source_record.passed_through(plan),))
+
+    MemoryOutputWriter.write_if_needed(context, plan)
+
+    destination = plan.output_dir / source_path.name
+    np.testing.assert_array_equal(tifffile.imread(destination), memory_pixels)
+    np.testing.assert_array_equal(tifffile.imread(source_path), original_pixels)
+    np.testing.assert_array_equal(
+        filemanager.load(str(source_path), Backend.MEMORY.value), memory_pixels
+    )
+    (target,) = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+    assert target.produced_projection_entries(context, plan) is not None
+
+
 def test_function_output_identity_preserves_non_axis_source_metadata() -> None:
     identity = FunctionOutputIdentity(
         component_values={"channel": "2", "site": "1"},

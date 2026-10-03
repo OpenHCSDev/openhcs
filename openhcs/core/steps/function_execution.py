@@ -238,111 +238,6 @@ class PatternGroups:
             )
         return tuple(requests)
 
-    @classmethod
-    def artifact_execution_requests(
-        cls,
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> tuple[ArtifactPatternGroupExecutionRequest, ...] | None:
-        """Discover complete correlated cohorts from their compiled producers."""
-
-        pattern = plan.compiled_function_pattern
-        scope = plan.execution_group_scope
-
-        def candidate_scopes(
-            edge: InvocationArtifactInputEdgePlan,
-            execution_scope: ComponentGroupScope,
-        ) -> dict[RuntimeExecutionAxisScope, str]:
-            return RuntimeArtifactInput(
-                edge_plan=edge,
-                axis_scope=RuntimeExecutionAxisScope.from_raw(
-                    plan.axis_id, component=None, value=None,
-                ),
-                backend=Backend.MEMORY.value,
-                source_binding_plan=plan.source_binding_plan,
-            ).candidate_execution_scopes(
-                context.runtime_value_store,
-                execution_scope,
-                variable_components=ComponentSet.coerce(plan.variable_components),
-            )
-
-        if scope.is_dynamic:
-            discovered_keys = []
-            for group in pattern.groups:
-                for invocation in group.invocations:
-                    group_refs = invocation.contract.group_scope_inputs.ref_set()
-                    for edge in invocation.artifact_input_edges:
-                        if edge.storage_plan is None or not (
-                            edge.main_flow_projection is not None
-                            or edge.spec.ref() in group_refs
-                        ):
-                            continue
-                        discovered_keys.extend(
-                            candidate.value_text
-                            for candidate in candidate_scopes(edge, scope)
-                        )
-            if not any(key is not None for key in discovered_keys):
-                return None
-            component_keys = scope.runtime_keys(discovered_keys)
-        else:
-            component_keys = scope.runtime_keys(())
-
-        selected_groups = []
-        for component_key in component_keys:
-            group = pattern.group_for_component(component_key)
-            if group is None:
-                raise ValueError(
-                    f"No compiled function group for component {component_key!r}."
-                )
-            edges = plan.stored_primary_input_edges_for_group(group, component_key)
-            if edges is None:
-                return None
-            selected_groups.append((component_key, group, edges))
-
-        requests = []
-        for component_index, (component_key, group, edges) in enumerate(selected_groups):
-            cohorts = None
-            for edge in edges:
-                edge_cohorts = candidate_scopes(
-                    edge,
-                    ComponentGroupScope.from_raw((component_key,), component=scope.component),
-                )
-                if not edge_cohorts:
-                    raise ValueError(
-                        f"Step {plan.step_index} ({plan.step_name}) has no exact "
-                        f"producer cohort for {edge.spec.ref()!r} on axis {plan.axis_id}."
-                    )
-                cohorts = (
-                    edge_cohorts
-                    if cohorts is None
-                    else {
-                        joined: anchor
-                        for coordinates, anchor in cohorts.items()
-                        for candidate in edge_cohorts
-                        if (joined := coordinates.join_execution_cohort(candidate))
-                        is not None
-                    }
-                )
-            if not cohorts:
-                raise ValueError(
-                    f"Step {plan.step_index} ({plan.step_name}) producer inputs "
-                    "do not share a complete execution cohort."
-                )
-            requests.extend(
-                ArtifactPatternGroupExecutionRequest(
-                    context=context,
-                    execution_plan=plan,
-                    pattern_group_info=anchor,
-                    compiled_group=group,
-                    component_value=component_key,
-                    fixed_component_values=coordinates.fixed_component_values,
-                    component_index=component_index,
-                    component_count=len(selected_groups),
-                )
-                for coordinates, anchor in cohorts.items()
-            )
-        return tuple(requests)
-
 
 def _single_execution_group_patterns(
     patterns: DiscoveredPatternCollection,
@@ -854,6 +749,110 @@ class FunctionStepExecutor:
             )
             raise
 
+    def artifact_execution_requests(
+        self,
+    ) -> tuple[ArtifactPatternGroupExecutionRequest, ...] | None:
+        """Discover complete correlated cohorts from their compiled producers."""
+
+        context = self.context
+        plan = self.plan
+        pattern = plan.compiled_function_pattern
+        scope = plan.execution_group_scope
+
+        def candidate_scopes(
+            edge: InvocationArtifactInputEdgePlan,
+            execution_scope: ComponentGroupScope,
+        ) -> dict[RuntimeExecutionAxisScope, str]:
+            return RuntimeArtifactInput(
+                edge_plan=edge,
+                axis_scope=RuntimeExecutionAxisScope.from_raw(
+                    plan.axis_id, component=None, value=None,
+                ),
+                backend=Backend.MEMORY.value,
+                source_binding_plan=plan.source_binding_plan,
+            ).candidate_execution_scopes(
+                context.runtime_value_store,
+                execution_scope,
+                variable_components=ComponentSet.coerce(plan.variable_components),
+            )
+
+        if scope.is_dynamic:
+            discovered_keys = []
+            for group in pattern.groups:
+                for invocation in group.invocations:
+                    group_refs = invocation.contract.group_scope_inputs.ref_set()
+                    for edge in invocation.artifact_input_edges:
+                        if edge.storage_plan is None or not (
+                            edge.main_flow_projection is not None
+                            or edge.spec.ref() in group_refs
+                        ):
+                            continue
+                        discovered_keys.extend(
+                            candidate.value_text
+                            for candidate in candidate_scopes(edge, scope)
+                        )
+            if not any(key is not None for key in discovered_keys):
+                return None
+            component_keys = scope.runtime_keys(discovered_keys)
+        else:
+            component_keys = scope.runtime_keys(())
+
+        selected_groups = []
+        for component_key in component_keys:
+            group = pattern.group_for_component(component_key)
+            if group is None:
+                raise ValueError(
+                    f"No compiled function group for component {component_key!r}."
+                )
+            edges = plan.stored_primary_input_edges_for_group(group, component_key)
+            if edges is None:
+                return None
+            selected_groups.append((component_key, group, edges))
+
+        requests = []
+        for component_index, (component_key, group, edges) in enumerate(selected_groups):
+            cohorts = None
+            for edge in edges:
+                edge_cohorts = candidate_scopes(
+                    edge,
+                    ComponentGroupScope.from_raw((component_key,), component=scope.component),
+                )
+                if not edge_cohorts:
+                    raise ValueError(
+                        f"Step {plan.step_index} ({plan.step_name}) has no exact "
+                        f"producer cohort for {edge.spec.ref()!r} on axis {plan.axis_id}."
+                    )
+                cohorts = (
+                    edge_cohorts
+                    if cohorts is None
+                    else {
+                        joined: anchor
+                        for coordinates, anchor in cohorts.items()
+                        for candidate in edge_cohorts
+                        if (joined := coordinates.join_execution_cohort(candidate))
+                        is not None
+                    }
+                )
+            if not cohorts:
+                raise ValueError(
+                    f"Step {plan.step_index} ({plan.step_name}) producer inputs "
+                    "do not share a complete execution cohort."
+                )
+            requests.extend(
+                ArtifactPatternGroupExecutionRequest(
+                    context=context,
+                    execution_plan=plan,
+                    pattern_group_info=anchor,
+                    compiled_group=group,
+                    component_value=component_key,
+                    fixed_component_values=coordinates.fixed_component_values,
+                    component_index=component_index,
+                    component_count=len(selected_groups),
+                )
+                for coordinates, anchor in cohorts.items()
+            )
+        return tuple(requests)
+
     def run(self) -> StepExecutionObservation:
         plan = self.plan
         step_started_at = time.perf_counter()
@@ -865,9 +864,7 @@ class FunctionStepExecutor:
         )
 
         phase_started_at = time.perf_counter()
-        execution_requests = PatternGroups.artifact_execution_requests(
-            self.context, plan,
-        )
+        execution_requests = self.artifact_execution_requests()
         patterns_by_axis = (
             self._detect_patterns() if execution_requests is None else None
         )

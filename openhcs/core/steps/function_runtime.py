@@ -1990,14 +1990,16 @@ class FunctionCoreExecutor:
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
         memory_types = self.memory_types()
-        source_payload = MainFlowMemoryConversion(
-            payload=self.main_data_arg,
+        target_device_id = self.group_data.execution_plan.device_id_for(
+            memory_types.input_type
+        )
+        converted_data = convert_memory(
+            data=image_payload_data(self.main_data_arg),
             source_type=self.source_memory_type,
             target_type=memory_types.input_type,
-            target_device_id=self.group_data.execution_plan.device_id_for(
-                memory_types.input_type
-            ),
-        ).converted_payload()
+            gpu_id=target_device_id,
+        )
+        source_payload = with_image_payload_data(self.main_data_arg, converted_data)
         main_data_arg = self.main_flow_call_argument(source_payload)
         final_kwargs = dict(self.base_kwargs)
         self.bind_compiled_runtime_parameters(final_kwargs)
@@ -2357,39 +2359,6 @@ class FunctionChainInvocationMemoryTypes:
         return cls(invocation.input_memory_type, invocation.output_memory_type)
 
 
-@dataclass(frozen=True, slots=True)
-class VariableComponentNames:
-    """Microscope parser variable-component names for pattern lookup."""
-
-    components: Sequence[VariableComponents]
-
-    @property
-    def value(self) -> list[str] | None:
-        if not self.components:
-            return None
-        return [component.value for component in self.components]
-
-
-@dataclass(frozen=True, slots=True)
-class MainFlowMemoryConversion:
-    """Main-flow image memory conversion preserving payload context."""
-
-    payload: RuntimeArrayData
-    source_type: str
-    target_type: str
-    target_device_id: int | None
-
-    def converted_payload(self) -> RuntimeArrayData:
-        data = image_payload_data(self.payload)
-        converted = convert_memory(
-            data=data,
-            source_type=self.source_type,
-            target_type=self.target_type,
-            gpu_id=self.target_device_id,
-        )
-        return with_image_payload_data(self.payload, converted)
-
-
 class PatternGroupRuntime:
     """Staged runtime for one pattern group."""
 
@@ -2592,7 +2561,11 @@ class PatternGroupRuntime:
                 request.pattern_group_info,
                 context.filemanager,
                 Backend.MEMORY.value,
-                VariableComponentNames(plan.variable_components).value,
+                (
+                    [component.value for component in plan.variable_components]
+                    if plan.variable_components
+                    else None
+                ),
             )
         matching_files = output_manifest.filter_to_producer_paths(
             plan,

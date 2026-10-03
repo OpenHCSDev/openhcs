@@ -200,6 +200,10 @@ class MemoryOutputWriter:
             memory_paths,
             Backend.MEMORY.value,
         )
+        output_paths = [
+            record.path_under(plan.output_dir)
+            for record in produced_outputs
+        ]
         parser_context = FunctionOutputParserContext.from_processing_context(context)
         row, col = parser_context.parser.extract_component_coordinates(plan.axis_id)
         context.filemanager.ensure_directory(
@@ -207,8 +211,8 @@ class MemoryOutputWriter:
             plan.write_backend,
         )
         context.filemanager.save_batch(
-            cls.payloads(memory_data, memory_paths, plan),
-            memory_paths,
+            cls.payloads(memory_data, output_paths, plan),
+            output_paths,
             plan.write_backend,
             chunk_name=plan.axis_id,
             zarr_config=plan.zarr_config,
